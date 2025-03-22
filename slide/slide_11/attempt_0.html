@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Roboto, Arial, sans-serif;
+            background-color: #E0E0E0;
+        }
+        .left-section {
+            background-color: #e9f7fe;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px;
+            box-sizing: border-box;
+            z-index: 1;
+        }
+        .left-section .title {
+            font-size: 48px;
+            font-weight: bold;
+            color: black;
+            margin-bottom: 20px;
+        }
+        .left-section .subtitle {
+            font-size: 24px;
+            color: black;
+            margin-bottom: 40px;
+        }
+        .left-section .dots {
+            font-size: 36px;
+            color: black;
+        }
+        .right-section {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 28px;
+            background-color: #f0f0f0;
+            border-radius: 10px;
+            z-index: 1;
+        }
+        .right-section img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 10px;
+        }
+        .container::before {
+            content: '';
+            position: absolute;
+            width: 100%;
+            height: 50%;
+            background-color: #2e4e7e;
+            top: 50%;
+            left: 0;
+            z-index: -1;
+        }
+        .decor-container {
+            position: absolute;
+            width: 100%;
+            height: 30%;
+            background-color: #2e4e7e;
+            bottom: 0;
+            left: 0;
+            z-index: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class='container d-flex flex-row justify-content-center align-items-center position-relative h-100'>
+        <div class="row w-100">
+            <div class="col-md-6 left-section">
+                <div class="title">Thách Thức và Phương Pháp Học AI</div>
+                <div class="subtitle">Học hỏi từ các nguồn khác nhau và áp dụng vào thực tiễn</div>
+                <div class="dots">•••••</div>
+            </div>
+            <div class="col-md-4 offset-md-1 right-section">
+                <img src="path-to-your-image/learning-resources.png" alt="Learning Resources">
+            </div>
+        </div>
+    </div>
+    <div class="decor-container"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
