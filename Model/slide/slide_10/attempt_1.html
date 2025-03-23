@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: Roboto, Arial, sans-serif;
+            background-color: #003f72;
+            color: #ffffff;
+        }
+        .container {
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+        .left-section {
+            flex: 1;
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        .title {
+            font-size: 2.5rem;
+            color: #ffffff;
+            margin-bottom: 20px;
+        }
+        .number {
+            background-color: #00c6ff;
+            color: #ffffff;
+            font-size: 1.2rem;
+            padding: 10px 20px;
+            border-radius: 10px;
+            margin-bottom: 10px;
+        }
+        .content {
+            font-size: 1.2rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+        .right-section {
+            position: relative;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }
+        .image-container {
+            width: 70%;
+            height: 60%;
+            background-color: #00c6ff;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .bubble {
+            position: absolute;
+            width: 20px;
+            height: 20px;
+            background-color: #00c6ff;
+            border-radius: 50%;
+            opacity: 0.8;
+        }
+        .bubble.bubble-1 {
+            top: 50px;
+            right: 150px;
+        }
+        .bubble.bubble-2 {
+            top: 100px;
+            right: 100px;
+        }
+        .bubble.bubble-3 {
+            top: 150px;
+            right: 50px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="left-section">
+            <h1 class="title">Kết luận</h1>
+            <div class="number">Animals 01</div>
+            <p class="content">Không cần đi đâu xa ta có thể hỏi chính những mô hình chatbot nổi tiếng hiện nay như chat gpt, claude hay gemini để tìm định hướng cho bản thân.</p>
+            <div class="number">Animals 02</div>
+            <p class="content">Các sự kiện và cộng đồng AI tại Việt Nam
+- Tham gia các hội thảo, sự kiện công nghệ.
+- Tham gia các cộng đồng AI như Bình Dân Học AI, Mì AI,...</p>
+        </div>
+        <div class="right-section">
+            <div class="image-container">Image</div>
+            <div class="bubble bubble-1"></div>
+            <div class="bubble bubble-2"></div>
+            <div class="bubble bubble-3"></div>
+        </div>
+    </div>
+</body>
+</html>

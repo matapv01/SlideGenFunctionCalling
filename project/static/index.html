@@ -1,0 +1,24 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slide Generator</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>Slide Generator</h1>
+        <p>Upload a DOCX file to generate slides.</p>
+        <div class="upload-section">
+            <input type="file" id="docxFile" accept=".docx">
+            <button onclick="handleDocxUpload()">Generate Slides</button>
+        </div>
+        <div id="result" class="result-section">
+            <p id="status"></p>
+            <a id="downloadLink" style="display: none;" download="slides.zip">Download Slides (ZIP)</a>
+        </div>
+    </div>
+    <script src="/static/script.js"></script>
+</body>
+</html>

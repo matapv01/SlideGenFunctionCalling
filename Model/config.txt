@@ -1,0 +1,21 @@
+conda create -n slidegen python==3.10
+conda activate slidegen
+
+# Không dùng pip install markupsafe==2.0 pyparsing==2.4.0 pillow==9.0
+
+pip install importlib-metadata
+pip install --upgrade pillow==10.0.1
+
+pip install torch==2.3.1 torchvision==0.18.1 --index-url https://download.pytorch.org/whl/cu121
+pip install transformers==4.49.0
+pip install qwen-vl-utils[decord]==0.0.8
+pip install accelerate==0.26.0
+
+pip install flash-attn==2.6.3 --no-build-isolation
+
+pip install pytz six click
+pip install decord==0.5.2
+pip install python-docx
+pip install weasyprint
+pip install langchain
+pip install selenium
