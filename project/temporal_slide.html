@@ -11,7 +11,7 @@
             padding: 0;
             height: 100%;
             font-family: Roboto, Arial, sans-serif;
-            background-color: #e0f7fa;
+            background-color: #E8F5E9;
             color: #ffffff;
             display: flex;
             justify-content: center;
@@ -25,28 +25,31 @@
             flex-direction: column;
             align-items: center;
             text-align: center;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
         }
         .title {
-            font-size: 2.5rem;
+            font-size: 42px;
             margin-bottom: 40px;
-            color: #003f72;
+            color: #2E7D32;
         }
         .objectives-container {
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
+            width: 100%;
         }
         .objective {
-            flex: 1 1 calc(50% - 40px);
-            min-width: 300px;
-            padding: 20px;
-            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
         }
         .number {
-            background-color: #00c6ff;
+            background-color: #388E3C;
             color: #ffffff;
-            font-size: 2rem;
+            font-size: 28px;
             width: 50px;
             height: 50px;
             display: flex;
@@ -56,63 +59,54 @@
             margin-bottom: 20px;
         }
         .box {
-            background-color: #003f72;
+            background-color: #1B5E20;
             color: #ffffff;
             padding: 20px;
             border-radius: 10px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
         }
         .box p {
-            font-size: 1.2rem;
+            font-size: 24px;
             line-height: 1.6;
             margin: 0;
+            text-align: center;
+        }
+        @media (max-width: 768px) {
+            .objectives-container {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1 class="title">Công nghệ AI trong cuộc sống hàng ngày</h1>
+        <h1 class="title">Giải pháp và hướng đi trong bảo vệ chủ quyền biển đảo</h1>
         <div class="objectives-container">
             
         <div class="objective">
             <div class="number">1</div>
             <div class="box">
-                <p>Trợ lý ảo: Siri, Google Assistant, Alexa</p>
+                <p>Tăng cường hợp tác quốc tế: Việt Nam cần đẩy mạnh hợp tác với các nước trong khu vực và quốc tế để cùng bảo vệ hòa bình và ổn định trên Biển Đông. Các hợp tác này có thể bao gồm việc tăng cường đối thoại, tham gia các diễn đàn quốc tế về Biển Đông, và phát huy vai trò của ASEAN.</p>
             </div>
         </div>
         
         <div class="objective">
             <div class="number">2</div>
             <div class="box">
-                <p>Dịch vụ giải trí: Gợi ý phim trên Netflix, gợi ý nhạc trên Spotify</p>
+                <p>Phát triển mạnh mẽ lực lượng bảo vệ biển: Cần đầu tư mạnh vào lực lượng cảnh sát biển và lực lượng hải quân, không chỉ về số lượng mà còn về trang thiết bị, đào tạo và kỹ năng, để đảm bảo khả năng bảo vệ chủ quyền biển đảo trước các mối đe dọa từ bên ngoài.</p>
             </div>
         </div>
         
         <div class="objective">
             <div class="number">3</div>
             <div class="box">
-                <p>Sức khỏe: Ứng dụng theo dõi sức khỏe như Fitbit, Apple Health</p>
-            </div>
-        </div>
-        
-        <div class="objective">
-            <div class="number">4</div>
-            <div class="box">
-                <p>Giáo dục: Các nền tảng học tập trực tuyến sử dụng AI để cá nhân hóa trải nghiệm học tập như Khan Academy, Duolingo</p>
-            </div>
-        </div>
-        
-        <div class="objective">
-            <div class="number">5</div>
-            <div class="box">
-                <p>Tài chính: Các ứng dụng quản lý tài chính cá nhân như Mint sử dụng AI để phân tích chi tiêu và gợi ý tiết kiệm</p>
-            </div>
-        </div>
-        
-        <div class="objective">
-            <div class="number">6</div>
-            <div class="box">
-                <p>Giao thông: Hệ thống dẫn đường như Google Maps, Waze sử dụng AI để dự báo tình trạng giao thông và gợi ý lộ trình tối ưu</p>
+                <p>Nâng cao nhận thức cộng đồng: Việc tuyên truyền, giáo dục về chủ quyền biển đảo cần được thực hiện rộng rãi qua các kênh truyền thông, sách vở, chương trình học, và các hoạt động cộng đồng để mỗi công dân hiểu rõ trách nhiệm của mình trong việc bảo vệ chủ quyền quốc gia.</p>
             </div>
         </div>
         

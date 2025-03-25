@@ -58,7 +58,7 @@ def generate_intro_slide(
     # Title parameters
     title="Introduction",
     title_color='#0F4662',
-    title_font_size="32px",
+    title_font_size="42px",
     title_font_style="italic",
     title_margin_bottom="5px",
     title_margin_left="40px",
@@ -66,7 +66,7 @@ def generate_intro_slide(
     # Content parameters
     content_text="Content",
     content_color="#0F4662",
-    content_font_size="16px",
+    content_font_size="24px",
     content_line_height="1.6",
     content_width="70%",
     content_margin="0 auto",
@@ -218,235 +218,10 @@ def generate_intro_slide(
 
     return html_code
 
-def generate_split_layout_slide1(
-    left_bg_color="#FFF3E0",
-    left_title="Title",
-    left_title_color="#EF6C00",
-    left_subtitle="SubTitle",
-    left_subtitle_color="#FB8C00",
-
-    right_bg_color="#FFE0B2",
-    right_image_src="path-to-your-image/image.png",
-    right_image_alt="Image",
-    decor_bg_color="#FFCC80",
-    font_family="Roboto, Arial, sans-serif"
-):
-
-    """
-    Generate a split-layout HTML slide with customizable parameters.
-
-    :param left_bg_color: Background color of the left section.
-    :param left_title: Title text in the left section.
-    :param left_title_color: Color of the title in the left section.
-    :param left_subtitle: Subtitle text in the left section.
-    :param left_subtitle_color: Color of the subtitle in the left section.
-    :param left_dots: Text or symbols for the dots section in the left section.
-    :param left_dots_color: Color of the dots in the left section.
-    :param right_bg_color: Background color of the right section.
-    :param right_image_src: Source path for the image in the right section.
-    :param right_image_alt: Alt text for the image in the right section.
-    :param decor_bg_color: Background color of the decorative container.
-    :param font_family: Font family for the slide content.
-    :return: A string containing the HTML code.
-    """
-
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: {font_family};
-            background-color: {decor_bg_color};
-        }}
-        .left-section {{
-            background-color: {left_bg_color};
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            padding: 60px;
-            box-sizing: border-box;
-            z-index: 1;
-        }}
-        .left-section .title {{
-            font-size: 48px;
-            font-weight: bold;
-            color: {left_title_color};
-            margin-bottom: 20px;
-        }}
-        .left-section .subtitle {{
-            font-size: 24px;
-            color: {left_subtitle_color};
-            margin-bottom: 40px;
-        }}
-        .right-section {{
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 28px;
-            background-color: {right_bg_color};
-            border-radius: 10px;
-            z-index: 1;
-        }}
-        .right-section img {{
-            max-width: 100%;
-            height: auto;
-            border-radius: 10px;
-        }}
-        .container::before {{
-            content: '';
-            position: absolute;
-            width: 100%;
-            height: 50%;
-            background-color: {decor_bg_color};
-            top: 50%;
-            left: 0;
-            z-index: -1;
-        }}
-        .decor-container {{
-            position: absolute;
-            width: 100%;
-            height: 30%;
-            background-color: {decor_bg_color};
-            bottom: 0;
-            left: 0;
-            z-index: 0;
-        }}
-    </style>
-</head>
-<body>
-    <div class='container d-flex flex-row justify-content-center align-items-center position-relative h-100'>
-        <div class="row w-100">
-            <div class="col-md-6 left-section">
-                <div class="title">{left_title}</div>
-                <div class="subtitle">{left_subtitle}</div>
-            </div>
-            <div class="col-md-4 offset-md-1 right-section">
-                <img src="{right_image_src}" alt="{right_image_alt}">
-            </div>
-        </div>
-    </div>
-    <div class="decor-container"></div>
-
-    <!-- Bootstrap JS -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>"""
-
-    return html_code
-
-
-def generate_split_layout_slide2(
-    title="Title",
-    right_bg_color="#DFE9FF",
-    bottom_right_title="Section Title",
-    bottom_right_title_color="#1F3685",
-    bottom_right_description="This section provides detailed insights and explanations.",
-    bottom_right_description_color="#333",
-    divider_color="#000",
-    font_family="Roboto, Arial, sans-serif"
-):
-    """
-    Generate a simplified split layout HTML slide without left section and image placeholders.
-
-    :param title: The title of the HTML document.
-    :param right_bg_color: Background color of the right section.
-    :param bottom_right_title: Title displayed in the bottom right section.
-    :param bottom_right_title_color: Color of the bottom right title.
-    :param bottom_right_description: Description text in the bottom right section.
-    :param bottom_right_description_color: Color of the bottom right description text.
-    :param divider_color: Color of the divider in the bottom right section.
-    :param font_family: Font family for the slide content.
-    :return: A string containing the HTML code.
-    """
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <!-- Bootstrap CSS -->
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: {font_family};
-            background-color: {right_bg_color};
-        }}
-        .right-section {{
-            background-color: {right_bg_color};
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            height: 100vh;
-            padding: 20px;
-            z-index: 2;
-        }}
-        .bottom-right {{
-            background-color: white;
-            padding: 50px;
-            display: flex;
-            justify-content: space-evenly;
-            align-items: center;
-            flex-direction: row;
-            width: 80%;
-            height: auto;
-            box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.1);
-        }}
-        .bottom-right .title {{
-            font-size: 64px;
-            font-weight: bold;
-            color: {bottom_right_title_color};
-            margin: 0;
-        }}
-        .bottom-right .description {{
-            font-size: 18px;
-            color: {bottom_right_description_color};
-            line-height: 1.6;
-            margin: 0;
-            width: 50%;
-        }}
-        .divider {{
-            width: 2px;
-            height: 100px;
-            background-color: {divider_color};
-            margin: 0 30px;
-        }}
-    </style>
-</head>
-<body>
-    <div class="container-fluid h-100 d-flex justify-content-center align-items-center">
-        <div class="bottom-right">
-            <div class="col-md-4 title">{bottom_right_title}</div>
-            <div class="divider"></div>
-            <div class="col-md-4 description">
-                {bottom_right_description}
-            </div>
-        </div>
-    </div>
-
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>"""
-
-    return html_code
-
 
 def generate_body_slide1(
     title="Professional HTML Slide",
+    title_font_size="42px",
     slide_title="Slide Title",
     bg_color="#E8F5E9",
     text_bg_color="#FFFFFF",
@@ -456,6 +231,7 @@ def generate_body_slide1(
     image_placeholder_text="Image Placeholder",
     font_family="Roboto, Arial, sans-serif",
     content_paragraph="This is a customizable slide. Add your content here:",
+    para_font_size="24px",
     list_items=None
 ):
     """
@@ -509,7 +285,7 @@ def generate_body_slide1(
         }}
         .slide-title {{
             color: {keyword_color};
-            font-size: 3em;
+            font-size: {title_font_size};
             margin-bottom: 15px;
             font-weight: bolder;
         }}
@@ -518,47 +294,44 @@ def generate_body_slide1(
             flex-direction: row;
             align-items: flex-start;
             background-color: {text_bg_color};
-            padding: 35px;
+            padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             color: {text_color};
-            max-width: 980px;
+            max-width: 1100px; /* Tăng kích thước tối đa của khung */
             width: 100%;
         }}
         .text-content {{
-            flex: 2;
-            margin-right: 20px;
+            flex: 3; /* Tăng tỉ lệ phần text để mở rộng */
+            margin-right: 30px;
         }}
         .text-content p {{
-            margin-bottom: 15px;
-            font-size: 1.4em;
-            line-height: 1.6;
+            margin-bottom: 18px;
+            font-size: {para_font_size};
+            line-height: 1.7;
         }}
         .text-content ul {{
             list-style: none;
             padding: 0;
         }}
         .text-content li {{
-            margin-top: 12px;
-            font-size: 1.2em;
-        }}
-        .keyword {{
-            font-weight: bold;
-            color: {keyword_color};
+            margin-top: 14px;
+            font-size: {para_font_size};
         }}
         .image-placeholder {{
             flex: 1;
             background-color: {image_bg_color};
-            width: 250px;
-            height: 250px;
+            width: 300px; /* Tăng kích thước ảnh */
+            height: 300px;
             border-radius: 10px;
             display: flex;
             justify-content: center;
             align-items: center;
             color: #333333;
-            font-size: 1.1em;
+            font-size: 24px;
             font-weight: bold;
         }}
+
         @media (max-width: 768px) {{
             .slide-content {{
                 flex-direction: column;
@@ -601,6 +374,7 @@ def generate_body_slide1(
 def generate_body_slide2(
     title="Slide Header",
     header_text="Key Insights",
+    header_font_size="42px",
     background_color="#E8F5E9",
     text_color="#004D40",
     content_bg_color="#FFFFFF",
@@ -611,7 +385,8 @@ def generate_body_slide2(
     image_placeholder_text="[Image Placeholder]",
     image_bg_color="#B2DFDB",
     font_family="Roboto, Arial, sans-serif",
-    paragraph_text="This is a customizable slide content area. You can add any relevant information here"
+    paragraph_text="This is a customizable slide content area. You can add any relevant information here",
+    para_font_size="24px"
 ):
     """
     Generate a professional HTML slide body for various presentation topics.
@@ -685,18 +460,18 @@ def generate_body_slide2(
             border-radius: 12px;
             width: 300px;
             height: 300px;
-            font-size: 1.2em;
+            font-size: 20px;
             font-weight: bold;
             color: #333;
         }}
 
         h1 {{
             color: {header_color};
-            font-size: 2.8em;
+            font-size: {header_font_size};
         }}
 
         p {{
-            font-size: 1.4em;
+            font-size: {para_font_size};
             line-height: 1.8em;
         }}
 
@@ -713,8 +488,8 @@ def generate_body_slide2(
                 padding: 20px;
             }}
             .image-box {{
-                width: 250px;
-                height: 250px;
+                width: 150px;
+                height: 150px;
                 margin-top: 20px;
             }}
         }}
@@ -739,174 +514,156 @@ def generate_body_slide2(
 
     return html_code
 
-
 def generate_body_slide3(
-    title="Title",
-    header_text="Subtitle",
-    background_gradient=("#FFEBEE", "#FFCDD2"),
-    content_bg_opacity=0.8,
-    content_shadow="0 4px 8px rgba(0, 0, 0, 0.1)",
-    header_color="#C62828",
-    text_body_color="#D32F2F",
-    highlight_color="#FF4500",
-    image_placeholder_text="Image Placeholder",
-    image_bg_color="#EF9A9A",
-    font_family="Roboto, Arial, sans-serif",
-    paragraph_text="content paragraph"
+    title="title",
+    tile_font_size = "42px",
+    subtitle="subtitle",
+    subtitle_font_size = "32px",
+    content_paragraphs=[
+        "Paragraph 1 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
+        "Paragraph 2 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
+    ],
+    left_bg_color="#F3F6FA",
+    right_bg_color="#0B1320",
+    text_color="#FFFFFF",
+    title_color="#000000",
+    subtitle_color="#333333",
+    icon_color="#FF9800",
+    corner_icon_color="#3D5AFE",
+    font_family="Roboto, Arial, sans-serif"
 ):
-    """
-    Generate a professional HTML slide body with customizable parameters.
-
-    :param title: The title of the HTML document.
-    :param header_text: The main header of the slide.
-    :param background_gradient: Gradient colors for the background.
-    :param content_bg_opacity: Opacity for the content box background.
-    :param content_shadow: Box shadow for the content container.
-    :param header_color: Color of the header text.
-    :param text_body_color: Color of the body text.
-    :param highlight_color: Color for highlighted text.
-    :param image_placeholder_text: Placeholder text for the main image area.
-    :param image_bg_color: Background color of the image placeholder.
-    :param font_family: The font family to use for all text.
-    :param paragraph_text: The content paragraph.
-    :return: A string containing the HTML code.
-    """
-
-    gradient_css = f"background: linear-gradient(to right, {background_gradient[0]}, {background_gradient[1]});"
-
+    paragraphs_html = "".join(f"<p>{p}</p>" for p in content_paragraphs)
+    
     html_code = f"""<!DOCTYPE html>
 <html lang=\"en\">
-
 <head>
     <meta charset=\"UTF-8\">
     <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
-    <title>{title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
     <style>
         body, html {{
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
-            {gradient_css}
-            color: #ffffff;
             font-family: {font_family};
-        }}
-
-        .custom-background {{
+            height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            {gradient_css}
+            background-color: {left_bg_color};
         }}
-
-        .content-container {{
-            background-color: rgba(255, 255, 255, {content_bg_opacity});
-            border-radius: 10px;
-            padding: 30px;
-            box-shadow: {content_shadow};
-            max-width: 800px;
-            width: 90%;
-            text-align: center;
+        .slide-container {{
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 0;
+            overflow: hidden;
         }}
-
-        .custom-title {{
-            color: {header_color};
+        .left-container {{
+            flex: 1;
+            padding: 60px;
+            background-color: {left_bg_color};
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+            align-items: flex-start;
+        }}
+        .title {{
+            font-size: {tile_font_size};
             font-weight: bold;
-            font-size: 2rem;
-            margin-bottom: 15px;
-        }}
-
-        .custom-text {{
-            font-size: 1.1rem;
-            color: {text_body_color};
+            color: {title_color};
             margin-bottom: 20px;
+            align-self: flex-start;
         }}
-
-        .bold {{
-            font-weight: bold;
+        .subtitle {{
+            font-size: {subtitle_font_size};
+            color: {subtitle_color};
+            align-self: flex-start;
         }}
-
-        .image-placeholder {{
-            background-color: {image_bg_color};
-            width: 100%;
-            height: 200px;
-            max-width: 300px;
+        .right-container {{
+            flex: 2;
+            padding: 40px;
+            background-color: {right_bg_color};
+            color: {text_color};
+            border-radius: 20px;
+            position: relative;
             display: flex;
-            align-items: center;
+            flex-direction: column;
             justify-content: center;
-            color: #333;
-            border-radius: 5px;
-            margin: auto;
+            align-items: center;
         }}
+        .corner-icons {{
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }}
+        .corner-icons span, .bottom-icons span {{
+            width: 12px;
+            height: 12px;
+            background-color: {corner_icon_color};
+            border-radius: 50%;
+            display: inline-block;
+        }}
+        .bottom-icons {{
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
+            display: flex;
+            gap: 5px;
+        }}
+        .bottom-icons span {{ background-color: {icon_color}; }}
     </style>
 </head>
 <body>
-    <div class=\"custom-background\">
-        <div class=\"content-container\">
-            <h1 class=\"custom-title\">{header_text}</h1>
-            <div class=\"custom-text\">
-                {paragraph_text}
+    <div class=\"slide-container\">
+        <div class=\"left-container\">
+            <div class=\"title\">{title}</div>
+            <div class=\"subtitle\">{subtitle}</div>
+        </div>
+        <div class=\"right-container\">
+            <div class=\"corner-icons\">
+                <span></span><span></span><span></span>
             </div>
-            <div class=\"d-flex justify-content-center\">
-                <div class=\"image-placeholder\">
-                    <span>{image_placeholder_text}</span>
-                </div>
+            {paragraphs_html}
+            <div class=\"bottom-icons\">
+                <span></span><span></span><span></span>
             </div>
         </div>
     </div>
 </body>
 </html>"""
-
     return html_code
-
 
 def generate_body_slide4(
     title="Learning Objectives",
+    title_font_size="42px",
+    para_font_size="24px",
     objectives=None,
-    bg_color="#E8F5E9",  # Màu nền chính
+    bg_color="#E8F5E9",
     title_color='#2E7D32',
-    objective_bg_color="#388E3C",  # Màu nền của số thứ tự
-    objective_text_color="#ffffff",  # Màu chữ của số thứ tự
-    content_text_color="#ffffff",  # Màu chữ nội dung
-    box_bg_color="#1B5E20",  # Màu nền của khung bao quanh content
-    box_shadow="0 4px 12px rgba(0, 0, 0, 0.1)",  # Hiệu ứng bóng đổ cho khung
-    box_border_radius="10px",  # Độ bo tròn góc cho khung
-    box_padding="20px",  # Khoảng cách padding trong khung
-    font_family="Roboto, Arial, sans-serif",  # Font chữ
-    image_src="path-to-your-image/ocean-background.png",  # Đường dẫn đến hình nền
-    image_width="100%",  # Chiều rộng hình nền
-    image_height="auto",  # Chiều cao hình nền
-    border_radius="50%"  # Độ bo tròn cho số thứ tự
+    objective_bg_color="#388E3C",
+    objective_text_color="#ffffff",
+    content_text_color="#ffffff",
+    box_bg_color="#1B5E20",
+    box_shadow="0 4px 12px rgba(0, 0, 0, 0.1)",
+    box_border_radius="10px",
+    box_padding="20px",
+    font_family="Roboto, Arial, sans-serif",
+    image_src="path-to-your-image/ocean-background.png",
+    image_width="100%",
+    image_height="auto",
+    border_radius="50%"
 ):
-    """
-    Generate a professional HTML slide body with customizable parameters.
-    :param title: Tiêu đề của slide.
-    :param objectives: Danh sách các mục tiêu học tập (list of strings).
-    :param bg_color: Màu nền chính.
-    :param objective_bg_color: Màu nền của số thứ tự.
-    :param objective_text_color: Màu chữ của số thứ tự.
-    :param content_text_color: Màu chữ nội dung.
-    :param box_bg_color: Màu nền của khung bao quanh content.
-    :param box_shadow: Hiệu ứng bóng đổ cho khung.
-    :param box_border_radius: Độ bo tròn góc cho khung.
-    :param box_padding: Khoảng cách padding trong khung.
-    :param font_family: Font chữ sử dụng.
-    :param image_src: Đường dẫn đến hình nền.
-    :param image_width: Chiều rộng của hình nền.
-    :param image_height: Chiều cao của hình nền.
-    :param border_radius: Độ bo tròn cho số thứ tự.
-    :return: Mã HTML của slide.
-    """
     if objectives is None:
         objectives = [
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "Maecenas euismod magna in sem rutrum luctus. Sed ultringer diam non venenatis dictum.",
+            "Maecenas euismod magna in sem rutrum luctus. Sed ultricies diam non venenatis dictum.",
             "Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.",
             "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
         ]
+    
     objective_html = "".join(
         f"""
         <div class="objective">
@@ -918,13 +675,14 @@ def generate_body_slide4(
         """
         for index, content in enumerate(objectives)
     )
+    
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {{
             margin: 0;
@@ -945,28 +703,31 @@ def generate_body_slide4(
             flex-direction: column;
             align-items: center;
             text-align: center;
+            width: 100%;
+            max-width: 1200px;
+            padding: 20px;
         }}
         .title {{
-            font-size: 2.5rem;
+            font-size: {title_font_size};
             margin-bottom: 40px;
             color: {title_color};
         }}
         .objectives-container {{
-            display: flex;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
             gap: 20px;
-            flex-wrap: wrap;
-            justify-content: center;
+            width: 100%;
         }}
         .objective {{
-            flex: 1 1 calc(50% - 40px);
-            min-width: 300px;
-            padding: 20px;
-            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            height: 100%;
         }}
         .number {{
             background-color: {objective_bg_color};
             color: {objective_text_color};
-            font-size: 2rem;
+            font-size: 28px;
             width: 50px;
             height: 50px;
             display: flex;
@@ -981,11 +742,23 @@ def generate_body_slide4(
             padding: {box_padding};
             border-radius: {box_border_radius};
             box-shadow: {box_shadow};
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            box-sizing: border-box;
         }}
         .box p {{
-            font-size: 1.2rem;
+            font-size: {para_font_size};
             line-height: 1.6;
             margin: 0;
+            text-align: center;
+        }}
+        @media (max-width: 768px) {{
+            .objectives-container {{
+                grid-template-columns: 1fr;
+            }}
         }}
     </style>
 </head>
@@ -1003,10 +776,13 @@ def generate_body_slide4(
 
 def generate_body_slide5(
     title="Title",
+    title_font_size="42px",
     subtitle1 = "Subtitle1",
     subtitle2 = "Subtitle2",
+    subtile_font_size="24px",
     content_1="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.",
     content_2="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.",
+    content_font_size="20px",
     bg_color="#0277BD",  # Màu nền chính
     title_color="#FFFFFF",  # Màu chữ tiêu đề
     content_color="#E1F5FE",  # Màu chữ nội dung
@@ -1062,20 +838,20 @@ def generate_body_slide5(
             box-sizing: border-box;
         }}
         .title {{
-            font-size: 2.5rem;
+            font-size: {title_font_size};
             color: {title_color};
             margin-bottom: 20px;
         }}
         .number {{
             background-color: {number_bg_color};
             color: {number_text_color};
-            font-size: 1.2rem;
+            font-size: {subtile_font_size};
             padding: 10px 20px;
             border-radius: {border_radius};
             margin-bottom: 10px;
         }}
         .content {{
-            font-size: 1.2rem;
+            font-size: {content_font_size};
             line-height: 1.6;
             margin-bottom: 20px;
         }}
@@ -1137,37 +913,57 @@ def generate_body_slide5(
 </html>"""
     return html_code
 
-
 def generate_body_slide6(
-    title="Title",
-    feature_1_title="Feature 01",
-    feature_1_content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas euismod magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque.",
-    feature_2_title="Feature 02",
-    feature_2_content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas euismod magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque.",
-    feature_3_title="Feature 03",
-    feature_3_content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas euismod magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque.",
-    feature_4_title="Feature 04",
-    feature_4_content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Maecenas euismod magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque.",
-    bg_color="#6D4C41",  # Màu nền chính
-    title_color="#FFFFFF",  # Màu chữ tiêu đề
-    content_color="#D7CCC8",  # Màu chữ nội dung
-    number_bg_color="#BCAAA4",  # Màu nền số thứ tự
-    number_text_color="#FFFFFF",  # Màu chữ số thứ tự
-    font_family="Roboto, Arial, sans-serif"  # Font chữ
+    title="TITLE",
+    sections=None,
+    title_font_size="42px",
+    section_title_font_size="24px",
+    section_content_font_size="20px",
+    title_color="#1a1a1a",
+    title_font_family="Roboto, Arial, sans-serif",
+    subtitle_bg_color="#1a1a1a",
+    subtitle_text_color="#ffffff",
+    box_border_color="#1a1a1a",
+    box_border_radius="12px",
+    box_padding="20px",
+    box_shadow="0 4px 12px rgba(0, 0, 0, 0.15)",
+    font_family="Roboto, Arial, sans-serif",
+    bullet_color="#333",
 ):
-    """
-    Generate a professional HTML slide body with customizable parameters.
-    :param title: Tiêu đề chính của slide.
-    :param feature_1_title, feature_2_title, feature_3_title, feature_4_title: Tiêu đề của các mục tiêu.
-    :param feature_1_content, feature_2_content, feature_3_content, feature_4_content: Nội dung của các mục tiêu.
-    :param bg_color: Màu nền chính.
-    :param title_color: Màu chữ của tiêu đề.
-    :param content_color: Màu chữ của nội dung.
-    :param number_bg_color: Màu nền số thứ tự.
-    :param number_text_color: Màu chữ số thứ tự.
-    :param font_family: Font chữ sử dụng.
-    :return: Mã HTML của slide.
-    """
+    if sections is None:
+        sections = {
+            "SubTitle1": [
+                "Content1",
+                "Content2",
+                "Content3",
+                "Content4",
+            ],
+            "SubTitle2": [
+                "Content5",
+                "Content6",
+                "Content7",
+            ],
+            "SubTitle3": [
+                "Content8",
+                "Content9",
+                "Content10",
+            ],
+        }
+
+    sections_html = "".join(
+        f"""
+        <div class="section">
+            <div class="section-title">{section}</div>
+            <div class="section-content">
+                <ul>
+                    {''.join(f'<li>{point}</li>' for point in points)}
+                </ul>
+            </div>
+        </div>
+        """
+        for section, points in sections.items()
+    )
+
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1176,78 +972,307 @@ def generate_body_slide6(
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
     <style>
-        body, html {{
+        body {{
+            font-family: {font_family};
             margin: 0;
             padding: 0;
-            height: 100%;
-            font-family: {font_family};
-            background-color: {bg_color};
-            color: {content_color};
-        }}
-        .container {{
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: center;
-            height: 100vh;
+            background-color: #f8f9fa;
         }}
         .title {{
-            font-size: 2.5rem;
+            font-size: {title_font_size};
+            font-family: {title_font_family};
+            font-weight: bold;
             color: {title_color};
-            text-transform: uppercase;
-            margin-bottom: 40px;
+            text-align: center;
+            margin-top: 40px;
         }}
-        .features-container {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            width: 80%;
-            max-width: 1200px;
+        .divider {{
+            width: 60%;
+            height: 3px;
+            background-color: {title_color};
+            margin: 10px auto 20px;
+            position: relative;
         }}
-        .feature {{
+        .dots {{
             display: flex;
-            flex-direction: column;
-            align-items: flex-start;
-            text-align: left;
+            justify-content: flex-end;
+            gap: 8px;
+            position: absolute;
+            right: 0;
+            top: -6px;
         }}
-        .feature-title {{
-            background-color: {number_bg_color};
-            color: {number_text_color};
-            font-size: 1.2rem;
-            padding: 10px 20px;
-            border-radius: 10px;
-            margin-bottom: 10px;
+        .dot {{
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
         }}
-        .feature-content {{
-            font-size: 1.2rem;
+        .dot:nth-child(1) {{ background-color: #ff6b6b; }}
+        .dot:nth-child(2) {{ background-color: #ffa502; }}
+        .dot:nth-child(3) {{ background-color: #1e90ff; }}
+        .sections-container {{
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            flex-wrap: wrap;
+            margin-top: 20px;
+        }}
+        .section {{
+            width: 300px;
+            border: 2px solid {box_border_color};
+            border-radius: {box_border_radius};
+            box-shadow: {box_shadow};
+            overflow: hidden;
+            background: white;
+        }}
+        .section-title {{
+            background-color: {subtitle_bg_color};
+            color: {subtitle_text_color};
+            font-size: {section_title_font_size};
+            font-weight: bold;
+            padding: 12px;
+            text-align: center;
+            border-top-left-radius: {box_border_radius};
+            border-top-right-radius: {box_border_radius};
+        }}
+        .section-content {{
+            padding: {box_padding};
+        }}
+        .section-content ul {{
+            padding-left: 20px;
+            margin: 0;
+        }}
+        .section-content li {{
+            font-size: {section_content_font_size};
             line-height: 1.6;
+            color: {bullet_color};
+            list-style-type: disc;
         }}
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="title">{title}</div>
+    <div class="divider">
+        <div class="dots">
+            <div class="dot"></div>
+            <div class="dot"></div>
+            <div class="dot"></div>
+        </div>
+    </div>
+    <div class="sections-container">
+        {sections_html}
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_body_slide7(
+    title="Title",
+    content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante. Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique, nulla risus mattis eros, id accumsan massa elit eu augue. Mauris massa ipsum, pharetra id nibh eget, sodales facilisis enim.",
+    title_font_size="42px",
+    content_font_size="24px",
+    bg_color="#FFFBEB",
+    title_color="#000000",
+    content_color="#333333",
+    corner_decoration_color="#FDE68A",
+    font_family="Roboto, Arial, sans-serif"
+):
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
+    <style>
+        html, body {{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }}
+        body {{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: {bg_color};
+            font-family: {font_family};
+        }}
+        .slide-container {{
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 10%;
+            box-sizing: border-box;
+            background-color: white;
+        }}
+        .corner-decoration {{
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background-color: {corner_decoration_color};
+            opacity: 0.3;
+            z-index: 1;
+        }}
+        .top-left {{
+            top: 0;
+            left: 0;
+            border-radius: 0 0 100% 0;
+        }}
+        .bottom-right {{
+            bottom: 0;
+            right: 0;
+            border-radius: 100% 0 0 0;
+        }}
+        .title {{
+            font-size: {title_font_size};
+            text-align: center;
+            color: {title_color};
+            margin-bottom: 30px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            z-index: 2;
+            position: relative;
+            top: -50px;
+        }}
+        .content {{
+            font-size: {content_font_size};
+            color: {content_color};
+            line-height: 1.8;
+            max-width: 1000px;
+            padding: 0 30px;
+            z-index: 2;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="corner-decoration top-left"></div>
+        <div class="corner-decoration bottom-right"></div>
         <h1 class="title">{title}</h1>
-        <div class="features-container">
-            <!-- Feature 01 -->
-            <div class="feature">
-                <div class="feature-title">{feature_1_title}</div>
-                <p class="feature-content">{feature_1_content}</p>
-            </div>
-            <!-- Feature 02 -->
-            <div class="feature">
-                <div class="feature-title">{feature_2_title}</div>
-                <p class="feature-content">{feature_2_content}</p>
-            </div>
-            <!-- Feature 03 -->
-            <div class="feature">
-                <div class="feature-title">{feature_3_title}</div>
-                <p class="feature-content">{feature_3_content}</p>
-            </div>
-            <!-- Feature 04 -->
-            <div class="feature">
-                <div class="feature-title">{feature_4_title}</div>
-                <p class="feature-content">{feature_4_content}</p>
-            </div>
+        <p class="content">{content}</p>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+
+def generate_body_slide8(
+    title="DISCUSSION",
+    points=[
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante.",
+        "Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique."
+    ],
+    title_font_size="42px",
+    content_font_size="24px",
+    bg_color="#FFFBEB",
+    title_color="#000000",
+    content_color="#333333",
+    corner_decoration_color="#FDE68A",
+    font_family="Roboto, Arial, sans-serif"
+):
+    # Xử lý danh sách các điểm
+    points_html = "".join(f"<li>{point}</li>" for point in points)
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
+    <style>
+        html, body {{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }}
+        body {{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: {bg_color};
+            font-family: {font_family};
+        }}
+        .slide-container {{
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 10%;
+            box-sizing: border-box;
+            background-color: white;
+        }}
+        .corner-decoration {{
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background-color: {corner_decoration_color};
+            opacity: 0.3;
+            z-index: 1;
+        }}
+        .top-left {{
+            top: 0;
+            left: 0;
+            border-radius: 0 0 100% 0;
+        }}
+        .bottom-right {{
+            bottom: 0;
+            right: 0;
+            border-radius: 100% 0 0 0;
+        }}
+        .title {{
+            font-size: {title_font_size};
+            text-align: center;
+            color: {title_color};
+            margin-bottom: 30px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            z-index: 2;
+            position: relative;
+            top: -50px;
+        }}
+        .content {{
+            font-size: {content_font_size};
+            color: {content_color};
+            line-height: 1.8;
+            max-width: 1000px;
+            padding: 0 30px;
+            z-index: 2;
+        }}
+        /* List styling */
+        ul {{
+            list-style-type: disc;
+            padding-left: 40px;
+            margin: 0;
+        }}
+        li {{
+            margin-bottom: 10px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="corner-decoration top-left"></div>
+        <div class="corner-decoration bottom-right"></div>
+        <h1 class="title">{title}</h1>
+        <div class="content">
+            <ul>
+                {points_html}
+            </ul>
         </div>
     </div>
 </body>
@@ -1570,10 +1595,6 @@ def generate_end_slide(
 def get_function_by_name(name):
     if name == "generate_intro_slide":
         return generate_intro_slide
-    elif name == "generate_split_content_slide1":
-        return generate_split_layout_slide1
-    elif name == "generate_split_content_slide2":
-        return generate_split_layout_slide2
     elif name == "generate_body_slide1":
         return generate_body_slide1
     elif name == "generate_body_slide2":
@@ -1584,8 +1605,6 @@ def get_function_by_name(name):
         return generate_body_slide4
     elif name == "generate_body_slide5":
         return generate_body_slide5
-    elif name == "generate_body_slide6":
-        return generate_body_slide6
     elif name == "generate_conclusion_slide":
         return generate_conclusion_slide
     elif name == "generate_end_slide":
@@ -1593,725 +1612,368 @@ def get_function_by_name(name):
     else:
         raise ValueError(f"Function with name '{name}' not found.")
 
-
-
 TOOLS = [
-    {
-  "function": {
-    "name": "generate_conclusion_slide",
-    "description": "Generates a customizable HTML slide with a 'Conclusion' layout featuring dots and lines as decorations.",
-    "parameters": {
-      "title": {
-        "type": "string",
-        "default": "Conclusion",
-        "description": "Slide title text."
-      },
-      "title_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the title."
-      },
-      "title_font_size": {
-        "type": "string",
-        "default": "32px",
-        "description": "Font size of the title."
-      },
-      "title_font_style": {
-        "type": "string",
-        "default": "italic",
-        "description": "Font style of the title (e.g., 'italic')."
-      },
-      "title_margin_bottom": {
-        "type": "string",
-        "default": "5px",
-        "description": "Bottom margin for the title."
-      },
-      "title_margin_left": {
-        "type": "string",
-        "default": "40px",
-        "description": "Left margin for the title."
-      },
-      "content_text": {
-        "type": "string",
-        "default": "Content",
-        "description": "Main content text of the slide."
-      },
-      "content_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the content text."
-      },
-      "content_font_size": {
-        "type": "string",
-        "default": "16px",
-        "description": "Font size of the content text."
-      },
-      "content_line_height": {
-        "type": "string",
-        "default": "1.6",
-        "description": "Line height for the content text."
-      },
-      "content_width": {
-        "type": "string",
-        "default": "70%",
-        "description": "Width of the content container."
-      },
-      "content_margin": {
-        "type": "string",
-        "default": "0 auto",
-        "description": "Margin around the content."
-      },
-      "content_text_align": {
-        "type": "string",
-        "default": "center",
-        "description": "Text alignment for the content."
-      },
-      "dot_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the decorative dots."
-      },
-      "dot_size": {
-        "type": "string",
-        "default": "10px",
-        "description": "Size of the decorative dots."
-      },
-      "dot_margin": {
-        "type": "string",
-        "default": "0 5px",
-        "description": "Margin between dots."
-      },
-      "dot_count": {
-        "type": "integer",
-        "default": 5,
-        "description": "Number of dots in each row."
-      },
-      "line_color": {
-        "type": "string",
-        "default": "#1a3d5c",
-        "description": "Color of the horizontal lines."
-      },
-      "line_width": {
-        "type": "string",
-        "default": "50%",
-        "description": "Width of the horizontal lines."
-      },
-      "line_height": {
-        "type": "string",
-        "default": "2px",
-        "description": "Height/thickness of the horizontal lines."
-      },
-      "line_margin": {
-        "type": "string",
-        "default": "30px auto",
-        "description": "Margin around the horizontal lines."
-      },
-      "slide_bg_color": {
-        "type": "string",
-        "default": "#f5f5f5",
-        "description": "Background color of the slide."
-      },
-      "font_family": {
-        "type": "string",
-        "default": "Roboto, Arial, sans-serif",
-        "description": "Font family for all text elements."
-      },
-      "additional_css": {
-        "type": "string",
-        "default": "",
-        "description": "Additional CSS styles for customization."
-      }
-    }
-  }
-},
-    {
-        "type": "function",
-        "function": {
-            "name": "generate_split_layout_slide1",
-            "description": "Generate a split layout HTML slide with customizable parameters for left and right sections, including background colors, text, image placeholders, and a bottom section with a title and description.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "left_bg_color": {
-                        "type": "string",
-                        "description": "Background color of the left section. Defaults to '#DFE9FF'.",
-                        "default": "#DFE9FF"
-                    },
-                    "left_title": {
-                        "type": "string",
-                        "description": "Tile displayed in the left section. Defaults to 'Title'.",
-                        "default": "Title"
-                    },
-                    "left_title_color": {
-                        "type": "string",
-                        "description": "Text color of the left section. Defaults to '#1F3685'.",
-                        "default": "#1F3685"
-                    },
-                    "left_subtitle": {
-                        "type": "string",
-                        "description": "Subtitle text in the left section. Defaults to 'Subtitle'.",
-                        "default": "Subtitle"
-
-                    },
-                    "left_subtitle_color": {
-                        "type": "string",
-                        "description": "Text color of the subtitle in the left section. Defaults to '#2B4CC0'.",
-                        "default": "#2B4CC0"
-                    },
-                    "right_bg_color": {
-                        "type": "string",
-                        "description": "Background color of the right section. Defaults to '#DFE9FF'.",
-                        "default": "#DFE9FF"
-                    },
-                    "right_image_src": {
-                        "type": "string",
-                        "description": "Link to image of the right section. Defaults to 'path-to-your-image/image.png'.",
-                        "default": "path-to-your-image/image.png"
-                    },
-                    "right_image_alt": {
-                        "type": "string",
-                        "description": "Text displayed in the image placeholder. Defaults to 'Image'.",
-                        "default": "Image"
-                    },
-                    "decor_bg_color":{
-                        "type": "string",
-                        "description": "Background color of the decorative container.Default to '#A6B4E5'.",
-                        "default": "#A6B4E5"
-                    },
-                    "font_family": {
-                        "type": "string",
-                        "description": "Font family for the slide content. Defaults to 'Roboto, Arial, sans-serif'.",
-                        "default": "Roboto, Arial, sans-serif"
-                    }
-                },
-                "required": []
-            }
-        }
-    },
     {
   "type": "function",
   "function": {
-    "name": "generate_split_layout_slide2",
-    "description": "Generate a simplified split layout HTML slide without left section and image placeholders. This function creates a presentation slide with a right section containing a title and description, separated by a divider. The design is minimalist and focused on text content.",
+    "name": "generate_intro_slide",
+    "description": "Generates a customizable HTML slide with an introduction layout featuring dots and lines as decorations.",
     "parameters": {
-      "type": "object",
-      "properties": {
-        "title": {
-          "type": "string",
-          "description": "The title of the HTML document. Defaults to 'Title'.",
-          "default": "Title"
-        },
-        "right_bg_color": {
-          "type": "string",
-          "description": "Background color of the right section. Defaults to '#DFE9FF'.",
-          "default": "#DFE9FF"
-        },
-        "bottom_right_title": {
-          "type": "string",
-          "description": "Title displayed in the bottom right section. Defaults to 'Section Title'.",
-          "default": "Section Title"
-        },
-        "bottom_right_title_color": {
-          "type": "string",
-          "description": "Color of the bottom right title. Defaults to '#1F3685'.",
-          "default": "#1F3685"
-        },
-        "bottom_right_description": {
-          "type": "string",
-          "description": "Description text in the bottom right section. Defaults to 'This section provides detailed insights and explanations.'.",
-          "default": "This section provides detailed insights and explanations."
-        },
-        "bottom_right_description_color": {
-          "type": "string",
-          "description": "Color of the bottom right description text. Defaults to '#333'.",
-          "default": "#333"
-        },
-        "divider_color": {
-          "type": "string",
-          "description": "Color of the divider in the bottom right section. Defaults to '#000'.",
-          "default": "#000"
-        },
-        "font_family": {
-          "type": "string",
-          "description": "Font family for the slide content. Defaults to 'Roboto, Arial, sans-serif'.",
-          "default": "Roboto, Arial, sans-serif"
-        }
-      },
-      "required": []
+      "title": {"type": "string", "default": "Introduction", "description": "Slide title text"},
+      "title_color": {"type": "string", "default": "#0F4662", "description": "Color of the title"},
+      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title"},
+      "title_font_style": {"type": "string", "default": "italic", "description": "Font style for the title (e.g., 'italic')"},
+      "title_margin_bottom": {"type": "string", "default": "5px", "description": "Bottom margin for the title"},
+      "title_margin_left": {"type": "string", "default": "40px", "description": "Left margin for the title"},
+      "content_text": {"type": "string", "default": "Content", "description": "Main content text"},
+      "content_color": {"type": "string", "default": "#0F4662", "description": "Color of content text"},
+      "content_font_size": {"type": "string", "default": "24px", "description": "Font size of content"},
+      "content_line_height": {"type": "string", "default": "1.6", "description": "Line height for content"},
+      "content_width": {"type": "string", "default": "70%", "description": "Width of content container"},
+      "content_margin": {"type": "string", "default": "0 auto", "description": "Margin around content"},
+      "content_text_align": {"type": "string", "default": "center", "description": "Text alignment for content"},
+      "dot_color": {"type": "string", "default": "#0F4662", "description": "Color of decorative dots"},
+      "dot_size": {"type": "string", "default": "10px", "description": "Size of decorative dots"},
+      "dot_margin": {"type": "string", "default": "0 5px", "description": "Margin between dots"},
+      "dot_count": {"type": "integer", "default": 5, "description": "Number of dots in each row"},
+      "line_color": {"type": "string", "default": "#1a3d5c", "description": "Color of horizontal lines"},
+      "line_width": {"type": "string", "default": "50%", "description": "Width of horizontal lines"},
+      "line_height": {"type": "string", "default": "2px", "description": "Height/thickness of horizontal lines"},
+      "line_margin": {"type": "string", "default": "30px auto", "description": "Margin around horizontal lines"},
+      "slide_bg_color": {"type": "string", "default": "#f5f5f5", "description": "Background color of the slide"},
+      "font_family": {"type": "string", "default": "Robotto, Arial, sans-serif", "description": "Font family for all text"},
+      "additional css": {"type": "string", "default": "", "description": "Additional CSS styles"}
+    }
+  }
+},
+
+{
+  "type": "function",
+  "function": {
+    "name": "generate_body_slide1",
+    "description": "Generate a professional HTML slide body with customizable content and styling. Use this function when you need to create a slide with a title, a main paragraph, a list of bullet points, and an image placeholder. The slide is designed for professional presentations and supports customization of colors, fonts, and content.",
+    "parameters": {
+      "title": {"type": "string", "default": "Professional HTML Slide Body", "description": "The title of the HTML document."},
+      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the slide title."},
+      "slide_title": {"type": "string", "default": "Slide Title", "description": "The title displayed on the slide."},
+      "bg_color": {"type": "string", "default": "#E8F5E9", "description": "Background color of the page."},
+      "text_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color of the text container."},
+      "text_color": {"type": "string", "default": "#2E7D32", "description": "Text color of the slide content."},
+      "keyword_color": {"type": "string", "default": "#1B5E20", "description": "Color for keywords in the slide content."},
+      "image_bg_color": {"type": "string", "default": "#C8E6C9", "description": "Background color of the image placeholder."},
+      "image_placeholder_text": {"type": "string", "default": "Image Placeholder", "description": "Text displayed in the image placeholder."},
+      "font_family": {"type": "string", "default": "Robotto, Arial, sans-serif", "description": "Font family for the slide content."},
+      "content_paragraph": {"type": "string", "default": "This is a customizable slide. Add your content here:", "description": "Main paragraph content of the slide."},
+      "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text."},
+      "list_items": {"type": "list of strings", "description": "A list of bullet points to include in the slide. If not provided, defaults to a list about networking benefits."}
     }
   }
 },
 {
-        "type": "function",
-        "function": {
-            "name": "generate_body_slide1",
-            "description": "Generate a professional HTML slide body with customizable content and styling. Use this function when you need to create a slide with a title, a main paragraph, a list of bullet points, and an image placeholder. The slide is designed for professional presentations and supports customization of colors, fonts, and content.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "description": "The title of the HTML document. Defaults to 'Professional HTML Slide Body'.",
-                        "default": "Professional HTML Slide Body"
-                    },
-                    "slide_title": {
-                        "type": "string",
-                        "description": "The title displayed on the slide. Defaults to '2. Importance of Networking:'.",
-                        "default": "2. Importance of Networking:"
-                    },
-                    "bg_color": {
-                        "type": "string",
-                        "description": "Background color of the page. Defaults to '#e9f7fe'.",
-                        "default": "#e9f7fe"
-                    },
-                    "text_bg_color": {
-                        "type": "string",
-                        "description": "Background color of the text container. Defaults to '#ffffff'.",
-                        "default": "#ffffff"
-                    },
-                    "text_color": {
-                        "type": "string",
-                        "description": "Text color of the slide content. Defaults to '#2e4e7e'.",
-                        "default": "#2e4e7e"
-                    },
-                    "keyword_color": {
-                        "type": "string",
-                        "description": "Color for keywords in the slide content. Defaults to '#004080'.",
-                        "default": "#004080"
-                    },
-                    "image_bg_color": {
-                        "type": "string",
-                        "description": "Background color of the image placeholder. Defaults to '#b0d4f1'.",
-                        "default": "#b0d4f1"
-                    },
-                    "image_placeholder_text": {
-                        "type": "string",
-                        "description": "Text displayed in the image placeholder. Defaults to 'Image Placeholder'.",
-                        "default": "Image Placeholder"
-                    },
-                    "font_family": {
-                        "type": "string",
-                        "description": "Font family for the slide content. Defaults to 'Arial, sans-serif'.",
-                        "default": "Roboto, Arial, sans-serif"
-                    },
-                    "content_paragraph": {
-                        "type": "string",
-                        "description": "Main paragraph content of the slide. Defaults to a paragraph about the importance of networking.",
-                        "default": "Networking is crucial for <span class=\"keyword\">personal development</span>. It fosters:"
-                    },
-                    "list_items": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "A list of bullet points to include in the slide. Each item should be a string. If not provided, defaults to a list about networking benefits.",
-                        "default": [
-                            "<span class=\"keyword\">Point 1</span>: Description of point 1.",
-                            "<span class=\"keyword\">Point 2</span>: Description of point 2.",
-                            "<span class=\"keyword\">Point 3</span>: Description of point 3.",
-                            "<span class=\"keyword\">Point 4</span>: Description of point 4."
-                        ]
-                    }
-                },
-                "required": []
-            }
-        }
-    },
+  "type": "function",
+  "function": {
+    "name": "generate_body_slide2",
+    "description": "Generate a professional HTML slide body with customizable layout, colors, and content. Use this function when you need to create a visually appealing slide with a header, a content paragraph, and an image placeholder. The function supports customization of background colors, text colors, fonts, and content, making it ideal for creating presentation slides.",
+    "parameters": {
+      "title": {"type": "string", "default": "Slide Header", "description": "The title of the HTML document."},
+      "header_text": {"type": "string", "default": "Key Insights", "description": "The main header of the slide."},
+      "header_font_size": {"type": "string", "default": "42px", "description": "Font size of the header text."},
+      "background_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the entire slide."},
+      "text_color": {"type": "string", "default": "#004D40", "description": "The default text color for the slide."},
+      "content_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color for the content box."},
+      "content_shadow": {"type": "string", "default": "0 6px 12px rgba(0, 0, 0, 0.1)", "description": "Box shadow for the content container."},
+      "header_color": {"type": "string", "default": "#00251A", "description": "Color of the header text."},
+      "text_body_color": {"type": "string", "default": "#00695C", "description": "Color of the body text."},
+      "highlight_color": {"type": "string", "default": "#FF4500", "description": "Color for highlighted text (e.g., bold text)."},
+      "image_placeholder_text": {"type": "string", "default": "[Image Placeholder]", "description": "Placeholder text for the main image area."},
+      "image_bg_color": {"type": "string", "default": "#B2DFDB", "description": "Background color of the image placeholder."},
+      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family to use for all text."},
+      "paragraph_text": {"type": "string", "default": "This is a customizable slide content area. You can add any relevant information here", "description": "The content paragraph."},
+      "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text."}
+    }
+  }
+},
+   {
+  "type": "function",
+  "function": {
+    "name": "generate_body_slide3",
+    "description": "Generate a professional HTML slide body with a split layout, including a title, subtitle, and multiple content paragraphs. Use this function to create a visually appealing slide with detailed information, featuring a left section for the title and subtitle, and a right section for paragraphs, enhanced with decorative icons.",
+    "parameters": {
+      "title": {"type": "string", "default": "title", "description": "The main title of the slide."},
+      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title (corrected from tile_font_size)."},
+      "subtitle": {"type": "string", "default": "subtitle", "description": "The subtitle of the slide."},
+      "subtitle_font_size": {"type": "string", "default": "32px", "description": "Font size of the subtitle."},
+      "content_paragraphs": {
+        "type": "list of strings",
+        "default": [
+          "Paragraph 1 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
+          "Paragraph 2 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
+        ],
+        "description": "A list of paragraphs to display in the right section."
+      },
+      "left_bg_color": {"type": "string", "default": "#F3F6FA", "description": "Background color of the left section."},
+      "right_bg_color": {"type": "string", "default": "#0B1320", "description": "Background color of the right section."},
+      "text_color": {"type": "string", "default": "#FFFFFF", "description": "Text color of the content paragraphs."},
+      "title_color": {"type": "string", "default": "#000000", "description": "Color of the title."},
+      "subtitle_color": {"type": "string", "default": "#333333", "description": "Color of the subtitle."},
+      "icon_color": {"type": "string", "default": "#FF9800", "description": "Color of the bottom decorative icons."},
+      "corner_icon_color": {"type": "string", "default": "#3D5AFE", "description": "Color of the corner decorative icons."},
+      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the slide content."}
+    }
+  }
+},
     {
-        "type": "function",
-        "function": {
-            "name": "generate_body_slide2",
-            "description": "Generate a professional HTML slide body with customizable layout, colors, and content. Use this function when you need to create a visually appealing slide with a header, a content paragraph, and an image placeholder. The function supports customization of background colors, text colors, fonts, and content, making it ideal for creating presentation slides.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "description": "The title of the HTML document. Defaults to 'Power of Goal Setting'.",
-                        "default": "Power of Goal Setting"
-                    },
-                    "header_text": {
-                        "type": "string",
-                        "description": "The main header text displayed on the slide. Defaults to 'The Power of Goal Setting'.",
-                        "default": "The Power of Goal Setting"
-                    },
-                    "background_color": {
-                        "type": "string",
-                        "description": "The background color of the entire slide. Defaults to '#faf0e6'.",
-                        "default": "#faf0e6"
-                    },
-                    "text_color": {
-                        "type": "string",
-                        "description": "The default text color for the slide. Defaults to '#333'.",
-                        "default": "#333"
-                    },
-                    "content_bg_color": {
-                        "type": "string",
-                        "description": "The background color of the content box. Defaults to '#ffffff'.",
-                        "default": "#ffffff"
-                    },
-                    "content_shadow": {
-                        "type": "string",
-                        "description": "The box shadow for the content container. Defaults to '0 4px 8px rgba(0, 0, 0, 0.1)'.",
-                        "default": "0 4px 8px rgba(0, 0, 0, 0.1)"
-                    },
-                    "header_color": {
-                        "type": "string",
-                        "description": "The color of the header text. Defaults to '#3B5998'.",
-                        "default": "#3B5998"
-                    },
-                    "text_body_color": {
-                        "type": "string",
-                        "description": "The color of the body text. Defaults to '#2f4f4f'.",
-                        "default": "#2f4f4f"
-                    },
-                    "highlight_color": {
-                        "type": "string",
-                        "description": "The color for highlighted text (e.g., bold text). Defaults to '#ff4500'.",
-                        "default": "#ff4500"
-                    },
-                    "image_placeholder_text": {
-                        "type": "string",
-                        "description": "The placeholder text for the image area. Defaults to '[Image Placeholder - Proportioned for future use]'.",
-                        "default": "[Image Placeholder - Proportioned for future use]"
-                    },
-                    "image_bg_color": {
-                        "type": "string",
-                        "description": "The background color of the image placeholder. Defaults to '#e1e5ea'.",
-                        "default": "#e1e5ea"
-                    },
-                    "font_family": {
-                        "type": "string",
-                        "description": "The font family for all text in the slide. Defaults to 'Arial, sans-serif'.",
-                        "default": "Roboto, Arial, sans-serif"
-                    },
-                    "paragraph_text": {
-                        "type": "string",
-                        "description": "The main content paragraph for the slide. Defaults to a placeholder paragraph about goal setting.",
-                        "default": "<strong>Goal setting</strong> is a crucial aspect of personal development that empowers individuals to define clear objectives, map out strategies, and cultivate a path toward growth. It provides direction, motivation, and accountability, helping people focus their efforts, overcome challenges, and achieve their aspirations."
-                    }
-                },
-                "required": []
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "generate_body_slide3",
-            "description": "Generate a professional HTML slide body with a gradient background, a centered content box, and a single image placeholder. Use this function when you need to create a visually appealing slide with a header, a content paragraph, and one image placeholder. The function supports customization of background gradients, text colors, fonts, and content, making it ideal for creating modern presentation slides.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "type": "string",
-                        "description": "The title of the HTML document. Defaults to 'The Future of Creative Industries: Digital Transformation and Immersive Experiences'.",
-                        "default": "The Future of Creative Industries: Digital Transformation and Immersive Experiences"
-                    },
-                    "header_text": {
-                        "type": "string",
-                        "description": "The main header text displayed on the slide. Defaults to 'The Future of Creative Industries: Digital Transformation and Immersive Experiences'.",
-                        "default": "The Future of Creative Industries: Digital Transformation and Immersive Experiences"
-                    },
-                    "background_gradient": {
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        },
-                        "description": "Gradient colors for the background, provided as an array of two color codes. Defaults to ['#4facfe', '#00c6ff'].",
-                        "default": ["#4facfe", "#00c6ff"]
-                    },
-                    "content_bg_opacity": {
-                        "type": "number",
-                        "description": "Opacity for the content box background. Defaults to 0.8.",
-                        "default": 0.8
-                    },
-                    "content_shadow": {
-                        "type": "string",
-                        "description": "Box shadow for the content container. Defaults to '0 4px 8px rgba(0, 0, 0, 0.1)'.",
-                        "default": "0 4px 8px rgba(0, 0, 0, 0.1)"
-                    },
-                    "header_color": {
-                        "type": "string",
-                        "description": "Color of the header text. Defaults to '#333333'.",
-                        "default": "#333333"
-                    },
-                    "text_body_color": {
-                        "type": "string",
-                        "description": "Color of the body text. Defaults to '#333333'.",
-                        "default": "#333333"
-                    },
-                    "highlight_color": {
-                        "type": "string",
-                        "description": "Color for highlighted text (e.g., bold text). Defaults to '#ff4500'.",
-                        "default": "#ff4500"
-                    },
-                    "image_placeholder_text": {
-                        "type": "string",
-                        "description": "Placeholder text for the image area. Defaults to 'Image Placeholder'.",
-                        "default": "Image Placeholder"
-                    },
-                    "image_bg_color": {
-                        "type": "string",
-                        "description": "Background color of the image placeholder. Defaults to '#cccccc'.",
-                        "default": "#cccccc"
-                    },
-                    "font_family": {
-                        "type": "string",
-                        "description": "The font family for all text in the slide. Defaults to 'Arial, sans-serif'.",
-                        "default": "Roboto, Arial, sans-serif"
-                    },
-                    "paragraph_text": {
-                        "type": "string",
-                        "description": "The main content paragraph for the slide. Defaults to a placeholder paragraph about digital transformation and immersive experiences.",
-                        "default": "The future of the <span class=\"bold\">creative industries</span> lies at the intersection of digital technology and immersive experiences. <span class=\"bold\">Virtual reality</span>, <span class=\"bold\">augmented reality</span>, and <span class=\"bold\">artificial intelligence</span> are revolutionizing how we create, consume, and interact with art, entertainment, and design. From immersive exhibitions to <span class=\"bold\">AI-powered storytelling</span>, these technologies are pushing the boundaries of imagination and engagement, opening up new possibilities for creativity and innovation."
-                    }
-                },
-                "required": []
-            }
-        }
-    },
-    {
+  "type": "function",
   "function": {
     "name": "generate_body_slide4",
     "description": "Generate a professional HTML slide body with a structured content box and numbered items. Use this function when you need to present key points, objectives, or topics in an organized and visually appealing format. The function supports customization of background colors, text colors, fonts, shadows, and more, making it suitable for various presentation needs.",
     "parameters": {
-      "title": {
-        "type": "string",
-        "default": "Slide Title",
-        "description": "The main title of the slide. Can be used for objectives, key points, or any content heading."
-      },
+      "title": {"type": "string", "default": "Learning Objectives", "description": "The main title of the slide."},
+      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title."},
+      "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text."},
       "objectives": {
         "type": "list of strings",
-        "default": ["Objective1", "Objective2", "Objective3"],
-        "description": "A list of key points or objectives to be displayed."
+        "description": "A list of objectives or key points to be displayed. If not provided, defaults to a list of 4 sample objectives."
       },
-      "bg_color": {
-        "type": "string",
-        "default": "#e0f7fa",
-        "description": "The background color of the slide."
-      },
-      "title_color": {
-        "type": "string",
-        "default": "#003f72",
-        "description": "The color of the slide title."
-      },
-      "objective_bg_color": {
-        "type": "string",
-        "default": "#00c6ff",
-        "description": "The background color for the numbered items."
-      },
-      "objective_text_color": {
-        "type": "string",
-        "default": "#ffffff",
-        "description": "The text color of the numbered items."
-      },
-      "content_text_color": {
-        "type": "string",
-        "default": "#ffffff",
-        "description": "The text color of the content inside the box."
-      },
-      "box_bg_color": {
-        "type": "string",
-        "default": "#003f72",
-        "description": "The background color of the content box."
-      },
-      "box_shadow": {
-        "type": "string",
-        "default": "0 4px 12px rgba(0, 0, 0, 0.1)",
-        "description": "The box shadow effect for the content box."
-      },
-      "box_border_radius": {
-        "type": "string",
-        "default": "10px",
-        "description": "The border radius for the content box."
-      },
-      "box_padding": {
-        "type": "string",
-        "default": "20px",
-        "description": "The padding inside the content box."
-      },
-      "font_family": {
-        "type": "string",
-        "default": "Roboto, Arial, sans-serif",
-        "description": "The font family used for the slide."
-      },
-      "image_src": {
-        "type": "string",
-        "default": "path-to-your-image/ocean-background.png",
-        "description": "The source path for the background image."
-      },
-      "image_width": {
-        "type": "string",
-        "default": "100%",
-        "description": "The width of the background image."
-      },
-      "image_height": {
-        "type": "string",
-        "default": "auto",
-        "description": "The height of the background image."
-      },
-      "border_radius": {
-        "type": "string",
-        "default": "50%",
-        "description": "The border radius applied to the numbered items."
-      }
+      "bg_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the slide."},
+      "title_color": {"type": "string", "default": "#2E7D32", "description": "The color of the slide title."},
+      "objective_bg_color": {"type": "string", "default": "#388E3C", "description": "The background color for the numbered items."},
+      "objective_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the numbered items."},
+      "content_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the content inside the box."},
+      "box_bg_color": {"type": "string", "default": "#1B5E20", "description": "The background color of the content box."},
+      "box_shadow": {"type": "string", "default": "0 4px 12px rgba(0, 0, 0, 0.1)", "description": "The box shadow effect for the content box."},
+      "box_border_radius": {"type": "string", "default": "10px", "description": "The border radius for the content box."},
+      "box_padding": {"type": "string", "default": "20px", "description": "The padding inside the content box."},
+      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family used for the slide."},
+      "image_src": {"type": "string", "default": "path-to-your-image/ocean-background.png", "description": "The source path for the background image."},
+      "image_width": {"type": "string", "default": "100%", "description": "The width of the background image."},
+      "image_height": {"type": "string", "default": "auto", "description": "The height of the background image."},
+      "border_radius": {"type": "string", "default": "50%", "description": "The border radius applied to the numbered items."}
     }
   }
 },
-
-    {
+{
+  "type": "function",
   "function": {
     "name": "generate_body_slide5",
     "description": "Generate a structured HTML slide with two content sections and an image placeholder. Use this function to present comparisons, key points, or categorized information in a visually engaging layout. The function allows customization of background colors, text colors, fonts, border styles, and image settings, making it adaptable for various presentation needs.",
     "parameters": {
+      "title": {"type": "string", "default": "Title", "description": "The main title of the slide, providing context for the content."},
+      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title."},
+      "subtitle1": {"type": "string", "default": "Subtitle1", "description": "Subtitle for the first content section."},
+      "subtitle2": {"type": "string", "default": "Subtitle2", "description": "Subtitle for the second content section."},
+      "subtitle_font_size": {"type": "string", "default": "24px", "description": "Font size of the subtitles (corrected from subtile_font_size)."},
+      "content_1": {"type": "string", "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.", "description": "The content for the first section of the slide."},
+      "content_2": {"type": "string", "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.", "description": "The content for the second section of the slide."},
+      "content_font_size": {"type": "string", "default": "20px", "description": "Font size of the content text."},
+      "bg_color": {"type": "string", "default": "#0277BD", "description": "The main background color of the slide."},
+      "title_color": {"type": "string", "default": "#FFFFFF", "description": "The text color of the title."},
+      "content_color": {"type": "string", "default": "#E1F5FE", "description": "The text color of the content sections."},
+      "number_bg_color": {"type": "string", "default": "#039BE5", "description": "The background color of the numbered elements."},
+      "number_text_color": {"type": "string", "default": "#FFFFFF", "description": "The text color of the numbered elements."},
+      "image_bg_color": {"type": "string", "default": "#E1F5FE", "description": "The background color of the image container."},
+      "image_width": {"type": "string", "default": "70%", "description": "The width of the image container."},
+      "image_height": {"type": "string", "default": "60%", "description": "The height of the image container."},
+      "border_radius": {"type": "string", "default": "10px", "description": "The border radius applied to various elements for a rounded look."},
+      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family used for the slide content."}
+    }
+  }
+},
+ {
+  "type": "function",
+  "function": {
+    "name": "generate_body_slide6",
+    "description": "Generate a professional HTML slide body with a main title and multiple sections, each containing a subtitle and a list of bullet points. Use this function to create a visually appealing slide with categorized content, featuring a centered title, a decorative divider with dots, and customizable section boxes with borders and shadows. Ideal for presenting structured information in a clear and organized manner.",
+    "parameters": {
       "title": {
         "type": "string",
-        "default": "Title",
-        "description": "The main title of the slide, providing context for the content."
+        "default": "TITLE",
+        "description": "The main title of the slide, displayed at the top and centered."
       },
-      "content_1": {
-        "type": "string",
-        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "description": "The content for the first section of the slide."
+      "sections": {
+        "type": "dictionary",
+        "default": {
+          "SubTitle1": ["Content1", "Content2", "Content3", "Content4"],
+          "SubTitle2": ["Content5", "Content6", "Content7"],
+          "SubTitle3": ["Content8", "Content9", "Content10"]
+        },
+        "description": "A dictionary where keys are section subtitles and values are lists of bullet points for each section. If not provided, defaults to three sections with sample content."
       },
-      "content_2": {
+      "title_font_size": {
         "type": "string",
-        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "description": "The content for the second section of the slide."
+        "default": "42px",
+        "description": "Font size of the main title."
       },
-      "bg_color": {
+      "section_title_font_size": {
         "type": "string",
-        "default": "#003f72",
-        "description": "The background color of the slide."
+        "default": "24px",
+        "description": "Font size of the section subtitles."
+      },
+      "section_content_font_size": {
+        "type": "string",
+        "default": "20px",
+        "description": "Font size of the bullet point content within each section."
       },
       "title_color": {
         "type": "string",
-        "default": "#ffffff",
-        "description": "The text color of the title."
+        "default": "#1a1a1a",
+        "description": "Color of the main title and the divider line."
       },
-      "content_color": {
+      "title_font_family": {
+        "type": "string",
+        "default": "Roboto, Arial, sans-serif",
+        "description": "Font family for the main title."
+      },
+      "subtitle_bg_color": {
+        "type": "string",
+        "default": "#1a1a1a",
+        "description": "Background color of the section subtitles."
+      },
+      "subtitle_text_color": {
         "type": "string",
         "default": "#ffffff",
-        "description": "The text color of the content sections."
+        "description": "Text color of the section subtitles."
       },
-      "number_bg_color": {
+      "box_border_color": {
         "type": "string",
-        "default": "#00c6ff",
-        "description": "The background color of the numbered elements."
+        "default": "#1a1a1a",
+        "description": "Color of the border around each section box."
       },
-      "number_text_color": {
+      "box_border_radius": {
         "type": "string",
-        "default": "#ffffff",
-        "description": "The text color of the numbered elements."
+        "default": "12px",
+        "description": "Border radius for the section boxes and their subtitles, giving a rounded appearance."
       },
-      "image_bg_color": {
+      "box_padding": {
         "type": "string",
-        "default": "#00c6ff",
-        "description": "The background color of the image container."
+        "default": "20px",
+        "description": "Padding inside each section box."
       },
-      "image_width": {
+      "box_shadow": {
         "type": "string",
-        "default": "70%",
-        "description": "The width of the image container."
-      },
-      "image_height": {
-        "type": "string",
-        "default": "60%",
-        "description": "The height of the image container."
-      },
-      "border_radius": {
-        "type": "string",
-        "default": "10px",
-        "description": "The border radius applied to various elements for a rounded look."
+        "default": "0 4px 12px rgba(0, 0, 0, 0.15)",
+        "description": "Box shadow effect applied to each section box for a 3D look."
       },
       "font_family": {
         "type": "string",
         "default": "Roboto, Arial, sans-serif",
-        "description": "The font family used for the slide content."
+        "description": "Font family for the overall slide content, excluding the main title if title_font_family is specified."
+      },
+      "bullet_color": {
+        "type": "string",
+        "default": "#333",
+        "description": "Color of the bullet point text within each section."
       }
     }
   }
 },
     {
+  "type": "function",
   "function": {
-    "name": "generate_body_slide6",
-    "description": "Generate an HTML slide with a structured layout to showcase multiple features or key points. This function is ideal for presenting categorized information in a visually engaging manner. It allows customization of background colors, text colors, fonts, and numbered elements, making it suitable for various presentation themes.",
+    "name": "generate_body_slide7",
+    "description": "Generate a professional HTML slide body with a centered title and a paragraph of content, enhanced with decorative semi-transparent circular corners at the top-left and bottom-right. Use this function to create a clean and elegant slide for presenting descriptive text, with customizable colors, fonts, and sizes.",
     "parameters": {
       "title": {
         "type": "string",
         "default": "Title",
-        "description": "The main title of the slide, summarizing the content."
+        "description": "The main title of the slide, displayed at the top and centered with bold styling and letter spacing."
       },
-      "feature_1_title": {
+      "content": {
         "type": "string",
-        "default": "Feature 01",
-        "description": "Title for the first feature or key point."
+        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante. Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique, nulla risus mattis eros, id accumsan massa elit eu augue. Mauris massa ipsum, pharetra id nibh eget, sodales facilisis enim.",
+        "description": "The main content paragraph displayed below the title."
       },
-      "feature_1_content": {
+      "title_font_size": {
         "type": "string",
-        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "description": "Description or explanation of the first feature."
+        "default": "42px",
+        "description": "Font size of the main title."
       },
-      "feature_2_title": {
+      "content_font_size": {
         "type": "string",
-        "default": "Feature 02",
-        "description": "Title for the second feature or key point."
-      },
-      "feature_2_content": {
-        "type": "string",
-        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "description": "Description or explanation of the second feature."
-      },
-      "feature_3_title": {
-        "type": "string",
-        "default": "Feature 03",
-        "description": "Title for the third feature or key point."
-      },
-      "feature_3_content": {
-        "type": "string",
-        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "description": "Description or explanation of the third feature."
-      },
-      "feature_4_title": {
-        "type": "string",
-        "default": "Feature 04",
-        "description": "Title for the fourth feature or key point."
-      },
-      "feature_4_content": {
-        "type": "string",
-        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-        "description": "Description or explanation of the fourth feature."
+        "default": "24px",
+        "description": "Font size of the content paragraph."
       },
       "bg_color": {
         "type": "string",
-        "default": "#003f72",
-        "description": "The background color of the slide."
+        "default": "#FFFBEB",
+        "description": "Background color of the entire slide body."
       },
       "title_color": {
         "type": "string",
-        "default": "#ffffff",
-        "description": "The text color of the title."
+        "default": "#000000",
+        "description": "Color of the main title text."
       },
       "content_color": {
         "type": "string",
-        "default": "#ffffff",
-        "description": "The text color of the feature descriptions."
+        "default": "#333333",
+        "description": "Color of the content paragraph text."
       },
-      "number_bg_color": {
+      "corner_decoration_color": {
         "type": "string",
-        "default": "#00c6ff",
-        "description": "The background color of the numbered elements."
-      },
-      "number_text_color": {
-        "type": "string",
-        "default": "#ffffff",
-        "description": "The text color of the numbered elements."
+        "default": "#FDE68A",
+        "description": "Color of the semi-transparent circular decorations in the top-left and bottom-right corners, with 0.3 opacity."
       },
       "font_family": {
         "type": "string",
         "default": "Roboto, Arial, sans-serif",
-        "description": "The font family used for the slide content."
+        "description": "Font family used for both the title and content text."
+      }
+    }
+  }
+},
+    {
+  "type": "function",
+  "function": {
+    "name": "generate_body_slide8",
+    "description": "Generate a professional HTML slide body with a centered title and a list of bullet points, enhanced with decorative semi-transparent circular corners at the top-left and bottom-right. Use this function to create an organized slide for presenting key points or discussion items, with customizable colors, fonts, and sizes.",
+    "parameters": {
+      "title": {
+        "type": "string",
+        "default": "DISCUSSION",
+        "description": "The main title of the slide, displayed at the top and centered with bold styling and letter spacing."
+      },
+      "points": {
+        "type": "list of strings",
+        "default": [
+          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante.",
+          "Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique."
+        ],
+        "description": "A list of bullet points to be displayed below the title."
+      },
+      "title_font_size": {
+        "type": "string",
+        "default": "42px",
+        "description": "Font size of the main title."
+      },
+      "content_font_size": {
+        "type": "string",
+        "default": "24px",
+        "description": "Font size of the bullet point text."
+      },
+      "bg_color": {
+        "type": "string",
+        "default": "#FFFBEB",
+        "description": "Background color of the entire slide body."
+      },
+      "title_color": {
+        "type": "string",
+        "default": "#000000",
+        "description": "Color of the main title text."
+      },
+      "content_color": {
+        "type": "string",
+        "default": "#333333",
+        "description": "Color of the bullet point text."
+      },
+      "corner_decoration_color": {
+        "type": "string",
+        "default": "#FDE68A",
+        "description": "Color of the semi-transparent circular decorations in the top-left and bottom-right corners, with 0.3 opacity."
+      },
+      "font_family": {
+        "type": "string",
+        "default": "Roboto, Arial, sans-serif",
+        "description": "Font family used for both the title and bullet point text."
       }
     }
   }
@@ -2582,7 +2244,7 @@ def create_slide_list(chunks):
 def get_html_slide(pre_slide_content, pre_function_call, slide_content):
     logger.info(f"Generating HTML slide for content: {slide_content[:50]}...")
     demand_prompt = """
-    # Xác định ngôn ngữ của slide_content
+    # slide_content's language
     language = "Vietnamese" if is_vietnamese(slide_content) else "English"
     Create a slide that matches the following content, choose a function when you think it is best suited with the content and the content of the slide should be base on input slide content. If the input text is in language, your output (including all text fields in the function call) MUST also be in language:
     Previous slide content: {}

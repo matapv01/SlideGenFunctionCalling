@@ -21,3 +21,4 @@ pip install langchain
 pip install selenium
 
 pip install fastapi
+pip install pip img2pdf
