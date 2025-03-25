@@ -19,3 +19,5 @@ pip install python-docx
 pip install weasyprint
 pip install langchain
 pip install selenium
+
+pip install fastapi
