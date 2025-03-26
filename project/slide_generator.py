@@ -1605,605 +1605,290 @@ def get_function_by_name(name):
         return generate_body_slide4
     elif name == "generate_body_slide5":
         return generate_body_slide5
+    elif name == "generate_body_slide8":
+        return generate_body_slide8
     elif name == "generate_conclusion_slide":
         return generate_conclusion_slide
-    elif name == "generate_end_slide":
-        return generate_end_slide
     else:
         raise ValueError(f"Function with name '{name}' not found.")
 
 TOOLS = [
     {
-  "type": "function",
-  "function": {
-    "name": "generate_intro_slide",
-    "description": "Generates a customizable HTML slide with an introduction layout featuring dots and lines as decorations.",
-    "parameters": {
-      "title": {"type": "string", "default": "Introduction", "description": "Slide title text"},
-      "title_color": {"type": "string", "default": "#0F4662", "description": "Color of the title"},
-      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title"},
-      "title_font_style": {"type": "string", "default": "italic", "description": "Font style for the title (e.g., 'italic')"},
-      "title_margin_bottom": {"type": "string", "default": "5px", "description": "Bottom margin for the title"},
-      "title_margin_left": {"type": "string", "default": "40px", "description": "Left margin for the title"},
-      "content_text": {"type": "string", "default": "Content", "description": "Main content text"},
-      "content_color": {"type": "string", "default": "#0F4662", "description": "Color of content text"},
-      "content_font_size": {"type": "string", "default": "24px", "description": "Font size of content"},
-      "content_line_height": {"type": "string", "default": "1.6", "description": "Line height for content"},
-      "content_width": {"type": "string", "default": "70%", "description": "Width of content container"},
-      "content_margin": {"type": "string", "default": "0 auto", "description": "Margin around content"},
-      "content_text_align": {"type": "string", "default": "center", "description": "Text alignment for content"},
-      "dot_color": {"type": "string", "default": "#0F4662", "description": "Color of decorative dots"},
-      "dot_size": {"type": "string", "default": "10px", "description": "Size of decorative dots"},
-      "dot_margin": {"type": "string", "default": "0 5px", "description": "Margin between dots"},
-      "dot_count": {"type": "integer", "default": 5, "description": "Number of dots in each row"},
-      "line_color": {"type": "string", "default": "#1a3d5c", "description": "Color of horizontal lines"},
-      "line_width": {"type": "string", "default": "50%", "description": "Width of horizontal lines"},
-      "line_height": {"type": "string", "default": "2px", "description": "Height/thickness of horizontal lines"},
-      "line_margin": {"type": "string", "default": "30px auto", "description": "Margin around horizontal lines"},
-      "slide_bg_color": {"type": "string", "default": "#f5f5f5", "description": "Background color of the slide"},
-      "font_family": {"type": "string", "default": "Robotto, Arial, sans-serif", "description": "Font family for all text"},
-      "additional css": {"type": "string", "default": "", "description": "Additional CSS styles"}
-    }
-  }
-},
-
-{
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide1",
-    "description": "Generate a professional HTML slide body with customizable content and styling. Use this function when you need to create a slide with a title, a main paragraph, a list of bullet points, and an image placeholder. The slide is designed for professional presentations and supports customization of colors, fonts, and content.",
-    "parameters": {
-      "title": {"type": "string", "default": "Professional HTML Slide Body", "description": "The title of the HTML document."},
-      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the slide title."},
-      "slide_title": {"type": "string", "default": "Slide Title", "description": "The title displayed on the slide."},
-      "bg_color": {"type": "string", "default": "#E8F5E9", "description": "Background color of the page."},
-      "text_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color of the text container."},
-      "text_color": {"type": "string", "default": "#2E7D32", "description": "Text color of the slide content."},
-      "keyword_color": {"type": "string", "default": "#1B5E20", "description": "Color for keywords in the slide content."},
-      "image_bg_color": {"type": "string", "default": "#C8E6C9", "description": "Background color of the image placeholder."},
-      "image_placeholder_text": {"type": "string", "default": "Image Placeholder", "description": "Text displayed in the image placeholder."},
-      "font_family": {"type": "string", "default": "Robotto, Arial, sans-serif", "description": "Font family for the slide content."},
-      "content_paragraph": {"type": "string", "default": "This is a customizable slide. Add your content here:", "description": "Main paragraph content of the slide."},
-      "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text."},
-      "list_items": {"type": "list of strings", "description": "A list of bullet points to include in the slide. If not provided, defaults to a list about networking benefits."}
-    }
-  }
-},
-{
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide2",
-    "description": "Generate a professional HTML slide body with customizable layout, colors, and content. Use this function when you need to create a visually appealing slide with a header, a content paragraph, and an image placeholder. The function supports customization of background colors, text colors, fonts, and content, making it ideal for creating presentation slides.",
-    "parameters": {
-      "title": {"type": "string", "default": "Slide Header", "description": "The title of the HTML document."},
-      "header_text": {"type": "string", "default": "Key Insights", "description": "The main header of the slide."},
-      "header_font_size": {"type": "string", "default": "42px", "description": "Font size of the header text."},
-      "background_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the entire slide."},
-      "text_color": {"type": "string", "default": "#004D40", "description": "The default text color for the slide."},
-      "content_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color for the content box."},
-      "content_shadow": {"type": "string", "default": "0 6px 12px rgba(0, 0, 0, 0.1)", "description": "Box shadow for the content container."},
-      "header_color": {"type": "string", "default": "#00251A", "description": "Color of the header text."},
-      "text_body_color": {"type": "string", "default": "#00695C", "description": "Color of the body text."},
-      "highlight_color": {"type": "string", "default": "#FF4500", "description": "Color for highlighted text (e.g., bold text)."},
-      "image_placeholder_text": {"type": "string", "default": "[Image Placeholder]", "description": "Placeholder text for the main image area."},
-      "image_bg_color": {"type": "string", "default": "#B2DFDB", "description": "Background color of the image placeholder."},
-      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family to use for all text."},
-      "paragraph_text": {"type": "string", "default": "This is a customizable slide content area. You can add any relevant information here", "description": "The content paragraph."},
-      "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text."}
-    }
-  }
-},
-   {
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide3",
-    "description": "Generate a professional HTML slide body with a split layout, including a title, subtitle, and multiple content paragraphs. Use this function to create a visually appealing slide with detailed information, featuring a left section for the title and subtitle, and a right section for paragraphs, enhanced with decorative icons.",
-    "parameters": {
-      "title": {"type": "string", "default": "title", "description": "The main title of the slide."},
-      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title (corrected from tile_font_size)."},
-      "subtitle": {"type": "string", "default": "subtitle", "description": "The subtitle of the slide."},
-      "subtitle_font_size": {"type": "string", "default": "32px", "description": "Font size of the subtitle."},
-      "content_paragraphs": {
-        "type": "list of strings",
-        "default": [
-          "Paragraph 1 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
-          "Paragraph 2 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
-        ],
-        "description": "A list of paragraphs to display in the right section."
-      },
-      "left_bg_color": {"type": "string", "default": "#F3F6FA", "description": "Background color of the left section."},
-      "right_bg_color": {"type": "string", "default": "#0B1320", "description": "Background color of the right section."},
-      "text_color": {"type": "string", "default": "#FFFFFF", "description": "Text color of the content paragraphs."},
-      "title_color": {"type": "string", "default": "#000000", "description": "Color of the title."},
-      "subtitle_color": {"type": "string", "default": "#333333", "description": "Color of the subtitle."},
-      "icon_color": {"type": "string", "default": "#FF9800", "description": "Color of the bottom decorative icons."},
-      "corner_icon_color": {"type": "string", "default": "#3D5AFE", "description": "Color of the corner decorative icons."},
-      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the slide content."}
-    }
-  }
-},
+        "type": "function",
+        "function": {
+            "name": "generate_intro_slide",
+            "description": "Generates a customizable HTML slide with an introduction layout featuring dots and lines as decorations.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "Introduction", "description": "Slide title text"},
+                    "title_color": {"type": "string", "default": "#0F4662", "description": "Color of the title"},
+                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title"},
+                    "title_font_style": {"type": "string", "default": "italic", "description": "Font style for the title (e.g., 'italic')"},
+                    "title_margin_bottom": {"type": "string", "default": "5px", "description": "Bottom margin for the title"},
+                    "title_margin_left": {"type": "string", "default": "40px", "description": "Left margin for the title"},
+                    "content_text": {"type": "string", "default": "Content", "description": "Main content text"},
+                    "content_color": {"type": "string", "default": "#0F4662", "description": "Color of content text"},
+                    "content_font_size": {"type": "string", "default": "24px", "description": "Font size of content"},
+                    "content_line_height": {"type": "string", "default": "1.6", "description": "Line height for content"},
+                    "content_width": {"type": "string", "default": "70%", "description": "Width of content container"},
+                    "content_margin": {"type": "string", "default": "0 auto", "description": "Margin around content"},
+                    "content_text_align": {"type": "string", "default": "center", "description": "Text alignment for content"},
+                    "dot_color": {"type": "string", "default": "#0F4662", "description": "Color of decorative dots"},
+                    "dot_size": {"type": "string", "default": "10px", "description": "Size of decorative dots"},
+                    "dot_margin": {"type": "string", "default": "0 5px", "description": "Margin between dots"},
+                    "dot_count": {"type": "integer", "default": 5, "description": "Number of dots in each row"},
+                    "line_color": {"type": "string", "default": "#1a3d5c", "description": "Color of horizontal lines"},
+                    "line_width": {"type": "string", "default": "50%", "description": "Width of horizontal lines"},
+                    "line_height": {"type": "string", "default": "2px", "description": "Height/thickness of horizontal lines"},
+                    "line_margin": {"type": "string", "default": "30px auto", "description": "Margin around horizontal lines"},
+                    "slide_bg_color": {"type": "string", "default": "#f5f5f5", "description": "Background color of the slide"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for all text"},
+                    "additional_css": {"type": "string", "default": "", "description": "Additional CSS styles"}
+                },
+                "required": []
+            }
+        }
+    },
+    
     {
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide4",
-    "description": "Generate a professional HTML slide body with a structured content box and numbered items. Use this function when you need to present key points, objectives, or topics in an organized and visually appealing format. The function supports customization of background colors, text colors, fonts, shadows, and more, making it suitable for various presentation needs.",
-    "parameters": {
-      "title": {"type": "string", "default": "Learning Objectives", "description": "The main title of the slide."},
-      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title."},
-      "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text."},
-      "objectives": {
-        "type": "list of strings",
-        "description": "A list of objectives or key points to be displayed. If not provided, defaults to a list of 4 sample objectives."
-      },
-      "bg_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the slide."},
-      "title_color": {"type": "string", "default": "#2E7D32", "description": "The color of the slide title."},
-      "objective_bg_color": {"type": "string", "default": "#388E3C", "description": "The background color for the numbered items."},
-      "objective_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the numbered items."},
-      "content_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the content inside the box."},
-      "box_bg_color": {"type": "string", "default": "#1B5E20", "description": "The background color of the content box."},
-      "box_shadow": {"type": "string", "default": "0 4px 12px rgba(0, 0, 0, 0.1)", "description": "The box shadow effect for the content box."},
-      "box_border_radius": {"type": "string", "default": "10px", "description": "The border radius for the content box."},
-      "box_padding": {"type": "string", "default": "20px", "description": "The padding inside the content box."},
-      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family used for the slide."},
-      "image_src": {"type": "string", "default": "path-to-your-image/ocean-background.png", "description": "The source path for the background image."},
-      "image_width": {"type": "string", "default": "100%", "description": "The width of the background image."},
-      "image_height": {"type": "string", "default": "auto", "description": "The height of the background image."},
-      "border_radius": {"type": "string", "default": "50%", "description": "The border radius applied to the numbered items."}
-    }
-  }
-},
-{
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide5",
-    "description": "Generate a structured HTML slide with two content sections and an image placeholder. Use this function to present comparisons, key points, or categorized information in a visually engaging layout. The function allows customization of background colors, text colors, fonts, border styles, and image settings, making it adaptable for various presentation needs.",
-    "parameters": {
-      "title": {"type": "string", "default": "Title", "description": "The main title of the slide, providing context for the content."},
-      "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title."},
-      "subtitle1": {"type": "string", "default": "Subtitle1", "description": "Subtitle for the first content section."},
-      "subtitle2": {"type": "string", "default": "Subtitle2", "description": "Subtitle for the second content section."},
-      "subtitle_font_size": {"type": "string", "default": "24px", "description": "Font size of the subtitles (corrected from subtile_font_size)."},
-      "content_1": {"type": "string", "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.", "description": "The content for the first section of the slide."},
-      "content_2": {"type": "string", "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.", "description": "The content for the second section of the slide."},
-      "content_font_size": {"type": "string", "default": "20px", "description": "Font size of the content text."},
-      "bg_color": {"type": "string", "default": "#0277BD", "description": "The main background color of the slide."},
-      "title_color": {"type": "string", "default": "#FFFFFF", "description": "The text color of the title."},
-      "content_color": {"type": "string", "default": "#E1F5FE", "description": "The text color of the content sections."},
-      "number_bg_color": {"type": "string", "default": "#039BE5", "description": "The background color of the numbered elements."},
-      "number_text_color": {"type": "string", "default": "#FFFFFF", "description": "The text color of the numbered elements."},
-      "image_bg_color": {"type": "string", "default": "#E1F5FE", "description": "The background color of the image container."},
-      "image_width": {"type": "string", "default": "70%", "description": "The width of the image container."},
-      "image_height": {"type": "string", "default": "60%", "description": "The height of the image container."},
-      "border_radius": {"type": "string", "default": "10px", "description": "The border radius applied to various elements for a rounded look."},
-      "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family used for the slide content."}
-    }
-  }
-},
- {
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide6",
-    "description": "Generate a professional HTML slide body with a main title and multiple sections, each containing a subtitle and a list of bullet points. Use this function to create a visually appealing slide with categorized content, featuring a centered title, a decorative divider with dots, and customizable section boxes with borders and shadows. Ideal for presenting structured information in a clear and organized manner.",
-    "parameters": {
-      "title": {
-        "type": "string",
-        "default": "TITLE",
-        "description": "The main title of the slide, displayed at the top and centered."
-      },
-      "sections": {
-        "type": "dictionary",
-        "default": {
-          "SubTitle1": ["Content1", "Content2", "Content3", "Content4"],
-          "SubTitle2": ["Content5", "Content6", "Content7"],
-          "SubTitle3": ["Content8", "Content9", "Content10"]
-        },
-        "description": "A dictionary where keys are section subtitles and values are lists of bullet points for each section. If not provided, defaults to three sections with sample content."
-      },
-      "title_font_size": {
-        "type": "string",
-        "default": "42px",
-        "description": "Font size of the main title."
-      },
-      "section_title_font_size": {
-        "type": "string",
-        "default": "24px",
-        "description": "Font size of the section subtitles."
-      },
-      "section_content_font_size": {
-        "type": "string",
-        "default": "20px",
-        "description": "Font size of the bullet point content within each section."
-      },
-      "title_color": {
-        "type": "string",
-        "default": "#1a1a1a",
-        "description": "Color of the main title and the divider line."
-      },
-      "title_font_family": {
-        "type": "string",
-        "default": "Roboto, Arial, sans-serif",
-        "description": "Font family for the main title."
-      },
-      "subtitle_bg_color": {
-        "type": "string",
-        "default": "#1a1a1a",
-        "description": "Background color of the section subtitles."
-      },
-      "subtitle_text_color": {
-        "type": "string",
-        "default": "#ffffff",
-        "description": "Text color of the section subtitles."
-      },
-      "box_border_color": {
-        "type": "string",
-        "default": "#1a1a1a",
-        "description": "Color of the border around each section box."
-      },
-      "box_border_radius": {
-        "type": "string",
-        "default": "12px",
-        "description": "Border radius for the section boxes and their subtitles, giving a rounded appearance."
-      },
-      "box_padding": {
-        "type": "string",
-        "default": "20px",
-        "description": "Padding inside each section box."
-      },
-      "box_shadow": {
-        "type": "string",
-        "default": "0 4px 12px rgba(0, 0, 0, 0.15)",
-        "description": "Box shadow effect applied to each section box for a 3D look."
-      },
-      "font_family": {
-        "type": "string",
-        "default": "Roboto, Arial, sans-serif",
-        "description": "Font family for the overall slide content, excluding the main title if title_font_family is specified."
-      },
-      "bullet_color": {
-        "type": "string",
-        "default": "#333",
-        "description": "Color of the bullet point text within each section."
-      }
-    }
-  }
-},
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide2",
+            "description": "Generate a professional HTML slide body with a header, a content paragraph, and an image placeholder.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "Slide Header", "description": "The title of the HTML document"},
+                    "header_text": {"type": "string", "default": "Key Insights", "description": "The main header of the slide"},
+                    "header_font_size": {"type": "string", "default": "42px", "description": "Font size of the header text"},
+                    "background_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the entire slide"},
+                    "text_color": {"type": "string", "default": "#004D40", "description": "The default text color"},
+                    "content_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color for the content box"},
+                    "content_shadow": {"type": "string", "default": "0 6px 12px rgba(0, 0, 0, 0.1)", "description": "Box shadow for the content container"},
+                    "header_color": {"type": "string", "default": "#00251A", "description": "Color of the header text"},
+                    "text_body_color": {"type": "string", "default": "#00695C", "description": "Color of the body text"},
+                    "highlight_color": {"type": "string", "default": "#FF4500", "description": "Color for highlighted text"},
+                    "image_placeholder_text": {"type": "string", "default": "[Image Placeholder]", "description": "Placeholder text for the main image area"},
+                    "image_bg_color": {"type": "string", "default": "#B2DFDB", "description": "Background color of the image placeholder"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family to use for all text"},
+                    "paragraph_text": {"type": "string", "default": "This is a customizable slide content area. You can add any relevant information here", "description": "The content paragraph"},
+                    "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text"}
+                },
+                "required": []
+            }
+        }
+    },
     {
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide7",
-    "description": "Generate a professional HTML slide body with a centered title and a paragraph of content, enhanced with decorative semi-transparent circular corners at the top-left and bottom-right. Use this function to create a clean and elegant slide for presenting descriptive text, with customizable colors, fonts, and sizes.",
-    "parameters": {
-      "title": {
-        "type": "string",
-        "default": "Title",
-        "description": "The main title of the slide, displayed at the top and centered with bold styling and letter spacing."
-      },
-      "content": {
-        "type": "string",
-        "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante. Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique, nulla risus mattis eros, id accumsan massa elit eu augue. Mauris massa ipsum, pharetra id nibh eget, sodales facilisis enim.",
-        "description": "The main content paragraph displayed below the title."
-      },
-      "title_font_size": {
-        "type": "string",
-        "default": "42px",
-        "description": "Font size of the main title."
-      },
-      "content_font_size": {
-        "type": "string",
-        "default": "24px",
-        "description": "Font size of the content paragraph."
-      },
-      "bg_color": {
-        "type": "string",
-        "default": "#FFFBEB",
-        "description": "Background color of the entire slide body."
-      },
-      "title_color": {
-        "type": "string",
-        "default": "#000000",
-        "description": "Color of the main title text."
-      },
-      "content_color": {
-        "type": "string",
-        "default": "#333333",
-        "description": "Color of the content paragraph text."
-      },
-      "corner_decoration_color": {
-        "type": "string",
-        "default": "#FDE68A",
-        "description": "Color of the semi-transparent circular decorations in the top-left and bottom-right corners, with 0.3 opacity."
-      },
-      "font_family": {
-        "type": "string",
-        "default": "Roboto, Arial, sans-serif",
-        "description": "Font family used for both the title and content text."
-      }
-    }
-  }
-},
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide3",
+            "description": "Generate a professional HTML slide body with a split layout, including a title, subtitle, and multiple content paragraphs.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "title", "description": "The main title of the slide"},
+                    "tile_font_size": {"type": "string", "default": "42px", "description": "Font size of the title (Note: parameter name in function is 'tile_font_size', not 'title_font_size')"},
+                    "subtitle": {"type": "string", "default": "subtitle", "description": "The subtitle of the slide"},
+                    "subtitle_font_size": {"type": "string", "default": "32px", "description": "Font size of the subtitle"},
+                    "content_paragraphs": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "default": [
+                            "Paragraph 1 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
+                            "Paragraph 2 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
+                        ],
+                        "description": "A list of paragraphs to display in the right section"
+                    },
+                    "left_bg_color": {"type": "string", "default": "#F3F6FA", "description": "Background color of the left section"},
+                    "right_bg_color": {"type": "string", "default": "#0B1320", "description": "Background color of the right section"},
+                    "text_color": {"type": "string", "default": "#FFFFFF", "description": "Text color of the content paragraphs"},
+                    "title_color": {"type": "string", "default": "#000000", "description": "Color of the title"},
+                    "subtitle_color": {"type": "string", "default": "#333333", "description": "Color of the subtitle"},
+                    "icon_color": {"type": "string", "default": "#FF9800", "description": "Color of the bottom decorative icons"},
+                    "corner_icon_color": {"type": "string", "default": "#3D5AFE", "description": "Color of the corner decorative icons"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the slide content"}
+                },
+                "required": []
+            }
+        }
+    },
     {
-  "type": "function",
-  "function": {
-    "name": "generate_body_slide8",
-    "description": "Generate a professional HTML slide body with a centered title and a list of bullet points, enhanced with decorative semi-transparent circular corners at the top-left and bottom-right. Use this function to create an organized slide for presenting key points or discussion items, with customizable colors, fonts, and sizes.",
-    "parameters": {
-      "title": {
-        "type": "string",
-        "default": "DISCUSSION",
-        "description": "The main title of the slide, displayed at the top and centered with bold styling and letter spacing."
-      },
-      "points": {
-        "type": "list of strings",
-        "default": [
-          "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante.",
-          "Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique."
-        ],
-        "description": "A list of bullet points to be displayed below the title."
-      },
-      "title_font_size": {
-        "type": "string",
-        "default": "42px",
-        "description": "Font size of the main title."
-      },
-      "content_font_size": {
-        "type": "string",
-        "default": "24px",
-        "description": "Font size of the bullet point text."
-      },
-      "bg_color": {
-        "type": "string",
-        "default": "#FFFBEB",
-        "description": "Background color of the entire slide body."
-      },
-      "title_color": {
-        "type": "string",
-        "default": "#000000",
-        "description": "Color of the main title text."
-      },
-      "content_color": {
-        "type": "string",
-        "default": "#333333",
-        "description": "Color of the bullet point text."
-      },
-      "corner_decoration_color": {
-        "type": "string",
-        "default": "#FDE68A",
-        "description": "Color of the semi-transparent circular decorations in the top-left and bottom-right corners, with 0.3 opacity."
-      },
-      "font_family": {
-        "type": "string",
-        "default": "Roboto, Arial, sans-serif",
-        "description": "Font family used for both the title and bullet point text."
-      }
-    }
-  }
-},
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide4",
+            "description": "Generate a professional HTML slide body with a structured content box and numbered items.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "Learning Objectives", "description": "The main title of the slide"},
+                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title"},
+                    "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text"},
+                    "objectives": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "default": [
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
+                            "Maecenas euismod magna in sem rutrum luctus. Sed ultricies diam non venenatis dictum.",
+                            "Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.",
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+                        ],
+                        "description": "A list of objectives or key points to be displayed"
+                    },
+                    "bg_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the slide"},
+                    "title_color": {"type": "string", "default": "#2E7D32", "description": "The color of the slide title"},
+                    "objective_bg_color": {"type": "string", "default": "#388E3C", "description": "The background color for the numbered items"},
+                    "objective_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the numbered items"},
+                    "content_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the content inside the box"},
+                    "box_bg_color": {"type": "string", "default": "#1B5E20", "description": "The background color of the content box"},
+                    "box_shadow": {"type": "string", "default": "0 4px 12px rgba(0, 0, 0, 0.1)", "description": "The box shadow effect for the content box"},
+                    "box_border_radius": {"type": "string", "default": "10px", "description": "The border radius for the content box"},
+                    "box_padding": {"type": "string", "default": "20px", "description": "The padding inside the content box"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family used for the slide"},
+                    "image_src": {"type": "string", "default": "path-to-your-image/ocean-background.png", "description": "The source path for the background image"},
+                    "image_width": {"type": "string", "default": "100%", "description": "The width of the background image"},
+                    "image_height": {"type": "string", "default": "auto", "description": "The height of the background image"},
+                    "border_radius": {"type": "string", "default": "50%", "description": "The border radius applied to the numbered items"}
+                },
+                "required": []
+            }
+        }
+    },
     {
-  "function": {
-    "name": "generate_conclusion_slide",
-    "description": "Generates a customizable HTML slide with a 'Conclusion' layout featuring dots and lines as decorations.",
-    "parameters": {
-      "title": {
-        "type": "string",
-        "default": "Conclusion",
-        "description": "Slide title text."
-      },
-      "title_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the title."
-      },
-      "title_font_size": {
-        "type": "string",
-        "default": "32px",
-        "description": "Font size of the title."
-      },
-      "title_font_style": {
-        "type": "string",
-        "default": "italic",
-        "description": "Font style of the title (e.g., 'italic')."
-      },
-      "title_margin_bottom": {
-        "type": "string",
-        "default": "5px",
-        "description": "Bottom margin for the title."
-      },
-      "title_margin_left": {
-        "type": "string",
-        "default": "40px",
-        "description": "Left margin for the title."
-      },
-      "content_text": {
-        "type": "string",
-        "default": "Content",
-        "description": "Main content text of the slide."
-      },
-      "content_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the content text."
-      },
-      "content_font_size": {
-        "type": "string",
-        "default": "16px",
-        "description": "Font size of the content text."
-      },
-      "content_line_height": {
-        "type": "string",
-        "default": "1.6",
-        "description": "Line height for the content text."
-      },
-      "content_width": {
-        "type": "string",
-        "default": "70%",
-        "description": "Width of the content container."
-      },
-      "content_margin": {
-        "type": "string",
-        "default": "0 auto",
-        "description": "Margin around the content."
-      },
-      "content_text_align": {
-        "type": "string",
-        "default": "center",
-        "description": "Text alignment for the content."
-      },
-      "dot_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the decorative dots."
-      },
-      "dot_size": {
-        "type": "string",
-        "default": "10px",
-        "description": "Size of the decorative dots."
-      },
-      "dot_margin": {
-        "type": "string",
-        "default": "0 5px",
-        "description": "Margin between dots."
-      },
-      "dot_count": {
-        "type": "integer",
-        "default": 5,
-        "description": "Number of dots in each row."
-      },
-      "line_color": {
-        "type": "string",
-        "default": "#1a3d5c",
-        "description": "Color of the horizontal lines."
-      },
-      "line_width": {
-        "type": "string",
-        "default": "50%",
-        "description": "Width of the horizontal lines."
-      },
-      "line_height": {
-        "type": "string",
-        "default": "2px",
-        "description": "Height/thickness of the horizontal lines."
-      },
-      "line_margin": {
-        "type": "string",
-        "default": "30px auto",
-        "description": "Margin around the horizontal lines."
-      },
-      "slide_bg_color": {
-        "type": "string",
-        "default": "#f5f5f5",
-        "description": "Background color of the slide."
-      },
-      "font_family": {
-        "type": "string",
-        "default": "Roboto, Arial, sans-serif",
-        "description": "Font family for all text elements."
-      },
-      "additional_css": {
-        "type": "string",
-        "default": "",
-        "description": "Additional CSS styles for customization."
-      }
-    }
-  }
-},
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide5",
+            "description": "Generate a structured HTML slide with two content sections and an image placeholder.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "Title", "description": "The main title of the slide"},
+                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title"},
+                    "subtitle1": {"type": "string", "default": "Subtitle1", "description": "Subtitle for the first content section"},
+                    "subtitle2": {"type": "string", "default": "Subtitle2", "description": "Subtitle for the second content section"},
+                    "subtile_font_size": {"type": "string", "default": "24px", "description": "Font size of the subtitles (Note: parameter name in function is 'subtile_font_size', not 'subtitle_font_size')"},
+                    "content_1": {"type": "string", "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.", "description": "The content for the first section"},
+                    "content_2": {"type": "string", "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Mauris eleifend magna in sem rutrum luctus. Sed ullamcorper diam non venenatis dictum. Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.", "description": "The content for the second section"},
+                    "content_font_size": {"type": "string", "default": "20px", "description": "Font size of the content text"},
+                    "bg_color": {"type": "string", "default": "#0277BD", "description": "The main background color of the slide"},
+                    "title_color": {"type": "string", "default": "#FFFFFF", "description": "The text color of the title"},
+                    "content_color": {"type": "string", "default": "#E1F5FE", "description": "The text color of the content sections"},
+                    "number_bg_color": {"type": "string", "default": "#039BE5", "description": "The background color of the numbered elements"},
+                    "number_text_color": {"type": "string", "default": "#FFFFFF", "description": "The text color of the numbered elements"},
+                    "image_bg_color": {"type": "string", "default": "#E1F5FE", "description": "The background color of the image container"},
+                    "image_width": {"type": "string", "default": "70%", "description": "The width of the image container"},
+                    "image_height": {"type": "string", "default": "60%", "description": "The height of the image container"},
+                    "border_radius": {"type": "string", "default": "10px", "description": "The border radius applied to various elements"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family used for the slide content"}
+                },
+                "required": []
+            }
+        }
+    },
+    
     {
-  "function": {
-    "name": "generate_end_slide",
-    "description": "Generates a customizable HTML slide with an end slide layout featuring decorative dots and lines.",
-    "parameters": {
-      "content_text": {
-        "type": "string",
-        "default": "THANK YOU!",
-        "description": "Main content text of the slide."
-      },
-      "content_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the content text."
-      },
-      "content_font_size": {
-        "type": "string",
-        "default": "56px",
-        "description": "Font size of the content text."
-      },
-      "content_line_height": {
-        "type": "string",
-        "default": "1.6",
-        "description": "Line height for the content text."
-      },
-      "content_width": {
-        "type": "string",
-        "default": "70%",
-        "description": "Width of the content container."
-      },
-      "content_margin": {
-        "type": "string",
-        "default": "0 auto",
-        "description": "Margin around the content."
-      },
-      "content_text_align": {
-        "type": "string",
-        "default": "center",
-        "description": "Text alignment for the content."
-      },
-      "dot_color": {
-        "type": "string",
-        "default": "#0F4662",
-        "description": "Color of the decorative dots."
-      },
-      "dot_size": {
-        "type": "string",
-        "default": "10px",
-        "description": "Size of the decorative dots."
-      },
-      "dot_margin": {
-        "type": "string",
-        "default": "0 5px",
-        "description": "Margin between dots."
-      },
-      "dot_count": {
-        "type": "integer",
-        "default": 5,
-        "description": "Number of dots in each row."
-      },
-      "line_color": {
-        "type": "string",
-        "default": "#1a3d5c",
-        "description": "Color of the horizontal lines."
-      },
-      "line_width": {
-        "type": "string",
-        "default": "50%",
-        "description": "Width of the horizontal lines."
-      },
-      "line_height": {
-        "type": "string",
-        "default": "2px",
-        "description": "Height/thickness of the horizontal lines."
-      },
-      "line_margin": {
-        "type": "string",
-        "default": "30px auto",
-        "description": "Margin around the horizontal lines."
-      },
-      "slide_bg_color": {
-        "type": "string",
-        "default": "#f5f5f5",
-        "description": "Background color of the slide."
-      },
-      "font_family": {
-        "type": "string",
-        "default": "Robo, Arial, sans-serif",
-        "description": "Font family for all text elements."
-      },
-      "additional_css": {
-        "type": "string",
-        "default": "",
-        "description": "Additional CSS styles for customization."
-      }
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide8",
+            "description": "Generate a professional HTML slide body with a centered title and a list of bullet points, enhanced with decorative semi-transparent circular corners.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "DISCUSSION", "description": "The main title of the slide"},
+                    "points": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "default": [
+                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante.",
+                            "Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique."
+                        ],
+                        "description": "A list of bullet points to be displayed"
+                    },
+                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the main title"},
+                    "content_font_size": {"type": "string", "default": "24px", "description": "Font size of the bullet point text"},
+                    "bg_color": {"type": "string", "default": "#FFFBEB", "description": "Background color of the entire slide body"},
+                    "title_color": {"type": "string", "default": "#000000", "description": "Color of the main title text"},
+                    "content_color": {"type": "string", "default": "#333333", "description": "Color of the bullet point text"},
+                    "corner_decoration_color": {"type": "string", "default": "#FDE68A", "description": "Color of the semi-transparent circular decorations in the corners"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for both title and content"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide1",
+            "description": "Generate a professional HTML slide body with a title, a main paragraph, a list of bullet points, and an image placeholder.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "Professional HTML Slide", "description": "The title of the HTML document"},
+                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the slide title"},
+                    "slide_title": {"type": "string", "default": "Slide Title", "description": "The title displayed on the slide"},
+                    "bg_color": {"type": "string", "default": "#E8F5E9", "description": "Background color of the page"},
+                    "text_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color of the text container"},
+                    "text_color": {"type": "string", "default": "#2E7D32", "description": "Text color of the slide content"},
+                    "keyword_color": {"type": "string", "default": "#1B5E20", "description": "Color for keywords"},
+                    "image_bg_color": {"type": "string", "default": "#C8E6C9", "description": "Background color of the image placeholder"},
+                    "image_placeholder_text": {"type": "string", "default": "Image Placeholder", "description": "Text displayed in the image placeholder"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the slide content"},
+                    "content_paragraph": {"type": "string", "default": "This is a customizable slide. Add your content here:", "description": "Main paragraph content"},
+                    "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text"},
+                    "list_items": {
+                        "type": "array",
+                        "items": {"type": "string"},
+                        "default": [
+                            "<span class=\"keyword\">Point 1</span>: Description of point 1.",
+                            "<span class=\"keyword\">Point 2</span>: Description of point 2.",
+                            "<span class=\"keyword\">Point 3</span>: Description of point 3.",
+                            "<span class=\"keyword\">Point 4</span>: Description of point 4."
+                        ],
+                        "description": "A list of bullet points to include"
+                    }
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_conclusion_slide",
+            "description": "Generates a customizable HTML slide with a 'Conclusion' layout featuring dots and lines as decorations.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "Conclusion", "description": "Slide title text"},
+                    "title_color": {"type": "string", "default": "#0F4662", "description": "Color of the title"},
+                    "title_font_size": {"type": "string", "default": "32px", "description": "Font size of the title"},
+                    "title_font_style": {"type": "string", "default": "italic", "description": "Font style for the title (e.g., 'italic')"},
+                    "title_margin_bottom": {"type": "string", "default": "5px", "description": "Bottom margin for the title"},
+                    "title_margin_left": {"type": "string", "default": "40px", "description": "Left margin for the title"},
+                    "content_text": {"type": "string", "default": "Content", "description": "Main content text"},
+                    "content_color": {"type": "string", "default": "#0F4662", "description": "Color of content text"},
+                    "content_font_size": {"type": "string", "default": "16px", "description": "Font size of content"},
+                    "content_line_height": {"type": "string", "default": "1.6", "description": "Line height for content"},
+                    "content_width": {"type": "string", "default": "70%", "description": "Width of content container"},
+                    "content_margin": {"type": "string", "default": "0 auto", "description": "Margin around content"},
+                    "content_text_align": {"type": "string", "default": "center", "description": "Text alignment for content"},
+                    "dot_color": {"type": "string", "default": "#0F4662", "description": "Color of decorative dots"},
+                    "dot_size": {"type": "string", "default": "10px", "description": "Size of decorative dots"},
+                    "dot_margin": {"type": "string", "default": "0 5px", "description": "Margin between dots"},
+                    "dot_count": {"type": "integer", "default": 5, "description": "Number of dots in each row"},
+                    "line_color": {"type": "string", "default": "#1a3d5c", "description": "Color of horizontal lines"},
+                    "line_width": {"type": "string", "default": "50%", "description": "Width of horizontal lines"},
+                    "line_height": {"type": "string", "default": "2px", "description": "Height/thickness of horizontal lines"},
+                    "line_margin": {"type": "string", "default": "30px auto", "description": "Margin around horizontal lines"},
+                    "slide_bg_color": {"type": "string", "default": "#f5f5f5", "description": "Background color of the slide"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for all text"},
+                    "additional_css": {"type": "string", "default": "", "description": "Additional CSS styles"}
+                },
+                "required": []
+            }
+        }
     }
-  }
-}
 ]
 
 def extract_text_from_docx(file_path):
@@ -2294,6 +1979,7 @@ def check_and_insert_char(s, i, char):
     return s
 
 def clean_slide_function(slide_function_calling_list):
+    logger.info("slide function calls list")
     logger.info("Cleaning slide function calls")
     fixed_list = slide_function_calling_list.copy()
     for i in range(len(fixed_list)):
@@ -2459,6 +2145,9 @@ def process_slides(docx_file, output_folder):
         pre_function_call = html_slide_call
 
     slide_function_calling_list = clean_slide_function(slide_function_calling_list)
+    for x in slide_function_calling_list:
+        logger.info(x)
+        logger.info("-------------------")
 
     driver = initialize_chromedriver()
     if not driver:
