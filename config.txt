@@ -22,3 +22,4 @@ pip install selenium
 
 pip install fastapi
 pip install pip img2pdf
+pip install -U bitsandbytes
