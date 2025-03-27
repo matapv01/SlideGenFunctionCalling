@@ -12,7 +12,7 @@ import io
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from transformers import AutoTokenizer, AutoModelForCausalLM
 import torch
-from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor
+from transformers import Qwen2_5_VLForConditionalGeneration, AutoProcessor, BitsAndBytesConfig
 from qwen_vl_utils import process_vision_info
 import logging
 import zipfile
@@ -27,7 +27,8 @@ try:
     tokenizer = AutoTokenizer.from_pretrained(model_name_or_path)
     model = AutoModelForCausalLM.from_pretrained(
         model_name_or_path,
-        torch_dtype="auto",
+        torch_dtype=torch.bfloat16,
+        attn_implementation="flash_attention_2",
         device_map="auto",
     )
     logger.info("Qwen2.5-7B-Instruct loaded successfully.")
@@ -36,12 +37,20 @@ except Exception as e:
     model = None
     tokenizer = None
 
+# Cấu hình quantization (8-bit)
+quantization_config = BitsAndBytesConfig(
+    load_in_4bit=True,  # Sử dụng 4-bit quantization
+    llm_int8_enable_fp32_cpu_offload=True  # Cho phép offload phần CPU nếu cần
+)
+
 # Tải mô hình Qwen2.5-VL-7B-Instruct
 vlm_model_name = "Qwen/Qwen2.5-VL-7B-Instruct"
 try:
     vlm_model = Qwen2_5_VLForConditionalGeneration.from_pretrained(
         vlm_model_name,
         torch_dtype=torch.bfloat16,
+        # quantization_config=quantization_config,  # Cấu hình quantization
+        max_memory={0: "6GB"},
         attn_implementation="flash_attention_2",
         device_map="auto",
     )
@@ -227,8 +236,6 @@ def generate_body_slide1(
     text_bg_color="#FFFFFF",
     text_color="#2E7D32",
     keyword_color="#1B5E20",
-    image_bg_color="#C8E6C9",
-    image_placeholder_text="Image Placeholder",
     font_family="Roboto, Arial, sans-serif",
     content_paragraph="This is a customizable slide. Add your content here:",
     para_font_size="24px",
@@ -238,15 +245,15 @@ def generate_body_slide1(
     Generate a professional HTML slide body with customizable parameters.
 
     :param title: The title of the HTML document.
+    :param title_font_size: Font size of the slide title.
     :param slide_title: The title displayed on the slide.
     :param bg_color: Background color of the page.
     :param text_bg_color: Background color of the text container.
     :param text_color: Text color of the slide content.
     :param keyword_color: Color for keywords.
-    :param image_bg_color: Background color of the image placeholder.
-    :param image_placeholder_text: Text displayed in the image placeholder.
     :param font_family: Font family for the slide content.
     :param content_paragraph: Main paragraph content.
+    :param para_font_size: Font size of the paragraph and list items.
     :param list_items: A list of bullet points to include.
     :return: A string containing the HTML code.
     """
@@ -261,13 +268,13 @@ def generate_body_slide1(
     list_html = "\n".join(f"<li>{item}</li>" for item in list_items)
 
     html_code = f"""<!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 <head>
-    <meta charset=\"UTF-8\">
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {{
             height: 100%;
@@ -280,7 +287,7 @@ def generate_body_slide1(
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            height: 100%;
+            height: 100vh;
             padding: 20px;
         }}
         .slide-title {{
@@ -290,20 +297,16 @@ def generate_body_slide1(
             font-weight: bolder;
         }}
         .slide-content {{
-            display: flex;
-            flex-direction: row;
-            align-items: flex-start;
             background-color: {text_bg_color};
             padding: 40px;
             border-radius: 12px;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
             color: {text_color};
-            max-width: 1100px; /* Tăng kích thước tối đa của khung */
-            width: 100%;
+            max-width: 1000px; /* Adjusted width for a balanced look */
+            width: 90%;
         }}
         .text-content {{
-            flex: 3; /* Tăng tỉ lệ phần text để mở rộng */
-            margin-right: 30px;
+            width: 100%;
         }}
         .text-content p {{
             margin-bottom: 18px;
@@ -318,49 +321,27 @@ def generate_body_slide1(
             margin-top: 14px;
             font-size: {para_font_size};
         }}
-        .image-placeholder {{
-            flex: 1;
-            background-color: {image_bg_color};
-            width: 300px; /* Tăng kích thước ảnh */
-            height: 300px;
-            border-radius: 10px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            color: #333333;
-            font-size: 24px;
+        .keyword {{
+            color: {keyword_color};
             font-weight: bold;
         }}
-
         @media (max-width: 768px) {{
             .slide-content {{
-                flex-direction: column;
-                align-items: center;
-            }}
-            .text-content, .image-placeholder {{
-                margin: 0;
                 width: 100%;
-                max-width: none;
-            }}
-            .image-placeholder {{
-                margin-top: 20px;
-                height: 220px;
+                padding: 20px;
             }}
         }}
     </style>
 </head>
 <body>
-    <div class=\"slide-container\">
-        <div class=\"slide-title\">{slide_title}</div>
-        <div class=\"slide-content\">
-            <div class=\"text-content\">
+    <div class="slide-container">
+        <div class="slide-title">{slide_title}</div>
+        <div class="slide-content">
+            <div class="text-content">
                 <p>{content_paragraph}</p>
                 <ul>
                     {list_html}
                 </ul>
-            </div>
-            <div class=\"image-placeholder\">
-                {image_placeholder_text}
             </div>
         </div>
     </div>
@@ -382,8 +363,6 @@ def generate_body_slide2(
     header_color="#00251A",
     text_body_color="#00695C",
     highlight_color="#FF4500",
-    image_placeholder_text="[Image Placeholder]",
-    image_bg_color="#B2DFDB",
     font_family="Roboto, Arial, sans-serif",
     paragraph_text="This is a customizable slide content area. You can add any relevant information here",
     para_font_size="24px"
@@ -400,24 +379,23 @@ def generate_body_slide2(
     :param header_color: Color of the header text.
     :param text_body_color: Color of the body text.
     :param highlight_color: Color for highlighted text.
-    :param image_placeholder_text: Placeholder text for the main image area.
-    :param image_bg_color: Background color of the image placeholder.
     :param font_family: The font family to use for all text.
     :param paragraph_text: The content paragraph.
+    :param para_font_size: Font size of the paragraph text.
     :return: A string containing the HTML code.
     """
 
     html_code = f"""<!DOCTYPE html>
-<html lang=\"en\">
+<html lang="en">
 
 <head>
-    <meta charset=\"UTF-8\">
-    <meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{title}</title>
-    <script src=\"https://polyfill.io/v3/polyfill.min.js?features=es6\"></script>
-    <script id=\"MathJax-script\" async src=\"https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js\"></script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-chtml.js"></script>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href=\"https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css\" rel=\"stylesheet\">
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {{
             height: 100%;
@@ -432,42 +410,24 @@ def generate_body_slide2(
             align-items: center;
             height: 100vh;
             background-color: {background_color};
+            padding: 20px;
         }}
 
         .content-box {{
-            display: flex;
-            flex-direction: row;
             background-color: {content_bg_color};
             border-radius: 12px;
             box-shadow: {content_shadow};
-            width: 90%;
             padding: 40px;
-            color: {text_color};
-        }}
-
-        .text-section {{
-            flex: 2;
-            padding: 30px;
             color: {text_body_color};
-        }}
-
-        .image-box {{
-            flex: 1;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: {image_bg_color};
-            border-radius: 12px;
-            width: 300px;
-            height: 300px;
-            font-size: 20px;
-            font-weight: bold;
-            color: #333;
+            width: 90%;
+            max-width: 1000px; 
+            text-align: left;
         }}
 
         h1 {{
             color: {header_color};
             font-size: {header_font_size};
+            margin-bottom: 20px;
         }}
 
         p {{
@@ -482,30 +442,18 @@ def generate_body_slide2(
 
         @media (max-width: 768px) {{
             .content-box {{
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
+                width: 100%;
                 padding: 20px;
-            }}
-            .image-box {{
-                width: 150px;
-                height: 150px;
-                margin-top: 20px;
             }}
         }}
     </style>
 </head>
 
 <body>
-    <div class=\"slide-container\">
-        <div class=\"content-box\">
-            <div class=\"text-section\">
-                <h1>{header_text}</h1>
-                <p>{paragraph_text}</p>
-            </div>
-            <div class=\"image-box\">
-                {image_placeholder_text}
-            </div>
+    <div class="slide-container">
+        <div class="content-box">
+            <h1>{header_text}</h1>
+            <p>{paragraph_text}</p>
         </div>
     </div>
 </body>
@@ -520,12 +468,12 @@ def generate_body_slide3(
     subtitle="subtitle",
     subtitle_font_size = "32px",
     content_paragraphs=[
-        "Paragraph 1 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
-        "Paragraph 2 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
+        "Paragraph 1: Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
+        "Paragraph 2: Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
     ],
     left_bg_color="#F3F6FA",
-    right_bg_color="#0B1320",
-    text_color="#FFFFFF",
+    right_bg_color="#cdecda",
+    text_color="#333333",
     title_color="#000000",
     subtitle_color="#333333",
     icon_color="#FF9800",
@@ -533,7 +481,7 @@ def generate_body_slide3(
     font_family="Roboto, Arial, sans-serif"
 ):
     paragraphs_html = "".join(f"<p>{p}</p>" for p in content_paragraphs)
-    
+
     html_code = f"""<!DOCTYPE html>
 <html lang=\"en\">
 <head>
@@ -630,143 +578,6 @@ def generate_body_slide3(
             <div class=\"bottom-icons\">
                 <span></span><span></span><span></span>
             </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    return html_code
-
-def generate_body_slide4(
-    title="Learning Objectives",
-    title_font_size="42px",
-    para_font_size="24px",
-    objectives=None,
-    bg_color="#E8F5E9",
-    title_color='#2E7D32',
-    objective_bg_color="#388E3C",
-    objective_text_color="#ffffff",
-    content_text_color="#ffffff",
-    box_bg_color="#1B5E20",
-    box_shadow="0 4px 12px rgba(0, 0, 0, 0.1)",
-    box_border_radius="10px",
-    box_padding="20px",
-    font_family="Roboto, Arial, sans-serif",
-    image_src="path-to-your-image/ocean-background.png",
-    image_width="100%",
-    image_height="auto",
-    border_radius="50%"
-):
-    if objectives is None:
-        objectives = [
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-            "Maecenas euismod magna in sem rutrum luctus. Sed ultricies diam non venenatis dictum.",
-            "Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.",
-            "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        ]
-    
-    objective_html = "".join(
-        f"""
-        <div class="objective">
-            <div class="number">{index + 1}</div>
-            <div class="box">
-                <p>{content}</p>
-            </div>
-        </div>
-        """
-        for index, content in enumerate(objectives)
-    )
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: {font_family};
-            background-color: {bg_color};
-            color: {content_text_color};
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-image: url('{image_src}');
-            background-size: cover;
-            background-position: center;
-        }}
-        .container {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            max-width: 1200px;
-            padding: 20px;
-        }}
-        .title {{
-            font-size: {title_font_size};
-            margin-bottom: 40px;
-            color: {title_color};
-        }}
-        .objectives-container {{
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            width: 100%;
-        }}
-        .objective {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            height: 100%;
-        }}
-        .number {{
-            background-color: {objective_bg_color};
-            color: {objective_text_color};
-            font-size: 28px;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: {border_radius};
-            margin-bottom: 20px;
-        }}
-        .box {{
-            background-color: {box_bg_color};
-            color: {content_text_color};
-            padding: {box_padding};
-            border-radius: {box_border_radius};
-            box-shadow: {box_shadow};
-            height: 100%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            box-sizing: border-box;
-        }}
-        .box p {{
-            font-size: {para_font_size};
-            line-height: 1.6;
-            margin: 0;
-            text-align: center;
-        }}
-        @media (max-width: 768px) {{
-            .objectives-container {{
-                grid-template-columns: 1fr;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="container">
-        <h1 class="title">{title}</h1>
-        <div class="objectives-container">
-            {objective_html}
         </div>
     </div>
 </body>
@@ -912,6 +723,7 @@ def generate_body_slide5(
 </body>
 </html>"""
     return html_code
+
 
 def generate_body_slide6(
     title="TITLE",
@@ -1066,7 +878,7 @@ def generate_body_slide6(
     </div>
 </body>
 </html>"""
-    
+
     return html_code
 
 def generate_body_slide7(
@@ -1164,7 +976,101 @@ def generate_body_slide7(
 </html>"""
     return html_code
 
-
+def generate_body_slide7(
+    title="Title",
+    content="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante. Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique, nulla risus mattis eros, id accumsan massa elit eu augue. Mauris massa ipsum, pharetra id nibh eget, sodales facilisis enim.",
+    title_font_size="42px",
+    content_font_size="24px",
+    bg_color="#FFFBEB",
+    title_color="#000000",
+    content_color="#333333",
+    corner_decoration_color="#FDE68A",
+    font_family="Roboto, Arial, sans-serif"
+):
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href=\"https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css\" rel=\"stylesheet\">
+    <style>
+        html, body {{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }}
+        body {{
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: {bg_color};
+            font-family: {font_family};
+        }}
+        .slide-container {{
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 0 10%;
+            box-sizing: border-box;
+            background-color: white;
+        }}
+        .corner-decoration {{
+            position: absolute;
+            width: 200px;
+            height: 200px;
+            background-color: {corner_decoration_color};
+            opacity: 0.3;
+            z-index: 1;
+        }}
+        .top-left {{
+            top: 0;
+            left: 0;
+            border-radius: 0 0 100% 0;
+        }}
+        .bottom-right {{
+            bottom: 0;
+            right: 0;
+            border-radius: 100% 0 0 0;
+        }}
+        .title {{
+            font-size: {title_font_size};
+            text-align: center;
+            color: {title_color};
+            margin-bottom: 30px;
+            font-weight: bold;
+            letter-spacing: 4px;
+            z-index: 2;
+            position: relative;
+            top: -50px;
+        }}
+        .content {{
+            font-size: {content_font_size};
+            color: {content_color};
+            line-height: 1.8;
+            max-width: 1000px;
+            padding: 0 30px;
+            z-index: 2;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="corner-decoration top-left"></div>
+        <div class="corner-decoration bottom-right"></div>
+        <h1 class="title">{title}</h1>
+        <p class="content">{content}</p>
+    </div>
+</body>
+</html>"""
+    return html_code
+    
 def generate_body_slide8(
     title="DISCUSSION",
     points=[
@@ -1181,7 +1087,7 @@ def generate_body_slide8(
 ):
     # Xử lý danh sách các điểm
     points_html = "".join(f"<li>{point}</li>" for point in points)
-    
+
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -1443,155 +1349,6 @@ def generate_conclusion_slide(
 
     return html_code
 
-def generate_end_slide(
-
-    # Content parameters
-    content_text="THANK YOU!",
-    content_color="#0F4662",
-    content_font_size="56px",
-    content_line_height="1.6",
-    content_width="70%",
-    content_margin="0 auto",
-    content_text_align="center",
-
-    # Decoration parameters
-    dot_color="#0F4662",
-    dot_size="10px",
-    dot_margin="0 5px",
-    dot_count=5,
-    line_color="#1a3d5c",
-    line_width="50%",
-    line_height="2px",
-    line_margin="30px auto",
-
-    # Slide parameters
-    slide_bg_color="#f5f5f5",
-    font_family="Robo, Arial, sans-serif",
-    additional_css=""
-):
-    """
-    Generates a customizable HTML slide with a 'Conclusion' layout featuring dots and lines as decorations.
-
-    Args:
-        title: Slide title text
-        title_color: Color of the title
-        title_font_size: Font size of title
-        title_font_style: Font style for title (e.g., "italic")
-        title_margin_bottom: Bottom margin for title
-        title_margin_left: Left margin for title
-
-        content_text: Main content text
-        content_color: Color of content text
-        content_font_size: Font size of content
-        content_line_height: Line height for content
-        content_width: Width of content container
-        content_margin: Margin around content
-        content_text_align: Text alignment for content
-
-        dot_color: Color of decorative dots
-        dot_size: Size of decorative dots
-        dot_margin: Margin between dots
-        dot_count: Number of dots in each row
-        line_color: Color of horizontal lines
-        line_width: Width of horizontal lines
-        line_height: Height/thickness of horizontal lines
-        line_margin: Margin around horizontal lines
-
-        slide_bg_color: Background color of the slide
-        font_family: Font family for all text
-        additional_css: Additional CSS styles
-    """
-
-    # Generate dots HTML
-    dots_html = ""
-    for _ in range(dot_count):
-        dots_html += f'<span class="dot"></span>'
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            font-family: {font_family};
-            background-color: {slide_bg_color};
-        }}
-        .slide-container {{
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-            padding: 40px;
-            box-sizing: border-box;
-        }}
-        .content-container {{
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            flex: 1;
-        }}
-        .content {{
-            color: {content_color};
-            font-size: {content_font_size};
-            line-height: {content_line_height};
-            width: {content_width};
-            margin: {content_margin};
-            text-align: {content_text_align};
-        }}
-        .horizontal-line {{
-            width: {line_width};
-            height: {line_height};
-            background-color: {line_color};
-            margin: {line_margin};
-        }}
-        .dots-container {{
-            display: flex;
-            justify-content: center;
-            margin: 10px 0;
-        }}
-        .dot {{
-            display: inline-block;
-            width: {dot_size};
-            height: {dot_size};
-            border-radius: 50%;
-            background-color: {dot_color};
-            margin: {dot_margin};
-        }}
-        {additional_css}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-
-        <div class="content-container">
-            <div class="dots-container">
-                {dots_html}
-            </div>
-
-            <div class="horizontal-line"></div>
-
-            <div class="content">
-                {content_text}
-            </div>
-
-            <div class="horizontal-line"></div>
-
-            <div class="dots-container">
-                {dots_html}
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-
-    return html_code
-
-
-# @title Function Descriptions
 def get_function_by_name(name):
     if name == "generate_intro_slide":
         return generate_intro_slide
@@ -1601,16 +1358,19 @@ def get_function_by_name(name):
         return generate_body_slide2
     elif name == "generate_body_slide3":
         return generate_body_slide3
-    elif name == "generate_body_slide4":
-        return generate_body_slide4
-    elif name == "generate_body_slide5":
-        return generate_body_slide5
+    elif name == "generate_body_slide6":
+        return generate_body_slide6
+    elif name == "generate_body_slide7":
+        return generate_body_slide7
     elif name == "generate_body_slide8":
         return generate_body_slide8
     elif name == "generate_conclusion_slide":
         return generate_conclusion_slide
     else:
         raise ValueError(f"Function with name '{name}' not found.")
+
+
+
 
 TOOLS = [
     {
@@ -1650,35 +1410,149 @@ TOOLS = [
             }
         }
     },
-    
+   {
+  "type": "function",
+  "function": {
+    "name": "generate_body_slide1",
+    "description": "Generate a professional HTML slide body with a centered content frame, featuring a slide title, a paragraph, and a list of bullet points. The slide is designed for presenting structured textual information in a clean and balanced manner, with customizable colors, fonts, and shadow effects. Ideal for focused presentation slides.",
+    "parameters": {
+      "title": {
+        "type": "string",
+        "default": "Professional HTML Slide",
+        "description": "The title of the HTML document, displayed in the browser tab."
+      },
+      "title_font_size": {
+        "type": "string",
+        "default": "42px",
+        "description": "Font size of the slide title displayed at the top of the slide."
+      },
+      "slide_title": {
+        "type": "string",
+        "default": "Slide Title",
+        "description": "The main title displayed at the top of the slide, above the content frame."
+      },
+      "bg_color": {
+        "type": "string",
+        "default": "#E8F5E9",
+        "description": "Background color of the entire slide."
+      },
+      "text_bg_color": {
+        "type": "string",
+        "default": "#FFFFFF",
+        "description": "Background color of the content frame."
+      },
+      "text_color": {
+        "type": "string",
+        "default": "#2E7D32",
+        "description": "Text color of the paragraph and list items in the content frame."
+      },
+      "keyword_color": {
+        "type": "string",
+        "default": "#1B5E20",
+        "description": "Color for keywords (used for the slide title and within <span class=\"keyword\"> tags in list items)."
+      },
+      "font_family": {
+        "type": "string",
+        "default": "Roboto, Arial, sans-serif",
+        "description": "Font family for all text in the slide."
+      },
+      "content_paragraph": {
+        "type": "string",
+        "default": "This is a customizable slide. Add your content here:",
+        "description": "The main paragraph text displayed above the list in the content frame."
+      },
+      "para_font_size": {
+        "type": "string",
+        "default": "24px",
+        "description": "Font size of the paragraph and list items."
+      },
+      "list_items": {
+        "type": "list",
+        "default": [
+          "<span class=\"keyword\">Point 1</span>: Description of point 1.",
+          "<span class=\"keyword\">Point 2</span>: Description of point 2.",
+          "<span class=\"keyword\">Point 3</span>: Description of point 3.",
+          "<span class=\"keyword\">Point 4</span>: Description of point 4."
+        ],
+        "description": "A list of bullet points to include in the content frame. Each item can include HTML tags like <span class=\"keyword\"> for styling keywords. If not provided, defaults to four sample bullet points."
+      }
+    }
+  }
+},
     {
-        "type": "function",
-        "function": {
-            "name": "generate_body_slide2",
-            "description": "Generate a professional HTML slide body with a header, a content paragraph, and an image placeholder.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string", "default": "Slide Header", "description": "The title of the HTML document"},
-                    "header_text": {"type": "string", "default": "Key Insights", "description": "The main header of the slide"},
-                    "header_font_size": {"type": "string", "default": "42px", "description": "Font size of the header text"},
-                    "background_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the entire slide"},
-                    "text_color": {"type": "string", "default": "#004D40", "description": "The default text color"},
-                    "content_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color for the content box"},
-                    "content_shadow": {"type": "string", "default": "0 6px 12px rgba(0, 0, 0, 0.1)", "description": "Box shadow for the content container"},
-                    "header_color": {"type": "string", "default": "#00251A", "description": "Color of the header text"},
-                    "text_body_color": {"type": "string", "default": "#00695C", "description": "Color of the body text"},
-                    "highlight_color": {"type": "string", "default": "#FF4500", "description": "Color for highlighted text"},
-                    "image_placeholder_text": {"type": "string", "default": "[Image Placeholder]", "description": "Placeholder text for the main image area"},
-                    "image_bg_color": {"type": "string", "default": "#B2DFDB", "description": "Background color of the image placeholder"},
-                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family to use for all text"},
-                    "paragraph_text": {"type": "string", "default": "This is a customizable slide content area. You can add any relevant information here", "description": "The content paragraph"},
-                    "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text"}
-                },
-                "required": []
-            }
-        }
-    },
+  "type": "function",
+  "function": {
+    "name": "generate_body_slide2",
+    "description": "Generate a professional HTML slide body with a centered content frame, featuring a main header and a paragraph. The slide is designed for presenting textual information in a clean and balanced manner, with a customizable background, text colors, and shadow effects. Ideal for simple, focused presentation slides.",
+    "parameters": {
+      "title": {
+        "type": "string",
+        "default": "Slide Header",
+        "description": "The title of the HTML document, displayed in the browser tab."
+      },
+      "header_text": {
+        "type": "string",
+        "default": "Key Insights",
+        "description": "The main header text of the slide, displayed at the top of the content frame."
+      },
+      "header_font_size": {
+        "type": "string",
+        "default": "42px",
+        "description": "Font size of the main header text."
+      },
+      "background_color": {
+        "type": "string",
+        "default": "#E8F5E9",
+        "description": "Background color of the entire slide."
+      },
+      "text_color": {
+        "type": "string",
+        "default": "#004D40",
+        "description": "Default text color for the slide (not currently used in styling but reserved for future use)."
+      },
+      "content_bg_color": {
+        "type": "string",
+        "default": "#FFFFFF",
+        "description": "Background color of the content frame."
+      },
+      "content_shadow": {
+        "type": "string",
+        "default": "0 6px 12px rgba(0, 0, 0, 0.1)",
+        "description": "Box shadow effect applied to the content frame for a 3D appearance."
+      },
+      "header_color": {
+        "type": "string",
+        "default": "#00251A",
+        "description": "Color of the main header text."
+      },
+      "text_body_color": {
+        "type": "string",
+        "default": "#00695C",
+        "description": "Color of the paragraph text in the content frame."
+      },
+      "highlight_color": {
+        "type": "string",
+        "default": "#FF4500",
+        "description": "Color for highlighted text (used for <strong> tags)."
+      },
+      "font_family": {
+        "type": "string",
+        "default": "Roboto, Arial, sans-serif",
+        "description": "Font family for all text in the slide."
+      },
+      "paragraph_text": {
+        "type": "string",
+        "default": "This is a customizable slide content area. You can add any relevant information here",
+        "description": "The paragraph text displayed below the header in the content frame."
+      },
+      "para_font_size": {
+        "type": "string",
+        "default": "24px",
+        "description": "Font size of the paragraph text."
+      }
+    }
+  }
+},
     {
         "type": "function",
         "function": {
@@ -1695,10 +1569,10 @@ TOOLS = [
                         "type": "array",
                         "items": {"type": "string"},
                         "default": [
-                            "Paragraph 1 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
-                            "Paragraph 2 Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
+                            "Paragraph 1: Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos.",
+                            "Paragraph 2: Present with ease and wow any audience with Canva Presentations. Choose from over a thousand professionally-made templates to fit any objective or topic. Make it your own by customizing it with text and photos."
                         ],
-                        "description": "A list of paragraphs to display in the right section"
+                        "description": "A list of paragraphs to display in the right section. It should be contained paragraphs with long content."
                     },
                     "left_bg_color": {"type": "string", "default": "#F3F6FA", "description": "Background color of the left section"},
                     "right_bg_color": {"type": "string", "default": "#0B1320", "description": "Background color of the right section"},
@@ -1708,47 +1582,6 @@ TOOLS = [
                     "icon_color": {"type": "string", "default": "#FF9800", "description": "Color of the bottom decorative icons"},
                     "corner_icon_color": {"type": "string", "default": "#3D5AFE", "description": "Color of the corner decorative icons"},
                     "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the slide content"}
-                },
-                "required": []
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "generate_body_slide4",
-            "description": "Generate a professional HTML slide body with a structured content box and numbered items.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string", "default": "Learning Objectives", "description": "The main title of the slide"},
-                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the title"},
-                    "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text"},
-                    "objectives": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "default": [
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit.",
-                            "Maecenas euismod magna in sem rutrum luctus. Sed ultricies diam non venenatis dictum.",
-                            "Integer malesuada molestie mauris at scelerisque. Sed sit amet tempor nulla.",
-                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-                        ],
-                        "description": "A list of objectives or key points to be displayed"
-                    },
-                    "bg_color": {"type": "string", "default": "#E8F5E9", "description": "The background color of the slide"},
-                    "title_color": {"type": "string", "default": "#2E7D32", "description": "The color of the slide title"},
-                    "objective_bg_color": {"type": "string", "default": "#388E3C", "description": "The background color for the numbered items"},
-                    "objective_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the numbered items"},
-                    "content_text_color": {"type": "string", "default": "#ffffff", "description": "The text color of the content inside the box"},
-                    "box_bg_color": {"type": "string", "default": "#1B5E20", "description": "The background color of the content box"},
-                    "box_shadow": {"type": "string", "default": "0 4px 12px rgba(0, 0, 0, 0.1)", "description": "The box shadow effect for the content box"},
-                    "box_border_radius": {"type": "string", "default": "10px", "description": "The border radius for the content box"},
-                    "box_padding": {"type": "string", "default": "20px", "description": "The padding inside the content box"},
-                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "The font family used for the slide"},
-                    "image_src": {"type": "string", "default": "path-to-your-image/ocean-background.png", "description": "The source path for the background image"},
-                    "image_width": {"type": "string", "default": "100%", "description": "The width of the background image"},
-                    "image_height": {"type": "string", "default": "auto", "description": "The height of the background image"},
-                    "border_radius": {"type": "string", "default": "50%", "description": "The border radius applied to the numbered items"}
                 },
                 "required": []
             }
@@ -1785,6 +1618,64 @@ TOOLS = [
             }
         }
     },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide6",
+            "description": "Generate a professional HTML slide body with a main title and multiple sections, each containing a subtitle and a list of bullet points.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "TITLE", "description": "The main title of the slide"},
+                    "sections": {
+                        "type": "object",
+                        "default": {
+                            "SubTitle1": ["Content1", "Content2", "Content3", "Content4"],
+                            "SubTitle2": ["Content5", "Content6", "Content7"],
+                            "SubTitle3": ["Content8", "Content9", "Content10"]
+                        },
+                        "description": "A dictionary where keys are section subtitles and values are lists of bullet points for each section. Limited to a maximum of 4 subtitles. The total word count of all bullet points per subtitle must not exceed 50 words. If not provided, defaults to three sections with sample content."
+                    },
+                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the main title"},
+                    "section_title_font_size": {"type": "string", "default": "24px", "description": "Font size of the section subtitles"},
+                    "section_content_font_size": {"type": "string", "default": "20px", "description": "Font size of the bullet point content"},
+                    "title_color": {"type": "string", "default": "#1a1a1a", "description": "Color of the main title and the divider line"},
+                    "title_font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the main title"},
+                    "subtitle_bg_color": {"type": "string", "default": "#1a1a1a", "description": "Background color of the section subtitles"},
+                    "subtitle_text_color": {"type": "string", "default": "#ffffff", "description": "Text color of the section subtitles"},
+                    "box_border_color": {"type": "string", "default": "#1a1a1a", "description": "Color of the border around each section box"},
+                    "box_border_radius": {"type": "string", "default": "12px", "description": "Border radius for the section boxes"},
+                    "box_padding": {"type": "string", "default": "20px", "description": "Padding inside each section box"},
+                    "box_shadow": {"type": "string", "default": "0 4px 12px rgba(0, 0, 0, 0.15)", "description": "Box shadow effect for each section box"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the overall slide content"},
+                    "bullet_color": {"type": "string", "default": "#333", "description": "Color of the bullet point text"}
+                },
+                "required": []
+            }
+        }
+    },
+    {
+        "type": "function",
+        "function": {
+            "name": "generate_body_slide7",
+            "description": "Generate a professional HTML slide body with a centered title and a paragraph of content, enhanced with decorative semi-transparent circular corners.",
+            "parameters": {
+                "type": "object",
+                "properties": {
+                    "title": {"type": "string", "default": "Title", "description": "The main title of the slide"},
+                    "content": {"type": "string", "default": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Duis vel dolor ante. Nullam feugiat egestas elit et vehicula. Proin venenatis, orci nec cursus tristique, nulla risus mattis eros, id accumsan massa elit eu augue. Mauris massa ipsum, pharetra id nibh eget, sodales facilisis enim.", "description": "The main content paragraph"},
+                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the main title"},
+                    "content_font_size": {"type": "string", "default": "24px", "description": "Font size of the content paragraph"},
+                    "bg_color": {"type": "string", "default": "#FFFBEB", "description": "Background color of the entire slide body"},
+                    "title_color": {"type": "string", "default": "#000000", "description": "Color of the main title text"},
+                    "content_color": {"type": "string", "default": "#333333", "description": "Color of the content paragraph text"},
+                    "corner_decoration_color": {"type": "string", "default": "#FDE68A", "description": "Color of the semi-transparent circular decorations in the corners"},
+                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for both title and content"}
+                },
+                "required": []
+            }
+        }
+    },
     
     {
         "type": "function",
@@ -1811,42 +1702,6 @@ TOOLS = [
                     "content_color": {"type": "string", "default": "#333333", "description": "Color of the bullet point text"},
                     "corner_decoration_color": {"type": "string", "default": "#FDE68A", "description": "Color of the semi-transparent circular decorations in the corners"},
                     "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for both title and content"}
-                },
-                "required": []
-            }
-        }
-    },
-    {
-        "type": "function",
-        "function": {
-            "name": "generate_body_slide1",
-            "description": "Generate a professional HTML slide body with a title, a main paragraph, a list of bullet points, and an image placeholder.",
-            "parameters": {
-                "type": "object",
-                "properties": {
-                    "title": {"type": "string", "default": "Professional HTML Slide", "description": "The title of the HTML document"},
-                    "title_font_size": {"type": "string", "default": "42px", "description": "Font size of the slide title"},
-                    "slide_title": {"type": "string", "default": "Slide Title", "description": "The title displayed on the slide"},
-                    "bg_color": {"type": "string", "default": "#E8F5E9", "description": "Background color of the page"},
-                    "text_bg_color": {"type": "string", "default": "#FFFFFF", "description": "Background color of the text container"},
-                    "text_color": {"type": "string", "default": "#2E7D32", "description": "Text color of the slide content"},
-                    "keyword_color": {"type": "string", "default": "#1B5E20", "description": "Color for keywords"},
-                    "image_bg_color": {"type": "string", "default": "#C8E6C9", "description": "Background color of the image placeholder"},
-                    "image_placeholder_text": {"type": "string", "default": "Image Placeholder", "description": "Text displayed in the image placeholder"},
-                    "font_family": {"type": "string", "default": "Roboto, Arial, sans-serif", "description": "Font family for the slide content"},
-                    "content_paragraph": {"type": "string", "default": "This is a customizable slide. Add your content here:", "description": "Main paragraph content"},
-                    "para_font_size": {"type": "string", "default": "24px", "description": "Font size of the paragraph text"},
-                    "list_items": {
-                        "type": "array",
-                        "items": {"type": "string"},
-                        "default": [
-                            "<span class=\"keyword\">Point 1</span>: Description of point 1.",
-                            "<span class=\"keyword\">Point 2</span>: Description of point 2.",
-                            "<span class=\"keyword\">Point 3</span>: Description of point 3.",
-                            "<span class=\"keyword\">Point 4</span>: Description of point 4."
-                        ],
-                        "description": "A list of bullet points to include"
-                    }
                 },
                 "required": []
             }
@@ -1889,8 +1744,8 @@ TOOLS = [
             }
         }
     }
+    
 ]
-
 def extract_text_from_docx(file_path):
     logger.info(f"Extracting text from {file_path}")
     doc = Document(file_path)

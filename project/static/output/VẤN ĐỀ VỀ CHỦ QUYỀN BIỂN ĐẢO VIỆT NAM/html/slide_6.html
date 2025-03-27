@@ -3,113 +3,97 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body, html {
             margin: 0;
             padding: 0;
-            height: 100%;
             font-family: Roboto, Arial, sans-serif;
-            background-color: #E8F5E9;
-            color: #ffffff;
+            height: 100vh;
+            width: 100vw;
             display: flex;
             justify-content: center;
             align-items: center;
-            background-image: url('path-to-your-image/ocean-background.png');
-            background-size: cover;
-            background-position: center;
+            background-color: #F3F6FA;
         }
-        .container {
+        .slide-container {
+            display: flex;
+            width: 100vw;
+            height: 100vh;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            border-radius: 0;
+            overflow: hidden;
+        }
+        .left-container {
+            flex: 1;
+            padding: 60px;
+            background-color: #F3F6FA;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            text-align: center;
-            width: 100%;
-            max-width: 1200px;
-            padding: 20px;
+            justify-content: flex-start;
+            align-items: flex-start;
         }
         .title {
             font-size: 42px;
-            margin-bottom: 40px;
-            color: #2E7D32;
+            font-weight: bold;
+            color: #000000;
+            margin-bottom: 20px;
+            align-self: flex-start;
         }
-        .objectives-container {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 20px;
-            width: 100%;
+        .subtitle {
+            font-size: 32px;
+            color: #333333;
+            align-self: flex-start;
         }
-        .objective {
+        .right-container {
+            flex: 2;
+            padding: 40px;
+            background-color: #0B1320;
+            color: #FFFFFF;
+            border-radius: 20px;
+            position: relative;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            height: 100%;
-        }
-        .number {
-            background-color: #388E3C;
-            color: #ffffff;
-            font-size: 28px;
-            width: 50px;
-            height: 50px;
-            display: flex;
-            align-items: center;
             justify-content: center;
+            align-items: center;
+        }
+        .corner-icons {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            display: flex;
+            gap: 5px;
+        }
+        .corner-icons span, .bottom-icons span {
+            width: 12px;
+            height: 12px;
+            background-color: #3D5AFE;
             border-radius: 50%;
-            margin-bottom: 20px;
+            display: inline-block;
         }
-        .box {
-            background-color: #1B5E20;
-            color: #ffffff;
-            padding: 20px;
-            border-radius: 10px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            height: 100%;
+        .bottom-icons {
+            position: absolute;
+            bottom: 10px;
+            left: 20px;
             display: flex;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            box-sizing: border-box;
+            gap: 5px;
         }
-        .box p {
-            font-size: 24px;
-            line-height: 1.6;
-            margin: 0;
-            text-align: center;
-        }
-        @media (max-width: 768px) {
-            .objectives-container {
-                grid-template-columns: 1fr;
-            }
-        }
+        .bottom-icons span { background-color: #FF9800; }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1 class="title">Giải pháp và hướng đi trong bảo vệ chủ quyền biển đảo</h1>
-        <div class="objectives-container">
-            
-        <div class="objective">
-            <div class="number">1</div>
-            <div class="box">
-                <p>Phát triển mạnh mẽ lực lượng bảo vệ biển: Cần đầu tư mạnh vào lực lượng cảnh sát biển và lực lượng hải quân, không chỉ về số lượng mà còn về trang thiết bị, đào tạo và kỹ năng, để đảm bảo khả năng bảo vệ chủ quyền biển đảo trước các mối đe dọa từ bên ngoài.</p>
-            </div>
+    <div class="slide-container">
+        <div class="left-container">
+            <div class="title">Giải Pháp và Hướng Đi Trong Bảo Vệ Chủ Quyền Biển Đảo</div>
+            <div class="subtitle">Phát Triển Mạnh Mẽ Lực Lượng Bảo Vệ Biển</div>
         </div>
-        
-        <div class="objective">
-            <div class="number">2</div>
-            <div class="box">
-                <p>Nâng cao nhận thức cộng đồng: Việc tuyên truyền, giáo dục về chủ quyền biển đảo cần được thực hiện rộng rãi qua các kênh truyền thông, sách vở, chương trình học, và các hoạt động cộng đồng để mỗi công dân hiểu rõ trách nhiệm của mình trong việc bảo vệ chủ quyền quốc gia.</p>
+        <div class="right-container">
+            <div class="corner-icons">
+                <span></span><span></span><span></span>
             </div>
-        </div>
-        
-        <div class="objective">
-            <div class="number">3</div>
-            <div class="box">
-                <p>Tăng cường đầu tư vào phát triển kinh tế biển: Nâng cao hiệu quả khai thác và bảo vệ tài nguyên biển, xây dựng các ngành công nghiệp biển như năng lượng tái tạo, khai thác khoáng sản, du lịch biển... để khẳng định chủ quyền và thúc đẩy phát triển kinh tế bền vững.</p>
+            <p>Nâng cao nhận thức cộng đồng: Cần đầu tư mạnh vào lực lượng cảnh sát biển và hải quân, không chỉ về số lượng mà còn về trang thiết bị, đào tạo và kỹ năng, để đảm bảo khả năng bảo vệ chủ quyền biển đảo trước các mối đe dọa từ bên ngoài.</p><p>Tăng cường đầu tư vào phát triển kinh tế biển: Nâng cao nhận thức cộng đồng về việc tuyên truyền, giáo dục về chủ quyền biển đảo thông qua các kênh truyền thông, sách vở, chương trình học, và các hoạt động cộng đồng để mỗi công dân hiểu rõ trách nhiệm của mình trong việc bảo vệ chủ quyền quốc gia.</p><p>Xây dựng các ngành công nghiệp biển: Tăng cường khai thác và bảo vệ tài nguyên biển, xây dựng các ngành công nghiệp biển như năng lượng tái tạo, khai thác khoáng sản, du lịch biển... để khẳng định chủ quyền và thúc đẩy phát triển kinh tế bền vững.</p>
+            <div class="bottom-icons">
+                <span></span><span></span><span></span>
             </div>
-        </div>
-        
         </div>
     </div>
 </body>

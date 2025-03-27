@@ -1,74 +1,127 @@
+/* Reset và style cơ bản */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
 body {
   font-family: Arial, sans-serif;
   background-color: #f8f9fa;
+  height: 100vh;
 }
 
+html, body, .container-fluid, .row {
+  height: 100%;
+  width: 100%; /* Đảm bảo không giới hạn chiều rộng */
+}
+
+/* Sidebar (danh sách slide bên trái) */
 .sidebar {
-  border-right: 1px solid #ddd;
-  padding: 20px;
-  height: 100vh;
+  border-right: 1px solid #04ff71;
+  padding: 15px;
+  height: 100%;
   overflow-y: auto;
+  background-color: #ffffff;
 }
 
 .slide-list {
-  margin-top: 20px;
+  margin-top: 15px;
 }
 
 .slide-item {
-  border: 1px solid #ddd;
-  padding: 10px;
-  margin-bottom: 10px;
+  border: 1px solid #010101;
+  padding: 8px;
+  margin-bottom: 8px;
   cursor: pointer;
   position: relative;
-  background-color: #fff;
-  border-radius: 5px;
+  background-color: #ffffff;
+  border-radius: 4px;
+  transition: background-color 0.2s, border-color 0.2s;
 }
 
 .slide-item.active {
-  border-color: #007bff;
-  background-color: #e7f1ff;
+  border-color: #000000;
+  background-color: #f3a0d2;
 }
 
 .slide-title {
   font-weight: bold;
-  margin-bottom: 5px;
+  font-size: 0.9rem;
+  color: #333;
 }
 
-.slide-item img.preview {
-  max-width: 100%;
-  height: auto;
-  margin-top: 5px;
-  border: 1px solid #eee;
-  border-radius: 3px;
+.slide-item.active .slide-title {
+  color: #28a745;
 }
 
+.delete-slide {
+  position: absolute;
+  top: 5px;
+  right: 5px;
+  padding: 2px 6px;
+  font-size: 0.8rem;
+}
+
+/* Khu vực chỉnh sửa slide (bên phải) */
 .editor-area {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  padding: 0; /* Loại bỏ padding để không có khoảng trống thừa */
+  overflow-x: auto; /* Cho phép cuộn ngang */
+  overflow-y: auto; /* Cho phép cuộn dọc */
   position: relative;
+  min-height: 1300px; /* Đủ chiều cao để chứa toolbar và slide */
 }
 
+/* Toolbar (thanh công cụ) */
 #toolbar {
-  position: sticky;
-  top: 0;
-  background-color: #fff;
-  border-bottom: 1px solid #ddd;
-  padding: 10px;
+  position: relative; /* Cuộn cùng nội dung */
+  background-color: #f3a0d2;
+  border-bottom: 1px solid #000000;
+  padding: 8px;
   z-index: 10;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 50px; /* Đảm bảo toolbar có chiều cao tối thiểu */
 }
 
-#toolbar .btn, #toolbar input, #toolbar select {
+#toolbar .btn,
+#toolbar input,
+#toolbar select {
   margin-right: 5px;
+  font-size: 0.9rem;
+  display: inline-block; /* Đảm bảo hiển thị */
+  visibility: visible; /* Đảm bảo không bị ẩn */
 }
 
-.slide-container {
+/* Container chứa slide */
+#slideContainer {
+  margin-top: 0; /* Sát toolbar */
+  margin-left: 0; /* Căn sát trái */
   border: 1px solid #ddd;
-  padding: 20px;
-  min-height: 500px;
-  background-color: #fff;
-  border-radius: 5px;
-  overflow: auto;
-  margin-top: 10px;
+  border-radius: 4px;
+  background-color: transparent;
+  width: 1980px; /* Kích thước gốc của slide */
+  min-width: 1920px; /* Đảm bảo không bị thu nhỏ */
+  height: 1080px; /* Kích thước gốc của slide */
+  position: relative;
+  text-align: left; /* Căn trái nội dung */
 }
 
+/* Wrapper của slide */
+.slide-wrapper {
+  width: 1920px;
+  height: 1080px;
+  margin-left: 0; /* Căn sát trái */
+  text-align: left; /* Căn trái nội dung */
+}
+
+/* Loading overlay */
 .loading-overlay {
   position: fixed;
   top: 0;
@@ -82,28 +135,38 @@ body {
   z-index: 1000;
 }
 
-.delete-slide {
-  position: absolute;
-  top: 5px;
-  right: 5px;
-  padding: 2px 6px;
-}
-
-.btn-sm {
-  font-size: 0.8rem;
-}
-
+/* Toast thông báo */
 .toast {
   min-width: 250px;
 }
 
+/* Responsive */
 @media (max-width: 768px) {
   .sidebar {
       height: auto;
       border-right: none;
       border-bottom: 1px solid #ddd;
+      padding: 10px;
   }
-  .slide-container {
-      min-height: 300px;
+
+  .editor-area {
+      padding: 0;
+      min-height: 1300px;
+  }
+
+  #toolbar {
+      padding: 5px;
+      flex-wrap: wrap;
+  }
+
+  #toolbar .btn,
+  #toolbar input,
+  #toolbar select {
+      margin-right: 5px;
+      font-size: 0.9rem;
+  }
+
+  #slideContainer {
+      margin-top: 0;
   }
 }
