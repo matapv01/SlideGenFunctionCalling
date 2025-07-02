@@ -196,7 +196,6 @@ async def export_pdf(slides: List[dict]):
     try:
         timestamp = tempfile.gettempdir().split(os.sep)[-1]
         temp_folder = os.path.join(TEMP_DIR, f"pdf_{timestamp}")
-
         if os.path.exists(temp_folder):
             shutil.rmtree(temp_folder)
         os.makedirs(temp_folder)
@@ -208,10 +207,6 @@ async def export_pdf(slides: List[dict]):
         chrome_options.add_argument('--window-size=1920,1080')
         
         driver = webdriver.Chrome(options=chrome_options)
-        driver.set_window_size(1920, 1080)  # Cưỡng ép lại kích thước trình duyệt thật
-        
-        # Cưỡng ép đúng tỉ lệ zoom
-        driver.execute_cdp_cmd('Emulation.setPageScaleFactor', {'pageScaleFactor': 1})
         
         image_files = []
         for i, slide in enumerate(slides, 1):
@@ -223,15 +218,16 @@ async def export_pdf(slides: List[dict]):
                         <head>
                             <meta charset="UTF-8">
                             <style>
-                                html, body {{
+                                body {{
                                     margin: 0;
-                                    padding: 0;
+                                    padding: 20px;
                                     width: 1920px;
                                     height: 1080px;
-                                    overflow: hidden;
+                                    display: flex;
+                                    align-items: center;
+                                    justify-content: center;
                                 }}
                                 .slide-content {{
-                                    box-sizing: border-box;
                                     width: 100%;
                                     height: 100%;
                                     padding: 40px;
@@ -246,7 +242,7 @@ async def export_pdf(slides: List[dict]):
                     </html>
                 ''')
             # Tăng thời gian chờ tải trang
-            driver.set_page_load_timeout(300)
+            driver.set_page_load_timeout(300)  # 5 phút
             driver.get(f'file:///{html_path}')
             # Đợi thêm để đảm bảo trang tải xong
             await asyncio.sleep(1)
@@ -256,16 +252,9 @@ async def export_pdf(slides: List[dict]):
         
         driver.quit()
         
-        # Đọc ảnh thành bytes trước khi chuyển đổi
-        image_bytes_list = []
-        for image_path in image_files:
-            with open(image_path, 'rb') as img_file:
-                image_bytes_list.append(img_file.read())
-        
         pdf_path = os.path.join(TEMP_DIR, f'slides_{timestamp}.pdf')
         with open(pdf_path, "wb") as f:
-            layout = img2pdf.get_layout_fun(auto_orient=True)
-            f.write(img2pdf.convert(image_bytes_list, layout_fun=layout))
+            f.write(img2pdf.convert(image_files))
         
         response = FileResponse(
             pdf_path,
@@ -273,7 +262,6 @@ async def export_pdf(slides: List[dict]):
             media_type='application/pdf'
         )
         return response
-        
     except Exception as e:
         logger.exception(f"Error exporting PDF: {e}")
         raise HTTPException(status_code=500, detail=str(e))

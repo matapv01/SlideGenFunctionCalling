@@ -1,33 +1,299 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SlideGen - Slide Generator</title>
-    <link rel="stylesheet" href="/static/styles.css">
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <meta charset="UTF-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+    <title>SlideGen - AI Slide Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet"/>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="/static/styles.css"> <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            font-family: 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background-attachment: fixed;
+            position: relative;
+            overflow-x: hidden; /* Prevent horizontal scroll due to fixed background */
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: 
+                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+            color: #ffffff; /* Ensure text is visible on the gradient */
+        }
+
+        .hero-title {
+            font-size: 3rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            color: #ffffff;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, 0.9);
+            max-width: 700px;
+            margin-bottom: 2rem;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .hero-buttons .btn {
+            margin: 0.5rem;
+            padding: 0.75rem 1.5rem;
+            font-size: 1rem;
+            border-radius: 0.5rem;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s ease;
+        }
+
+        .hero-buttons .btn-outline-primary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ffffff;
+            border-color: rgba(255, 255, 255, 0.3);
+        }
+
+        .hero-buttons .btn-outline-primary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }
+
+        .hero-buttons .btn-primary { /* Changed to btn-success in new code for 'Create New Slide' */
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            border: none;
+            color: #ffffff;
+        }
+
+        .hero-buttons .btn-primary:hover { /* For Import DOCX/ZIP */
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+        }
+
+        /* Specific style for the green 'Create New Slide' button from the new code */
+        .hero-buttons .btn-success {
+            background: linear-gradient(45deg, #28a745, #218838); /* Green gradient */
+            border: none;
+            color: #ffffff;
+        }
+
+        .hero-buttons .btn-success:hover {
+            background: linear-gradient(45deg, #218838, #1e7e34);
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+        }
+
+        .slide-stack {
+            position: relative;
+            width: 600px; /* Adjust as needed */
+            height: 400px; /* Adjust as needed */
+            margin-top: 3rem;
+            display: flex;
+            justify-content: center;
+        }
+
+        .slide-stack img {
+            position: absolute;
+            width: 100%;
+            border-radius: 0.75rem;
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
+            transition: transform 0.3s;
+            border: 2px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Layered slide effect */
+        .slide-stack img:nth-child(1) {
+            z-index: 4;
+            transform: rotate(0deg) translate(0px, 0px);
+        }
+
+        .slide-stack img:nth-child(2) {
+            z-index: 3;
+            transform: rotate(-3deg) translate(-15px, 15px);
+        }
+
+        .slide-stack img:nth-child(3) {
+            z-index: 2;
+            transform: rotate(4deg) translate(-30px, 30px);
+        }
+
+        .slide-stack img:nth-child(4) {
+            z-index: 1;
+            transform: rotate(-5deg) translate(-45px, 45px);
+        }
+
+        /* Styles for the editor page to blend with the theme if visible */
+        #editorPage {
+            min-height: 100vh; /* Ensure editor page takes full height */
+            background: rgba(255, 255, 255, 0.1); /* Slightly transparent background for editor */
+            backdrop-filter: blur(8px);
+            padding-top: 20px;
+        }
+
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 0.5rem;
+            color: #ffffff;
+            height: calc(100vh - 40px); /* Adjust height */
+            overflow-y: auto;
+        }
+
+        .editor-area {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 15px;
+            border-radius: 0.5rem;
+            color: #ffffff;
+            height: calc(100vh - 40px); /* Adjust height */
+            display: flex;
+            flex-direction: column;
+        }
+
+        #toolbar .btn {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+        }
+        #toolbar .btn:hover {
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+
+        #toolbar select {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.2);
+            color: #ffffff;
+            padding: 0.375rem 0.75rem;
+            border-radius: 0.25rem;
+            appearance: none; /* Remove default arrow */
+            background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+            background-repeat: no-repeat;
+            background-position: right 0.75rem center;
+            background-size: 16px 12px;
+        }
+        #toolbar select option {
+            background-color: #764ba2; /* Darker background for dropdown options */
+            color: #ffffff;
+        }
+
+        #colorPicker {
+            vertical-align: middle;
+            margin-left: 0.5rem;
+            width: 30px;
+            height: 30px;
+            border: none;
+            background: none;
+            cursor: pointer;
+            padding: 0;
+        }
+
+        .slide-container {
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.05);
+            min-height: 400px; /* Placeholder height */
+            flex-grow: 1;
+            padding: 20px;
+            border-radius: 0.5rem;
+            overflow-y: auto;
+        }
+        
+        .slide-list .slide-item {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 0.5rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .slide-list .slide-item:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+        .slide-list .slide-item.active {
+            border-color: #4f46e5;
+            background: rgba(79, 70, 229, 0.3);
+        }
+
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            z-index: 1000;
+        }
+
+        #toastContainer .toast {
+            background-color: rgba(40, 167, 69, 0.8); /* Green for success */
+            color: #ffffff;
+        }
+        #toastContainer .toast-header {
+            background-color: rgba(40, 167, 69, 0.9);
+            color: #ffffff;
+            border-bottom: none;
+        }
+    </style>
 </head>
 <body>
-    <div id="homePage" class="container text-center mt-5">
-        <h1 class="display-4">SlideGen</h1>
-        <p class="lead">Create and edit slides easily</p>
-        <div class="row justify-content-center mt-4">
-            <div class="col-md-4">
-                <button class="btn btn-primary btn-lg w-100 mb-3" onclick="document.getElementById('docxFile').click()">Import DOCX</button>
-                <input type="file" id="docxFile" accept=".docx" style="display: none;">
-                <button class="btn btn-primary btn-lg w-100 mb-3" onclick="document.getElementById('zipFile').click()">Import Folder (ZIP)</button>
-                <input type="file" id="zipFile" accept=".zip" style="display: none;">
-                <button class="btn btn-success btn-lg w-100" onclick="createNewSlide()">Create New Slide</button>
-            </div>
+
+    <div id="homePage" class="hero-section">
+        <h1 class="hero-title">SlideGen - AI Presentation Maker</h1>
+        <p class="hero-description">
+            Quickly create beautiful slide decks from your documents or ideas using AI. Import, customize, and export your slides in just a few clicks.
+        </p>
+
+        <div class="hero-buttons d-flex flex-wrap justify-content-center">
+            <button class="btn btn-primary btn-lg" onclick="document.getElementById('docxFile').click()">Import DOCX</button>
+            <input type="file" id="docxFile" accept=".docx" style="display: none;">
+            
+            <button class="btn btn-primary btn-lg" onclick="document.getElementById('zipFile').click()">Import Folder (ZIP)</button>
+            <input type="file" id="zipFile" accept=".zip" style="display: none;">
+            
+            <button class="btn btn-success btn-lg" onclick="createNewSlide()">Create New Slide</button>
         </div>
+
+        <!-- <div class="slide-stack">
+            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_8.png" alt="Slide 1">
+            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_9.png" alt="Slide 2">
+            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_10.png" alt="Slide 3">
+            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_11.png" alt="Slide 4">
+        </div> -->
     </div>
 
     <div id="editorPage" class="container-fluid" style="display: none;">
         <div class="row">
             <div class="col-md-3 sidebar">
                 <h4>Slides</h4>
-                <div id="slideList" class="slide-list"></div>
+                <div id="slideList" class="slide-list">
+                    </div>
                 <button class="btn btn-success mt-3 w-100" onclick="createNewSlide()">Add Slide</button>
             </div>
             <div class="col-md-9 editor-area">
@@ -68,6 +334,6 @@
 
     <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;"></div>
 
-    <script src="/static/script.js"></script>
-</body>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="/static/script.js"></script> </body>
 </html>

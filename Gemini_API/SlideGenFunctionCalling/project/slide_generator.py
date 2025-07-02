@@ -44,6 +44,10 @@ import time
 from tools import *
 from html_lib import *
 from parse_funcs import *
+from input_funcs import *
+
+
+
 
 def extract_text_from_docx(file_path):
     print(f"Extracting text from {file_path}")
@@ -190,15 +194,16 @@ def get_html_slide(pre_slide_content, pre_function_call, slide_content):
     # Check for a function call
     if response.candidates[0].content.parts[0].function_call:
         function_call = response.candidates[0].content.parts[0].function_call
-        print(f"respond: {response.text}")
-        print(f"Function to call: {function_call.name}")
-        print(f"Arguments: {function_call.args}")
+        # Log the response
+        logger.info(f"respond: {response.text}")
+        logger.info(f"Function to call: {function_call.name}")
+        logger.info(f"Arguments: {function_call.args}")
         #  In a real app, you would call your function here:
         #  result = schedule_meeting(**function_call.args)
         return function_call
     else:
-        print("No function call found in the response.")
-        print(response.text)
+        logger.info("No function call found in the response.")
+        logger.info(response.text)
         return {"name": "generate_split_layout_slide1", "arguments": {"left_title": "Error", "left_subtitle": "No function call found"}}
 
 import time
@@ -245,7 +250,13 @@ def initialize_chromedriver():
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--window-size=1920,1080")
+        chrome_options.add_argument("--disable-web-security")
+        chrome_options.add_argument("--allow-running-insecure-content")
+        # Đặt kích thước cửa sổ theo tỷ lệ slide presentation
+        chrome_options.add_argument("--window-size=1600,900")
+        chrome_options.add_argument("--force-device-scale-factor=1")
+        chrome_options.add_argument("--disable-extensions")
+        chrome_options.add_argument("--disable-plugins")
 
         driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
         print("✅ ChromeDriver initialized successfully")
@@ -267,24 +278,75 @@ def capture_slide_image(driver, html_content, output_path):
     temp_html_path = os.path.join(temp_dir, "temporal_slide.html")
     
     try:
-        # 2. Chỉ thêm prefix file:/// vào đường dẫn tuyệt đối
-        modified_html = html_content.replace(
-            'C:/',
-            'file:///C:/'
-        )
+        # 2. Xử lý đường dẫn ảnh tương đối cho Linux/Docker
+        modified_html = html_content
+        
+        # Tìm thư mục project hiện tại
+        current_dir = os.path.dirname(os.path.abspath(__file__))
+        image_folder = os.path.join(current_dir, "Image")
+        
+        # Xử lý đường dẫn tương đối đến thư mục Image
+        import re
+        
+        # Pattern 1: src="Image/filename" 
+        pattern1 = r'src="Image/([^"]+)"'
+        def replace_image_path(match):
+            image_name = match.group(1)
+            full_image_path = os.path.join(image_folder, image_name)
+            if os.path.exists(full_image_path):
+                # Sử dụng file:// URI cho Linux
+                return f'src="file://{full_image_path}"'
+            else:
+                logger.warning(f"Image not found: {full_image_path}")
+                return match.group(0)
+        
+        modified_html = re.sub(pattern1, replace_image_path, modified_html)
+        
+        # Pattern 2: src="filename.png/jpg" (không có thư mục)
+        pattern2 = r'src="([^/"]+\.(?:png|jpg|jpeg|gif|bmp|svg))"'
+        def replace_image_only_path(match):
+            image_name = match.group(1)
+            full_image_path = os.path.join(image_folder, image_name)
+            if os.path.exists(full_image_path):
+                return f'src="file://{full_image_path}"'
+            else:
+                logger.warning(f"Image not found: {full_image_path}")
+                return match.group(0)
+        
+        modified_html = re.sub(pattern2, replace_image_only_path, modified_html)
+        
+        # Pattern 3: các đường dẫn tương đối khác (không bắt đầu bằng http, file, data, hoặc /)
+        pattern3 = r'src="(?!http|file|data:|/)([^"]+)"'
+        def replace_relative_path(match):
+            relative_path = match.group(1)
+            # Nếu không phải là file ảnh đã xử lý ở trên
+            if not re.match(r'[^/]+\.(?:png|jpg|jpeg|gif|bmp|svg)$', relative_path):
+                full_path = os.path.join(current_dir, relative_path)
+                if os.path.exists(full_path):
+                    return f'src="file://{full_path}"'
+                else:
+                    logger.warning(f"File not found: {full_path}")
+            return match.group(0)
+        
+        modified_html = re.sub(pattern3, replace_relative_path, modified_html)
         
         # 3. Ghi file HTML đã sửa
         with open(temp_html_path, "w", encoding="utf-8") as file:
             file.write(modified_html)
         
-        # 4. Load trang và đợi cho ảnh load
-        driver.get(f"file:///{os.path.abspath(temp_html_path)}")
-        time.sleep(2)
+        # 4. Load trang và chụp ảnh
+        driver.get(f"file://{os.path.abspath(temp_html_path)}")
+        driver.set_window_size(1920, 1080)
         
-        # 5. Chụp và xử lý ảnh
+        # Đợi trang load hoàn toàn
+        time.sleep(3)
+        
+        # 5. Chụp ảnh toàn bộ viewport
         screenshot_bytes = driver.get_screenshot_as_png()
         image = Image.open(io.BytesIO(screenshot_bytes))
-        image = image.resize((900, 500))
+        
+        # Resize về kích thước slide chuẩn giữ nguyên tỷ lệ
+        image = image.resize((900, 500), Image.Resampling.LANCZOS)
         image.save(output_path)
         
         # 6. Dọn dẹp file tạm
@@ -299,31 +361,89 @@ def capture_slide_image(driver, html_content, output_path):
         raise
 
 criteria = """
-    1. Title: 
-        ●	The title must clearly state the main topic of the slide in a concise way (e.g., ‘Customer Survey Results’ instead of ‘Slide 1’). 
-        ●	The font size of the title should be at least 4–6 points larger than the body text to ensure prominence. 
-        ●	Use a clean, professional font (such as Arial, Helvetica, or Calibri). Place the title in a prominent position, typically at the top of the slide. 
-    2. Text content: 
-        ●	Font size should be at least 18 pt to ensure readability, even from a distance. 
-        ●	Text color must have strong contrast with the background (e.g., white text on dark background or black text on light background).
-        ●	Sentences should be concise (no more than 2 lines per sentence). 
-        ●	Use bullet points or short paragraphs (fewer than 5 lines each) to avoid dense blocks of text.
-        ●	 Ensure there are no spelling or grammar errors. 
-    3. Layout: 
-        ●	Elements (title, text, images, graphics) must not overlap or be cut off. 
-        ●	Maintain consistent spacing (margins) to avoid a cluttered look. 
-        ●	Visually separate different sections (e.g., using white space or subtle dividers). 
-    4. Images (if any): 
-        ●	Images must be directly relevant to the slide’s content. 
-        ●	Ensure images are placed appropriately and do not cover any text. Use images of good quality (not pixelated or stretched) with proper resolution (at least 72 dpi for presentations). 
-    5. Overall design:
-        ●	 Use no more than 2–3 font families to maintain consistency. 
-        ●	Limit the color palette to 3–4 main colors to avoid visual chaos. 
-        ●	Avoid excessive animations or effects that might distract from the content.
-        ●	 Keep the slide clean and uncluttered, focusing on key points.
-    6. Consistency with previous slide (if applicable): 
-        ●	Use the same background color, text color, font size, and font family as the previous slide to maintain visual coherence. 
-        ●	Keep the overall layout consistent, with the title and main sections in the same positions. 
+    Improved Prompt for Slide Content Evaluation
+    Please evaluate the slide according to the following detailed criteria. Assess not only the design and formatting, but also whether the content is placed in a suitable location, the meaning is clear, and the message supports the intended purpose of the slide.
+
+    1. Title
+        - Is the title clearly stating the main idea or topic of the slide (e.g., "Market Overview" instead of "Slide 2")?
+
+        - Is the title placed in a prominent location (typically top center or top left)?
+
+        - Is the font at least 4–6 points larger than the body text?
+
+        - Is the title meaningful, concise, and contextually aligned with the slide’s content?
+
+    Evaluate if the title actually reflects the core message of the slide and is not generic.
+
+    2. Text Content
+        - Is the font size at least 18 pt to ensure readability from a distance?
+
+        - Does the text contrast clearly with the background (e.g., white on dark, black on light)?
+
+        - Are sentences clear, concise (no more than 2 lines), and easy to scan?
+
+        - Is the use of bullet points or short paragraphs (max 5 lines) applied effectively?
+
+        - Is spelling, grammar, and punctuation correct?
+
+        - Does the content logically support the purpose of the slide (informative, persuasive, etc.)?
+
+        - Are the main points prioritized and placed in the most logical order?
+
+    Check if the content is relevant, well-organized, and presented in a way that supports comprehension and focus.
+
+    3. Layout and Content Placement
+        - Are all elements (title, text, images, charts) well-aligned and not overlapping or cut off?
+
+        - Is there sufficient white space to reduce visual clutter?
+
+        - Are different content blocks clearly separated?
+
+        - Are the most important messages placed in visually strong positions (top-left, center)?
+
+        - Does the slide guide the viewer’s eye naturally (top → bottom or left → right)?
+
+    Evaluate how effectively the layout guides the viewer and if content is located where it naturally makes sense to appear.
+
+    4. Visuals and Images (if any)
+        - Are images directly relevant to the content and purpose of the slide?
+
+        - Are they high quality (not blurry or pixelated)?
+
+        - Are images placed so they do not obscure or distract from text?
+
+        - Do images enhance understanding or visual appeal, not just decoration?
+
+    Assess if images help reinforce or explain the content — not just filler.
+
+    5. Overall Visual Design
+        - Are no more than 2–3 font types used?
+
+        - Is the color scheme limited to 3–4 harmonious colors?
+
+        - Are there minimal and tasteful transitions or animations?
+
+        - Is the slide clean and easy to scan, with visual emphasis on key messages?
+
+        - Is the visual hierarchy clear (title > main points > supporting text)?
+
+    Consider if the overall aesthetic supports clarity and avoids distraction.
+
+    6. Consistency with Other Slides (if applicable)
+        - Are the background, font style, size, and color consistent with previous slides?
+
+        - Is the layout structure (title placement, content areas) consistent?
+
+        - Do the design choices support a cohesive narrative across slides?
+
+    Check whether this slide feels like part of a unified deck or visually disconnected.
+
+    Additional Evaluation Dimensions (Newly Added)
+        - Content Meaning Accuracy: Does the text or visual element truly represent what it intends to convey? Is it logically accurate in the context?
+
+        - Slide Purpose Fit: Does the slide serve its intended purpose (inform, compare, convince, summarize)? Does every element contribute to that goal?
+
+        - Redundancy Check: Are there any duplicate or unnecessary elements that could be removed without losing meaning?
 """
 
 def evaluate_slide_with_vlm(image_path, previous_image_path, tool_call_output):
@@ -444,8 +564,9 @@ def generate_plan_from_html(html_content):
 
 def process_slides(docx_file, output_folder):
     logger.info(f"Processing slides from {docx_file}")
-    text = extract_text_from_docx(docx_file)
-    chunks = split_text_into_chunks(text)
+    # text = extract_text_from_docx(docx_file)
+    # chunks = split_text_into_chunks(text)
+    chunks = inputProcessor(docx_file)  # Sử dụng hàm inputProcessor từ input_funcs.py
     slide_list = create_slide_list(chunks)
 
     slide_function_calling_list = []
@@ -454,9 +575,11 @@ def process_slides(docx_file, output_folder):
     cnt = 1
     api_call_cnt = 0
     for slide_content in slide_list:
+        logger.info("--" * 20)
+        logger.info(f"Slide {cnt} processing")
         html_slide_call = get_html_slide(pre_slide_content, pre_function_call, slide_content)
         api_call_cnt += 1
-        print(f"Slide {cnt} processed, API call count: {api_call_cnt}")
+        logger.info(f"Slide {cnt} processed, API call count: {api_call_cnt}")
         cnt += 1
         slide_function_calling_list.append(html_slide_call)
         pre_slide_content = slide_content
@@ -464,6 +587,7 @@ def process_slides(docx_file, output_folder):
     print("All slides processed.")
 
     for x in slide_function_calling_list:
+        logger.info("-------------------FC LIST-------------------")
         logger.info(x)
         logger.info("-------------------")
 
