@@ -1,5 +1,5 @@
 dotenv
-python-docx
+# python-docx
 langchain
 google-genai==1.16.1
 fastapi
@@ -7,3 +7,5 @@ uvicorn
 selenium
 img2pdf
 python-multipart
+docling
+transformers

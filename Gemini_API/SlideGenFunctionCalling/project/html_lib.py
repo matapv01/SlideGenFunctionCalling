@@ -177,7 +177,7 @@ def generate_intro_slide(
         
         <!-- Image frame -->
         <div class="image-frame">
-            <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture1.png" alt="slide visual">
+            <img src="Picture1.png" alt="slide visual">
         </div>
     </div>
 </body>
@@ -398,7 +398,7 @@ def generate_body_slide1(
             </div>
             
             <div class="image-area">
-                <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture2.png" alt="Decorative image">
+                <img src="Picture2.png" alt="Decorative image">
             </div>
         </div>
     </div>
@@ -632,7 +632,7 @@ def generate_body_slide2(
                 <div class="image-frame">
                     <div class="image-accent"></div>
                     <div class="image-container">
-                        <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture3.png" alt="Slide image">
+                        <img src="Picture3.png" alt="Slide image">
                     </div>
                 </div>
             </div>
@@ -1069,7 +1069,7 @@ def generate_body_slide4(
             <div class="image-item">
                 <div class="image-container">
                     <div class="image-border"></div>
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture4.1.png" alt="Image 1">
+                    <img src="Picture4.1.png" alt="Image 1">
                 </div>
                 <h3 class="subtitle">{subtitle1}</h3>
                 <p class="image-content">{content1}</p>
@@ -1079,7 +1079,7 @@ def generate_body_slide4(
             <div class="image-item">
                 <div class="image-container">
                     <div class="image-border"></div>
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture4.2.png" alt="Image 2">
+                    <img src="Picture4.2.png" alt="Image 2">
                 </div>
                 <h3 class="subtitle">{subtitle2}</h3>
                 <p class="image-content">{content2}</p>
@@ -1089,7 +1089,7 @@ def generate_body_slide4(
             <div class="image-item">
                 <div class="image-container">
                     <div class="image-border"></div>
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture4.3.png" alt="Image 3">
+                    <img src="Picture4.3.png" alt="Image 3">
                 </div>
                 <h3 class="subtitle">{subtitle3}</h3>
                 <p class="image-content">{content3}</p>
@@ -1341,7 +1341,7 @@ def generate_body_slide8(
             
             <!-- Right Column with Image -->
             <div class="right-column">
-                <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture2.png" alt="Decorative image">
+                <img src="Picture2.png" alt="Decorative image">
             </div>
         </div>
     </div>
@@ -1555,19 +1555,19 @@ def generate_body_slide5(
             <!-- Image Grid -->
             <div class="image-grid">
                 <div class="grid-image">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture5.1.png" alt="Image 1">
+                    <img src="Picture5.1.png" alt="Image 1">
                     <div class="image-overlay"></div>
                 </div>
                 <div class="grid-image">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture5.2.png" alt="Image 2">
+                    <img src="Picture5.2.png" alt="Image 2">
                     <div class="image-overlay"></div>
                 </div>
                 <div class="grid-image">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture5.3.png" alt="Image 3">
+                    <img src="Picture5.3.png" alt="Image 3">
                     <div class="image-overlay"></div>
                 </div>
                 <div class="grid-image">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture5.4.png" alt="Image 4">
+                    <img src="Picture5.4.png" alt="Image 4">
                     <div class="image-overlay"></div>
                 </div>
             </div>
@@ -1788,7 +1788,7 @@ def generate_body_slide6(
             <!-- Right Column with Image -->
             <div class="right-column">
                 <div class="image-container">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture6.png" alt="Slide image">
+                    <img src="Picture6.png" alt="Slide image">
                 </div>
             </div>
         </div>
@@ -1967,13 +1967,13 @@ def generate_body_slide7(
             <!-- Left Column with Images -->
             <div class="left-column">
                 <div class="image-container">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture7.1.png" alt="Image 1">
+                    <img src="Picture7.1.png" alt="Image 1">
                 </div>
                 <div class="image-container">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture7.2.png" alt="Image 2">
+                    <img src="Picture7.2.png" alt="Image 2">
                 </div>
                 <div class="image-container">
-                    <img src="C:/Users/pvmkt/OneDrive/Documents/SlideGen/SlideGenSourceCode/SlideGenFunctionCalling/project/Image/Picture7.3.png" alt="Image 3">
+                    <img src="Picture7.3.png" alt="Image 3">
                 </div>
             </div>
             
