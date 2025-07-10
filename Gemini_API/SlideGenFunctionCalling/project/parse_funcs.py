@@ -2,8 +2,16 @@ from tools import *
 from html_lib import *
 
 def get_function_by_name(tool_call):
-    function_name = tool_call.name  # Đây là string, ví dụ: 'generate_academic_slide'
-    function_args = tool_call.args
+
+    # Kiểm tra nếu function_call là dictionary
+    if isinstance(tool_call, dict):
+        function_name = tool_call.get('name')
+        function_args = tool_call.get('arguments', {})
+    else:
+        # Giả sử function_call là đối tượng với thuộc tính name và args
+        function_name = tool_call.name
+        function_args = tool_call.args
+
     if function_name == "generate_academic_slide":
         return generate_academic_slide(**function_args)
     elif function_name == "generate_content_slide":

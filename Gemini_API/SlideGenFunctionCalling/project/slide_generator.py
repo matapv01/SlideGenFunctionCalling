@@ -87,11 +87,10 @@ def create_slide_list(chunks):
 def get_html_slide(pre_slide_content, pre_function_call, slide_content):
     print(f"Generating HTML slide for content: {slide_content[:50]}...")
     demand_prompt = """
-
-    # Smart Slide Generation Prompt (with Design Consistency & HTML Support)
+    # Smart Slide Generation Prompt (with Design Consistency & Semantic Content Splitting)
 
     # Detect content language
-    language = "Vietnamese" if is_vietnamese(slide_content) else "English"
+    language = "Vietnamese" if is_vietnamese('{2}') else "English"
 
     # Create a new slide that accurately conveys `slide_content`, fits the logical flow from the previous slide, 
     # and maintains full design coherence across the deck.
@@ -99,118 +98,152 @@ def get_html_slide(pre_slide_content, pre_function_call, slide_content):
     INSTRUCTIONS FOR SMART SLIDE GENERATION
 
     1. CONTENT ANALYSIS & SUMMARIZATION:
-    - Extract the key ideas from `slide_content`.
-    - Rewrite the content into a clear and concise form that’s suitable for a slide.
-    - Avoid copy-pasting long text blocks. Use bullet points, sections, or summaries.
+    - Extract key ideas from `slide_content`.
+    - Rewrite content concisely for a slide, using bullet points or sections.
+    - Remove any placeholder text like "Your Title Here", "Placeholder", or similar.
+    - Identify semantic blocks (e.g., Introduction, Part 1, Part 2).
 
     2. SLIDE FUNCTION SELECTION:
-    - Choose the most suitable slide function for the current content, considering:
-        a. Content type (list, narrative, explanation, process, comparison, etc.)
-        b. Optimal visual layout for comprehension and impact
-        c. Narrative flow from the previous slide
-    - DO NOT default to the same slide function as before unless it fits naturally.
-    - Example slide functions include:
-        • `make_bullet_slide` – for short points or key facts  
-        • `make_two_column_slide` – for comparison or parallel ideas  
-        • `make_text_slide` – for deep explanations or storytelling  
-        • `make_image_with_caption_slide` – for visual explanations  
+    - Evaluate ALL available slide functions:
+        - `make_bullet_slide` – for short points (max 3–4 bullet points)
+        - `make_two_column_slide` – for comparisons
+        - `make_text_slide` – for explanations
+        - `make_image_with_caption_slide` – for visuals
+        - `generate_content_slide` – for general content
+    - Consider:
+        a. Content type (list, narrative, comparison, etc.)
+        b. Optimal visual layout for comprehension
+        c. Narrative flow from previous slide ({0})
+        d. Fit within slide without overflow (max 3–4 bullet points or 5–7 lines)
+    - Choose the best function to avoid overflow.
+    - Split content if it exceeds 3–4 bullet points or 5–7 lines.
 
     3. LANGUAGE:
-    - All output text must be in `(language)`, matching the input content.
+    - Output text in `(language)`, matching input.
 
     4. VISUAL & DESIGN CONSISTENCY:
-    Ensure that the new slide aligns stylistically with the previous one:
-    - Use matching:
-        • Font size and style  
-        • Bullet point formatting  
-        • Text alignment and spacing  
-        • Background, title alignment, text padding  
-        • Color themes and visual tone  
-    - Avoid disruptive shifts like:
-        × Sudden font downsizing (e.g. 14pt → 10pt)
-        × Changing bullet type (e.g. dash → dot) without purpose
-        × Inconsistent title placement (e.g. left-aligned → centered)
+    - Match the previous slide ({0}, {1}):
+        - Font size: Minimum 1.5rem for titles, 1.125rem for body text (1rem = 16px).
+        - Font family: Arial or same as previous slide.
+        - Colors: Use same background, text, and title colors as previous slide.
+        - Bullet formatting, text alignment, and spacing.
+    - Avoid:
+        - Font size < 1.125rem for body or < 1.5rem for titles.
+        - Inconsistent colors or alignment.
+        - Placeholder text like "Your Title Here".
 
-    5. HTML SUPPORT (ONLY WHEN NECESSARY):
-    - You may insert basic HTML tags inside the content strings to fine-tune formatting — **only if justified**.
-    - Acceptable use-cases:
-        • `<br>` to control line breaks in tightly packed content
-        • `<b>`, `<i>` to highlight keywords or distinctions
-        • `<ul>`, `<li>` only when necessary to override default bullet behavior
-        • `<span style="font-size: Xpx">` for inline size correction — use carefully!
-    - HTML should **enhance clarity**, not clutter the slide or introduce inconsistency.
-    - Avoid overusing or nesting tags unless truly needed for alignment or visual balance.
+    5. HTML SUPPORT:
+    - Use HTML tags only when necessary:
+        - `<br>` for line breaks.
+        - `<b>`, `<i>` for emphasis.
+        - `<ul>`, `<li>` for bullets.
+        - `<span style="font-size: Xrem">` for size correction (X ≥ 1.125 for body, X ≥ 1.5 for titles).
+    - HTML must enhance clarity, not clutter.
 
-    6. SEMANTIC & LOGICAL CONTINUITY:
-    - If the previous slide introduced a concept, this one may expand, contrast, or illustrate.
-    - Make sure the tone, topic, and flow remain natural and progressive.
-    - The audience should feel the transition is smooth and meaningful.
+    6. Highlight key phrase:
+    - Use `<b><i><span style='color:...'>...</span></i></b>` for key phrases.
+    - Requirements:
+        - Exact structure for all key phrases.
+        - Vary color values for clarity, but keep tag structure identical.
+        - Do not highlight placeholders or filler words (e.g., “also,” “such as”).
+    - Example: `<b><i><span style='color:#EF4444;'>Hợp tác toàn cầu</span></i></b>`.
 
-    7. PRESENTATION-READY STRUCTURE:
-    - Use whitespace wisely.
-    - Keep content digestible: avoid text-heavy layouts.
-    - Place title and content to guide the viewer’s eye clearly.
+    7. SEMANTIC & LOGICAL CONTINUITY:
+    - Ensure tone, topic, and flow align with previous slide.
+    - Transitions should be smooth and meaningful.
+
+    8. PRESENTATION-READY STRUCTURE:
+    - Ensure ≥10% whitespace.
+    - Limit to 3–4 bullet points or 5–7 lines.
+    - Guide viewer’s eye with clear title and content placement.
+
+    9. CONTENT FIT EVALUATION & SEMANTIC SPLITTING:
+    - Check if `slide_content` fits without overcrowding.
+    - If too long (>3–4 bullet points or >5–7 lines), split and return:
+        - JSON object with:
+            - `tokens_used`: Tokens for visible content (use `sentence-transformers/all-MiniLM-L6-v2`).
+            - `remaining_content`: Content for next slide, preserving semantic integrity.
+            - `split_reason`: Why and how content was split (e.g., "Split to limit to 3 bullet points").
+        - Semantic splitting:
+            - Split at semantic block boundaries (e.g., Slide 1: Part 1, Slide 2: Part 2).
+            - Good example:
+                - Slide 1: 3 bullet points
+                - Slide 2: Remaining points
+            - Bad example (avoid):
+                - Slide 1: Half of Part 1
+                - Slide 2: Rest of Part 1 + Part 2
+            - Do not split mid-sentence or mid-idea.
+            - ENSURE `remaining_content` excludes content in current slide.
+    - If content fits, return {{}}.
 
     INPUT CONTEXT:
-    - Previous slide content: {}
-    - Previous function call: {}
-    - Current slide content: {}
+    - Previous slide content: {0}
+    - Previous function call: {1}
+    - Current slide content: {2}
 
     OUTPUT REQUIREMENTS:
-    - A **single slide function call**, e.g. `make_bullet_slide(...)`, with parameters written entirely in `(language)`.
+    - A single slide function call (e.g., `make_bullet_slide(...)`) with parameters in `(language)`.
+    - Include only supported parameters (e.g., `title`, `content`).
+    - Include JSON with `tokens_used`, `remaining_content`, `split_reason` if split, or {{}} if not.
     - Slide must be:
-    ✓ Content-relevant  
-    ✓ Layout-appropriate  
-    ✓ Visually consistent  
-    ✓ Logically connected  
-    ✓ Clean and readable  
-    ✓ Enhanced (only if necessary) with minimal HTML for formatting
+        - Content-relevant
+        - Layout-appropriate
+        - Visually consistent with previous slide
+        - Free of placeholders
     """
 
-    # load dotenv
-    from dotenv import load_dotenv
-    load_dotenv()
-
-    # Configure tools
     tools = types.Tool(function_declarations=TOOLS)
-
-    # Define user prompt
     contents = [
-        types.Content(
-            role="user", parts=[types.Part(text="You are a AI agent that generates HTML slides based on the provided content.")],
-        ),
-        types.Content(
-            role="user",
-            parts=[
-                types.Part(
-                    text=demand_prompt.format(pre_slide_content, pre_function_call, slide_content),
-                )
-            ],
-        )
+        types.Content(role="user", parts=[types.Part(text="You are an AI agent that generates HTML slides based on the provided content.")]),
+        types.Content(role="user", parts=[types.Part(text=demand_prompt.format(pre_slide_content, pre_function_call, slide_content))])
     ]
     
     response = safe_generate_content("gemini-2.5-flash-preview-05-20", contents, tools)
     
-    # Check for a function call
-    if response.candidates[0].content.parts[0].function_call:
-        function_call = response.candidates[0].content.parts[0].function_call
-        # Log the response
-        logger.info(f"respond: {response.text}")
-        logger.info(f"Function to call: {function_call.name}")
-        logger.info(f"Arguments: {function_call.args}")
-        #  In a real app, you would call your function here:
-        #  result = schedule_meeting(**function_call.args)
-        return function_call
-    else:
-        logger.info("No function call found in the response.")
-        logger.info(response.text)
-        return {"name": "generate_split_layout_slide1", "arguments": {"left_title": "Error", "left_subtitle": "No function call found"}}
+    if not response or not hasattr(response, 'candidates') or not response.candidates or not response.candidates[0].content:
+        logger.error("Invalid or empty response from API")
+        return {"name": "generate_content_slide", "arguments": {"title": "Lỗi", "content": "Không thể tạo slide do phản hồi API không hợp lệ"}}, {}
+
+    function_call = None
+    text_response = ""
+    try:
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "text") and part.text:
+                text_response += part.text
+            if hasattr(part, "function_call") and part.function_call:
+                function_call = part.function_call
+    except AttributeError as e:
+        logger.error(f"Error accessing response parts: {e}")
+        return {"name": "generate_content_slide", "arguments": {"title": "Lỗi", "content": f"Không thể truy cập phản hồi API: {str(e)}"}}, {}
+
+    if not function_call:
+        logger.info(f"No function call found in response: {text_response}")
+        return {"name": "generate_content_slide", "arguments": {"title": "Lỗi", "content": "Không tìm thấy lệnh gọi hàm"}}, {}
+
+    # Chuyển FunctionCall thành dict
+    if hasattr(function_call, 'name') and hasattr(function_call, 'args'):
+        function_call = {"name": function_call.name, "arguments": function_call.args}
+
+    text_response = re.sub(r'```json\n|\n```', '', text_response).strip()
+    try:
+        json_match = re.search(r'\{.*\}', text_response, re.DOTALL)
+        text_json = json.loads(json_match.group(0)) if json_match else {}
+        if json_match:
+            text_response = text_response.replace(json_match.group(0), '').strip()
+    except json.JSONDecodeError:
+        logger.error(f"Failed to parse text response as JSON: {text_response}")
+        text_json = {}
+
+    logger.debug(f"Function call from get_html_slide: {function_call}")
+    logger.debug(f"Text response JSON: {text_json}")
+    return function_call, text_json
+
 
 import time
 import google.genai.errors
 
 def safe_generate_content(model, contents, tools=None, max_retries=10, delay=15):
-    API_KEY_LIST = ['GEMINI_API_KEY', 'AQUANG1', 'AQUANG2', 'MATA01']
+    API_KEY_LIST = ['GEMINI_API_KEY', 'MATA01', 'AQUANG1', 'AQUANG2']
     for attempt, i in zip(range(max_retries), range(len(API_KEY_LIST))):
         try:
             print(f"Attempt {attempt + 1} with API key: {API_KEY_LIST[i]}")
@@ -223,14 +256,38 @@ def safe_generate_content(model, contents, tools=None, max_retries=10, delay=15)
                 config=config,
                 contents=contents,
             )        
+            
+            # Kiểm tra tính hợp lệ của phản hồi
+            if not response or not hasattr(response, 'candidates') or not response.candidates:
+                error_msg = f"Invalid response: {response}. Response is None, missing candidates, or candidates empty."
+                logger.error(error_msg)
+                last_error = error_msg
+                print(f"Invalid response (attempt {attempt + 1}), retrying in {delay}s...")
+                time.sleep(delay)
+                continue
+
+            logger.info("Valid response received.")
             return response
+
         except google.genai.errors.ServerError as e:
+            last_error = str(e)
             if '503' in str(e):
                 print(f"Model overloaded (attempt {attempt + 1}), retrying in {delay}s...")
-                time.sleep(delay)
+            elif '500' in str(e):
+                print(f"Limit quota (attempt {attempt + 1}), retrying in {delay}s...")
             else:
-                raise
-    raise RuntimeError("Max retries reached. Model still overloaded.")
+                print(f"Eror: {str(e)} (attempt {attempt + 1}), retrying in {delay}s...")
+            time.sleep(delay)
+            continue
+
+        except Exception as e:
+            last_error = str(e)
+            print(f"Unexpected error: {str(e)} (attempt {attempt + 1}), retrying in {delay}s...")
+            logger.error(f"Unexpected error with key {API_KEY_LIST[i]}: {e}")
+            time.sleep(delay)
+            continue
+
+    raise RuntimeError(f"Max retries reached. Last error: {last_error or 'Unknown error'}")
 
 
 import shutil
@@ -361,193 +418,168 @@ def capture_slide_image(driver, html_content, output_path):
         raise
 
 criteria = """
-    Improved Prompt for Slide Content Evaluation
-    Please evaluate the slide according to the following detailed criteria. Assess not only the design and formatting, but also whether the content is placed in a suitable location, the meaning is clear, and the message supports the intended purpose of the slide.
+Improved Prompt for Slide Content Evaluation
+Please evaluate the slide according to the following detailed criteria. Assess not only the design and formatting, but also whether the content is placed in a suitable location, the meaning is clear, and the message supports the intended purpose of the slide.
 
-    1. Title
-        - Is the title clearly stating the main idea or topic of the slide (e.g., "Market Overview" instead of "Slide 2")?
+1. Title
+    - Is the title clearly stating the main idea or topic of the slide (e.g., "Market Overview" instead of "Slide 2")?
+    - Is the title placed in a prominent location (typically top center or top left)?
+    - Is the font at least 1.5rem (approximately 24pt, assuming 1rem = 16px) for titles to ensure prominence?
+    - Is the title meaningful, concise, and contextually aligned with the slide’s content?
+Evaluate if the title actually reflects the core message of the slide and is not generic.
 
-        - Is the title placed in a prominent location (typically top center or top left)?
+2. Text Content
+    - Is the font size at least 1.125rem (approximately 18pt) for body text to ensure readability from a distance?
+    - Does the text contrast clearly with the background (e.g., white on dark, black on light)?
+    - Are sentences clear, concise (no more than 2 lines per bullet), and easy to scan?
+    - Is the number of lines limited to 5–7 per slide to avoid overcrowding?
+    - Is spelling, grammar, and punctuation correct?
+    - Does the content logically support the purpose of the slide (informative, persuasive, etc.)?
+    - Are the main points prioritized and placed in the most logical order?
 
-        - Is the font at least 4–6 points larger than the body text?
+3. Layout and Content Placement
+    - Are all elements (title, text, images, charts) well-aligned and not overlapping or cut off?
+    - Is there sufficient white space (at least 10% of slide area) to reduce visual clutter?
+    - Are different content blocks clearly separated (e.g., by margins or dividers)?
+    - Are the most important messages placed in visually strong positions (top-left, center)?
+    - Does the slide guide the viewer’s eye naturally (top → bottom or left → right)?
 
-        - Is the title meaningful, concise, and contextually aligned with the slide’s content?
+4. Visuals and Images (if any)
+    - Are images directly relevant to the content and purpose of the slide?
+    - Are they high quality (not blurry or pixelated)?
+    - Are images placed so they do not obscure or distract from text?
+    - Do images enhance understanding or visual appeal, not just decoration?
 
-    Evaluate if the title actually reflects the core message of the slide and is not generic.
+5. Overall Visual Design
+    - Are no more than 2–3 font types used?
+    - Is the color scheme limited to 3–4 harmonious colors?
+    - Are there minimal and tasteful transitions or animations?
+    - Is the slide clean and easy to scan, with visual emphasis on key messages?
+    - Is the visual hierarchy clear (title > main points > supporting text)?
 
-    2. Text Content
-        - Is the font size at least 18 pt to ensure readability from a distance?
+6. Consistency with Other Slides (if applicable)
+    - Are the background, font style, size (in rem), and color consistent with previous slides?
+    - Is the layout structure (title placement, content areas) consistent?
+    - Do the design choices support a cohesive narrative across slides?
 
-        - Does the text contrast clearly with the background (e.g., white on dark, black on light)?
-
-        - Are sentences clear, concise (no more than 2 lines), and easy to scan?
-
-        - Is the use of bullet points or short paragraphs (max 5 lines) applied effectively?
-
-        - Is spelling, grammar, and punctuation correct?
-
-        - Does the content logically support the purpose of the slide (informative, persuasive, etc.)?
-
-        - Are the main points prioritized and placed in the most logical order?
-
-    Check if the content is relevant, well-organized, and presented in a way that supports comprehension and focus.
-
-    3. Layout and Content Placement
-        - Are all elements (title, text, images, charts) well-aligned and not overlapping or cut off?
-
-        - Is there sufficient white space to reduce visual clutter?
-
-        - Are different content blocks clearly separated?
-
-        - Are the most important messages placed in visually strong positions (top-left, center)?
-
-        - Does the slide guide the viewer’s eye naturally (top → bottom or left → right)?
-
-    Evaluate how effectively the layout guides the viewer and if content is located where it naturally makes sense to appear.
-
-    4. Visuals and Images (if any)
-        - Are images directly relevant to the content and purpose of the slide?
-
-        - Are they high quality (not blurry or pixelated)?
-
-        - Are images placed so they do not obscure or distract from text?
-
-        - Do images enhance understanding or visual appeal, not just decoration?
-
-    Assess if images help reinforce or explain the content — not just filler.
-
-    5. Overall Visual Design
-        - Are no more than 2–3 font types used?
-
-        - Is the color scheme limited to 3–4 harmonious colors?
-
-        - Are there minimal and tasteful transitions or animations?
-
-        - Is the slide clean and easy to scan, with visual emphasis on key messages?
-
-        - Is the visual hierarchy clear (title > main points > supporting text)?
-
-    Consider if the overall aesthetic supports clarity and avoids distraction.
-
-    6. Consistency with Other Slides (if applicable)
-        - Are the background, font style, size, and color consistent with previous slides?
-
-        - Is the layout structure (title placement, content areas) consistent?
-
-        - Do the design choices support a cohesive narrative across slides?
-
-    Check whether this slide feels like part of a unified deck or visually disconnected.
-
-    Additional Evaluation Dimensions (Newly Added)
-        - Content Meaning Accuracy: Does the text or visual element truly represent what it intends to convey? Is it logically accurate in the context?
-
-        - Slide Purpose Fit: Does the slide serve its intended purpose (inform, compare, convince, summarize)? Does every element contribute to that goal?
-
-        - Redundancy Check: Are there any duplicate or unnecessary elements that could be removed without losing meaning?
+7. Content Overflow Detection
+    - Check for content overflow or occlusion, indicated by:
+        - Text being cut off or extending beyond the slide boundaries (outside 900x500px).
+        - Font size reduced below 1.125rem for body text or 1.5rem for titles.
+        - Too many lines of text (more than 5–7 bullet points or paragraphs).
+        - Insufficient white space (less than 10% of slide area).
+        - Text or elements overlapping or obscured, making them unreadable.
+    - If overflow or occlusion is detected, return a JSON object with `tokens_used` and `remaining_content` to split the content, ensuring semantic integrity.
 """
+
 
 def evaluate_slide_with_vlm(image_path, previous_image_path, tool_call_output):
     logger.info(f"Evaluating slide: {image_path} with previous: {previous_image_path}")
-
-    # Configure tools
     tools = types.Tool(function_declarations=TOOLS)
     contents = []
 
-    # Load ảnh slide hiện tại
-    # image = PILImage.open(image_path)
     with open(image_path, 'rb') as f:
-      image_bytes = f.read()
-
-    # Slide hiện tại
-    current_image_part = types.Part.from_bytes(
-                            data=image_bytes,
-                            mime_type='image/png',
-                         )
-    contents.append( 
+        image_bytes = f.read()
+    current_image_part = types.Part.from_bytes(data=image_bytes, mime_type='image/png')
+    contents.append(
         types.Content(
             role="user",
             parts=[
                 current_image_part,
-                types.Part(text = "This is the current slide."),
+                types.Part(text="This is the current slide."),
             ]
         )
     )
 
-    # Thêm ảnh slide trước đó nếu có
     if previous_image_path and os.path.exists(previous_image_path):
-        # previous_image = PILImage.open(previous_image_path)
-
         with open(previous_image_path, 'rb') as f:
             pre_image_bytes = f.read()
-
-        # Slide hiện tại
-        pre_image_part = types.Part.from_bytes(
-                                data=pre_image_bytes,
-                                mime_type='image/png',
-                            )
-        contents.append( 
+        pre_image_part = types.Part.from_bytes(data=pre_image_bytes, mime_type='image/png')
+        contents.append(
             types.Content(
                 role="user",
                 parts=[
                     pre_image_part,
-                    types.Part(text = "This is the previous slide."),
+                    types.Part(text="This is the previous slide."),
                 ]
             )
         )
 
-    # Câu hỏi đánh giá
-    question = f"""
+    question = """
     Evaluate the following slide based on these criteria:
-    {criteria}
+    {0}
 
-    In addition, if a previous slide is available, evaluate consistency between the current and previous slides in the following aspects:
+    In addition, if a previous slide is available, evaluate consistency in:
     - Background color
     - Text color
-    - Font size
+    - Font size (in rem)
     - Font family
 
     Current tool call:  
-    {tool_call_output}
+    {1}
     
-    if you deny:
-    - Generate a tool call using the current function . You MAY also modify the slide content **only if necessary**, such as:
-    - The content is too long and overcrowds the slide.
-    - The content lacks clarity or is not well structured for presentation.
-    - The content does not match the selected slide layout appropriately.
+    If you deny the slide or detect content overflow or occlusion:
+        • Check for:
+            o Text cut off or extending beyond 900x500px.
+            o Font size < 1.125rem for body or < 1.5rem for titles (1rem = 16px).
+            o More than 3–4 bullet points or 5–7 lines.
+            o Insufficient whitespace (<10% slide area).
+            o Overlapping or obscured text/elements.
+        • If overflow or occlusion detected:
+            o Prioritize adjusting font size (≥1.125rem for body, ≥1.5rem for titles) to resolve overflow.
+            o If font size adjustment fails, split content into multiple slides, preserving semantic meaning.
+        • Semantic splitting guidelines:
+            o Identify semantic blocks (e.g., Part 1, Part 2) from tool call or visible text.
+            o Split at block boundaries (e.g., Slide 1: Part 1, Slide 2: Part 2).
+            o Good example:
+                - Slide 1: 3 bullet points
+                - Slide 2: Remaining points
+            o Bad example (avoid):
+                - Slide 1: Half of Part 1
+                - Slide 2: Rest of Part 1 + Part 2
+            o If a block is too long, split into sub-blocks (e.g., Part 1a, Part 1b).
+            o Do not split mid-sentence or mid-idea.
+            o Remove placeholders like "Your Title Here" or "Placeholder".
+            o ENSURE `remaining_content` excludes content already displayed.
+        • Generate a tool call using the same function as the current tool_call_output (or a more suitable function) with:
+            o Adjusted content (max 3–4 bullet points).
+            o Font size ≥ 1.125rem for body, ≥ 1.5rem for titles.
+            o Colors matching the previous slide.
+            o No placeholders.
+        • Include JSON in text response:
+            o `tokens_used`: Tokens for visible content (use `sentence-transformers/all-MiniLM-L6-v2`).
+            o `remaining_content`: Content for next slide.
+            o `split_reason`: Why and how content was split (e.g., "Split to limit to 3 bullet points").
+        • Allowed modifications:
+            o Increase font size to meet thresholds.
+            o Trim or summarize to fit 3–4 bullet points or 5–7 lines.
+            o Adjust layout for whitespace and no occlusion.
+        • Do NOT alter core message or intent.
+        • Do NOT highlight non-key phrases (e.g., placeholders, “also,” “such as”).
+        • Key phrases must use: `<b><i><span style='color:...'>...</span></i></b>`.
 
-    Allowed modifications include:
-    - Trimming or summarizing overly long paragraphs
-    - Splitting complex content into simpler bullets
-    - Improving clarity, structure, or conciseness
-
-    However, do NOT remove or alter the **core message** of the content. Preserve its intent and essential meaning.
-
-    Respond with either:
-
-    <!-- accept -->
-    <!-- reason -->
-
-    Or:
-
-    <!-- deny -->
-    <!-- reason -->
-
+    Respond with:
+    - Text response:
+        - `<!-- accept -->` or `<!-- deny -->`
+        - `<!-- reason: [Detailed explanation, e.g., font size < 1.125rem, text cut off] -->`
+        - JSON with `tokens_used`, `remaining_content`, `split_reason` if split, or {{}}. No markdown code blocks.
+    - A function call (if denied) with supported parameters.
     """
 
-    contents.append( 
-            types.Content(
-                role="user",
-                parts=[
-                    types.Part(text = question),
-                ]
-            )
+    contents.append(
+        types.Content(
+            role="user",
+            parts=[types.Part(text=question.format(criteria, tool_call_output))]
         )
-    
-    # Send request with function declarations
-    
+    )
+
     response = safe_generate_content("gemini-2.5-flash-preview-05-20", contents, tools)
     text = ""
     function_call = None
+
+    if not response or not hasattr(response, 'candidates') or not response.candidates:
+        logger.error("Invalid response from VLM")
+        return "<!-- deny -->", {"name": "generate_content_slide", "arguments": {"title": "Error", "content": "Invalid VLM response"}}, {}
 
     for part in response.candidates[0].content.parts:
         if hasattr(part, "text") and part.text:
@@ -555,7 +587,19 @@ def evaluate_slide_with_vlm(image_path, previous_image_path, tool_call_output):
         if hasattr(part, "function_call") and part.function_call:
             function_call = part.function_call
 
-    return text.strip(), function_call
+    text = re.sub(r'```json\n|\n```', '', text).strip()
+    try:
+        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        text_json = json.loads(json_match.group(0)) if json_match else {}
+        if json_match:
+            text = text.replace(json_match.group(0), '').strip()
+    except json.JSONDecodeError:
+        logger.error(f"Failed to parse text response as JSON: {text}")
+        text_json = {}
+
+    logger.debug(f"VLM response: {text}, Function call: {function_call}, Text JSON: {text_json}")
+    return text.strip(), function_call, text_json
+
 
 
 def generate_plan_from_html(html_content):
@@ -564,26 +608,50 @@ def generate_plan_from_html(html_content):
 
 def process_slides(docx_file, output_folder):
     logger.info(f"Processing slides from {docx_file}")
-    # text = extract_text_from_docx(docx_file)
-    # chunks = split_text_into_chunks(text)
-    chunks = inputProcessor(docx_file)  # Sử dụng hàm inputProcessor từ input_funcs.py
+    chunks = inputProcessor(docx_file)
     slide_list = create_slide_list(chunks)
+    logger.debug(f"Initial slide_list: {slide_list}")
 
     slide_function_calling_list = []
     pre_slide_content = ""
     pre_function_call = ""
     cnt = 1
     api_call_cnt = 0
-    for slide_content in slide_list:
+    i = 0
+    while i < len(slide_list):
         logger.info("--" * 20)
         logger.info(f"Slide {cnt} processing")
-        html_slide_call = get_html_slide(pre_slide_content, pre_function_call, slide_content)
+        slide_content = slide_list[i]
+        # Loại bỏ placeholder từ slide_content
+        slide_content = re.sub(r'Your Title Here|Placeholder', '', slide_content, flags=re.IGNORECASE).strip()
+        try:
+            html_slide_call, text_json = get_html_slide(pre_slide_content, pre_function_call, slide_content)
+            logger.debug(f"html_slide_call for slide {cnt}: {html_slide_call}")
+        except Exception as e:
+            logger.error(f"Error generating HTML slide {cnt}: {e}")
+            html_slide_call = {"name": "generate_content_slide", "arguments": {"title": "Error", "content": f"Failed to generate slide: {str(e)}"}}
+            text_json = {}
         api_call_cnt += 1
         logger.info(f"Slide {cnt} processed, API call count: {api_call_cnt}")
-        cnt += 1
+
+        if 'tokens_used' in text_json and 'remaining_content' in text_json:
+            remaining_content = text_json['remaining_content']
+            split_reason = text_json.get('split_reason', 'No split reason provided')
+            if (remaining_content and remaining_content != slide_content and 
+                remaining_content not in slide_list[:i] and 
+                not any(remaining_content in prev_content for prev_content in slide_list[:i])):
+                logger.info(f"Slide {cnt} only processed {text_json['tokens_used']} tokens, adding remaining content to slide_list. Split reason: {split_reason}")
+                slide_list.insert(i + 1, remaining_content)
+                logger.debug(f"Updated slide_list after slide {cnt}: {slide_list}")
+            else:
+                logger.warning(f"Skipping remaining_content for slide {cnt} due to duplication or invalid content: {remaining_content}. Split reason: {split_reason}")
+        
         slide_function_calling_list.append(html_slide_call)
         pre_slide_content = slide_content
         pre_function_call = html_slide_call
+        cnt += 1
+        i += 1
+
     print("All slides processed.")
 
     for x in slide_function_calling_list:
@@ -595,7 +663,6 @@ def process_slides(docx_file, output_folder):
     if not driver:
         raise Exception("Cannot initialize ChromeDriver")
 
-    # Sử dụng tempfile.TemporaryDirectory() để quản lý thư mục tạm *bên trong* process_slides
     with tempfile.TemporaryDirectory() as tmpdir:
         html_folder = os.path.join(tmpdir, "html")
         png_folder = os.path.join(tmpdir, "png")
@@ -604,28 +671,41 @@ def process_slides(docx_file, output_folder):
 
         html_files = []
         png_files = []
-        max_attempts = 3
+        max_attempts = 6  # Tăng max_attempts
         previous_image_path = None
+        slide_accepted = False
 
         for i, (slide_content, tool_call_output) in enumerate(zip(slide_list, slide_function_calling_list)):
             attempts = 0
-            html_content = ""
-            slide_image = None
+            current_tool_call = tool_call_output
+            if hasattr(current_tool_call, 'name') and hasattr(current_tool_call, 'args'):
+                current_tool_call = {"name": current_tool_call.name, "arguments": current_tool_call.args}
 
             while attempts < max_attempts:
                 attempts += 1
-                logger.info(f"Processing slide {i+1}, attempt {attempts}")
                 try:
-                    html_content = get_function_by_name(tool_call_output)
+                    html_content = get_function_by_name(current_tool_call)
+                    if not isinstance(html_content, str):
+                        logger.error(f"Invalid HTML content for slide {i+1}, attempt {attempts}: {html_content}")
+                        html_content = "<html><body><h1>Error</h1><p>Invalid HTML content</p></body></html>"
+                    elif 'font-size: 14px' in html_content or 'font-size: 0.875rem' in html_content:
+                        logger.warning(f"Font size too small detected in HTML for slide {i+1}, adjusting tool call")
+                        if 'content' in current_tool_call['arguments']:
+                            current_tool_call['arguments']['content'] = f"<span style='font-size: 18px'>{current_tool_call['arguments']['content']}</span>"
+                        elif 'items' in current_tool_call['arguments']:
+                            current_tool_call['arguments']['items'] = [f"<span style='font-size: 18px'>{item}</span>" for item in current_tool_call['arguments']['items']]
+                        elif 'left_column_texts' in current_tool_call['arguments']:
+                            current_tool_call['arguments']['left_column_texts'] = [f"<span style='font-size: 18px'>{text}</span>" for text in current_tool_call['arguments']['left_column_texts']]
+                            current_tool_call['arguments']['right_column_texts'] = [f"<span style='font-size: 18px'>{text}</span>" for text in current_tool_call['arguments']['right_column_texts']]
+                        html_content = get_function_by_name(current_tool_call)
 
                     temp_html_path = os.path.join(html_folder, f"slide_{i+1}_attempt_{attempts}.html")
                     with open(temp_html_path, "w", encoding="utf-8") as file:
                         file.write(html_content)
-
                     temp_image_path = os.path.join(png_folder, f"slide_{i+1}_attempt_{attempts}.png")
                     slide_image = capture_slide_image(driver, html_content, temp_image_path)
 
-                    text, new_tool_call = evaluate_slide_with_vlm(temp_image_path, previous_image_path, tool_call_output)
+                    text, new_tool_call, text_json = evaluate_slide_with_vlm(temp_image_path, previous_image_path, current_tool_call)
 
                     if "<!-- accept -->" in text:
                         final_html_path = os.path.join(html_folder, f"slide_{i+1}.html")
@@ -635,57 +715,62 @@ def process_slides(docx_file, output_folder):
                         html_files.append(final_html_path)
                         png_files.append(final_png_path)
                         previous_image_path = final_png_path
-                        logger.info(f"Slide {i+1} accepted")
-                        attempts -= 1
-                        break  # Thoát vòng lặp while nếu slide được chấp nhận
+                        slide_accepted = True
+                        break
                     elif "<!-- deny -->" in text and new_tool_call:
-                        tool_call_output = new_tool_call
-                        logger.info(f"Slide {i+1} denied, retrying with new tool call")
-
+                        if hasattr(new_tool_call, 'name') and hasattr(new_tool_call, 'args'):
+                            new_tool_call = {"name": new_tool_call.name, "arguments": new_tool_call.args}
+                        if 'tokens_used' in text_json and 'remaining_content' in text_json:
+                            remaining_content = text_json['remaining_content']
+                            split_reason = text_json.get('split_reason', 'No split reason provided')
+                            if (remaining_content and remaining_content != slide_content and 
+                                remaining_content not in slide_list and 
+                                not any(remaining_content in prev_content for prev_content in slide_list)):
+                                logger.info(f"Adding remaining content to slide_list for slide {i+2}: {remaining_content}")
+                                slide_list.insert(i + 1, remaining_content)
+                                slide_function_calling_list.insert(i + 1, new_tool_call)
+                            else:
+                                logger.warning(f"Skipping remaining_content for slide {i+1}: {remaining_content}")
+                        current_tool_call = new_tool_call
+                        logger.info(f"Slide {i+1} denied, retrying with new tool call: {new_tool_call}")
                 except Exception as e:
                     logger.error(f"Error processing slide {i+1}, attempt {attempts}: {e}")
-                    # Không break ở đây, để thử lại nếu còn attempts
+                    continue
 
-            if attempts == max_attempts:  # Đã thử hết số lần cho phép
-                logger.warning(f"Slide {i+1} max attempts reached")
-                
-                temp_html_path = os.path.join(html_folder, f"slide_{i+1}_attempt_{attempts}.html")
-                temp_image_path = os.path.join(png_folder, f"slide_{i+1}_attempt_{attempts}.png")
-
+            if not slide_accepted:
+                logger.warning(f"Slide {i+1} max attempts reached without acceptance")
                 final_html_path = os.path.join(html_folder, f"slide_{i+1}.html")
                 final_png_path = os.path.join(png_folder, f"slide_{i+1}.png")
-                os.rename(temp_html_path, final_html_path)
-                os.rename(temp_image_path, final_png_path)
+                default_html = "<html><body><h1>Error</h1><p>Slide could not be generated.</p></body></html>"
+                with open(final_html_path, "w", encoding="utf-8") as file:
+                    file.write(default_html)
+                capture_slide_image(driver, default_html, final_png_path)
                 html_files.append(final_html_path)
                 png_files.append(final_png_path)
                 previous_image_path = final_png_path
+                logger.info(f"Slide {i+1} generated default slide due to max attempts")
 
         driver.quit()
         logger.info("ChromeDriver closed")
 
-
-        # Tạo file zip *trong* thư mục tạm của process_slide
-        zip_file_path = os.path.join(tmpdir, "slides.zip")  # Đặt tên file ZIP trong thư mục tạm
-        with zipfile.ZipFile(zip_file_path, 'w') as zipf:
+        zip_file_path = os.path.join(tmpdir, "slides.zip")
+        with zipfile.ZipFile(zip_file_path, 'w', compression=zipfile.ZIP_DEFLATED) as zipf:
             for html_file in html_files:
-                if os.path.exists(html_file):  # Kiểm tra sự tồn tại *trước khi* thêm
+                if html_file and os.path.exists(html_file):
                     zipf.write(html_file, os.path.join("html", os.path.basename(html_file)))
                 else:
-                    logger.error(f"File not found: {html_file}") # Log lỗi nếu file không tồn tại
+                    logger.error(f"File not found or skipped: {html_file}")
             for png_file in png_files:
-                if os.path.exists(png_file):
+                if png_file and os.path.exists(png_file):
                     zipf.write(png_file, os.path.join("png", os.path.basename(png_file)))
                 else:
-                    logger.error(f"File not found: {png_file}")
+                    logger.error(f"File not found or skipped: {png_file}")
 
-        # *Sau khi* tạo xong ZIP, kiểm tra xem nó có tồn tại không
         if not os.path.exists(zip_file_path):
             raise FileNotFoundError(f"ZIP file not created: {zip_file_path}")
 
-        # Copy file zip ra output_folder trước khi temp dir bị xóa
         final_zip_path = os.path.join(output_folder, "slides.zip")
-        shutil.copy2(zip_file_path, final_zip_path) # copy cả metadata
+        shutil.copy2(zip_file_path, final_zip_path)
 
-
-    return final_zip_path  # Trả về đường dẫn đến file ZIP *trong output_folder*
-
+    logger.debug(f"Final slide_list: {slide_list}")
+    return final_zip_path

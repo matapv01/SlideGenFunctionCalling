@@ -14,9 +14,9 @@ def inputProcessor(source):
 
     doc = result.document
 
-    from docling.chunking import HybridChunker
+    from docling.chunking import HierarchicalChunker
 
-    chunker = HybridChunker()
+    chunker = HierarchicalChunker()
     chunk_iter = chunker.chunk(dl_doc=doc)
 
     # for i, chunk in enumerate(chunk_iter):
