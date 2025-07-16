@@ -1,3 +1,6 @@
+#langchain
+#google-genai==1.16.1
+
 from google import genai
 from google.genai import types
 import os
@@ -1369,16 +1372,10 @@ TOOLS = [
     }
 ]
 
-
-demand_prompt = """
-# slide_content's language
-language = "Vietnamese" if is_vietnamese(slide_content) else "English"
-Create a slide that matches the following content, choose a function when you think it is best suited with the content and the content of the slide should be base on input slide content. If the input text is in language, your output (including all text fields in the function call) MUST also be in language:
-Previous slide content: {}
-Previous function call: {}
-Current slide content: {}
-Current function call:
-"""
+import re
+import json
+import logging
+logger = logging.getLogger(__name__)
 
 def extract_text_from_docx(file_path):
     print(f"Extracting text from {file_path}")
@@ -1416,69 +1413,197 @@ def create_slide_list(chunks):
     return slide_list
 
 def get_html_slide(pre_slide_content, pre_function_call, slide_content):
-    print(f"Generating HTML slide for content: {slide_content[:50]}...")
+    logger.debug(f"Generating HTML slide for content: {slide_content[:50]}...")
     demand_prompt = """
-    # slide_content's language
-    language = "Vietnamese" if is_vietnamese(slide_content) else "English"
-    Create a slide that matches the following content, choose a function when you think it is best suited with the content and the content of the slide should be base on input slide content. If the input text is in language, your output (including all text fields in the function call) MUST also be in language:
-    Previous slide content: {}
-    Previous function call: {}
-    Current slide content: {}
-    Current function call:
+    # Smart Slide Generation Prompt (with Design Consistency & Semantic Content Splitting)
+
+    # Language Detection
+    language = "Vietnamese" if is_vietnamese else "English"
+
+    # Objective
+    Create a single slide that conveys a single semantic block from `slide_content`, fits the logical flow from the previous slide, 
+    and maintains full design coherence across the deck. Split unrelated content into `remaining_content` for subsequent slides, ensuring 
+    no content from the current slide or previous slides is repeated in `remaining_content`.
+
+    # Instructions for Smart Slide Generation
+
+    ## 1. Content Analysis & Splitting
+    - Analyze `slide_content` to identify distinct semantic blocks (e.g., "Title", "Introduction", "Section 1", "Section 2").
+    - Assign only one semantic block (or two closely related blocks, e.g., "Title" and "Introduction") to the slide.
+    - Split unrelated blocks into `remaining_content` for subsequent slides, even if content fits within one slide, to ensure clarity and focus.
+    - Example:
+        - Input: "Title: Green Environment. Introduction: Forests are vital. Section 1: Oxygen production. Section 2: Rivers."
+        - Output:
+            - Slide: Title + Introduction
+            - `remaining_content`: "Section 1: Oxygen production. Section 2: Rivers."
+    - Summarize the chosen block concisely (3–4 bullet points or 5–7 lines).
+    - Remove placeholders (e.g., "Your Title Here", "Placeholder").
+    - Ensure `remaining_content`:
+        - Does NOT repeat any content included in the slide's `arguments`.
+        - Does NOT repeat any content from previous slides ({0}).
+        - Preserves semantic integrity (no mid-sentence or mid-idea splits).
+        - Is distinct from the current slide's content to avoid duplication.
+    - If no split is needed, return empty JSON (i.e., {{}}).
+    - Output text in `(language)`.
+
+    ## 2. Slide Function Selection
+    - Evaluate ALL available slide functions:
+        - `make_bullet_slide`
+            - Parameters: `title` (string), `items` (list of strings)
+            - Example: {{"name": "make_bullet_slide", "arguments": {{"title": "Title", "items": ["Point 1", "Point 2", "Point 3"]}}}}
+        - `make_two_column_slide`
+            - Parameters: `title` (string), `left_column_texts` (list of strings), `right_column_texts` (list of strings)
+            - Example: {{"name": "make_two_column_slide", "arguments": {{"title": "Comparison", "left_column_texts": ["Left 1", "Left 2"], "right_column_texts": ["Right 1", "Right 2"]}}}}
+        - `make_text_slide`
+            - Parameters: `title` (string), `content` (string)
+            - Example: {{"name": "make_text_slide", "arguments": {{"title": "Explanation", "content": "Detailed content."}}}}
+        - `make_image_with_caption_slide`
+            - Parameters: `title` (string), `image_path` (string), `caption` (string)
+            - Example: {{"name": "make_image_with_caption_slide", "arguments": {{"title": "Image", "image_path": "path/to/image.jpg", "caption": "Image description"}}}}
+        - `generate_content_slide`
+            - Parameters: `title` (string), `content` (string)
+            - Example: {{"name": "generate_content_slide", "arguments": {{"title": "Content", "content": "General content"}}}}
+    - Choose based on:
+        a. Content type (list → `make_bullet_slide`, comparison → `make_two_column_slide`, narrative → `make_text_slide`, visual → `make_image_with_caption_slide`).
+        b. Optimal visual layout for comprehension.
+        c. Narrative flow from previous slide ({0}, {1}).
+        d. Fit within slide without overflow (max 3–4 bullet points or 5–7 lines).
+    - Default to `generate_content_slide` if unsure.
+    - Do NOT use invalid function names or parameters.
+
+    ## 3. Visual & Design Consistency
+    - Match the previous slide ({0}, {1}):
+        - Font size: Minimum 1.5rem for titles, 1.125rem for body text (1rem = 16px).
+        - Font family: Arial or same as previous slide.
+        - Colors: Use background (#FFFFFF), title (#000000), body (#333333), highlights (#EF4444, #3B82F6, #388E3C).
+        - Bullet formatting, text alignment (centered titles, left/justified body), and spacing.
+    - Ensure ≥10% whitespace.
+    - Avoid:
+        - Font size < 1.125rem for body or < 1.5rem for titles.
+        - Inconsistent colors or alignment.
+        - Placeholder text like "Your Title Here".
+
+    ## 4. Highlight Key Phrases
+    - Highlight meaningful phrases in content slides (not intro/thank you slides).
+    - Use: `<b><i><span style='color:#HEXCODE'>text</span></i></b>`.
+    - Colors: `#EF4444` (primary), `#3B82F6` (related), `#388E3C` (environmental).
+    - Limit to 2–3 colors per slide, consistent across deck.
+    - Do NOT highlight non-key phrases (e.g., "also", "such as", "for example", slide titles).
+    - Highlighting must be consistent: use same color for same concepts across slides.
+
+    ## 5. HTML Support
+    - Use HTML tags only when necessary:
+        - `<br>` for line breaks.
+        - `<b>`, `<i>` for emphasis.
+        - `<ul>`, `<li>` for bullets.
+        - `<span style="font-size: Xrem">` for size correction (X ≥ 1.125 for body, X ≥ 1.5 for titles).
+    - HTML must enhance clarity, not clutter.
+
+    ## 6. Semantic & Logical Continuity
+    - Ensure tone, topic, and flow align with previous slide ({0}, {1}).
+    - Transitions should be smooth and meaningful.
+
+    ## 7. Presentation-Ready Structure
+    - Ensure ≥10% whitespace.
+    - Limit to 3–4 bullet points or 5–7 lines.
+    - Guide viewer’s eye with clear title and content placement.
+
+    - Slide must be:
+    - Content-relevant
+    - Layout-appropriate
+    - Visually consistent with previous slide
+    - Free of placeholders
+
+    ## Input Context
+    - Previous slide content: {0}
+    - Previous function call: {1}
+    - Current slide content: {2}
+
+    ## Output Requirements
+    Respond with:
+    - A function call with supported parameters
+    - A JSON object in text response with:
+        - `remaining_content`: Excess content for next slide, EXCLUDING content used in the slide and content from previous slides ({0}), or empty string if no split.
+        - `split_reason`: Reason for split, or empty string if no split.
+        - Return {{}} if no split is needed.
     """
 
-
-    # load dotenv
-    from dotenv import load_dotenv
-    load_dotenv()
-
-    
-    # Configure the client and tools
-    client = genai.Client(api_key=os.getenv('GEMINI_API_KEY'))
     tools = types.Tool(function_declarations=TOOLS)
-    
-
-    # Define user prompt
     contents = [
-        types.Content(
-            role="user", parts=[types.Part(text="You are a AI agent that generates HTML slides based on the provided content.")],
-        ),
-        types.Content(
-            role="user",
-            parts=[
-                types.Part(
-                    text=demand_prompt.format(pre_slide_content, pre_function_call, slide_content),
-                )
-            ],
-        )
+        types.Content(role="user", parts=[types.Part(text="You are an AI agent that generates HTML slides based on the provided content.")]),
+        types.Content(role="user", parts=[types.Part(text=demand_prompt.format(pre_slide_content, pre_function_call, slide_content))])
     ]
-
-
+    
     response = safe_generate_content("gemini-2.5-flash-preview-05-20", contents, tools)
     
-    # Check for a function call
-    if response.candidates[0].content.parts[0].function_call:
-        function_call = response.candidates[0].content.parts[0].function_call
-        print(f"respond: {response.text}")
-        print(f"Function to call: {function_call.name}")
-        print(f"Arguments: {function_call.args}")
-        #  In a real app, you would call your function here:
-        #  result = schedule_meeting(**function_call.args)
-        return function_call
-    else:
-        print("No function call found in the response.")
-        print(response.text)
-        return {"name": "generate_split_layout_slide1", "arguments": {"left_title": "Error", "left_subtitle": "No function call found"}}
+    logger.debug(f"Response from API: {response}")
+    print(f"Response from API: {response}")
 
+    if not response or not hasattr(response, 'candidates') or not response.candidates:
+        logger.error("Invalid or empty response from API")
+        return {
+            "function_call": {
+                "name": "generate_content_slide",
+                "arguments": {"title": "Error", "content": "Unable to generate slide due to invalid API response"}
+            },
+            "remaining_content": "",
+            "split_reason": ""
+        }
+
+    function_call = None
+    text = ""
+    try:
+        for part in response.candidates[0].content.parts:
+            if hasattr(part, "text") and part.text:
+                text += part.text
+            if hasattr(part, "function_call") and part.function_call:
+                function_call = part.function_call
+
+    except AttributeError as e:
+        logger.error(f"Error accessing response parts: {e}")
+        logger.debug(f"Function call: {function_call}")
+        logger.debug(f"text: {text}")
+        r1 = ""
+        r2 = {
+                "function_call": {
+                    "name": "generate_content_slide",
+                    "arguments": {"title": "Error", "content": f"Unable to access API response: {str(e)}"}
+                }
+            }
+        r3 = {
+                "remaining_content": "",
+                "split_reason": ""
+            }
+        return r1, r2, r3
+
+    # Xử lý text response để lấy text_json
+    text = re.sub(r'```json\n|\n```', '', text).strip()
+    try:
+        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        text_json = json.loads(json_match.group(0)) if json_match else {}
+        if json_match:
+            text = text.replace(json_match.group(0), '').strip()
+    except json.JSONDecodeError:
+        logger.error(f"Failed to parse text response as JSON: {text}")
+        text_json = {}
+
+    logger.debug(f"LLM response: {text}, Function call: {function_call}, Text JSON: {text_json}")
+    return text.strip(), function_call, text_json
+
+from google import genai
+from google.genai import types
+from dotenv import load_dotenv
 import time
 import google.genai.errors
 
 def safe_generate_content(model, contents, tools=None, max_retries=10, delay=15):
-    API_KEY_LIST = ['GEMINI_API_KEY', 'AQUANG1', 'AQUANG2', 'MATA01']
+    API_KEY_LIST = ['MATA01', 'GEMINI_API_KEY',  'AQUANG1', 'AQUANG2']
     for attempt, i in zip(range(max_retries), range(len(API_KEY_LIST))):
         try:
-            print(f"Attempt {attempt + 1} with API key: {API_KEY_LIST[i]}")
-            client = genai.Client(api_key=os.getenv(API_KEY_LIST[i]))
+            key_index = attempt % len(API_KEY_LIST)
+            api_key_name = API_KEY_LIST[key_index]
+            print(f"Attempt {attempt + 1}/{max_retries} with API key: {api_key_name}")
+            client = genai.Client(api_key=os.getenv(api_key_name))
 
             config = types.GenerateContentConfig(tools=[tools]) if tools else None
             # Send request with function declarations
@@ -1487,17 +1612,41 @@ def safe_generate_content(model, contents, tools=None, max_retries=10, delay=15)
                 config=config,
                 contents=contents,
             )        
+            
+            # Kiểm tra tính hợp lệ của phản hồi
+            if not response or not hasattr(response, 'candidates') or not response.candidates:
+                error_msg = f"Invalid response: {response}. Response is None, missing candidates, or candidates empty."
+                logger.error(error_msg)
+                last_error = error_msg
+                print(f"Invalid response (attempt {attempt + 1}), retrying in {delay}s...")
+                time.sleep(delay)
+                continue
+
+            logger.info("Valid response received.")
             return response
+
         except google.genai.errors.ServerError as e:
+            last_error = str(e)
             if '503' in str(e):
                 print(f"Model overloaded (attempt {attempt + 1}), retrying in {delay}s...")
-                time.sleep(delay)
+            elif '500' in str(e):
+                print(f"Limit quota (attempt {attempt + 1}), retrying in {delay}s...")
             else:
-                raise
-    raise RuntimeError("Max retries reached. Model still overloaded.")
+                print(f"Eror: {str(e)} (attempt {attempt + 1}), retrying in {delay}s...")
+            time.sleep(delay)
+            continue
+
+        except Exception as e:
+            last_error = str(e)
+            print(f"Unexpected error: {str(e)} (attempt {attempt + 1}), retrying in {delay}s...")
+            logger.error(f"Unexpected error with key {API_KEY_LIST[i]}: {e}")
+            time.sleep(delay)
+            continue
+
+    raise RuntimeError(f"Max retries reached. Last error: {last_error or 'Unknown error'}")
 
 
-docx_file = "C:\\Users\\pvmkt\\OneDrive\\Desktop\\SlideGenSourceCode\\SlideGenFunctionCalling\\Document\\Test.docx"  # Replace with your actual DOCX file path
+docx_file = "C:\\Users\\pvmkt\\OneDrive\\Desktop\\SlideGenSourceCode\\Gemini_API\\SlideGenFunctionCalling\\Document\\nature.docx"  # Replace with your actual DOCX file path
 print(f"Processing slides from {docx_file}")
 text = extract_text_from_docx(docx_file)
 chunks = split_text_into_chunks(text)
@@ -1509,11 +1658,14 @@ pre_function_call = ""
 cnt = 1
 api_call_cnt = 0
 for slide_content in slide_list:
-    html_slide_call = get_html_slide(pre_slide_content, pre_function_call, slide_content)
+    text, current_tool_call, text_json = get_html_slide(pre_slide_content, pre_function_call, slide_content)
     api_call_cnt += 1
     print(f"Slide {cnt} processed, API call count: {api_call_cnt}")
     cnt += 1
-    slide_function_calling_list.append(html_slide_call)
+    slide_function_calling_list.append(current_tool_call)
     pre_slide_content = slide_content
-    pre_function_call = html_slide_call
+    pre_function_call = current_tool_call
+    print(f"tool_call: {current_tool_call}")
+    print(f"text: {text}")
+    print(f"text_json: {text_json}")
 print("All slides processed.")

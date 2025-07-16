@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three Column Slide</title>
+    <title>Image Grid Slide</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            font-family: Arial, sans-serif;
+            font-family: Segoe UI, Arial, sans-serif;
             background-color: #f5f5f5;
             display: flex;
             justify-content: center;
@@ -23,26 +23,44 @@
             background-color: #ffffff;
             overflow: hidden;
             box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            box-sizing: border-box;
+        }
+        
+        .left-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 100%;
+            background-color: #d5e8b9;
+        }
+        
+        .right-accent {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 100%;
+            background-color: #d5e8b9;
         }
         
         .title-section {
+            position: absolute;
+            top: 30px;
+            left: 30px;
             display: flex;
             align-items: center;
-            margin-bottom: 60px; /* Increased margin to move content boxes down */
         }
         
         .title-accent {
             width: 30px;
             height: 30px;
-            background-color: #e1eff2;
+            background-color: #d5e8b9;
             margin-right: 15px;
         }
         
         .main-title {
-            font-size: 32px;
-            color: #555555;
+            font-size: 48px;
+            color: #333333;
             font-weight: normal;
             font-style: italic;
             margin: 0;
@@ -50,91 +68,124 @@
         
         .content-layout {
             display: flex;
-            justify-content: space-between;
-            align-items: center; /* Center content boxes vertically */
-            height: calc(100% - 120px); /* Adjusted to account for larger title margin */
+            position: absolute;
+            top: 100px;
+            left: 30px;
+            width: calc(100% - 60px);
+            height: calc(100% - 130px);
         }
         
-        .content-box {
-            width: 31%;
-            height: 250px; /* Fixed height for content boxes */
-            background-color: #e1eff2;
+        .image-grid {
+            width: 45%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .grid-image {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
             position: relative;
+        }
+        
+        .grid-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background-color: #d5e8b9;
+        }
+        
+        .content-sections {
+            width: 55%;
+            padding-left: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .content-section {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 60px 20px 20px;
-            box-sizing: border-box;
-            text-align: center;
-        }
-        
-        .icon-circle {
-            width: 70px;
-            height: 70px;
-            border-radius: 50%;
-            background-color: #ffffff;
-            position: absolute;
-            top: -35px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        
-        .icon-circle svg {
-            stroke: #a2c4c9;
         }
         
         .subtitle {
-            font-size: 20px;
-            color: #555555;
-            margin: 0 0 15px 0;
-            font-weight: bold;
+            font-size: 24px;
+            color: #333333;
+            margin: 0 0 10px 0;
+            font-style: italic;
         }
         
         .content {
             font-size: 18px;
             color: #555555;
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.4;
+            font-style: italic;
         }
     </style>
 </head>
 <body>
     <div class="slide-container">
+        <div class="left-accent"></div>
+        <div class="right-accent"></div>
+        
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
-            <h1 class="main-title">Chung tay</h1>
+            <h1 class="main-title">Thiên nhiên và những điều kì thú</h1>
         </div>
         
         <!-- Content Layout -->
         <div class="content-layout">
-            <!-- Content Box 1 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-2-2-4 4"></path></svg>
+            <!-- Image Grid -->
+            <div class="image-grid">
+                <div class="grid-image">
+                    <img src="Picture5.1.png" alt="Image 1">
+                    <div class="image-overlay"></div>
                 </div>
-                <h3 class="subtitle">Trồng cây xanh</h3>
-                <p class="content">trồng cây hấp thụ <b><i><span style='color:#0000FF;'>CO2</span></i></b>, cải thiện <b><i><span style='color:#009900;'>không khí</span></i></b> và chống <b><i><span style='color:#FF0000;'>biến đổi khí hậu</span></i></b>.</p>
+                <div class="grid-image">
+                    <img src="Picture5.2.png" alt="Image 2">
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="grid-image">
+                    <img src="Picture5.3.png" alt="Image 3">
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="grid-image">
+                    <img src="Picture5.4.png" alt="Image 4">
+                    <div class="image-overlay"></div>
+                </div>
             </div>
             
-            <!-- Content Box 2 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>
+            <!-- Content Sections -->
+            <div class="content-sections">
+                <div class="content-section">
+                    <h3 class="subtitle">Trồng cây xanh</h3>
+                    <p class="content">trồng cây <b><i><span style='color:#388E3C'>hấp thụ CO2</span></i></b>, <b><i><span style='color:#3B82F6'>cải thiện không khí</span></i></b> và chống <b><i><span style='color:#EF4444'>biến đổi khí hậu</span></i></b>.</p>
                 </div>
-                <h3 class="subtitle">Tái chế rác thải</h3>
-                <p class="content">tái chế <b><i><span style='color:#0000FF;'>giảm rác</span></i></b>, bảo vệ <b><i><span style='color:#009900;'>tài nguyên thiên nhiên</span></i></b> và <b><i><span style='color:#FF0000;'>môi trường</span></i></b>.</p>
-            </div>
-            
-            <!-- Content Box 3 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>
+                <div class="content-section">
+                    <h3 class="subtitle">Tái chế rác thải</h3>
+                    <p class="content">tái chế <b><i><span style='color:#3B82F6'>giảm rác</span></i></b>, <b><i><span style='color:#388E3C'>bảo vệ tài nguyên thiên nhiên</span></i></b> và môi trường.</p>
                 </div>
-                <h3 class="subtitle">Giáo dục cộng đồng</h3>
-                <p class="content">nâng cao <b><i><span style='color:#0000FF;'>nhận thức về bảo vệ thiên nhiên</span></i></b> qua <b><i><span style='color:#009900;'>trường học</span></i></b> và <b><i><span style='color:#FF0000;'>truyền thông</span></i></b>.</p>
+                <div class="content-section">
+                    <h3 class="subtitle">Giáo dục cộng đồng</h3>
+                    <p class="content">nâng cao <b><i><span style='color:#3B82F6'>nhận thức</span></i></b> về <b><i><span style='color:#388E3C'>bảo vệ thiên nhiên</span></i></b> qua trường học và truyền thông.</p>
+                </div>
+                <div class="content-section">
+                    <h3 class="subtitle">Hợp tác toàn cầu</h3>
+                    <p class="content">các quốc gia cùng <b><i><span style='color:#3B82F6'>hành động</span></i></b> để <b><i><span style='color:#388E3C'>bảo vệ môi trường và hệ sinh thái toàn cầu</span></i></b>.</p>
+                </div>
             </div>
         </div>
     </div>
