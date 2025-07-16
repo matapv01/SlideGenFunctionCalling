@@ -5,8 +5,8 @@ def get_function_by_name(tool_call):
 
     # Kiểm tra nếu function_call là dictionary
     if isinstance(tool_call, dict):
-        function_name = tool_call.get('name')
-        function_args = tool_call.get('arguments', {})
+        function_name = tool_call.get("name")
+        function_args = tool_call.get("arguments", {})
     else:
         # Giả sử function_call là đối tượng với thuộc tính name và args
         function_name = tool_call.name
