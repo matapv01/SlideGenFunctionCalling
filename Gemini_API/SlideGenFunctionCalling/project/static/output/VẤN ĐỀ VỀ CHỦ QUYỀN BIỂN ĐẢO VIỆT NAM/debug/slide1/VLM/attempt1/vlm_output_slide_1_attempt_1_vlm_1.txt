@@ -1,0 +1,4 @@
+VLM Text: <!-- deny -->
+<!-- reason: The slide suffers from poor readability due to the excessive length of the description text. While not physically cut off, the content density violates the recommendation for conciseness and exceeds the guideline of a maximum of 7 lines for the entire slide content, making it difficult to scan and digest. -->
+VLM Tool Call: {'name': 'generate_academic_slide', 'arguments': {'description': 'Chủ quyền biển đảo là vấn đề sống còn đối với đất nước ta, ảnh hưởng sâu sắc đến an ninh quốc gia, kinh tế biển và sự toàn vẹn lãnh thổ.', 'title': 'Vấn đề về chủ quyền biển đảo Việt Nam'}}
+VLM Text JSON: {'remaining_content': 'Vấn đề về chủ quyền biển đảo Việt Nam\n\nViệc hiểu rõ về chủ quyền biển đảo là hết sức quan trọng với mỗi người dân Việt Nam.', 'split_reason': 'Split to prevent visual overflow and ensure readability. The second part of the description has been moved to the next slide.'}

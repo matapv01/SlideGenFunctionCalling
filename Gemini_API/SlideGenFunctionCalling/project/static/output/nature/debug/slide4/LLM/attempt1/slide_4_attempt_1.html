@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Grid Slide</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Segoe UI, Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .slide-container {
+            width: 1000px;
+            height: 560px;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        }
+        
+        .left-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 10px;
+            height: 100%;
+            background-color: #6ea88a;
+        }
+        
+        .right-accent {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 10px;
+            height: 100%;
+            background-color: #6ea88a;
+        }
+        
+        .title-section {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            display: flex;
+            align-items: center;
+        }
+        
+        .title-accent {
+            width: 30px;
+            height: 30px;
+            background-color: #6ea88a;
+            margin-right: 15px;
+        }
+        
+        .main-title {
+            font-size: 36px;
+            color: #333333;
+            font-weight: normal;
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .content-layout {
+            display: flex;
+            position: absolute;
+            top: 100px;
+            left: 30px;
+            width: calc(100% - 60px);
+            height: calc(100% - 130px);
+        }
+        
+        .image-grid {
+            width: 45%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .grid-image {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .grid-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 10px;
+            background-color: #6ea88a;
+        }
+        
+        .content-sections {
+            width: 55%;
+            padding-left: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .content-section {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .subtitle {
+            font-size: 18px;
+            color: #555555;
+            margin: 0 0 10px 0;
+            font-style: italic;
+        }
+        
+        .content {
+            font-size: 14px;
+            color: #555555;
+            margin: 0;
+            line-height: 1.4;
+            font-style: italic;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="left-accent"></div>
+        <div class="right-accent"></div>
+        
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">Thiên nhiên và những điều kì thú</h1>
+        </div>
+        
+        <!-- Content Layout -->
+        <div class="content-layout">
+            <!-- Image Grid -->
+            <div class="image-grid">
+                <div class="grid-image">
+                    <img src="Picture5.1.png" alt="Image 1">
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="grid-image">
+                    <img src="Picture5.2.png" alt="Image 2">
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="grid-image">
+                    <img src="Picture5.3.png" alt="Image 3">
+                    <div class="image-overlay"></div>
+                </div>
+                <div class="grid-image">
+                    <img src="Picture5.4.png" alt="Image 4">
+                    <div class="image-overlay"></div>
+                </div>
+            </div>
+            
+            <!-- Content Sections -->
+            <div class="content-sections">
+                <div class="content-section">
+                    <h3 class="subtitle">Trồng cây xanh</h3>
+                    <p class="content">trồng cây <b><i><span style='color:#388E3C'>hấp thụ CO2</span></i></b>, <b><i><span style='color:#3B82F6'>cải thiện không khí</span></i></b> và <b><i><span style='color:#EF4444'>chống biến đổi khí hậu</span></i></b>.</p>
+                </div>
+                <div class="content-section">
+                    <h3 class="subtitle">Tái chế rác thải</h3>
+                    <p class="content"><b><i><span style='color:#3B82F6'>tái chế giảm rác</span></i></b>, <b><i><span style='color:#388E3C'>bảo vệ tài nguyên thiên nhiên</span></i></b> và môi trường.</p>
+                </div>
+                <div class="content-section">
+                    <h3 class="subtitle">Giáo dục cộng đồng</h3>
+                    <p class="content"><b><i><span style='color:#3B82F6'>nâng cao nhận thức</span></i></b> về bảo vệ thiên nhiên qua trường học và truyền thông.</p>
+                </div>
+                <div class="content-section">
+                    <h3 class="subtitle">Hợp tác toàn cầu</h3>
+                    <p class="content">các quốc gia <b><i><span style='color:#3B82F6'>cùng hành động</span></i></b> để bảo vệ môi trường và <b><i><span style='color:#388E3C'>hệ sinh thái toàn cầu</span></i></b>.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

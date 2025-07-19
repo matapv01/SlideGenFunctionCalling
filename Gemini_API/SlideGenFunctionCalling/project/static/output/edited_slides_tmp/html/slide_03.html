@@ -1,0 +1,143 @@
+
+            
+
+
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertical Images Slide</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Segoe UI, Arial, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .slide-container {
+            width: 1000px;
+            height: 560px;
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            box-sizing: border-box;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 40px;
+        }
+        
+        .title-accent {
+            width: 30px;
+            height: 30px;
+            background-color: #d5e8b9;
+            margin-right: 15px;
+        }
+        
+        .main-title {
+            font-size: 32px;
+            color: #333333;
+            font-weight: normal;
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .content-layout {
+            display: flex;
+            width: 100%;
+            height: calc(100% - 80px);
+        }
+        
+        .left-column {
+            width: 40%;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .image-container {
+            width: 100%;
+            height: calc(33.33% - 7px);
+            overflow: hidden;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .right-column {
+            width: 60%;
+            padding-left: 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .subtitle {
+            font-size: 28px;
+            color: #333333;
+            margin: 0 0 15px 0;
+            font-weight: normal;
+            font-style: italic;
+        }
+        
+        .divider {
+            width: 100%;
+            height: 3px;
+            background-color: #d5e8b9;
+            margin-bottom: 30px;
+        }
+        
+        .content {
+            font-size: 18px;
+            color: #4a90a0;
+            margin: 0 0 20px 0;
+            line-height: 1.6;
+            font-style: italic;
+        }
+    </style>
+
+
+    <div class="slide-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">Thiên nhiên và những điều kì thú</h1>
+        </div>
+        
+        <!-- Content Layout -->
+        <div class="content-layout">
+            <!-- Left Column with Images -->
+            <div class="left-column">
+                <div class="image-container">
+                    <img src="/api/images/Picture7.1.png" alt="Image 1">
+                </div>
+                <div class="image-container">
+                    <img src="/api/images/Picture7.2.png" alt="Image 2">
+                </div>
+                <div class="image-container">
+                    <img src="/api/images/Picture7.3.png" alt="Image 3">
+                </div>
+            </div>
+            
+            <!-- Right Column with Content -->
+            <div class="right-column">
+                <h2 class="subtitle">Phần 3: Núi đồi</h2>
+                <div class="divider"></div>
+                <p class="content"></p><ul><li><b><i><span style="color:#388E3C">Đỉnh núi cao:</span></i></b> những ngọn núi như Fansipan là nguồn cảm hứng và thử thách cho con người.</li><li><b><i><span style="color:#388E3C">Động vật núi:</span></i></b> hệ sinh thái núi có nhiều loài đặc hữu thích nghi với điều kiện khắc nghiệt.</li></ul><p></p>
+                <p class="content"></p><ul><li><b><i><span style="color:#388E3C">Du lịch sinh thái:</span></i></b> du lịch bền vững giúp bảo tồn vẻ đẹp tự nhiên của núi non.</li></ul><p></p>
+            </div>
+        </div>
+    </div>
+
+
+        

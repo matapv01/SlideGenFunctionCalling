@@ -1,0 +1,3 @@
+Text: 
+Tool Call: id=None args={'line_color': '#a2c4c9', 'text_box_bg_color': '#e1eff2', 'main_bg_color': '#ffffff', 'main_title': 'Chào mừng quý vị và các bạn', 'subtitle_color': '#888888', 'font_family': 'Arial, sans-serif', 'subtitle1': 'Đến với buổi thuyết trình.', 'title_color': '#666666', 'subtitle2': 'Mục tiêu: Khơi dậy sự tò mò và khuyến khích mỗi cá nhân khai thác tiềm năng của AI để phát triển bản thân và cuộc sống.', 'main_title_font_size': '60px', 'subtitle_font_size': '32px', 'accent_bg_color': '#a2c4c9'} name='generate_intro_slide'
+Text JSON: {}
