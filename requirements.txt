@@ -1,0 +1,15 @@
+langgraph
+langsmith
+langchain
+langchain-openai
+
+dotenv
+# python-docx
+langchain
+fastapi
+uvicorn
+selenium
+img2pdf
+python-multipart
+docling
+transformers
