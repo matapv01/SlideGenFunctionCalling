@@ -1,12 +1,11 @@
 # /app/src/nodes/prepare_slide.py 
 
 import logging
-from typing import Dict, Any
-from src.graph_state import graph_state
+from src.stage import State
 
 logger = logging.getLogger(__name__)
 
-def prepare_next_slide(state: graph_state) -> graph_state:
+def prepare_next_slide(state: State) -> State:
     """
     Node chuẩn bị slide tiếp theo từ hàng đợi.
     """

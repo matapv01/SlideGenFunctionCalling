@@ -2,16 +2,13 @@ import os
 import time
 from typing import List, Dict, Any
 import logging
-
 from langchain_openai import ChatOpenAI
-# Quan trọng: Cần import các loại lỗi cụ thể từ thư viện openai
-import openai
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 logger = logging.getLogger(__name__)
 
 
-class llm:
+class LLM:
     """
     A robust wrapper class for language models via langchain_openai,
     featuring built-in retry logic and API key rotation.
@@ -68,59 +65,28 @@ class llm:
         logger.warning(f"Rotating API key. New key index: {self.current_key_index}")
         self._create_llm_instance()
 
-    def invoke(self, prompt: str, tools: List[Dict] = None, max_retries: int = 5, delay: int = 15) -> Any:
+    def invoke(self, prompt: str, temperature: float = 0.5, top_p: float = 0.9) -> str:
         """
-        Invokes the LLM with a given prompt, applying retry logic and API key rotation on failure.
-        
-        Args:
-            prompt (str): The input prompt for the model.
-            tools (List[Dict], optional): A list of tools to bind for this specific call.
-            max_retries (int): The maximum number of retries before giving up.
-            delay (int): The delay in seconds between retries.
-            
-        Returns:
-            The content of the LLM response.
-            
-        Raises:
-            RuntimeError: If all retries with all API keys fail.
+        Invokes the LLM with a given prompt and returns the text response.
+        Handles both openai_server API calls and local model inference.
         """
-        last_exception = None
-        
-        for attempt in range(max_retries):
-            try:
-                # Gắn tools (nếu có) cho lần gọi này
-                llm_with_tools = self.llm.bind_tools(tools) if tools else self.llm
-                
-                logger.info(f"Attempt {attempt + 1}/{max_retries} with API key index {self.current_key_index}...")
-                
-                # Gọi invoke
-                response = llm_with_tools.invoke(prompt)
-                
-                # Nếu thành công, trả về kết quả ngay lập tức
-                return response
-            
-            # Xử lý các lỗi cụ thể từ OpenAI/Langchain
-            except openai.RateLimitError as e:
-                logger.warning(f"Rate limit error: {e}. Rotating key and retrying after {delay}s...")
-                last_exception = e
-                self._rotate_key_and_recreate_instance()
-                time.sleep(delay)
-                
-            except (openai.APIError, openai.APITimeoutError, openai.APIConnectionError) as e:
-                logger.error(f"API error on attempt {attempt + 1}: {e}. Retrying after {delay}s...")
-                last_exception = e
-                # Không cần xoay key cho lỗi timeout hoặc lỗi kết nối, chỉ cần thử lại
-                time.sleep(delay)
-                
-            except Exception as e:
-                # Bắt các lỗi không mong muốn khác
-                logger.critical(f"An unexpected error occurred: {e}. Rotating key and retrying...")
-                last_exception = e
-                self._rotate_key_and_recreate_instance()
-                time.sleep(delay)
+        # For openai_server, the temperature is set at initialization
+        response = self.llm.invoke(prompt, temperature=temperature, top_p=top_p)
+        return response.content if hasattr(response, 'content') else str(response)
 
-        # Nếu tất cả các lần thử lại đều thất bại
-        raise RuntimeError(f"Max retries ({max_retries}) reached. Last error: {last_exception}")
+    def bind_tools(self, tools):
+        """
+        Bind tools to the LLM instance.
+        """
+        return self.llm.bind_tools(tools)
+    
+    def with_structured_output(self, output_schema, **kwargs):
+        """
+        Configure the LLM to use structured output.
+        Accepts and passes along any additional keyword arguments.
+        """
+        # Pass the schema and all other kwargs to the real method
+        return self.llm.with_structured_output(output_schema, **kwargs)
 
     def stream(self, prompt: str):
         """

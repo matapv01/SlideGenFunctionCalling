@@ -3,51 +3,36 @@ import src
 import tempfile
 import os
 from typing import Dict, Any
-from src.graph_state import graph_state
+from src.stage import State
+from docling.document_converter import DocumentConverter
+from docling.chunking import HierarchicalChunker
+
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 
-# source = "https://arxiv.org/pdf/2408.09869"  # PDF path or URL
-# source = "C:\\Users\\pvmkt\\OneDrive\\Desktop\\SlideGenSourceCode\\SlideGenFunctionCalling\\Document\\test_ttcs.docx"
-
 def input_processor(source):
-    from docling.document_converter import DocumentConverter
+    """
+    Node khởi tạo: Đọc DOCX, chia chunks, và thiết lập trạng thái ban đầu.
+    """
     converter = DocumentConverter()
     result = converter.convert(source)
-    # print(result.document.export_to_markdown())  # output: "### Docling Technical Report[...]"
-    # print("-" * 20)
-
-
     doc = result.document
-
-    from docling.chunking import HierarchicalChunker
-
     chunker = HierarchicalChunker()
     chunk_iter = chunker.chunk(dl_doc=doc)
 
-    # for i, chunk in enumerate(chunk_iter):
-    #     print(f"=== {i} ===")
-    #     print(f"chunk.text:\n{f'{chunk.text[:300]}…'!r}") # noi dung goc
-
-    #     enriched_text = chunker.contextualize(chunk=chunk)
-    #     print(f"chunker.contextualize(chunk):\n{f'{enriched_text[:300]}…'!r}") # Noi dung da duoc lam giau
-
-    #     print()
-
     returnArray = []
     for i, chunk in enumerate(chunk_iter):
-        # print(f"=== {i} ===")
-        # print(f"chunk.text:\n{f'{chunk.text[:300]}…'!r}") # noi dung goc
-
         enriched_text = chunker.contextualize(chunk=chunk)
-        # print(f"chunker.contextualize(chunk):\n{f'{enriched_text[:300]}…'!r}") # Noi dung da duoc lam giau
-
         returnArray.append(enriched_text)
 
     return returnArray
 
 def create_slide_list(chunks):
+    """
+    Tạo danh sách slide từ các chunks đã chia.
+    Mỗi slide sẽ chứa tối đa 600 ký tự.
+    """
     print("Creating slide list")
     slide_list = []
     current_slide = ""
@@ -68,10 +53,7 @@ def create_slide_list(chunks):
     return slide_list
 
 
-
-
-
-def initialize_and_prepare(state: graph_state) -> Dict[str, Any]:
+def initialize_and_prepare(state: State) -> Dict[str, Any]:
     """
     Node khởi tạo: Đọc DOCX, chia chunks, và thiết lập trạng thái ban đầu.
     """

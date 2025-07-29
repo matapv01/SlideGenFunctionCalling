@@ -7,14 +7,14 @@ import logging
 import zipfile
 from docx import Document
 import shutil
-from src.models.llm import llm
+from src.models.llm import LLM
 from src.nodes.input_processor import input_processor, initialize_and_prepare
 from src.nodes.prepare_next_slide import prepare_next_slide
 from src.nodes.slide_generator import slide_generator
 from src.nodes.slide_evaluator import slide_evaluator
 from src.nodes.finalize_slide import finalize_slide
 from src.nodes.html_renderer import html_renderer
-from src.graph_state import graph_state
+from src.stage import State
 from src.utils import config
 from langgraph.graph import StateGraph
 import os
@@ -23,19 +23,7 @@ from langgraph.graph import END
 
 logger = logging.getLogger(__name__)
 
-# tools = [
-#         get_add_tool(),
-#         get_subtract_tool(),
-#         get_multiply_tool(),
-#         get_divide_tool(),
-#         get_table_max_tool(),
-#         get_table_min_tool(),
-#         get_table_sum_tool(),
-#         get_table_average_tool()
-#     ]
-
-
-def route_to_task(state: graph_state) -> str:
+def route_to_task(state: State) -> str:
     """
     Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
     """
@@ -48,7 +36,7 @@ def route_to_task(state: graph_state) -> str:
         logger.info("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
         return END
 
-def check_redundancy(state: graph_state) -> str:
+def check_redundancy(state: State) -> str:
     """
     Kiểm tra xem slide có bị LLM đánh dấu là dư thừa không.
     """
@@ -65,7 +53,7 @@ def check_redundancy(state: graph_state) -> str:
         logger.info("Slide không dư thừa, tiếp tục đến node renderer")
         return "renderer"
 
-def evaluate_vlm_decision(state: graph_state) -> str:
+def evaluate_vlm_decision(state: State) -> str:
     """
     Đánh giá quyết định của VLM và quyết định luồng tiếp theo.
     """
@@ -115,13 +103,12 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     if not api_keys:
         raise RuntimeError("Không có API key hợp lệ trong biến môi trường.")
 
-    llm_instance = llm(
+    llm = LLM(
         api_keys=api_keys,
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         model="gemini-2.5-flash",
         temperature=0.5,
         max_tokens=4096,
-        add_stop_token=["</step>"]
     )
 
     # Tạo thư mục temp nếu chưa có
@@ -135,7 +122,7 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
             logger.info(f"Đã tạo thư mục: {dir_path}")
             
     # Định nghĩa đồ thị
-    workflow = StateGraph(graph_state)
+    workflow = StateGraph(State)
     
     # Cấu hình logger chi tiết hơn
     logging.basicConfig(
@@ -164,10 +151,7 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     workflow.add_edge("finalizer", "initializer")
 
     # Biên dịch đồ thị với các tùy chọn
-    app = workflow.compile(
-        checkpointing=True,  # Bật checkpoint để lưu trạng thái giữa các bước
-        state_serializer=lambda x: x  # Serializer đơn giản cho state
-    )
+    app = workflow.compile()
     
     # ===== TRUYỀN LLM_INSTANCE VÀO STATE BAN ĐẦU =====
     # Chuẩn bị input ban đầu cho graph
@@ -176,7 +160,8 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
         "output_folder": output_folder,
         "max_retries": max_retries_per_slide,
         "driver": driver, 
-        "llm_instance": llm_instance,
+        "llm": llm,
+        "tools": ALL_TOOLS,  # Truyền vào danh sách công cụ
         "current_slide_index": -1,
         "retry_count": 0,
         "final_slides": [],

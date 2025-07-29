@@ -4,12 +4,36 @@ import re
 from typing import Dict, Any, List
 from langchain_core.tools import Tool
 
-from src.graph_state import graph_state
+from src.stage import State
 from langchain_core.messages import AIMessage, HumanMessage
-from src.tools.tool_des import ALL_TOOLS 
+from langchain_core.prompts import ChatPromptTemplate
 
 
 logger = logging.getLogger(__name__)
+
+SLIDEGEN_PROMPT = """Bạn là một chuyên gia thiết kế slide học thuật với khả năng tạo ra các slide đẹp mắt, dễ đọc 
+và chứa đầy đủ thông tin quan trọng. Nhiệm vụ của bạn là tạo slide HTML từ nội dung đầu vào.
+
+Những đặc điểm quan trọng của một slide tốt:
+1. Nội dung súc tích, rõ ràng và dễ đọc
+2. Bố cục cân đối, thẩm mỹ
+3. Sử dụng bullets, numbers khi thích hợp
+4. Phông chữ đủ lớn để đọc từ xa
+5. Màu sắc hài hòa, dễ nhìn
+
+HTML của bạn phải đầy đủ và có thể hiển thị được. Bắt đầu bằng <!DOCTYPE html> và kết thúc với </html>.
+Hãy đảm bảo đoạn mã HTML của bạn hoàn chỉnh, không bị cắt giữa chừng.
+
+Hãy thực hiện nhiệm vụ này một cách nghiêm túc, chuyên nghiệp.
+
+Hãy tạo một slide học thuật với HTML và CSS inline từ nội dung sau:
+
+{current_text}
+
+Trả về slide hoàn chỉnh với đầy đủ mã HTML.
+"""
+
+
 
 def extract_html_content(response_text):
     """
@@ -50,7 +74,7 @@ def extract_html_content(response_text):
     </html>
     """
 
-def slide_generator(state: graph_state) -> graph_state:
+def slide_generator(state: State) -> State:
     """
     Node tạo slide: Sử dụng LLM để tạo slide từ nội dung văn bản.
     """
@@ -59,38 +83,24 @@ def slide_generator(state: graph_state) -> graph_state:
     
     # Lấy thông tin cần thiết từ state
     current_text = state['current_slide_text']
-    llm_instance = state['llm_instance']
+    llm = state['llm']
     
     # Gọi LLM để tạo slide
     try:
-        system_message = f"""Bạn là một chuyên gia thiết kế slide học thuật với khả năng tạo ra các slide đẹp mắt, dễ đọc 
-và chứa đầy đủ thông tin quan trọng. Nhiệm vụ của bạn là tạo slide HTML từ nội dung đầu vào.
 
-Những đặc điểm quan trọng của một slide tốt:
-1. Nội dung súc tích, rõ ràng và dễ đọc
-2. Bố cục cân đối, thẩm mỹ
-3. Sử dụng bullets, numbers khi thích hợp
-4. Phông chữ đủ lớn để đọc từ xa
-5. Màu sắc hài hòa, dễ nhìn
 
-HTML của bạn phải đầy đủ và có thể hiển thị được. Bắt đầu bằng <!DOCTYPE html> và kết thúc với </html>.
-Hãy đảm bảo đoạn mã HTML của bạn hoàn chỉnh, không bị cắt giữa chừng.
-
-Hãy thực hiện nhiệm vụ này một cách nghiêm túc, chuyên nghiệp.
-"""
         logger.info(f"Attempt 1/5 with API key index 0...")
         # Sử dụng invoke trực tiếp mà không cần tool_choice
-        response = llm_instance.invoke(
-            f"""Hãy tạo một slide học thuật với HTML và CSS inline từ nội dung sau:
-            
-            {current_text}
-            
-            Trả về slide hoàn chỉnh với đầy đủ mã HTML."""
-        )
+        llm_with_tools = llm.bind_tools(state['tools'])
+
+        slidegen_prompt = ChatPromptTemplate.from_template(SLIDEGEN_PROMPT)
+        slide_generator_runnable = slidegen_prompt | llm_with_tools
+
+        response = slide_generator_runnable.invoke({"current_text": current_text})
         
         # Log thông tin phản hồi để debug
         response_content = response.content
-        logger.info(f"LLM output (first 100 chars): {response_content[:100]}...")
+        logger.info(f"LLM output (first 100 chars): {response}...")
         
         # Trích xuất HTML từ phản hồi
         html_content = extract_html_from_response(response_content)
@@ -98,7 +108,7 @@ Hãy thực hiện nhiệm vụ này một cách nghiêm túc, chuyên nghiệp.
         if not html_content or len(html_content) < 100:
             # Thử lại với một prompt khác nếu HTML quá ngắn
             logger.warning(f"HTML content quá ngắn: {len(html_content)} ký tự. Thử lại với prompt khác.")
-            response = llm_instance.invoke(
+            response = llm_with_tools.invoke(
                 f"""Tạo một slide học thuật bằng HTML/CSS từ nội dung này: "{current_text}".
                 
                 Hãy trả về TOÀN BỘ mã HTML (bắt đầu với <!DOCTYPE html> và kết thúc với </html>).

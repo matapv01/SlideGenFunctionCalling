@@ -1,20 +1,22 @@
 from typing import List, Dict, TypedDict, Optional, Any
 from src.utils.slide_context import slide_context
 from src.utils.debug_info import debug_info
-from src.models.llm import llm
+from src.models.llm import LLM
 
-class graph_state(TypedDict):
+class State(TypedDict):
     """Trạng thái tổng thể của luồng công việc."""
     # Input
     docx_file: str
     output_folder: str
     max_retries: int
     
+    
     # Hàng đợi công việc
     slide_chunks: List[str]
     
     # LLM
-    llm_instance: llm
+    llm: Optional[LLM]
+    tools: List[Any]  # Danh sách các công cụ LLM
 
     # Trạng thái vòng lặp
     current_slide_index: int
@@ -27,6 +29,9 @@ class graph_state(TypedDict):
     
     # Context giữa các slide
     previous_slide_context: Optional[slide_context]
+
+    # Lịch sử tin nhắn giữa người dùng và AI
+    messages: List[Dict[str, Any]]  
     
     # Thư mục tạm
     temp_dir: str

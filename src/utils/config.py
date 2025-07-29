@@ -17,27 +17,27 @@ def setup_environment():
     load_dotenv()
     api_keys = {
         "GEMINI_API_KEY": os.getenv('GEMINI_API_KEY'),
-        "AQUANG1": os.getenv('AQUANG1'),
-        "AQUANG2": os.getenv('AQUANG2'),
-        "MATA01": os.getenv('MATA01')
+        # "AQUANG1": os.getenv('AQUANG1'),
+        # "AQUANG2": os.getenv('AQUANG2'),
+        # "MATA01": os.getenv('MATA01')
     }
     if "GEMINI_API_KEY" not in os.environ:
         os.environ["GEMINI_API_KEY"] = os.getenv('GEMINI_API_KEY')
-    if "AQUANG1" not in os.environ:
-        os.environ["AQUANG1"] = os.getenv('AQUANG1')
-    if "AQUANG2" not in os.environ:
-        os.environ["AQUANG2"] = os.getenv('AQUANG2')
-    if "MATA01" not in os.environ:
-        os.environ["MATA01"] = os.getenv('MATA01')
+    # if "AQUANG1" not in os.environ:
+    #     os.environ["AQUANG1"] = os.getenv('AQUANG1')
+    # if "AQUANG2" not in os.environ:
+    #     os.environ["AQUANG2"] = os.getenv('AQUANG2')
+    # if "MATA01" not in os.environ:
+    #     os.environ["MATA01"] = os.getenv('MATA01')
     
     return api_keys
 
 def initialize_chromedriver():
     try:
-        chrome_driver_path = shutil.which("chromedriver")
-        print(f"🔍 ChromeDriver path: {chrome_driver_path}")
-        if not chrome_driver_path:
-            raise FileNotFoundError("ChromeDriver not found in PATH.")
+        # chrome_driver_path = shutil.which("chromedriver")
+        # print(f"🔍 ChromeDriver path: {chrome_driver_path}")
+        # if not chrome_driver_path:
+        #     raise FileNotFoundError("ChromeDriver not found in PATH.")
 
         chrome_options = Options()
         chrome_options.add_argument("--headless")
@@ -52,7 +52,7 @@ def initialize_chromedriver():
         chrome_options.add_argument("--disable-extensions")
         chrome_options.add_argument("--disable-plugins")
 
-        driver = webdriver.Chrome(service=Service(chrome_driver_path), options=chrome_options)
+        driver = webdriver.Chrome(options=chrome_options)
         
         # Tăng giới hạn thời gian chờ để tránh lỗi timeout
         driver.set_page_load_timeout(30)

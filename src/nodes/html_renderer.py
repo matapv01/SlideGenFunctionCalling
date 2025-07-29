@@ -7,12 +7,12 @@ import time
 
 # Import hàm thực thi tool duy nhất
 from src.tools.tool_des import execute_tool 
-from src.graph_state import graph_state
+from src.stage import State
 from src.utils.config import capture_slide_image 
 
 logger = logging.getLogger(__name__)
 
-def html_renderer(state: graph_state) -> graph_state:
+def html_renderer(state: State) -> State:
     """
     Node HTML Renderer: Tạo file HTML từ tool call và chụp ảnh.
     """

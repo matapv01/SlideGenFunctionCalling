@@ -1,0 +1,206 @@
+/* Reset và style cơ bản */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+  font-family: 'Segoe UI', sans-serif;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  overflow-x: hidden;
+}
+
+/* Ensure editor page is isolated */
+#editorPage {
+  min-height: 100vh;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(8px);
+  padding-top: 20px;
+}
+
+/* Sidebar (danh sách slide bên trái) */
+.sidebar {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  height: calc(100vh - 40px);
+  overflow-y: auto;
+}
+
+/* Khu vực chỉnh sửa slide (bên phải) */
+.editor-area {
+  background: rgba(0, 0, 0, 0.2);
+  padding: 15px;
+  border-radius: 0.5rem;
+  color: #ffffff;
+  height: calc(100vh - 40px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Toolbar (thanh công cụ) */
+#toolbar {
+  background-color: #f3a0d2;
+  border-bottom: 1px solid #000000;
+  padding: 8px;
+  z-index: 10;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-height: 50px;
+}
+
+#toolbar .btn,
+#toolbar input,
+#toolbar select {
+  margin-right: 5px;
+  font-size: 0.9rem;
+  display: inline-block;
+  visibility: visible;
+}
+
+#toolbar .btn {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+#toolbar .btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+#toolbar select {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.25rem;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 0.75rem center;
+  background-size: 16px 12px;
+}
+
+#toolbar select option {
+  background-color: #764ba2;
+  color: #ffffff;
+}
+
+#colorPicker {
+  vertical-align: middle;
+  margin-left: 0.5rem;
+  width: 30px;
+  height: 30px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+}
+
+/* Container chứa slide */
+.slide-container {
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.05);
+  min-height: 400px;
+  flex-grow: 1;
+  padding: 20px;
+  border-radius: 0.5rem;
+  overflow-y: auto;
+}
+
+/* Wrapper của slide */
+.slide-wrapper {
+  width: 100%;
+  height: 100%;
+  margin-left: 0;
+  text-align: left;
+}
+
+/* Ensure iframe is isolated */
+iframe.slide-iframe {
+  width: 100%;
+  height: 100%;
+  background: transparent;
+}
+
+/* Ensure editor div is isolated */
+.slide-editor {
+  width: 100%;
+  height: 100%;
+  display: none;
+  background: transparent;
+}
+
+/* Slide list */
+.slide-list .slide-item {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.slide-list .slide-item:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.slide-list .slide-item.active {
+  border-color: #4f46e5;
+  background: rgba(79, 70, 229, 0.3);
+}
+
+/* Loading overlay */
+.loading-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  z-index: 1000;
+}
+
+/* Toast */
+#toastContainer .toast {
+  background-color: rgba(40, 167, 69, 0.8);
+  color: #ffffff;
+}
+
+#toastContainer .toast-header {
+  background-color: rgba(40, 167, 69, 0.9);
+  color: #ffffff;
+  border-bottom: none;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .sidebar {
+    height: auto;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    padding: 10px;
+  }
+
+  .editor-area {
+    padding: 0;
+  }
+
+  .slide-wrapper,
+  iframe.slide-iframe,
+  .slide-editor {
+    width: 100%;
+    height: auto;
+    min-height: 400px;
+  }
+}

@@ -24,13 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
 });
 
 function showEditor() {
-    document.getElementById('homePage').style.display = 'none';
-    document.getElementById('editorPage').style.display = 'block';
+    window.location.href = '/edit';
 }
 
 function showHome() {
-    document.getElementById('editorPage').style.display = 'none';
-    document.getElementById('homePage').style.display = 'block';
+    window.location.href = '/';
 }
 
 function showLoading(message) {
@@ -74,28 +72,26 @@ async function handleDocxImport() {
         const formData = new FormData();
         formData.append('file', file);
 
-        console.log('Sending DOCX file to /api/upload-docx'); // Debug
+        console.log('Sending DOCX file to /api/upload-docx');
         const response = await fetch('/api/upload-docx', {
             method: 'POST',
             body: formData
         });
 
-        console.log('Response status:', response.status); // Debug
+        console.log('Response status:', response.status);
         if (!response.ok) {
             throw new Error(`Upload DOCX failed with status ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Response data:', data); // Debug
+        console.log('Response data:', data);
         if (data.slides && data.slides.length > 0) {
-            const slideList = document.getElementById('slideList');
-            slideList.innerHTML = '';
-
-            data.slides.forEach((slide, index) => {
-                addNewSlide(slide.content, index + 1);
-            });
-
-            selectFirstSlide();
+            const slides = data.slides.map(slide => ({
+                content: scopeSlideCSS(slide.content, `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`),
+                type: slide.type,
+                preview: slide.preview
+            }));
+            sessionStorage.setItem('slides', JSON.stringify(slides));
             showEditor();
             showToast('Import DOCX thành công!', 'success');
         }
@@ -120,28 +116,26 @@ async function handleZipImport() {
         const formData = new FormData();
         formData.append('file', file);
 
-        console.log('Sending ZIP file to /api/upload-zip'); // Debug
+        console.log('Sending ZIP file to /api/upload-zip');
         const response = await fetch('/api/upload-zip', {
             method: 'POST',
             body: formData
         });
 
-        console.log('Response status:', response.status); // Debug
+        console.log('Response status:', response.status);
         if (!response.ok) {
             throw new Error(`Upload ZIP failed with status ${response.status}`);
         }
 
         const data = await response.json();
-        console.log('Response data:', data); // Debug
+        console.log('Response data:', data);
         if (data.slides && data.slides.length > 0) {
-            const slideList = document.getElementById('slideList');
-            slideList.innerHTML = '';
-
-            data.slides.forEach((slide, index) => {
-                addNewSlide(slide.content, index + 1);
-            });
-
-            selectFirstSlide();
+            const slides = data.slides.map(slide => ({
+                content: scopeSlideCSS(slide.content, `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`),
+                type: slide.type,
+                preview: slide.preview
+            }));
+            sessionStorage.setItem('slides', JSON.stringify(slides));
             showEditor();
             showToast('Import ZIP thành công!', 'success');
         } else {
@@ -155,16 +149,74 @@ async function handleZipImport() {
     }
 }
 
+function scopeSlideCSS(htmlContent, slideId) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(htmlContent, 'text/html');
+    
+    // Create a wrapper div with a unique class
+    const wrapper = doc.createElement('div');
+    wrapper.className = `slide-scope-${slideId}`;
+    
+    // Move body content into the wrapper
+    const bodyContent = doc.body.innerHTML;
+    wrapper.innerHTML = bodyContent;
+    doc.body.innerHTML = '';
+    doc.body.appendChild(wrapper);
+    
+    // Process styles to scope them to the wrapper
+    const styleElements = doc.head.getElementsByTagName('style');
+    for (let style of styleElements) {
+        let cssText = style.textContent;
+        // Prefix all selectors with the wrapper class
+        cssText = cssText.replace(/(^|\{|\})\s*([^{}]+)\s*{/g, (match, prefix, selector) => {
+            // Avoid scoping pseudo-elements and pseudo-classes directly
+            if (selector.trim().startsWith(':') || selector.trim().startsWith('::')) {
+                return match;
+            }
+            // Split selectors and add the wrapper class
+            const scopedSelectors = selector.split(',').map(s => {
+                s = s.trim();
+                if (s === 'body' || s === 'html') {
+                    return `.slide-scope-${slideId}`;
+                }
+                return `.slide-scope-${slideId} ${s}`;
+            }).join(', ');
+            return `${prefix} ${scopedSelectors} {`;
+        });
+        style.textContent = cssText;
+    }
+    
+    // Add minimal reset styles to prevent leakage
+    const resetStyle = doc.createElement('style');
+    resetStyle.textContent = `
+        html, body {
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            background: transparent;
+        }
+        .slide-scope-${slideId} {
+            width: 100%;
+            height: 100%;
+        }
+    `;
+    doc.head.appendChild(resetStyle);
+    
+    return doc.documentElement.outerHTML;
+}
+
 function createNewSlide() {
     const slideList = document.getElementById('slideList');
-    const slideCount = slideList.children.length + 1;
+    const slideCount = slideList ? slideList.children.length + 1 : 1;
+    const slideId = `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
     const defaultContent = `
         <!DOCTYPE html>
         <html>
             <head>
                 <meta charset="UTF-8">
                 <style>
-                    body {
+                    .slide-scope-${slideId} {
                         margin: 0;
                         padding: 0;
                         width: 1920px;
@@ -173,13 +225,13 @@ function createNewSlide() {
                         color: #fff;
                         font-family: Arial, sans-serif;
                     }
-                    .slide-container {
+                    .slide-scope-${slideId} .slide-container {
                         width: 1920px;
                         height: 1080px;
                         display: flex;
                         flex-direction: row;
                     }
-                    .left-container {
+                    .slide-scope-${slideId} .left-container {
                         min-width: 600px;
                         height: 100%;
                         flex: 1;
@@ -188,42 +240,46 @@ function createNewSlide() {
                         flex-direction: column;
                         justify-content: center;
                     }
-                    .right-container {
+                    .slide-scope-${slideId} .right-container {
                         height: 100%;
                         flex: 2;
                         padding: 32px;
                     }
-                    .title {
+                    .slide-scope-${slideId} .title {
                         font-size: 32px;
                         white-space: nowrap;
                         margin-bottom: 16px;
                     }
-                    .subtitle {
+                    .slide-scope-${slideId} .subtitle {
                         font-size: 24px;
                         white-space: nowrap;
                         margin-bottom: 16px;
                     }
-                    p {
+                    .slide-scope-${slideId} p {
                         font-size: 20px;
                         line-height: 1.5;
                     }
                 </style>
             </head>
             <body>
-                <div class="slide-container">
-                    <div class="left-container">
-                        <h1 class="title">New Slide</h1>
-                        <h2 class="subtitle">Click to edit this slide</h2>
-                        <p>Start adding your content here.</p>
-                    </div>
-                    <div class="right-container">
-                        <!-- Nội dung bên phải có thể để trống hoặc thêm hình ảnh -->
+                <div class="slide-scope-${slideId}">
+                    <div class="slide-container">
+                        <div class="left-container">
+                            <h1 class="title">New Slide</h1>
+                            <h2 class="subtitle">Click to edit this slide</h2>
+                            <p>Start adding your content here.</p>
+                        </div>
+                        <div class="right-container">
+                            <!-- Nội dung bên phải có thể để trống hoặc thêm hình ảnh -->
+                        </div>
                     </div>
                 </div>
             </body>
         </html>
     `;
-    addNewSlide(defaultContent, slideCount);
+    let slides = JSON.parse(sessionStorage.getItem('slides') || '[]');
+    slides.push({ content: defaultContent });
+    sessionStorage.setItem('slides', JSON.stringify(slides));
     showEditor();
 }
 
@@ -261,6 +317,9 @@ function addNewSlide(content, index) {
         e.stopPropagation();
         if (confirm("Bạn có chắc muốn xóa slide này?")) {
             slideDiv.remove();
+            let slides = JSON.parse(sessionStorage.getItem('slides') || '[]');
+            slides.splice(index - 1, 1);
+            sessionStorage.setItem('slides', JSON.stringify(slides));
         }
     });
 
@@ -280,27 +339,49 @@ function selectFirstSlide() {
 }
 
 function renderSlideInContainer(content, container) {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(content, 'text/html');
+    const slideId = doc.body.firstElementChild?.className || `slide-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
+    
     const iframe = document.createElement('iframe');
-    iframe.style.width = '1920px';
-    iframe.style.height = '1080px';
+    iframe.className = 'slide-iframe';
+    iframe.style.width = '100%';
+    iframe.style.height = '100%';
     iframe.style.border = 'none';
-    iframe.style.pointerEvents = 'none'; // Cho phép nhấp qua iframe
+    iframe.style.pointerEvents = 'none';
 
-    const blob = new Blob([content], { type: 'text/html' });
+    // Update html and body styles to ensure width and height are 100%
+    const htmlStyle = doc.documentElement.getAttribute('style') || '';
+    const updatedHtmlStyle = `width: 100%; height: 100%; margin: 0; padding: 0; ${htmlStyle}`.replace(/;;+/g, ';').trim();
+    const bodyStyle = doc.body.getAttribute('style') || '';
+    const updatedBodyStyle = `width: 100%; height: 100%; margin: 0; padding: 0; ${bodyStyle}`.replace(/;;+/g, ';').trim();
+    
+    // Create updated content with modified html and body styles
+    const updatedContent = `
+        <!DOCTYPE html>
+        <html style="${updatedHtmlStyle}">
+            <head>
+                <meta charset="UTF-8">
+                ${Array.from(doc.head.getElementsByTagName('style')).map(style => style.outerHTML).join('')}
+            </head>
+            <body style="${updatedBodyStyle}">
+                ${doc.body.innerHTML}
+            </body>
+        </html>
+    `;
+    
+    const blob = new Blob([updatedContent], { type: 'text/html' });
     let url = URL.createObjectURL(blob);
     iframe.src = url;
 
-    const parser = new DOMParser();
-    const doc = parser.parseFromString(content, 'text/html');
     const bodyContent = doc.body.innerHTML;
     const styles = Array.from(doc.head.getElementsByTagName('style')).map(style => style.outerHTML).join('');
-    const bodyStyle = doc.body.getAttribute('style') || '';
 
     const editorDiv = document.createElement('div');
-    editorDiv.className = 'slide-editor';
+    editorDiv.className = `slide-editor slide-scope-${slideId}`;
     editorDiv.contentEditable = true;
     editorDiv.innerHTML = bodyContent;
-    editorDiv.style.cssText = bodyStyle + '; width: 1920px; height: 1080px; display: none;';
+    editorDiv.style.cssText = updatedBodyStyle + '; display: none;';
 
     container.innerHTML = `
         <div class="slide-wrapper">
@@ -312,38 +393,38 @@ function renderSlideInContainer(content, container) {
     wrapper.appendChild(editorDiv);
 
     editorDiv.addEventListener('input', function() {
-        const updatedContent = `
+        const updatedEditorContent = `
             <!DOCTYPE html>
-            <html>
+            <html style="${updatedHtmlStyle}">
                 <head>
                     <meta charset="UTF-8">
                     ${styles}
                 </head>
-                <body style="${bodyStyle}">
+                <body style="${updatedBodyStyle}">
                     ${editorDiv.innerHTML}
                 </body>
             </html>
         `;
-        const newBlob = new Blob([updatedContent], { type: 'text/html' });
+        const newBlob = new Blob([updatedEditorContent], { type: 'text/html' });
         const newUrl = URL.createObjectURL(newBlob);
         iframe.src = newUrl;
-        updateSlideContent(updatedContent);
+        updateSlideContent(updatedEditorContent);
         URL.revokeObjectURL(url);
         url = newUrl;
     });
 
     let isEditing = false;
     container.addEventListener('dblclick', function(e) {
-        console.log('Double-click detected on slideContainer'); // Debug
+        console.log('Double-click detected on slideContainer');
         isEditing = !isEditing;
         iframe.style.display = isEditing ? 'none' : 'block';
-        iframe.style.pointerEvents = isEditing ? 'none' : 'auto'; // Bật/tắt tương tác với iframe
+        iframe.style.pointerEvents = isEditing ? 'none' : 'auto';
         editorDiv.style.display = isEditing ? 'block' : 'none';
         if (isEditing) {
             editorDiv.focus();
-            console.log('Switched to edit mode'); // Debug
+            console.log('Switched to edit mode');
         } else {
-            console.log('Switched to view mode'); // Debug
+            console.log('Switched to view mode');
         }
     });
 }
@@ -353,6 +434,10 @@ function updateSlideContent(updatedContent) {
     if (activeSlide) {
         const slideContent = activeSlide.querySelector(".slide-content");
         slideContent.innerHTML = updatedContent;
+        const index = Array.from(document.querySelectorAll('.slide-item')).indexOf(activeSlide);
+        let slides = JSON.parse(sessionStorage.getItem('slides') || '[]');
+        slides[index].content = updatedContent;
+        sessionStorage.setItem('slides', JSON.stringify(slides));
     }
 }
 
@@ -487,10 +572,7 @@ function updateToolbarFromSelection() {
 }
 
 async function exportToPDF() {
-    const slides = Array.from(document.querySelectorAll('.slide-item')).map(item => {
-        return { content: item.querySelector('.slide-content').innerHTML };
-    });
-
+    let slides = JSON.parse(sessionStorage.getItem('slides') || '[]');
     try {
         showLoading("Đang xuất PDF...");
         const response = await fetch('/api/export-pdf', {
@@ -521,10 +603,7 @@ async function exportToPDF() {
 }
 
 async function exportToZip() {
-    const slides = Array.from(document.querySelectorAll('.slide-item')).map(item => {
-        return { content: item.querySelector('.slide-content').innerHTML };
-    });
-
+    let slides = JSON.parse(sessionStorage.getItem('slides') || '[]');
     try {
         showLoading("Đang xuất ZIP...");
         const response = await fetch('/api/save-slides', {
@@ -551,4 +630,13 @@ async function exportToZip() {
     } finally {
         hideLoading();
     }
+}
+
+// Load slides on edit page
+if (window.location.pathname === '/edit') {
+    let slides = JSON.parse(sessionStorage.getItem('slides') || '[]');
+    slides.forEach((slide, index) => {
+        addNewSlide(slide.content, index + 1);
+    });
+    selectFirstSlide();
 }

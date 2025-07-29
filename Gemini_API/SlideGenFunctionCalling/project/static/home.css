@@ -1,0 +1,17 @@
+/* Reset và style cơ bản */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: Arial, sans-serif;
+  background-color: #f8f9fa;
+  height: 100vh;
+}
+
+html, body {
+  height: 100%;
+  width: 100%;
+}

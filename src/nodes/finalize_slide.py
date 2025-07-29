@@ -1,11 +1,11 @@
 import re
 import logging
 import src
-from src.graph_state import graph_state
+from src.stage import State
 from typing import List, Dict, Any
 logger = logging.getLogger(__name__)
 
-def finalize_slide(state: graph_state) -> Dict[str, Any]:
+def finalize_slide(state: State) -> Dict[str, Any]:
     """
     Node hoàn tất: Lưu slide đã được chấp nhận và cập nhật context.
     """
