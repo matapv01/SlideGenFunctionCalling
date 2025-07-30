@@ -11,26 +11,83 @@ from langchain_core.prompts import ChatPromptTemplate
 
 logger = logging.getLogger(__name__)
 
-SLIDEGEN_PROMPT = """Bạn là một chuyên gia thiết kế slide học thuật với khả năng tạo ra các slide đẹp mắt, dễ đọc 
-và chứa đầy đủ thông tin quan trọng. Nhiệm vụ của bạn là tạo slide HTML từ nội dung đầu vào.
+SLIDEGEN_PROMPT = """# Smart Slide Generation Prompt (with Design Consistency & HTML Support)
 
-Những đặc điểm quan trọng của một slide tốt:
-1. Nội dung súc tích, rõ ràng và dễ đọc
-2. Bố cục cân đối, thẩm mỹ
-3. Sử dụng bullets, numbers khi thích hợp
-4. Phông chữ đủ lớn để đọc từ xa
-5. Màu sắc hài hòa, dễ nhìn
+    # Detect content language
+    language = "Vietnamese" if is_vietnamese(slide_content) else "English"
 
-HTML của bạn phải đầy đủ và có thể hiển thị được. Bắt đầu bằng <!DOCTYPE html> và kết thúc với </html>.
-Hãy đảm bảo đoạn mã HTML của bạn hoàn chỉnh, không bị cắt giữa chừng.
+    # Create a new slide that accurately conveys `slide_content`, fits the logical flow from the previous slide, 
+    # and maintains full design coherence across the deck.
 
-Hãy thực hiện nhiệm vụ này một cách nghiêm túc, chuyên nghiệp.
+    INSTRUCTIONS FOR SMART SLIDE GENERATION
 
-Hãy tạo một slide học thuật với HTML và CSS inline từ nội dung sau:
+    1. CONTENT ANALYSIS & SUMMARIZATION:
+    - Extract the key ideas from `slide_content`.
+    - Rewrite the content into a clear and concise form that’s suitable for a slide.
+    - Avoid copy-pasting long text blocks. Use bullet points, sections, or summaries.
 
-{current_text}
+    2. SLIDE FUNCTION SELECTION:
+    - Choose the most suitable slide function for the current content, considering:
+        a. Content type (list, narrative, explanation, process, comparison, etc.)
+        b. Optimal visual layout for comprehension and impact
+        c. Narrative flow from the previous slide
+    - DO NOT default to the same slide function as before unless it fits naturally.
+    - Example slide functions include:
+        • `make_bullet_slide` – for short points or key facts  
+        • `make_two_column_slide` – for comparison or parallel ideas  
+        • `make_text_slide` – for deep explanations or storytelling  
+        • `make_image_with_caption_slide` – for visual explanations  
 
-Trả về slide hoàn chỉnh với đầy đủ mã HTML.
+    3. LANGUAGE:
+    - All output text must be in `(language)`, matching the input content.
+
+    4. VISUAL & DESIGN CONSISTENCY:
+    Ensure that the new slide aligns stylistically with the previous one:
+    - Use matching:
+        • Font size and style  
+        • Bullet point formatting  
+        • Text alignment and spacing  
+        • Background, title alignment, text padding  
+        • Color themes and visual tone  
+    - Avoid disruptive shifts like:
+        × Sudden font downsizing (e.g. 14pt → 10pt)
+        × Changing bullet type (e.g. dash → dot) without purpose
+        × Inconsistent title placement (e.g. left-aligned → centered)
+
+    5. HTML SUPPORT (ONLY WHEN NECESSARY):
+    - You may insert basic HTML tags inside the content strings to fine-tune formatting — **only if justified**.
+    - Acceptable use-cases:
+        • `<br>` to control line breaks in tightly packed content
+        • `<b>`, `<i>` to highlight keywords or distinctions
+        • `<ul>`, `<li>` only when necessary to override default bullet behavior
+        • `<span style="font-size: Xpx">` for inline size correction — use carefully!
+    - HTML should **enhance clarity**, not clutter the slide or introduce inconsistency.
+    - Avoid overusing or nesting tags unless truly needed for alignment or visual balance.
+
+    6. SEMANTIC & LOGICAL CONTINUITY:
+    - If the previous slide introduced a concept, this one may expand, contrast, or illustrate.
+    - Make sure the tone, topic, and flow remain natural and progressive.
+    - The audience should feel the transition is smooth and meaningful.
+
+    7. PRESENTATION-READY STRUCTURE:
+    - Use whitespace wisely.
+    - Keep content digestible: avoid text-heavy layouts.
+    - Place title and content to guide the viewer’s eye clearly.
+
+    INPUT CONTEXT:
+    - Previous slide content: {}
+    - Previous function call: {}
+    - Current slide content: {}
+
+    OUTPUT REQUIREMENTS:
+    - A **single slide function call**, e.g. `make_bullet_slide(...)`, with parameters written entirely in `(language)`.
+    - Slide must be:
+    ✓ Content-relevant  
+    ✓ Layout-appropriate  
+    ✓ Visually consistent  
+    ✓ Logically connected  
+    ✓ Clean and readable  
+    ✓ Enhanced (only if necessary) with minimal HTML for formatting
 """
 
 

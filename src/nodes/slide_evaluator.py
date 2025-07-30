@@ -51,24 +51,131 @@ def slide_evaluator(state: State) -> State:
         state['retry_count'] = retry_count + 1
         return state
 
+    criteria = """
+    Improved Prompt for Slide Content Evaluation
+    Please evaluate the slide according to the following detailed criteria. Assess not only the design and formatting, but also whether the content is placed in a suitable location, the meaning is clear, and the message supports the intended purpose of the slide.
+
+    1. Title
+        - Is the title clearly stating the main idea or topic of the slide (e.g., "Market Overview" instead of "Slide 2")?
+
+        - Is the title placed in a prominent location (typically top center or top left)?
+
+        - Is the font at least 4–6 points larger than the body text?
+
+        - Is the title meaningful, concise, and contextually aligned with the slide’s content?
+
+    Evaluate if the title actually reflects the core message of the slide and is not generic.
+
+    2. Text Content
+        - Is the font size at least 18 pt to ensure readability from a distance?
+
+        - Does the text contrast clearly with the background (e.g., white on dark, black on light)?
+
+        - Are sentences clear, concise (no more than 2 lines), and easy to scan?
+
+        - Is the use of bullet points or short paragraphs (max 5 lines) applied effectively?
+
+        - Is spelling, grammar, and punctuation correct?
+
+        - Does the content logically support the purpose of the slide (informative, persuasive, etc.)?
+
+        - Are the main points prioritized and placed in the most logical order?
+
+    Check if the content is relevant, well-organized, and presented in a way that supports comprehension and focus.
+
+    3. Layout and Content Placement
+        - Are all elements (title, text, images, charts) well-aligned and not overlapping or cut off?
+
+        - Is there sufficient white space to reduce visual clutter?
+
+        - Are different content blocks clearly separated?
+
+        - Are the most important messages placed in visually strong positions (top-left, center)?
+
+        - Does the slide guide the viewer’s eye naturally (top → bottom or left → right)?
+
+    Evaluate how effectively the layout guides the viewer and if content is located where it naturally makes sense to appear.
+
+    4. Visuals and Images (if any)
+        - Are images directly relevant to the content and purpose of the slide?
+
+        - Are they high quality (not blurry or pixelated)?
+
+        - Are images placed so they do not obscure or distract from text?
+
+        - Do images enhance understanding or visual appeal, not just decoration?
+
+    Assess if images help reinforce or explain the content — not just filler.
+
+    5. Overall Visual Design
+        - Are no more than 2–3 font types used?
+
+        - Is the color scheme limited to 3–4 harmonious colors?
+
+        - Are there minimal and tasteful transitions or animations?
+
+        - Is the slide clean and easy to scan, with visual emphasis on key messages?
+
+        - Is the visual hierarchy clear (title > main points > supporting text)?
+
+    Consider if the overall aesthetic supports clarity and avoids distraction.
+
+    6. Consistency with Other Slides (if applicable)
+        - Are the background, font style, size, and color consistent with previous slides?
+
+        - Is the layout structure (title placement, content areas) consistent?
+
+        - Do the design choices support a cohesive narrative across slides?
+
+    Check whether this slide feels like part of a unified deck or visually disconnected.
+
+    Additional Evaluation Dimensions (Newly Added)
+        - Content Meaning Accuracy: Does the text or visual element truly represent what it intends to convey? Is it logically accurate in the context?
+
+        - Slide Purpose Fit: Does the slide serve its intended purpose (inform, compare, convince, summarize)? Does every element contribute to that goal?
+
+        - Redundancy Check: Are there any duplicate or unnecessary elements that could be removed without losing meaning?
+    """
+
     # --- SỬA ĐỔI: Prompt được đơn giản hóa ---
     # Không cần phải hướng dẫn chi tiết về định dạng JSON nữa.
-    prompt_template = """
-Bạn là một chuyên gia đánh giá slide thuyết trình. Nhiệm vụ của bạn là đánh giá slide được cung cấp dưới dạng hình ảnh và mã HTML.
-Dựa trên các tiêu chí sau, hãy đưa ra phản hồi và quyết định của bạn.
+    prompt_template = f"""
+    Evaluate the following slide based on these criteria:
+    {criteria}
 
-**Tiêu chí đánh giá:**
-1.  **Nội dung (Content):** Slide có truyền tải đúng và đủ thông tin quan trọng không? Nội dung có súc tích, dễ hiểu không?
-2.  **Bố cục (Layout):** Các thành phần có được sắp xếp cân đối, hợp lý không?
-3.  **Thẩm mỹ (Aesthetics):** Phối màu, font chữ, kích thước chữ có hài hòa và dễ đọc không?
+    In addition, if a previous slide is available, evaluate consistency between the current and previous slides in the following aspects:
+    - Background color
+    - Text color
+    - Font size
+    - Font family
 
-**Nội dung HTML của slide:**
-```html
-{html_content}
-```
+    Current tool call:  
+    {tool_call_output}
+    
+    if you deny:
+    - Generate a tool call using the current function . You MAY also modify the slide content **only if necessary**, such as:
+    - The content is too long and overcrowds the slide.
+    - The content lacks clarity or is not well structured for presentation.
+    - The content does not match the selected slide layout appropriately.
 
-Bây giờ, hãy đánh giá slide (chủ yếu dựa vào hình ảnh) và đưa ra nhận xét cùng quyết định của bạn.
-"""
+    Allowed modifications include:
+    - Trimming or summarizing overly long paragraphs
+    - Splitting complex content into simpler bullets
+    - Improving clarity, structure, or conciseness
+
+    However, do NOT remove or alter the **core message** of the content. Preserve its intent and essential meaning.
+
+    Respond with either:
+
+    <!-- accept -->
+    <!-- reason -->
+
+    Or:
+
+    <!-- deny -->
+    <!-- reason -->
+
+    """
 
     # Xây dựng tin nhắn đa phương thức (text + image)
     message_content = []
