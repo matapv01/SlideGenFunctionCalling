@@ -1,15 +1,14 @@
 # /app/src/nodes/prepare_slide.py 
 
-import logging
 from src.stage import State
-
-logger = logging.getLogger(__name__)
+import time
 
 def prepare_next_slide(state: State) -> State:
     """
     Node chuẩn bị slide tiếp theo từ hàng đợi.
     """
-    logger.info("--- Node: prepare_next_slide ---")
+    print("\n---------------- Executing Node: prepare_next_slide ----------------")
+    time.sleep(20)
     if state['slide_chunks']:
         # Lấy slide tiếp theo từ hàng đợi
         next_chunk = state['slide_chunks'].pop(0)
@@ -17,6 +16,6 @@ def prepare_next_slide(state: State) -> State:
         state['current_slide_index'] += 1
         # Reset retry_count cho slide mới
         state['retry_count'] = 0
-        logger.info(f"Hàng đợi còn {len(state['slide_chunks'])} chunks. Chuẩn bị xử lý slide {state['current_slide_index'] + 1}.")
-        logger.info(f"Reset retry_count cho slide mới: {state['retry_count']}")
+        print(f"Hàng đợi còn {len(state['slide_chunks'])} chunks. Chuẩn bị xử lý slide {state['current_slide_index'] + 1}.")
+        print(f"Reset retry_count cho slide mới: {state['retry_count']}")
     return state

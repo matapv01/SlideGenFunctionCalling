@@ -3,7 +3,6 @@ from typing import List, Optional
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import StructuredTool
 from langchain_core.messages import AIMessage
-import logging
 import zipfile
 from docx import Document
 import shutil
@@ -21,67 +20,65 @@ import os
 from src.tools.tool_des import ALL_TOOLS
 from langgraph.graph import END
 
-logger = logging.getLogger(__name__)
-
 def route_to_task(state: State) -> str:
     """
     Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
     """
-    logger.info("--- Router: route_to_task ---")
+    print("--- Router: route_to_task ---")
     if state.get('slide_chunks'):
         # Nếu còn slide, đi đến node chuẩn bị
-        return "prepare_slide"
+        return "generator"
     else:
         # Nếu hết, kết thúc
-        logger.info("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
+        print("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
         return END
 
 def check_redundancy(state: State) -> str:
     """
     Kiểm tra xem slide có bị LLM đánh dấu là dư thừa không.
     """
-    logger.info("--- Router: check_redundancy ---")
+    print("--- Router: check_redundancy ---")
     is_redundant = state.get('is_redundant', False)
-    logger.info(f"Slide có bị đánh dấu là dư thừa: {is_redundant}")
+    print(f"Slide có bị đánh dấu là dư thừa: {is_redundant}")
     
     if is_redundant:
         # Nếu dư thừa, quay lại router chính để lấy slide khác
-        logger.info("Slide bị đánh dấu là dư thừa, quay lại node initializer")
+        print("Slide bị đánh dấu là dư thừa, quay lại node initializer")
         return "initializer"
     else:
         # Nếu không, tiếp tục render
-        logger.info("Slide không dư thừa, tiếp tục đến node renderer")
+        print("Slide không dư thừa, tiếp tục đến node renderer")
         return "renderer"
 
 def evaluate_vlm_decision(state: State) -> str:
     """
     Đánh giá quyết định của VLM và quyết định luồng tiếp theo.
     """
-    logger.info("--- Router: evaluate_vlm_decision ---")
+    print("--- Router: evaluate_vlm_decision ---")
     
     # Đảm bảo vlm_decision luôn tồn tại trong state
     decision = state.get('vlm_decision', 'deny')  # Mặc định deny nếu không có quyết định
-    logger.info(f"Đang xử lý quyết định VLM: {decision}")
+    print(f"Đang xử lý quyết định VLM: {decision}")
     
     # Lấy retry_count hiện tại
     retry_count = state.get('retry_count', 0)
-    logger.info(f"Giá trị retry_count hiện tại: {retry_count}")
+    print(f"Giá trị retry_count hiện tại: {retry_count}")
     
     if decision == "accept":
-        logger.info("Slide được chấp nhận. Chuyển đến bước hoàn tất.")
+        print("Slide được chấp nhận. Chuyển đến bước hoàn tất.")
         # Reset retry_count
         state['retry_count'] = 0
         return "finalizer"
     else: # deny
         # Kiểm tra nếu đã đạt số lần thử lại tối đa
         if retry_count >= state.get('max_retries', 3):
-            logger.warning(f"Đã đạt số lần thử lại tối đa ({state.get('max_retries', 3)}). Buộc chấp nhận slide.")
+            print(f"Đã đạt số lần thử lại tối đa ({state.get('max_retries', 3)}). Buộc chấp nhận slide.")
             # Reset retry_count
             state['retry_count'] = 0
             return "finalizer"  # Đi thẳng đến finalizer
         else:
-            logger.info(f"Slide bị từ chối. Thử lại lần {retry_count}.")
-            return "renderer"
+            print(f"Slide bị từ chối. Thử lại lần {retry_count}.")
+            return "generator"  # Quay lại node generator để thử lại slide
 
 
 
@@ -119,17 +116,10 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     for dir_path in [temp_dir, html_dir, png_dir]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
-            logger.info(f"Đã tạo thư mục: {dir_path}")
+            print(f"Đã tạo thư mục: {dir_path}")
             
     # Định nghĩa đồ thị
     workflow = StateGraph(State)
-    
-    # Cấu hình logger chi tiết hơn
-    logging.basicConfig(
-        level=logging.INFO,
-        format='%(asctime)s - %(levelname)s - %(message)s',
-        datefmt='%Y-%m-%d %H:%M:%S'
-    )
 
     # Thêm các node
     workflow.add_node("initializer", initialize_and_prepare)
@@ -143,12 +133,12 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     workflow.set_entry_point("initializer")
 
     # Thêm các cạnh (edges)
-    workflow.add_conditional_edges("initializer", route_to_task, {"prepare_slide": "prepare_slide", END: END})
-    workflow.add_edge("prepare_slide", "generator")
+    workflow.add_conditional_edges("initializer", "prepare_slide")
+    workflow.add_edge("prepare_slide", route_to_task, {"generator": "generator", END: END})
     workflow.add_conditional_edges("generator", check_redundancy, {"initializer": "initializer", "renderer": "renderer"})
     workflow.add_edge("renderer", "evaluator")
-    workflow.add_conditional_edges("evaluator", evaluate_vlm_decision, {"finalizer": "finalizer", "renderer": "renderer"})
-    workflow.add_edge("finalizer", "initializer")
+    workflow.add_conditional_edges("evaluator", evaluate_vlm_decision, {"finalizer": "finalizer", "generator": "generator"})
+    workflow.add_edge("finalizer", "prepare_slide")
 
     # Biên dịch đồ thị với các tùy chọn
     app = workflow.compile()
@@ -176,7 +166,7 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     finally:
         if driver:
             driver.quit()
-            logger.info("Đã đóng ChromeDriver.")
+            print("Đã đóng ChromeDriver.")
             
     # Đảm bảo driver đã đóng và không còn được sử dụng
     zip_file_path = os.path.join(final_state['temp_dir'], "slides.zip")
@@ -192,7 +182,7 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     shutil.copy2(zip_file_path, final_zip_path)
     shutil.rmtree(final_state['temp_dir']) # Xóa thư mục tạm
 
-    logger.info(f"Hoàn thành! File kết quả đã được lưu tại: {final_zip_path}")
+    print(f"Hoàn thành! File kết quả đã được lưu tại: {final_zip_path}")
     return final_zip_path
 
 # --- Ví dụ cách chạy ---
@@ -219,10 +209,10 @@ if __name__ == "__main__":
     doc.add_paragraph('Nội dung này được thiết kế để rất dài và có thể không vừa một slide duy nhất. Nó buộc LLM phải sử dụng khả năng chia tách nội dung của mình. Đây là dòng 1. Đây là dòng 2. Đây là dòng 3. Đây là dòng 4. Đây là dòng 5. Đây là dòng 6. Đây là dòng 7. Đây là dòng 8. Đây là dòng 9. Đây là dòng 10. LLM nên nhận ra điều này và đặt phần còn lại vào `remaining_content`.')
     
     doc.save(sample_docx_path)
-    logger.info(f"Đã tạo file test tại: {sample_docx_path}")
+    print(f"Đã tạo file test tại: {sample_docx_path}")
 
     # Chạy quy trình
     try:
         process_slides_with_langgraph(sample_docx_path, "test_output")
     except Exception as e:
-        logger.error(f"Một lỗi không mong muốn đã xảy ra trong quá trình xử lý: {e}", exc_info=True)
+        print(f"Một lỗi không mong muốn đã xảy ra trong quá trình xử lý: {e}", exc_info=True)

@@ -1,246 +1,108 @@
-import logging
 import json
 import re
+import logging
 from typing import Dict, Any, List
 from langchain_core.tools import Tool
-
 from src.stage import State
 from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
+from src.tools.tool_des import execute_tool
 
+SLIDEGEN_PROMPT = """
+# Detect content language
+language = "Vietnamese" if is_vietnamese(slide_content) else "English"
 
-logger = logging.getLogger(__name__)
+# Create a new slide that accurately conveys `slide_content`, fits the logical flow from the previous slide, 
+# and maintains full design coherence across the deck.
 
-SLIDEGEN_PROMPT = """# Smart Slide Generation Prompt (with Design Consistency & HTML Support)
+INSTRUCTIONS FOR SMART SLIDE GENERATION
 
-    # Detect content language
-    language = "Vietnamese" if is_vietnamese(slide_content) else "English"
+1. CONTENT ANALYSIS & SUMMARIZATION:
+- Extract the key ideas from `slide_content`.
+- Rewrite the content into a clear and concise form that's suitable for a slide.
+- Avoid copy-pasting long text blocks. Use bullet points, sections, or summaries.
 
-    # Create a new slide that accurately conveys `slide_content`, fits the logical flow from the previous slide, 
-    # and maintains full design coherence across the deck.
+2. SLIDE FUNCTION SELECTION:
+- Choose the most suitable slide function for the current content, considering:
+    a. Content type (list, narrative, explanation, process, comparison, etc.)
+    b. Optimal visual layout for comprehension and impact
+    c. Narrative flow from the previous slide
+- DO NOT default to the same slide function as before unless it fits naturally.
+- Example slide functions include:
+    + `make_bullet_slide` – for short points or key facts  
+    + `make_two_column_slide` – for comparison or parallel ideas  
+    + `make_text_slide` – for deep explanations or storytelling  
+    + `make_image_with_caption_slide` – for visual explanations  
 
-    INSTRUCTIONS FOR SMART SLIDE GENERATION
+3. LANGUAGE:
+- All output text must be in the detected language, matching the input content.
 
-    1. CONTENT ANALYSIS & SUMMARIZATION:
-    - Extract the key ideas from `slide_content`.
-    - Rewrite the content into a clear and concise form that’s suitable for a slide.
-    - Avoid copy-pasting long text blocks. Use bullet points, sections, or summaries.
+4. VISUAL & DESIGN CONSISTENCY:
+Ensure that the new slide aligns stylistically with the previous one:
+- Use matching:
+    + Font size and style  
+    + Bullet point formatting  
+    + Text alignment and spacing  
+    + Background, title alignment, text padding  
+    + Color themes and visual tone  
+- Avoid disruptive shifts like:
+    + Sudden font downsizing (e.g. 14pt → 10pt)
+    + Changing bullet type (e.g. dash → dot) without purpose
+    + Inconsistent title placement (e.g. left-aligned → centered)
 
-    2. SLIDE FUNCTION SELECTION:
-    - Choose the most suitable slide function for the current content, considering:
-        a. Content type (list, narrative, explanation, process, comparison, etc.)
-        b. Optimal visual layout for comprehension and impact
-        c. Narrative flow from the previous slide
-    - DO NOT default to the same slide function as before unless it fits naturally.
-    - Example slide functions include:
-        • `make_bullet_slide` – for short points or key facts  
-        • `make_two_column_slide` – for comparison or parallel ideas  
-        • `make_text_slide` – for deep explanations or storytelling  
-        • `make_image_with_caption_slide` – for visual explanations  
+5. HTML SUPPORT (ONLY WHEN NECESSARY):
+- You may insert basic HTML tags inside the content strings to fine-tune formatting — **only if justified**.
+- Acceptable use-cases:
+    + `<br>` to control line breaks in tightly packed content
+    + `<b>`, `<i>` to highlight keywords or distinctions
+    + `<ul>`, `<li>` only when necessary to override default bullet behavior
+    + `<span style="font-size: Xpx">` for inline size correction — use carefully!
+- HTML should **enhance clarity**, not clutter the slide or introduce inconsistency.
+- Avoid overusing or nesting tags unless truly needed for alignment or visual balance.
 
-    3. LANGUAGE:
-    - All output text must be in `(language)`, matching the input content.
+6. SEMANTIC & LOGICAL CONTINUITY:
+- If the previous slide introduced a concept, this one may expand, contrast, or illustrate.
+- Make sure the tone, topic, and flow remain natural and progressive.
+- The audience should feel the transition is smooth and meaningful.
 
-    4. VISUAL & DESIGN CONSISTENCY:
-    Ensure that the new slide aligns stylistically with the previous one:
-    - Use matching:
-        • Font size and style  
-        • Bullet point formatting  
-        • Text alignment and spacing  
-        • Background, title alignment, text padding  
-        • Color themes and visual tone  
-    - Avoid disruptive shifts like:
-        × Sudden font downsizing (e.g. 14pt → 10pt)
-        × Changing bullet type (e.g. dash → dot) without purpose
-        × Inconsistent title placement (e.g. left-aligned → centered)
+7. PRESENTATION-READY STRUCTURE:
+- Use whitespace wisely.
+- Keep content digestible: avoid text-heavy layouts.
+- Place title and content to guide the viewer's eye clearly.
 
-    5. HTML SUPPORT (ONLY WHEN NECESSARY):
-    - You may insert basic HTML tags inside the content strings to fine-tune formatting — **only if justified**.
-    - Acceptable use-cases:
-        • `<br>` to control line breaks in tightly packed content
-        • `<b>`, `<i>` to highlight keywords or distinctions
-        • `<ul>`, `<li>` only when necessary to override default bullet behavior
-        • `<span style="font-size: Xpx">` for inline size correction — use carefully!
-    - HTML should **enhance clarity**, not clutter the slide or introduce inconsistency.
-    - Avoid overusing or nesting tags unless truly needed for alignment or visual balance.
+INPUT CONTEXT:
+- Previous slide content:
+{previous_slide_content}
 
-    6. SEMANTIC & LOGICAL CONTINUITY:
-    - If the previous slide introduced a concept, this one may expand, contrast, or illustrate.
-    - Make sure the tone, topic, and flow remain natural and progressive.
-    - The audience should feel the transition is smooth and meaningful.
+- Previous function call:
+{previous_function_call}
 
-    7. PRESENTATION-READY STRUCTURE:
-    - Use whitespace wisely.
-    - Keep content digestible: avoid text-heavy layouts.
-    - Place title and content to guide the viewer’s eye clearly.
+- Current slide content:
+{slide_content}
 
-    INPUT CONTEXT:
-    - Previous slide content: {}
-    - Previous function call: {}
-    - Current slide content: {}
+- Previous evaluation (if any):
+{previous_evaluation}
 
-    OUTPUT REQUIREMENTS:
-    - A **single slide function call**, e.g. `make_bullet_slide(...)`, with parameters written entirely in `(language)`.
-    - Slide must be:
-    ✓ Content-relevant  
-    ✓ Layout-appropriate  
-    ✓ Visually consistent  
-    ✓ Logically connected  
-    ✓ Clean and readable  
-    ✓ Enhanced (only if necessary) with minimal HTML for formatting
+OUTPUT REQUIREMENTS:
+- A **single slide function call**, e.g. `make_bullet_slide(...)`, with parameters written entirely in the detected language.
+- Slide must be:
+    + Content-relevant  
+    + Layout-appropriate  
+    + Visually consistent  
+    + Logically connected  
+    + Clean and readable  
+    + Enhanced (only if necessary) with minimal HTML for formatting
 """
 
-
-
-def extract_html_content(response_text):
-    """
-    Trích xuất nội dung HTML từ phản hồi của LLM.
-    Cố gắng tìm phần HTML giữa các thẻ html hoặc body, hoặc lấy toàn bộ văn bản nếu không tìm thấy.
-    """
-    # Tìm kiếm mã HTML đầy đủ (bắt đầu bằng <!DOCTYPE hoặc <html>)
-    html_full = re.search(r'<!DOCTYPE.*?html>|<html>.*?</html>', response_text, re.DOTALL)
-    if html_full:
-        return html_full.group(0)
+def create_default_html(content_text: str) -> str:
+    """Create default HTML when unable to get from LLM"""
+    if not content_text:
+        content_text = "Default slide content"
     
-    # Tìm kiếm nội dung trong thẻ body
-    body_content = re.search(r'<body>.*?</body>', response_text, re.DOTALL)
-    if body_content:
-        return body_content.group(0)
-    
-    # Tìm kiếm bất kỳ mã HTML nào với thẻ div container
-    div_content = re.search(r'<div.*?>.*?</div>', response_text, re.DOTALL)
-    if div_content:
-        return div_content.group(0)
-    
-    # Nếu không tìm thấy HTML, bọc văn bản bằng thẻ HTML cơ bản
-    return f"""
-    <html>
-    <head>
-        <style>
-            body {{ font-family: Arial, sans-serif; margin: 20px; }}
-            h1 {{ color: #2c3e50; }}
-            ul {{ margin-left: 20px; }}
-            li {{ margin-bottom: 10px; }}
-        </style>
-    </head>
-    <body>
-        <div class="slide">
-            {response_text}
-        </div>
-    </body>
-    </html>
-    """
-
-def slide_generator(state: State) -> State:
-    """
-    Node tạo slide: Sử dụng LLM để tạo slide từ nội dung văn bản.
-    """
-    idx = state['current_slide_index']
-    logger.info(f"--- Node: slide_generator (Slide {idx + 1}) ---")
-    
-    # Lấy thông tin cần thiết từ state
-    current_text = state['current_slide_text']
-    llm = state['llm']
-    
-    # Gọi LLM để tạo slide
-    try:
-
-
-        logger.info(f"Attempt 1/5 with API key index 0...")
-        # Sử dụng invoke trực tiếp mà không cần tool_choice
-        llm_with_tools = llm.bind_tools(state['tools'])
-
-        slidegen_prompt = ChatPromptTemplate.from_template(SLIDEGEN_PROMPT)
-        slide_generator_runnable = slidegen_prompt | llm_with_tools
-
-        response = slide_generator_runnable.invoke({"current_text": current_text})
-        
-        # Log thông tin phản hồi để debug
-        response_content = response.content
-        logger.info(f"LLM output (first 100 chars): {response}...")
-        
-        # Trích xuất HTML từ phản hồi
-        html_content = extract_html_from_response(response_content)
-        
-        if not html_content or len(html_content) < 100:
-            # Thử lại với một prompt khác nếu HTML quá ngắn
-            logger.warning(f"HTML content quá ngắn: {len(html_content)} ký tự. Thử lại với prompt khác.")
-            response = llm_with_tools.invoke(
-                f"""Tạo một slide học thuật bằng HTML/CSS từ nội dung này: "{current_text}".
-                
-                Hãy trả về TOÀN BỘ mã HTML (bắt đầu với <!DOCTYPE html> và kết thúc với </html>).
-                Đảm bảo slide có tiêu đề, nội dung được định dạng tốt, và thiết kế đẹp mắt."""
-            )
-            html_content = extract_html_from_response(response.content)
-        
-        # Log thông tin HTML được tạo
-        logger.info(f"HTML content length: {len(html_content)} characters")
-        
-        # Kiểm tra nếu HTML vẫn không hợp lệ, tạo một HTML mặc định
-        if not html_content or len(html_content) < 100:
-            logger.warning("Tạo HTML mặc định vì không lấy được HTML hợp lệ từ LLM")
-            html_content = create_default_html(current_text)
-            
-        # Tạo tool call giả
-        tool_call_dict = {
-            "name": "generate_academic_slide",
-            "arguments": {
-                "html_content": html_content
-            }
-        }
-        
-        # Cập nhật state với tool call
-        state['current_tool_call'] = tool_call_dict
-        logger.info(f"LLM returned tool call: generate_academic_slide")
-        
-        # Kiểm tra nếu nội dung quá dài
-        if len(html_content) > 10000:
-            state['is_redundant'] = True
-            logger.warning(f"HTML content quá dài ({len(html_content)} ký tự). Đánh dấu slide là dư thừa.")
-        else:
-            state['is_redundant'] = False
-                
-    except Exception as e:
-        logger.error(f"Lỗi khi gọi LLM: {e}")
-        # Tạo HTML mặc định khi có lỗi
-        html_content = create_default_html(current_text)
-        tool_call_dict = {
-            "name": "generate_academic_slide",
-            "arguments": {
-                "html_content": html_content
-            }
-        }
-        state['current_tool_call'] = tool_call_dict
-        state['is_redundant'] = False
-        
-    return state
-
-def extract_html_from_response(response_text):
-    """Trích xuất phần HTML từ phản hồi của LLM"""
-    # Tìm đoạn HTML bắt đầu với <!DOCTYPE html> hoặc <html>
-    html_start = response_text.find('<!DOCTYPE html>')
-    if html_start == -1:
-        html_start = response_text.find('<html>')
-    
-    if html_start == -1:
-        # Không tìm thấy thẻ mở HTML, thử tìm bất kỳ thẻ HTML nào
-        html_start = response_text.find('<')
-        if html_start == -1:
-            return ""
-    
-    # Tìm thẻ đóng HTML
-    html_end = response_text.rfind('</html>')
-    if html_end == -1:
-        # Nếu không tìm thấy thẻ đóng, lấy toàn bộ nội dung từ vị trí bắt đầu
-        return response_text[html_start:]
-    
-    # Trả về phần HTML hoàn chỉnh
-    return response_text[html_start:html_end + 7]  # +7 để bao gồm cả "</html>"
-
-def create_default_html(content_text):
-    """Tạo HTML mặc định khi không lấy được từ LLM"""
-    title = content_text.split('\n')[0] if '\n' in content_text else "Slide"
-    content = content_text.replace('\n', '<br>')
+    # Extract title from first line or use default
+    lines = content_text.split('\n')
+    title = lines[0] if lines else "Slide"
+    content = '<br>'.join(lines[1:]) if len(lines) > 1 else content_text
     
     html = f"""<!DOCTYPE html>
 <html>
@@ -286,3 +148,153 @@ def create_default_html(content_text):
 </html>"""
     
     return html
+
+def slide_generator(state: State) -> State:
+    """
+    Node for slide generation: Uses LLM to create slides from text content by calling appropriate tools.
+    """
+    print("\n---------------- Executing Node: slide_generator ----------------")
+
+    idx = state['current_slide_index']
+    current_text = state.get("current_slide_text", "")
+    previous_slide_context = state.get('previous_slide_context', {})
+    previous_function_call = state.get('current_tool_call', {})
+    previous_evaluation = state.get('vlm_feedback', "")
+    
+    print(f"--- Node: slide_generator (Slide {idx + 1}) ---")
+    
+    # Validate required inputs
+    if not current_text:
+        print("No slide text provided. Creating default slide.")
+        current_text = "Default slide content"
+    
+    # Get LLM from state
+    llm = state.get('llm')
+    if not llm:
+        print("Error: No LLM found in state")
+        state['current_tool_call'] = {
+            "name": "generate_academic_slide",
+            "arguments": {"html_content": create_default_html(current_text)}
+        }
+        state['is_redundant'] = False
+        return state
+    
+    # Get tools from state
+    tools = state.get('tools', [])
+    if not tools:
+        print("Error: No tools found in state")
+        state['current_tool_call'] = {
+            "name": "generate_academic_slide", 
+            "arguments": {"html_content": create_default_html(current_text)}
+        }
+        state['is_redundant'] = False
+        return state
+    
+    try:
+        print("Attempting to generate slide with LLM...")
+        
+        # Bind tools to LLM
+        llm_with_tools = llm.bind_tools(tools)
+
+        # Create and invoke the prompt
+        slidegen_prompt = ChatPromptTemplate.from_template(SLIDEGEN_PROMPT)
+        slide_generator_runnable = slidegen_prompt | llm_with_tools
+        
+        previous_slide_content = ""
+        if previous_slide_context:
+            previous_slide_content = previous_slide_context.get("content", "")
+
+        response = slide_generator_runnable.invoke({
+            "previous_slide_content": previous_slide_content,
+            "previous_function_call": previous_function_call,
+            "slide_content": current_text,
+            "previous_evaluation": previous_evaluation
+        })
+        
+        print(f"LLM response type: {type(response)}")
+        
+        # Check if response has tool calls
+        if hasattr(response, 'tool_calls') and response.tool_calls:
+            tool_call = response.tool_calls[0]  # Get first tool call
+            print(f"LLM called tool: {tool_call}")
+            
+            # Convert tool call to dictionary format expected by execute_tool
+            tool_call_dict = {
+                "name": tool_call["name"],
+                "arguments": tool_call["args"]
+            }
+            
+            # Execute the tool to get HTML
+            html_content = execute_tool(tool_call_dict)
+            
+            # Update state with the tool call and HTML
+            state['current_tool_call'] = tool_call_dict
+            state['current_html_content'] = html_content
+            
+            print(f"Successfully executed tool: {tool_call_dict['name']}")
+            print(f"Generated HTML length: {len(html_content)} characters")
+            
+        else:
+            # Fallback: try to extract content from response or create default
+            print("No tool calls found in response. Creating default slide.")
+            
+            # Try to use response content if available
+            if hasattr(response, 'content') and response.content:
+                # Try to extract meaningful content from the response
+                response_text = response.content
+                if len(response_text) > 50:  # If there's substantial content
+                    current_text = response_text
+            
+            html_content = create_default_html(current_text)
+            
+            # Create a default tool call
+            tool_call_dict = {
+                "name": "generate_academic_slide",
+                "arguments": {
+                    "title": current_text.split('\n')[0] if '\n' in current_text else current_text[:50],
+                    "description": current_text
+                }
+            }
+            
+            html_content = execute_tool(tool_call_dict)
+
+            
+            state['current_tool_call'] = tool_call_dict
+            state['current_html_content'] = html_content
+            print("Created default slide using generate_academic_slide")
+        
+        # Check if content is too long (mark as redundant)
+        if len(html_content) > 10000:
+            state['is_redundant'] = True
+            print(f"HTML content too long ({len(html_content)} characters). Marking slide as redundant.")
+        else:
+            state['is_redundant'] = False
+                
+    except Exception as e:
+        logging.error(f"Error in slide generation: {e}")
+        print(f"Error in slide generation: {e}")
+        
+        # Create default HTML on error
+        html_content = create_default_html(current_text)
+        
+        # Create default tool call
+        tool_call_dict = {
+            "name": "generate_academic_slide",
+            "arguments": {
+                "title": "Error",
+                "description": f"Error generating slide: {str(e)}"
+            }
+        }
+        
+        try:
+            html_content = execute_tool(tool_call_dict)
+        except:
+            # If even the default tool fails, use basic HTML
+            pass
+            
+        state['current_tool_call'] = tool_call_dict
+        state['current_html_content'] = html_content 
+        state['is_redundant'] = False
+        print("Created error slide due to exception")
+        
+    return state

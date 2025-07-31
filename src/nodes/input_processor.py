@@ -1,15 +1,10 @@
-import logging
-import src
 import tempfile
 import os
 from typing import Dict, Any
 from src.stage import State
 from docling.document_converter import DocumentConverter
 from docling.chunking import HierarchicalChunker
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
-
+import time
 
 def input_processor(source):
     """
@@ -57,14 +52,15 @@ def initialize_and_prepare(state: State) -> Dict[str, Any]:
     """
     Node khởi tạo: Đọc DOCX, chia chunks, và thiết lập trạng thái ban đầu.
     """
-    logger.info(f"--- Node: initialize_and_prepare ---")
+    print("\n---------------- Executing Node: initialize_and_prepare ----------------")
+    time.sleep(20)
     docx_file = state['docx_file']
     
     # Sử dụng các hàm gốc của bạn
     chunks = input_processor(docx_file) # inputProcessor bao gồm extract_text và split_text
     slide_list = create_slide_list(chunks)
     
-    logger.info(f"Đã tạo {len(slide_list)} slide chunks ban đầu.")
+    print(f"Đã tạo {len(slide_list)} slide chunks ban đầu.")
     
     temp_dir = tempfile.mkdtemp()
     os.makedirs(os.path.join(temp_dir, "html"), exist_ok=True)

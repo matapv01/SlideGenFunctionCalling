@@ -22,6 +22,7 @@ class State(TypedDict):
     current_slide_index: int
     current_slide_text: str
     current_tool_call: Optional[Dict]
+    current_html_content: Optional[str]
     current_html_path: Optional[str]
     current_image_path: Optional[str]
     retry_count: int
@@ -29,6 +30,11 @@ class State(TypedDict):
     
     # Context giữa các slide
     previous_slide_context: Optional[slide_context]
+
+    # Thông tin đánh giá
+    vlm_decision: Optional[str]  # Quyết định của VLM về slide hiện tại
+    vlm_feedback: Optional[str]  # Phản hồi từ VLM nếu có
+
 
     # Lịch sử tin nhắn giữa người dùng và AI
     messages: List[Dict[str, Any]]  

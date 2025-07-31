@@ -4,9 +4,6 @@ from typing import List, Dict, Any
 import logging
 from langchain_openai import ChatOpenAI
 
-logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
-logger = logging.getLogger(__name__)
-
 
 class LLM:
     """
@@ -40,7 +37,7 @@ class LLM:
         self.current_key_index = 0
         self._create_llm_instance()
         
-        logger.info(f"LLM class initialized for model '{model}' with {len(self.api_keys)} API keys.")
+        print(f"LLM class initialized for model '{model}' with {len(self.api_keys)} API keys.")
 
     def _create_llm_instance(self):
         """
@@ -57,12 +54,12 @@ class LLM:
             top_p=self.top_p,
             stop=self.add_stop_token
         )
-        logger.info(f"ChatOpenAI instance created/updated with API key index: {self.current_key_index}")
+        print(f"ChatOpenAI instance created/updated with API key index: {self.current_key_index}")
 
     def _rotate_key_and_recreate_instance(self):
         """Rotates to the next API key and recreates the LLM instance."""
         self.current_key_index = (self.current_key_index + 1) % len(self.api_keys)
-        logger.warning(f"Rotating API key. New key index: {self.current_key_index}")
+        print(f"Rotating API key. New key index: {self.current_key_index}")
         self._create_llm_instance()
 
     def invoke(self, prompt: str, temperature: float = 0.5, top_p: float = 0.9) -> str:

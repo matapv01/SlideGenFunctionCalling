@@ -10,28 +10,26 @@ from src.tools.tool_des import execute_tool
 from src.stage import State
 from src.utils.config import capture_slide_image 
 
-logger = logging.getLogger(__name__)
-
 def html_renderer(state: State) -> State:
     """
     Node HTML Renderer: Tạo file HTML từ tool call và chụp ảnh.
     """
     retry_count = state.get('retry_count', 0)
     idx = state['current_slide_index']
-    logger.info(f"--- Node: html_renderer (Slide {idx + 1}, Thử lại lần {retry_count}) ---")
+    print(f"\n---------------- Executing Node: html_renderer (Slide {idx + 1}, Thử lại lần {retry_count}) ----------------")
+    time.sleep(20)
     
     # Lấy nội dung từ tool call
-    tool_call = state['current_tool_call']
-    html_content = tool_call['arguments'].get('html_content', '')
+    html_content = state['current_html_content']
     
     # Log thông tin HTML để dễ debug
-    logger.info(f"HTML content (first 100 chars): {html_content[:100]}...")
-    logger.info(f"HTML content length: {len(html_content)} characters")
+    print(f"HTML content (first 100 chars): {html_content[:100]}...")
+    print(f"HTML content length: {len(html_content)} characters")
     
     # Lấy driver từ state hoặc bỏ qua nếu không có
     driver = state.get('driver')
     if not driver:
-        logger.warning("Driver không tìm thấy trong state, có thể đã bị đóng")
+        print("Driver không tìm thấy trong state, có thể đã bị đóng")
         
         # Cố gắng khởi tạo lại driver một cách an toàn
         try:
@@ -52,16 +50,16 @@ def html_renderer(state: State) -> State:
                 driver = webdriver.Chrome(options=chrome_options)
                 # Lưu driver mới vào state
                 state['driver'] = driver
-                logger.info("Đã khởi tạo lại ChromeDriver thành công")
+                print("Đã khởi tạo lại ChromeDriver thành công")
             except Exception as e:
-                logger.error(f"Không thể khởi tạo Chrome trực tiếp: {e}")
+                print(f"Không thể khởi tạo Chrome trực tiếp: {e}")
                 # Thêm thông tin HTML vào state và tiếp tục mà không có driver
                 state['current_html_content'] = html_content
                 state['current_html_path'] = ''
                 state['current_image_path'] = ''
                 return state
         except Exception as e:
-            logger.error(f"Lỗi khi khởi tạo lại ChromeDriver: {e}")
+            print(f"Lỗi khi khởi tạo lại ChromeDriver: {e}")
             # Thêm thông tin HTML vào state và tiếp tục mà không có driver
             state['current_html_content'] = html_content
             state['current_html_path'] = ''
@@ -76,7 +74,7 @@ def html_renderer(state: State) -> State:
     with open(html_path, "w", encoding="utf-8") as f:
         f.write(html_content)
     
-    logger.info(f"Đã lưu HTML tại: {html_path}")
+    print(f"Đã lưu HTML tại: {html_path}")
     
     # Chụp ảnh slide
     try:
@@ -93,7 +91,7 @@ def html_renderer(state: State) -> State:
         
         # Chụp ảnh
         driver.save_screenshot(png_path)
-        logger.info(f"Đã chụp ảnh tại: {png_path}")
+        print(f"Đã chụp ảnh tại: {png_path}")
         
         # Cập nhật state với đường dẫn
         state['current_html_path'] = html_path
@@ -101,7 +99,7 @@ def html_renderer(state: State) -> State:
         state['current_html_content'] = html_content
         
     except Exception as e:
-        logger.error(f"Lỗi khi chụp ảnh slide: {e}")
+        print(f"Lỗi khi chụp ảnh slide: {e}")
         # Vẫn lưu đường dẫn HTML
         state['current_html_path'] = html_path
         state['current_html_content'] = html_content
