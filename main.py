@@ -20,6 +20,11 @@ import os
 from src.tools.tool_des import ALL_TOOLS
 from langgraph.graph import END
 
+os.environ['GOOGLE_API_USE_CLIENT_CERTIFICATE'] = 'false'
+os.environ['GOOGLE_API_USE_MTLS_ENDPOINT'] = 'never'
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"
+
 def route_to_task(state: State) -> str:
     """
     Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
@@ -133,8 +138,8 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     workflow.set_entry_point("initializer")
 
     # Thêm các cạnh (edges)
-    workflow.add_conditional_edges("initializer", "prepare_slide")
-    workflow.add_edge("prepare_slide", route_to_task, {"generator": "generator", END: END})
+    workflow.add_edge("initializer", "prepare_slide")
+    workflow.add_conditional_edges("prepare_slide", route_to_task, {"generator": "generator", END: END})
     workflow.add_conditional_edges("generator", check_redundancy, {"initializer": "initializer", "renderer": "renderer"})
     workflow.add_edge("renderer", "evaluator")
     workflow.add_conditional_edges("evaluator", evaluate_vlm_decision, {"finalizer": "finalizer", "generator": "generator"})
@@ -215,4 +220,4 @@ if __name__ == "__main__":
     try:
         process_slides_with_langgraph(sample_docx_path, "test_output")
     except Exception as e:
-        print(f"Một lỗi không mong muốn đã xảy ra trong quá trình xử lý: {e}", exc_info=True)
+        print(f"Một lỗi không mong muốn đã xảy ra trong quá trình xử lý: {e}")
