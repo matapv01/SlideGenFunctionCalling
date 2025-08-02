@@ -12,6 +12,9 @@ import time
 from PIL import Image
 import io
 
+# Define the character limit as a constant for easy changes
+SLIDE_CHAR_LIMIT = 600
+
 def setup_environment():
     """Load environment variables and set API keys and return a dictionary of them."""
     load_dotenv()
@@ -41,6 +44,7 @@ def initialize_chromedriver():
 
         chrome_options = Options()
         chrome_options.add_argument("--headless")
+        chrome_options.add_argument("--log-level=3")  # Reduce logging noise
         chrome_options.add_argument("--no-sandbox")
         chrome_options.add_argument("--disable-dev-shm-usage")
         chrome_options.add_argument("--disable-gpu")

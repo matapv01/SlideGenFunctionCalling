@@ -8,90 +8,71 @@ from langchain_core.messages import AIMessage, HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from src.tools.tool_des import execute_tool
 
-SLIDEGEN_PROMPT = """
-# Detect content language
-language = "Vietnamese" if is_vietnamese(slide_content) else "English"
-
-# Create a new slide that accurately conveys `slide_content`, fits the logical flow from the previous slide, 
-# and maintains full design coherence across the deck.
+SLIDEGEN_SYSTEM_PROMPT = """
+# YOUR MISSION: Generate a single, perfect slide function call for the `current_slide_content`.
+# Your primary goal is to create a slide that is accurate, visually consistent, and logically sound. If you are given evaluation feedback, your #1 priority is to fix the mistakes from your last attempt.
 
 INSTRUCTIONS FOR SMART SLIDE GENERATION
 
-1. CONTENT ANALYSIS & SUMMARIZATION:
-- Extract the key ideas from `slide_content`.
-- Rewrite the content into a clear and concise form that's suitable for a slide.
-- Avoid copy-pasting long text blocks. Use bullet points, sections, or summaries.
+1. CONTENT DE-DUPLICATION & PREPARATION:
+- **First, compare `current_slide_content` with `previous_slide_content`.**
+- **Identify and REMOVE any text from `current_slide_content` that is a direct repetition of content already on the previous slide.** The remaining unique text is your new working content for this slide.
 
-2. SLIDE FUNCTION SELECTION:
-- Choose the most suitable slide function for the current content, considering:
-    a. Content type (list, narrative, explanation, process, comparison, etc.)
-    b. Optimal visual layout for comprehension and impact
-    c. Narrative flow from the previous slide
-- DO NOT default to the same slide function as before unless it fits naturally.
-- Example slide functions include:
-    + `make_bullet_slide` – for short points or key facts  
-    + `make_two_column_slide` – for comparison or parallel ideas  
-    + `make_text_slide` – for deep explanations or storytelling  
-    + `make_image_with_caption_slide` – for visual explanations  
+2. CONTENT ANALYSIS & LOSSLESS SYNTHESIS:
+- **Core Principle: Rephrase for clarity, but do not omit information.**
+- Analyze the de-duplicated content to identify every unique point, idea, and piece of data.
+- **Your goal is a comprehensive summary.** Structure the content concisely using bullet points or short phrases, but you MUST include all distinct information from the source text.
+- DO NOT simply copy-paste raw text. Transform it into a polished, slide-friendly format.
 
-3. LANGUAGE:
-- All output text must be in the detected language, matching the input content.
+3. STRATEGIC SLIDE FUNCTION SELECTION & CORRECTION:
+- **Core Principle: The layout must serve the content. If `previous_evaluation` exists, you MUST correct your previous choice.**
+- **If `previous_evaluation` is provided:**
+    - It means your `previous_function_call` was flawed. Analyze the feedback carefully.
+    - Your new function call MUST address the critique. This might involve changing the slide function entirely (e.g., from `make_text_slide` to `make_bullet_slide`), rephrasing the content, or adjusting formatting.
+- **If no feedback is provided:**
+    - Select the single best slide function based on your synthesized content. Consider the content's nature (list, comparison, narrative), the amount of text, and the narrative flow.
+- Available functions include: `make_bullet_slide`, `make_two_column_slide`, `make_text_slide`, `make_image_with_caption_slide`, `make_quote_slide`.
 
-4. VISUAL & DESIGN CONSISTENCY:
-Ensure that the new slide aligns stylistically with the previous one:
-- Use matching:
-    + Font size and style  
-    + Bullet point formatting  
-    + Text alignment and spacing  
-    + Background, title alignment, text padding  
-    + Color themes and visual tone  
-- Avoid disruptive shifts like:
-    + Sudden font downsizing (e.g. 14pt → 10pt)
-    + Changing bullet type (e.g. dash → dot) without purpose
-    + Inconsistent title placement (e.g. left-aligned → centered)
+4. VISUAL & DESIGN COHERENCE:
+- **Core Principle: The new slide must feel like part of the same presentation.**
+- **Use the `previous_function_call` as your definitive style guide.**
+- **This is true for BOTH first attempts and retries.** The `previous_function_call` always contains the design template (fonts, alignment, etc.) that you must follow.
+- MAINTAIN a consistent style for: Fonts (family, size), bullet point style, text alignment, and spacing.
+- AVOID jarring visual shifts.
 
-5. HTML SUPPORT (ONLY WHEN NECESSARY):
-- You may insert basic HTML tags inside the content strings to fine-tune formatting — **only if justified**.
-- Acceptable use-cases:
-    + `<br>` to control line breaks in tightly packed content
-    + `<b>`, `<i>` to highlight keywords or distinctions
-    + `<ul>`, `<li>` only when necessary to override default bullet behavior
-    + `<span style="font-size: Xpx">` for inline size correction — use carefully!
-- HTML should **enhance clarity**, not clutter the slide or introduce inconsistency.
-- Avoid overusing or nesting tags unless truly needed for alignment or visual balance.
+5. STRATEGIC HTML FORMATTING (Use Sparingly):
+- **Core Principle: Use HTML for subtle enhancement, not for layout.**
+- Use tags like `<b>`, `<i>`, and `<br>` only to improve readability.
+- Use with extreme caution: `<ul>/<li>` or `<span style="...">`, typically only if correcting a specific issue from `previous_evaluation`.
 
 6. SEMANTIC & LOGICAL CONTINUITY:
-- If the previous slide introduced a concept, this one may expand, contrast, or illustrate.
-- Make sure the tone, topic, and flow remain natural and progressive.
-- The audience should feel the transition is smooth and meaningful.
-
-7. PRESENTATION-READY STRUCTURE:
-- Use whitespace wisely.
-- Keep content digestible: avoid text-heavy layouts.
-- Place title and content to guide the viewer's eye clearly.
-
-INPUT CONTEXT:
-- Previous slide content:
-{previous_slide_content}
-
-- Previous function call:
-{previous_function_call}
-
-- Current slide content:
-{slide_content}
-
-- Previous evaluation (if any):
-{previous_evaluation}
+- **Core Principle: Ensure a smooth narrative flow.**
+- The new slide must be a logical next step from `previous_slide_content` (e.g., an elaboration, a contrast, an example).
 
 OUTPUT REQUIREMENTS:
-- A **single slide function call**, e.g. `make_bullet_slide(...)`, with parameters written entirely in the detected language.
-- Slide must be:
-    + Content-relevant  
-    + Layout-appropriate  
-    + Visually consistent  
-    + Logically connected  
-    + Clean and readable  
-    + Enhanced (only if necessary) with minimal HTML for formatting
+
+- Your response must be a **single, syntactically correct function call** and nothing else.
+- All text arguments in the function call must be in the detected language.
+- **Final Check:** Ensure the slide is comprehensive, well-structured, visually consistent, logically connected, and directly addresses any feedback.
+"""
+
+HUMAN_PROMPT_TEMPLATE = """
+---
+INPUT CONTEXT FOR THIS TASK:
+
+- **Previous slide content:** (The text from the preceding slide in the presentation. Used for de-duplication and context.)
+{previous_slide_content}
+
+- **Current slide content:** (The raw text for the new slide. Process this.)
+{slide_content}
+
+- **Previous function call:** (CRITICAL INPUT: On the first try, there will be no function call below. On a retry, this is *your own last failed attempt* and is the object you must fix based on feedback, while still using it as a style guide.)
+{previous_function_call}
+
+- **Previous evaluation (if any):** (Critique of your last attempt (`previous_function_call`). If this exists, you MUST address the problems it describes.)
+{previous_evaluation}
+
+---
 """
 
 def create_default_html(content_text: str) -> str:
@@ -170,25 +151,9 @@ def slide_generator(state: State) -> State:
     
     # Get LLM from state
     llm = state.get('llm')
-    if not llm:
-        print("Error: No LLM found in state")
-        state['current_tool_call'] = {
-            "name": "generate_academic_slide",
-            "arguments": {"html_content": create_default_html(current_text)}
-        }
-        state['is_redundant'] = False
-        return state
     
     # Get tools from state
     tools = state.get('tools', [])
-    if not tools:
-        print("Error: No tools found in state")
-        state['current_tool_call'] = {
-            "name": "generate_academic_slide", 
-            "arguments": {"html_content": create_default_html(current_text)}
-        }
-        state['is_redundant'] = False
-        return state
     
     try:
         print("Attempting to generate slide with LLM...")
@@ -196,8 +161,12 @@ def slide_generator(state: State) -> State:
         # Bind tools to LLM
         llm_with_tools = llm.bind_tools(tools)
 
-        # Create and invoke the prompt
-        slidegen_prompt = ChatPromptTemplate.from_template(SLIDEGEN_PROMPT)
+        # REFACTOR: Using from_messages for better structure
+        slidegen_prompt = ChatPromptTemplate.from_messages([
+            ("system", SLIDEGEN_SYSTEM_PROMPT),
+            ("human", HUMAN_PROMPT_TEMPLATE)
+        ])
+
         slide_generator_runnable = slidegen_prompt | llm_with_tools
         
         previous_slide_content = ""

@@ -10,7 +10,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from src.stage import State
 import time
 
-CRITERIA = """
+EVALUATION_PROMPT = """
+Evaluate the following slide based on these criteria:
 Improved Prompt for Slide Content Evaluation
 Please evaluate the slide according to the following detailed criteria. Assess not only the design and formatting, but also whether the content is placed in a suitable location, the meaning is clear, and the message supports the intended purpose of the slide.
 
@@ -70,11 +71,6 @@ Additional Evaluation Dimensions (Newly Added)
     - Content Meaning Accuracy: Does the text or visual element truly represent what it intends to convey? Is it logically accurate in the context?
     - Slide Purpose Fit: Does the slide serve its intended purpose (inform, compare, convince, summarize)? Does every element contribute to that goal?
     - Redundancy Check: Are there any duplicate or unnecessary elements that could be removed without losing meaning?
-"""
-
-EVALUATION_PROMPT = """
-Evaluate the following slide based on these criteria:
-{criteria}
 
 In addition, if a previous slide is available, evaluate consistency between the current and previous slides in the following aspects:
 - Background color
@@ -147,7 +143,6 @@ def slide_evaluator(state: State) -> State:
     try:
         evaluation_prompt = ChatPromptTemplate.from_template(EVALUATION_PROMPT)
         formatted_prompt = evaluation_prompt.format(
-            criteria=CRITERIA, 
             tool_call_output=json.dumps(recent_function_call, indent=2)
         )
         

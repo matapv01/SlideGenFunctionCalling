@@ -3,12 +3,11 @@
 from src.stage import State
 import time
 
-def prepare_next_slide(state: State) -> State:
+def provide_next_slide(state: State) -> State:
     """
     Node chuẩn bị slide tiếp theo từ hàng đợi.
     """
     print("\n---------------- Executing Node: prepare_next_slide ----------------")
-    time.sleep(20)
     if state['slide_chunks']:
         # Lấy slide tiếp theo từ hàng đợi
         next_chunk = state['slide_chunks'].pop(0)

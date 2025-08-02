@@ -12,7 +12,7 @@ from src.utils.config import capture_slide_image
 
 def html_renderer(state: State) -> State:
     """
-    Node HTML Renderer: Tạo file HTML từ tool call và chụp ảnh.
+    Node HTML Renderer: Tạo file HTML từ tool call và cap ảnh slide.
     """
     retry_count = state.get('retry_count', 0)
     idx = state['current_slide_index']
@@ -26,7 +26,7 @@ def html_renderer(state: State) -> State:
     print(f"HTML content (first 100 chars): {html_content[:100]}...")
     print(f"HTML content length: {len(html_content)} characters")
     
-    # Lấy driver từ state hoặc bỏ qua nếu không có
+    # Lấy driver từ state hoặc khởi tạo lại nếu không có
     driver = state.get('driver')
     if not driver:
         print("Driver không tìm thấy trong state, có thể đã bị đóng")
@@ -39,6 +39,7 @@ def html_renderer(state: State) -> State:
             
             # Thiết lập tùy chọn cho Chrome
             chrome_options = Options()
+            chrome_options.add_argument("--log-level=3")
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
