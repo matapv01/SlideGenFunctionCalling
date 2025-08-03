@@ -20,6 +20,11 @@ import os
 from src.tools.tool_des import ALL_TOOLS
 from langgraph.graph import END
 
+os.environ['GOOGLE_API_USE_CLIENT_CERTIFICATE'] = 'false'
+os.environ['GOOGLE_API_USE_MTLS_ENDPOINT'] = 'never'
+os.environ["GRPC_VERBOSITY"] = "ERROR"
+os.environ["GLOG_minloglevel"] = "2"
+
 def route_to_task(state: State) -> str:
     """
     Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.

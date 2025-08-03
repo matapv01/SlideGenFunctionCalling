@@ -43,6 +43,7 @@ def initialize_chromedriver():
         #     raise FileNotFoundError("ChromeDriver not found in PATH.")
 
         chrome_options = Options()
+        chrome_options.add_argument("--log-level=3")
         chrome_options.add_argument("--headless")
         chrome_options.add_argument("--log-level=3")  # Reduce logging noise
         chrome_options.add_argument("--no-sandbox")
