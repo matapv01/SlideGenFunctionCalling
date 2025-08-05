@@ -41,7 +41,7 @@ class State(TypedDict):
     
     # Thư mục tạm
     temp_dir: str
-    
+    temp_debug_dir: str
     # Kết quả cuối cùng
     final_slides: List[Dict]
-    all_debug_info: List[debug_info]
+    all_debug_info: List[Dict]

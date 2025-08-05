@@ -59,56 +59,65 @@ def _split_long_section_into_slides(heading: str, paragraphs: List[str]) -> List
     return sub_slides
 
 # --- THE LOGIC OF THIS FUNCTION IS REPLACED ---
+from collections import OrderedDict
+from typing import List
+
+SLIDE_CHAR_LIMIT = 1000  # hoặc một giới hạn bạn định nghĩa
+
 def create_slide_list(chunks: List[str]) -> List[str]:
     """
     Tạo danh sách slide từ các chunks đã chia.
-    NEW LOGIC:
-    1. First, groups all chunks by their common heading.
-    2. Then, for each heading group:
-       - If it fits on one slide, create one slide.
-       - If it's too long, split it intelligently across multiple slides.
+    Logic:
+    - Giữ nguyên chunks.
+    - Gộp nhiều chunks cùng heading nếu tổng chiều dài vẫn trong SLIDE_CHAR_LIMIT.
+    - Nếu quá dài, giữ nguyên từng chunk như là một slide.
     """
-    print("Creating slide list with improved, structure-aware logic...")
-    
-    # 1. Group paragraphs by their heading to restore document structure
+    print("Creating slide list with grouping-only logic (no splitting)...")
+
+    # 1. Gom chunks theo heading
     grouped_content = OrderedDict()
     for chunk in chunks:
-        # The chunk format is assumed to be "Heading\nParagraph text."
-        # We split it once to separate the heading from the paragraph.
         try:
-            # =================== THIS IS THE FIX ===================
-            # Changed from .split('\n\n', 1) to .split('\n', 1)
-            # This is more robust and handles the actual output from your chunker.
             heading, paragraph = chunk.strip().split('\n', 1)
-            # =======================================================
         except ValueError:
-            # If a chunk has no heading or is malformed, we skip it.
-            # You could add a print here for debugging if you want:
-            # print(f"Warning: Skipping malformed chunk: {chunk}")
             continue
-        
-        # Add the paragraph to its heading's list
+
         if heading not in grouped_content:
             grouped_content[heading] = []
-        # The paragraph might have leading/trailing newlines from the split, so strip it.
         grouped_content[heading].append(paragraph.strip())
 
-    # 2. Process the grouped content into final slides
+    # 2. Xử lý tạo slides (gộp nếu vừa, giữ nguyên nếu không)
     final_slides = []
     for heading, paragraphs in grouped_content.items():
-        full_content_text = "\n\n".join(paragraphs)
-        total_len = len(heading) + len(full_content_text) + 2
+        current_slide = ""
+        current_len = 0
+        buffer = []
 
-        # Case 1: The entire section fits on one slide
-        if total_len <= SLIDE_CHAR_LIMIT:
-            slide = f"{heading}\n\n{full_content_text}"
+        for para in paragraphs:
+            para_text = para.strip()
+            estimated_len = current_len + len(para_text) + 2  # +2 cho khoảng cách giữa các đoạn
+
+            if estimated_len + len(heading) <= SLIDE_CHAR_LIMIT:
+                buffer.append(para_text)
+                current_len = estimated_len
+            else:
+                # Thêm slide đã tích lũy
+                if buffer:
+                    slide = f"{heading}\n\n" + "\n\n".join(buffer)
+                    final_slides.append(slide)
+                # Bắt đầu slide mới với đoạn này
+                slide = f"{heading}\n\n{para_text}"
+                final_slides.append(slide)
+                buffer = []
+                current_len = 0
+
+        # Thêm phần còn lại trong buffer
+        if buffer:
+            slide = f"{heading}\n\n" + "\n\n".join(buffer)
             final_slides.append(slide)
-        # Case 2: The section is too long and must be split
-        else:
-            split_slides = _split_long_section_into_slides(heading, paragraphs)
-            final_slides.extend(split_slides)
-            
+
     return final_slides
+
 
 
 def initialize_and_provide(state: State) -> Dict[str, Any]: # Renamed back based on your error log

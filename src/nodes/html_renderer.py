@@ -39,7 +39,6 @@ def html_renderer(state: State) -> State:
             
             # Thiết lập tùy chọn cho Chrome
             chrome_options = Options()
-            chrome_options.add_argument("--log-level=3")
             chrome_options.add_argument("--headless")
             chrome_options.add_argument("--no-sandbox")
             chrome_options.add_argument("--disable-dev-shm-usage")
@@ -67,8 +66,8 @@ def html_renderer(state: State) -> State:
             state['current_image_path'] = ''
             return state
     
-    # Tạo tên file dựa trên index và số lần thử
-    html_filename = f"slide_{idx + 1}_{retry_count}.html"
+    # Tạo tên file dựa trên index
+    html_filename = f"slide_{idx + 1}.html"
     html_path = os.path.join(state['temp_dir'], "html", html_filename)
     
     # Lưu file HTML
@@ -87,7 +86,7 @@ def html_renderer(state: State) -> State:
         time.sleep(1)
         
         # Tạo tên file ảnh
-        png_filename = f"slide_{idx + 1}_{retry_count}.png"
+        png_filename = f"slide_{idx + 1}.png"
         png_path = os.path.join(state['temp_dir'], "png", png_filename)
         
         # Chụp ảnh
@@ -98,7 +97,43 @@ def html_renderer(state: State) -> State:
         state['current_html_path'] = html_path
         state['current_image_path'] = png_path
         state['current_html_content'] = html_content
-        
+
+
+        # Debug info - kiểm tra xem các key cần thiết có tồn tại không
+        if 'temp_debug_dir' in state:
+            html_debug_filename = f"slide_{idx + 1}_{retry_count}.html"
+            html_debug_path = os.path.join(state['temp_debug_dir'], "html", html_debug_filename)
+            
+            # Đảm bảo thư mục debug html tồn tại
+            os.makedirs(os.path.dirname(html_debug_path), exist_ok=True)
+            
+            # Sao chép file HTML vào thư mục debug
+            with open(html_debug_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+
+            png_debug_filename = f"slide_{idx + 1}_{retry_count}.png"
+            png_debug_path = os.path.join(state['temp_debug_dir'], "png", png_debug_filename)
+            
+            # Đảm bảo thư mục debug png tồn tại
+            os.makedirs(os.path.dirname(png_debug_path), exist_ok=True)
+            
+            # Sao chép ảnh vào thư mục debug
+            driver.save_screenshot(png_debug_path)
+
+            # Chuẩn bị dữ liệu debug
+            debug_slide_data = {
+                "index": idx,
+                "tool_call": state.get('current_tool_call', {}),
+                "html_path": html_debug_path,
+                "png_path": png_debug_path,
+                "feedback": state.get('vlm_feedback', ''),
+                "retry_count": retry_count
+            }
+            
+            # Thêm vào all_debug_info nếu tồn tại
+            if 'all_debug_info' in state:
+                state['all_debug_info'].append(debug_slide_data)
+    
     except Exception as e:
         print(f"Lỗi khi chụp ảnh slide: {e}")
         # Vẫn lưu đường dẫn HTML

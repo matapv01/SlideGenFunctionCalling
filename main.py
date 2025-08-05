@@ -20,11 +20,6 @@ import os
 from src.tools.tool_des import ALL_TOOLS
 from langgraph.graph import END
 
-os.environ['GOOGLE_API_USE_CLIENT_CERTIFICATE'] = 'false'
-os.environ['GOOGLE_API_USE_MTLS_ENDPOINT'] = 'never'
-os.environ["GRPC_VERBOSITY"] = "ERROR"
-os.environ["GLOG_minloglevel"] = "2"
-
 def route_to_task(state: State) -> str:
     """
     Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
@@ -67,19 +62,17 @@ def evaluate_vlm_decision(state: State) -> str:
     
     # Lấy retry_count hiện tại
     retry_count = state.get('retry_count', 0)
+    max_retries = state.get('max_retries', 3)
     print(f"Giá trị retry_count hiện tại: {retry_count}")
     
     if decision == "accept":
         print("Slide được chấp nhận. Chuyển đến bước hoàn tất.")
-        # Reset retry_count
-        state['retry_count'] = 0
+
         return "finalizer"
     else: # deny
         # Kiểm tra nếu đã đạt số lần thử lại tối đa
-        if retry_count >= state.get('max_retries', 3):
-            print(f"Đã đạt số lần thử lại tối đa ({state.get('max_retries', 3)}). Buộc chấp nhận slide.")
-            # Reset retry_count
-            state['retry_count'] = 0
+        if retry_count >= max_retries:
+            print(f"Đã đạt số lần thử lại tối đa ({max_retries}). Buộc chấp nhận slide.")
             return "finalizer"  # Đi thẳng đến finalizer
         else:
             print(f"Slide bị từ chối. Thử lại lần {retry_count}.")
@@ -110,7 +103,7 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
         model="gemini-2.5-flash",
         temperature=0.5,
-        max_tokens=8192,
+        max_tokens=4096,
     )
 
     # Tạo thư mục temp nếu chưa có
@@ -118,7 +111,13 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     html_dir = os.path.join(temp_dir, "html")
     png_dir = os.path.join(temp_dir, "png")
     
-    for dir_path in [temp_dir, html_dir, png_dir]:
+    # Tạo thư mục debug
+    temp_debug_dir = os.path.join(output_folder, "temp_debug")
+    debug_html_dir = os.path.join(temp_debug_dir, "html")
+    debug_png_dir = os.path.join(temp_debug_dir, "png")
+    
+    # Tạo tất cả các thư mục cần thiết
+    for dir_path in [temp_dir, html_dir, png_dir, temp_debug_dir, debug_html_dir, debug_png_dir]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
             print(f"Đã tạo thư mục: {dir_path}")
@@ -161,7 +160,10 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
         "retry_count": 0,
         "final_slides": [],
         "temp_dir": os.path.join(output_folder, "temp"),
+        "temp_debug_dir": temp_debug_dir,
         "is_redundant": False,
+        "all_debug_info": [],  # Thêm khởi tạo cho all_debug_info
+        "vlm_decision": "accept",  # Đặt mặc định là accept
     }
     
     # Chạy graph
@@ -173,7 +175,6 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
             driver.quit()
             print("Đã đóng ChromeDriver.")
             
-    # Đảm bảo driver đã đóng và không còn được sử dụng
     zip_file_path = os.path.join(final_state['temp_dir'], "slides.zip")
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for slide in final_state['final_slides']:
@@ -187,6 +188,40 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     shutil.copy2(zip_file_path, final_zip_path)
     shutil.rmtree(final_state['temp_dir']) # Xóa thư mục tạm
 
+
+    zip_debug_file_path = os.path.join(final_state['temp_debug_dir'], "slides_debug.zip")
+    # Tạo zip file debug nếu có thông tin debug
+    with zipfile.ZipFile(zip_debug_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for slide in final_state['all_debug_info']:
+            if os.path.exists(slide['html_path']):
+                zipf.write(slide['html_path'], os.path.join("html", os.path.basename(slide['html_path'])))
+            if os.path.exists(slide['png_path']):
+                zipf.write(slide['png_path'], os.path.join("png", os.path.basename(slide['png_path'])))
+            if 'feedback' in slide:
+                feedback_filename = f"feedback_{slide['index'] + 1}_{slide['retry_count']}.txt"
+                feedback_path = os.path.join(final_state['temp_dir'], "feedback", feedback_filename)
+                if not os.path.exists(os.path.dirname(feedback_path)):
+                    os.makedirs(os.path.dirname(feedback_path))
+                with open(feedback_path, 'w', encoding='utf-8') as f:
+                    f.write(slide['feedback'])
+                zipf.write(feedback_path, os.path.join("feedback", feedback_filename))
+            if 'tool_call' in slide:
+                tool_call_filename = f"tool_call_{slide['index'] + 1}_{slide['retry_count']}.json"
+                tool_call_path = os.path.join(final_state['temp_dir'], "tool_calls", tool_call_filename)
+                if not os.path.exists(os.path.dirname(tool_call_path)):
+                    os.makedirs(os.path.dirname(tool_call_path))
+                with open(tool_call_path, 'w', encoding='utf-8') as f:
+                    import json
+                    json.dump(slide['tool_call'], f, ensure_ascii=False, indent=4)
+                zipf.write(tool_call_path, os.path.join("tool_calls", tool_call_filename))
+
+
+    # Sao chép file zip debug cuối cùng ra output folder
+    final_zip_debug_path = os.path.join(output_folder, "slides_debug_langgraph.zip")
+    shutil.copy2(zip_debug_file_path, final_zip_debug_path)
+    if os.path.exists(final_state['temp_debug_dir']):
+        shutil.rmtree(final_state['temp_debug_dir'])  # Xóa thư mục tạm debug
+
     print(f"Hoàn thành! File kết quả đã được lưu tại: {final_zip_path}")
     return final_zip_path
 
@@ -199,30 +234,7 @@ if __name__ == "__main__":
         os.makedirs("test_output")
 
     # Tạo một file docx giả để test
-    sample_docx_path = os.path.join("test_input", "sample.docx")
-    # sample_docx_path = "nature.docx"
-    doc = Document()
-    
-    # Section 1: Short, should be one slide
-    doc.add_heading('Slide 1: Giới thiệu về LangGraph', level=1)
-    doc.add_paragraph('LangGraph là một thư viện giúp xây dựng các ứng dụng LLM phức tạp, có trạng thái.')
-    doc.add_paragraph('Nó cho phép tạo các đồ thị có chu trình, rất phù hợp cho các tác vụ lặp đi lặp lại như agent.')
-    
-    # Section 2: Also short, should be one slide
-    doc.add_heading('Slide 2: Các lợi ích chính', level=1)
-    doc.add_paragraph('- Dễ dàng quản lý trạng thái qua các bước.')
-    doc.add_paragraph('- Hỗ trợ các chu trình và vòng lặp một cách tự nhiên.')
-    doc.add_paragraph('- Tăng khả năng gỡ lỗi và quan sát luồng dữ liệu.')
-    
-    # Section 3: Long, should be split into TWO slides
-    doc.add_heading('Slide 3: Ví dụ về nội dung dài', level=1)
-    long_text_part1 = "Phần đầu tiên của nội dung này đủ ngắn để vừa vặn. Nó giới thiệu khái niệm và thiết lập bối cảnh. Chúng ta sẽ thảo luận về các nguyên tắc cơ bản và lý do tại sao phương pháp này lại hiệu quả. Đoạn này bao gồm một vài câu để đảm bảo nó có nội dung đáng kể, nhưng không quá dài đến mức tự nó vượt quá giới hạn."
-    long_text_part2 = "Bây giờ, phần thứ hai này là phần đẩy nội dung vượt quá giới hạn 600 ký tự. Bằng cách thêm đoạn văn này, tổng độ dài của 'Slide 3' sẽ yêu cầu logic phân tách phải được kích hoạt. Trình xử lý thông minh sẽ giữ 'Phần đầu tiên' trên một slide và đặt 'Phần thứ hai' này trên một slide mới, nhưng cả hai đều có cùng một tiêu đề 'Slide 3'."
-    doc.add_paragraph(long_text_part1)
-    doc.add_paragraph(long_text_part2)
-    
-    doc.save(sample_docx_path)
-    print(f"Đã tạo file test tại: {sample_docx_path}")
+    sample_docx_path = os.path.join("test_input", "nature.docx")
 
     # Chạy quy trình
     try:
