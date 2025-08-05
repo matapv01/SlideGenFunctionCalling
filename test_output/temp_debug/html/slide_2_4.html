@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Column Slide</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Roboto, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .slide-container {
+            width: 62.5rem; /* THAY ĐỔI: 1000px -> 62.5rem */
+            height: 35rem; /* THAY ĐỔI: 560px -> 35rem */
+            position: relative;
+            background-color: #F8F8F8;
+            overflow: hidden;
+            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
+            padding: 2.5rem; /* THAY ĐỔI: 40px -> 2.5rem */
+            box-sizing: border-box;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3.75rem; /* THAY ĐỔI: 60px -> 3.75rem */
+        }
+        
+        .title-accent {
+            width: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
+            height: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
+            background-color: #FFFFFF;
+            margin-right: 0.9375rem; /* THAY ĐỔI: 15px -> 0.9375rem */
+        }
+        
+        .main-title {
+            font-size: 3rem;
+            color: #333333;
+            font-weight: normal;
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .content-layout {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: calc(100% - 7.5rem); /* THAY ĐỔI: 120px -> 7.5rem */
+        }
+        
+        .content-box {
+            width: 31%;
+            height: auto;
+            background-color: #FFFFFF;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3.75rem 1.25rem 1.25rem; /* THAY ĐỔI: 60px 20px 20px */
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        .icon-circle {
+            width: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
+            height: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
+            border-radius: 50%;
+            background-color: #ffffff;
+            position: absolute;
+            top: -2.1875rem; /* THAY ĐỔI: -35px -> -2.1875rem */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* 4px 6px */
+        }
+        
+        .icon-circle svg {
+            stroke: #4CAF50;
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            color: #555555;
+            margin: 0 0 0.9375rem 0; /* THAY ĐỔI: 15px -> 0.9375rem */
+            font-weight: bold;
+        }
+        
+        .content {
+            font-size: 1rem;
+            color: #777777;
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">Môi trường xanh</h1>
+        </div>
+        
+        <!-- Content Layout -->
+        <div class="content-layout">
+            <!-- Content Box 1 -->
+            <div class="content-box">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tree-pine"><path d="M10 19h4"/><path d="M12 15v4"/><path d="M12 12v3"/><path d="M17.6 15.6L22 13L12 2L2 13l4.4 2.6L9 12l3 3l3-3z"/></svg>
+                </div>
+                <h3 class="subtitle"><b>Rừng nhiệt đới</b></h3>
+                <p class="content"><ul><li>Lá phổi xanh của Trái Đất</li><li>Cung cấp oxy thiết yếu</li><li>Môi trường sống của hàng triệu loài</li></ul></p>
+            </div>
+            
+            <!-- Content Box 2 -->
+            <div class="content-box">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tree-deciduous"><path d="M18 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9L10 2l-2 3.5A2 2 0 0 1 4.9 6H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16Z"/><path d="M12 22v-2"/></svg>
+                </div>
+                <h3 class="subtitle"><b>Cây cổ thụ</b></h3>
+                <p class="content"><ul><li>Biểu tượng sức sống</li><li>Đại diện sự bền vững</li></ul></p>
+            </div>
+            
+            <!-- Content Box 3 -->
+            <div class="content-box">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <h3 class="subtitle"><b>Bảo vệ rừng</b></h3>
+                <p class="content"><ul><li>Trồng rừng</li><li>Chống phá rừng</li><li>Duy trì cân bằng sinh thái</li></ul></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

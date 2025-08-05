@@ -25,7 +25,7 @@ def route_to_task(state: State) -> str:
     Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
     """
     print("--- Router: route_to_task ---")
-    if state.get('slide_chunks'):
+    if len(state.get('slide_chunks', [])) >= 0:
         # Nếu còn slide, đi đến node chuẩn bị
         return "generator"
     else:
@@ -82,7 +82,7 @@ def evaluate_vlm_decision(state: State) -> str:
 
 # -- Xây dựng và thực thi Graph ---
 
-def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retries_per_slide: int = 3):
+def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retries_per_slide: int = 6):
     """
     Hàm chính để xây dựng và chạy luồng công việc LangGraph.
     """
@@ -169,7 +169,7 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     # Chạy graph
     # Sử dụng try-finally để đảm bảo driver luôn được đóng
     try:
-        final_state = app.invoke(initial_input)
+        final_state = app.invoke(initial_input, config={"recursion_limit": 500}) # gioi han so buoc cua workflow
     finally:
         if driver:
             driver.quit()

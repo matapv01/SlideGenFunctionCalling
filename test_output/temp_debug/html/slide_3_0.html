@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Column Slide</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Roboto, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .slide-container {
+            width: 62.5rem; /* THAY ĐỔI: 1000px -> 62.5rem */
+            height: 35rem; /* THAY ĐỔI: 560px -> 35rem */
+            position: relative;
+            background-color: #F8F8F8;
+            overflow: hidden;
+            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
+            padding: 2.5rem; /* THAY ĐỔI: 40px -> 2.5rem */
+            box-sizing: border-box;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 3.75rem; /* THAY ĐỔI: 60px -> 3.75rem */
+        }
+        
+        .title-accent {
+            width: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
+            height: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
+            background-color: #FFFFFF;
+            margin-right: 0.9375rem; /* THAY ĐỔI: 15px -> 0.9375rem */
+        }
+        
+        .main-title {
+            font-size: 3rem;
+            color: #333333;
+            font-weight: normal;
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .content-layout {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            height: calc(100% - 7.5rem); /* THAY ĐỔI: 120px -> 7.5rem */
+        }
+        
+        .content-box {
+            width: 31%;
+            height: auto;
+            background-color: #FFFFFF;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 3.75rem 1.25rem 1.25rem; /* THAY ĐỔI: 60px 20px 20px */
+            box-sizing: border-box;
+            text-align: center;
+        }
+        
+        .icon-circle {
+            width: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
+            height: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
+            border-radius: 50%;
+            background-color: #ffffff;
+            position: absolute;
+            top: -2.1875rem; /* THAY ĐỔI: -35px -> -2.1875rem */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* 4px 6px */
+        }
+        
+        .icon-circle svg {
+            stroke: #007bff;
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            color: #555555;
+            margin: 0 0 0.9375rem 0; /* THAY ĐỔI: 15px -> 0.9375rem */
+            font-weight: bold;
+        }
+        
+        .content {
+            font-size: 1.15rem;
+            color: #777777;
+            margin: 0;
+            line-height: 1.5;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">Môi trường biển</h1>
+        </div>
+        
+        <!-- Content Layout -->
+        <div class="content-layout">
+            <!-- Content Box 1 -->
+            <div class="content-box">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fish"><path d="M6.5 12.5c.938-1.562 2.7-1.777 2.7-1.777L12 14l-2.7 2.7c0 0-1.762-.215-2.7-1.777C5.562 13.738 5.562 11.262 6.5 12.5z"/><path d="M18 12c-2.438-1.562-4.2-1.777-4.2-1.777L16.5 14l-4.2 2.7c0 0 1.762-.215 2.7-1.777C17.438 13.738 17.438 11.262 18 12z"/><path d="M22 12c-2.438-1.562-4.2-1.777-4.2-1.777L20.5 14l-4.2 2.7c0 0 1.762-.215 2.7-1.777C21.438 13.738 21.438 11.262 22 12z"/><path d="M2 12h.01"/></svg>
+                </div>
+                <h3 class="subtitle"><b>Rạn san hô</b></h3>
+                <p class="content"><ul><li>Ngôi nhà của nhiều loài biển</li><li>Đang bị đe dọa bởi ô nhiễm</li></ul></p>
+            </div>
+            
+            <!-- Content Box 2 -->
+            <div class="content-box">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whale"><path d="M12 12H3c-2.76 0-3-2-3-3s.24-3 3-3h9l-1 2 1 2z"/><path d="M22 12H13l-1-2 1-2h9c2.76 0 3 2 3 3s-.24 3-3 3z"/><path d="M17 17.5c-2.5-1.5-5-2.5-7-2.5s-4.5 1-7 2.5c0 0-1 4 0 4s3-1 6-1 6 1 6 1 1-4 0-4z"/></svg>
+                </div>
+                <h3 class="subtitle"><b>Cá voi</b></h3>
+                <p class="content"><ul><li>Loài động vật lớn nhất hành tinh</li><li>Đóng vai trò quan trọng trong hệ sinh thái biển</li></ul></p>
+            </div>
+            
+            <!-- Content Box 3 -->
+            <div class="content-box">
+                <div class="icon-circle">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-droplet"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.32 0z"/></svg>
+                </div>
+                <h3 class="subtitle"><b>Bảo vệ đại dương</b></h3>
+                <p class="content"><ul><li>Giảm rác thải nhựa</li><li>Khai thác bền vững</li><li>Bảo vệ môi trường biển</li></ul></p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Points Slide - Adjusted Layout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: Roboto, sans-serif;
+            background-color: #F8F8F8;
+            color: #777777;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 90rem;
+            padding: 3rem 2rem;
+            text-align: center;
+        }
+
+        .main-title {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 800;
+            color: #333333;
+            margin-bottom: 4rem;
+            line-height: 1.2;
+        }
+
+        .points-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
+        }
+
+        .point-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #FFFFFF;
+            padding: 3rem 2.5rem;
+            border-radius: 1rem;
+            border: 1px solid #EAE2D6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+            /* ĐÃ XÓA: transition: transform 0.3s ease, box-shadow 0.3s ease; */
+        }
+
+        /* ĐÃ XÓA: Khối CSS .point-card:hover đã được loại bỏ hoàn toàn. */
+        
+        .point-icon {
+            width: 4rem;
+            height: 4rem;
+            color: #007bff;
+        }
+        
+        .icon-divider {
+            width: 50px;
+            height: 3px;
+            background-color: #007bff;
+            border-radius: 2px;
+            margin: 1.5rem 0;
+        }
+
+        .point-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #333333;
+            margin-bottom: 1.5rem;
+            min-height: 5.5rem; 
+        }
+
+        .point-description {
+            font-size: 1.2rem;
+            line-height: 1.7;
+        }
+        
+        @media (max-width: 64rem) {
+            .points-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem; }
+        }
+
+        @media (max-width: 48rem) {
+            .points-grid { grid-template-columns: 1fr; }
+            .point-title { min-height: auto; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <h1 class="main-title">Chung tay bảo vệ thiên nhiên</h1>
+        <div class="points-grid">
+            
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74A7 7 0 0 0 12 2M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9z"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Trồng cây xanh</h2>
+            <p class="point-description">Hấp thụ CO2, cải thiện không khí và chống biến đổi khí hậu.</p>
+        </div>
+        
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8m0-14a6 6 0 1 0 6 6a6 6 0 0 0-6-6m0 10a4 4 0 1 1 4-4a4 4 0 0 1-4 4m0-6a2 2 0 1 0 2 2a2 2 0 0 0-2-2"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Tái chế rác thải</h2>
+            <p class="point-description">Giảm rác, bảo vệ tài nguyên thiên nhiên và môi trường.</p>
+        </div>
+        
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="m3.5 18.49l6-6.01l4 4L22 6.92L20.59 5.51L13.5 12.5l-4-4l-7.5 7.5z"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Giáo dục cộng đồng</h2>
+            <p class="point-description">Nâng cao nhận thức về bảo vệ thiên nhiên qua trường học và truyền thông.</p>
+        </div>
+        
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8m0 6a2 2 0 1 1 0-4a2 2 0 0 1 0 4m6.6-4.95l-.71-.71l-1.42 1.42l.71.71c.39.39.39 1.02 0 1.41l-1.42 1.42l-.71.71l1.42 1.42l.71-.71l1.42-1.42l-.71-.71c-.39-.39-.39-1.02 0-1.41M5.4 7.05L4 5.64l.71-.71l1.42 1.42l-.71.71c-.39.39-1.02.39-1.41 0l-1.42-1.42l-.71-.71L4 5.64M18.36 5.64l.71.71l1.42-1.42l-.71-.71a.996.996 0 0 0-1.41 0l-1.42 1.42l-.71.71l1.42 1.42zm-12.72 12.72l-.71-.71l-1.42 1.42l.71.71c.39.39.39 1.02 0 1.41l-1.42 1.42l-.71.71l1.42 1.42l.71-.71l1.42-1.42l-.71-.71c-.39-.39-.39-1.02 0-1.41Z"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Hợp tác toàn cầu</h2>
+            <p class="point-description">Các quốc gia cùng hành động để bảo vệ môi trường và hệ sinh thái toàn cầu.</p>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>

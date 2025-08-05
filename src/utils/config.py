@@ -20,18 +20,18 @@ def setup_environment():
     load_dotenv()
     api_keys = {
         "GEMINI_API_KEY": os.getenv('GEMINI_API_KEY'),
-        # "AQUANG1": os.getenv('AQUANG1'),
-        # "AQUANG2": os.getenv('AQUANG2'),
-        # "MATA01": os.getenv('MATA01')
+        "AQUANG1": os.getenv('AQUANG1'),
+        "AQUANG2": os.getenv('AQUANG2'),
+        "MATA01": os.getenv('MATA01')
     }
     if "GEMINI_API_KEY" not in os.environ:
         os.environ["GEMINI_API_KEY"] = os.getenv('GEMINI_API_KEY')
-    # if "AQUANG1" not in os.environ:
-    #     os.environ["AQUANG1"] = os.getenv('AQUANG1')
-    # if "AQUANG2" not in os.environ:
-    #     os.environ["AQUANG2"] = os.getenv('AQUANG2')
-    # if "MATA01" not in os.environ:
-    #     os.environ["MATA01"] = os.getenv('MATA01')
+    if "AQUANG1" not in os.environ:
+        os.environ["AQUANG1"] = os.getenv('AQUANG1')
+    if "AQUANG2" not in os.environ:
+        os.environ["AQUANG2"] = os.getenv('AQUANG2')
+    if "MATA01" not in os.environ:
+        os.environ["MATA01"] = os.getenv('MATA01')
     
     return api_keys
 

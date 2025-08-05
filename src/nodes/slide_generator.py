@@ -155,106 +155,114 @@ def slide_generator(state: State) -> State:
     # Get tools from state
     tools = state.get('tools', [])
     
-    try:
-        print("Attempting to generate slide with LLM...")
-        
-        # Bind tools to LLM
-        llm_with_tools = llm.bind_tools(tools)
+    indexTry = 0
+    while True:
+        indexTry += 1
+        try:
+            print("Attempting to generate slide with LLM...")
+            
+            # Bind tools to LLM
+            llm_with_tools = llm.bind_tools(tools)
 
-        # REFACTOR: Using from_messages for better structure
-        slidegen_prompt = ChatPromptTemplate.from_messages([
-            ("system", SLIDEGEN_SYSTEM_PROMPT),
-            ("human", HUMAN_PROMPT_TEMPLATE)
-        ])
+            # REFACTOR: Using from_messages for better structure
+            slidegen_prompt = ChatPromptTemplate.from_messages([
+                ("system", SLIDEGEN_SYSTEM_PROMPT),
+                ("human", HUMAN_PROMPT_TEMPLATE)
+            ])
 
-        slide_generator_runnable = slidegen_prompt | llm_with_tools
-        
-        previous_slide_content = ""
-        if previous_slide_context:
-            previous_slide_content = previous_slide_context.get("content", "")
+            slide_generator_runnable = slidegen_prompt | llm_with_tools
+            
+            previous_slide_content = ""
+            if previous_slide_context:
+                previous_slide_content = previous_slide_context.get("content", "")
 
-        response = slide_generator_runnable.invoke({
-            "previous_slide_content": previous_slide_content,
-            "previous_function_call": previous_function_call,
-            "slide_content": current_text,
-            "previous_evaluation": previous_evaluation
-        })
-        
-        print(f"LLM response type: {type(response)}")
-        
-        # Check if response has tool calls
-        if hasattr(response, 'tool_calls') and response.tool_calls:
-            tool_call = response.tool_calls[0]  # Get first tool call
-            print(f"LLM called tool: {tool_call}")
+            response = slide_generator_runnable.invoke({
+                "previous_slide_content": previous_slide_content,
+                "previous_function_call": previous_function_call,
+                "slide_content": current_text,
+                "previous_evaluation": previous_evaluation
+            })
             
-            # Convert tool call to dictionary format expected by execute_tool
-            tool_call_dict = {
-                "name": tool_call["name"],
-                "arguments": tool_call["args"]
-            }
+            print(f"LLM response type: {type(response)}")
             
-            # Execute the tool to get HTML
-            html_content = execute_tool(tool_call_dict)
+            # Check if response has tool calls
+            if hasattr(response, 'tool_calls') and response.tool_calls:
+                tool_call = response.tool_calls[0]  # Get first tool call
+                print(f"LLM called tool: {tool_call}")
+                
+                # Convert tool call to dictionary format expected by execute_tool
+                tool_call_dict = {
+                    "name": tool_call["name"],
+                    "arguments": tool_call["args"]
+                }
+                
+                # Execute the tool to get HTML
+                html_content = execute_tool(tool_call_dict)
+                
+                # Update state with the tool call and HTML
+                state['current_tool_call'] = tool_call_dict
+                state['current_html_content'] = html_content
+                
+                print(f"Successfully executed tool: {tool_call_dict['name']}")
+                print(f"Generated HTML length: {len(html_content)} characters")
+                
+            else:
+                if indexTry < 3:
+                    print("No tool calls found in response. retrying with slide generation.")
+                    continue
+
+                # Fallback: try to extract content from response or create default
+                print("No tool calls found in response. Creating default slide.")
+                
+                # Try to use response content if available
+                if hasattr(response, 'content') and response.content:
+                    # Try to extract meaningful content from the response
+                    response_text = response.content
+                    if len(response_text) > 50:  # If there's substantial content
+                        current_text = response_text
+                
+                html_content = create_default_html(current_text)
+                
+                # Create a default tool call
+                tool_call_dict = {
+                    "name": "generate_academic_slide",
+                    "arguments": {
+                        "title": current_text.split('\n')[0] if '\n' in current_text else current_text[:50],
+                        "description": current_text
+                    }
+                }
+                
+                html_content = execute_tool(tool_call_dict)
+
+                
+                state['current_tool_call'] = tool_call_dict
+                state['current_html_content'] = html_content
+                print("Created default slide using generate_academic_slide")
             
-            # Update state with the tool call and HTML
-            state['current_tool_call'] = tool_call_dict
-            state['current_html_content'] = html_content
+            # Check if content is too long (mark as redundant)
+            if len(html_content) > 10000:
+                state['is_redundant'] = True
+                print(f"HTML content too long ({len(html_content)} characters). Marking slide as redundant.")
+            else:
+                state['is_redundant'] = False
+            print("Slide generation completed successfully.")
+            break  # Exit loop if successful      
+        except Exception as e:
+            logging.error(f"Error in slide generation: {e}")
+            print(f"Error in slide generation: {e}")
             
-            print(f"Successfully executed tool: {tool_call_dict['name']}")
-            print(f"Generated HTML length: {len(html_content)} characters")
-            
-        else:
-            # Fallback: try to extract content from response or create default
-            print("No tool calls found in response. Creating default slide.")
-            
-            # Try to use response content if available
-            if hasattr(response, 'content') and response.content:
-                # Try to extract meaningful content from the response
-                response_text = response.content
-                if len(response_text) > 50:  # If there's substantial content
-                    current_text = response_text
-            
+            # Create default HTML on error
             html_content = create_default_html(current_text)
             
-            # Create a default tool call
+            # Create default tool call
             tool_call_dict = {
                 "name": "generate_academic_slide",
                 "arguments": {
-                    "title": current_text.split('\n')[0] if '\n' in current_text else current_text[:50],
-                    "description": current_text
+                    "title": "Error",
+                    "description": f"Error generating slide: {str(e)}"
                 }
             }
             
-            html_content = execute_tool(tool_call_dict)
-
-            
-            state['current_tool_call'] = tool_call_dict
-            state['current_html_content'] = html_content
-            print("Created default slide using generate_academic_slide")
-        
-        # Check if content is too long (mark as redundant)
-        if len(html_content) > 10000:
-            state['is_redundant'] = True
-            print(f"HTML content too long ({len(html_content)} characters). Marking slide as redundant.")
-        else:
-            state['is_redundant'] = False
-                
-    except Exception as e:
-        logging.error(f"Error in slide generation: {e}")
-        print(f"Error in slide generation: {e}")
-        
-        # Create default HTML on error
-        html_content = create_default_html(current_text)
-        
-        # Create default tool call
-        tool_call_dict = {
-            "name": "generate_academic_slide",
-            "arguments": {
-                "title": "Error",
-                "description": f"Error generating slide: {str(e)}"
-            }
-        }
-        
         try:
             html_content = execute_tool(tool_call_dict)
         except:

@@ -9,6 +9,8 @@ from docling.document_converter import DocumentConverter
 from docling.chunking import HierarchicalChunker
 from src.utils.config import SLIDE_CHAR_LIMIT
 import time
+from collections import OrderedDict
+from typing import List
 
 def input_processor(source):
     """
@@ -26,6 +28,7 @@ def input_processor(source):
     for i, chunk in enumerate(chunk_iter):
         enriched_text = chunker.contextualize(chunk=chunk)
         returnArray.append(enriched_text)
+        print(f"Chunk {i + 1}: {enriched_text[:100]}...")  # Log first 100 chars of each chunk
 
     return returnArray
 
@@ -58,65 +61,52 @@ def _split_long_section_into_slides(heading: str, paragraphs: List[str]) -> List
 
     return sub_slides
 
-# --- THE LOGIC OF THIS FUNCTION IS REPLACED ---
-from collections import OrderedDict
-from typing import List
 
-SLIDE_CHAR_LIMIT = 1000  # hoặc một giới hạn bạn định nghĩa
 
 def create_slide_list(chunks: List[str]) -> List[str]:
     """
-    Tạo danh sách slide từ các chunks đã chia.
-    Logic:
-    - Giữ nguyên chunks.
-    - Gộp nhiều chunks cùng heading nếu tổng chiều dài vẫn trong SLIDE_CHAR_LIMIT.
-    - Nếu quá dài, giữ nguyên từng chunk như là một slide.
+    Gộp các phần có cùng subheading nếu tổng độ dài <= SLIDE_CHAR_LIMIT.
+    Nếu vượt quá giới hạn, giữ nguyên từng phần.
     """
-    print("Creating slide list with grouping-only logic (no splitting)...")
+    print("Creating slide list with conditional subheading grouping...")
 
-    # 1. Gom chunks theo heading
-    grouped_content = OrderedDict()
+    heading = None
+    subheading_map = OrderedDict()
+
+    # 1. Tách thông tin từ các chunk
     for chunk in chunks:
-        try:
-            heading, paragraph = chunk.strip().split('\n', 1)
-        except ValueError:
+        lines = chunk.strip().split('\n')
+        if len(lines) < 3:
             continue
 
-        if heading not in grouped_content:
-            grouped_content[heading] = []
-        grouped_content[heading].append(paragraph.strip())
+        # Lấy heading chung từ dòng đầu
+        if heading is None:
+            heading = lines[0].split(':', 1)[-1].strip()
 
-    # 2. Xử lý tạo slides (gộp nếu vừa, giữ nguyên nếu không)
+        subheading = lines[1].strip()
+        content = "\n".join(lines[2:]).strip()
+
+        if subheading not in subheading_map:
+            subheading_map[subheading] = []
+        subheading_map[subheading].append(content)
+
+    # 2. Gộp theo subheading nếu tổng chiều dài <= SLIDE_CHAR_LIMIT
     final_slides = []
-    for heading, paragraphs in grouped_content.items():
-        current_slide = ""
-        current_len = 0
-        buffer = []
+    for subheading, content_list in subheading_map.items():
+        # Gộp thử các đoạn nội dung
+        combined_content = "\n".join(content_list)
+        slide_text = f"{heading}\n\n{subheading}\n\n{combined_content}"
 
-        for para in paragraphs:
-            para_text = para.strip()
-            estimated_len = current_len + len(para_text) + 2  # +2 cho khoảng cách giữa các đoạn
-
-            if estimated_len + len(heading) <= SLIDE_CHAR_LIMIT:
-                buffer.append(para_text)
-                current_len = estimated_len
-            else:
-                # Thêm slide đã tích lũy
-                if buffer:
-                    slide = f"{heading}\n\n" + "\n\n".join(buffer)
-                    final_slides.append(slide)
-                # Bắt đầu slide mới với đoạn này
-                slide = f"{heading}\n\n{para_text}"
-                final_slides.append(slide)
-                buffer = []
-                current_len = 0
-
-        # Thêm phần còn lại trong buffer
-        if buffer:
-            slide = f"{heading}\n\n" + "\n\n".join(buffer)
-            final_slides.append(slide)
-
+        if len(slide_text) <= SLIDE_CHAR_LIMIT:
+            final_slides.append(slide_text)
+        else:
+            # Nếu quá dài, giữ nguyên từng đoạn
+            for content in content_list:
+                single_slide = f"{heading}\n\n{subheading}\n\n{content}"
+                final_slides.append(single_slide)
+    print(f"Created {len(final_slides)} slides from {len(chunks)} chunks.")
     return final_slides
+
 
 
 
