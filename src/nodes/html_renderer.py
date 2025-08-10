@@ -94,10 +94,11 @@ def html_renderer(state: State) -> State:
         print(f"Đã chụp ảnh tại: {png_path}")
         
         # Cập nhật state với đường dẫn
+        if state.get('current_slide_index') > 0:
+            state['previous_image_path'] = state.get('current_image_path', '')
         state['current_html_path'] = html_path
         state['current_image_path'] = png_path
         state['current_html_content'] = html_content
-
 
         # Debug info - kiểm tra xem các key cần thiết có tồn tại không
         if 'temp_debug_dir' in state:

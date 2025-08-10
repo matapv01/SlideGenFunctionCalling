@@ -27,6 +27,7 @@ def finalize_slide(state: State) -> Dict[str, Any]:
         "original_text": state['current_slide_text']
     }
     state['final_slides'].append(final_slide_data)
+    state['slide_chunks'].pop(0)  # Xóa slide đã hoàn tất khỏi hàng đợi
     print(f"Đã thêm slide {idx + 1} vào danh sách final_slides (tổng: {len(state['final_slides'])})")
     
     # Reset retry_count cho slide tiếp theo

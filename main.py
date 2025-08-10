@@ -25,7 +25,7 @@ def route_to_task(state: State) -> str:
     Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
     """
     print("--- Router: route_to_task ---")
-    if len(state.get('slide_chunks', [])) >= 0:
+    if state.get('slide_chunks'):
         # Nếu còn slide, đi đến node chuẩn bị
         return "generator"
     else:
@@ -234,7 +234,7 @@ if __name__ == "__main__":
         os.makedirs("test_output")
 
     # Tạo một file docx giả để test
-    sample_docx_path = os.path.join("test_input", "nature.docx")
+    sample_docx_path = os.path.join("test_input", "test_ttcs - heading.docx")
 
     # Chạy quy trình
     try:

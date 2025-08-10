@@ -3,156 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Contents Slide</title>
+    <title>Elegant Points Slide - Adjusted Layout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Arial, sans-serif;
-            background-color: #f5f5f5;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: Inter, sans-serif;
+            background-color: #0A2342;
+            color: #333333;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
-        }
-        
-        .slide-container {
-            width: 1000px;
-            height: 560px;
-            position: relative;
-            background-color: #ffffff;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
+            padding: 2rem;
         }
-        
-        .left-section {
-            width: 15%;
-            height: 100%;
-            background-color: #a2c4c9;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: relative;
+
+        .slide-container {
+            width: 100%;
+            max-width: 90rem;
+            padding: 3rem 2rem;
+            text-align: center;
         }
-        
-        .vertical-title {
-            font-size: 48px;
-            color: #666666;
-            writing-mode: vertical-rl;
-            transform: rotate(180deg);
-            text-transform: uppercase;
-            letter-spacing: 4px;
-            font-weight: bold;
+
+        .main-title {
+            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-weight: 800;
+            color: #0A2342;
+            margin-bottom: 4rem;
+            line-height: 1.2;
         }
-        
-        .green-square {
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 40px;
-            height: 20px;
-            background-color: #ffffff;
+
+        .points-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 3rem;
         }
-        
-        .main-section {
-            flex: 1;
-            display: flex;
-            position: relative;
-        }
-        
-        .content-area {
-            width: 65%;
-            padding: 40px;
+
+        .point-card {
             display: flex;
             flex-direction: column;
-            justify-content: center;
-        }
-        
-        .image-area {
-            width: 35%;
-            height: 100%;
-            overflow: hidden;
-            display: flex;
             align-items: center;
-            justify-content: center;
+            background-color: #FFFFFF;
+            padding: 3rem 2.5rem;
+            border-radius: 1rem;
+            border: 1px solid #EAE2D6;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+            /* ĐÃ XÓA: transition: transform 0.3s ease, box-shadow 0.3s ease; */
+        }
+
+        /* ĐÃ XÓA: Khối CSS .point-card:hover đã được loại bỏ hoàn toàn. */
+        
+        .point-icon {
+            width: 4rem;
+            height: 4rem;
+            color: #ADD8E6;
         }
         
-        .image-area img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .icon-divider {
+            width: 50px;
+            height: 3px;
+            background-color: #ADD8E6;
+            border-radius: 2px;
+            margin: 1.5rem 0;
+        }
+
+        .point-title {
+            font-size: 2rem;
+            font-weight: 600;
+            color: #0A2342;
+            margin-bottom: 1.5rem;
+            min-height: 5.5rem; 
+        }
+
+        .point-description {
+            font-size: 1.2rem;
+            line-height: 1.7;
         }
         
-        /* Styling for the content */
-        .content-area ul {
-            margin-bottom: 30px;
-            padding-left: 0;
-            list-style-type: none;
+        @media (max-width: 64rem) {
+            .points-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem; }
         }
-        
-        .content-area ul li {
-            font-size: 24px;
-            color: #888888;
-            margin-bottom: 5px;
-            margin-left: 20px;
-        }
-        
-        /* First line of each ul is treated as a title */
-        .content-area ul::before {
-            content: attr(data-title);
-            display: block;
-            font-size: 28px;
-            color: #666666;
-            margin-bottom: 10px;
-            font-style: italic;
-        }
-        
-        /* Add numbers before each ul */
-        .content-area ul {
-            position: relative;
-            padding-left: 50px;
-        }
-        
-        .content-area ul::after {
-            content: counter(item, decimal-leading-zero);
-            counter-increment: item;
-            position: absolute;
-            left: 0;
-            top: 0;
-            font-size: 28px;
-            color: #333333;
-            font-weight: 300;
-            font-style: italic;
+
+        @media (max-width: 48rem) {
+            .points-grid { grid-template-columns: 1fr; }
+            .point-title { min-height: auto; }
         }
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <!-- Left section with vertical title -->
-        <div class="left-section">
-            <div class="green-square"></div>
-            <div class="vertical-title">Môi trường biển</div>
+        <h1 class="main-title">TỔNG QUAN VỀ INNOTECH SOLUTIONS</h1>
+        <div class="points-grid">
+            
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74A7 7 0 0 0 12 2M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9z"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Lĩnh vực hoạt động</h2>
+            <p class="point-description">Phát triển phần mềm theo yêu cầu, tư vấn giải pháp Cloud, và triển khai hệ thống An ninh mạng. Chúng tôi tập trung vào việc tạo ra các sản phẩm đáp ứng chính xác nhu cầu của từng khách hàng.</p>
         </div>
         
-        <!-- Main section with content and image -->
-        <div class="main-section">
-            <div class="content-area">
-                <style>
-                    .content-area {
-                        counter-reset: item;
-                    }
-                </style>
-                <ul>
-  <li><b>Rạn san hô:</b> San hô là ngôi nhà của nhiều loài biển, đang bị đe dọa bởi ô nhiễm.</li>
-  <li><b>Cá voi:</b> Loài động vật lớn nhất hành tinh, đóng vai trò quan trọng trong hệ sinh thái biển.</li>
-  <li><b>Bảo vệ đại dương:</b> Giảm rác thải nhựa và khai thác bền vững để duy trì môi trường biển.</li>
-</ul>
-            </div>
-            
-            <div class="image-area">
-                <img src="Picture2.png" alt="Decorative image">
-            </div>
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8m0-14a6 6 0 1 0 6 6a6 6 0 0 0-6-6m0 10a4 4 0 1 1 4-4a4 4 0 0 1-4 4m0-6a2 2 0 1 0 2 2a2 2 0 0 0-2-2"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Đội ngũ cốt lõi</h2>
+            <p class="point-description">Đội ngũ của chúng tôi bao gồm các kỹ sư phần mềm giàu kinh nghiệm, các chuyên gia tư vấn giải pháp và các nhà quản lý dự án tận tâm, với hơn 10 năm kinh nghiệm trong ngành.</p>
+        </div>
+        
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="m3.5 18.49l6-6.01l4 4L22 6.92L20.59 5.51L13.5 12.5l-4-4l-7.5 7.5z"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Lợi thế cạnh tranh</h2>
+            <p class="point-description">Sự kết hợp giữa chuyên môn kỹ thuật sâu rộng, quy trình làm việc linh hoạt theo mô hình Agile, và cam kết hỗ trợ khách hàng tận tình là những yếu tố tạo nên sự khác biệt của Innovatech.</p>
+        </div>
+        
+        <div class="point-card">
+            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8m0 6a2 2 0 1 1 0-4a2 2 0 0 1 0 4m6.6-4.95l-.71-.71l-1.42 1.42l.71.71c.39.39.39 1.02 0 1.41l-1.42 1.42l-.71.71l1.42 1.42l.71-.71l1.42-1.42l-.71-.71c-.39-.39-.39-1.02 0-1.41M5.4 7.05L4 5.64l.71-.71l1.42 1.42l-.71.71c-.39.39-1.02.39-1.41 0l-1.42-1.42l-.71-.71L4 5.64M18.36 5.64l.71.71l1.42-1.42l-.71-.71a.996.996 0 0 0-1.41 0l-1.42 1.42l-.71.71l1.42 1.42zm-12.72 12.72l-.71-.71l-1.42 1.42l.71.71c.39.39.39 1.02 0 1.41l-1.42 1.42l-.71.71l1.42 1.42l.71-.71l1.42-1.42l-.71-.71c-.39-.39-.39-1.02 0-1.41Z"></path></svg>
+            <div class="icon-divider"></div>
+            <h2 class="point-title">Tiềm năng tăng trưởng</h2>
+            <p class="point-description">Thị trường SMEs tại Việt Nam đang phát triển nhanh chóng và có nhu cầu lớn về số hóa, mở ra cơ hội tăng trưởng đáng kể cho các dịch vụ của chúng tôi.</p>
+        </div>
+        
         </div>
     </div>
 </body>

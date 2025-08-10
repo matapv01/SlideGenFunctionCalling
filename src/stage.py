@@ -20,6 +20,7 @@ class State(TypedDict):
 
     # Trạng thái vòng lặp
     current_slide_index: int
+    length_slide_chunks: int  # Tổng số slide chunks
     current_slide_text: str
     current_tool_call: Optional[Dict]
     current_html_content: Optional[str]
@@ -27,7 +28,8 @@ class State(TypedDict):
     current_image_path: Optional[str]
     retry_count: int
     is_redundant: bool
-    
+    previous_image_path: Optional[str]  # Đường dẫn ảnh trước đó
+
     # Context giữa các slide
     previous_slide_context: Optional[slide_context]
 

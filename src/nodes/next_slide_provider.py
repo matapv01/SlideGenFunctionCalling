@@ -10,7 +10,7 @@ def provide_next_slide(state: State) -> State:
     print("\n---------------- Executing Node: prepare_next_slide ----------------")
     if state['slide_chunks']:
         # Lấy slide tiếp theo từ hàng đợi
-        next_chunk = state['slide_chunks'].pop(0)
+        next_chunk = state['slide_chunks'][0]
         state['current_slide_text'] = next_chunk
         state['current_slide_index'] += 1
         # Reset retry_count cho slide mới

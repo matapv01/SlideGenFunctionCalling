@@ -107,6 +107,10 @@ class Evaluation(BaseModel):
 
 def image_to_base64(image_path: str) -> str:
     """Convert image file to base64 string."""
+    if image_path is None:
+        logging.warning("Image path is None, cannot convert to base64")
+        return ""
+        
     try:
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode('utf-8')
@@ -126,14 +130,15 @@ def slide_evaluator(state: State) -> State:
 
     # Get current tool call and image path
     recent_function_call = state.get('current_tool_call', None)
-    image_path = state.get('current_image_path', '')
+    current_image_path = state.get('current_image_path', None)
+    previous_image_path = state.get('previous_image_path', None)
 
     # Initialize default values
     state['vlm_feedback'] = "No feedback provided."
     state['vlm_decision'] = "deny"
 
     # Validate required inputs
-    if not recent_function_call or not image_path:
+    if not recent_function_call or not current_image_path:
         print("Insufficient function call or image for evaluation. Denying.")
         state['vlm_feedback'] = "Cannot evaluate due to missing HTML code or slide image."
         state['retry_count'] = retry_count + 1
@@ -151,15 +156,26 @@ def slide_evaluator(state: State) -> State:
         ]
 
         # Add image if available
-        base64_image = image_to_base64(image_path)
-        if base64_image:
+        current_base64_image = image_to_base64(current_image_path)
+        if current_base64_image:
             message_content.append({
                 "type": "image_url",
-                "image_url": {"url": f"data:image/png;base64,{base64_image}"}
+                "image_url": {"url": f"data:image/png;base64,{current_base64_image}"},
+                "description": "current slide image"
             })
         else:
-            print("Warning: Could not encode image to base64")
-        
+            print("Warning: Could not encode current slide image to base64")
+
+        previous_base64_image = image_to_base64(previous_image_path)
+        if previous_base64_image:
+            message_content.append({
+                "type": "image_url",
+                "image_url": {"url": f"data:image/png;base64,{previous_base64_image}"},
+                "description": "previous slide image"
+            })
+        else:
+            print("Warning: Could not encode previous slide image to base64")
+
         vlm_message = HumanMessage(content=message_content)
 
         # Use structured output with the LLM

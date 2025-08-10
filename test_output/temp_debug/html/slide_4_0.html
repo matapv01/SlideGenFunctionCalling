@@ -3,138 +3,279 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three Column Slide</title>
+    <title>TẦM NHÌN CỦA CHÚNG TÔI & SỨ MỆNH CỦA CHÚNG TÔI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        body, html {
             margin: 0;
             padding: 0;
-            font-family: Roboto, sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            height: 100%;
+            width: 100%;
+            font-family: Inter, sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #e8f4f8 0%, #d1e7dd 100%);
         }
         
         .slide-container {
-            width: 62.5rem; /* THAY ĐỔI: 1000px -> 62.5rem */
-            height: 35rem; /* THAY ĐỔI: 560px -> 35rem */
+            width: 100%;
+            height: 100vh;
+            display: flex;
             position: relative;
-            background-color: #F8F8F8;
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: 2.5rem; /* THAY ĐỔI: 40px -> 2.5rem */
+            padding: 40px;
             box-sizing: border-box;
         }
         
-        .title-section {
-            display: flex;
-            align-items: center;
-            margin-bottom: 3.75rem; /* THAY ĐỔI: 60px -> 3.75rem */
+        .slide-border {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 2px dashed #1a4b8c;
+            opacity: 0.4;
+            pointer-events: none;
+            z-index: 5;
         }
         
-        .title-accent {
-            width: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            height: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            background-color: #FFFFFF;
-            margin-right: 0.9375rem; /* THAY ĐỔI: 15px -> 0.9375rem */
-        }
-        
-        .main-title {
-            font-size: 3rem;
-            color: #333333;
-            font-weight: normal;
-            font-style: italic;
-            margin: 0;
-        }
-        
-        .content-layout {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: calc(100% - 7.5rem); /* THAY ĐỔI: 120px -> 7.5rem */
-        }
-        
-        .content-box {
-            width: 31%;
-            height: auto;
-            background-color: #FFFFFF;
+        .section {
+            width: 50%;
             position: relative;
+            padding: 60px 40px;
+            color: #FFFFFF;
+            overflow: hidden;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 3.75rem 1.25rem 1.25rem; /* THAY ĐỔI: 60px 20px 20px */
-            box-sizing: border-box;
+        }
+        
+        .vision-section {
+            background-color: #0A2342;
+            margin-right: 10px;
+        }
+        
+        .mission-section {
+            background-color: #0A2342;
+            margin-left: 10px;
+        }
+        
+        .section-title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 40px;
             text-align: center;
+            letter-spacing: 0.1em;
+            z-index: 10;
+            position: relative;
         }
         
-        .icon-circle {
-            width: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
-            height: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
-            border-radius: 50%;
-            background-color: #ffffff;
-            position: absolute;
-            top: -2.1875rem; /* THAY ĐỔI: -35px -> -2.1875rem */
+        .content-point {
             display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* 4px 6px */
+            align-items: flex-start;
+            margin-bottom: 30px;
+            position: relative;
+            z-index: 10;
         }
         
-        .icon-circle svg {
-            stroke: #007bff;
-        }
-        
-        .subtitle {
+        .point-number {
             font-size: 1.5rem;
-            color: #555555;
-            margin: 0 0 0.9375rem 0; /* THAY ĐỔI: 15px -> 0.9375rem */
-            font-weight: bold;
+            font-weight: 700;
+            margin-right: 20px;
+            min-width: 40px;
+            opacity: 0.9;
         }
         
-        .content {
-            font-size: 1.15rem;
-            color: #777777;
-            margin: 0;
-            line-height: 1.5;
+        .point-text {
+            font-size: 1rem;
+            line-height: 1.6;
+            flex: 1;
         }
+        
+        /* Background numbers */
+        .bg-number {
+            position: absolute;
+            font-size: 8rem;
+            font-weight: 900;
+            z-index: 1;
+            pointer-events: none;
+            user-select: none;
+        }
+        
+        .vision-section .bg-number {
+            color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .mission-section .bg-number {
+            color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .bg-number-1 {
+            top: 20%;
+            right: -20px;
+        }
+        
+        .bg-number-2 {
+            bottom: 20%;
+            left: -20px;
+        }
+        
+        .bg-number-3 {
+            top: 50%;
+            right: -30px;
+            transform: translateY(-50%);
+        }
+        
+        .bg-number-4 {
+            bottom: 10%;
+            right: -25px;
+        }
+        
+        /* Geometric pattern */
+        .geometric-pattern {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            opacity: 0.1;
+            z-index: 2;
+            background-image: 
+                linear-gradient(45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%),
+                linear-gradient(-45deg, transparent 40%, rgba(255,255,255,0.1) 50%, transparent 60%);
+            background-size: 60px 60px, 80px 80px;
+            background-position: 0 0, 30px 30px;
+        }
+        
+        /* Decorative triangles */
+        .triangle {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0.1;
+            z-index: 3;
+        }
+        
+        .triangle-1 {
+            border-left: 60px solid transparent;
+            border-right: 60px solid transparent;
+            border-bottom: 100px solid rgba(255, 255, 255, 0.2);
+            top: 10%;
+            left: 10%;
+            transform: rotate(15deg);
+        }
+        
+        .triangle-2 {
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 80px solid rgba(255, 255, 255, 0.2);
+            bottom: 15%;
+            right: 15%;
+            transform: rotate(-25deg);
+        }
+        
+        @media (max-width: 768px) {
+            .slide-container {
+                flex-direction: column;
+                padding: 20px;
+            }
+            
+            .section {
+                width: 100%;
+                height: 50%;
+                padding: 30px 20px;
+            }
+            
+            .vision-section {
+                margin-right: 0;
+                margin-bottom: 10px;
+            }
+            
+            .mission-section {
+                margin-left: 0;
+                margin-top: 10px;
+            }
+            
+            .section-title {
+                font-size: 2.5rem;
+                margin-bottom: 20px;
+            }
+            
+            .point-text {
+                font-size: 0.9rem;
+            }
+            
+            .bg-number {
+                font-size: 4rem;
+            }
+            
+            .content-point {
+                margin-bottom: 15px;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .section-title {
+                font-size: 2rem;
+            }
+            
+            .point-text {
+                font-size: 0.8rem;
+            }
+            
+            .point-number {
+                font-size: 1.2rem;
+                margin-right: 15px;
+                min-width: 30px;
+            }
+        }
+        
+        
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">Núi đồi</h1>
+        <!-- Border frame -->
+        <div class="slide-border"></div>
+        
+        <!-- Vision Section -->
+        <div class="section vision-section">
+            <div class="geometric-pattern"></div>
+            <div class="bg-number bg-number-1">01</div><div class="bg-number bg-number-2">02</div>
+            <div class="triangle triangle-1"></div>
+            
+            <h1 class="section-title">TẦM NHÌN CỦA CHÚNG TÔI</h1>
+            <div class="content-area">
+                
+        <div class="content-point">
+            <div class="point-number">01</div>
+            <div class="point-text">Trở thành đối tác công nghệ đáng tin cậy hàng đầu cho các doanh nghiệp vừa và nhỏ tại Việt Nam, thúc đẩy sự thành công của họ thông qua các giải pháp công nghệ đổi mới.</div>
         </div>
         
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Content Box 1 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-mountain"><path d="m8 3 4 8 5-5 5 15H2L8 3z"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Đỉnh núi cao</b></h3>
-                <p class="content"><ul><li>Nguồn cảm hứng và thử thách cho con người</li><li>Ví dụ: Fansipan</li></ul></p>
+        <div class="content-point">
+            <div class="point-number">02</div>
+            <div class="point-text">Xây dựng một môi trường làm việc sáng tạo, nơi các tài năng công nghệ có thể phát triển và đóng góp vào sự phát triển chung của xã hội.</div>
+        </div>
+        
             </div>
+        </div>
+        
+        <!-- Mission Section -->
+        <div class="section mission-section">
+            <div class="geometric-pattern"></div>
+            <div class="bg-number bg-number-1">01</div><div class="bg-number bg-number-2">02</div>
+            <div class="triangle triangle-2"></div>
             
-            <!-- Content Box 2 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bear"><path d="M6.1 12.2C5.3 10.9 5 9.4 5 8a5 5 0 0 1 10 0c0 1.4-.3 2.9-1.1 4.2L12 17l-5.9-4.8Z"/><path d="M10 5a2 2 0 1 0-4 0"/><path d="M14 5a2 2 0 1 1 4 0"/><path d="M12 17v.2c0 1.3-.8 2.5-2 3.2l-1 .6c-1.1.7-2.4 1.2-3.8 1H3c-1.1 0-2-.9-2-2V19c0-1.1.9-2 2-2h1c1.3 0 2.5-.8 3.2-2l.6-1c.7-1.1 1.2-2.4 1-3.8V9c0-1.1.9-2 2-2h1c1.1 0 2 .9 2 2v.2c0 1.3.8 2.5 2 3.2l1 .6c1.1.7 2.4 1.2 3.8 1H21c1.1 0 2 .9 2 2v2c0 1.1-.9 2-2 2h-1c-1.3 0-2.5-.8-3.2-2l-.6-1c-.7-1.1-1.2-2.4-1-3.8z"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Động vật núi</b></h3>
-                <p class="content"><ul><li>Hệ sinh thái đa dạng</li><li>Nhiều loài đặc hữu</li><li>Thích nghi với điều kiện khắc nghiệt</li></ul></p>
-            </div>
-            
-            <!-- Content Box 3 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tent"><path d="M10 13L3.35 4.93a.5.5 0 0 0-.87.48l1.84 10.74a1 1 0 0 1-.9 1.1H2a1 1 0 0 0-1 1v2a1 1 0 0 0 1 1h20a1 1 0 0 0 1-1v-2a1 1 0 0 0-1-1h-2.42a1 1 0 0 1-.9-1.1L21.52 5.4a.5.5 0 0 0-.87-.48L14 13"/><path d="M10 13 12 22l2-9"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Du lịch sinh thái</b></h3>
-                <p class="content"><ul><li>Du lịch bền vững</li><li>Giúp bảo tồn vẻ đẹp tự nhiên</li></ul></p>
+            <h1 class="section-title">SỨ MỆNH CỦA CHÚNG TÔI</h1>
+            <div class="content-area">
+                
+        <div class="content-point">
+            <div class="point-number">01</div>
+            <div class="point-text">Cung cấp các giải pháp phần mềm và dịch vụ công nghệ chất lượng cao, tùy chỉnh theo nhu cầu đặc thù của từng doanh nghiệp, giúp tối ưu hóa hoạt động và nâng cao hiệu quả kinh doanh.</div>
+        </div>
+        
+        <div class="content-point">
+            <div class="point-number">02</div>
+            <div class="point-text">Đồng hành cùng khách hàng trong suốt quá trình chuyển đổi số, từ tư vấn ban đầu đến triển khai và hỗ trợ sau triển khai, đảm bảo sự hài lòng và thành công của khách hàng.</div>
+        </div>
+        
             </div>
         </div>
     </div>

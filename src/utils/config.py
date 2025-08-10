@@ -19,9 +19,9 @@ def setup_environment():
     """Load environment variables and set API keys and return a dictionary of them."""
     load_dotenv()
     api_keys = {
-        "GEMINI_API_KEY": os.getenv('GEMINI_API_KEY'),
         "AQUANG1": os.getenv('AQUANG1'),
         "AQUANG2": os.getenv('AQUANG2'),
+        "GEMINI_API_KEY": os.getenv('GEMINI_API_KEY'),
         "MATA01": os.getenv('MATA01')
     }
     if "GEMINI_API_KEY" not in os.environ:

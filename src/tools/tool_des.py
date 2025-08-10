@@ -1952,9 +1952,7 @@ def execute_tool(tool_call: dict):
             result = TOOL_MAP[name].invoke(args)
             return str(result)
         except Exception as e:
-            return f"Error executing {name}: {str(e)}"
-    else:
-        return f"Tool {name} not found"
-
-# Successfully converted 88 tools with complete parameter schemas
-print(f"✅ Loaded {len(ALL_TOOLS)} slide generation tools with full parameter definitions")
+            print(f"Error executing tool '{name}': {e}")
+            return None
+        print(f"Tool '{name}' not found.")
+        return None

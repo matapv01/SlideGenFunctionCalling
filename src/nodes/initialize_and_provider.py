@@ -104,7 +104,8 @@ def create_slide_list(chunks: List[str]) -> List[str]:
             for content in content_list:
                 single_slide = f"{heading}\n\n{subheading}\n\n{content}"
                 final_slides.append(single_slide)
-    print(f"Created {len(final_slides)} slides from {len(chunks)} chunks.")
+    # final_slides.append("Thank you!")
+    print(f"Created {len(final_slides)} slides from {len(chunks)} chunks (including 'Thank you!')")
     return final_slides
 
 
@@ -130,12 +131,13 @@ def initialize_and_provide(state: State) -> Dict[str, Any]: # Renamed back based
     os.makedirs(os.path.join(temp_dir, "html"), exist_ok=True)
     os.makedirs(os.path.join(temp_dir, "png"), exist_ok=True)
     os.makedirs(os.path.join(temp_dir, "debug"), exist_ok=True)
+    
+    state['length_slide_chunks'] = len(slide_list)
+    state['slide_chunks'] = slide_list
+    state['current_slide_index'] = -1  # Bắt đầu từ -1 để router tăng lên 0
+    state['final_slides'] = []
+    state['all_debug_info'] = []
+    state['previous_slide_context'] = None
+    state['temp_dir'] = temp_dir
 
-    return {
-        "slide_chunks": slide_list,
-        "current_slide_index": -1, # Bắt đầu từ -1 để router tăng lên 0
-        "final_slides": [],
-        "all_debug_info": [],
-        "previous_slide_context": None,
-        "temp_dir": temp_dir,
-    }
+    return state

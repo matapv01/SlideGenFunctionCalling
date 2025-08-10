@@ -3,139 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three Column Slide</title>
+    <title>GIỚI THIỆU DỰ ÁN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body {
+        body, html {
             margin: 0;
             padding: 0;
-            font-family: Roboto, sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            height: 100%;
+            width: 100%;
+            font-family: Inter, sans-serif;
+            overflow: hidden;
         }
         
         .slide-container {
-            width: 62.5rem; /* THAY ĐỔI: 1000px -> 62.5rem */
-            height: 35rem; /* THAY ĐỔI: 560px -> 35rem */
-            position: relative;
-            background-color: #F8F8F8;
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: 2.5rem; /* THAY ĐỔI: 40px -> 2.5rem */
-            box-sizing: border-box;
-        }
-        
-        .title-section {
-            display: flex;
-            align-items: center;
-            margin-bottom: 3.75rem; /* THAY ĐỔI: 60px -> 3.75rem */
-        }
-        
-        .title-accent {
-            width: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            height: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            background-color: #FFFFFF;
-            margin-right: 0.9375rem; /* THAY ĐỔI: 15px -> 0.9375rem */
-        }
-        
-        .main-title {
-            font-size: 3rem;
-            color: #333333;
-            font-weight: normal;
-            font-style: italic;
-            margin: 0;
-        }
-        
-        .content-layout {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: calc(100% - 7.5rem); /* THAY ĐỔI: 120px -> 7.5rem */
-        }
-        
-        .content-box {
-            width: 31%;
-            height: auto;
-            background-color: #FFFFFF;
-            position: relative;
+            width: 100%;
+            height: 100vh;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 3.75rem 1.25rem 1.25rem; /* THAY ĐỔI: 60px 20px 20px */
-            box-sizing: border-box;
-            text-align: center;
-        }
-        
-        .icon-circle {
-            width: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
-            height: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
-            border-radius: 50%;
-            background-color: #ffffff;
-            position: absolute;
-            top: -2.1875rem; /* THAY ĐỔI: -35px -> -2.1875rem */
-            display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* 4px 6px */
+            background: linear-gradient(135deg, #3F51B5 0%, #2196F3 100%);
+            position: relative;
+            color: #FFFFFF;
+            padding: 60px;
+            box-sizing: border-box;
         }
         
-        .icon-circle svg {
-            stroke: #4CAF50;
+        .content-wrapper {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
+            position: relative;
+            z-index: 10;
+            padding: 80px 60px;
+            border: none;
+            border-radius: 8px;
         }
         
-        .subtitle {
-            font-size: 1.5rem;
-            color: #555555;
-            margin: 0 0 0.9375rem 0; /* THAY ĐỔI: 15px -> 0.9375rem */
-            font-weight: bold;
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: 0.1em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
         .content {
-            font-size: 1rem;
-            color: #777777;
-            margin: 0;
-            line-height: 1.5;
+            font-size: 1.6rem;
+            line-height: 1.6;
+            font-weight: 300;
+            text-align: center;
+            max-width: 90%;
+            margin: 0 auto;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
+        
+        /* Decorative triangles */
+        .triangle {
+            position: absolute;
+            opacity: 0;
+            z-index: 1;
+        }
+        
+        .triangle-top-left {
+            top: 5%;
+            left: 5%;
+            width: 0;
+            height: 0;
+            border-left: 120px solid transparent;
+            border-right: 120px solid transparent;
+            border-bottom: 200px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(15deg);
+        }
+        
+        .triangle-top-right {
+            top: 8%;
+            right: 8%;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 180px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-25deg);
+        }
+        
+        .triangle-bottom-left {
+            bottom: 10%;
+            left: 3%;
+            width: 0;
+            height: 0;
+            border-left: 80px solid transparent;
+            border-right: 80px solid transparent;
+            border-bottom: 140px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+        
+        .triangle-bottom-right {
+            bottom: 5%;
+            right: 5%;
+            width: 0;
+            height: 0;
+            border-left: 110px solid transparent;
+            border-right: 110px solid transparent;
+            border-bottom: 190px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-35deg);
+        }
+        
+        /* Additional geometric shapes */
+        .geometric-shape {
+            position: absolute;
+            opacity: 0;
+            z-index: 2;
+        }
+        
+        .shape-1 {
+            top: 15%;
+            left: 15%;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            transform: rotate(45deg);
+        }
+        
+        .shape-2 {
+            top: 20%;
+            right: 20%;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+        
+        .shape-3 {
+            bottom: 25%;
+            left: 20%;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 30px;
+            }
+            
+            .content-wrapper {
+                padding: 40px 30px;
+            }
+            
+            .title {
+                font-size: 2.5rem;
+                margin-bottom: 30px;
+            }
+            
+            .content {
+                font-size: 1.1rem;
+                max-width: 100%;
+            }
+            
+            .triangle {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2rem;
+                letter-spacing: 0.05em;
+            }
+            
+            .content {
+                font-size: 1rem;
+                line-height: 1.5;
+            }
+        }
+        
+        
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">Môi trường xanh</h1>
-        </div>
+        <!-- Decorative triangles -->
+        <div class="triangle triangle-top-left"></div>
+        <div class="triangle triangle-top-right"></div>
+        <div class="triangle triangle-bottom-left"></div>
+        <div class="triangle triangle-bottom-right"></div>
         
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Content Box 1 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tree-pine"><path d="M10 19h4"/><path d="M12 15v4"/><path d="M12 12v3"/><path d="M17.6 15.6L22 13L12 2L2 13l4.4 2.6L9 12l3 3l3-3z"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Rừng nhiệt đới</b></h3>
-                <p class="content"><ul><li>Lá phổi xanh của Trái Đất</li><li>Cung cấp oxy thiết yếu</li><li>Môi trường sống của hàng triệu loài</li></ul></p>
-            </div>
-            
-            <!-- Content Box 2 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-tree-deciduous"><path d="M18 20a2 2 0 0 0 2-2V8a2 2 0 0 0-2-2h-3.9a2 2 0 0 1-1.69-.9L10 2l-2 3.5A2 2 0 0 1 4.9 6H2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h16Z"/><path d="M12 22v-2"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Cây cổ thụ</b></h3>
-                <p class="content"><ul><li>Biểu tượng sức sống</li><li>Đại diện sự bền vững</li></ul></p>
-            </div>
-            
-            <!-- Content Box 3 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-shield"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Bảo vệ rừng</b></h3>
-                <p class="content"><ul><li>Trồng rừng</li><li>Chống phá rừng</li><li>Duy trì cân bằng sinh thái</li></ul></p>
-            </div>
+        <!-- Additional geometric shapes -->
+        <div class="geometric-shape shape-1"></div>
+        <div class="geometric-shape shape-2"></div>
+        <div class="geometric-shape shape-3"></div>
+        
+        <!-- Main content -->
+        <div class="content-wrapper">
+            <h1 class="title">GIỚI THIỆU DỰ ÁN</h1>
+            <div class="content"><ul><li><b>Mục tiêu:</b> Cung cấp giải pháp phần mềm tùy chỉnh & tư vấn CNTT cho SMEs.</li><li><b>Bối cảnh:</b> Chuyển đổi số thúc đẩy nhu cầu công nghệ hiệu quả, dễ tiếp cận cho SMEs.</li><li><b>Kế hoạch này trình bày:</b><ul><li>Mô hình hoạt động & chiến lược thị trường.</li><li>Mục tiêu phát triển & dự phóng tài chính (5 năm).</li></ul></li><li><b>Niềm tin:</b> Tiềm năng tăng trưởng vượt trội, tạo giá trị bền vững cho khách hàng & nhà đầu tư.</li></ul></div>
         </div>
     </div>
 </body>

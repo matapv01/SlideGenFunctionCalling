@@ -3,123 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geometric Content Slide - Bolder Text</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <!-- FIX: Imported bolder font weights (600, 800) -->
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>GIỚI THIỆU DỰ ÁN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        html { font-size: 16px; }
         body, html {
-            height: 100vh;
-            width: 100vw;
-            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: Inter, sans-serif;
             overflow: hidden;
-            background-color: #1a202c;
-            color: #e2e8f0;
         }
-
+        
         .slide-container {
-            width: 100%; height: 100%;
+            width: 100%;
+            height: 100vh;
             display: flex;
+            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            justify-content: flex-start;
+            background: linear-gradient(135deg, #F8F8F8 0%, #2a6cb7 100%);
             position: relative;
-            padding: 5rem 8rem;
+            color: #333333;
+            padding: 60px;
+            box-sizing: border-box;
         }
-
-        .content-area {
+        
+        .content-wrapper {
+            max-width: 800px;
+            width: 100%;
+            text-align: center;
             position: relative;
             z-index: 10;
-            max-width: 65ch;
-        }
-
-        .slide-title {
-            font-size: 2.75rem;
-            /* FIX: Title is now Extra-Bold */
-            font-weight: 800;
-            margin-bottom: 3rem;
+            padding: 80px 60px;
+            border: none;
+            border-radius: 8px;
         }
         
-        .content-list {
-            list-style: none;
-            margin-bottom: 3rem;
-        }
-
-        .content-list li {
-            font-size: 1.75rem;
-            line-height: 1.6;
-            margin-bottom: 1rem;
-            padding-left: 2.5rem;
-            position: relative;
-            /* FIX: Body text is now Semi-Bold */
-            font-weight: 600;
-        }
-
-        .content-list li::before {
-            content: '>';
-            position: absolute;
-            left: 0;
-            top: 5px;
-            color: #48bb78;
-            font-weight: 800; /* Made bullet heavier to match text */
+        .title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: 0.1em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
         
-        .concluding-text {
-            font-size: 1.75rem;
+        .content {
+            font-size: 1.2rem;
             line-height: 1.6;
-            /* FIX: Body text is now Semi-Bold */
-            font-weight: 600;
+            font-weight: 300;
+            text-align: center;
+            max-width: 90%;
+            margin: 0 auto;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
         }
-
-        /* Shapes are unchanged from the previous fix */
-        .shape-cluster {
+        
+        /* Decorative triangles */
+        .triangle {
             position: absolute;
-            pointer-events: none;
+            opacity: 0;
             z-index: 1;
-            transform: scale(0.85); 
         }
-        .shape { position: absolute; border-radius: 8px; }
-        .top-right { top: 5rem; right: 5rem; width: 25rem; height: 20rem; }
-        .shape-tr-1 { width: 14rem; height: 14rem; background-color: #1E3A8A; opacity: 0.6; top: 0; right: 8rem; transform: rotate(15deg); }
-        .shape-tr-2 { width: 15rem; height: 15rem; background-color: #34D399; opacity: 0.7; top: 2rem; right: 0; transform: rotate(25deg); }
-        .shape-tr-3 { width: 13rem; height: 13rem; background-color: #6366F1; opacity: 0.6; top: 8rem; right: 10rem; transform: rotate(35deg); }
-        .shape-tr-4 { width: 12rem; height: 12rem; background: linear-gradient(45deg, #F59E0B, #FBBF24); opacity: 0.8; top: 12rem; right: 2rem; transform: rotate(10deg); }
-        .bottom-left { bottom: 3rem; left: -5rem; width: 25rem; height: 20rem; }
-        .shape-bl-1 { width: 12rem; height: 12rem; background-color: #4F46E5; opacity: 0.5; bottom: 0; left: 10rem; transform: rotate(-25deg); }
-        .shape-bl-2 { width: 14rem; height: 14rem; background-color: #10B981; opacity: 0.4; bottom: 8rem; left: 2rem; transform: rotate(-35deg); }
-        .shape-bl-3 { width: 16rem; height: 16rem; background: linear-gradient(45deg, #EF4444, #F97316); opacity: 0.7; bottom: 0; left: 0; transform: rotate(-15deg); }
         
-        @media (max-width: 96rem) { .slide-container { padding: 4rem; } }
-        @media (max-width: 64rem) {
-            .slide-title { font-size: 2.25rem; }
-            .content-list li, .concluding-text { font-size: 1.4rem; }
-            .shape-cluster { transform: scale(0.7); }
+        .triangle-top-left {
+            top: 5%;
+            left: 5%;
+            width: 0;
+            height: 0;
+            border-left: 120px solid transparent;
+            border-right: 120px solid transparent;
+            border-bottom: 200px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(15deg);
         }
-         @media (max-width: 48rem) {
-            .shape-cluster { display: none; }
-            .slide-container { justify-content: center; text-align: center; }
+        
+        .triangle-top-right {
+            top: 8%;
+            right: 8%;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 180px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-25deg);
         }
+        
+        .triangle-bottom-left {
+            bottom: 10%;
+            left: 3%;
+            width: 0;
+            height: 0;
+            border-left: 80px solid transparent;
+            border-right: 80px solid transparent;
+            border-bottom: 140px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+        
+        .triangle-bottom-right {
+            bottom: 5%;
+            right: 5%;
+            width: 0;
+            height: 0;
+            border-left: 110px solid transparent;
+            border-right: 110px solid transparent;
+            border-bottom: 190px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-35deg);
+        }
+        
+        /* Additional geometric shapes */
+        .geometric-shape {
+            position: absolute;
+            opacity: 0;
+            z-index: 2;
+        }
+        
+        .shape-1 {
+            top: 15%;
+            left: 15%;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            transform: rotate(45deg);
+        }
+        
+        .shape-2 {
+            top: 20%;
+            right: 20%;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+        
+        .shape-3 {
+            bottom: 25%;
+            left: 20%;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 30px;
+            }
+            
+            .content-wrapper {
+                padding: 40px 30px;
+            }
+            
+            .title {
+                font-size: 2.5rem;
+                margin-bottom: 30px;
+            }
+            
+            .content {
+                font-size: 1.1rem;
+                max-width: 100%;
+            }
+            
+            .triangle {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title {
+                font-size: 2rem;
+                letter-spacing: 0.05em;
+            }
+            
+            .content {
+                font-size: 1rem;
+                line-height: 1.5;
+            }
+        }
+        
+        
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <div class="shape-cluster top-right">
-            <div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div><div class="shape shape-tr-4"></div>
-        </div>
-        <div class="shape-cluster bottom-left">
-             <div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div>
-        </div>
-        <div class="content-area">
-            <h2 class="slide-title">Môi trường xanh</h2>
-            <ul class="content-list">
-                <li>Rừng nhiệt đới: Lá phổi xanh, cung cấp oxy, môi trường sống đa dạng.</li>
-<li>Cây cổ thụ: Biểu tượng của sức sống và sự bền vững.</li>
-<li>Bảo vệ rừng: Trồng rừng, chống phá rừng, duy trì cân bằng sinh thái.</li>
-
-            </ul>
-            <p class="concluding-text"><b>Bảo vệ môi trường xanh là trách nhiệm của mỗi chúng ta.</b></p>
+        <!-- Decorative triangles -->
+        <div class="triangle triangle-top-left"></div>
+        <div class="triangle triangle-top-right"></div>
+        <div class="triangle triangle-bottom-left"></div>
+        <div class="triangle triangle-bottom-right"></div>
+        
+        <!-- Additional geometric shapes -->
+        <div class="geometric-shape shape-1"></div>
+        <div class="geometric-shape shape-2"></div>
+        <div class="geometric-shape shape-3"></div>
+        
+        <!-- Main content -->
+        <div class="content-wrapper">
+            <h1 class="title">GIỚI THIỆU DỰ ÁN</h1>
+            <div class="content"><ul><li><b>Mục tiêu:</b> Cung cấp giải pháp phần mềm tùy chỉnh và tư vấn CNTT tiên tiến cho SMEs.</li><li><b>Bối cảnh:</b> SMEs cần công cụ công nghệ hiệu quả, dễ tiếp cận để nâng cao năng lực cạnh tranh trong chuyển đổi số.</li><li><b>Nội dung kế hoạch:</b> Trình bày chi tiết mô hình hoạt động, chiến lược thị trường, mục tiêu phát triển và dự phóng tài chính của Innovatech Solutions (5 năm).</li><li><b>Niềm tin:</b> Tiềm năng tăng trưởng vượt trội và tạo giá trị bền vững cho khách hàng và nhà đầu tư.</li></ul></div>
         </div>
     </div>
 </body>

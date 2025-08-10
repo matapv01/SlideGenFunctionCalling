@@ -3,130 +3,130 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elegant Points Slide - Adjusted Layout</title>
+    <title>Grid Content Slide - Faded Shapes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
         body, html {
             height: 100vh;
             width: 100vw;
-            font-family: Roboto, sans-serif;
-            background-color: #F8F8F8;
-            color: #444444;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+            font-family: Inter, sans-serif;
             overflow: hidden;
-            padding: 2rem;
+            background-color: #0A2342;
+            color: #FFFFFF;
         }
 
         .slide-container {
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            padding: 4rem;
+        }
+
+        .content-wrapper {
             width: 100%;
             max-width: 90rem;
-            padding: 3rem 2rem;
-            text-align: center;
+            position: relative;
+            z-index: 10;
+            padding: 0 4rem;
         }
-
+        
         .main-title {
-            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-size: 2.75rem;
             font-weight: 800;
-            color: #333333;
             margin-bottom: 4rem;
-            line-height: 1.2;
         }
 
-        .points-grid {
+        .content-grid {
             display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 3rem;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem 4rem;
         }
 
-        .point-card {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            background-color: #FFFFFF;
-            padding: 3rem 2.5rem;
-            border-radius: 1rem;
-            border: 1px solid #EAE2D6;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
-            /* ĐÃ XÓA: transition: transform 0.3s ease, box-shadow 0.3s ease; */
+        .item-title {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 0.75rem;
         }
 
-        /* ĐÃ XÓA: Khối CSS .point-card:hover đã được loại bỏ hoàn toàn. */
-        
-        .point-icon {
-            width: 4rem;
-            height: 4rem;
-            color: #007bff;
-        }
-        
-        .icon-divider {
-            width: 50px;
-            height: 3px;
-            background-color: #007bff;
-            border-radius: 2px;
-            margin: 1.5rem 0;
-        }
-
-        .point-title {
-            font-size: 2rem;
+        .item-description {
+            font-size: 1.25rem;
             font-weight: 600;
-            color: #333333;
-            margin-bottom: 1.5rem;
-            min-height: 5.5rem; 
+            line-height: 1.6;
         }
 
-        .point-description {
-            font-size: 1.2rem;
-            line-height: 1.7;
-        }
-        
-        @media (max-width: 64rem) {
-            .points-grid { grid-template-columns: repeat(2, 1fr); gap: 3rem; }
-        }
+        /* FIX: Opacity values significantly reduced for a more subtle effect */
+        .shape-cluster { position: absolute; pointer-events: none; z-index: 1; transform: scale(0.85); }
+        .shape { position: absolute; border-radius: 8px; }
+        .top-right { top: 5rem; right: 5rem; width: 25rem; height: 20rem; }
+        .shape-tr-1 { width: 14rem; height: 14rem; background-color: #1E3A8A; opacity: 0.3; top: 0; right: 8rem; transform: rotate(15deg); }
+        .shape-tr-2 { width: 15rem; height: 15rem; background-color: #34D399; opacity: 0.4; top: 2rem; right: 0; transform: rotate(25deg); }
+        .shape-tr-3 { width: 13rem; height: 13rem; background-color: #6366F1; opacity: 0.3; top: 8rem; right: 10rem; transform: rotate(35deg); }
+        .shape-tr-4 { width: 12rem; height: 12rem; background: linear-gradient(45deg, #F59E0B, #FBBF24); opacity: 0.5; top: 12rem; right: 2rem; transform: rotate(10deg); }
+        .bottom-left { bottom: 3rem; left: -5rem; width: 25rem; height: 20rem; }
+        .shape-bl-1 { width: 12rem; height: 12rem; background-color: #4F46E5; opacity: 0.2; bottom: 0; left: 10rem; transform: rotate(-25deg); }
+        .shape-bl-2 { width: 14rem; height: 14rem; background-color: #10B981; opacity: 0.2; bottom: 8rem; left: 2rem; transform: rotate(-35deg); }
+        .shape-bl-3 { width: 16rem; height: 16rem; background: linear-gradient(45deg, #EF4444, #F97316); opacity: 0.4; bottom: 0; left: 0; transform: rotate(-15deg); }
 
+        @media (max-width: 75rem) {
+            .content-wrapper { padding: 0 1rem; max-width: 100%; }
+            .content-grid { grid-template-columns: repeat(2, 1fr); }
+        }
         @media (max-width: 48rem) {
-            .points-grid { grid-template-columns: 1fr; }
-            .point-title { min-height: auto; }
+            .content-grid { grid-template-columns: 1fr; }
+            .main-title { text-align: center; }
+            .slide-container { padding: 2rem; }
         }
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <h1 class="main-title">Chung tay bảo vệ thiên nhiên</h1>
-        <div class="points-grid">
-            
-        <div class="point-card">
-            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74A7 7 0 0 0 12 2M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9z"></path></svg>
-            <div class="icon-divider"></div>
-            <h2 class="point-title">Trồng cây xanh</h2>
-            <p class="point-description"><span style="font-size:1.5rem;">Hấp thụ CO2, cải thiện không khí và chống biến đổi khí hậu.</span></p>
+        <div class="content-wrapper">
+            <h1 class="main-title">PHÂN TÍCH THỊ TRƯỜNG</h1>
+            <div class="content-grid">
+                
+        <div class="grid-item">
+            <h3 class="item-title">Phân khúc khách hàng mục tiêu</h3>
+            <p class="item-description">Các doanh nghiệp SME trong lĩnh vực bán lẻ, sản xuất, và dịch vụ đang tìm kiếm giải pháp để tự động hóa quy trình và cải thiện trải nghiệm khách hàng.</p>
         </div>
         
-        <div class="point-card">
-            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8m0-14a6 6 0 1 0 6 6a6 6 0 0 0-6-6m0 10a4 4 0 1 1 4-4a4 4 0 0 1-4 4m0-6a2 2 0 1 0 2 2a2 2 0 0 0-2-2"></path></svg>
-            <div class="icon-divider"></div>
-            <h2 class="point-title">Tái chế rác thải</h2>
-            <p class="point-description"><span style="font-size:1.5rem;">Giảm rác, bảo vệ tài nguyên thiên nhiên và môi trường.</span></p>
+        <div class="grid-item">
+            <h3 class="item-title">Quy mô thị trường</h3>
+            <p class="item-description">Thị trường phần mềm và dịch vụ IT cho SME tại Việt Nam dự kiến đạt 2 tỷ USD vào năm 2025, với tốc độ tăng trưởng hàng năm (CAGR) là 12%.</p>
         </div>
         
-        <div class="point-card">
-            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="m3.5 18.49l6-6.01l4 4L22 6.92L20.59 5.51L13.5 12.5l-4-4l-7.5 7.5z"></path></svg>
-            <div class="icon-divider"></div>
-            <h2 class="point-title">Giáo dục cộng đồng</h2>
-            <p class="point-description"><span style="font-size:1.5rem;">Nâng cao nhận thức về bảo vệ thiên nhiên qua trường học và truyền thông.</span></p>
+        <div class="grid-item">
+            <h3 class="item-title">Đối thủ cạnh tranh chính</h3>
+            <p class="item-description">Các công ty phần mềm lớn cung cấp giải pháp đóng gói và các công ty gia công phần mềm nhỏ lẻ. Lợi thế của Innovatech là khả năng tùy biến cao và dịch vụ chuyên sâu.</p>
         </div>
         
-        <div class="point-card">
-            <svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8a4 4 0 0 0 0-8m0 6a2 2 0 1 1 0-4a2 2 0 0 1 0 4m6.6-4.95l-.71-.71l-1.42 1.42l.71.71c.39.39.39 1.02 0 1.41l-1.42 1.42l-.71.71l1.42 1.42l.71-.71l1.42-1.42l-.71-.71c-.39-.39-.39-1.02 0-1.41M5.4 7.05L4 5.64l.71-.71l1.42 1.42l-.71.71c-.39.39-1.02.39-1.41 0l-1.42-1.42l-.71-.71L4 5.64M18.36 5.64l.71.71l1.42-1.42l-.71-.71a.996.996 0 0 0-1.41 0l-1.42 1.42l-.71.71l1.42 1.42zm-12.72 12.72l-.71-.71l-1.42 1.42l.71.71c.39.39.39 1.02 0 1.41l-1.42 1.42l-.71.71l1.42 1.42l.71-.71l1.42-1.42l-.71-.71c-.39-.39-.39-1.02 0-1.41Z"></path></svg>
-            <div class="icon-divider"></div>
-            <h2 class="point-title">Hợp tác toàn cầu</h2>
-            <p class="point-description"><span style="font-size:1.5rem;">Các quốc gia cùng hành động để bảo vệ môi trường và hệ sinh thái toàn cầu.</span></p>
+        <div class="grid-item">
+            <h3 class="item-title">Xu hướng thị trường</h3>
+            <p class="item-description">Nhu cầu về Cloud Computing, AI, và Data Analytics đang tăng cao. Doanh nghiệp ngày càng ưu tiên các giải pháp linh hoạt và có khả năng tích hợp.</p>
         </div>
         
+        <div class="grid-item">
+            <h3 class="item-title">Rào cản gia nhập</h3>
+            <p class="item-description">Yêu cầu về vốn đầu tư ban đầu cho R&D và xây dựng đội ngũ chất lượng cao. Uy tín thương hiệu cũng là một yếu tố quan trọng.</p>
+        </div>
+        
+        <div class="grid-item">
+            <h3 class="item-title"></h3>
+            <p class="item-description"></p>
+        </div>
+        
+            </div>
+        </div>
+        <div class="shape-cluster top-right">
+            <div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div><div class="shape shape-tr-4"></div>
+        </div>
+        <div class="shape-cluster bottom-left">
+             <div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div>
         </div>
     </div>
 </body>

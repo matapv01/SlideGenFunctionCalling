@@ -3,139 +3,138 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three Column Slide</title>
+    <title>Corporate Content Slide - Bright Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
-        body {
-            margin: 0;
-            padding: 0;
-            font-family: Roboto, sans-serif;
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-        
-        .slide-container {
-            width: 62.5rem; /* THAY ĐỔI: 1000px -> 62.5rem */
-            height: 35rem; /* THAY ĐỔI: 560px -> 35rem */
-            position: relative;
-            background-color: #F8F8F8;
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: Inter, sans-serif;
             overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: 2.5rem; /* THAY ĐỔI: 40px -> 2.5rem */
-            box-sizing: border-box;
+            background-color: #F5F5F5;
         }
-        
-        .title-section {
+
+        .slide-container {
+            width: 100%; height: 100%;
+            display: flex; position: relative;
+        }
+
+        .accent-panel {
+            flex: 1;
+            background-color: #3F51B5;
+            clip-path: url(#angled-title-panel);
             display: flex;
             align-items: center;
-            margin-bottom: 3.75rem; /* THAY ĐỔI: 60px -> 3.75rem */
+            padding: 4rem;
         }
-        
-        .title-accent {
-            width: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            height: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            background-color: #FFFFFF;
-            margin-right: 0.9375rem; /* THAY ĐỔI: 15px -> 0.9375rem */
+
+        .slide-title {
+            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-weight: 800;
+            color: #FFFFFF;
+            text-transform: uppercase;
+            max-width: 15ch;
+            line-height: 1.1;
         }
+        .highlight { color: #F5F5F5; opacity: 0.8; }
         
-        .main-title {
-            font-size: 3rem;
-            color: #333333;
-            font-weight: normal;
-            font-style: italic;
-            margin: 0;
-        }
-        
-        .content-layout {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            height: calc(100% - 7.5rem); /* THAY ĐỔI: 120px -> 7.5rem */
-        }
-        
-        .content-box {
-            width: 31%;
-            height: auto;
-            background-color: #FFFFFF;
-            position: relative;
+        .content-column {
+            flex: 1.2;
+            padding: 4rem;
             display: flex;
             flex-direction: column;
-            align-items: center;
-            padding: 3.75rem 1.25rem 1.25rem; /* THAY ĐỔI: 60px 20px 20px */
-            box-sizing: border-box;
-            text-align: center;
-        }
-        
-        .icon-circle {
-            width: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
-            height: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
-            border-radius: 50%;
-            background-color: #ffffff;
-            position: absolute;
-            top: -2.1875rem; /* THAY ĐỔI: -35px -> -2.1875rem */
-            display: flex;
             justify-content: center;
-            align-items: center;
-            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* 4px 6px */
+            gap: 2rem;
         }
-        
-        .icon-circle svg {
-            stroke: #007bff;
+
+        .list-item-card {
+            background: #FFFFFF;
+            border-radius: 1rem;
+            padding: 2rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+            /* ĐÃ XÓA: transition */
         }
-        
-        .subtitle {
+        /* ĐÃ XÓA: khối :hover */
+
+        .item-number {
+            position: absolute;
+            top: -1rem; right: 1rem;
+            font-size: 5rem;
+            font-weight: 800;
+            color: rgba(30, 41, 59, 0.05);
+            z-index: 1;
+        }
+        .item-content { position: relative; z-index: 2; }
+
+        .list-item-title {
             font-size: 1.5rem;
-            color: #555555;
-            margin: 0 0 0.9375rem 0; /* THAY ĐỔI: 15px -> 0.9375rem */
-            font-weight: bold;
+            font-weight: 700;
+            color: #3F51B5;
+            margin-bottom: 0.75rem;
+        }
+        .list-item-description {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #333333;
         }
         
-        .content {
-            font-size: 1.15rem;
-            color: #777777;
-            margin: 0;
-            line-height: 1.5;
+        @media (max-width: 64rem) {
+            .slide-container { flex-direction: column; }
+            .accent-panel { flex: 0.5; width: 100%; clip-path: none; text-align: center; }
+            .slide-title { max-width: none; }
+            .content-column { flex: 1; width: 100%; }
         }
     </style>
 </head>
 <body>
+    
+    <svg width="0" height="0">
+      <defs>
+        <clipPath id="angled-title-panel" clipPathUnits="objectBoundingBox">
+          <polygon points="0 0, 1 0, 0.85 1, 0 1" />
+        </clipPath>
+      </defs>
+    </svg>
+    
     <div class="slide-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">Môi trường biển</h1>
+        <div class="accent-panel">
+            <h1 class="slide-title">TỔNG QUAN VỀ <span class='highlight'>INNOTECH SOLUTIONS</span></h1>
+        </div>
+        <div class="content-column">
+            
+        <div class="list-item-card">
+            <div class="item-content">
+                <h3 class="list-item-title">Lĩnh vực hoạt động</h3>
+                <p class="list-item-description">Phát triển phần mềm tùy chỉnh, tư vấn Cloud, triển khai An ninh mạng. Tập trung đáp ứng chính xác nhu cầu khách hàng.</p>
+            </div>
         </div>
         
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Content Box 1 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-fish"><path d="M6.5 12.5c.938-1.562 2.7-1.777 2.7-1.777L12 14l-2.7 2.7c0 0-1.762-.215-2.7-1.777C5.562 13.738 5.562 11.262 6.5 12.5z"/><path d="M18 12c-2.438-1.562-4.2-1.777-4.2-1.777L16.5 14l-4.2 2.7c0 0 1.762-.215 2.7-1.777C17.438 13.738 17.438 11.262 18 12z"/><path d="M22 12c-2.438-1.562-4.2-1.777-4.2-1.777L20.5 14l-4.2 2.7c0 0 1.762-.215 2.7-1.777C21.438 13.738 21.438 11.262 22 12z"/><path d="M2 12h.01"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Rạn san hô</b></h3>
-                <p class="content"><ul><li>Ngôi nhà của nhiều loài biển</li><li>Đang bị đe dọa bởi ô nhiễm</li></ul></p>
+        <div class="list-item-card">
+            <div class="item-content">
+                <h3 class="list-item-title">Đội ngũ cốt lõi</h3>
+                <p class="list-item-description">Kỹ sư phần mềm giàu kinh nghiệm, chuyên gia tư vấn, quản lý dự án tận tâm, hơn 10 năm kinh nghiệm.</p>
             </div>
-            
-            <!-- Content Box 2 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-whale"><path d="M12 12H3c-2.76 0-3-2-3-3s.24-3 3-3h9l-1 2 1 2z"/><path d="M22 12H13l-1-2 1-2h9c2.76 0 3 2 3 3s-.24 3-3 3z"/><path d="M17 17.5c-2.5-1.5-5-2.5-7-2.5s-4.5 1-7 2.5c0 0-1 4 0 4s3-1 6-1 6 1 6 1 1-4 0-4z"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Cá voi</b></h3>
-                <p class="content"><ul><li>Loài động vật lớn nhất hành tinh</li><li>Đóng vai trò quan trọng trong hệ sinh thái biển</li></ul></p>
+        </div>
+        
+        <div class="list-item-card">
+            <div class="item-content">
+                <h3 class="list-item-title">Lợi thế cạnh tranh</h3>
+                <p class="list-item-description">Chuyên môn kỹ thuật sâu rộng, quy trình Agile linh hoạt, cam kết hỗ trợ khách hàng tận tình.</p>
             </div>
-            
-            <!-- Content Box 3 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-droplet"><path d="M12 2.69l5.66 5.66a8 8 0 1 1-11.32 0z"/></svg>
-                </div>
-                <h3 class="subtitle"><b>Bảo vệ đại dương</b></h3>
-                <p class="content"><ul><li>Giảm rác thải nhựa</li><li>Khai thác bền vững</li><li>Bảo vệ môi trường biển</li></ul></p>
+        </div>
+        
+        <div class="list-item-card">
+            <div class="item-content">
+                <h3 class="list-item-title">Tiềm năng tăng trưởng</h3>
+                <p class="list-item-description">Thị trường SMEs Việt Nam phát triển nhanh, nhu cầu số hóa lớn, mở ra cơ hội tăng trưởng đáng kể.</p>
             </div>
+        </div>
+        
         </div>
     </div>
 </body>

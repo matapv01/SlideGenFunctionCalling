@@ -63,7 +63,7 @@ INPUT CONTEXT FOR THIS TASK:
 - **Previous slide content:** (The text from the preceding slide in the presentation. Used for de-duplication and context.)
 {previous_slide_content}
 
-- **Current slide content:** (The raw text for the new slide. Process this.)
+- **Current slide content:** (Current slide index is {slide_index}/{length_slide_chunks} total slides. The raw text for the new slide. Process this.)
 {slide_content}
 
 - **Previous function call:** (CRITICAL INPUT: On the first try, there will be no function call below. On a retry, this is *your own last failed attempt* and is the object you must fix based on feedback, while still using it as a style guide.)
@@ -127,7 +127,7 @@ def create_default_html(content_text: str) -> str:
     </div>
 </body>
 </html>"""
-    
+
     return html
 
 def slide_generator(state: State) -> State:
@@ -140,8 +140,11 @@ def slide_generator(state: State) -> State:
     current_text = state.get("current_slide_text", "")
     previous_slide_context = state.get('previous_slide_context', {})
     previous_function_call = state.get('current_tool_call', {})
-    previous_evaluation = state.get('vlm_feedback', "")
-    
+    previous_evaluation = state.get('vlm_feedback', "not evaluate yet")
+    current_slide_index = state.get('current_slide_index', 0)
+    length_slide_chunks = state.get('length_slide_chunks', 0)
+
+
     print(f"--- Node: slide_generator (Slide {idx + 1}) ---")
     
     # Validate required inputs
@@ -180,7 +183,9 @@ def slide_generator(state: State) -> State:
                 "previous_slide_content": previous_slide_content,
                 "previous_function_call": previous_function_call,
                 "slide_content": current_text,
-                "previous_evaluation": previous_evaluation
+                "previous_evaluation": previous_evaluation,
+                "slide_index": current_slide_index + 1,
+                "length_slide_chunks": length_slide_chunks
             })
             
             print(f"LLM response type: {type(response)}")
@@ -198,7 +203,11 @@ def slide_generator(state: State) -> State:
                 
                 # Execute the tool to get HTML
                 html_content = execute_tool(tool_call_dict)
-                
+                if html_content is None:
+                    print(f"Failed to generate HTML for tool call: {tool_call_dict}")
+                    print("Generator retrying function calling")
+                    continue
+
                 # Update state with the tool call and HTML
                 state['current_tool_call'] = tool_call_dict
                 state['current_html_content'] = html_content
