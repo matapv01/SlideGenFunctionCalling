@@ -17,7 +17,7 @@ from src.stage import State
 from src.utils import config
 from langgraph.graph import StateGraph
 import os
-from src.tools.tool_des import ALL_TOOLS
+from src.tools.tool_des import TOOLS_DICT
 from langgraph.graph import END
 
 def route_to_task(state: State) -> str:
@@ -155,7 +155,7 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
         "max_retries": max_retries_per_slide,
         "driver": driver, 
         "llm": llm,
-        "tools": ALL_TOOLS,  # Truyền vào danh sách công cụ
+        "tools": TOOLS_DICT,  # Truyền vào danh sách công cụ
         "current_slide_index": -1,
         "retry_count": 0,
         "final_slides": [],

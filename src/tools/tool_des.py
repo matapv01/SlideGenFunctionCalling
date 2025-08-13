@@ -1420,8 +1420,7 @@ class GenerateCorporateThankYouSlideInput(BaseModel):
     shadow_color: str = Field(default="#EA580C", description="The secondary (darker) accent color for the panel behind.")
     icon_color: str = Field(default="#D1D5DB", description="The color for the small smiley icon.")
 
-# All available slide generation tools with complete parameter schemas
-ALL_TOOLS = [
+INTRO_TOOLS = [
     # === SLIDE INTRO ===
     StructuredTool.from_function(
         func=generate_title_slide,
@@ -1494,8 +1493,10 @@ ALL_TOOLS = [
         name="generate_mission_slide",
         description="Generates a Content Slide with a two-column, side-by-side layout, specifically designed for presenting a Mission, Vision, or Introduction. This layout is adjusted to emphasize the written content by making the text column significantly wider than the image column. The visual style is warm and elegant, using a beige and brown color palette, making it ideal for in-depth explanations where the text is the main focus.",
         args_schema=GenerateMissionSlideInput
-    ),
+    )
+]
 
+TRANSITION_TOOLS = [
     # === SLIDE CHUYỂN SLIDE ===
     StructuredTool.from_function(
         func=generate_geometric_transition_slide,
@@ -1550,8 +1551,10 @@ ALL_TOOLS = [
         name="generate_credits_slide",
         description="Generate a credits/thank you slide with warm peach gradient background, emoji characters, and decorative dots. Features script typography for main content and branded header badge. Perfect for presentation endings, acknowledgments, template credits, or closing slides in creative, educational, and business presentations.",
         args_schema=GenerateCreditsSlideInput
-    ),
+    )
+]
 
+CONTENT_TOOLS = [
     # === SLIDE CONTENT ===
     StructuredTool.from_function(
         func=generate_content_slide,
@@ -1882,8 +1885,10 @@ ALL_TOOLS = [
         name="generate_premium_abstract_slide",
         description="Generates a versatile content, introduction, or section divider slide. It features a premium, highly modern design with an 'aurora' gradient background and an abstract 'glassmorphism' graphic. Perfect for presenting key concepts, introducing a topic, or opening a new presentation section with a sophisticated, high-tech, and elegant first impression.",
         args_schema=GeneratePremiumAbstractSlideInput
-    ),
+    )
+]
 
+TEAM_TOOLS = [
     # === SLIDE GIỚI THIỆU TEAM ===
     StructuredTool.from_function(
         func=generate_team_slide,
@@ -1902,8 +1907,10 @@ ALL_TOOLS = [
         name="generate_corporate_team_slide",
         description="Generates a creative and personal **Team Slide** with a 'Polaroid photo' theme. This slide is perfect for introducing team members in a warm and approachable way. Its unique characteristics include a central title and a grid of team member profiles, each styled to look like a Polaroid picture with a handwritten name. The photos are scattered and slightly rotated for a friendly, scrapbook-like feel. **The layout is flexible, but it is visually optimized for 3 to 4 members** to create a balanced, single-row composition.",
         args_schema=GenerateCorporateTeamSlideInput
-    ),
+    )
+]
 
+THANK_YOU_TOOLS = [
     # === SLIDE CẢM ƠN ===
     StructuredTool.from_function(
         func=generate_thank_you_slide_2,
@@ -1928,8 +1935,17 @@ ALL_TOOLS = [
         name="generate_corporate_thank_you_slide",
         description="Generates a minimalist, corporate 'Thank You' or Closing Slide. It provides a clean and professional way to end a presentation. Its unique characteristics include a simple smiley icon, a bold 'Thanks!' message, and the signature dynamic diagonal color panel with a layered shadow effect. This slide is designed for a clean, impactful, and friendly conclusion.",
         args_schema=GenerateCorporateThankYouSlideInput
-    ),
+    )
 ]
+
+# All available slide generation tools with complete parameter schemas
+ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS
+
+TOOLS_DICT = {'INTRO_TOOLS': INTRO_TOOLS,
+               'TRANSITION_TOOLS': TRANSITION_TOOLS,
+               'CONTENT_TOOLS': CONTENT_TOOLS,
+               'TEAM_TOOLS': TEAM_TOOLS,
+               'THANK_YOU_TOOLS': THANK_YOU_TOOLS}
 
 # Tool utilities
 TOOL_MAP = {tool.name: tool for tool in ALL_TOOLS}

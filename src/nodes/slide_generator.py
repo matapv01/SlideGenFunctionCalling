@@ -162,10 +162,19 @@ def slide_generator(state: State) -> State:
     while True:
         indexTry += 1
         try:
-            print("Attempting to generate slide with LLM...")
-            
+            print(f"Attempting {indexTry}/3 to generate slide with LLM...")
+            print(f"Current slide index: {current_slide_index + 1} of {length_slide_chunks}")
             # Bind tools to LLM
-            llm_with_tools = llm.bind_tools(tools)
+            if current_slide_index + 1 == 1:
+                my_tools = tools.get('INTRO_TOOLS', [])
+            if current_slide_index + 1 == 2:
+                my_tools = tools.get('TEAM_TOOLS', []) + tools.get('TRANSITION_TOOLS', []) + tools.get('CONTENT_TOOLS', [])
+            if current_slide_index + 1 >= 3:
+                my_tools = tools.get('TRANSITION_TOOLS', []) + tools.get('CONTENT_TOOLS', [])
+            if current_slide_index + 1 == length_slide_chunks:
+                my_tools = tools.get('THANK_YOU_TOOLS', [])
+
+            llm_with_tools = llm.bind_tools(my_tools)
 
             # REFACTOR: Using from_messages for better structure
             slidegen_prompt = ChatPromptTemplate.from_messages([
@@ -214,15 +223,15 @@ def slide_generator(state: State) -> State:
                 
                 print(f"Successfully executed tool: {tool_call_dict['name']}")
                 print(f"Generated HTML length: {len(html_content)} characters")
-                
+                return state
             else:
                 if indexTry < 3:
-                    print("No tool calls found in response. retrying with slide generation.")
+                    print(f"No tool calls found in response. retrying with slide generation {indexTry}/3.")
                     continue
 
                 # Fallback: try to extract content from response or create default
-                print("No tool calls found in response. Creating default slide.")
-                
+                print(f"No tool calls found in response ({indexTry}/3). Creating default slide.")
+
                 # Try to use response content if available
                 if hasattr(response, 'content') and response.content:
                     # Try to extract meaningful content from the response
@@ -248,14 +257,9 @@ def slide_generator(state: State) -> State:
                 state['current_html_content'] = html_content
                 print("Created default slide using generate_academic_slide")
             
-            # Check if content is too long (mark as redundant)
-            if len(html_content) > 10000:
-                state['is_redundant'] = True
-                print(f"HTML content too long ({len(html_content)} characters). Marking slide as redundant.")
-            else:
-                state['is_redundant'] = False
-            print("Slide generation completed successfully.")
-            break  # Exit loop if successful      
+        
+            print("Default slide created successfully.")
+            return state
         except Exception as e:
             logging.error(f"Error in slide generation: {e}")
             print(f"Error in slide generation: {e}")
