@@ -1,3 +1,0 @@
-# SlideGen Function Calling
-
-

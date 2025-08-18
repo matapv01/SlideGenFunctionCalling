@@ -1,3 +1,0 @@
-Text: 
-Tool Call: id=None args={'background_color': '#ffffff', 'accent_color': '#a2c4c9', 'title_font_size': '48px', 'font_family': 'Arial, sans-serif', 'title_color': '#555555', 'description': 'GIỚI THIỆU DỰ ÁN', 'title': 'KẾ HOẠCH KINH DOANH INNOTECH SOLUTIONS', 'description_color': '#555555', 'description_font_size': '24px'} name='generate_academic_slide'
-Text JSON: {}

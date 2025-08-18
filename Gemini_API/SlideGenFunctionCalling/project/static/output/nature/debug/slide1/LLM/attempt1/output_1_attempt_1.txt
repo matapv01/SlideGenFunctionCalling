@@ -1,3 +1,0 @@
-Text: 
-Tool Call: id=None args={'accent_bg_color': '#6ea88a', 'main_title_font_size': '36px', 'subtitle1': 'Mở đầu: Thiên nhiên kỳ diệu', 'subtitle2': 'Thiên nhiên mang lại sự sống, cân bằng sinh thái và cảm hứng. Chúng ta cần bảo tồn thiên nhiên cho thế hệ tương lai.', 'font_family': 'Segoe UI, Arial, sans-serif', 'subtitle_color': '#555555', 'subtitle_font_size': '18px', 'title_color': '#333333', 'line_color': '#e6c35c', 'main_bg_color': '#ffffff', 'main_title': 'Thiên nhiên và những điều kì thú', 'text_box_bg_color': '#c5e6b8'} name='generate_intro_slide'
-Text JSON: {}

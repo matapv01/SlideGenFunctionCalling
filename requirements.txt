@@ -12,3 +12,4 @@ selenium
 img2pdf
 python-multipart
 docling
+playwright

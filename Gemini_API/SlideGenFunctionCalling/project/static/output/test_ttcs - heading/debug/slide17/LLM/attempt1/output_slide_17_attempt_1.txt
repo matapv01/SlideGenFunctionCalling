@@ -1,3 +1,0 @@
-Text: 
-Tool Call: id=None args={'description': 'Mọi thông tin chi tiết xin liên hệ:<br>Ông Nguyễn Văn An - Giám đốc Điều hành<br>Điện thoại: 0987 654 321<br>Email: an.nguyen@innovatech.vn', 'title_color': '#555555', 'title_font_size': '48px', 'accent_color': '#a2c4c9', 'font_family': 'Arial, sans-serif', 'description_font_size': '24px', 'title': 'THÔNG TIN LIÊN HỆ', 'background_color': '#ffffff', 'description_color': '#555555'} name='generate_academic_slide'
-Text JSON: {}

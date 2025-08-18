@@ -1,7 +1,6 @@
 # /app/src/nodes/prepare_slide.py 
 
-from src.stage import State
-import time
+from src.graph.stage import State
 
 def provide_next_slide(state: State) -> State:
     """

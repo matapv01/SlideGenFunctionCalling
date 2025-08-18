@@ -1,4 +1,0 @@
-VLM Text: <!-- accept -->
-<!-- reason: All content from the tool call is clearly visible on the slide. The layout is clean, and the font sizes meet the readability requirements. There is no overflow or occlusion detected. Consistency with previous slides is maintained. -->
-VLM Tool Call: {'name': 'generate_content_slide', 'arguments': {'title': 'Error', 'content': 'No function call returned'}}
-VLM Text JSON: {'remaining_content': '', 'split_reason': ''}

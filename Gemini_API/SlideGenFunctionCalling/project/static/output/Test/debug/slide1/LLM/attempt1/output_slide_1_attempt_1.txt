@@ -1,3 +1,0 @@
-Text: 
-Tool Call: id=None args={'name': 'Phạm Văn Minh', 'description': 'Mở đầu:<br>Chào mừng quý vị và các bạn đến với buổi thuyết trình.<br>Chủ đề: Tầm quan trọng và ứng dụng của trí tuệ nhân tạo (AI) trong kỷ nguyên 4.0.<br>Mục tiêu: Khơi dậy sự tò mò và khuyến khích mỗi cá nhân khai thác tiềm năng của AI để phát triển bản thân và cuộc sống.', 'title': 'Người Việt Nam nên sử dụng AI như thế nào?'} name='generate_academic_slide'
-Text JSON: {}

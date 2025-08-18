@@ -1,4 +1,0 @@
-VLM Text: <!-- accept -->
-<!-- reason: All content is clearly visible, properly aligned, and does not show any signs of overflow or occlusion. The font sizes are appropriate for readability, and the overall layout is clean and consistent with the expected design. -->
-VLM Tool Call: {'name': 'generate_content_slide', 'arguments': {'title': 'Error', 'content': 'No function call returned'}}
-VLM Text JSON: {'remaining_content': '', 'split_reason': ''}

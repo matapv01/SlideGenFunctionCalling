@@ -1,96 +1,21 @@
 # main.py
-from typing import List, Optional
-from langchain_openai import ChatOpenAI
-from langchain_core.tools import StructuredTool
-from langchain_core.messages import AIMessage
 import zipfile
-from docx import Document
 import shutil
 from src.models.llm import LLM
-from src.nodes.initialize_and_provider import initialize_and_provide
-from src.nodes.next_slide_provider import provide_next_slide
-from src.nodes.slide_generator import slide_generator
-from src.nodes.slide_evaluator import slide_evaluator
-from src.nodes.finalize_slide import finalize_slide
-from src.nodes.html_renderer import html_renderer
-from src.stage import State
 from src.utils import config
-from langgraph.graph import StateGraph
 import os
 from src.tools.tool_des import TOOLS_DICT
-from langgraph.graph import END
-
-def route_to_task(state: State) -> str:
-    """
-    Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
-    """
-    print("--- Router: route_to_task ---")
-    if state.get('slide_chunks'):
-        # Nếu còn slide, đi đến node chuẩn bị
-        return "generator"
-    else:
-        # Nếu hết, kết thúc
-        print("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
-        return END
-
-def check_redundancy(state: State) -> str:
-    """
-    Kiểm tra xem slide có bị LLM đánh dấu là dư thừa không.
-    """
-    print("--- Router: check_redundancy ---")
-    is_redundant = state.get('is_redundant', False)
-    print(f"Slide có bị đánh dấu là dư thừa: {is_redundant}")
-    
-    if is_redundant:
-        # Nếu dư thừa, quay lại router chính để lấy slide khác
-        print("Slide bị đánh dấu là dư thừa, quay lại node initialize_and_provide")
-        return "initialize_and_provide"
-    else:
-        # Nếu không, tiếp tục render
-        print("Slide không dư thừa, tiếp tục đến node renderer")
-        return "renderer"
-
-def evaluate_vlm_decision(state: State) -> str:
-    """
-    Đánh giá quyết định của VLM và quyết định luồng tiếp theo.
-    """
-    print("--- Router: evaluate_vlm_decision ---")
-    
-    # Đảm bảo vlm_decision luôn tồn tại trong state
-    decision = state.get('vlm_decision', 'deny')  # Mặc định deny nếu không có quyết định
-    print(f"Đang xử lý quyết định VLM: {decision}")
-    
-    # Lấy retry_count hiện tại
-    retry_count = state.get('retry_count', 0)
-    max_retries = state.get('max_retries', 3)
-    print(f"Giá trị retry_count hiện tại: {retry_count}")
-    
-    if decision == "accept":
-        print("Slide được chấp nhận. Chuyển đến bước hoàn tất.")
-
-        return "finalizer"
-    else: # deny
-        # Kiểm tra nếu đã đạt số lần thử lại tối đa
-        if retry_count >= max_retries:
-            print(f"Đã đạt số lần thử lại tối đa ({max_retries}). Buộc chấp nhận slide.")
-            return "finalizer"  # Đi thẳng đến finalizer
-        else:
-            print(f"Slide bị từ chối. Thử lại lần {retry_count}.")
-            return "generator"  # Quay lại node generator để thử lại slide
-
+from src.graph.builder import build_workflow
+import asyncio
 
 
 # -- Xây dựng và thực thi Graph ---
 
-def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retries_per_slide: int = 6):
+def process_slides_with_langgraph(router_flags: bool, docx_file: str, output_folder: str, max_retries_per_slide: int = 6):
     """
     Hàm chính để xây dựng và chạy luồng công việc LangGraph.
     """
-    # Khởi tạo WebDriver một lần duy nhất
-    driver = config.initialize_chromedriver()
-    if not driver:
-        raise RuntimeError("Không thể khởi tạo ChromeDriver.")
-        
+
     # ===== KHỞI TẠO LLM INSTANCE =====
     # KHỞI TẠO LLM INSTANCE
     env_keys = config.setup_environment()
@@ -122,38 +47,18 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
             os.makedirs(dir_path)
             print(f"Đã tạo thư mục: {dir_path}")
             
-    # Định nghĩa đồ thị
-    workflow = StateGraph(State)
-
-    # Thêm các node
-    workflow.add_node("initialize_and_provide", initialize_and_provide)
-    workflow.add_node("provide_next_slide", provide_next_slide)
-    workflow.add_node("generator", slide_generator)
-    workflow.add_node("renderer", html_renderer)
-    workflow.add_node("evaluator", slide_evaluator)
-    workflow.add_node("finalizer", finalize_slide)
-
-    # Thiết lập điểm bắt đầu
-    workflow.set_entry_point("initialize_and_provide")
-
-    # Thêm các cạnh (edges)
-    workflow.add_edge("initialize_and_provide", "provide_next_slide")
-    workflow.add_conditional_edges("provide_next_slide", route_to_task, {"generator": "generator", END: END})
-    workflow.add_conditional_edges("generator", check_redundancy, {"initialize_and_provide": "initialize_and_provide", "renderer": "renderer"})
-    workflow.add_edge("renderer", "evaluator")
-    workflow.add_conditional_edges("evaluator", evaluate_vlm_decision, {"finalizer": "finalizer", "generator": "generator"})
-    workflow.add_edge("finalizer", "provide_next_slide")
+    # ===== TẠO GRAPH VỚI CÁC NODE =====
+    workflow = build_workflow(router_flags)
 
     # Biên dịch đồ thị với các tùy chọn
     app = workflow.compile()
-    
+
     # ===== TRUYỀN LLM_INSTANCE VÀO STATE BAN ĐẦU =====
     # Chuẩn bị input ban đầu cho graph
     initial_input = {
         "docx_file": docx_file,
         "output_folder": output_folder,
         "max_retries": max_retries_per_slide,
-        "driver": driver, 
         "llm": llm,
         "tools": TOOLS_DICT,  # Truyền vào danh sách công cụ
         "current_slide_index": -1,
@@ -161,20 +66,14 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
         "final_slides": [],
         "temp_dir": os.path.join(output_folder, "temp"),
         "temp_debug_dir": temp_debug_dir,
-        "is_redundant": False,
         "all_debug_info": [],  # Thêm khởi tạo cho all_debug_info
-        "vlm_decision": "accept",  # Đặt mặc định là accept
+        "vlm_decision": "accept"  # Đặt mặc định là accept
     }
     
     # Chạy graph
-    # Sử dụng try-finally để đảm bảo driver luôn được đóng
-    try:
-        final_state = app.invoke(initial_input, config={"recursion_limit": 500}) # gioi han so buoc cua workflow
-    finally:
-        if driver:
-            driver.quit()
-            print("Đã đóng ChromeDriver.")
-            
+    recursionLimit = {"recursion_limit": 500}
+    final_state = asyncio.run(app.ainvoke(initial_input, config=recursionLimit))
+
     zip_file_path = os.path.join(final_state['temp_dir'], "slides.zip")
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for slide in final_state['final_slides']:
@@ -234,10 +133,10 @@ if __name__ == "__main__":
         os.makedirs("test_output")
 
     # Tạo một file docx giả để test
-    sample_docx_path = os.path.join("test_input", "test_ttcs - heading.docx")
+    sample_docx_path = os.path.join("test_input", "TỰ ĐỘNG TẠO BÀI THUYẾT TRÌNH SỬ DỤNG CÁC MÔ HÌNH N.docx")
 
     # Chạy quy trình
     try:
-        process_slides_with_langgraph(sample_docx_path, "test_output")
+        process_slides_with_langgraph(False, sample_docx_path, "test_output")
     except Exception as e:
         print(f"Một lỗi không mong muốn đã xảy ra trong quá trình xử lý: {e}")

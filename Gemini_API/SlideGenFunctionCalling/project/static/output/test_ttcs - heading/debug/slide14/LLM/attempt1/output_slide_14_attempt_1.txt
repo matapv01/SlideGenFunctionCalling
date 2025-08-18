@@ -1,3 +1,0 @@
-Text: 
-Tool Call: id=None args={'main_bg_color': '#ffffff', 'left_bg_color': '#a2c4c9', 'item_text_font_size': '18px', 'font_family': 'Arial, sans-serif', 'items_content': "<ul><li><b>Giai đoạn 2 (Năm 2 - 2025): <i><span style='color:#EF4444'>Tăng trưởng & Đa dạng hóa</span></i></b><br>Mở rộng danh mục dịch vụ sang tư vấn giải pháp Cloud (AWS, Azure). Phát triển thêm module CRM tích hợp với POS. Mục tiêu đạt <b><i><span style='color:#3B82F6'>50 khách hàng</span></i></b>.</li></ul>", 'title_color': '#555555', 'vertical_title': 'LỘ TRÌNH PHÁT TRIỂN', 'left_width': '20%', 'item_text_color': '#555555', 'item_title_font_size': '24px', 'item_title_color': '#555555', 'vertical_title_font_size': '48px'} name='generate_body_slide1'
-Text JSON: {}

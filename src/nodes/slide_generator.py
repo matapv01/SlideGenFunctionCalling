@@ -1,10 +1,4 @@
-import json
-import re
-import logging
-from typing import Dict, Any, List
-from langchain_core.tools import Tool
-from src.stage import State
-from langchain_core.messages import AIMessage, HumanMessage
+from src.graph.stage import State
 from langchain_core.prompts import ChatPromptTemplate
 from src.tools.tool_des import execute_tool
 
@@ -62,6 +56,9 @@ INPUT CONTEXT FOR THIS TASK:
 
 - **Previous slide content:** (The text from the preceding slide in the presentation. Used for de-duplication and context.)
 {previous_slide_content}
+
+- - **Previous slide function call:** (the previous slide function call accepted)
+{previous_slide_function_call}
 
 - **Current slide content:** (Current slide index is {slide_index}/{length_slide_chunks} total slides. The raw text for the new slide. Process this.)
 {slide_content}
@@ -143,6 +140,7 @@ def slide_generator(state: State) -> State:
     previous_evaluation = state.get('vlm_feedback', "not evaluate yet")
     current_slide_index = state.get('current_slide_index', 0)
     length_slide_chunks = state.get('length_slide_chunks', 0)
+    previous_slide_function_call = state.get('previous_accepted_tool_call', {})
 
 
     print(f"--- Node: slide_generator (Slide {idx + 1}) ---")
@@ -161,130 +159,80 @@ def slide_generator(state: State) -> State:
     indexTry = 0
     while True:
         indexTry += 1
-        try:
-            print(f"Attempting {indexTry}/3 to generate slide with LLM...")
-            print(f"Current slide index: {current_slide_index + 1} of {length_slide_chunks}")
-            # Bind tools to LLM
-            if current_slide_index + 1 == 1:
-                my_tools = tools.get('INTRO_TOOLS', [])
-            if current_slide_index + 1 == 2:
-                my_tools = tools.get('TEAM_TOOLS', []) + tools.get('TRANSITION_TOOLS', []) + tools.get('CONTENT_TOOLS', [])
-            if current_slide_index + 1 >= 3:
-                my_tools = tools.get('TRANSITION_TOOLS', []) + tools.get('CONTENT_TOOLS', [])
-            if current_slide_index + 1 == length_slide_chunks:
-                my_tools = tools.get('THANK_YOU_TOOLS', [])
-
-            llm_with_tools = llm.bind_tools(my_tools)
-
-            # REFACTOR: Using from_messages for better structure
-            slidegen_prompt = ChatPromptTemplate.from_messages([
-                ("system", SLIDEGEN_SYSTEM_PROMPT),
-                ("human", HUMAN_PROMPT_TEMPLATE)
-            ])
-
-            slide_generator_runnable = slidegen_prompt | llm_with_tools
+        print(f"Attempting {indexTry} times to generate slide with LLM...")
+        print(f"Current slide index: {current_slide_index + 1} of {length_slide_chunks}")
+        # Kiểm tra LLM có sẵn không
+        if llm is None:
+            print("ERROR: LLM is None in state. Cannot proceed with slide generation.")
+            break
             
-            previous_slide_content = ""
-            if previous_slide_context:
-                previous_slide_content = previous_slide_context.get("content", "")
-
-            response = slide_generator_runnable.invoke({
-                "previous_slide_content": previous_slide_content,
-                "previous_function_call": previous_function_call,
-                "slide_content": current_text,
-                "previous_evaluation": previous_evaluation,
-                "slide_index": current_slide_index + 1,
-                "length_slide_chunks": length_slide_chunks
-            })
+        # Kiểm tra tools có sẵn không
+        if not tools:
+            print("WARNING: No tools found in state. Using empty tool list.")
+            tools = {}
             
-            print(f"LLM response type: {type(response)}")
-            
-            # Check if response has tool calls
-            if hasattr(response, 'tool_calls') and response.tool_calls:
-                tool_call = response.tool_calls[0]  # Get first tool call
-                print(f"LLM called tool: {tool_call}")
-                
-                # Convert tool call to dictionary format expected by execute_tool
-                tool_call_dict = {
-                    "name": tool_call["name"],
-                    "arguments": tool_call["args"]
-                }
-                
-                # Execute the tool to get HTML
-                html_content = execute_tool(tool_call_dict)
-                if html_content is None:
-                    print(f"Failed to generate HTML for tool call: {tool_call_dict}")
-                    print("Generator retrying function calling")
-                    continue
-
-                # Update state with the tool call and HTML
-                state['current_tool_call'] = tool_call_dict
-                state['current_html_content'] = html_content
-                
-                print(f"Successfully executed tool: {tool_call_dict['name']}")
-                print(f"Generated HTML length: {len(html_content)} characters")
-                return state
-            else:
-                if indexTry < 3:
-                    print(f"No tool calls found in response. retrying with slide generation {indexTry}/3.")
-                    continue
-
-                # Fallback: try to extract content from response or create default
-                print(f"No tool calls found in response ({indexTry}/3). Creating default slide.")
-
-                # Try to use response content if available
-                if hasattr(response, 'content') and response.content:
-                    # Try to extract meaningful content from the response
-                    response_text = response.content
-                    if len(response_text) > 50:  # If there's substantial content
-                        current_text = response_text
-                
-                html_content = create_default_html(current_text)
-                
-                # Create a default tool call
-                tool_call_dict = {
-                    "name": "generate_academic_slide",
-                    "arguments": {
-                        "title": current_text.split('\n')[0] if '\n' in current_text else current_text[:50],
-                        "description": current_text
-                    }
-                }
-                
-                html_content = execute_tool(tool_call_dict)
-
-                
-                state['current_tool_call'] = tool_call_dict
-                state['current_html_content'] = html_content
-                print("Created default slide using generate_academic_slide")
-            
+        # Bind tools to LLM
+        if current_slide_index + 1 == 1:
+            my_tools = tools.get('INTRO_TOOLS', [])
+        if current_slide_index + 1 == 2:
+            my_tools = tools.get('TEAM_TOOLS', []) + tools.get('TRANSITION_TOOLS', []) + tools.get('CONTENT_TOOLS', [])
+        if current_slide_index + 1 >= 3:
+            my_tools = tools.get('TRANSITION_TOOLS', []) + tools.get('CONTENT_TOOLS', [])
+        if current_slide_index + 1 == length_slide_chunks:
+            my_tools = tools.get('THANK_YOU_TOOLS', [])
         
-            print("Default slide created successfully.")
-            return state
-        except Exception as e:
-            logging.error(f"Error in slide generation: {e}")
-            print(f"Error in slide generation: {e}")
+        llm_with_tools = llm.bind_tools(my_tools)
+
+        # REFACTOR: Using from_messages for better structure
+        slidegen_prompt = ChatPromptTemplate.from_messages([
+            ("system", SLIDEGEN_SYSTEM_PROMPT),
+            ("human", HUMAN_PROMPT_TEMPLATE)
+        ])
+
+        slide_generator_runnable = slidegen_prompt | llm_with_tools
+        
+        previous_slide_content = ""
+        if previous_slide_context:
+            previous_slide_content = previous_slide_context.get("content", "")
+
+        response = slide_generator_runnable.invoke({
+            "previous_slide_content": previous_slide_content,
+            "previous_function_call": previous_function_call,
+            "slide_content": current_text,
+            "previous_evaluation": previous_evaluation,
+            "slide_index": current_slide_index + 1,
+            "length_slide_chunks": length_slide_chunks,
+            "previous_slide_function_call": previous_slide_function_call
+        })
+        
+        print(f"LLM response type: {type(response)}")
+
+        if response.usage_metadata['output_tokens'] == 0:
+            llm._rotate_key_and_recreate_instance()
+            continue
+
+        # Check if response has tool calls
+        if hasattr(response, 'tool_calls') and response.tool_calls:
+            tool_call = response.tool_calls[0]  # Get first tool call
+            print(f"LLM called tool: {tool_call}")
             
-            # Create default HTML on error
-            html_content = create_default_html(current_text)
-            
-            # Create default tool call
+            # Convert tool call to dictionary format expected by execute_tool
             tool_call_dict = {
-                "name": "generate_academic_slide",
-                "arguments": {
-                    "title": "Error",
-                    "description": f"Error generating slide: {str(e)}"
-                }
+                "name": tool_call["name"],
+                "arguments": tool_call["args"]
             }
             
-        try:
+            # Execute the tool to get HTML
             html_content = execute_tool(tool_call_dict)
-        except:
-            # If even the default tool fails, use basic HTML
-            pass
+            if html_content is None:
+                print(f"Failed to generate HTML for tool call: {tool_call_dict}")
+                print("Generator retrying function calling")
+                continue
+
+            # Update state with the tool call and HTML
+            state['current_tool_call'] = tool_call_dict
+            state['current_html_content'] = html_content
             
-        state['current_tool_call'] = tool_call_dict
-        state['current_html_content'] = html_content 
-        state['is_redundant'] = False
-        print("Created error slide due to exception")
-        
-    return state
+            print(f"Successfully executed tool: {tool_call_dict['name']}")
+            print(f"Generated HTML length: {len(html_content)} characters")
+            return state

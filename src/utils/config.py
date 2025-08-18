@@ -1,14 +1,10 @@
-# src/utils/config.py
+import asyncio
 import os
 from dotenv import load_dotenv
-from selenium import webdriver
-from selenium.webdriver.chrome.service import Service
-from selenium.webdriver.chrome.options import Options
-import shutil
+from playwright.async_api import async_playwright
 import logging
 logger = logging.getLogger(__name__)
 import re
-import time
 from PIL import Image
 import io
 
@@ -34,40 +30,25 @@ def setup_environment():
         os.environ["MATA01"] = os.getenv('MATA01')
     
     return api_keys
-
-def initialize_chromedriver():
+async def initialize_playwright():
     try:
-        # chrome_driver_path = shutil.which("chromedriver")
-        # print(f"🔍 ChromeDriver path: {chrome_driver_path}")
-        # if not chrome_driver_path:
-        #     raise FileNotFoundError("ChromeDriver not found in PATH.")
-
-        chrome_options = Options()
-        chrome_options.add_argument("--log-level=3")
-        chrome_options.add_argument("--headless")
-        chrome_options.add_argument("--log-level=3")  # Reduce logging noise
-        chrome_options.add_argument("--no-sandbox")
-        chrome_options.add_argument("--disable-dev-shm-usage")
-        chrome_options.add_argument("--disable-gpu")
-        chrome_options.add_argument("--disable-web-security")
-        chrome_options.add_argument("--allow-running-insecure-content")
-        # Đặt kích thước cửa sổ theo tỷ lệ slide presentation
-        chrome_options.add_argument("--window-size=1600,900")
-        chrome_options.add_argument("--force-device-scale-factor=1")
-        chrome_options.add_argument("--disable-extensions")
-        chrome_options.add_argument("--disable-plugins")
-
-        driver = webdriver.Chrome(options=chrome_options)
-        
-        # Tăng giới hạn thời gian chờ để tránh lỗi timeout
-        driver.set_page_load_timeout(30)
-        driver.set_script_timeout(30)
-        
-        print("✅ ChromeDriver initialized successfully")
-        return driver
-
+        playwright = await async_playwright().__aenter__()
+        browser = await playwright.chromium.launch(headless=True, args=[
+            "--no-sandbox",
+            "--disable-dev-shm-usage",
+            "--disable-gpu",
+            "--disable-web-security",
+            "--allow-running-insecure-content",
+            "--disable-extensions",
+            "--disable-plugins",
+        ])
+        context = await browser.new_context(
+            viewport={"width": 1600, "height": 900},
+            device_scale_factor=1
+        )
+        print("✅ Playwright initialized successfully")
+        return {"playwright": playwright, "browser": browser, "context": context}
     except Exception as e:
-        print(f"❌ Error initializing ChromeDriver: {e}")
+        print(f"❌ Error initializing Playwright: {e}")
         import traceback; traceback.print_exc()
         return None
-    

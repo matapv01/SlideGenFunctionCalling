@@ -1,8 +1,6 @@
-import re
-import logging
-import src
-from src.stage import State
-from typing import List, Dict, Any
+
+from src.graph.stage import State
+from typing import Dict, Any
 import time
 
 def finalize_slide(state: State) -> Dict[str, Any]:
@@ -33,14 +31,7 @@ def finalize_slide(state: State) -> Dict[str, Any]:
     # Reset retry_count cho slide tiếp theo
     state['retry_count'] = 0
     print(f"Reset retry_count: {state['retry_count']}")
-    
-    # Cập nhật context cho slide tiếp theo
-    new_context = {
-        "content": state['current_slide_text'],
-        "function_call": state['current_tool_call'],
-        "image_path": state.get('current_image_path', '')
-    }
-    
-    return {
-        "previous_slide_context": new_context
-    }
+
+    state['previous_accepted_tool_call'] = state['current_tool_call']
+
+    return state

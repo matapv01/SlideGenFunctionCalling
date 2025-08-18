@@ -1,3 +1,0 @@
-Text: 
-Tool Call: id=None args={'description': 'Chủ quyền biển đảo là vấn đề sống còn đối với đất nước ta, ảnh hưởng sâu sắc đến an ninh quốc gia, kinh tế biển và sự toàn vẹn lãnh thổ. Việc hiểu rõ về chủ quyền biển đảo là hết sức quan trọng với mỗi người dân Việt Nam.', 'title': 'Vấn đề về chủ quyền biển đảo Việt Nam'} name='generate_academic_slide'
-Text JSON: {}

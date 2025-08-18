@@ -5,9 +5,9 @@ import base64
 import json
 from typing import Literal
 from pydantic import BaseModel, Field
-from langchain_core.messages import HumanMessage, SystemMessage
+from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
-from src.stage import State
+from src.graph.stage import State
 import time
 
 EVALUATION_PROMPT = """
@@ -145,64 +145,66 @@ def slide_evaluator(state: State) -> State:
         return state
 
     # Build multimodal message (text + image)
-    try:
-        evaluation_prompt = ChatPromptTemplate.from_template(EVALUATION_PROMPT)
-        formatted_prompt = evaluation_prompt.format(
-            tool_call_output=json.dumps(recent_function_call, indent=2)
-        )
-        
-        message_content = [
-            {"type": "text", "text": formatted_prompt}
-        ]
+    evaluation_prompt = ChatPromptTemplate.from_template(EVALUATION_PROMPT)
+    formatted_prompt = evaluation_prompt.format(
+        tool_call_output=json.dumps(recent_function_call, indent=2)
+    )
+    
+    message_content = [
+        {"type": "text", "text": formatted_prompt}
+    ]
 
-        # Add image if available
-        current_base64_image = image_to_base64(current_image_path)
-        if current_base64_image:
-            message_content.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/png;base64,{current_base64_image}"},
-                "description": "current slide image"
-            })
-        else:
-            print("Warning: Could not encode current slide image to base64")
+    # Add image if available
+    current_base64_image = image_to_base64(current_image_path)
+    if current_base64_image:
+        message_content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/png;base64,{current_base64_image}"},
+            "description": "current slide image"
+        })
+    else:
+        print("Warning: Could not encode current slide image to base64")
 
-        previous_base64_image = image_to_base64(previous_image_path)
-        if previous_base64_image:
-            message_content.append({
-                "type": "image_url",
-                "image_url": {"url": f"data:image/png;base64,{previous_base64_image}"},
-                "description": "previous slide image"
-            })
-        else:
-            print("Warning: Could not encode previous slide image to base64")
+    previous_base64_image = image_to_base64(previous_image_path)
+    if previous_base64_image:
+        message_content.append({
+            "type": "image_url",
+            "image_url": {"url": f"data:image/png;base64,{previous_base64_image}"},
+            "description": "previous slide image"
+        })
+    else:
+        print("Warning: Could not encode previous slide image to base64")
 
-        vlm_message = HumanMessage(content=message_content)
+    vlm_message = HumanMessage(content=message_content)
 
-        # Use structured output with the LLM
-        llm = state['llm']
+    # Use structured output with the LLM
+    llm = state['llm']
+
+    while True:
         structured_llm = llm.with_structured_output(Evaluation)
 
         print("Sending request to VLM with structured_output...")
         response: Evaluation = structured_llm.invoke([vlm_message])
-        
+
+        print(f"Response: {response}")
+
         print(f"VLM Decision: {response.decision}")
         print(f"VLM Feedback: {response.feedback}")
+
+        # if response.usage_metadata['output_tokens'] == 0:
+        #     llm._rotate_key_and_recreate_instance()
 
         state['vlm_decision'] = response.decision
         state['vlm_feedback'] = response.feedback
 
-    except Exception as e:
-        print(f"Critical error when calling VLM with structured_output: {e}")
-        state['vlm_decision'] = "deny"
-        state['vlm_feedback'] = f"System error occurred during evaluation: {str(e)}"
 
-    # Update retry count if decision is 'deny'
-    if state['vlm_decision'] == 'deny':
-        state['retry_count'] = retry_count + 1
-        print(f"Slide rejected. Increasing retry_count to {state['retry_count']}")
-    else:
-        # Reset retry count on successful acceptance
-        state['retry_count'] = 0
-        print("Slide accepted.")
-    
-    return state
+        # Update retry count if decision is 'deny'
+        if state['vlm_decision'] == 'deny':
+            state['retry_count'] = retry_count + 1
+            print(f"Slide rejected. Increasing retry_count to {state['retry_count']}")
+        else:
+            # Reset retry count on successful acceptance
+            state['retry_count'] = 0
+            print("Slide accepted.")
+        
+        return state

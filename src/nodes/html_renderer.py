@@ -3,44 +3,36 @@
 import logging
 import os
 from typing import Dict, Any
-import time
+import asyncio
+from src.graph.stage import State
+from src.utils.config import initialize_playwright
 
-# Import hàm thực thi tool duy nhất
-from src.tools.tool_des import execute_tool 
-from src.stage import State
-from src.utils.config import initialize_chromedriver
-
-def html_renderer(state: State) -> State:
+async def html_renderer(state: State) -> State:
     """
-    Node HTML Renderer: Tạo file HTML từ tool call và cap ảnh slide.
+    Node HTML Renderer: Tạo file HTML từ tool call và chụp ảnh slide.
     """
     retry_count = state.get('retry_count', 0)
     idx = state['current_slide_index']
     print(f"\n---------------- Executing Node: html_renderer (Slide {idx + 1}, Thử lại lần {retry_count}) ----------------")
-    time.sleep(20)
+    await asyncio.sleep(2)  # Reduced sleep time as Playwright is faster
     
     # Lấy nội dung từ tool call
     html_content = state['current_html_content']
-    
     
     # Log thông tin HTML để dễ debug
     print(f"HTML content (first 100 chars): {html_content[:100]}...")
     print(f"HTML content length: {len(html_content)} characters")
     
-    # Lấy driver từ state hoặc khởi tạo lại nếu không có
-    driver = state.get('driver')
-    while not driver:
-        print("Driver không tìm thấy trong state, có thể đã bị đóng")
+    # Lấy Playwright instance từ state hoặc khởi tạo lại nếu không có
+    playwright_instance = state.get('playwright_instance')
+    while not playwright_instance:
+        print("Playwright instance không tìm thấy trong state")
         try:
-            # Khởi tạo driver
-            driver = initialize_chromedriver()
-            # Lưu driver mới vào state
-            state['driver'] = driver
-            print("Đã khởi tạo lại ChromeDriver thành công")
+            playwright_instance = await initialize_playwright()
+            state['playwright_instance'] = playwright_instance
+            print("Đã khởi tạo lại Playwright thành công")
         except Exception as e:
-            print(f"Lỗi khi khởi tạo lại ChromeDriver: {e}")
-            # Thêm thông tin HTML vào state và tiếp tục mà không có driver
-            state['current_html_content'] = html_content
+            print(f"Lỗi khi khởi tạo lại Playwright: {e}")
             state['current_html_path'] = ''
             state['current_image_path'] = ''
             return state
@@ -57,50 +49,42 @@ def html_renderer(state: State) -> State:
     
     # Chụp ảnh slide
     try:
+        page = await playwright_instance['context'].new_page()
         # Tải trang HTML
         url = f"file:///{html_path}"
-        driver.get(url)
+        await page.goto(url)
         
-        # Đợi một chút để trang load
-        time.sleep(1)
+        # Đợi để trang load hoàn toàn
+        await page.wait_for_load_state('networkidle')
         
         # Tạo tên file ảnh
         png_filename = f"slide_{idx + 1}.png"
         png_path = os.path.join(state['temp_dir'], "png", png_filename)
         
         # Chụp ảnh
-        driver.save_screenshot(png_path)
+        await page.screenshot(path=png_path, full_page=True)
         print(f"Đã chụp ảnh tại: {png_path}")
         
-        # Cập nhật state với đường dẫn
+        # Cập nhật state
         if state.get('current_slide_index') > 0:
             state['previous_image_path'] = state.get('current_image_path', '')
         state['current_html_path'] = html_path
         state['current_image_path'] = png_path
         state['current_html_content'] = html_content
 
-        # Debug info - kiểm tra xem các key cần thiết có tồn tại không
+        # Debug info
         if 'temp_debug_dir' in state:
             html_debug_filename = f"slide_{idx + 1}_{retry_count}.html"
             html_debug_path = os.path.join(state['temp_debug_dir'], "html", html_debug_filename)
-            
-            # Đảm bảo thư mục debug html tồn tại
             os.makedirs(os.path.dirname(html_debug_path), exist_ok=True)
-            
-            # Sao chép file HTML vào thư mục debug
             with open(html_debug_path, "w", encoding="utf-8") as f:
                 f.write(html_content)
 
             png_debug_filename = f"slide_{idx + 1}_{retry_count}.png"
             png_debug_path = os.path.join(state['temp_debug_dir'], "png", png_debug_filename)
-            
-            # Đảm bảo thư mục debug png tồn tại
             os.makedirs(os.path.dirname(png_debug_path), exist_ok=True)
-            
-            # Sao chép ảnh vào thư mục debug
-            driver.save_screenshot(png_debug_path)
+            await page.screenshot(path=png_debug_path, full_page=True)
 
-            # Chuẩn bị dữ liệu debug
             debug_slide_data = {
                 "index": idx,
                 "tool_call": state.get('current_tool_call', {}),
@@ -110,13 +94,13 @@ def html_renderer(state: State) -> State:
                 "retry_count": retry_count
             }
             
-            # Thêm vào all_debug_info nếu tồn tại
             if 'all_debug_info' in state:
                 state['all_debug_info'].append(debug_slide_data)
+        
+        await page.close()
     
     except Exception as e:
         print(f"Lỗi khi chụp ảnh slide: {e}")
-        # Vẫn lưu đường dẫn HTML
         state['current_html_path'] = html_path
         state['current_html_content'] = html_content
     

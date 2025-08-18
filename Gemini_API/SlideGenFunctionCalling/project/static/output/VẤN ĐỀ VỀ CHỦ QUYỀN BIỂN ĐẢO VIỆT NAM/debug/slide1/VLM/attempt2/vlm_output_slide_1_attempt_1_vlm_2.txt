@@ -1,4 +1,0 @@
-VLM Text: <!-- accept -->
-<!-- reason: The slide clearly displays all content from the provided tool call. The title is prominent, the description is fully visible and readable, and there are no signs of content overflow or occlusion. The layout is clean with sufficient whitespace. -->
-VLM Tool Call: {'name': 'generate_content_slide', 'arguments': {'title': 'Error', 'content': 'No function call returned'}}
-VLM Text JSON: {'remaining_content': '', 'split_reason': ''}
