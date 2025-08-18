@@ -17,6 +17,8 @@ class State(TypedDict):
     # LLM
     llm: Optional[LLM]
     tools: List[Any]  # Danh sách các công cụ LLM
+    playwright_instance: Optional[Any]  # Playwright instance nếu cần
+
 
     # Trạng thái vòng lặp
     current_slide_index: int

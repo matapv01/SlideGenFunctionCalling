@@ -1,4 +1,3 @@
-# main.py
 from typing import List, Optional
 from langchain_openai import ChatOpenAI
 from langchain_core.tools import StructuredTool
@@ -17,6 +16,7 @@ from src.stage import State
 from src.utils import config
 from langgraph.graph import StateGraph
 import os
+import asyncio
 from src.tools.tool_des import TOOLS_DICT
 from langgraph.graph import END
 
@@ -26,10 +26,8 @@ def route_to_task(state: State) -> str:
     """
     print("--- Router: route_to_task ---")
     if state.get('slide_chunks'):
-        # Nếu còn slide, đi đến node chuẩn bị
         return "generator"
     else:
-        # Nếu hết, kết thúc
         print("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
         return END
 
@@ -42,11 +40,9 @@ def check_redundancy(state: State) -> str:
     print(f"Slide có bị đánh dấu là dư thừa: {is_redundant}")
     
     if is_redundant:
-        # Nếu dư thừa, quay lại router chính để lấy slide khác
         print("Slide bị đánh dấu là dư thừa, quay lại node initialize_and_provide")
         return "initialize_and_provide"
     else:
-        # Nếu không, tiếp tục render
         print("Slide không dư thừa, tiếp tục đến node renderer")
         return "renderer"
 
@@ -55,44 +51,33 @@ def evaluate_vlm_decision(state: State) -> str:
     Đánh giá quyết định của VLM và quyết định luồng tiếp theo.
     """
     print("--- Router: evaluate_vlm_decision ---")
-    
-    # Đảm bảo vlm_decision luôn tồn tại trong state
-    decision = state.get('vlm_decision', 'deny')  # Mặc định deny nếu không có quyết định
+    decision = state.get('vlm_decision', 'deny')
     print(f"Đang xử lý quyết định VLM: {decision}")
-    
-    # Lấy retry_count hiện tại
     retry_count = state.get('retry_count', 0)
     max_retries = state.get('max_retries', 3)
     print(f"Giá trị retry_count hiện tại: {retry_count}")
     
     if decision == "accept":
         print("Slide được chấp nhận. Chuyển đến bước hoàn tất.")
-
         return "finalizer"
-    else: # deny
-        # Kiểm tra nếu đã đạt số lần thử lại tối đa
+    else:
         if retry_count >= max_retries:
             print(f"Đã đạt số lần thử lại tối đa ({max_retries}). Buộc chấp nhận slide.")
-            return "finalizer"  # Đi thẳng đến finalizer
+            return "finalizer"
         else:
             print(f"Slide bị từ chối. Thử lại lần {retry_count}.")
-            return "generator"  # Quay lại node generator để thử lại slide
+            return "generator"
 
-
-
-# -- Xây dựng và thực thi Graph ---
-
-def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retries_per_slide: int = 6):
+async def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retries_per_slide: int = 6):
     """
     Hàm chính để xây dựng và chạy luồng công việc LangGraph.
     """
-    # Khởi tạo WebDriver một lần duy nhất
-    driver = config.initialize_chromedriver()
-    if not driver:
-        raise RuntimeError("Không thể khởi tạo ChromeDriver.")
-        
+    # Khởi tạo Playwright
+    playwright_instance = await config.initialize_playwright()
+    if not playwright_instance:
+        raise RuntimeError("Không thể khởi tạo Playwright.")
+    
     # ===== KHỞI TẠO LLM INSTANCE =====
-    # KHỞI TẠO LLM INSTANCE
     env_keys = config.setup_environment()
     api_keys = [v for v in env_keys.values() if v]
     if not api_keys:
@@ -110,13 +95,10 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
     temp_dir = os.path.join(output_folder, "temp")
     html_dir = os.path.join(temp_dir, "html")
     png_dir = os.path.join(temp_dir, "png")
-    
-    # Tạo thư mục debug
     temp_debug_dir = os.path.join(output_folder, "temp_debug")
     debug_html_dir = os.path.join(temp_debug_dir, "html")
     debug_png_dir = os.path.join(temp_debug_dir, "png")
     
-    # Tạo tất cả các thư mục cần thiết
     for dir_path in [temp_dir, html_dir, png_dir, temp_debug_dir, debug_html_dir, debug_png_dir]:
         if not os.path.exists(dir_path):
             os.makedirs(dir_path)
@@ -124,56 +106,46 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
             
     # Định nghĩa đồ thị
     workflow = StateGraph(State)
-
-    # Thêm các node
     workflow.add_node("initialize_and_provide", initialize_and_provide)
     workflow.add_node("provide_next_slide", provide_next_slide)
     workflow.add_node("generator", slide_generator)
     workflow.add_node("renderer", html_renderer)
     workflow.add_node("evaluator", slide_evaluator)
     workflow.add_node("finalizer", finalize_slide)
-
-    # Thiết lập điểm bắt đầu
     workflow.set_entry_point("initialize_and_provide")
-
-    # Thêm các cạnh (edges)
     workflow.add_edge("initialize_and_provide", "provide_next_slide")
     workflow.add_conditional_edges("provide_next_slide", route_to_task, {"generator": "generator", END: END})
     workflow.add_conditional_edges("generator", check_redundancy, {"initialize_and_provide": "initialize_and_provide", "renderer": "renderer"})
     workflow.add_edge("renderer", "evaluator")
     workflow.add_conditional_edges("evaluator", evaluate_vlm_decision, {"finalizer": "finalizer", "generator": "generator"})
     workflow.add_edge("finalizer", "provide_next_slide")
-
-    # Biên dịch đồ thị với các tùy chọn
     app = workflow.compile()
     
-    # ===== TRUYỀN LLM_INSTANCE VÀO STATE BAN ĐẦU =====
-    # Chuẩn bị input ban đầu cho graph
     initial_input = {
         "docx_file": docx_file,
         "output_folder": output_folder,
         "max_retries": max_retries_per_slide,
-        "driver": driver, 
+        "playwright_instance": playwright_instance,
         "llm": llm,
-        "tools": TOOLS_DICT,  # Truyền vào danh sách công cụ
+        "tools": TOOLS_DICT,
         "current_slide_index": -1,
         "retry_count": 0,
         "final_slides": [],
         "temp_dir": os.path.join(output_folder, "temp"),
         "temp_debug_dir": temp_debug_dir,
         "is_redundant": False,
-        "all_debug_info": [],  # Thêm khởi tạo cho all_debug_info
-        "vlm_decision": "accept",  # Đặt mặc định là accept
+        "all_debug_info": [],
+        "vlm_decision": "accept",
     }
     
-    # Chạy graph
-    # Sử dụng try-finally để đảm bảo driver luôn được đóng
     try:
-        final_state = app.invoke(initial_input, config={"recursion_limit": 500}) # gioi han so buoc cua workflow
+        final_state = await app.ainvoke(initial_input, config={"recursion_limit": 500})
     finally:
-        if driver:
-            driver.quit()
-            print("Đã đóng ChromeDriver.")
+        if playwright_instance:
+            await playwright_instance["context"].close()
+            await playwright_instance["browser"].close()
+            await playwright_instance["playwright"].__aexit__(None, None, None)
+            print("Đã đóng Playwright.")
             
     zip_file_path = os.path.join(final_state['temp_dir'], "slides.zip")
     with zipfile.ZipFile(zip_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
@@ -183,14 +155,11 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
             if os.path.exists(slide['png_path']):
                 zipf.write(slide['png_path'], os.path.join("png", os.path.basename(slide['png_path'])))
 
-    # Sao chép file zip cuối cùng ra output folder
     final_zip_path = os.path.join(output_folder, "slides_langgraph.zip")
     shutil.copy2(zip_file_path, final_zip_path)
-    shutil.rmtree(final_state['temp_dir']) # Xóa thư mục tạm
-
+    shutil.rmtree(final_state['temp_dir'])
 
     zip_debug_file_path = os.path.join(final_state['temp_debug_dir'], "slides_debug.zip")
-    # Tạo zip file debug nếu có thông tin debug
     with zipfile.ZipFile(zip_debug_file_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
         for slide in final_state['all_debug_info']:
             if os.path.exists(slide['html_path']):
@@ -215,29 +184,18 @@ def process_slides_with_langgraph(docx_file: str, output_folder: str, max_retrie
                     json.dump(slide['tool_call'], f, ensure_ascii=False, indent=4)
                 zipf.write(tool_call_path, os.path.join("tool_calls", tool_call_filename))
 
-
-    # Sao chép file zip debug cuối cùng ra output folder
     final_zip_debug_path = os.path.join(output_folder, "slides_debug_langgraph.zip")
     shutil.copy2(zip_debug_file_path, final_zip_debug_path)
     if os.path.exists(final_state['temp_debug_dir']):
-        shutil.rmtree(final_state['temp_debug_dir'])  # Xóa thư mục tạm debug
+        shutil.rmtree(final_state['temp_debug_dir'])
 
     print(f"Hoàn thành! File kết quả đã được lưu tại: {final_zip_path}")
     return final_zip_path
 
-# --- Ví dụ cách chạy ---
 if __name__ == "__main__":
-    # Tạo các thư mục test nếu chưa có
     if not os.path.exists("test_input"):
         os.makedirs("test_input")
     if not os.path.exists("test_output"):
         os.makedirs("test_output")
-
-    # Tạo một file docx giả để test
     sample_docx_path = os.path.join("test_input", "test_ttcs - heading.docx")
-
-    # Chạy quy trình
-    try:
-        process_slides_with_langgraph(sample_docx_path, "test_output")
-    except Exception as e:
-        print(f"Một lỗi không mong muốn đã xảy ra trong quá trình xử lý: {e}")
+    asyncio.run(process_slides_with_langgraph(sample_docx_path, "test_output"))
