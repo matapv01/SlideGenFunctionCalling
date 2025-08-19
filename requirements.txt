@@ -13,3 +13,7 @@ img2pdf
 python-multipart
 docling
 playwright
+
+fastapi
+uvicorn
+python-multipart

@@ -3,61 +3,58 @@ from langchain_core.prompts import ChatPromptTemplate
 from src.tools.tool_des import execute_tool
 
 SLIDEGEN_SYSTEM_PROMPT = """
-# YOUR MISSION: Generate a single, perfect slide function call for the `current_slide_content`.
+# YOUR MISSION: Generate a single function call to create a slide from current_slide_content. The slide must be clear, well-structured, visually consistent, and logically connected.
 # Your primary goal is to create a slide that is accurate, visually consistent, and logically sound. If you are given evaluation feedback, your #1 priority is to fix the mistakes from your last attempt.
 
 INSTRUCTIONS FOR SMART SLIDE GENERATION
 
-1. CONTENT DE-DUPLICATION & PREPARATION:
-- **First, compare `current_slide_content` with `previous_slide_content`.**
-- **Identify and REMOVE any text from `current_slide_content` that is a direct repetition of content already on the previous slide.** The remaining unique text is your new working content for this slide.
+1. Content Preparation
+    - Input only contains current_slide_content.
+    - No need to compare with or remove duplicates from a previous slide.
+    - Focus solely on transforming the current content into slide-ready form.
 
-2. CONTENT ANALYSIS & LOSSLESS SYNTHESIS:
-- **Core Principle: Rephrase for clarity, but do not omit information.**
-- Analyze the de-duplicated content to identify every unique point, idea, and piece of data.
-- **Your goal is a comprehensive summary.** Structure the content concisely using bullet points or short phrases, but you MUST include all distinct information from the source text.
-- DO NOT simply copy-paste raw text. Transform it into a polished, slide-friendly format.
+2. Content Analysis & Synthesis
+    - Preserve all information — do not omit or lose details.
+    - Present content concisely, in a slide-friendly way (bullet points, short phrases).
+    - Do not copy raw text directly; rephrase for clarity and readability.
 
-3. STRATEGIC SLIDE FUNCTION SELECTION & CORRECTION:
-- **Core Principle: The layout must serve the content. If `previous_evaluation` exists, you MUST correct your previous choice.**
-- **If `previous_evaluation` is provided:**
-    - It means your `previous_function_call` was flawed. Analyze the feedback carefully.
-    - Your new function call MUST address the critique. This might involve changing the slide function entirely (e.g., from `make_text_slide` to `make_bullet_slide`), rephrasing the content, or adjusting formatting.
-- **If no feedback is provided:**
-    - Select the single best slide function based on your synthesized content. Consider the content's nature (list, comparison, narrative), the amount of text, and the narrative flow.
-- Available functions include: `make_bullet_slide`, `make_two_column_slide`, `make_text_slide`, `make_image_with_caption_slide`, `make_quote_slide`.
+3. Strategic Slide Function Selection
+    - Choose the slide type that best matches the structure and quantity of the current content.
+    - Adjust the function’s parameters carefully to ensure the slide is aesthetically pleasing and effective in communication.
 
-4. VISUAL & DESIGN COHERENCE:
-- **Core Principle: The new slide must feel like part of the same presentation.**
-- **Use the `previous_function_call` as your definitive style guide.**
-- **This is true for BOTH first attempts and retries.** The `previous_function_call` always contains the design template (fonts, alignment, etc.) that you must follow.
-- MAINTAIN a consistent style for: Fonts (family, size), bullet point style, text alignment, and spacing.
-- AVOID jarring visual shifts.
+    - If previous_evaluation and previous_tool_call exists, you must fix errors by adjusting the parameters of the previous tool call follow the feedback of previous_evaluation (e.g., rephrasing text, resizing, reformatting).
+    - You should fix parameters of previous_tool_call based on previous_evaluation feedback (don't change tool_name, just adjust parameters), avoid call other tool_name unless strictly necessary (e.g., when the previous function type is fundamentally unsuitable for the content).
+    - If no feedback is provided, select the function type that best matches the content.
 
-5. STRATEGIC HTML FORMATTING (Use Sparingly):
-- **Core Principle: Use HTML for subtle enhancement, not for layout.**
-- Use tags like `<b>`, `<i>`, and `<br>` only to improve readability.
-- Use with extreme caution: `<ul>/<li>` or `<span style="...">`, typically only if correcting a specific issue from `previous_evaluation`.
+4. Design Consistency
+    - The new slide must stay visually aligned with the presentation’s style.
+    - Use the previous tool call as style inspiration, but avoid directly replicating it.
+    - Maintain coherence in fonts, alignment, bullet style, and spacing.
 
-6. SEMANTIC & LOGICAL CONTINUITY:
-- **Core Principle: Ensure a smooth narrative flow.**
-- The new slide must be a logical next step from `previous_slide_content` (e.g., an elaboration, a contrast, an example).
+5. HTML Highlighting & Formatting
+    - Key phrases must be highlighted for emphasis, using a combination of:
+        + <b> for bold
+        + <i> for italics
+        + Color tags (e.g., <span style="color:...">)
+    - Follow the highlighting style seen in the previous tool call for consistency.
+    - You may also use tags to adjust alignment or structure if needed.
 
-OUTPUT REQUIREMENTS:
+6. Logical Continuity
+    - Each new slide must connect smoothly to the previous one.
+    - Do not repeat content from the previous slide.
+    - Ensure a clear narrative flow (elaboration, contrast, examples, etc.).
 
-- Your response must be a **single, syntactically correct function call** and nothing else.
-- All text arguments in the function call must be in the detected language.
-- **Final Check:** Ensure the slide is comprehensive, well-structured, visually consistent, logically connected, and directly addresses any feedback.
+Output Requirement:
+    - Return exactly one syntactically correct function call and nothing else.
+    - All text arguments must be in the correct language of the presentation.
+    - The slide must be comprehensive, structured, visually consistent, and logically coherent.
 """
 
 HUMAN_PROMPT_TEMPLATE = """
 ---
 INPUT CONTEXT FOR THIS TASK:
 
-- **Previous slide content:** (The text from the preceding slide in the presentation. Used for de-duplication and context.)
-{previous_slide_content}
-
-- - **Previous slide function call:** (the previous slide function call accepted)
+- **Previous slide function call:** (the previous slide function call accepted)
 {previous_slide_function_call}
 
 - **Current slide content:** (Current slide index is {slide_index}/{length_slide_chunks} total slides. The raw text for the new slide. Process this.)
@@ -207,7 +204,7 @@ def slide_generator(state: State) -> State:
         
         print(f"LLM response type: {type(response)}")
 
-        if response.usage_metadata['output_tokens'] == 0:
+        if response.usage_metadata['output_tokens'] == 0 or (hasattr(response, 'error') ):
             llm._rotate_key_and_recreate_instance()
             continue
 

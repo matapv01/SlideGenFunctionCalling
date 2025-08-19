@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split-Layout List Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh; width: 100vw;
+            font-family: Open Sans; overflow: hidden;
+        }
+        .slide-container { width: 100%; height: 100%; display: flex; }
+        .left-column {
+            flex: 1; max-width: 35%;
+            background-color: #4A90E2; color: #FFFFFF;
+            padding: 3rem; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        .right-column {
+            flex: 2; background-color: #F8F8F8; color: #34495E;
+            padding: 4rem 3rem; overflow-y: auto;
+        }
+        .points-list { display: flex; flex-direction: column; gap: 2rem; }
+        .point-item:not(:last-child) {
+            padding-bottom: 2rem; border-bottom: 1px solid #DCDCDC;
+        }
+
+        /* Font size styles */
+        .main-title {
+            font-size: clamp(calc(2.5rem * 1.0), calc(6vw * 1.0), calc(4rem * 1.0));
+            font-weight: 900; line-height: 1.2; text-transform: uppercase;
+        }
+        .point-title {
+            font-size: 1.5rem;
+            font-weight: 900; text-transform: uppercase; margin-bottom: 0.75rem;
+        }
+        .point-description {
+            font-size: 1.25rem;
+            line-height: 1.6; font-weight: 400; max-width: 45rem;
+        }
+        
+        @media (max-width: 768px) {
+            .slide-container { flex-direction: column; overflow-y: auto; }
+            .left-column { max-width: 100%; width: 100%; flex: none; height: auto; min-height: 12rem; padding: 2rem; }
+            .right-column { flex: none; width: 100%; padding: 2.5rem 2rem; }
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="left-column">
+            <h1 class="main-title">KẾ HOẠCH KINH DOANH <br> <span style='color:#FFFFFF;'>INNOVATECH SOLUTIONS</span></h1>
+        </div>
+        <div class="right-column">
+            <div class="points-list">
+                
+        <div class="point-item">
+            <h2 class="point-title">Mục tiêu thành lập</h2>
+            <p class="point-description">Cung cấp <span style='color:#2C3E50;'><b>giải pháp phần mềm tùy chỉnh</b></span> và <span style='color:#2C3E50;'><b>dịch vụ tư vấn CNTT tiên tiến</b></span> cho <span style='color:#2C3E50;'><b>doanh nghiệp vừa và nhỏ (SMEs)</b></span>.</p>
+        </div>
+        
+        <div class="point-item">
+            <h2 class="point-title">Nhu cầu thị trường</h2>
+            <p class="point-description">Đáp ứng nhu cầu <span style='color:#2C3E50;'><b>chuyển đổi số</b></span>: công cụ <span style='color:#2C3E50;'><b>hiệu quả, dễ tiếp cận, mở rộng</b></span> giúp SMEs <span style='color:#2C3E50;'><b>nâng cao năng lực cạnh tranh</b></span>.</p>
+        </div>
+        
+        <div class="point-item">
+            <h2 class="point-title">Nội dung Kế hoạch</h2>
+            <p class="point-description">Trình bày chi tiết <span style='color:#2C3E50;'><b>mô hình hoạt động, chiến lược thị trường, mục tiêu phát triển</b></span> và <span style='color:#2C3E50;'><b>dự phóng tài chính</b></span> của Innovatech Solutions trong 5 năm tới.</p>
+        </div>
+        
+        <div class="point-item">
+            <h2 class="point-title">Tầm nhìn & Giá trị</h2>
+            <p class="point-description">Tin tưởng vào <span style='color:#2C3E50;'><b>tiềm năng tăng trưởng vượt trội</b></span> và khả năng tạo <span style='color:#2C3E50;'><b>giá trị bền vững</b></span> cho <span style='color:#2C3E50;'><b>khách hàng</b></span> và <span style='color:#2C3E50;'><b>nhà đầu tư</b></span>.</p>
+        </div>
+        
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -78,6 +78,9 @@ In addition, if a previous slide is available, evaluate consistency between the 
 - Font size
 - Font family
 
+Previous accepted tool call:  
+{previous_accepted_tool_call}
+
 Current tool call:  
 {tool_call_output}
 
@@ -130,6 +133,7 @@ def slide_evaluator(state: State) -> State:
 
     # Get current tool call and image path
     recent_function_call = state.get('current_tool_call', None)
+    previous_accepted_tool_call = state.get('previous_accepted_tool_call', None)
     current_image_path = state.get('current_image_path', None)
     previous_image_path = state.get('previous_image_path', None)
 
@@ -147,7 +151,8 @@ def slide_evaluator(state: State) -> State:
     # Build multimodal message (text + image)
     evaluation_prompt = ChatPromptTemplate.from_template(EVALUATION_PROMPT)
     formatted_prompt = evaluation_prompt.format(
-        tool_call_output=json.dumps(recent_function_call, indent=2)
+        tool_call_output=json.dumps(recent_function_call, indent=2),
+        previous_accepted_tool_call=json.dumps(previous_accepted_tool_call, indent=2)
     )
     
     message_content = [
@@ -190,9 +195,10 @@ def slide_evaluator(state: State) -> State:
 
         print(f"VLM Decision: {response.decision}")
         print(f"VLM Feedback: {response.feedback}")
-
-        # if response.usage_metadata['output_tokens'] == 0:
+        
+        # if response['completion_tokens'] == 0:
         #     llm._rotate_key_and_recreate_instance()
+        #     continue
 
         state['vlm_decision'] = response.decision
         state['vlm_feedback'] = response.feedback
