@@ -1,0 +1,227 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { font-size: 16px; width: 1920px; height: 1080px; }
+        body, html {
+            height: 1080px;
+            width: 1920px;
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a4b8c 0%, #2a6cb7 100%);
+            position: relative;
+            color: #FFFFFF;
+            padding: 60px;
+            box-sizing: border-box;
+        }
+        
+        /* Content wrapper for scaling */
+        .content-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }
+        
+        .outer-wrapper {
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }
+
+        .content-frame {
+            width: 100%;
+            max-width: 1400px;
+            padding: 80px;
+            position: relative;
+            text-align: center;
+        }
+        
+        .content-frame:not(.no-border) {
+            border: 3px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+        }
+        
+        
+        .title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: 0.1em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content {
+            font-size: 22px;
+            line-height: 1.6;
+            font-weight: 300;
+            text-align: center;
+            max-width: 90%;
+            margin: 0 auto;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Decorative triangles */
+        .triangle {
+            position: absolute;
+            opacity: 0.15;
+            z-index: 1;
+        }
+        
+        .triangle-top-left {
+            top: 5%;
+            left: 5%;
+            width: 0;
+            height: 0;
+            border-left: 120px solid transparent;
+            border-right: 120px solid transparent;
+            border-bottom: 200px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(15deg);
+        }
+        
+        .triangle-top-right {
+            top: 8%;
+            right: 8%;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 180px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-25deg);
+        }
+        
+        .triangle-bottom-left {
+            bottom: 10%;
+            left: 3%;
+            width: 0;
+            height: 0;
+            border-left: 80px solid transparent;
+            border-right: 80px solid transparent;
+            border-bottom: 140px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+        
+        .triangle-bottom-right {
+            bottom: 5%;
+            right: 5%;
+            width: 0;
+            height: 0;
+            border-left: 110px solid transparent;
+            border-right: 110px solid transparent;
+            border-bottom: 190px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-35deg);
+        }
+        
+        /* Additional geometric shapes */
+        .geometric-shape {
+            position: absolute;
+            opacity: 0.105;
+            z-index: 2;
+        }
+        
+        .shape-1 {
+            top: 15%;
+            left: 15%;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            transform: rotate(45deg);
+        }
+        
+        .shape-2 {
+            top: 20%;
+            right: 20%;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+        
+        .shape-3 {
+            bottom: 25%;
+            left: 20%;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        @media (max-width: 768px) {
+            .outer-wrapper {
+                transform: scale(0.4);
+                transform-origin: top left;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .outer-wrapper {
+                transform: scale(0.25);
+                transform-origin: top left;
+            }
+        }
+        
+        
+    </style><style>
+*{box-sizing:border-box;}
+html { width: 1920px; height: 1080px; }
+body {
+  margin: 0;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0);
+  overflow: auto;
+  /* KHÔNG đặt width/height cho body */
+}
+.outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
+.content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:1920px;height:1080px;overflow:visible;background:inherit;box-sizing:border-box;}
+</style></head><body><div class="outer-wrapper"><div class="content-wrapper">
+    <div style='position:absolute;z-index:100;left:0px;top:0px;width:1920px;height:1080px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 960px 540px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="outer-wrapper"></div>
+    <div style='position:absolute;z-index:101;left:0px;top:0px;width:1920px;height:1080px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform: matrix(1, 0, 0, 1, -960, -540); transform-origin: 960px 540px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="content-wrapper"></div>
+    <div style='position:absolute;z-index:102;left:0px;top:0px;width:1920px;height:1080px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(26, 75, 140) 0%, rgb(42, 108, 183) 100%) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgb(26, 75, 140) 0%, rgb(42, 108, 183) 100%); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 1; transform-origin: 960px 540px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 60px; padding-top: 60px; padding-right: 60px; padding-bottom: 60px; padding-left: 60px; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="slide-container"></div>
+    <div style='position:absolute;z-index:103;left:74.20699310302734px;top:26.349132537841797px;width:283.58599853515625px;height:255.30174255371094px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 0.15; transform: matrix(0.965926, 0.258819, -0.258819, 0.965926, 0, 0); transform-origin: 120px 100px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 120px solid rgba(0, 0, 0, 0); border-bottom: 200px solid rgba(255, 255, 255, 0.1); border-left: 120px solid rgba(0, 0, 0, 0); ' class="triangle triangle-top-left"></div>
+    <div style='position:absolute;z-index:104;left:1537.7398681640625px;top:52.56109619140625px;width:257.332763671875px;height:247.6590576171875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 0.15; transform: matrix(0.906308, -0.422618, 0.422618, 0.906308, 0, 0); transform-origin: 100px 90px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 100px solid rgba(0, 0, 0, 0); border-bottom: 180px solid rgba(255, 255, 255, 0.1); border-left: 100px solid rgba(0, 0, 0, 0); ' class="triangle triangle-top-right"></div>
+    <div style='position:absolute;z-index:105;left:31.527732849121094px;top:795.9339599609375px;width:212.13204956054688px;height:212.132080078125px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 0.15; transform: matrix(0.707107, 0.707107, -0.707107, 0.707107, 0, 0); transform-origin: 80px 70px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 80px solid rgba(0, 0, 0, 0); border-bottom: 140px solid rgba(255, 255, 255, 0.1); border-left: 80px solid rgba(0, 0, 0, 0); ' class="triangle triangle-bottom-left"></div>
+    <div style='position:absolute;z-index:106;left:1569.403564453125px;top:790.087158203125px;width:289.19287109375px;height:281.82568359375px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 0.15; transform: matrix(0.819152, -0.573576, 0.573576, 0.819152, 0, 0); transform-origin: 110px 95px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 110px solid rgba(0, 0, 0, 0); border-bottom: 190px solid rgba(255, 255, 255, 0.1); border-left: 110px solid rgba(0, 0, 0, 0); ' class="triangle triangle-bottom-right"></div>
+    <div style='position:absolute;z-index:107;left:275.5735778808594px;top:149.57359313964844px;width:84.85284423828125px;height:84.85281372070312px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(255, 255, 255, 0.05) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(255, 255, 255, 0.05); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 0.105; transform: matrix(0.707107, 0.707107, -0.707107, 0.707107, 0, 0); transform-origin: 30px 30px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="geometric-shape shape-1"></div>
+    <div style='position:absolute;z-index:108;left:1496px;top:216px;width:40px;height:40px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(255, 255, 255, 0.05) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(255, 255, 255, 0.05); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 50%; opacity: 0.105; transform-origin: 20px 20px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="geometric-shape shape-2"></div>
+    <div style='position:absolute;z-index:109;left:384px;top:760px;width:50px;height:50px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(255, 255, 255, 0.05) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(255, 255, 255, 0.05); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 0.105; transform-origin: 25px 25px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; clip-path: polygon(50% 0%, 0% 100%, 100% 100%); box-sizing: border-box; text-align: start; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="geometric-shape shape-3"></div>
+    <div style='position:absolute;z-index:110;left:260px;top:253.265625px;width:1400px;height:573.46875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: center; text-decoration: rgb(255, 255, 255); border-radius: 12px; opacity: 1; transform-origin: 700px 286.734px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 80px; padding-top: 80px; padding-right: 80px; padding-bottom: 80px; padding-left: 80px; box-sizing: border-box; text-align: center; vertical-align: baseline; border-top: 3px dashed rgba(255, 255, 255, 0.4); border-right: 3px dashed rgba(255, 255, 255, 0.4); border-bottom: 3px dashed rgba(255, 255, 255, 0.4); border-left: 3px dashed rgba(255, 255, 255, 0.4); ' class="content-frame"></div>
+    <h1 style='position:absolute;z-index:111;left:343px;top:336.265625px;width:1234px;height:74px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 64px; font-weight: 700; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.1) 0px 2px 4px; letter-spacing: 6.4px; opacity: 1; transform-origin: 617px 37px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 40px; margin-bottom: 40px; box-sizing: border-box; letter-spacing: 6.4px; text-align: center; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="title">Thiên nhiên và những điều kì thú</h1>
+    <div style='position:absolute;z-index:112;left:404.703125px;top:450.265625px;width:1110.59375px;height:293.46875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 22px; font-weight: 300; line-height: 35.2px; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px; opacity: 1; transform-origin: 555.297px 146.734px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 61.7031px; margin-right: 61.7031px; margin-left: 61.7031px; box-sizing: border-box; line-height: 35.2px; text-align: center; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="content"></div>
+    <h3 style='position:absolute;z-index:113;left:404.703125px;top:450.265625px;width:1110.59375px;height:41.171875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 25.74px; font-weight: 700; line-height: 41.184px; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px; opacity: 1; transform-origin: 555.297px 20.5859px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 41.184px; text-align: center; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); '><span style="color:#2E8B57;">Mở đầu:</span> Thiên nhiên kỳ diệu</h3>
+    <ul style='position:absolute;z-index:115;left:404.703125px;top:491.4375px;width:1110.59375px;height:70.375px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 22px; font-weight: 300; line-height: 35.2px; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px; opacity: 1; transform-origin: 555.297px 35.1875px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 35.2px; text-align: center; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); '><li><b>Vẻ đẹp thiên nhiên:</b> thiên nhiên mang lại sự sống, cân bằng sinh thái và cảm hứng cho con người.</li><li><b>Trách nhiệm bảo vệ:</b> mỗi người cần hành động để bảo tồn thiên nhiên cho thế hệ tương lai.</li></ul>
+    <br style='position:absolute;z-index:120;left:960px;top:566.8125px;width:0px;height:25px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 22px; font-weight: 300; line-height: 35.2px; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 35.2px; text-align: center; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); '>
+    <h3 style='position:absolute;z-index:121;left:404.703125px;top:597px;width:1110.59375px;height:41.171875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 25.74px; font-weight: 700; line-height: 41.184px; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px; opacity: 1; transform-origin: 555.297px 20.5859px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 41.184px; text-align: center; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); '><span style="color:#2E8B57;">Phần 1:</span> Môi trường xanh</h3>
+    <ul style='position:absolute;z-index:123;left:404.703125px;top:638.171875px;width:1110.59375px;height:105.5625px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 22px; font-weight: 300; line-height: 35.2px; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.1) 0px 1px 2px; opacity: 1; transform-origin: 555.297px 52.7812px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 35.2px; text-align: center; vertical-align: baseline; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); '><li><b>Rừng nhiệt đới:</b> rừng là lá phổi xanh, cung cấp oxy và là nhà của hàng triệu loài sinh vật.</li><li><b>Cây cổ thụ:</b> những cây hàng trăm năm tuổi biểu tượng cho sức sống và sự bền vững.</li><li><b>Bảo vệ rừng:</b> trồng rừng và chống phá rừng giúp duy trì cân bằng sinh thái.</li></ul>
+</div><script>
+(function() {
+  function resizeContent() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    var ww = window.innerWidth, wh = window.innerHeight;
+    var cw = wrapper.offsetWidth, ch = wrapper.offsetHeight;
+    var scale = Math.min(ww / cw, wh / ch);
+    wrapper.style.setProperty('--scale', scale);
+  }
+  window.addEventListener('resize', resizeContent);
+  window.addEventListener('DOMContentLoaded', resizeContent);
+})();
+</script></body></html>
