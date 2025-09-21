@@ -29,7 +29,8 @@ def process_slides_with_langgraph(router_flags: bool, docx_file: str, output_fol
     llm = LLM(
         api_keys=api_keys,
         base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-        model="gemini-2.5-flash",
+        # model="gemini-2.5-flash",
+        model="gemini-2.5-pro",
         temperature=0.5,
         max_tokens=4096,
     )

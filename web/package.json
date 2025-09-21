@@ -4,19 +4,13 @@
   "description": "SlideGen Web - Convert HTML slides to absolute positioning for drag & drop editing",
   "main": "converter.js",
   "dependencies": {
-    "puppeteer": "^24.19.0"
+    "puppeteer": "^19.0.0"
   },
   "scripts": {
     "convert": "node converter.js",
     "setup": "npm install",
     "test": "node converter.js input.html output.html"
   },
-  "keywords": [
-    "html",
-    "converter",
-    "slides",
-    "absolute-positioning",
-    "puppeteer"
-  ],
+  "keywords": ["html", "converter", "slides", "absolute-positioning", "puppeteer"],
   "author": "SlideGen Team"
 }

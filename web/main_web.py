@@ -392,56 +392,120 @@ async def upload_docx(file: UploadFile = File(...)):
             
             def run_workflow():
                 try:
-                    # Create a completely new temporary folder in a location less likely to have permission issues
+                    # Create our own structure that fully bypasses the workflow's directory creation
                     import tempfile
-                    import shutil
                     
-                    # Create a temporary folder to work in
-                    with tempfile.TemporaryDirectory() as temp_workflow_dir:
-                        logger.info(f"Using temporary workflow directory: {temp_workflow_dir}")
-                        
-                        # Process in the temporary directory
+                    # Create master temp dir that will be used instead of output_folder
+                    temp_workflow_dir = tempfile.mkdtemp(prefix="slidegen_workflow_")
+                    logger.info(f"Created temporary workflow directory: {temp_workflow_dir}")
+                    
+                    # Pre-create all required subdirectories to avoid permission issues
+                    html_dir = os.path.join(temp_workflow_dir, "html")
+                    png_dir = os.path.join(temp_workflow_dir, "png") 
+                    debug_dir = os.path.join(temp_workflow_dir, "temp_debug")
+                    debug_html_dir = os.path.join(debug_dir, "html")
+                    
+                    for dir_path in [html_dir, png_dir, debug_dir, debug_html_dir]:
                         try:
-                            result_zip = process_slides_with_langgraph(
-                                router_flags=True,
-                                docx_file=temp_path,
-                                output_folder=temp_workflow_dir
-                            )
-                            
-                            # Handle the case where the function returns a message instead of a path
-                            if isinstance(result_zip, str) and "đã được lưu tại:" in result_zip:
-                                # Extract the path from the message (format: "File kết quả đã được lưu tại: PATH")
-                                import re
-                                path_match = re.search(r'đã được lưu tại:\s*(.+)', result_zip)
-                                if path_match:
-                                    actual_path = path_match.group(1).strip()
-                                    if os_module.path.exists(actual_path):
-                                        logger.info(f"Found result ZIP from message: {actual_path}")
-                                        result_zip = actual_path
-                                    else:
-                                        logger.error(f"Path from message doesn't exist: {actual_path}")
-                        except Exception as process_err:
-                            logger.error(f"Error during workflow processing: {process_err}")
-                            result_zip = None
-                        
-                        # Important: Copy the result zip to a permanent location outside the temp dir
-                        # before the tempdir is deleted at the end of the with block
-                        if result_zip and os_module.path.exists(result_zip):
-                            # Generate a name for the copied zip
-                            permanent_zip = os_module.path.join(TEMP_DIR, f"slides_result_{uuid.uuid4().hex[:8]}.zip")
-                            shutil.copy2(result_zip, permanent_zip)
-                            logger.info(f"Copied result ZIP from {result_zip} to {permanent_zip}")
-                            result_zip = permanent_zip
-                        else:
-                            logger.error(f"Workflow didn't produce valid zip at {result_zip}")
-                            return None
+                            os.makedirs(dir_path, exist_ok=True)
+                            logger.info(f"Created directory: {dir_path}")
+                        except Exception as e:
+                            logger.warning(f"Could not create directory {dir_path}: {e}")
                     
-                    return result_zip
-                except PermissionError as pe:
-                    logger.error(f"Workflow permission error: {pe}")
-                    return None
+                    try:
+                        # Process in the temporary directory
+                        logger.info(f"Running workflow with temp directory: {temp_workflow_dir}")
+                        result = process_slides_with_langgraph(
+                            router_flags=True,
+                            docx_file=temp_path,
+                            output_folder=temp_workflow_dir
+                        )
+                        
+                        # Check if the result is a message or path
+                        if isinstance(result, str):
+                            if "được lưu tại:" in result or "hoàn thành" in result.lower():
+                                # Try to extract path from message
+                                import re
+                                path_match = re.search(r'(?:được lưu tại:|saved at:)\s*(.+)', result)
+                                if path_match:
+                                    zip_path = path_match.group(1).strip()
+                                    if os.path.exists(zip_path):
+                                        logger.info(f"Found zip file from message: {zip_path}")
+                                        result_zip = zip_path
+                                    else:
+                                        # Look for zip files in the temp dir
+                                        zip_files = [f for f in os.listdir(temp_workflow_dir) 
+                                                    if f.endswith('.zip')]
+                                        if zip_files:
+                                            result_zip = os.path.join(temp_workflow_dir, zip_files[0])
+                                            logger.info(f"Using found zip file: {result_zip}")
+                                        else:
+                                            logger.error("No zip files found in temp directory")
+                                            return None
+                                else:
+                                    # Still search for zip files
+                                    zip_files = [f for f in os.listdir(temp_workflow_dir) 
+                                                if f.endswith('.zip')]
+                                    if zip_files:
+                                        result_zip = os.path.join(temp_workflow_dir, zip_files[0])
+                                        logger.info(f"Using found zip file: {result_zip}")
+                                    else:
+                                        logger.error("No path in message and no zip files found")
+                                        return None
+                            else:
+                                # Just use the string as a path if it points to a zip file
+                                if os.path.exists(result) and result.endswith('.zip'):
+                                    result_zip = result
+                                else:
+                                    # Last resort: search for any zip files
+                                    zip_files = [f for f in os.listdir(temp_workflow_dir) 
+                                                if f.endswith('.zip')]
+                                    if zip_files:
+                                        result_zip = os.path.join(temp_workflow_dir, zip_files[0])
+                                    else:
+                                        logger.error(f"Unknown result format: {result}")
+                                        return None
+                        else:
+                            # If result is not a string (None or other), search for zip files
+                            zip_files = [f for f in os.listdir(temp_workflow_dir) 
+                                        if f.endswith('.zip')]
+                            if zip_files:
+                                result_zip = os.path.join(temp_workflow_dir, zip_files[0])
+                            else:
+                                # Check html and png dirs for content
+                                if os.path.exists(html_dir) and len(os.listdir(html_dir)) > 0:
+                                    # Create zip file from html and png contents
+                                    result_zip = os.path.join(temp_workflow_dir, "slides.zip")
+                                    with zipfile.ZipFile(result_zip, 'w') as zipf:
+                                        # Add HTML files
+                                        for file in os.listdir(html_dir):
+                                            zipf.write(os.path.join(html_dir, file), 
+                                                     os.path.join("html", file))
+                                        # Add PNG files if they exist
+                                        if os.path.exists(png_dir):
+                                            for file in os.listdir(png_dir):
+                                                zipf.write(os.path.join(png_dir, file),
+                                                         os.path.join("png", file))
+                                else:
+                                    logger.error("Workflow did not produce any output")
+                                    return None
+                        
+                        # Copy to a permanent location
+                        final_zip = os.path.join(TEMP_DIR, f"slides_result_{uuid.uuid4().hex[:8]}.zip")
+                        try:
+                            shutil.copy2(result_zip, final_zip)
+                            logger.info(f"Copied result to: {final_zip}")
+                            return final_zip
+                        except Exception as copy_error:
+                            logger.error(f"Error copying result: {copy_error}")
+                            return result_zip
+                            
+                    except Exception as e:
+                        logger.error(f"Error in workflow processing: {e}")
+                        return None
+                        
                 except Exception as e:
-                    logger.error(f"Workflow error: {e}")
+                    logger.error(f"Workflow setup error: {e}")
                     return None
             
             # Chạy trong thread pool

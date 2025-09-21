@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thank You Slide - Extra Large</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #F9F9F9 0%, #F9F9F9 100%);
+      font-family: 'Montserrat', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .card {
+      position: relative;
+      background-color: #FFFFFF;
+      border-radius: 2rem;
+      padding: 4rem;
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+
+    .icon-heart {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        transform: rotate(-45deg);
+        background-color: #6B8E23;
+        margin: 0 auto 2.5rem;
+    }
+    .icon-heart::before, .icon-heart::after {
+        content: "";
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        background-color: inherit;
+        border-radius: 50%;
+    }
+    .icon-heart::before { top: -40px; left: 0; }
+    .icon-heart::after { left: 40px; top: 0; }
+
+    h1 {
+      font-size: clamp(4.5rem, 12vw, 6.5rem);
+      font-weight: 800;
+      color: #6B8E23;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.15);
+      margin: 0 0 1.5rem 0;
+    }
+
+    p {
+      margin-top: 1rem;
+      font-size: 1.75rem;
+      line-height: 1.6;
+      color: #36454F;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* --- ĐÃ XÓA: Toàn bộ phần CSS cho Sparkles & Animation đã được loại bỏ --- */
+
+  </style>
+</head>
+<body>
+  <!--  sẽ là một chuỗi rỗng, không hiển thị gì cả -->
+  
+  <div class="card">
+    <div class="icon-heart"></div>
+    <h1>Cảm ơn!</h1>
+    <p><b>Thiên nhiên và những điều kì thú</b><br>Cảm ơn bạn đã chú ý lắng nghe! Mọi câu hỏi đều được chào đón.</p>
+  </div>
+</body>
+</html>

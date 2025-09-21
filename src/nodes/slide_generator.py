@@ -205,7 +205,7 @@ def slide_generator(state: State) -> State:
         print(f"LLM response type: {type(response)}")
 
         if response.usage_metadata['output_tokens'] == 0 or (hasattr(response, 'error') ):
-            llm._rotate_key_and_recreate_instance()
+            # llm._rotate_key_and_recreate_instance()
             continue
 
         # Check if response has tool calls

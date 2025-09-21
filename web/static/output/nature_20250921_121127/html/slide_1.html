@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thiên nhiên và những điều kì thú</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { font-size: 16px; }
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            background-color: #F9F9F9;
+        }
+        
+        .slide-container {
+            width: 100%; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+            padding: 4vw; box-sizing: border-box;
+        }
+        
+        .content-wrapper {
+            display: flex; align-items: center; justify-content: center;
+            width: 100%; max-width: 75rem; /* 1200px */
+        }
+        
+        /* Image Section with Decorative Frame */
+        .image-section {
+            flex: 1;
+            position: relative;
+            height: 28rem; /* 448px */
+        }
+        .accent-bg {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 90%;
+            height: 90%;
+            background-color: #D4E2D4;
+            z-index: 1;
+        }
+        .main-image {
+            position: absolute;
+            bottom: 0;
+            right: 0;
+            width: 90%;
+            height: 90%;
+            object-fit: cover;
+            z-index: 2;
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.1);
+        }
+        
+        /* Text Section */
+        .text-section {
+            flex: 1;
+            padding-left: 5rem;
+        }
+        
+        .main-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 3.5rem;
+            font-weight: 500;
+            font-style: italic;
+            color: #2F4F4F;
+            margin: 0 0 1.5rem 0;
+            line-height: 1.2;
+        }
+        
+        .subtitle {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #6B8E23;
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            margin-bottom: 2rem;
+        }
+
+        .agenda-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+        }
+        .agenda-item {
+            font-size: 1.1rem;
+            color: #36454F;
+            margin-bottom: 1rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 56.25em) { /* 900px */
+            .text-section { padding-left: 3rem; }
+            .main-title { font-size: 3rem; }
+            .agenda-item { font-size: 1rem; }
+        }
+        @media (max-width: 48em) { /* 768px */
+            .content-wrapper { flex-direction: column; }
+            .image-section { width: 80%; height: 20rem; margin-bottom: 3rem; }
+            .text-section { width: 80%; padding-left: 0; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="content-wrapper">
+            <div class="image-section">
+                <div class="accent-bg"></div>
+                <img src="https://images.unsplash.com/photo-1448375240586-882707db888b?q=80&w=2070&auto=format&fit=crop" alt="Workspace" class="main-image">
+            </div>
+            <div class="text-section">
+                <h1 class="main-title">Thiên nhiên và những điều kì thú</h1>
+                <h3 class="subtitle">NỘI DUNG CHÍNH</h3>
+                <ul class="agenda-list">
+                    <li class='agenda-item'><b>Mở đầu:</b> Vẻ đẹp và sự kỳ diệu của thiên nhiên.</li><li class='agenda-item'><b>Trách nhiệm:</b> Bảo tồn thiên nhiên cho các thế hệ tương lai.</li><li class='agenda-item'><b>Môi trường xanh:</b> Rừng nhiệt đới - lá phổi của hành tinh.</li><li class='agenda-item'><b>Biểu tượng bền vững:</b> Sức sống từ những cây cổ thụ.</li><li class='agenda-item'><b>Hành động:</b> Tầm quan trọng của việc trồng và bảo vệ rừng.</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

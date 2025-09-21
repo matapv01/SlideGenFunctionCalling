@@ -55,7 +55,10 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                 // Bổ sung các thuộc tính quan trọng cho layout và text
                 'margin', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left',
                 'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left',
-                'box-sizing', 'line-height', 'letter-spacing', 'text-align', 'vertical-align', 'white-space'
+                'box-sizing', 'line-height', 'letter-spacing', 'text-align', 'vertical-align', 'white-space',
+                // ✅ THÊM: Các thuộc tính cho hình ảnh và kích thước
+                'width', 'height', 'min-width', 'min-height', 'max-width', 'max-height',
+                'object-fit', 'object-position', 'aspect-ratio', 'display'
             ];
 
             function getVisualStyles(element) {
@@ -185,15 +188,35 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                     computedZIndex = 100 + index; // Đảm bảo không trùng, tăng dần theo thứ tự
                 }
 
+                // ✅ SPECIAL: Với hình ảnh, tìm container cha có class image-container
+                let useRect = { width: rect.width, height: rect.height };
+                let useX = rect.left - containerRect.left;
+                let useY = rect.top - containerRect.top;
+                
+                if (tagName === 'img') {
+                    // Tìm container cha có class chứa "image"
+                    let parent = el.parentElement;
+                    while (parent && parent !== mainContainer) {
+                        if (parent.className && parent.className.includes('image-container')) {
+                            const parentRect = parent.getBoundingClientRect();
+                            useRect = { width: parentRect.width, height: parentRect.height };
+                            useX = parentRect.left - containerRect.left;
+                            useY = parentRect.top - containerRect.top;
+                            break;
+                        }
+                        parent = parent.parentElement;
+                    }
+                }
+
                 elementsData.push({
                     tagName: tagName === 'svg' ? 'div' : tagName,
-                    rect: { width: rect.width, height: rect.height },
+                    rect: useRect,
                     style: getVisualStyles(el),
                     attributes: getImportantAttributes(el),
                     content,
                     index,
-                    relativeX: rect.left - containerRect.left,
-                    relativeY: rect.top - containerRect.top,
+                    relativeX: useX,
+                    relativeY: useY,
                     zIndex: computedZIndex
                 });
 
@@ -264,7 +287,30 @@ body {
 `;
         pageData.elements.sort((a, b) => a.index - b.index).forEach(data => {
             const styleContent = data.style.replace(/z-index\s*:\s*[^;]+;?/g, '').replace(/'/g, '&#39;');
-            const finalStyle = `position:absolute;z-index:${data.zIndex};left:${data.relativeX}px;top:${data.relativeY}px;width:${data.rect.width}px;height:${data.rect.height}px;box-sizing:border-box;${styleContent}`;
+            
+            // ✅ SPECIAL FIX: Xử lý đặc biệt cho hình ảnh với kích thước container cha  
+            let finalStyle;
+            if (data.tagName === 'img') {
+                // Loại bỏ các thuộc tính width/height cũ và làm clean CSS
+                let cleanStyleContent = styleContent
+                    .replace(/\bwidth\s*:\s*[^;]+;?\s*/gi, '')
+                    .replace(/\bheight\s*:\s*[^;]+;?\s*/gi, '')
+                    .replace(/\bobject-fit\s*:\s*[^;]+;?\s*/gi, '')
+                    .replace(/stroke-\s*/gi, 'stroke-width: 1px; stroke-') // Sửa lỗi stroke- thiếu width
+                    .replace(/;\s*;/g, ';') // Loại bỏ dấu ; thừa
+                    .replace(/^\s*;|;\s*$/g, '') // Loại bỏ ; ở đầu/cuối
+                    .trim();
+                
+                // Đảm bảo có dấu ; cuối nếu cần
+                if (cleanStyleContent && !cleanStyleContent.endsWith(';')) {
+                    cleanStyleContent += ';';
+                }
+                
+                finalStyle = `position:absolute;z-index:${data.zIndex};left:${data.relativeX}px;top:${data.relativeY}px;width:${data.rect.width}px;height:${data.rect.height}px;object-fit:cover!important;box-sizing:border-box;${cleanStyleContent}`;
+            } else {
+                finalStyle = `position:absolute;z-index:${data.zIndex};left:${data.relativeX}px;top:${data.relativeY}px;width:${data.rect.width}px;height:${data.rect.height}px;box-sizing:border-box;${styleContent}`;
+            }
+            
             let attributesString = '';
             for (const attr in data.attributes) {
                 const value = String(data.attributes[attr]).replace(/"/g, '&quot;');

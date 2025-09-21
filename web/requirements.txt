@@ -1,0 +1,22 @@
+langgraph
+langsmith
+langchain
+langchain-openai
+
+dotenv
+python-docx
+langchain
+
+python-multipart
+docling
+playwright # run (cmd) playwright install
+
+################### web ######################
+fastapi
+uvicorn
+img2pdf
+
+reportlab
+Pillow
+beautifulsoup4
+npm # run (cmd) npm install
