@@ -1,0 +1,253 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CẢM ƠN</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            height: 100%;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            background: linear-gradient(135deg, #0F172A 0%, #0F172A 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 60px;
+            position: relative;
+            box-sizing: border-box;
+        }
+        
+        .geometric-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }
+        
+        .shape {
+            position: absolute;
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+            transition: transform 0.3s ease;
+        }
+        
+        .shape-1 {
+            width: 200px;
+            height: 200px;
+            top: 10%;
+            left: 5%;
+            transform: rotate(45deg);
+        }
+        
+        .shape-2 {
+            width: 150px;
+            height: 150px;
+            top: 20%;
+            left: 15%;
+            transform: rotate(-30deg);
+        }
+        
+        .shape-3 {
+            width: 180px;
+            height: 180px;
+            top: 5%;
+            right: 10%;
+            transform: rotate(60deg);
+        }
+        
+        .shape-4 {
+            width: 120px;
+            height: 120px;
+            top: 25%;
+            right: 20%;
+            transform: rotate(-45deg);
+        }
+        
+        .shape-5 {
+            width: 160px;
+            height: 160px;
+            bottom: 15%;
+            left: 8%;
+            transform: rotate(30deg);
+        }
+        
+        .shape-6 {
+            width: 140px;
+            height: 140px;
+            bottom: 25%;
+            left: 20%;
+            transform: rotate(-60deg);
+        }
+        
+        .shape-7 {
+            width: 190px;
+            height: 190px;
+            bottom: 10%;
+            right: 5%;
+            transform: rotate(75deg);
+        }
+        
+        .shape-8 {
+            width: 130px;
+            height: 130px;
+            bottom: 30%;
+            right: 15%;
+            transform: rotate(-15deg);
+        }
+        
+        .animated .shape:hover {
+            transform: scale(1.1) rotate(var(--rotation));
+        }
+        
+        
+        .shape-1 {
+            background-color: rgba(251, 191, 36, 0.2);
+        }
+        
+        .shape-2 {
+            background-color: rgba(103, 232, 249, 0.2);
+        }
+        
+        .shape-3 {
+            background-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        
+        .content-frame {
+            border: 2px solid rgba(255, 255, 255, 0.4);
+            border-radius: 8px;
+            padding: 80px;
+            position: relative;
+            z-index: 2;
+            text-align: center;
+            backdrop-filter: blur(5px);
+            background: rgba(255, 255, 255, 0.05);
+            width: 100%;
+            max-width: 800px;
+        }
+        
+        .main-title {
+            font-size: 6rem;
+            font-weight: 700;
+            color: #E5E7EB;
+            letter-spacing: 0.1em;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            margin-bottom: 0;
+        }
+        
+        .contact-section {
+            margin-top: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 40px;
+            flex-wrap: wrap;
+        }
+        
+        .contact-item {
+            display: flex;
+            align-items: center;
+            color: #FFFFFF;
+            font-size: 1.2rem;
+            font-weight: 400;
+        }
+        
+        .contact-icon {
+            margin-right: 12px;
+            color: #FFFFFF;
+            font-size: 1.2em;
+        }
+        
+        .contact-text {
+            color: #FFFFFF;
+        }
+        
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 30px;
+            }
+            
+            .content-frame {
+                padding: 40px;
+            }
+            
+            .main-title {
+                font-size: 3.5rem;
+            }
+            
+            .contact-section {
+                gap: 25px;
+                flex-direction: column;
+            }
+            
+            .contact-item {
+                font-size: 1rem;
+            }
+            
+            .shape {
+                width: 80px !important;
+                height: 80px !important;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .main-title {
+                font-size: 2.5rem;
+                letter-spacing: 0.05em;
+            }
+            
+            .contact-item {
+                font-size: 0.9rem;
+            }
+            
+            .content-frame {
+                padding: 30px 20px;
+            }
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        
+        <div class="geometric-background animated">
+            <div class="shape shape-1"></div>
+            <div class="shape shape-2"></div>
+            <div class="shape shape-3"></div>
+            <div class="shape shape-4"></div>
+            <div class="shape shape-5"></div>
+            <div class="shape shape-6"></div>
+            <div class="shape shape-7"></div>
+            <div class="shape shape-8"></div>
+        </div>
+        
+        
+        <div class="content-frame">
+            <h1 class="main-title">CẢM ƠN</h1>
+            
+            <div class="contact-section">
+                
+            </div>
+        </div>
+    </div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
