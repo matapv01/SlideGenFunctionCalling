@@ -476,7 +476,7 @@ class GenerateProcessSlideInput(BaseModel):
 class GenerateProcessStepsSlideInput(BaseModel):
     """Input schema for generate_process_steps_slide."""
     main_title: str = Field(..., description="The main title displayed in the left-hand colored panel. Default: 'Cách tiếp cận đề xuất'.")
-    steps: List[str] = Field(..., description=f"""A list of step objects, each containing an image URL, a title, and a description. Default: [
+    steps: List[Dict] = Field(..., description=f"""A list of step objects, each containing an image URL, a title, and a description. Default: [
         {{
             "image_url": "https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop",
             "title": "Thiết lập nền tảng số",
@@ -994,7 +994,7 @@ class GenerateCorporateGridSlideInput(BaseModel):
 class GenerateBusinessOverviewSlideInput(BaseModel):
     """Input schema for generate_business_overview_slide."""
     main_title: str = Field(..., description="Main title text (10-25 characters), displayed on the left side. Default: 'BUSINESS OVERVIEW'.")
-    sections: List[str] = Field(..., description="List of dictionaries with icon and content for each section. Icons: 'chart-analysis', 'innovation', 'growth'. . Default: 3 sections with Lorem ipsum content.")
+    sections: List[Dict] = Field(..., description="List of dictionaries with icon and content for each section. Icons: 'chart-analysis', 'innovation', 'growth'. . Default: 3 sections with Lorem ipsum content.")
     left_bg_color: str = Field(default="#1a4b8c", description="Background color for the left title section (hex code).")
     right_bg_color: str = Field(default="#f8f9fa", description="Background color for the right content area (hex code).")
     title_color: str = Field(default="#FFFFFF", description="Color of the main title text (hex code).")
@@ -1036,7 +1036,7 @@ class GenerateVisionMissionSlideInput(BaseModel):
 class GenerateStrategicGoalsSlideInput(BaseModel):
     """Input schema for generate_strategic_goals_slide."""
     main_title: str = Field(..., description="Main title text (10-25 characters), displayed on the left side. Default: 'STRATEGIC GOALS'.")
-    goals: List[str] = Field(..., description="List of dictionaries with number and content for each strategic goal. . Default: 3 goals with Lorem ipsum content.")
+    goals: List[Dict] = Field(..., description="List of dictionaries with number and content for each strategic goal. . Default: 3 goals with Lorem ipsum content.")
     bg_image: str = Field(default="skyscrapers.jpg", description="Background image URL or path (skyscraper/city image recommended).")
     bg_overlay_color: str = Field(default="rgba(26, 75, 140, 0.85)", description="Color overlay for the background image (rgba with transparency).")
     title_color: str = Field(default="#FFFFFF", description="Color of the main title text (hex code).")
@@ -1057,7 +1057,7 @@ class GenerateStrategicGoalsSlideInput(BaseModel):
 class GenerateServiceRoadmapSlideInput(BaseModel):
     """Input schema for generate_service_roadmap_slide."""
     main_title: str = Field(..., description="Main title text (10-30 characters), displayed at the top center. Default: 'SERVICE ROADMAP'.")
-    roadmap_items: List[str] = Field(..., description="List of dictionaries with title and content for each roadmap phase. . Default: 4 phases with Lorem ipsum content.")
+    roadmap_items: List[Dict] = Field(..., description="List of dictionaries with title and content for each roadmap phase. . Default: 4 phases with Lorem ipsum content.")
     bg_gradient_start: str = Field(default="#4A90E2", description="Starting color of the background gradient (hex code).")
     bg_gradient_end: str = Field(default="#2E5BBA", description="Ending color of the background gradient (hex code).")
     title_color: str = Field(default="#FFFFFF", description="Color of the main title text (hex code).")
@@ -1080,7 +1080,7 @@ class GenerateServiceRoadmapSlideInput(BaseModel):
 class GenerateFinancialProjectionsSlideDarkInput(BaseModel):
     """Input schema for generate_financial_projections_slide_dark."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide. Default: 'FINANCIAL PROJECTIONS'.")
-    cards: List[str] = Field(..., description="List of dictionaries with 'title' and 'content' keys for each card. . Default: 3 cards with financial topics and Lorem ipsum content.")
+    cards: List[Dict] = Field(..., description="List of dictionaries with 'title' and 'content' keys for each card. . Default: 3 cards with financial topics and Lorem ipsum content.")
     background_color: str = Field(default="#1E3A8A", description="Solid background color (dark blue).")
     main_title_color: str = Field(default="#FFFFFF", description="Color of the main title text.")
     card_background_color: str = Field(default="rgba(255, 255, 255, 0.95)", description="Background color of the cards.")

@@ -1,49 +1,42 @@
-from typing import List, Dict, TypedDict, Optional, Any
-from src.utils.slide_context import slide_context
-from src.models.llm import LLM
+# src/graph/stage.py
+from typing import List, Dict, TypedDict, Any
+from src.utils.slide_context import slide_context # Assuming this is a class you have defined
 
-class State(TypedDict):
-    """Trạng thái tổng thể của luồng công việc."""
+class State(TypedDict, total=False):
+    """
+    The data that flows through the graph. This only contains items that are
+    created or modified by the nodes during execution.
+    """
     # Input
     docx_file: str
-    output_folder: str
-    max_retries: int
-    
-    playwright_instance: Any  # Playwright instance for HTML rendering
 
-    # Hàng đợi công việc
+    # Document processing state
+    document_title: str
+    document_structure: List[Dict]
+    document_outline: List[Dict]
     slide_chunks: List[str]
-    
-    # LLM
-    llm: Optional[LLM]
-    tools: List[Any]  # Danh sách các công cụ LLM
+    slide_positions: List[Any]
+    slide_context_maps: List[str]
+    slide_plans: List[Dict]
 
-    # Trạng thái vòng lặp
+    # Slide generation loop state
     current_slide_index: int
-    length_slide_chunks: int  # Tổng số slide chunks
+    length_slide_chunks: int
     current_slide_text: str
-    current_tool_call: Optional[Dict]
-    current_html_content: Optional[str]
-    current_html_path: Optional[str]
-    current_image_path: Optional[str]
+    current_tool_call: Dict
+    current_html_content: str
+    current_html_path: str
+    current_image_path: str
+    previous_image_path: str
+    previous_accepted_tool_call: Dict
+    previous_slide_context: slide_context
+
+    # Retry and evaluation state
     retry_count: int
-    previous_image_path: Optional[str]  # Đường dẫn ảnh trước đó
-    previous_accepted_tool_call: Optional[Dict]
+    vlm_decision: str
+    vlm_feedback: str
 
-    # Context giữa các slide
-    previous_slide_context: Optional[slide_context]
-
-    # Thông tin đánh giá
-    vlm_decision: Optional[str]  # Quyết định của VLM về slide hiện tại
-    vlm_feedback: Optional[str]  # Phản hồi từ VLM nếu có
-
-
-    # Lịch sử tin nhắn giữa người dùng và AI
-    messages: List[Dict[str, Any]]  
-    
-    # Thư mục tạm
-    temp_dir: str
-    temp_debug_dir: str
-    # Kết quả cuối cùng
+    # History and final results
+    messages: List[Dict[str, Any]]
     final_slides: List[Dict]
     all_debug_info: List[Dict]

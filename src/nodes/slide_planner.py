@@ -1,0 +1,138 @@
+# src/nodes/slide_planner.py
+
+from typing import List, Literal
+from pydantic import BaseModel, Field
+from langchain_core.prompts import ChatPromptTemplate
+from src.graph.stage import State
+from langchain_core.runnables import RunnableConfig
+import time
+
+# --- Pydantic Model for Structured LLM Output ---
+
+# Define the allowed tool categories based on your TOOLS_DICT keys
+ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS']
+
+class SlidePlan(BaseModel):
+    """Defines the structure of a slide plan."""
+    thought: str = Field(
+        description="A detailed creative brief for designing the slide. Describe the desired visual style, color palette, layout, typography, and whether to include images, icons, or specific visual elements. This should be a guide for the next step."
+    )
+    action: ToolCategory = Field(
+        description="The single, most appropriate category of tools to use for generating this slide."
+    )
+
+
+# --- Prompts for the Slide Planner ---
+
+SLIDE_PLANNER_SYSTEM_PROMPT = """
+You are an expert presentation designer and slide planner. Your task is to analyze the content for a single slide and create a high-level plan for its visual design and type.
+
+**INSTRUCTIONS:**
+
+1.  **Analyze the Inputs:** You will be given the slide's content and its context within the overall presentation outline.
+2.  **Develop a Creative Vision (`thought`):** Based on the content, describe your vision for the slide.
+    *   What is the key message?
+    *   What layout would be best (e.g., two-column, grid, single image with text)?
+    *   What is the appropriate mood or tone (e.g., professional, playful, minimalist, high-tech)?
+    *   Suggest color themes, font styles, and whether an image or icon would enhance the message.
+3.  **Select the Right Tool Category (`action`):** Based on your vision and the content's purpose (e.g., introduction, main point, transition), you MUST choose exactly one tool category from the provided list. This choice determines which set of slide templates will be available in the next step.
+
+**CRITICAL OUTPUT REQUIREMENT:**
+- You MUST return ONLY a single, valid JSON object that strictly follows the required schema.
+- Do not add any text, explanations, or markdown formatting before or after the JSON object.
+- The 'action' key must be one of the following exact strings: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS'.
+"""
+
+SLIDE_PLANNER_HUMAN_PROMPT = """
+---
+**PRESENTATION CONTEXT (OUTLINE):**
+This is the structure of the entire presentation. The "YOU ARE HERE" marker shows the position of the current slide you are planning.
+
+{slide_context_map}
+
+---
+**SLIDE CONTENT TO PLAN:**
+This is the raw text content for the slide you need to create a plan for.
+
+{slide_content}
+"""
+
+
+# Define a manageable batch size to avoid overwhelming the API.
+PLANNING_BATCH_SIZE = 5 # You can adjust this value
+
+def planning_slide(state: State, config: RunnableConfig) -> State:
+    """
+    Analyzes all slide content in manageable chunks (batches) to create a design
+    plan for every slide, avoiding API rate limits.
+    """
+    print("\n---------------- Executing Node: slide_planner (Chunked Batch Mode) ----------------")
+
+    start_time = time.time()
+    configurable = config["configurable"]
+    llm = configurable.get('llm')
+    if not llm:
+        raise ValueError("LLM instance not found in config.")
+
+    slide_chunks = state.get('slide_chunks', [])
+    slide_context_maps = state.get('slide_context_maps', [])
+    
+    if not slide_chunks or not slide_context_maps:
+        print("WARNING: No slide chunks or context maps found. Skipping planning.")
+        state['slide_plans'] = []
+        return state
+
+    prompt = ChatPromptTemplate.from_messages([
+        ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
+        ("human", SLIDE_PLANNER_HUMAN_PROMPT)
+    ])
+
+    planner_chain = prompt | llm.with_structured_output(SlidePlan)
+
+    # --- CHUNKED BATCH PROCESSING LOGIC ---
+
+    # 1. Prepare a list of all inputs.
+    all_inputs = []
+    for i, content in enumerate(slide_chunks):
+        all_inputs.append({
+            "slide_context_map": slide_context_maps[i],
+            "slide_content": content
+        })
+    
+    total_slides = len(all_inputs)
+    all_slide_plans = []
+    
+    print(f"Total slides to plan: {total_slides}. Processing in chunks of {PLANNING_BATCH_SIZE}.")
+
+    try:
+        # 2. Process the inputs in chunks.
+        for i in range(0, total_slides, PLANNING_BATCH_SIZE):
+            # Get the current chunk of inputs
+            chunk_inputs = all_inputs[i : i + PLANNING_BATCH_SIZE]
+            chunk_start_num = i + 1
+            chunk_end_num = min(i + PLANNING_BATCH_SIZE, total_slides)
+            
+            print(f"  -> Processing chunk: slides {chunk_start_num}-{chunk_end_num}...")
+
+            # Invoke the chain with the current chunk.
+            batch_results = planner_chain.batch(chunk_inputs, config={"max_concurrency": 5})
+            
+            # Add the results from this chunk to the main list.
+            chunk_plans = [plan.dict() for plan in batch_results]
+            all_slide_plans.extend(chunk_plans)
+            print(f"     ... done.")
+
+        print(f"\n  -> Successfully generated plans for all {len(all_slide_plans)} slides.")
+        state['slide_plans'] = all_slide_plans
+
+    except Exception as e:
+        print(f"  -> FAILED during batch planning. Error: {e}")
+        # As a fallback, create default plans for all slides.
+        default_plan = {"thought": "Default plan due to a batch error.", "action": "CONTENT_TOOLS"}
+        state['slide_plans'] = [default_plan for _ in slide_chunks]
+        print(f"  -> Created {len(state['slide_plans'])} default plans as a fallback.")
+
+    end_time = time.time()
+    print(f"Planning completed in {end_time - start_time:.2f} seconds.")
+    print("Slide planning process complete.")
+    return state

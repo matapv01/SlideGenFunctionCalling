@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Thank You Slide - Extra Large</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background: linear-gradient(135deg, #1A2980 0%, #26D0CE 100%);
+      font-family: 'Poppins', 'Segoe UI', sans-serif;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    .card {
+      position: relative;
+      background-color: #FFFFFF;
+      border-radius: 2rem;
+      padding: 4rem;
+      width: 90%;
+      max-width: 800px;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+      z-index: 10;
+    }
+
+    .icon-heart {
+        position: relative;
+        width: 80px;
+        height: 80px;
+        transform: rotate(-45deg);
+        background-color: #F97316;
+        margin: 0 auto 2.5rem;
+    }
+    .icon-heart::before, .icon-heart::after {
+        content: "";
+        position: absolute;
+        width: 80px;
+        height: 80px;
+        background-color: inherit;
+        border-radius: 50%;
+    }
+    .icon-heart::before { top: -40px; left: 0; }
+    .icon-heart::after { left: 40px; top: 0; }
+
+    h1 {
+      font-size: clamp(4.5rem, 12vw, 6.5rem);
+      font-weight: 800;
+      color: #F97316;
+      text-shadow: 3px 3px 6px rgba(0,0,0,0.15);
+      margin: 0 0 1.5rem 0;
+    }
+
+    p {
+      margin-top: 1rem;
+      font-size: 1.75rem;
+      line-height: 1.6;
+      color: #FFFFFF;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    /* --- ĐÃ XÓA: Toàn bộ phần CSS cho Sparkles & Animation đã được loại bỏ --- */
+
+  </style>
+</head>
+<body>
+  <!--  sẽ là một chuỗi rỗng, không hiển thị gì cả -->
+  
+  <div class="card">
+    <div class="icon-heart"></div>
+    <h1>TRÂN TRỌNG CẢM ƠN!</h1>
+    <p>Cảm ơn Quý vị đã dành thời gian xem xét kế hoạch kinh doanh của Innovatech Solutions. Chúng tôi rất mong nhận được sự hợp tác và đồng hành của Quý vị.<br><br>Mọi thông tin chi tiết xin liên hệ:<br><b>Ông Nguyễn Văn An</b> - Giám đốc Điều hành<br>Điện thoại: 0987 654 321<br>Email: an.nguyen@innovatech.vn</p>
+  </div>
+</body>
+</html>

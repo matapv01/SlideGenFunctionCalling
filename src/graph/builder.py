@@ -1,10 +1,13 @@
 # builder.py
-from src.nodes.initialize_and_provider import initialize_and_provide
+from src.nodes.document_converter import convert_document
+from src.nodes.content_splitter import split_content
+from src.nodes.chunk_organizer import organize_chunks
+from src.nodes.slide_planner import planning_slide
 from src.nodes.next_slide_provider import provide_next_slide
-from src.nodes.slide_generator import slide_generator
+from src.nodes.slide_generator import generate_slide
 from src.nodes.slide_evaluator import slide_evaluator
 from src.nodes.finalize_slide import finalize_slide
-from src.nodes.html_renderer import html_renderer
+from src.nodes.html_renderer import render_html
 from src.graph.stage import State
 from langgraph.graph import StateGraph
 from langgraph.graph import END
@@ -17,7 +20,7 @@ def route_to_task(state: State) -> str:
     print("--- Router: route_to_task ---")
     if state.get('slide_chunks'):
         # Nếu còn slide, đi đến node chuẩn bị
-        return "generator"
+        return "generate_slide"
     else:
         # Nếu hết, kết thúc
         print("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
@@ -49,7 +52,7 @@ def evaluate_vlm_decision(state: State) -> str:
             return "finalizer"  # Đi thẳng đến finalizer
         else:
             print(f"Slide bị từ chối. Thử lại lần {retry_count}.")
-            return "generator"  # Quay lại node generator để thử lại slide
+            return "generate_slide"  # Quay lại node generate_slide để thử lại slide
 
 def build_workflow(router_flags: bool) -> StateGraph:
     """
@@ -59,39 +62,51 @@ def build_workflow(router_flags: bool) -> StateGraph:
     workflow = StateGraph(State)
     if router_flags:
         # Thêm các node
-        workflow.add_node("initialize_and_provide", initialize_and_provide)
+        workflow.add_node("convert_document", convert_document)
+        workflow.add_node("split_content", split_content)
+        workflow.add_node("organize_chunks", organize_chunks)
+        workflow.add_node("planning_slide", planning_slide)
         workflow.add_node("provide_next_slide", provide_next_slide)
-        workflow.add_node("generator", slide_generator)
-        workflow.add_node("renderer", html_renderer)
+        workflow.add_node("generate_slide", generate_slide)
+        workflow.add_node("render_html", render_html)
         workflow.add_node("evaluator", slide_evaluator)
         workflow.add_node("finalizer", finalize_slide)
 
         # Thiết lập điểm bắt đầu
-        workflow.set_entry_point("initialize_and_provide")
+        workflow.set_entry_point("convert_document")
 
         # Thêm các cạnh (edges)
-        workflow.add_edge("initialize_and_provide", "provide_next_slide")
-        workflow.add_conditional_edges("provide_next_slide", route_to_task, {"generator": "generator", END: END})
-        workflow.add_edge("generator", "renderer")
-        workflow.add_edge("renderer", "evaluator")
-        workflow.add_conditional_edges("evaluator", evaluate_vlm_decision, {"finalizer": "finalizer", "generator": "generator"})
+        workflow.add_edge("convert_document", "split_content")
+        workflow.add_edge("split_content", "organize_chunks")
+        workflow.add_edge("organize_chunks", "planning_slide")
+        workflow.add_edge("planning_slide", "provide_next_slide")
+        workflow.add_conditional_edges("provide_next_slide", route_to_task, {"generate_slide": "generate_slide", END: END})
+        workflow.add_edge("generate_slide", "render_html")
+        workflow.add_edge("render_html", "evaluator")
+        workflow.add_conditional_edges("evaluator", evaluate_vlm_decision, {"finalizer": "finalizer", "generate_slide": "generate_slide"})
         workflow.add_edge("finalizer", "provide_next_slide")
     else:
         # Thêm các node
-        workflow.add_node("initialize_and_provide", initialize_and_provide)
+        workflow.add_node("convert_document", convert_document)
+        workflow.add_node("split_content", split_content)
+        workflow.add_node("organize_chunks", organize_chunks)
+        workflow.add_node("planning_slide", planning_slide)
         workflow.add_node("provide_next_slide", provide_next_slide)
-        workflow.add_node("generator", slide_generator)
-        workflow.add_node("renderer", html_renderer)
+        workflow.add_node("generate_slide", generate_slide)
+        workflow.add_node("render_html", render_html)
         workflow.add_node("finalizer", finalize_slide)
 
         # Thiết lập điểm bắt đầu
-        workflow.set_entry_point("initialize_and_provide")
+        workflow.set_entry_point("convert_document")
 
         # Thêm các cạnh (edges)
-        workflow.add_edge("initialize_and_provide", "provide_next_slide")
-        workflow.add_conditional_edges("provide_next_slide", route_to_task, {"generator": "generator", END: END})
-        workflow.add_edge("generator", "renderer")
-        workflow.add_edge("renderer", "finalizer")
+        workflow.add_edge("convert_document", "split_content")
+        workflow.add_edge("split_content", "organize_chunks")
+        workflow.add_edge("organize_chunks", "planning_slide")
+        workflow.add_edge("planning_slide", "provide_next_slide")
+        workflow.add_conditional_edges("provide_next_slide", route_to_task, {"generate_slide": "generate_slide", END: END})
+        workflow.add_edge("generate_slide", "render_html")
+        workflow.add_edge("render_html", "finalizer")
         workflow.add_edge("finalizer", "provide_next_slide")
 
     return workflow
