@@ -5,7 +5,6 @@ langchain-openai
 
 dotenv
 # python-docx
-langchain
 fastapi
 uvicorn
 selenium
@@ -13,7 +12,3 @@ img2pdf
 python-multipart
 docling
 playwright
-
-fastapi
-uvicorn
-python-multipart

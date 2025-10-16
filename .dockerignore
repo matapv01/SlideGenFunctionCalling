@@ -1,0 +1,7 @@
+__pycache__
+index/tests
+index/mocks
+Dockerfile
+.env
+.env.example
+env

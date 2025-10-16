@@ -1,0 +1,19 @@
+
+networks:
+  multidimentional:
+    driver: bridge
+
+services:
+  litellm_service:
+    image: ghcr.io/berriai/litellm:main-latest
+    ports:
+      - "9510:4000"
+    networks:
+      - multidimentional
+    volumes:
+      - ./config.yaml:/app/config.yaml
+    command:
+      - "--config=/app/config.yaml"
+    environment:
+      - GEMINI_API_KEY=${GEMINI_API_KEY}
+      - HF_TOKEN=${HF_TOKEN}
