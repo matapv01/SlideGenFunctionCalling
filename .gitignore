@@ -187,3 +187,8 @@ src/docmanager/document
 
 # IDE
 .idea
+
+uv.lock
+*.lock
+
+node_modules/

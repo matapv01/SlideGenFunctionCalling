@@ -16,4 +16,4 @@ services:
       - "--config=/app/config.yaml"
     environment:
       - GEMINI_API_KEY=${GEMINI_API_KEY}
-      - HF_TOKEN=${HF_TOKEN}
+      - GOOGLE_API_KEY=${GOOGLE_API_KEY}

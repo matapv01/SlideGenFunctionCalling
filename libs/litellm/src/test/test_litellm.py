@@ -22,7 +22,7 @@ LITELLM__PRESENCE_PENALTY = float(os.getenv('LITELLM__PRESENCE_PENALTY', 0.0))
 LITELLM__MAX_COMPLETION_TOKENS = int(os.getenv('LITELLM__MAX_COMPLETION_TOKENS', 4096))
 LITELLM__N = int(os.getenv('LITELLM__N', 1))
 
-LITELLM__EMBEDDING_MODEL = os.getenv('LITELLM__EMBEDDING_MODEL', 'multilingual-e5-base')
+LITELLM__EMBEDDING_MODEL = os.getenv('LITELLM__EMBEDDING_MODEL', 'embedding-004')
 LITELLM__ENCODING_FORMAT = os.getenv('LITELLM__ENCODING_FORMAT', 'float')
 LITELLM__DIMENSIONS = int(os.getenv('LITELLM__DIMENSIONS', 768))
 LITELLM__MAX_LENGTH = int(os.getenv('LITELLM__MAX_LENGTH', 2048))
@@ -80,7 +80,7 @@ class TestLiteLLMService:
         print(f'Single text input: {embedding_input.input}')
 
         result = self.litellm.embedding(embedding_input)
-        print(result)
+        print(len(result.vector))
 
 
 if __name__ == '__main__':

@@ -3,19 +3,15 @@ model_list:
     litellm_params:
       model: gemini/gemini-2.0-flash
       api_key: os.environ/GEMINI_API_KEY
-      max_output_tokens: 20000
-      temperature: 0.5
 
-  - model_name: codebert-base
+  - model_name: embedding-004
     litellm_params:
-      model: huggingface/microsoft/codebert-base
-      api_base: https://api-inference.huggingface.co/pipeline/feature-extraction/microsoft/codebert-base
-      api_key: os.environ/HF_TOKEN
-      provider: huggingface
-      task: feature-extraction
-      model_endpoint_type: embeddings
+      model: gemini/text-embedding-004
+      api_key: os.environ/GEMINI_API_KEY
+  
 
 litellm_settings:
+  set_model_info: true
   num_retries: 2
   key_management_strategy: round_robin
   drop_params: true
