@@ -192,3 +192,5 @@ uv.lock
 *.lock
 
 node_modules/
+
+.env

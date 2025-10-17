@@ -1,10 +1,12 @@
 [project]
-name = "slidegenfunctioncalling"
+name = "slidegen"
 version = "0.1.0"
 description = "Add your description here"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
+    "graph",
+    "litellm",
     "python-dotenv>=1.1.1",
 ]
 
@@ -15,5 +17,8 @@ members = [
     "libs/litellm",
     "libs/playwright_client",
     "services/graph",
-    "libs/faiss",
 ]
+
+[tool.uv.sources]
+graph = { workspace = true }
+litellm = { workspace = true }

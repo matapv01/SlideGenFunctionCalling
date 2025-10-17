@@ -3,21 +3,27 @@ from __future__ import annotations
 from .datatypes import CompletionMessage
 from .datatypes import MessageRole
 from .datatypes import TypeMessage
-from .service import LiteLLMEmbeddingInput
-from .service import LiteLLMEmbeddingOutput
-from .service import LiteLLMInput
-from .service import LiteLLMOutput
+from .embedding_service import LiteLLMEmbeddingInput
+from .embedding_service import LiteLLMEmbeddingOutput
+from .chat_service import LiteLLMChatInput
+from .chat_service import LiteLLMChatService
 from .service import LiteLLMService
 from .settings import LiteLLMSetting
 
+from .tool_service import LiteLLMToolInput
+from .tool_service import LiteLLMToolOutput
+
 __all__ = [
-    'LiteLLMInput',
-    'LiteLLMOutput',
-    'LiteLLMService',
+    'LiteLLMChatInput',
+    'LiteLLMChatService',
     'CompletionMessage',
     'MessageRole',
     'TypeMessage',
     'LiteLLMSetting',
     'LiteLLMEmbeddingInput',
     'LiteLLMEmbeddingOutput',
+    'LiteLLMService',
+    
+    'LiteLLMToolInput',
+    'LiteLLMToolOutput',
 ]

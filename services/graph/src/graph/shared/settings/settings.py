@@ -14,6 +14,8 @@ load_dotenv(find_dotenv('.env'), override=True)
 
 
 class Settings(BaseSettings):
+    
+    model: str = 'gemini-2.0-flash'
 
     class Config:
         env_nested_delimiter = '__'
