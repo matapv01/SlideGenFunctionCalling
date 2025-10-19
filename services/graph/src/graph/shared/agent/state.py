@@ -14,7 +14,7 @@ class SlidegenState(TypedDict):
     created or modified by the nodes during execution.
     """
     # Input
-    docx_file: str
+    object_name: str
 
     # Document processing state
     document_title: str

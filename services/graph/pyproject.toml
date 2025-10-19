@@ -18,6 +18,8 @@ dependencies = [
     "logger",
     "markitdown[docx]>=0.1.3",
     "pydantic-settings==2.9.1",
+    "python-multipart>=0.0.20",
+    "storage",
     "typing-extensions>=4.15.0",
     "uvicorn[standard]==0.23.1",
 ]
@@ -33,3 +35,4 @@ build-backend = "uv_build"
 base = { workspace = true }
 litellm = { workspace = true }
 logger = { workspace = true }
+storage = { workspace = true }
