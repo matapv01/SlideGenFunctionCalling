@@ -9,7 +9,6 @@ import httpx
 
 from .chat_service import LiteLLMChatService
 from .embedding_service import LiteLLMEmbeddingService
-from .tool_service import LiteLLMToolService
 
 from logger import get_logger
 logger = get_logger(__name__)
@@ -17,8 +16,7 @@ logger = get_logger(__name__)
 
 class LiteLLMService(
     LiteLLMChatService,
-    LiteLLMEmbeddingService,
-    LiteLLMToolService,
+    LiteLLMEmbeddingService
 ):
     """
     Service for interacting with LiteLLM API for language model inference and embedding generation.

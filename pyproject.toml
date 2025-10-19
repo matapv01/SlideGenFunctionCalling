@@ -17,6 +17,9 @@ members = [
     "libs/litellm",
     "libs/playwright_client",
     "services/graph",
+    "services/docmanager",
+    "libs/agent",
+    "libs/storage",
 ]
 
 [tool.uv.sources]
