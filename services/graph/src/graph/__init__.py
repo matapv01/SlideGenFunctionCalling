@@ -11,6 +11,9 @@ from graph.shared.utils import get_settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from litellm import LiteLLMService
+
+from storage import MinioService 
+
 from logger import get_logger
 from logger import setup_logging
 
@@ -37,6 +40,10 @@ async def lifespan(app: FastAPI):
         encoding_format=settings.litellm.encoding_format,
         dimensions=settings.litellm.dimensions,
         max_length=settings.litellm.max_length,
+    )
+    
+    app.state.minio = MinioService(
+        settings=settings.minio,
     )
     
     yield

@@ -4,7 +4,7 @@ networks:
     driver: bridge
 
 services:
-  litellm_service:
+  litellm:
     image: ghcr.io/berriai/litellm:main-latest
     ports:
       - "9510:4000"
@@ -48,6 +48,10 @@ services:
       - LITELLM__MODEL=${LITELLM__MODEL}
       - LITELLM__EMBEDDING_MODEL=${LITELLM__EMBEDDING_MODEL}
 
+      - MINIO__ACCESS_KEY=${MINIO__ACCESS_KEY}
+      - MINIO__SECRET_KEY=${MINIO__SECRET_KEY}
+      - MINIO__ENDPOINT=${MINIO__ENDPOINT}
+
     volumes:
       - type: bind
         source: ./services/graph/
@@ -56,5 +60,6 @@ services:
         source: ./libs/
         target: /home/slidegen/app/libs/
     depends_on:
-      - litellm_service
+      - minio
+      - litellm
     command: uv run graph

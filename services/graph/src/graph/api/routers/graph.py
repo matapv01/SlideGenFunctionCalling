@@ -4,10 +4,10 @@ import asyncio
 
 from graph.api.helpers.exception_handler import ExceptionHandler
 from fastapi import APIRouter
-from fastapi import BackgroundTasks
 from fastapi import Request
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
+from fastapi import UploadFile
 from logger import get_logger
 
 from graph.application import GraphInput
@@ -24,8 +24,7 @@ settings = get_settings()
 @graph_router.post('/graph', response_model=None)
 def chatbot(
     request: Request,
-    inputs: GraphInput,
-    background_task: BackgroundTasks,
+    docx_file: UploadFile,
 ) -> JSONResponse:
     exception_handler = ExceptionHandler(
         logger=logger.bind(),
@@ -43,12 +42,14 @@ def chatbot(
     try:
         response = asyncio.run(
             graph_service.process(
-                inputs=inputs, 
+                inputs=GraphInput(
+                    docx_file=docx_file,
+                ),
             ),
         )
 
     except Exception as e:
-        return exception_handler.handle_exception(e=str(e), extra={'inputs': inputs})
+        return exception_handler.handle_exception(e=str(e), extra={'docx_file': docx_file.filename})
 
     return exception_handler.handle_success(
         jsonable_encoder(

@@ -1,4 +1,5 @@
 from __future__ import annotations
+import io
 
 from base import BaseModel
 from base import BaseService
@@ -15,19 +16,22 @@ from graph.domain.convert_document import ConvertDocumentService
 from graph.domain.organize_chunks import OrganizeChunkService
 from graph.domain.split_content import SplitContentService
 
+from graph.domain.upload_minio import MinioUploaderInput
+from graph.domain.upload_minio import MinioUploaderService
 
 from pydantic import ConfigDict
 from pydantic import Field
 
 from typing import Any
 from typing import  Annotated
+from fastapi import UploadFile
 
 from logger import get_logger
 
 logger = get_logger(__name__)
 
 class GraphInput(BaseModel):
-    docx_file: str
+    docx_file: UploadFile
 
 
 class GraphOutput(BaseModel):
@@ -40,10 +44,19 @@ class GraphService(BaseService):
     request: Annotated[Any, Field(exclude=True)]
     settings: Annotated[Any, Field(exclude=True)]
     
-    
+    @property
+    def minio_uploader_service(self) -> MinioUploaderService:
+        return MinioUploaderService(
+            minio=self.request.app.state.minio,
+            minio_settings=self.settings.minio
+        )
+
     @property
     def convert_document_service(self) -> ConvertDocumentService:
-        return ConvertDocumentService()
+        return ConvertDocumentService(
+            minio=self.request.app.state.minio,
+            minio_settings=self.settings.minio
+        )
     
     
     @property
@@ -94,9 +107,26 @@ class GraphService(BaseService):
         Returns:
             GraphOutput: placeholder output object (expandable later).
         """
+
+        try:
+            
+            content = await inputs.docx_file.read()
+            buffer = io.BytesIO(content)
+            
+            minio_uploader = self.minio_uploader_service.process(
+                inputs=MinioUploaderInput(
+                    file_path=inputs.docx_file.filename,
+                    file=buffer
+                )
+            )
+
+        except Exception as e:
+            logger.exception('Error occurred while uploading file to MinIO', extra={'error': str(e)})
+            raise
+
         logger.info('Starting GraphService.process', extra={'docx_file': inputs.docx_file})
         state = SlidegenState(
-            docx_file=inputs.docx_file,
+            object_name=minio_uploader.object_name,
             document_title='',
             document_structure=[],
             document_outline=[],

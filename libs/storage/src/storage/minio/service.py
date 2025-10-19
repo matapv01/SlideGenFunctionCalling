@@ -84,15 +84,30 @@ class MinioService(StorageBase):
         if not self.bucket_exists(input.bucket_name):
             raise ValueError(f"Bucket '{input.bucket_name}' does not exist.")
 
-        self._client.fput_object(
-            bucket_name=input.bucket_name,
-            object_name=input.object_name,
-            file_path=input.file_path,
-            content_type=input.content_type,
-            metadata=input.metadata if input.metadata else None,
-        )
+        if input.file_path:
+            self._client.fput_object(
+                bucket_name=input.bucket_name,
+                object_name=input.object_name,
+                file_path=input.file_path,
+                content_type=input.content_type,
+                metadata=input.metadata if input.metadata else None,
+            )
+
+        elif input.data:
+            input.data.seek(0)
+            self._client.put_object(
+                bucket_name=input.bucket_name,
+                object_name=input.object_name,
+                data=input.data,
+                length=input.data.getbuffer().nbytes,
+                content_type=input.content_type,
+                metadata=input.metadata if input.metadata else None,
+            )
+        else:
+            raise ValueError("Either file_path or data must be provided.")
 
         return MinioServiceOutput()
+
 
     def download_file(self, input: MinioServiceInput) -> MinioServiceOutput:
         """Download a file from MinIO.

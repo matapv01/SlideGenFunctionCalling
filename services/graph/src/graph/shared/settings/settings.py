@@ -4,7 +4,9 @@ from pathlib import Path
 
 from dotenv import find_dotenv
 from dotenv import load_dotenv
+
 from litellm.settings import LiteLLMSetting
+from storage import MinioSetting
 from .organize_chunk import OrganizeChunkSettings
 from .content_splitter import ContentSplitterSettings
 
@@ -21,6 +23,7 @@ load_dotenv(find_dotenv('.env'), override=True)
 
 class Settings(BaseSettings):
     
+    minio: MinioSetting
     litellm: LiteLLMSetting
     content_splitter_settings: ContentSplitterSettings
     organize_chunk_settings: OrganizeChunkSettings

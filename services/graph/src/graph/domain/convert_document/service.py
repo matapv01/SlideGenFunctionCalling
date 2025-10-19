@@ -1,29 +1,59 @@
 from __future__ import annotations
-import re
 
+import re
+import os
+
+import tempfile
+
+from base import BaseModel
 from base import BaseService
 from typing import Tuple, Any
 
 from markitdown import MarkItDown
+
+from storage import MinioSetting
+from storage import MinioService
+from storage import MinioServiceInput
+
 from graph.shared.agent import SlidegenState
+
 from logger import get_logger
 
 logger = get_logger(__name__)
 
-
 class ConvertDocumentService(BaseService):
     
-    def process(self, input: SlidegenState) -> dict:
-        logger.info('Converting docx to markdown', extra={'docx_file': input.get('docx_file')})
+    minio: MinioService
+    minio_settings: MinioSetting
+    
+    def process(self, inputs: SlidegenState) -> dict:
+        
+        logger.info('Converting docx to markdown', extra={'docx_file': inputs.get('object_name')})
 
-        markdown_text = MarkItDown().convert(input.get('docx_file')).text_content
+        tmp_path = self._get_object_from_minio(self.minio_settings.bucket, inputs.get('object_name'))
+
+        markdown_text = MarkItDown().convert(tmp_path).text_content
 
         title, structure = self.__parse_markdown_to_hierarchical_json(markdown_text=markdown_text)
 
         logger.info('Parsed document', extra={'title': title, 'top_level_sections': len(structure)})
 
         return {'document_title': title, 'document_structure': structure}
+    
+    def _get_object_from_minio(self, bucket_name: str, object_name: str) -> str:
+        with tempfile.NamedTemporaryFile(delete=False) as tmp_file:
+            tmp_path = tmp_file.name
+            
+        self.minio.download_file(
+            input=MinioServiceInput(
+                bucket_name=bucket_name,
+                object_name=object_name,
+                file_path=tmp_path
+            )
+        )
         
+        return tmp_path
+            
     ### TODO
     def __parse_markdown_to_hierarchical_json(self, markdown_text: str) -> Tuple[str, list[dict[str, Any]]]:
         """

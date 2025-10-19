@@ -9,6 +9,10 @@ litellm:
     dimensions: 768
     max_length: 1024
 
+minio:
+    bucket: 'slidegen'
+    secure: false
+
 content_splitter_settings:
     content_char_limit_for_split: 1000
 
