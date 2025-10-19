@@ -24,8 +24,19 @@ settings = get_settings()
 async def lifespan(app: FastAPI):
     app.state.settings = settings
     
-    app.state.litellm_service = LiteLLMService(
-        settings=app.state.settings.litellm,
+    app.state.litellm = LiteLLMService(
+        url=settings.litellm.url,
+        model=settings.litellm.model,
+        embedding_model=settings.litellm.embedding_model,
+        frequency_penalty=settings.litellm.frequency_penalty,
+        n=settings.litellm.n,
+        presence_penalty=settings.litellm.presence_penalty,
+        temperature=settings.litellm.temperature,
+        top_p=settings.litellm.top_p,
+        max_completion_tokens=settings.litellm.max_completion_tokens,
+        encoding_format=settings.litellm.encoding_format,
+        dimensions=settings.litellm.dimensions,
+        max_length=settings.litellm.max_length,
     )
     
     yield
@@ -34,11 +45,6 @@ async def lifespan(app: FastAPI):
 app = FastAPI(
     lifespan=lifespan,
 )
-origins = [
-    'http://localhost',
-    'http://localhost:8080',
-]
-
 
 # add middleware to generate correlation id
 app.add_middleware(LoggingMiddleware, logger=logger)
@@ -46,7 +52,7 @@ app.add_middleware(CorrelationIdMiddleware)
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=['*'],
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],

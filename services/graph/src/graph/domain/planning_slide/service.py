@@ -23,12 +23,14 @@ from .prompts import SLIDE_PLANNER_HUMAN_PROMPT
 
 logger = get_logger(__name__)
 
+
 class PlanningSlideService(BaseService):
     
     litellm: LiteLLMService
     planning_slide_settings: PlanningSlideSettings
     
     def process(self, inputs: SlidegenState) -> dict:
+        logger.info('PlanningSlideService starting', extra={'slides': len(inputs.get('slide_chunks', []))})
         
         slide_chunks = inputs.get('slide_chunks', [])
         slide_context_maps = inputs.get('slide_context_maps', [])
@@ -72,7 +74,7 @@ class PlanningSlideService(BaseService):
                             tools=planning_tools_for_llm,
                         ))
 
-                logger.info('Done planning slide: %s', i)
+                logger.info('Done planning slide', extra={'index': i})
 
                 # If the model returned tool calls, attempt to execute them
                 resp = response.response
@@ -104,9 +106,9 @@ class PlanningSlideService(BaseService):
                                 # use first successful execution
                                 break
                             except Exception:
-                                logger.exception('Tool execution failed for %s', tool_id)
+                                    logger.exception('Tool execution failed', extra={'tool_id': tool_id})
                         else:
-                            logger.warning('Received tool call for unknown tool id: %s', tool_id)
+                            logger.warning('Received tool call for unknown tool id', extra={'tool_id': tool_id})
 
                 else:
                     # If response is plain text, keep it
@@ -115,7 +117,7 @@ class PlanningSlideService(BaseService):
                 all_slide_plans.append(executed)
                 
             except Exception as e:
-                logger.exception("Failed to call tools via LiteLLMService: %s", e)
+                logger.exception("Failed to call tools via LiteLLMService", extra={'error': str(e)})
                 raise e
 
         return {'slide_plans': all_slide_plans}
