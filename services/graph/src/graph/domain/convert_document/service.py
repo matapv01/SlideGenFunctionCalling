@@ -1,35 +1,28 @@
 from __future__ import annotations
-
 import re
-import json
 
-from base import BaseModel
 from base import BaseService
-
-from typing import Tuple
-from typing import Any
+from typing import Tuple, Any
 
 from markitdown import MarkItDown
 from graph.shared.agent import SlidegenState
+from logger import get_logger
+
+logger = get_logger(__name__)
 
 
 class ConvertDocumentService(BaseService):
     
     def process(self, input: SlidegenState) -> dict:
-        
-        # if not os.path.exists(input.docx_file):
-        #     raise FileNotFoundError(f"The specified DOCX file was not found: {input.docx_file}")
+        logger.info('Converting docx to markdown', extra={'docx_file': input.get('docx_file')})
 
-        markdown_text = MarkItDown().convert(input.get("docx_file")).text_content
+        markdown_text = MarkItDown().convert(input.get('docx_file')).text_content
 
-        title, structure = self.__parse_markdown_to_hierarchical_json(
-            markdown_text=markdown_text
-        )
-        
-        return {
-            'document_title': title,
-            'document_structure': structure
-        }
+        title, structure = self.__parse_markdown_to_hierarchical_json(markdown_text=markdown_text)
+
+        logger.info('Parsed document', extra={'title': title, 'top_level_sections': len(structure)})
+
+        return {'document_title': title, 'document_structure': structure}
         
     ### TODO
     def __parse_markdown_to_hierarchical_json(self, markdown_text: str) -> Tuple[str, list[dict[str, Any]]]:

@@ -1,17 +1,19 @@
 from __future__ import annotations
 
-from base import BaseModel
 from base import BaseService
-
 from graph.shared.agent import SlidegenState
 from graph.shared.settings import OrganizeChunkSettings
+from logger import get_logger
+
+logger = get_logger(__name__)
+
 
 class OrganizeChunkService(BaseService):
-    
     organize_chunk_settings: OrganizeChunkSettings
-    
+
     def process(self, inputs: SlidegenState) -> dict:
-        
+        logger.info('Organizing document into chunks; top-level nodes', extra={'count': len(inputs.get('document_structure', []))})
+
         renumbered_structure = self._add_numbering_recursively(inputs.get('document_structure', []))
         
         final_slides_content, final_slides_positions, final_slides_context_maps = [], [], []
@@ -89,7 +91,7 @@ class OrganizeChunkService(BaseService):
         header = parent.get('numbered_title', '')
         for item in leaves:
             tentative_buffer = buffer + [item]
-            if len(self._render_slide_content(header, tentative_buffer)) > self.organize_chunk_settings.THRESHOLD_CHAR_LIMIT and buffer:
+            if len(self._render_slide_content(header, tentative_buffer)) > self.organize_chunk_settings.threshold_char_limit and buffer:
                 content = self._render_slide_content(header, buffer)
                 pos = [i.get('index', '') for i in buffer]
                 final_slides_content.append(content)

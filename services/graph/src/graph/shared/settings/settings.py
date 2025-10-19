@@ -5,9 +5,15 @@ from pathlib import Path
 from dotenv import find_dotenv
 from dotenv import load_dotenv
 from litellm.settings import LiteLLMSetting
+from .organize_chunk import OrganizeChunkSettings
+from .content_splitter import ContentSplitterSettings
+
+
 from pydantic_settings import BaseSettings
 from pydantic_settings import PydanticBaseSettingsSource
 from pydantic_settings import YamlConfigSettingsSource
+
+
 
 # test in local
 load_dotenv(find_dotenv('.env'), override=True)
@@ -15,7 +21,10 @@ load_dotenv(find_dotenv('.env'), override=True)
 
 class Settings(BaseSettings):
     
-    model: str = 'gemini-2.0-flash'
+    litellm: LiteLLMSetting
+    content_splitter_settings: ContentSplitterSettings
+    organize_chunk_settings: OrganizeChunkSettings
+    
 
     class Config:
         env_nested_delimiter = '__'

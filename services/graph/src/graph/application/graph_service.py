@@ -3,16 +3,132 @@ from __future__ import annotations
 from base import BaseModel
 from base import BaseService
 
+from functools import cached_property
+
+from easydict import EasyDict
+from langgraph.graph import START
+from langgraph.graph import END
+from langgraph.graph import StateGraph
+
+from graph.shared.agent import SlidegenState
+from graph.domain.convert_document import ConvertDocumentService
+from graph.domain.organize_chunks import OrganizeChunkService
+from graph.domain.split_content import SplitContentService
+
+
+from pydantic import ConfigDict
+from pydantic import Field
+
+from typing import Any
+from typing import  Annotated
+
 from logger import get_logger
 
 logger = get_logger(__name__)
 
 class GraphInput(BaseModel):
-    pass
+    docx_file: str
 
 
 class GraphOutput(BaseModel):
     pass
 
 class GraphService(BaseService):
-    pass
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+
+    request: Annotated[Any, Field(exclude=True)]
+    settings: Annotated[Any, Field(exclude=True)]
+    
+    
+    @property
+    def convert_document_service(self) -> ConvertDocumentService:
+        return ConvertDocumentService()
+    
+    
+    @property
+    def organize_chunk_service(self) -> OrganizeChunkService:
+        return OrganizeChunkService(organize_chunk_settings=self.settings.organize_chunk_settings)
+    
+    
+    @property
+    def split_content_service(self) -> SplitContentService:
+        return SplitContentService(
+            litellm=self.request.app.state.litellm,
+            content_splitter_settings=self.settings.content_splitter_settings
+        )
+    
+    @property
+    def nodes(self) -> EasyDict:
+        
+        return EasyDict(
+            {
+                'convert_document': self.convert_document_service.process,
+                'split_content': self.split_content_service.process,
+                'organize_chunk': self.organize_chunk_service.process,
+                
+            }
+        )
+    
+    @cached_property
+    def complied_graph(self) -> Any:
+        graph = StateGraph(SlidegenState)
+        
+        for key, tool in self.nodes.items():
+            graph.add_node(key, tool)
+            
+        graph.add_edge(START, 'convert_document')
+        graph.add_edge('convert_document', 'split_content')
+        graph.add_edge('split_content', 'organize_chunk')
+        
+        graph.add_edge('organize_chunk', END)
+        
+        return graph.compile()
+    
+    async def process(self, inputs: GraphInput) -> GraphOutput:
+        """Run the graph pipeline against provided inputs.
+
+        Args:
+            inputs: GraphInput containing the path to the source DOCX file.
+
+        Returns:
+            GraphOutput: placeholder output object (expandable later).
+        """
+        logger.info('Starting GraphService.process', extra={'docx_file': inputs.docx_file})
+        state = SlidegenState(
+            docx_file=inputs.docx_file,
+            document_title='',
+            document_structure=[],
+            document_outline=[],
+            slide_chunks=[],
+            slide_positions=[],
+            slide_context_maps=[],
+            slide_plans=[],
+            current_slide_index=0,
+            length_slide_chunks=0,
+            current_slide_text='',
+            current_tool_call={},
+            current_html_content='',
+            current_html_path='',
+            current_image_path='',
+            previous_image_path='',
+            previous_accepted_tool_call={},
+            previous_slide_context={},
+            retry_count=2,
+            vlm_decision='',
+            vlm_feedback='',
+            messages=[],
+            final_slides=[],
+            all_debug_info=[],
+        )
+        
+        try:
+            graph_output = await self.complied_graph.ainvoke(state)
+            
+            
+            logger.info('GraphService completed invoke')
+        except Exception as e:
+            logger.exception('Graph invocation failed', extra={'error': str(e)})
+            raise
+
+        return GraphOutput()

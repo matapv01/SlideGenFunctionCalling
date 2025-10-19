@@ -1,17 +1,17 @@
 from __future__ import annotations
 
 import asyncio
-import time
 
 from graph.api.helpers.exception_handler import ExceptionHandler
-from graph.api.helpers.exception_handler import ResponseMessage
 from fastapi import APIRouter
 from fastapi import BackgroundTasks
 from fastapi import Request
-from fastapi import status
 from fastapi.encoders import jsonable_encoder
 from fastapi.responses import JSONResponse
 from logger import get_logger
+
+from graph.application import GraphInput
+from graph.application import GraphService
 
 from graph.shared.utils import get_settings
 
@@ -42,7 +42,9 @@ def chatbot(
 
     try:
         response = asyncio.run(
-            graph_service.process(inputs=inputs, background_task=background_task),
+            graph_service.process(
+                inputs=inputs, 
+            ),
         )
 
     except Exception as e:

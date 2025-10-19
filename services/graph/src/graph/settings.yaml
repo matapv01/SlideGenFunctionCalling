@@ -1,0 +1,16 @@
+litellm:
+    frequency_penalty: 0
+    n: 1
+    presence_penalty: 0
+    temperature: 0
+    top_p: 1
+    max_completion_tokens: 20000
+    encoding_format: 'float'
+    dimensions: 768
+    max_length: 1024
+
+content_splitter_settings:
+    content_char_limit_for_split: 1000
+
+organize_chunk_settings:
+    threshold_char_limit: 1000

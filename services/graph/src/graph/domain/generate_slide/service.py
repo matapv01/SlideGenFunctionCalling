@@ -16,11 +16,13 @@ from graph.shared.agent import SlidegenState
 
 logger = get_logger(__name__)
 
+
 class GenerateSlideService(BaseService):
     
     litellm: LiteLLMService
 
     def process(self, inputs: SlidegenState) -> dict:
+        logger.info('GenerateSlideService.process starting', extra={'index': inputs.get('current_slide_index', 0)})
         
         # --- start process ---
         idx = inputs.get('current_slide_index', 0)
@@ -32,7 +34,7 @@ class GenerateSlideService(BaseService):
         slide_plans = inputs.get('slide_plans', [])
         slide_context_maps = inputs.get('slide_context_maps', [])
 
-        logger.info('Generating slide %s/%s', idx + 1, length_slide_chunks)
+        logger.info('Generating slide', extra={'index': idx + 1, 'length': length_slide_chunks})
 
         if not current_text:
             logger.warning('No slide text provided. Using default.')
@@ -49,7 +51,7 @@ class GenerateSlideService(BaseService):
         tool_category = current_plan.get('action', 'CONTENT_TOOLS')
         creative_thought = current_plan.get('thought', '')
 
-        logger.info('Using plan action=%s thought=%s', tool_category, (creative_thought[:120] + '...') if len(creative_thought) > 120 else creative_thought)
+        logger.info('Using plan', extra={'action': tool_category, 'thought': (creative_thought[:120] + '...') if len(creative_thought) > 120 else creative_thought})
 
         # Retrieve candidate tools from inputs (tool_retriever) or fall back to TOOLS_DICT
         tool_retriever = inputs.get('tool_retriever')
@@ -63,7 +65,7 @@ class GenerateSlideService(BaseService):
             my_tools = TOOLS_DICT.get(tool_category, [])
 
         if not my_tools:
-            logger.warning('No tools retrieved for category %s, falling back to CONTENT_TOOLS', tool_category)
+            logger.warning('No tools retrieved for category, falling back to CONTENT_TOOLS', extra={'category': tool_category})
             my_tools = TOOLS_DICT.get('CONTENT_TOOLS', [])
 
         # Build metadata for LLM (JSON-serializable list of tools)
@@ -90,7 +92,7 @@ class GenerateSlideService(BaseService):
 
         # Try LLM tool-calling a couple times
         for attempt in (1, 2):
-            logger.info('Attempt %s to generate tool call', attempt)
+            logger.info('Attempt to generate tool call', extra={'attempt': attempt})
             try:
                 with self.litellm.client as client:
                     response = self.litellm.use_tools(
@@ -122,7 +124,7 @@ class GenerateSlideService(BaseService):
                         tool_call_dict = {'name': func_name, 'arguments': parsed_args}
                         html_content = execute_tool(tool_call_dict)
                         if html_content:
-                            logger.info('Successfully generated HTML with tool %s', func_name)
+                            logger.info('Successfully generated HTML with tool', extra={'tool': func_name})
                             return {
                                 'current_tool_call': tool_call_dict,
                                 'current_html_content': html_content,
@@ -134,7 +136,7 @@ class GenerateSlideService(BaseService):
                     return {'current_html_content': str(resp)}
 
             except Exception as e:
-                logger.exception('LLM tool call attempt failed: %s', e)
+                logger.exception('LLM tool call attempt failed', extra={'error': str(e)})
 
         # All attempts failed -> fallback to default HTML
         logger.error('All attempts to generate slide failed. Creating default HTML slide.')

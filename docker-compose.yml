@@ -31,3 +31,30 @@ services:
     volumes:
       - ./minio/data:/data
     command: server /data --console-address ":9001"
+
+  graph_service:
+    build:
+      context: .
+      dockerfile: dockers/Dockerfile
+      args:
+        - PACKAGE=graph
+        - OPTIONAL_BUILD=src/graph/__init__.py
+    ports:
+      - "9527:9527"
+    networks:
+      - multidimentional
+    environment:
+      - LITELLM__URL=${LITELLM__URL}
+      - LITELLM__MODEL=${LITELLM__MODEL}
+      - LITELLM__EMBEDDING_MODEL=${LITELLM__EMBEDDING_MODEL}
+
+    volumes:
+      - type: bind
+        source: ./services/graph/
+        target: /home/slidegen/app/services/graph/
+      - type: bind
+        source: ./libs/
+        target: /home/slidegen/app/libs/
+    depends_on:
+      - litellm_service
+    command: uv run graph

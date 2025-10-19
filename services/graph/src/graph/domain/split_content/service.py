@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from base import BaseModel
 from base import BaseService
 
 from litellm import LiteLLMChatInput
@@ -15,35 +14,30 @@ from .prompts import SYSTEM_PROMPT
 from .prompts import HUMAN_PROMPT_TEMPLATE
 from graph.shared.settings import ContentSplitterSettings
 
-from langchain_core.prompts import ChatPromptTemplate
-from langchain_core.output_parsers import StrOutputParser
+from graph.shared.agent import SlidegenState
 
 from logger import get_logger
 
 logger = get_logger(__name__)
 
-class SplitContentInput(BaseModel):
-    document_title: str = 'Unititled Document'
-    document_structure: list[dict] = []
-        
 class SplitContentService(BaseService):
     
     litellm: LiteLLMService
     content_splitter_settings: ContentSplitterSettings
     
     
-    def process(self, inputs: SplitContentInput) -> dict:
+    def process(self, inputs: SlidegenState) -> dict:
 
         def _process_node(node: Dict[str, Any], parent_headings: list[str]):
             """Recursively checks and splits content for a node and its children."""
 
             current_heading = node.get('numbered_title', node.get('title', ''))
 
-            if node.get('content') and len(node['content']) > self.content_splitter_settings.CONTENT_CHAR_LIMIT_FOR_SPLIT:
+            if node.get('content') and len(node['content']) > self.content_splitter_settings.content_char_limit_for_split:
                 logger.info('Found oversized content, lets split:', extra={'current_heading': current_heading})
                 
                 messages = self.build_conversation(
-                    document_title=inputs.document_title,
+                    document_title=inputs.get('document_title'),
                     parent_headings=' -> '.join(parent_headings),
                     current_heading=current_heading,
                     content_to_split=node['content'],
@@ -79,6 +73,7 @@ class SplitContentService(BaseService):
                         split_data = [split_data]
 
                     if not isinstance(split_data, list):
+                        logger.exception('LLM response is not a JSON list', extra={'current_heading': current_heading, 'response': response.response})
                         raise ValueError("LLM response is not a JSON list or object.")
 
                     # Convert the LLM's nested tree into our standard node format
@@ -87,15 +82,12 @@ class SplitContentService(BaseService):
                     if not new_children:
                         raise ValueError("Failed to convert LLM response into valid nodes.")
 
-                    print(f"  -> LLM successfully created a nested structure. Adding {len(new_children)} top-level new sections.")
-
                     # Replace the old content with the new hierarchical child nodes
                     node['content'] = "" # Clear the original long content
                     node['children'] = new_children + node.get('children', []) # Prepend new structure
 
                 except (json.JSONDecodeError, ValueError) as e:
-                    print(f"  -> FAILED to process LLM response for '{current_heading}'. Keeping original content. Error: {e}")
-                    print(f"  -> LLM raw response was: {response.response}")
+                    logger.warning('Failed to process LLM response; keeping original content', extra={'current_heading': current_heading, 'error': str(e)})
 
             # Recurse into all children (including any that were just added)
             new_parent_headings = parent_headings + [current_heading]
