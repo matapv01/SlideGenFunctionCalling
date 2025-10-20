@@ -1,139 +1,84 @@
 from __future__ import annotations
 
 from base import BaseService
+from agent import AgentService
 
-from litellm import LiteLLMService
-from litellm import LiteLLMToolInput
-from litellm import MessageRole
-
-from logger import get_logger
 from graph.shared.agent import SlidegenState
 from graph.shared.settings import PlanningSlideSettings
-from graph.shared.tools import (
-    planning_slide_tool,
-    PLANNING_SLIDE_TOOL_ID,
-    PLANNING_SLIDE_TOOL_NAME,
-    PLANNING_SLIDE_TOOL_DESC,
-)
-from typing import Optional, Dict, Any
-import json
+from graph.shared.models import SlidePlan
+
+from graph.shared.settings import PlanningSlideSettings
+
+from langchain_core.prompts import ChatPromptTemplate
 
 from .prompts import SLIDE_PLANNER_SYSTEM_PROMPT
 from .prompts import SLIDE_PLANNER_HUMAN_PROMPT
 
+from logger import get_logger
 logger = get_logger(__name__)
 
 
 class PlanningSlideService(BaseService):
-    
-    litellm: LiteLLMService
-    planning_slide_settings: PlanningSlideSettings
+
+    agent: AgentService
+    planning_settings: PlanningSlideSettings
     
     def process(self, inputs: SlidegenState) -> dict:
-        logger.info('PlanningSlideService starting', extra={'slides': len(inputs.get('slide_chunks', []))})
-        
+
         slide_chunks = inputs.get('slide_chunks', [])
         slide_context_maps = inputs.get('slide_context_maps', [])
 
         if not slide_chunks or not slide_context_maps:
-            logger.warning("No slide chunks or context maps found in input state.")
+            logger.warning("No slide chunks or context maps found. Skipping planning.")
             return {'slide_plans': []}
+        
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
+            ("human", SLIDE_PLANNER_HUMAN_PROMPT)
+        ])
 
+        planner_chain = prompt | self.agent.with_structured_output(SlidePlan)
+        
+        # 1. Prepare a list of all inputs.
+        all_inputs = []
+        for i, content in enumerate(slide_chunks):
+            all_inputs.append({
+                "slide_context_map": slide_context_maps[i],
+                "slide_content": content
+            })
+        
+        total_slides = len(all_inputs)
         all_slide_plans = []
 
-        for i, content in enumerate(slide_chunks):
-            context_map = slide_context_maps[i] if i < len(slide_context_maps) else ""
-            
-            messages = self.build_conversation(
-                slide_context_map=context_map,
-                slide_content=content
-            )
-            
-            # Build tool metadata to send to the LLM (JSON-serializable)
-            planning_tools_for_llm = [
-                {
-                    'id': PLANNING_SLIDE_TOOL_ID,
-                    'name': PLANNING_SLIDE_TOOL_NAME,
-                    'description': PLANNING_SLIDE_TOOL_DESC,
-                    # don't include 'func' here — only metadata goes to the model
-                }
-            ]
-
-            # Local map of tool id -> callable used to execute the tool when LLM
-            # returns a tool call. This map is NOT sent over the wire.
-            planning_local_funcs = {
-                PLANNING_SLIDE_TOOL_ID: planning_slide_tool,
-            }
-
-            try:
-                with self.litellm.client as client:
-                    response = self.litellm.use_tools(
-                        client=client, inputs=LiteLLMToolInput(
-                            message=messages,
-                            model=self.planning_slide_settings.model,
-                            tools=planning_tools_for_llm,
-                        ))
-
-                logger.info('Done planning slide', extra={'index': i})
-
-                # If the model returned tool calls, attempt to execute them
-                resp = response.response
-                executed: Optional[Dict[str, Any]] = None
-                if isinstance(resp, list):
-                    # Expect list of ToolCall-like objects with id and function.arguments
-                    for tc in resp:
-                        tool_id = getattr(tc, 'id', None) or tc.get('id') if isinstance(tc, dict) else None
-                        func_call = None
-                        # extract arguments - could be string JSON
-                        args_str = None
-                        if isinstance(tc, dict):
-                            func_call = tc.get('function') or tc.get('tool')
-                        else:
-                            func_call = getattr(tc, 'function', None)
-
-                        if func_call:
-                            args_str = getattr(func_call, 'arguments', None) or func_call.get('arguments') if isinstance(func_call, dict) else None
-
-                        # Lookup local function by id and execute if available
-                        if tool_id and tool_id in planning_local_funcs:
-                            try:
-                                parsed_args = json.loads(args_str) if isinstance(args_str, str) and args_str.strip() else {}
-                            except Exception:
-                                parsed_args = {}
-
-                            try:
-                                executed = planning_local_funcs[tool_id](parsed_args)
-                                # use first successful execution
-                                break
-                            except Exception:
-                                    logger.exception('Tool execution failed', extra={'tool_id': tool_id})
-                        else:
-                            logger.warning('Received tool call for unknown tool id', extra={'tool_id': tool_id})
-
-                else:
-                    # If response is plain text, keep it
-                    executed = resp
-
-                all_slide_plans.append(executed)
+        logger.info('Total slides to plan and processing in chunks', 
+                    extra={
+                        'total_slides': total_slides, 
+                        'batch_size': self.planning_settings.planning_batch_size
+                    }
+                )
+        
+        try:
+            for i in range(0, total_slides, self.planning_settings.planning_batch_size):
+                # Get the current chunk of inputs
+                chunk_inputs = all_inputs[i : i + self.planning_settings.planning_batch_size]
+                chunk_start_num = i + 1
+                chunk_end_num = min(i + self.planning_settings.planning_batch_size, total_slides)
                 
-            except Exception as e:
-                logger.exception("Failed to call tools via LiteLLMService", extra={'error': str(e)})
-                raise e
+                logger.info(' -> Processing chunk: slides', extra={
+                    'chunk_start_num': chunk_start_num,
+                    'chunk_end_num': chunk_end_num
+                })
 
-        return {'slide_plans': all_slide_plans}
+                batch_results = planner_chain.batch(chunk_inputs, config={"max_concurrency": 5})
+                
+                chunk_plans = [plan.dict() for plan in batch_results]
+                all_slide_plans.extend(chunk_plans)
+                logger.info('Done processing chunk')
 
-    def build_conversation(self, slide_context_map: str, slide_content: str) -> list[dict]:
+                return {
+                    'slide_plans': all_slide_plans
+                }
 
-        return [
-            {
-                'role': MessageRole.SYSTEM,
-                'content': SLIDE_PLANNER_SYSTEM_PROMPT,
-            },
-            {
-                'role': MessageRole.USER,
-                'content': SLIDE_PLANNER_HUMAN_PROMPT.format(
-                    slide_context_map=slide_context_map,
-                    slide_content=slide_content
-                ),
-            },
-        ]
+        except Exception as e:
+            logger.exception('Failed during batch planning', extra={'error': str(e)})
+            raise e

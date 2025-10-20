@@ -22,8 +22,11 @@ class GenerateSlideService(BaseService):
     litellm: LiteLLMService
 
     def process(self, inputs: SlidegenState) -> dict:
-        logger.info('GenerateSlideService.process starting', extra={'index': inputs.get('current_slide_index', 0)})
-        
+        logger.info(
+            'GenerateSlideService.process starting',
+            extra={'index': inputs.get('current_slide_index', 0)}
+        )
+
         # --- start process ---
         idx = inputs.get('current_slide_index', 0)
         current_text = inputs.get('current_slide_text', '')

@@ -9,6 +9,7 @@ from litellm.settings import LiteLLMSetting
 from storage import MinioSetting
 from .organize_chunk import OrganizeChunkSettings
 from .content_splitter import ContentSplitterSettings
+from .planning_slide import PlanningSlideSettings
 
 
 from pydantic_settings import BaseSettings
@@ -23,11 +24,13 @@ load_dotenv(find_dotenv('.env'), override=True)
 
 class Settings(BaseSettings):
     
+    tool_retriver_url: str
+    
     minio: MinioSetting
     litellm: LiteLLMSetting
     content_splitter_settings: ContentSplitterSettings
     organize_chunk_settings: OrganizeChunkSettings
-    
+    planning_slide_settings: PlanningSlideSettings
 
     class Config:
         env_nested_delimiter = '__'

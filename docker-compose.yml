@@ -1,3 +1,5 @@
+volumes:
+  chromadb:
 
 networks:
   multidimentional:
@@ -32,6 +34,15 @@ services:
       - ./minio/data:/data
     command: server /data --console-address ":9001"
 
+  chromadb:
+    image: ghcr.io/chroma-core/chroma:latest
+    volumes:
+      - chromadb:/chroma/.chroma/index
+    ports:
+      - ${CHROMADB__PORT}:8000
+    networks:
+      - multidimentional
+
   graph_service:
     build:
       context: .
@@ -63,3 +74,31 @@ services:
       - minio
       - litellm
     command: uv run graph
+  tool_service:
+    build:
+      context: .
+      dockerfile: dockers/Dockerfile
+      args:
+        - PACKAGE=tools
+        - OPTIONAL_BUILD=src/tools/__init__.py
+    ports:
+      - "9229:9229"
+    networks:
+      - multidimentional
+
+    environment:
+      - LITELLM__URL=${LITELLM__URL}
+      - LITELLM__MODEL=${LITELLM__MODEL}
+      - LITELLM__EMBEDDING_MODEL=${LITELLM__EMBEDDING_MODEL}
+
+      - CHROMADB__HOST=${CHROMADB__HOST}
+      - CHROMADB__PORT=${CHROMADB__PORT}
+      
+    volumes:
+      - type: bind
+        source: ./services/tools/
+        target: /home/slidegen/app/services/tools/
+      - type: bind
+        source: ./libs/
+        target: /home/slidegen/app/libs/
+    command: uv run tools

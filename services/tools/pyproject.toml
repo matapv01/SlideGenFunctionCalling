@@ -1,0 +1,35 @@
+[project]
+name = "tools"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "huskywannacry", email = "ttkien1503@gmail.com" }
+]
+requires-python = ">=3.11"
+dependencies = [
+    "asgi-correlation-id>=4.2.0",
+    "base",
+    "chromadb-client",
+    "fastapi>=0.119.0",
+    "litellm",
+    "logger",
+    "pydantic>=2.12.3",
+    "pydantic-settings[yaml]>=2.11.0",
+    "tool-registry",
+    "uvicorn>=0.23.1",
+]
+
+[project.scripts]
+tools = "tools:main"
+
+[build-system]
+requires = ["uv_build>=0.8.18,<0.9.0"]
+build-backend = "uv_build"
+
+[tool.uv.sources]
+base = { workspace = true }
+logger = { workspace = true }
+chromadb-client = { workspace = true }
+tool-registry = { workspace = true }
+litellm = { workspace = true }
