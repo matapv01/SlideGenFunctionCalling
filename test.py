@@ -1,126 +1,182 @@
 from __future__ import annotations
 
-import os
-from dotenv import load_dotenv
+from datetime import datetime
+from base import BaseService
 
-from litellm import LiteLLMService
+from typing import Any
+from pydantic import Field
+from pydantic import ConfigDict
 
-from graph.domain.convert_document import ConvertDocumentService
-from graph.shared.agent import SlidegenState
+from chromadb_client import ChromaDB
+from logger import get_logger
 
-from graph.domain.split_content import SplitContentService
-from graph.shared.settings import ContentSplitterSettings
+logger = get_logger(__name__)
 
-from graph.domain.organize_chunks import OrganizeChunkService
-from graph.shared.settings import OrganizeChunkSettings
 
-from graph.domain.planning_slide import PlanningSlideService
-from graph.shared.settings import PlanningSlideSettings
-
-from graph.domain.provide_next_slide import ProvideNextSlideService
-from graph.domain.generate_slide import GenerateSlideService
-
-load_dotenv()
-
-LITELLM__URL = os.getenv('LITELLM__URL')
-LITELLM__MODEL = os.getenv('LITELLM__MODEL', 'gemini-2.0-flash')
-
-LITELLM__TEMPERATURE = float(os.getenv('LITELLM__TEMPERATURE', 0.7))
-LITELLM__TOP_P = float(os.getenv('LITELLM__TOP_P', 0.9))
-LITELLM__FREQUENCY_PENALTY = float(os.getenv('LITELLM__FREQUENCY_PENALTY', 0.0))
-LITELLM__PRESENCE_PENALTY = float(os.getenv('LITELLM__PRESENCE_PENALTY', 0.0))
-LITELLM__MAX_COMPLETION_TOKENS = int(os.getenv('LITELLM__MAX_COMPLETION_TOKENS', 4096))
-LITELLM__N = int(os.getenv('LITELLM__N', 1))
-
-LITELLM__EMBEDDING_MODEL = os.getenv('LITELLM__EMBEDDING_MODEL', 'embedding-004')
-LITELLM__ENCODING_FORMAT = os.getenv('LITELLM__ENCODING_FORMAT', 'float')
-LITELLM__DIMENSIONS = int(os.getenv('LITELLM__DIMENSIONS', 768))
-LITELLM__MAX_LENGTH = int(os.getenv('LITELLM__MAX_LENGTH', 2048))
-
-litellm = LiteLLMService(
-    url=LITELLM__URL,
-    model=LITELLM__MODEL,
-    frequency_penalty=LITELLM__FREQUENCY_PENALTY,
-    n=LITELLM__N,
-    temperature=LITELLM__TEMPERATURE,
-    presence_penalty=LITELLM__PRESENCE_PENALTY,
-    top_p=LITELLM__TOP_P,
-    max_completion_tokens=LITELLM__MAX_COMPLETION_TOKENS,
-    embedding_model=LITELLM__EMBEDDING_MODEL,
-    encoding_format=LITELLM__ENCODING_FORMAT,
-    max_length=LITELLM__MAX_LENGTH,
-    dimensions=LITELLM__DIMENSIONS,
-)
-
-state = SlidegenState(
-    docx_file=os.path.join("data", "input", "test_ttcs - heading.docx"),
-    document_title='',
-    document_structure=[],
-    document_outline=[],
-    slide_chunks=[],
-    slide_positions=[],
-    slide_context_maps=[],
-    slide_plans=[],
-    # Slide generation loop state
-    current_slide_index=None,
-    length_slide_chunks=None,
-    current_slide_text=None,
-    current_tool_call=None,
-    current_html_content=None,
-    current_html_path=None,
-    current_image_path=None,
-    previous_image_path=None,
-    previous_accepted_tool_call=None,
-    previous_slide_context=None,
-
-    # Retry and evaluation state
-    retry_count=2,
-    vlm_decision=None,
-    vlm_feedback=None,
-
-    # History and final results
-    messages=[],
-    final_slides=[],
-    all_debug_info=[]
-)
-
-content_splitter_settings = ContentSplitterSettings(
-    CONTENT_CHAR_LIMIT_FOR_SPLIT=1000,
-)
-
-convert_document = ConvertDocumentService()
-split_content = SplitContentService(
-    litellm=litellm,
-    content_splitter_settings=content_splitter_settings
-)
-
-organize_chunk_settings = OrganizeChunkSettings(
-    THRESHOLD_CHAR_LIMIT=1000
-)
-
-organize_chunks = OrganizeChunkService(
-    organize_chunk_settings=organize_chunk_settings
-)
-
-planning_slide = PlanningSlideService(
-    litellm=litellm,
-    planning_slide_settings=PlanningSlideSettings(
-        model=LITELLM__MODEL
-    )
-)
-
-next_slide_provider = ProvideNextSlideService()
-
-generate_slide = GenerateSlideService(litellm=litellm)
-
-state = convert_document.process(input=state)
-
-state = split_content.process(inputs=state)
-
-state = organize_chunks.process(inputs=state)
-
-state = planning_slide.process(inputs=state)
-
-state = next_slide_provider.process(inputs=state)
-
-# print(generate_slide.process(inputs=state))
+class ToolGenerationService(BaseService):
+    """Service for slide generation business logic."""
+    
+    model_config = ConfigDict(arbitrary_types_allowed=True)
+    request: Any = Field(exclude=True)
+    settings: Any = Field(exclude=True)
+    
+    async def process(
+        self,
+        request: SlideGenerationRequest,
+    ) -> SlideGenerationResponse:
+        """
+        Generate a slide using specified tool and parameters.
+        
+        Raises:
+            ValueError: If tool not found
+            TypeError: If parameters invalid
+        """
+        logger.info("Starting slide generation process for tool", extra={"tool_name": request.tool_name})
+        logger.info("Request parameters received", extra={"params": request.params})
+        
+        tool_tuple = self.registry.get_tool(request.tool_name)
+        
+        if not tool_tuple:
+            logger.warning("Tool not found in registry", extra={"tool_name": request.tool_name})
+            raise ValueError(f"Tool '{request.tool_name}' not found")
+        
+        func, metadata = tool_tuple
+        logger.info("Tool found", extra={"tool_name": request.tool_name, "category": metadata.category.value, "version": metadata.version})
+        
+        try:
+            logger.info("Executing tool", extra={"tool_name": request.tool_name})
+            html = func(**request.params)
+            logger.info("Successfully generated HTML", extra={"tool_name": request.tool_name, "html_length": len(html)})
+            
+            return SlideGenerationResponse(
+                tool_name=request.tool_name,
+                html=html,
+                category=metadata.category.value,
+                metadata={
+                    "generated_at": datetime.utcnow().isoformat(),
+                    "version": metadata.version,
+                }
+            )
+        except TypeError as e:
+            logger.error("Invalid parameters for tool", extra={"tool_name": request.tool_name, "error": str(e), "params": request.params})
+            raise TypeError(f"Invalid parameters: {str(e)}")
+        except Exception as e:
+            logger.error("Error generating slide", extra={"tool_name": request.tool_name, "error": str(e)})
+            raise
+    
+    def get_tools_by_category(self, category: SlideCategory) -> ToolListResponse:
+        """Get all tools in a category."""
+        logger.info("Retrieving tools by category", extra={"category": category.value})
+        metadatas = self.registry.list_tools_by_category(category)
+        tools = [
+            ToolInfo(
+                name=m.name,
+                description=m.description,
+                category=m.category.value,
+                version=m.version,
+                tags=m.tags,
+            )
+            for m in metadatas
+        ]
+        logger.info("Retrieved tools by category", extra={"category": category.value, "count": len(tools)})
+        return ToolListResponse(
+            category=category.value,
+            count=len(tools),
+            tools=tools
+        )
+    
+    def get_all_tools(self) -> AllToolsResponse:
+        """Get all tools grouped by category."""
+        logger.info("Retrieving all tools grouped by category")
+        categories_data = {}
+        total_count = 0
+        
+        for category in SlideCategory:
+            cat_response = self.get_tools_by_category(category)
+            if cat_response.count > 0:
+                categories_data[category.value] = cat_response
+                total_count += cat_response.count
+        
+        logger.info("Retrieved all tools", extra={"total_count": total_count, "categories_count": len(categories_data)})
+        return AllToolsResponse(
+            total_count=total_count,
+            categories=categories_data
+        )
+    
+    def search_tools(self, query: str, top_k: int = 5) -> ToolListResponse:
+        """
+        Search tools by query using ChromaDB.
+        
+        Args:
+            query: Search query string
+            chromadb_client: ChromaDB client instance
+            top_k: Number of results to return
+            
+        Returns:
+            ToolListResponse with matching tools
+        """
+        try:
+            # Get all tools from registry
+            all_tools = self.registry.get_all_tools()
+            
+            # Prepare tool information for searching
+            tool_docs = []
+            tool_metadatas = []
+            
+            for tool_name, (func, metadata) in all_tools.items():
+                doc = f"{tool_name} {metadata.description}"
+                tool_docs.append(doc)
+                tool_metadatas.append({
+                    "tool_name": tool_name,
+                    "category": metadata.category.value,
+                })
+            
+            if not tool_docs:
+                return ToolListResponse(category="search", count=0, tools=[])
+            
+            # Store tools in ChromaDB if not already there
+            self.chromadb.store_vector(
+                document_collections="tools",
+                vectors=None,  # ChromaDB will handle embedding
+                metadatas=tool_metadatas,
+                ids=list(all_tools.keys()),
+                documents=tool_docs,
+            )
+            
+            # Query ChromaDB for similar tools
+            # Note: query_embeddings should be embeddings, not text
+            # For now, we'll use a simple text search by storing and querying
+            results = self.chromadb.collections("tools").query(
+                query_texts=[query],
+                n_results=top_k,
+            )
+            
+            tool_names = []
+            if results.get("ids") and len(results["ids"]) > 0:
+                tool_names = results["ids"][0]
+            
+            # Get tool metadata for results
+            tools = []
+            for tool_name in tool_names:
+                tool_tuple = self.registry.get_tool(tool_name)
+                if tool_tuple:
+                    func, metadata = tool_tuple
+                    tools.append(
+                        ToolInfo(
+                            name=metadata.name,
+                            description=metadata.description,
+                            category=metadata.category.value,
+                            version=metadata.version,
+                            tags=metadata.tags,
+                        )
+                    )
+            
+            return ToolListResponse(
+                category="search",
+                count=len(tools),
+                tools=tools
+            )
+            
+        except Exception as e:
+            logger.error(f"Error searching tools: {str(e)}")
+            raise

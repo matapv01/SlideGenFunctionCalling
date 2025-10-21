@@ -15,6 +15,8 @@ from graph.shared.agent import SlidegenState
 from graph.domain.convert_document import ConvertDocumentService
 from graph.domain.organize_chunks import OrganizeChunkService
 from graph.domain.split_content import SplitContentService
+from graph.domain.planning_slide import PlanningSlideService
+from graph.domain.provide_next_slide import ProvideNextSlideService
 
 from graph.domain.upload_minio import MinioUploaderInput
 from graph.domain.upload_minio import MinioUploaderService
@@ -72,6 +74,17 @@ class GraphService(BaseService):
         )
     
     @property
+    def planning_slide_service(self) -> PlanningSlideService:
+        return PlanningSlideService(
+            agent=self.request.app.state.agent,
+            planning_settings=self.settings.planning_slide_settings
+        )
+    
+    @property
+    def provide_next_slide_service(self) -> ProvideNextSlideService:
+        return ProvideNextSlideService()
+    
+    @property
     def nodes(self) -> EasyDict:
         
         return EasyDict(
@@ -79,7 +92,8 @@ class GraphService(BaseService):
                 'convert_document': self.convert_document_service.process,
                 'split_content': self.split_content_service.process,
                 'organize_chunk': self.organize_chunk_service.process,
-                
+                'planning_slide': self.planning_slide_service.process,
+                'provide_next_slide': self.provide_next_slide_service.process,
             }
         )
     
@@ -93,9 +107,10 @@ class GraphService(BaseService):
         graph.add_edge(START, 'convert_document')
         graph.add_edge('convert_document', 'split_content')
         graph.add_edge('split_content', 'organize_chunk')
-        
-        graph.add_edge('organize_chunk', END)
-        
+        graph.add_edge('organize_chunk', 'planning_slide')
+        graph.add_edge('planning_slide', 'provide_next_slide')
+        graph.add_edge('provide_next_slide', END)
+
         return graph.compile()
     
     async def process(self, inputs: GraphInput) -> GraphOutput:

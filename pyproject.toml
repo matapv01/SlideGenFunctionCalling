@@ -18,7 +18,7 @@ members = [
     "services/docmanager",
     "libs/agent",
     "libs/storage",
+    "libs/chromadb_client",
+    "services/tools",
+    "libs/tool_registry",
 ]
-
-[tool.uv.sources]
-graph = { workspace = true }
