@@ -29,7 +29,7 @@ build-backend = "uv_build"
 
 [tool.uv.sources]
 base = { workspace = true }
-logger = { workspace = true }
 chromadb-client = { workspace = true }
 tool-registry = { workspace = true }
 litellm = { workspace = true }
+logger = { workspace = true }

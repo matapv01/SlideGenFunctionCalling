@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from .registry import ToolRegistry
 from .models import SlideCategory
 from .models import SlideToolMetadata
+from .service import ToolRegistryService
 
 __all__ = [
-    'ToolRegistry',
     'SlideCategory',
     'SlideToolMetadata',
+    'ToolRegistryService',
 ]

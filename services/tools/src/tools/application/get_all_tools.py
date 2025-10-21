@@ -34,8 +34,7 @@ class ToolListResponse(BaseModel):
 
 class ListToolServiceOutput(BaseModel):
     """Response with all tools grouped by category."""
-    total_count: int
-    categories: Dict[str, ToolListResponse]
+    all_tools: dict
 
 class ListToolsService(BaseService):
     """Service for slide generation business logic."""
@@ -50,36 +49,11 @@ class ListToolsService(BaseService):
         categories_data = {}
         total_count = 0
         
-        for category in SlideCategory:
-            cat_response = self.__get_tools_by_category(category)
-            if cat_response.count > 0:
-                categories_data[category.value] = cat_response
-                total_count += cat_response.count
+        all_tools = self.request.app.state.registry.get_all_tools()
         
         logger.info("Retrieved all tools", extra={"total_count": total_count, "categories_count": len(categories_data)})
         
         return ListToolServiceOutput(
-            total_count=total_count,
-            categories=categories_data
+            all_tools=all_tools
         )
         
-    def __get_tools_by_category(self, category: SlideCategory) -> ToolListResponse:
-        """Get all tools in a category."""
-        logger.info("Retrieving tools by category", extra={"category": category.value})
-        metadatas = self.request.app.state.registry.list_tools_by_category(category)
-        tools = [
-            ToolInfo(
-                name=m.name,
-                description=m.description,
-                category=m.category.value,
-                version=m.version,
-                tags=m.tags,
-            )
-            for m in metadatas
-        ]
-        logger.info("Retrieved tools by category", extra={"category": category.value, "count": len(tools)})
-        return ToolListResponse(
-            category=category.value,
-            count=len(tools),
-            tools=tools
-        )

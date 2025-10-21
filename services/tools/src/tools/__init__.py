@@ -14,7 +14,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from litellm import LiteLLMService
 from chromadb_client import ChromaDB
 
-from tool_registry import ToolRegistry
+from tool_registry import ToolRegistryService
 
 from logger import get_logger
 from logger import setup_logging
@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
         chromadb_setting=settings.chromadb
     )
     
-    app.state.registry = ToolRegistry()
+    app.state.registry = ToolRegistryService()
     
     yield
 

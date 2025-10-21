@@ -14,6 +14,7 @@ from tools.api.helpers.exception_handler import ExceptionHandler
 
 from tools.application import ListToolsService
 from tools.shared.utils import get_settings
+from tools.shared.utils import _make_serializable_response
 
 logger = get_logger(__name__)
 
@@ -22,7 +23,7 @@ settings = get_settings()
 tool_router = APIRouter(prefix='/v1')
 
 @tool_router.get(
-    '/slides/tools',
+    '/tools',
     summary="List all available tools",
     tags=["tools"],
 )
@@ -64,6 +65,6 @@ async def list_all_tools(request: Request):
         
     return exception_handler.handle_success(
         jsonable_encoder(
-            response,
+            _make_serializable_response(response),
         )
     )

@@ -3499,6 +3499,16 @@ wheels = [
 name = "tool-registry"
 version = "0.1.0"
 source = { editable = "libs/tool_registry" }
+dependencies = [
+    { name = "base" },
+    { name = "pydantic" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "base", editable = "libs/base" },
+    { name = "pydantic", specifier = ">=2.12.3" },
+]
 
 [[package]]
 name = "tools"
