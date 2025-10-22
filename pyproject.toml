@@ -21,4 +21,5 @@ members = [
     "libs/chromadb_client",
     "services/tools",
     "libs/tool_registry",
+    "libs/tool_storage",
 ]

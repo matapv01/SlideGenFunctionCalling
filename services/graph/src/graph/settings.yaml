@@ -9,6 +9,13 @@ litellm:
     dimensions: 768
     max_length: 1024
 
+agent:
+    model: 'gemini-2.0-flash'
+    temperature: 0.7
+    top_p: 1
+    max_tokens: 1024
+    add_stop_token: ['---\n', 'STOP_HERE']
+
 minio:
     bucket: 'slidegen'
     secure: false
@@ -18,3 +25,7 @@ content_splitter_settings:
 
 organize_chunk_settings:
     threshold_char_limit: 1000
+
+planning_slide_settings:
+    model: 'gemini-2.0-flash'
+    planning_batch_size: 5

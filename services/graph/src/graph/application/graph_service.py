@@ -17,6 +17,7 @@ from graph.domain.organize_chunks import OrganizeChunkService
 from graph.domain.split_content import SplitContentService
 from graph.domain.planning_slide import PlanningSlideService
 from graph.domain.provide_next_slide import ProvideNextSlideService
+from graph.domain.generate_slide import GenerateSlideService
 
 from graph.domain.upload_minio import MinioUploaderInput
 from graph.domain.upload_minio import MinioUploaderService
@@ -84,6 +85,14 @@ class GraphService(BaseService):
     def provide_next_slide_service(self) -> ProvideNextSlideService:
         return ProvideNextSlideService()
     
+    
+    @property
+    def generate_slide_service(self) -> GenerateSlideService:
+        return GenerateSlideService(
+            agent=self.request.app.state.agent,
+            registry=self.request.app.state.registry
+        )
+    
     @property
     def nodes(self) -> EasyDict:
         
@@ -94,6 +103,7 @@ class GraphService(BaseService):
                 'organize_chunk': self.organize_chunk_service.process,
                 'planning_slide': self.planning_slide_service.process,
                 'provide_next_slide': self.provide_next_slide_service.process,
+                'generate_slide': self.generate_slide_service.process,
             }
         )
     
@@ -109,7 +119,8 @@ class GraphService(BaseService):
         graph.add_edge('split_content', 'organize_chunk')
         graph.add_edge('organize_chunk', 'planning_slide')
         graph.add_edge('planning_slide', 'provide_next_slide')
-        graph.add_edge('provide_next_slide', END)
+        graph.add_edge('provide_next_slide', 'generate_slide')
+        graph.add_edge('generate_slide', END)
 
         return graph.compile()
     

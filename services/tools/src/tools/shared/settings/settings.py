@@ -19,6 +19,7 @@ load_dotenv(find_dotenv('.env'), override=True)
 
 class Settings(BaseSettings):
 
+    threshold: float
     litellm: LiteLLMSetting
     chromadb: ChromaDBSetting
 

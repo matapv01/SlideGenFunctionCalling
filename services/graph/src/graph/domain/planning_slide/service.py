@@ -5,9 +5,7 @@ from agent import AgentService
 
 from graph.shared.agent import SlidegenState
 from graph.shared.settings import PlanningSlideSettings
-from graph.shared.models import SlidePlan
-
-from graph.shared.settings import PlanningSlideSettings
+from .models import SlidePlan
 
 from langchain_core.prompts import ChatPromptTemplate
 

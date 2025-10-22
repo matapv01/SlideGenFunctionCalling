@@ -8,3 +8,5 @@ litellm:
   encoding_format: 'float'
   dimensions: 768
   max_length: 1024
+
+threshold: 0.3

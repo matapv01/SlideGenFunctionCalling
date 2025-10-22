@@ -24,6 +24,7 @@ dependencies = [
     "pydantic-settings>=2.11.0",
     "python-multipart>=0.0.20",
     "storage",
+    "tool-registry",
     "typing-extensions>=4.15.0",
     "uvicorn[standard]==0.23.1",
 ]
@@ -38,7 +39,8 @@ build-backend = "uv_build"
 [tool.uv.sources]
 litellm = { workspace = true }
 storage = { workspace = true }
-agent = { workspace = true }
 base = { workspace = true }
 logger = { workspace = true }
 chromadb-client = { workspace = true }
+tool-registry = { workspace = true }
+agent = { workspace = true }

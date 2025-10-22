@@ -20,6 +20,7 @@ members = [
     "slidegen",
     "storage",
     "tool-registry",
+    "tool-storage",
     "tools",
 ]
 
@@ -866,6 +867,7 @@ dependencies = [
     { name = "pydantic-settings" },
     { name = "python-multipart" },
     { name = "storage" },
+    { name = "tool-registry" },
     { name = "typing-extensions" },
     { name = "uvicorn", extra = ["standard"] },
 ]
@@ -888,6 +890,7 @@ requires-dist = [
     { name = "pydantic-settings", specifier = ">=2.11.0" },
     { name = "python-multipart", specifier = ">=0.0.20" },
     { name = "storage", editable = "libs/storage" },
+    { name = "tool-registry", editable = "libs/tool_registry" },
     { name = "typing-extensions", specifier = ">=4.15.0" },
     { name = "uvicorn", extras = ["standard"], specifier = "==0.23.1" },
 ]
@@ -3501,13 +3504,36 @@ version = "0.1.0"
 source = { editable = "libs/tool_registry" }
 dependencies = [
     { name = "base" },
+    { name = "litellm" },
     { name = "pydantic" },
 ]
 
 [package.metadata]
 requires-dist = [
     { name = "base", editable = "libs/base" },
+    { name = "litellm", editable = "libs/litellm" },
     { name = "pydantic", specifier = ">=2.12.3" },
+]
+
+[[package]]
+name = "tool-storage"
+version = "0.1.0"
+source = { editable = "libs/tool_storage" }
+dependencies = [
+    { name = "base" },
+    { name = "chromadb-client" },
+    { name = "langchain-core" },
+    { name = "litellm" },
+    { name = "logger" },
+]
+
+[package.metadata]
+requires-dist = [
+    { name = "base", editable = "libs/base" },
+    { name = "chromadb-client", editable = "libs/chromadb_client" },
+    { name = "langchain-core", specifier = ">=1.0.0" },
+    { name = "litellm", editable = "libs/litellm" },
+    { name = "logger", editable = "libs/logger" },
 ]
 
 [[package]]

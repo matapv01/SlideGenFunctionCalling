@@ -9,14 +9,17 @@ from logger import get_logger
 
 logger = get_logger(__name__)
 
-def get_relevant_tool() -> None:
+def get_relevant_tool(though: str, category: str) -> None:
     settings = get_settings()
 
     try:
         with httpx.Client() as client:
             response = client.post(
                 url=settings.tool_retriver_url,
-                json={} ### TODO
+                json={
+                    'thought': though,
+                    'category': category
+                }
             )
 
             if response.status_code != 200:

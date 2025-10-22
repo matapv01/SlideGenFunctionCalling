@@ -14,6 +14,10 @@ from .tools import (
     TEAM_TOOLS_INFO,
     THANK_YOU_TOOLS_INFO,
 )
+import numpy as np
+from litellm import LiteLLMService
+from litellm import LiteLLMEmbeddingInput
+
 
 class ToolRegistryService:
     """
@@ -23,10 +27,16 @@ class ToolRegistryService:
     content, team, and thank_you domains.
     """
     
-    def __init__(self):
-        """Initialize the tool registry service."""
+    def __init__(self, litellm_service: LiteLLMService):
+        """Initialize the tool registry service.
+        
+        Args:
+            litellm_service: LiteLLM service for generating embeddings
+        """
         self._tool_registry = {}
         self._initialized = False
+        self._tool_embeddings = {}  # Cache for tool embeddings
+        self._litellm_service = litellm_service
         self.initialize()
     
     def initialize(self) -> None:
@@ -39,6 +49,9 @@ class ToolRegistryService:
         self._register_content_tools()
         self._register_team_tools()
         self._register_thank_you_tools()
+        
+        # Generate embeddings for all tools if litellm service is available
+        self._generate_tool_embeddings()
         
         self._initialized = True
     
@@ -85,48 +98,186 @@ class ToolRegistryService:
                 }
         return None
     
-    def search_tools(
-        self,
-        query: str,
-        category: Optional[SlideCategory] = None
-    ) -> list:
+    def _convert_category(self, category: Optional[str]) -> Optional[SlideCategory]:
         """
-        Search for relevant tools based on query string and optional category.
+        Convert string category to SlideCategory enum.
         
         Args:
-            query: Search query string (searches tool name and description)
-            category: Optional category filter
+            category: Category as string (e.g., 'intro', 'content')
             
         Returns:
-            List of matching tools with their metadata
+            SlideCategory enum or None
         """
-        query_lower = query.lower()
+        if category is None:
+            return None
+        
+        try:
+            return SlideCategory(category.lower())
+        except ValueError:
+            raise ValueError(f"Invalid category: {category}. Must be one of {[c.value for c in SlideCategory]}")
+    
+    def search_tools(
+        self,
+        query: list,
+        threshold: float,
+        category: str | None = None
+    ) -> list:
+        """
+        Search for relevant tools using vector embedding similarity.
+        
+        Args:
+            query: Query embedding vector (list of floats)
+            category: Optional category filter as string (e.g., 'intro', 'content', 'team')
+            threshold: Minimum similarity score (0-1) to include results
+            
+        Returns:
+            List of matching tools with their metadata, sorted by similarity score
+        """
+        if not isinstance(query, (list, np.ndarray)):
+            raise ValueError("Query must be an embedding vector (list or numpy array)")
+        
+        # Convert string category to enum if provided
+        category_enum = self._convert_category(category)
+        
+        query_vector = np.array(query)
         results = []
         
         # Determine which categories to search
-        categories_to_search = [category] if category else list(self._tool_registry.keys())
+        categories_to_search = [category_enum] if category_enum else list(self._tool_registry.keys())
         
         for cat in categories_to_search:
             tools = self._tool_registry.get(cat, {})
             
             for tool_name, tool_info in tools.items():
-                # Check if query matches tool name or description
-                name_match = query_lower in tool_name.lower()
-                desc_match = query_lower in tool_info.get("description", "").lower()
+                # Get or create tool text representation for embedding
+                tool_text = self._get_tool_representation(tool_name, tool_info)
                 
-                if name_match or desc_match:
+                # Calculate similarity
+                similarity = self._calculate_similarity(query_vector, tool_text, cat, tool_name)
+                
+                # Filter by threshold
+                if similarity >= threshold:
                     results.append({
                         "category": cat.value,
                         "name": tool_name,
                         "description": tool_info.get("description", ""),
                         "input_schema": tool_info.get("input_schema"),
+                        "similarity_score": similarity
                     })
+        
+        # Sort by similarity score in descending order
+        results.sort(key=lambda x: x["similarity_score"], reverse=True)
         
         return results
     
-    def get_tools_by_category(self, category: SlideCategory) -> list:
-        """Get all tools in a specific category."""
-        tools = self._tool_registry.get(category, {})
+    def _get_tool_representation(self, tool_name: str, tool_info: dict) -> str:
+        """
+        Get text representation of a tool for embedding.
+        
+        Args:
+            tool_name: Name of the tool
+            tool_info: Tool metadata dictionary
+            
+        Returns:
+            Combined text representation of the tool
+        """
+        parts = [
+            tool_name.lower(),
+            tool_info.get("description", "").lower(),
+        ]
+        
+        # Add tags if available
+        if "tags" in tool_info and tool_info["tags"]:
+            parts.extend([tag.lower() for tag in tool_info["tags"]])
+        
+        return " ".join(filter(None, parts))
+    
+    def _generate_tool_embeddings(self) -> None:
+        """
+        Generate embeddings for all tools using the LiteLLM service.
+        """
+        # Generate embeddings for each tool individually
+        for category, tools in self._tool_registry.items():
+            for tool_name, tool_info in tools.items():
+                tool_text = self._get_tool_representation(tool_name, tool_info)
+                
+                # Generate embedding for this tool
+                with self._litellm_service.client as client:
+                    embedding_result = self._litellm_service.embedding(
+                        client=client,
+                        inputs=LiteLLMEmbeddingInput(
+                            input=tool_text,
+                            embedding_model=self._litellm_service.embedding_model,
+                            dimensions=self._litellm_service.dimensions,
+                        )
+                    )
+                
+                # Store embedding
+                self._tool_embeddings[(category, tool_name)] = np.array(embedding_result.vector)
+    
+    def _calculate_similarity(self, query_vector: np.ndarray, tool_text: str, category: SlideCategory, tool_name: str) -> float:
+        """
+        Calculate cosine similarity between query embedding and tool embedding.
+        
+        Args:
+            query_vector: Query embedding vector
+            tool_text: Text representation of the tool (fallback)
+            category: Tool category
+            tool_name: Tool name
+            
+        Returns:
+            Similarity score between 0 and 1
+        """
+        # Use cached embedding if available
+        tool_key = (category, tool_name)
+        if tool_key in self._tool_embeddings:
+            tool_vector = self._tool_embeddings[tool_key]
+            
+            # Calculate cosine similarity
+            query_norm = np.linalg.norm(query_vector)
+            tool_norm = np.linalg.norm(tool_vector)
+            
+            if query_norm == 0 or tool_norm == 0:
+                return 0.0
+            
+            similarity = np.dot(query_vector, tool_vector) / (query_norm * tool_norm)
+            # Ensure result is between 0 and 1
+            return max(0.0, min(1.0, (similarity + 1) / 2))
+        
+            
+        with self._litellm_service.client as client:
+            tool_embedding_result = self._litellm_service.embedding(
+                client=client,
+                inputs=LiteLLMEmbeddingInput(
+                    input=tool_text,
+                    embedding_model=self._litellm_service.embedding_model,
+                    dimensions=self._litellm_service.dimensions,
+                )
+            )
+        
+        tool_vector = np.array(tool_embedding_result.vector)
+        
+        # Calculate cosine similarity
+        query_norm = np.linalg.norm(query_vector)
+        tool_norm = np.linalg.norm(tool_vector)
+        
+        if query_norm == 0 or tool_norm == 0:
+            return 0.0
+        
+        similarity = np.dot(query_vector, tool_vector) / (query_norm * tool_norm)
+        return max(0.0, min(1.0, (similarity + 1) / 2))
+        
+    def get_tools_by_category(self, category: str) -> list:
+        """Get all tools in a specific category.
+        
+        Args:
+            category: Category as string (e.g., 'intro', 'content')
+            
+        Returns:
+            List of tools in the category
+        """
+        category_enum = self._convert_category(category)
+        tools = self._tool_registry.get(category_enum, {})
         return [
             {
                 "name": tool_name,

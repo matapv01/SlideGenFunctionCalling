@@ -7,12 +7,10 @@ from typing import Any
 from pydantic import Field
 from pydantic import ConfigDict
 
-from typing import Dict
 from typing import List
 
 from logger import get_logger
 
-from tool_registry import SlideCategory
 
 logger = get_logger(__name__)
 

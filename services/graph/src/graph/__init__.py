@@ -11,6 +11,8 @@ from graph.shared.utils import get_settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from litellm import LiteLLMService
+from agent import AgentService
+from tool_registry import ToolRegistryService
 
 from storage import MinioService 
 
@@ -45,6 +47,18 @@ async def lifespan(app: FastAPI):
     app.state.minio = MinioService(
         settings=settings.minio,
     )
+    
+    app.state.agent = AgentService(
+            api_keys=[settings.agent.api_keys],
+            base_url=[settings.agent.base_url],
+            model=[settings.agent.model],
+            temperature=settings.agent.temperature,
+            top_p=settings.agent.top_p,
+            max_tokens=settings.agent.max_tokens,
+            add_stop_token=settings.agent.add_stop_token
+        )
+    
+    app.state.registry = ToolRegistryService(litellm_service=app.state.litellm)
     
     yield
 

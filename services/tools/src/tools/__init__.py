@@ -48,7 +48,7 @@ async def lifespan(app: FastAPI):
         chromadb_setting=settings.chromadb
     )
     
-    app.state.registry = ToolRegistryService()
+    app.state.registry = ToolRegistryService(litellm_service=app.state.litellm)
     
     yield
 

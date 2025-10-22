@@ -63,6 +63,11 @@ services:
       - MINIO__SECRET_KEY=${MINIO__SECRET_KEY}
       - MINIO__ENDPOINT=${MINIO__ENDPOINT}
 
+      - TOOL_RETRIEVER_URL=${TOOL_RETRIEVER_URL}
+
+      - AGENT__API_KEYS=${GEMINI_API_KEY}
+      - AGENT__BASE_URL=${AGENT__URL}
+
     volumes:
       - type: bind
         source: ./services/graph/
@@ -101,4 +106,7 @@ services:
       - type: bind
         source: ./libs/
         target: /home/slidegen/app/libs/
+
+    depends_on:
+      - litellm
     command: uv run tools

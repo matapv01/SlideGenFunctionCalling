@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 
 from litellm.settings import LiteLLMSetting
 from storage import MinioSetting
+from agent import AgentSettings
 from .organize_chunk import OrganizeChunkSettings
 from .content_splitter import ContentSplitterSettings
 from .planning_slide import PlanningSlideSettings
@@ -23,9 +24,10 @@ load_dotenv(find_dotenv('.env'), override=True)
 
 
 class Settings(BaseSettings):
-    
-    tool_retriver_url: str
-    
+
+    tool_retriever_url: str
+
+    agent: AgentSettings
     minio: MinioSetting
     litellm: LiteLLMSetting
     content_splitter_settings: ContentSplitterSettings
