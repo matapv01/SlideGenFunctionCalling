@@ -33,6 +33,7 @@ class State(TypedDict, total=False):
 
     # Retry and evaluation state
     retry_count: int
+    llm : Any
     vlm_decision: str
     vlm_feedback: str
 

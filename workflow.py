@@ -67,6 +67,7 @@ async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, 
             "retry_count": 0,
             "final_slides": [],
             "all_debug_info": [],
+            "llm": llm,
             "vlm_decision": "accept"
         }
 
@@ -130,11 +131,13 @@ async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, 
 
     print(f"\nHoàn thành! Files have been saved and cleaned up.")
 
+    return final_zip_path
 
-# --- 2. Call the async main function using asyncio.run() only ONCE ---
-if __name__ == "__main__":
-    sample_docx_path = os.path.join("data", "input", "test_ttcs - heading.docx")
+
+# # --- 2. Call the async main function using asyncio.run() only ONCE ---
+# if __name__ == "__main__":
+#     sample_docx_path = os.path.join("data", "input", "test_ttcs - heading.docx")
     
-    # This single call starts the event loop, runs everything inside main_workflow,
-    # and then closes the loop correctly after all tasks are done.
-    asyncio.run(main_workflow(False, sample_docx_path, "data"))
+#     # This single call starts the event loop, runs everything inside main_workflow,
+#     # and then closes the loop correctly after all tasks are done.
+#     asyncio.run(main_workflow(False, sample_docx_path, "data"))

@@ -385,12 +385,12 @@ async def upload_docx(file: UploadFile = File(...)):
         
         # Import workflow function
         try:
-            from workflow import process_slides_with_langgraph
+            from workflow import main_workflow
             
             # Chạy workflow trong thread pool để tránh async conflict
             import concurrent.futures
             
-            def run_workflow():
+            async def run_workflow():
                 try:
                     # Create our own structure that fully bypasses the workflow's directory creation
                     import tempfile
@@ -415,8 +415,8 @@ async def upload_docx(file: UploadFile = File(...)):
                     try:
                         # Process in the temporary directory
                         logger.info(f"Running workflow with temp directory: {temp_workflow_dir}")
-                        result = process_slides_with_langgraph(
-                            router_flags=True,
+                        result = await main_workflow(
+                            router_flags=False,
                             docx_file=temp_path,
                             output_folder=temp_workflow_dir
                         )
@@ -511,7 +511,8 @@ async def upload_docx(file: UploadFile = File(...)):
             # Chạy trong thread pool
             loop = asyncio.get_event_loop()
             with concurrent.futures.ThreadPoolExecutor() as executor:
-                result_zip = await loop.run_in_executor(executor, run_workflow)
+                # result_zip = await loop.run_in_executor(executor, run_workflow)
+                result_zip = await run_workflow()
             
             if result_zip and os_module.path.exists(result_zip):
                 logger.info(f"✅ Successfully processed DOCX via direct workflow: {file.filename}")

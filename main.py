@@ -2,7 +2,7 @@ from fastapi import FastAPI, UploadFile, File, Form
 from fastapi.responses import FileResponse
 import os
 import shutil
-from workflow import process_slides_with_langgraph
+from workflow import main_workflow
 import uvicorn
 
 
@@ -26,7 +26,7 @@ async def process_docx(
 
     # Gọi hàm xử lý
     try:
-        result_zip = process_slides_with_langgraph(
+        result_zip = main_workflow(
             router_flags=router_flags,
             docx_file=input_path,
             output_folder=output_folder
