@@ -120,7 +120,9 @@ def organize_chunks(state: State) -> State:
     end_time = time.time()
     print(f"Slide organization took {end_time - start_time:.2f} seconds.")
     print(f"Successfully sorted {len(sorted_chunks)} slides by their outline position.")
-
+    print(f"Final slide chunks prepared for output.")
+    for i, chunk in enumerate(sorted_chunks[:2]):
+        print(f"\n--- Sample Slide Chunk {i+1} ---\n{chunk}\n")
     # --- Final State Update ---
     state['document_outline'] = renumbered_structure
     state['slide_chunks'] = list(sorted_chunks)
