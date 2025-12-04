@@ -11,6 +11,7 @@ def generate_title_slide(
     triangle_opacity=0.2,
     title_font_size="5rem",
     subtitle_font_size="2rem",
+    show_border=True,
     custom_css=""
 ):
     """
@@ -27,6 +28,7 @@ def generate_title_slide(
     :param triangle_opacity: Opacity of the triangle decorative elements (0.0 to 1.0)
     :param title_font_size: Font size for the main title
     :param subtitle_font_size: Font size for the subtitle
+    :param show_border: Whether to show the dashed border frame
     :param custom_css: Additional custom CSS to be included
     :return: A string containing the HTML code for the slide
     """
@@ -39,18 +41,23 @@ def generate_title_slide(
     <title>{main_title}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        body, html {{
+        * {{
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
+            box-sizing: border-box;
+        }}
+        
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
             overflow: hidden;
         }}
         
         .slide-container {{
-            width: 100%;
-            height: 100vh;
+            width: 1920px;
+            height: 1080px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -58,6 +65,44 @@ def generate_title_slide(
             background: linear-gradient(135deg, {bg_color} 0%, {bg_gradient_to} 100%);
             position: relative;
             color: {text_color};
+            padding: 60px;
+            box-sizing: border-box;
+        }}
+        
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }}
+
+        .content-frame {{
+            width: 80%;
+            max-width: 800px;
+            padding: 40px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }}
+        
+        .content-frame:not(.no-border) {{
+            border: 1px dashed rgba(255, 255, 255, 0.3);
         }}
         
         .title {{
@@ -73,19 +118,6 @@ def generate_title_slide(
             font-size: {subtitle_font_size};
             text-align: center;
             z-index: 10;
-        }}
-        
-        .content-wrapper {{
-            padding: 40px;
-            border: 1px dashed rgba(255, 255, 255, 0.3);
-            width: 80%;
-            max-width: 800px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            position: relative;
-            z-index: 5;
         }}
         
         /* Decorative triangles */
@@ -147,32 +179,48 @@ def generate_title_slide(
             z-index: 2;
         }}
         
+        @media (max-width: 768px) {{
+            .outer-wrapper {{
+                transform: scale(0.4);
+                transform-origin: top left;
+            }}
+        }}
+        
+        @media (max-width: 480px) {{
+            .outer-wrapper {{
+                transform: scale(0.25);
+                transform-origin: top left;
+            }}
+        }}
+        
         {custom_css}
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <!-- Decorative triangles -->
-        <div class="triangle triangle-1"></div>
-        <div class="triangle triangle-2"></div>
-        <div class="triangle triangle-3"></div>
-        <div class="triangle triangle-4"></div>
-        
-        <!-- Content -->
+    <div class="outer-wrapper">
         <div class="content-wrapper">
-            <h1 class="title">{main_title}</h1>
-            <div class="subtitle">{subtitle}</div>
+            <div class="slide-container">
+                <!-- Decorative triangles -->
+                <div class="triangle triangle-1"></div>
+                <div class="triangle triangle-2"></div>
+                <div class="triangle triangle-3"></div>
+                <div class="triangle triangle-4"></div>
+                
+                <!-- Content -->
+                <div class="content-frame{(" no-border" if not show_border else "")}">
+                    <h1 class="title">{main_title}</h1>
+                    <div class="subtitle">{subtitle}</div>
+                </div>
+                
+                <!-- City skyline -->
+                <div class="skyline"></div>
+            </div>
         </div>
-        
-        <!-- City skyline -->
-        <div class="skyline"></div>
     </div>
 </body>
 </html>"""
 
     return html_code
-
-
 
 def generate_introduction_slide(
     main_title="INTRODUCTION",
@@ -229,18 +277,23 @@ def generate_introduction_slide(
     <title>{main_title}</title>
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
     <style>
-        body, html {{
+        * {{
             margin: 0;
             padding: 0;
-            height: 100%;
-            width: 100%;
+            box-sizing: border-box;
+        }}
+        
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
             overflow: hidden;
         }}
         
         .slide-container {{
-            width: 100%;
-            height: 100vh;
+            width: 1920px;
+            height: 1080px;
             display: flex;
             flex-direction: column;
             justify-content: center;
@@ -252,16 +305,39 @@ def generate_introduction_slide(
             box-sizing: border-box;
         }}
         
+        /* Content wrapper for scaling */
         .content-wrapper {{
-            max-width: {content_max_width};
-            width: 100%;
-            text-align: center;
-            position: relative;
-            z-index: 10;
-            padding: 80px 60px;
-            border: {("2px dashed rgba(255, 255, 255, " + str(border_opacity) + ")" if show_border else "none")};
-            border-radius: 8px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
         }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }}
+
+        .content-frame {{
+            width: 100%;
+            max-width: 1400px;
+            padding: 80px;
+            position: relative;
+            text-align: center;
+        }}
+        
+        .content-frame:not(.no-border) {{
+            border: 3px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+        }}
+        
         
         .title {{
             font-size: {title_font_size};
@@ -367,38 +443,16 @@ def generate_introduction_slide(
         }}
         
         @media (max-width: 768px) {{
-            .slide-container {{
-                padding: 30px;
-            }}
-            
-            .content-wrapper {{
-                padding: 40px 30px;
-            }}
-            
-            .title {{
-                font-size: 2.5rem;
-                margin-bottom: 30px;
-            }}
-            
-            .content {{
-                font-size: 1.1rem;
-                max-width: 100%;
-            }}
-            
-            .triangle {{
-                display: none;
+            .outer-wrapper {{
+                transform: scale(0.4);
+                transform-origin: top left;
             }}
         }}
         
         @media (max-width: 480px) {{
-            .title {{
-                font-size: 2rem;
-                letter-spacing: 0.05em;
-            }}
-            
-            .content {{
-                font-size: 1rem;
-                line-height: 1.5;
+            .outer-wrapper {{
+                transform: scale(0.25);
+                transform-origin: top left;
             }}
         }}
         
@@ -406,30 +460,32 @@ def generate_introduction_slide(
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <!-- Decorative triangles -->
-        <div class="triangle triangle-top-left"></div>
-        <div class="triangle triangle-top-right"></div>
-        <div class="triangle triangle-bottom-left"></div>
-        <div class="triangle triangle-bottom-right"></div>
-        
-        <!-- Additional geometric shapes -->
-        <div class="geometric-shape shape-1"></div>
-        <div class="geometric-shape shape-2"></div>
-        <div class="geometric-shape shape-3"></div>
-        
-        <!-- Main content -->
+    <div class="outer-wrapper">
         <div class="content-wrapper">
-            <h1 class="title">{main_title}</h1>
-            <div class="content">{content_text}</div>
+            <div class="slide-container">
+                <!-- Decorative triangles -->
+                <div class="triangle triangle-top-left"></div>
+                <div class="triangle triangle-top-right"></div>
+                <div class="triangle triangle-bottom-left"></div>
+                <div class="triangle triangle-bottom-right"></div>
+                
+                <!-- Additional geometric shapes -->
+                <div class="geometric-shape shape-1"></div>
+                <div class="geometric-shape shape-2"></div>
+                <div class="geometric-shape shape-3"></div>
+                
+                <!-- Main content -->
+                <div class="content-frame{(" no-border" if not show_border else "")}">
+                    <h1 class="title">{main_title}</h1>
+                    <div class="content">{content_text}</div>
+                </div>
+            </div>
         </div>
     </div>
 </body>
 </html>"""
 
     return html_code
-
-
 
 def generate_intro_slide1(
     main_title="Main Title",
@@ -442,13 +498,13 @@ def generate_intro_slide1(
     subtitle_color="#555555",
     line_color="#e6c35c",
     font_family="'Segoe UI', Arial, sans-serif",
-    main_title_font_size="2.25rem",  # THAY ĐỔI: 36px -> 2.25rem
-    subtitle_font_size="1rem",      # THAY ĐỔI: 16px -> 1rem
+    main_title_font_size="4rem",  # THAY ĐỔI: 2.25rem -> 4rem (tăng gần gấp đôi)
+    subtitle_font_size="1.5rem",      # THAY ĐỔI: 1rem -> 1.5rem (tăng 50%)
     main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"        # Thêm tham số cho URL ảnh
 ):
     """
-    Tạo slide HTML với thiết kế marketing. 
+    Tạo slide HTML với thiết kế marketing có nền tràn viền như các slide khác.
     Các tham số kích thước nên được truyền vào dưới dạng chuỗi với đơn vị REM.
     """
     
@@ -459,150 +515,187 @@ def generate_intro_slide1(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marketing Slide</title>
     <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; }}
         body, html {{
-            margin: 0;
-            padding: 0;
+            height: 100vh;
+            width: 100vw;
             font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            /* Không cố định font-size để tôn trọng cài đặt người dùng */
-        }}
-        
-        /* Sử dụng aspect-ratio để slide co giãn mà vẫn giữ tỷ lệ */
-        .slide-wrapper {{
-            width: 90vw;
-            max-width: 62.5rem; /* 1000px -> 62.5rem */
-            aspect-ratio: 1000 / 560;
-            box-shadow: 0 0.313rem 0.938rem rgba(0, 0, 0, 0.1); /* 5px 15px */
+            background-color: {accent_bg_color};
+            overflow: hidden;
         }}
 
         .slide-container {{
             width: 100%;
             height: 100%;
             position: relative;
-            background-color: {main_bg_color};
-            overflow: hidden;
+            background-color: {accent_bg_color};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .left-section {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 60%;
+
+        .slide-inner-container {{
+            width: 100%;
             height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
         }}
         
-        .right-section {{
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 40%;
+        .left-content {{
+            flex: 0 0 60%;
+            height: 100%;
+            position: relative;
+            background-color: {main_bg_color};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        
+        .right-content {{
+            flex: 0 0 40%;
             height: 100%;
             background-color: {accent_bg_color};
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }}
         
-        .green-bar-top {{
+        .image-container {{
+            width: 80%;
+            height: 70%;
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+            z-index: 3;
+        }}
+        
+        .image-container img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }}
+        
+        .accent-bar-top {{
             position: absolute;
             top: 0;
             left: 0;
-            width: 2.5rem; /* 40px */
-            height: 1.25rem; /* 20px */
+            width: 4rem; /* 64px - larger for better visibility */
+            height: 2rem; /* 32px */
             background-color: {text_box_bg_color};
             z-index: 1;
         }}
         
-        .green-bar-middle {{
+        .accent-bar-middle {{
             position: absolute;
             top: 50%;
             left: 0;
-            width: 100%;
-            height: 3.75rem; /* 60px */
+            right: 0;
+            height: 4rem; /* 64px - larger */
             background-color: {text_box_bg_color};
             transform: translateY(-50%);
             z-index: 1;
         }}
         
-        .text-box {{
-            position: absolute;
-            top: 50%;
-            left: 10%;
-            transform: translateY(-50%);
-            width: 40%;
+        .content-box {{
             background-color: {text_box_bg_color};
-            padding: 1.875rem; /* 30px */
+            padding: 5rem; /* 80px - much larger padding */
+            border-radius: 0.5rem;
             z-index: 2;
+            position: relative;
+            width: 90%; /* 90% of left-content width */
+            height: 85%; /* 85% of left-content height */
+            max-width: none; /* Remove max-width constraint */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }}
         
         .main-title {{
             font-size: {main_title_font_size};
             color: {title_color};
-            margin: 0 0 0.938rem 0; /* 15px */
+            margin: 0 0 3rem 0; /* 48px - even larger margin */
             font-weight: bold;
             font-style: {main_title_font_style};
             line-height: 1.2;
+            text-align: center;
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0.313rem 0; /* 5px */
+            margin: 1rem 0; /* 16px - increased margin */
+            line-height: 1.4;
+            text-align: center;
         }}
         
         .divider {{
-            width: 100%;
-            height: 0.125rem; /* 2px */
+            width: 80%; /* 80% width instead of 100% */
+            height: 0.25rem; /* 4px - thicker */
             background-color: {line_color};
-            margin-top: 0.938rem; /* 15px */
+            margin: 3rem auto 0 auto; /* 48px top margin, centered */
+            border-radius: 0.125rem;
         }}
         
-        .image-frame {{
+        .decorative-element {{
             position: absolute;
-            top: 50%;
-            right: 10%;
-            transform: translateY(-50%);
-            width: 30%;
-            height: 70%;
-            border: 0.625rem solid white; /* 10px */
-            box-shadow: 0 0.313rem 0.938rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            overflow: hidden;
-            z-index: 2;
+            background-color: {text_box_bg_color};
+            opacity: 0.5;
+            z-index: 1;
         }}
         
-        .image-frame img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .deco-1 {{
+            top: 1rem;
+            right: 1rem;
+            width: 4rem; /* 64px - smaller so they don't interfere with image */
+            height: 4rem;
+            border-radius: 50%;
+        }}
+        
+        .deco-2 {{
+            bottom: 1rem;
+            right: 1rem;
+            width: 3rem; /* 48px - smaller square */
+            height: 3rem;
+            transform: rotate(45deg);
         }}
     </style>
 </head>
 <body>
-    <div class="slide-wrapper">
-        <div class="slide-container">
-            <!-- Left and right sections -->
-            <div class="left-section"></div>
-            <div class="right-section"></div>
+    <div class="slide-container">
+        <div class="slide-inner-container">
+            <!-- Accent bars -->
+            <div class="accent-bar-top"></div>
+            <div class="accent-bar-middle"></div>
             
-            <!-- Small green bar at top left -->
-            <div class="green-bar-top"></div>
-            
-            <!-- Green bar across the middle -->
-            <div class="green-bar-middle"></div>
-            
-            <!-- Text box -->
-            <div class="text-box">
-                <h1 class="main-title">{main_title}</h1>
-                <p class="subtitle">{subtitle1}</p>
-                <p class="subtitle">{subtitle2}</p>
-                <div class="divider"></div>
+            <!-- Left content area -->
+            <div class="left-content">
+                <div class="content-box">
+                    <h1 class="main-title">{main_title}</h1>
+                    <p class="subtitle">{subtitle1}</p>
+                    <p class="subtitle">{subtitle2}</p>
+                    <div class="divider"></div>
+                </div>
             </div>
             
-            <!-- Image frame -->
-            <div class="image-frame">
-                <img src="{image_url}" alt="slide visual">
+            <!-- Right content area -->
+            <div class="right-content">
+                <div class="image-container">
+                    <img src="{image_url}" alt="slide visual">
+                </div>
+                <div class="decorative-element deco-1"></div>
+                <div class="decorative-element deco-2"></div>
             </div>
         </div>
     </div>
@@ -611,12 +704,9 @@ def generate_intro_slide1(
     
     return html_code
 
-
-
-
 def generate_elegant_intro_slide(
-    main_title="Write Your Topic or Idea Here",
-    subtitle="Briefly elaborate on what you want to discuss.",
+    main_title="My Amazing Presentation",
+    subtitle="This is a test slide to demonstrate the improved layout and styling.",
     image_url="https://images.pexels.com/photos/3807735/pexels-photo-3807735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
     font_family="'Be Vietnam Pro', sans-serif",
     background_color="#EAE3D9",
@@ -625,8 +715,8 @@ def generate_elegant_intro_slide(
     decoration_color_end="#C9A842"
 ):
     """
-    Generates an elegant intro slide with a two-column layout, framed image, and botanical decorations.
-    Uses relative CSS units (rem, vw, %) for excellent scalability.
+    Generates an elegant intro slide optimized for 1920x1080 screenshots with balanced layout.
+    Features improved proportions, spacing, and visual hierarchy.
     """
 
     # SVG Definitions
@@ -677,134 +767,167 @@ def generate_elegant_intro_slide(
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
-            height: 100vh;
-            width: 100vw;
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
             background-color: {background_color};
             color: {text_color};
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
         }}
 
         .slide-container {{
-            width: 100%;
-            max-width: 75rem; /* 1200px */
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background-color: {background_color};
             display: grid;
             grid-template-columns: 1fr 1fr;
             align-items: center;
-            gap: 2rem;
-            padding: 2rem;
+            padding: 80px 120px;
+            gap: 80px;
         }}
 
         .text-column {{
-            padding-right: 2rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding-right: 40px;
+            z-index: 10;
         }}
 
         .main-title {{
-            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-size: 94px;
             font-weight: 700;
-            line-height: 1.2;
-            margin-bottom: 1.5rem;
+            line-height: 1.1;
+            margin-bottom: 40px;
+            max-width: 720px;
         }}
 
         .subtitle {{
-            font-size: 1rem;
+            font-size: 24px;
             line-height: 1.6;
-            opacity: 0.9;
-            max-width: 25rem;
+            opacity: 0.85;
+            max-width: 600px;
+            font-weight: 400;
         }}
 
         .image-column {{
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }}
 
         .image-wrapper {{
             position: relative;
-            padding-top: 66.66%; /* 3:2 Aspect Ratio */
-            border-radius: 0.75rem;
+            width: 100%;
+            max-width: 560px;
+            height: 420px;
+            border-radius: 16px;
             overflow: hidden;
-            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.15);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }}
 
         .main-image {{
-            position: absolute;
-            top: 0;
-            left: 0;
             width: 100%;
             height: 100%;
             object-fit: cover;
+            display: block;
         }}
 
         /* --- Decorations --- */
         .star-cluster {{
             position: absolute;
-            top: -1rem;
-            left: -1rem;
-            width: 4rem;
-            height: 4rem;
+            top: -20px;
+            left: -20px;
+            width: 80px;
+            height: 80px;
             pointer-events: none;
+            z-index: 20;
         }}
-        .star-cluster .star {{ position: absolute; opacity: 0.8; }}
-        .star-cluster .star:nth-child(1) {{ width: 1.5rem; height: 1.5rem; top: 0; left: 0; }}
-        .star-cluster .star:nth-child(2) {{ width: 1.2rem; height: 1.2rem; top: 1.5rem; left: 0.5rem; }}
-        .star-cluster .star:nth-child(3) {{ width: 1rem; height: 1rem; top: 0.5rem; left: 1.8rem; }}
+        
+        .star-cluster .star {{ 
+            position: absolute; 
+            opacity: 0.9; 
+        }}
+        
+        .star-cluster .star:nth-child(1) {{ 
+            width: 28px; 
+            height: 28px; 
+            top: 0; 
+            left: 0; 
+        }}
+        
+        .star-cluster .star:nth-child(2) {{ 
+            width: 22px; 
+            height: 22px; 
+            top: 30px; 
+            left: 10px; 
+        }}
+        
+        .star-cluster .star:nth-child(3) {{ 
+            width: 18px; 
+            height: 18px; 
+            top: 8px; 
+            left: 36px; 
+        }}
 
         .botanical-frame {{
             position: absolute;
-            bottom: -2rem;
-            right: -2rem;
-            width: 12rem;
-            height: 12rem;
-            opacity: 0.9;
+            bottom: -40px;
+            right: -40px;
+            width: 200px;
+            height: 200px;
+            opacity: 0.8;
             pointer-events: none;
-            transform: scaleX(-1); /* Flip horizontally to match image */
+            transform: scaleX(-1);
+            z-index: 5;
         }}
 
-        /* --- Responsive Design --- */
-        @media (max-width: 48rem) {{ /* 768px */
-            .slide-container {{
-                grid-template-columns: 1fr;
-                text-align: center;
-                padding-top: 4rem;
-                height: 100vh;
-                overflow-y: auto;
-            }}
-            .text-column {{
-                padding-right: 0;
-                order: 1; /* Text comes first */
-            }}
-            .image-column {{
-                order: 2; /* Image comes second */
-                width: 90%;
-                margin: 0 auto;
-            }}
-            .subtitle {{
-                margin: 0 auto;
-            }}
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
         }}
 
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <div class="text-column">
-            <h1 class="main-title">{main_title}</h1>
-            <p class="subtitle">{subtitle}</p>
-        </div>
-        <div class="image-column">
-            <div class="image-wrapper">
-                <img class="main-image" src="{image_url}" alt="Introductory image" />
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="text-column">
+                    <h1 class="main-title">{main_title}</h1>
+                    <p class="subtitle">{subtitle}</p>
+                </div>
+                <div class="image-column">
+                    <div class="image-wrapper">
+                        <img class="main-image" src="{image_url}" alt="Introductory image" />
+                        <div class="star-cluster">
+                            {star_svg}
+                            {star_svg}
+                            {star_svg}
+                        </div>
+                        {botanical_frame_svg}
+                    </div>
+                </div>
             </div>
-            <div class="star-cluster">
-                {star_svg}
-                {star_svg}
-                {star_svg}
-            </div>
-            {botanical_frame_svg}
         </div>
     </div>
 </body>
@@ -812,21 +935,16 @@ def generate_elegant_intro_slide(
     
     return html_code
 
-
-
 def generate_inspirational_quote_slide(
     quote_text="The best way to predict the future is to create it.",
     attribution_text="Peter Drucker",
     font_family="'Playfair Display', serif",
-    # ĐÃ THAY ĐỔI: URL ảnh nền sáng sủa
     background_image_url="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop",
-    # ĐÃ THAY ĐỔI: Bảng màu mới cho nền sáng
-    text_color="#3A3A3A", # Màu xám đen
-    decoration_color="rgba(0, 0, 0, 0.08)" # Màu xám rất nhạt và mờ
+    text_color="#3A3A3A"
 ):
     """
-    Generates a bright, airy, and sophisticated quote slide with a light-themed background image.
-    Features elegant serif typography and subtle decorative quotation marks.
+    Generates a clean and elegant quote slide with a light-themed background image.
+    Features elegant serif typography with a simple, focused design.
     """
 
     html_code = f"""<!DOCTYPE html>
@@ -834,27 +952,53 @@ def generate_inspirational_quote_slide(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Inspirational Quote Slide - Bright Theme</title>
+    <title>Inspirational Quote Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            /* ĐÃ THAY ĐỔI: Dùng ảnh nền sáng và bỏ lớp phủ tối */
-            background-image: url('{background_image_url}');
-            background-size: cover;
-            background-position: center;
-            color: {text_color};
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
-            position: relative;
+        
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {{
+            background-image: url('{background_image_url}') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            background-color: transparent !important;
+        }}
+        
+        html#html.html {{ 
+            font-size: 16px !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family} !important;
+            background-image: url('{background_image_url}') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            color: {text_color} !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            overflow: hidden !important;
+        }}
+        
+        body#body.body, html#html.html {{
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family} !important;
+            background-image: url('{background_image_url}') !important;
+            background-size: cover !important;
+            background-position: center !important;
+            color: {text_color} !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            overflow: hidden !important;
         }}
 
         .slide-container {{
@@ -862,36 +1006,10 @@ def generate_inspirational_quote_slide(
             max-width: 65rem;
             text-align: center;
             position: relative;
-            z-index: 1;
-            /* ĐÃ THÊM: Một lớp nền mờ phía sau chữ để dễ đọc hơn trên ảnh phức tạp */
             background-color: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(8px);
             padding: 4rem;
             border-radius: 1rem;
-        }}
-
-        /* ĐÃ THAY ĐỔI: Dấu ngoặc kép trang trí mờ nhạt */
-        .slide-container::before,
-        .slide-container::after {{
-            content: '"';
-            position: absolute;
-            font-size: 20rem;
-            font-weight: 700;
-            color: {decoration_color};
-            z-index: -1;
-            line-height: 1;
-        }}
-
-        .slide-container::before {{
-            content: '\\201C';
-            top: -7rem;
-            left: -5rem;
-        }}
-
-        .slide-container::after {{
-            content: '\\201D';
-            bottom: -11rem;
-            right: -5rem;
         }}
 
         .quote-text {{
@@ -916,7 +1034,7 @@ def generate_inspirational_quote_slide(
         }}
     </style>
 </head>
-<body>
+<body id="body" class="body">
     <div class="slide-container">
         <h1 class="quote-text">“{quote_text}”</h1>
         <p class="attribution-text">— {attribution_text}</p>
@@ -925,9 +1043,6 @@ def generate_inspirational_quote_slide(
 </html>"""
     
     return html_code
-
-
-
 
 def generate_title_slide_2(
     main_title="THIS IS YOUR<br><span class='highlight'>PRESENTATION</span><br>TITLE",
@@ -1056,9 +1171,6 @@ def generate_title_slide_2(
     
     return html_code
 
-
-
-
 def generate_dynamic_intro_slide(
     # ĐÃ THAY ĐỔI: Chữ mặc định mới, phù hợp với font lớn
     main_title="Innovate. Create. Inspire.",
@@ -1130,16 +1242,17 @@ def generate_dynamic_intro_slide(
         }}
 
         .title-group {{
-            /* Sits at the top because of space-between on parent */
+            transform: scale(1); /* Phóng to toàn bộ title group */
+            transform-origin: left top;
         }}
 
         .main-title {{
             /* ĐÃ SỬA ĐỔI: Font to hơn rất nhiều */
-            font-size: clamp(3rem, 7vw, 5rem);
-            font-weight: 800;
-            line-height: 1.2;
+            font-size: clamp(2rem, 3vw, 7rem);
+            font-weight: 600;
+            line-height: 1.1;
             /* ĐÃ SỬA ĐỔI: Tăng lề dưới */
-            margin-bottom: 1.5rem;
+            margin-bottom: 10rem;
         }}
 
         .subtitle {{
@@ -1230,9 +1343,6 @@ def generate_dynamic_intro_slide(
     
     return html_code
 
-
-
-
 def generate_big_concept_slide(
     main_title="BIG<br>CONCEPT",
     subtitle="Bring the attention of your audience over a key concept using icons or illustrations",
@@ -1314,18 +1424,20 @@ def generate_big_concept_slide(
         }}
         
         .big-title {{
-            font-size: clamp(5rem, 12vw, 8rem);
-            font-weight: 800;
+            font-size: 3rem;
+            font-weight: 600;
             line-height: 1;
             text-transform: uppercase;
-            margin-bottom: 2rem;
+            margin-bottom: 10rem;
+            max-width: 100rem;
         }}
 
         .subtitle {{
-            font-size: 1.75rem;
+             font-size: 1.5rem;
             line-height: 1.6;
-            font-weight: 600;
-            max-width: 40ch;
+            font-weight: 400;
+            max-width: 50rem;
+            margin-bottom: 10rem;
         }}
         
         .icon-column {{
@@ -1395,8 +1507,6 @@ def generate_big_concept_slide(
 </body>
 </html>"""
     return html_code
-
-
 
 def generate_elegant_agenda_slide(
     main_title="Bài thuyết trình hôm nay",
@@ -1552,8 +1662,6 @@ def generate_elegant_agenda_slide(
 </html>"""
     return html_code
 
-
-
 def generate_playful_title_slide(
     main_title="Introduction<br>to penguins",
     subtitle="Introduce penguins here. Mention their characteristics and unique behaviors.",
@@ -1593,8 +1701,8 @@ def generate_playful_title_slide(
         .slide-container {{ width: 100%; height: 100%; background-color: {top_bg_color}; position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 2rem 4rem; }}
         .slide-container::after {{ content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 15%; background-color: {bottom_bg_color}; z-index: 0; }}
         .text-column {{ z-index: 10; }}
-        .main-title {{ font-family: {font_family_title}; font-size: clamp(4rem, 8vw, 6rem); color: {text_color}; line-height: 1.1; margin-bottom: 1.5rem; }}
-        .subtitle {{ font-family: {font_family_body}; font-size: clamp(1.2rem, 2vw, 1.5rem); color: {text_color}; line-height: 1.6; max-width: 40ch; }}
+        .main-title {{ font-family: 'Patrick Hand', cursive;  font-size: clamp(2rem, 7vw, 5rem); color: #2D2D2D; line-height: 1.1; margin-bottom: 8rem; }}
+        .subtitle {{ font-family: {font_family_body}; font-size: clamp(1.2rem, 2vw, 3rem); color: {text_color}; line-height: 1.6; max-width: 40ch;margin-bottom: 15rem; }}
         .illustration-column {{ z-index: 5; display: flex; align-items: center; justify-content: center; }}
         .illustration-wrapper {{ position: relative; width: 90%; max-width: 450px; }}
         .penguin-svg {{ width: 100%; height: auto; filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.1)); }}
@@ -1614,8 +1722,6 @@ def generate_playful_title_slide(
 </body>
 </html>"""
     return html_code
-
-
 
 def generate_minimalist_title_slide(
     main_title="This is your presentation title",
@@ -1745,8 +1851,6 @@ def generate_minimalist_title_slide(
 </html>"""
     
     return html_code
-
-
 
 def generate_mission_slide(
     top_text="Subheading or Category",
@@ -1913,9 +2017,7 @@ def generate_mission_slide(
 </body>
 </html>"""
     return html_code
-
 #----------------------SLIDE CHUYỂN SLIDE
-
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
     subtitle="Let's start with the first set of slides",
@@ -1961,25 +2063,24 @@ def generate_geometric_transition_slide(
 
         .text-content {{
             z-index: 10;
+            transform: scale(1.3);
+            min-width: 40vw;
+            min-height: 30vh;
         }}
 
-        .section-number {{
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
-        }}
 
         .headline {{
-            font-size: clamp(3rem, 8vw, 5rem);
+            font-size: clamp(4rem, 6vw, 4rem);
             font-weight: 700;
             text-transform: uppercase;
             line-height: 1.1;
-            margin-bottom: 1.5rem;
+            margin-bottom: 10rem;
         }}
 
         .subtitle {{
-            font-size: 1.5rem;
-            font-weight: 400;
+            font-size: 2rem;
+            font-weight: 500;
+            margin-bottom: 15rem;
             color: {subtitle_color};
         }}
 
@@ -2045,8 +2146,6 @@ def generate_geometric_transition_slide(
 </html>"""
     return html_code
 
-
-
 def generate_transition_slide_2(
     main_headline="HEADLINE",
     subtitle="Content",
@@ -2057,8 +2156,8 @@ def generate_transition_slide_2(
     bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png"
 ):
     """
-    Generates a doodle-themed transition slide with larger, more impactful fonts
-    for a bold and clear section break.
+    Generates a doodle-themed transition slide optimized for 1920x1080 screenshots
+    with large, impactful fonts for bold and clear section breaks.
     """
     
     html_code = f"""<!DOCTYPE html>
@@ -2072,76 +2171,114 @@ def generate_transition_slide_2(
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family_body};
-            color: {text_color};
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: #FFFFFF;
-            background-image: 
-                linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%),
-                url('{bg_url}');
-            /* ĐÃ SỬA ĐỔI: Tăng khoảng cách dòng kẻ giấy */
-            background-size: 4rem 4rem, auto;
+        
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {{
+            background: url('{bg_url}') repeat center !important;
+            background-color: #FFFFFF !important;
+        }}
+        html#html.html {{ 
+            font-size: 16px !important; 
+            width: 1920px !important; 
+            height: 1080px !important;
+            background-color: #FFFFFF !important;
+            background-image: url('{bg_url}') !important;
+            background-repeat: repeat !important;
+            background-position: center !important;
+            background-size: auto !important;
+        }}
+        
+        body#body.body, html#html.html {{
+            height: 1080px !important;
+            width: 1920px !important;
+            font-family: {font_family_body} !important;
+            color: {text_color} !important;
+            overflow: hidden !important;
+            background-color: #FFFFFF !important;
+            background-image: url('{bg_url}') !important;
+            background-repeat: repeat !important;
+            background-position: center !important;
+            background-size: auto !important;
         }}
 
         .slide-container {{
-            width: 100%;
-            /* ĐÃ SỬA ĐỔI: Tăng max-width để chứa nội dung lớn hơn */
-            max-width: 60rem; 
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
             text-align: center;
-            padding: 2rem;
+            padding: 80px 120px;
+            background: transparent !important;
         }}
 
-        .section-number {{
-            font-family: {font_family_heading};
-            /* ĐÃ SỬA ĐỔI: Font to hơn rất nhiều */
-            font-size: 4.5rem;
-            color: {number_color};
-            font-weight: 400;
-            line-height: 1;
-            margin-bottom: 1rem;
+        .text-box {{
+            min-width: 70%;
+            min-height: 40%;
+            transform: scale(1.4);
+            text-align: center;
         }}
-        
+
         .main-headline {{
             font-family: {font_family_heading};
-            /* ĐÃ SỬA ĐỔI: Font to hơn rất nhiều */
-            font-size: clamp(4rem, 12vw, 7.5rem);
+            font-size: 80px;
             color: {text_color};
             text-transform: uppercase;
-            font-weight: 400;
+            font-weight: 600;
             line-height: 1.1;
-            margin-bottom: 2rem; /* Tăng lề */
+            margin-bottom: 120px;
+            max-width: 1400px;
         }}
 
         .subtitle {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn */
-            font-size: 1.5rem;
+            font-size: 40px;
             font-weight: 400;
-            line-height: 1.7;
+            line-height: 1.6;
+            max-width: 1200px;
+        }}
+
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: transparent !important;
         }}
         
-        @media (max-width: 48rem) {{
-            html {{ font-size: 14px; }}
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: transparent !important;
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <h1 class="main-headline">{main_headline}</h1>
-        <p class="subtitle">{subtitle}</p>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <h1 class="main-headline">{main_headline}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+        </div>
     </div>
 </body>
 </html>"""
     
     return html_code
-
-
 
 def generate_dusk_transition_slide(
     headline="Transition Headline",
@@ -2200,27 +2337,25 @@ def generate_dusk_transition_slide(
         
         .text-group {{
             z-index: 10;
+            transform: scale(1.5); /* Tăng từ 1.2 lên 1.5 để to hơn */
+
         }}
 
-        .section-number {{
-            font-size: 1.75rem;
-            font-weight: 800;
-            color: {number_color};
-            margin-bottom: 0.5rem;
-        }}
 
         .headline {{
-            font-size: clamp(2.5rem, 7vw, 4rem);
-            font-weight: 800;
+            font-size: 3rem; /* Tăng từ clamp(2.5rem, 7vw, 4rem) lên 3rem */
+            font-weight: 650;
             color: {headline_color};
             line-height: 1.2;
-            margin-bottom: 1rem;
+            margin-bottom: 5rem;
         }}
 
         .subtitle {{
-            font-size: 1.1rem;
+            font-size: 2rem;
             font-weight: 400;
             color: {subtitle_color};
+            margin-bottom: 13rem;
+
         }}
 
     </style>
@@ -2238,9 +2373,6 @@ def generate_dusk_transition_slide(
 </html>"""
     
     return html_code
-
-
-
 
 def generate_memphis_transition_slide(
     headline="Transition headline",
@@ -2268,13 +2400,15 @@ def generate_memphis_transition_slide(
         .top-panel, .bottom-panel {{ flex: 1; position: relative; overflow: hidden; }}
         .top-panel {{ background-color: {top_panel_bg}; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5rem; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; }}
-        .text-content {{ text-align: center; color: #FFFFFF; }}
+        .text-content {{
+            text-align: center;
+            transform: scale(1.3);
+            min-width: 50vw;
+            min-height: 25vh; 
+        }}
         .section-number {{ font-family: {font_family_headline}; font-size: 3rem; font-weight: 400; color: {palette[3]}; opacity: 0.8; }}
-        .headline {{ font-family: {font_family_headline}; font-size: 4rem; font-weight: 600; margin: 0.5rem 0; color: #FFFFFF; }}
-        .subtitle {{ font-size: 1.5rem; font-weight: 400; color: {palette[1]}; }}
-        .divider-icon {{ position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 20; width: 4rem; height: 4rem; }}
-        .divider-icon .dashed-circle {{ stroke: {palette[3]}; stroke-width: 2; stroke-dasharray: 4 4; fill: none; transform-origin: center; }}
-        .divider-icon .arrow {{ fill: {palette[1]}; }}
+        .headline {{ font-family: {font_family_headline}; font-size: 4rem; font-weight: 700; margin-bottom: 5rem ; color: #FFFFFF; }}
+        .subtitle {{font-size: 2rem; font-weight: 500; margin-bottom: 8rem; color: {palette[1]}; }}
         .shape {{ position: absolute; }}
         .shape-tl-1 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: 4rem; left: 6rem; border-radius: 50%; opacity: 0.8; }}
         .shape-tl-2 {{ width: 0; height: 0; border-left: 3rem solid transparent; border-right: 3rem solid transparent; border-bottom: 5rem solid {palette[0]}; top: 12rem; left: 3rem; transform: rotate(-25deg); }}
@@ -2293,15 +2427,12 @@ def generate_memphis_transition_slide(
 <body>
     {svg_patterns}
     <div class="slide-container">
-        <div class="top-panel"><div class="text-content"><h2 class="headline">{headline}</h2><p class="subtitle">{subtitle}</p></div><div class="shape shape-tl-1"></div><div class="shape shape-tl-2"></div><div class="shape shape-tl-3"></div><div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div></div>
+        <div class="top-panel"><div class="text-content"><h2 class="headline">{headline}</h2><p class="subtitle">{subtitle}</p></div><div class="shape shape-tl-1"></div><div class="shape shape-tl-2"></div><div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div></div>
         <div class="bottom-panel"><div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div><div class="shape shape-br-1"></div><div class="shape shape-br-2"></div><div class="shape shape-br-3"></div></div>
-        <div class="divider-icon"><svg viewBox="0 0 100 100" style="overflow:visible;"><circle class="dashed-circle" cx="50" cy="50" r="48"/><polygon class="arrow" points="50,30 70,60 30,60" /></svg></div>
     </div>
 </body>
 </html>"""
     return html_code
-
-
 
 def generate_pushpin_section_header(
     main_title="Add a Section Header",
@@ -2327,17 +2458,45 @@ def generate_pushpin_section_header(
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            background-color: {bg_color};
-            background-image: url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png');
+        
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {{
+            background: url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png') repeat center !important;
+            background-color: {bg_color} !important;
+        }}
+        
+        html#html.html {{ 
+            font-size: 16px !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family} !important;
+            overflow: hidden !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            background-color: {bg_color} !important;
+            background-image: url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png') !important;
+            background-repeat: repeat !important;
+            background-position: center !important;
+        }}
+        
+        body#body.body, html#html.html {{
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family} !important;
+            overflow: hidden !important;
+            display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            background-color: {bg_color} !important;
+            background-image: url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png') !important;
+            background-repeat: repeat !important;
+            background-position: center !important;
         }}
 
         .slide-container {{
@@ -2400,7 +2559,7 @@ def generate_pushpin_section_header(
 
     </style>
 </head>
-<body>
+<body id="body" class="body">
     <div class="slide-container">
         <div class="title-block">
             <div class="dot left-dot"></div>
@@ -2413,9 +2572,6 @@ def generate_pushpin_section_header(
 </html>"""
     
     return html_code
-
-
-
 
 def generate_section_header_slide(
     header_text="Add a Section Header",
@@ -2502,8 +2658,6 @@ def generate_section_header_slide(
 </html>"""
     
     return html_code
-
-
 
 
 def generate_corporate_transition_slide(
@@ -2645,46 +2799,25 @@ def generate_corporate_transition_slide(
     
     return html_code
 
-
-
-
 def generate_intro_slide(
     main_title="Main Title",
     subtitle1="Subtitle1",
     subtitle2="Subtitle2",
     main_bg_color="#ffffff",
-    accent_bg_color="#6ea88a",  # Teal/blue-green color
-    text_box_bg_color="#c5e6b8",  # Light green color
+    accent_bg_color="#6ea88a",
+    text_box_bg_color="#c5e6b8",
     title_color="#333333",
     subtitle_color="#555555",
-    line_color="#e6c35c",  # Gold/yellow line color
+    line_color="#e6c35c",
     font_family="'Segoe UI', Arial, sans-serif",
-    main_title_font_size="36px",
-    subtitle_font_size="16px",
+    main_title_font_size="4rem",
+    subtitle_font_size="1.5rem",
     main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"
 ):
     """
-    Generates an HTML slide with a marketing design featuring a title section on the left
-    and an image on the right, exactly matching the provided design.
-    
-    Parameters:
-    - main_title: The main title text
-    - subtitle1: The first subtitle text
-    - subtitle2: The second subtitle text
-    - main_bg_color: Main background color
-    - accent_bg_color: Background color for the right side
-    - text_box_bg_color: Background color for the text box
-    - title_color: Color for the main title
-    - subtitle_color: Color for the subtitles
-    - line_color: Color for the horizontal line
-    - font_family: Font family for the text
-    - main_title_font_size: Font size for the main title
-    - subtitle_font_size: Font size for the subtitles
-    - main_title_font_style: Font style for the main title (normal, italic, etc.)
-    
-    Returns:
-    - HTML code for the marketing slide
+    Tạo slide HTML với thiết kế marketing có nền tràn viền như các slide khác.
+    Các tham số kích thước nên được truyền vào dưới dạng chuỗi với đơn vị REM.
     """
     
     html_code = f"""<!DOCTYPE html>
@@ -2694,141 +2827,188 @@ def generate_intro_slide(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Marketing Slide</title>
     <style>
-        body {{
-            margin: 0;
-            padding: 0;
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; }}
+        body, html {{
+            height: 100vh;
+            width: 100vw;
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_bg_color};
+            overflow: hidden;
+        }}
+
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: {accent_bg_color};
             display: flex;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            justify-content: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
+        }}
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
+            background-color: {main_bg_color};
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
         }}
         
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
+        .left-content {{
+            flex: 0 0 60%;
+            height: 100%;
             position: relative;
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }}
         
-        .left-section {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 60%;
-            height: 100%;
-            background-color: {main_bg_color};
-        }}
-        
-        .right-section {{
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 40%;
+        .right-content {{
+            flex: 0 0 40%;
             height: 100%;
             background-color: {accent_bg_color};
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }}
         
-        .green-bar-top {{
+        .image-container {{
+            width: 80%;
+            height: 70%;
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+            z-index: 3;
+        }}
+        
+        .image-container img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }}
+        
+        .accent-bar-top {{
             position: absolute;
             top: 0;
             left: 0;
-            width: 40px;
-            height: 20px;
+            width: 4rem; /* 64px - larger for better visibility */
+            height: 2rem; /* 32px */
             background-color: {text_box_bg_color};
             z-index: 1;
         }}
         
-        .green-bar-middle {{
+        .accent-bar-middle {{
             position: absolute;
             top: 50%;
             left: 0;
-            width: 100%;
-            height: 60px;
+            right: 0;
+            height: 4rem; /* 64px - larger */
             background-color: {text_box_bg_color};
             transform: translateY(-50%);
             z-index: 1;
         }}
         
-        .text-box {{
-            position: absolute;
-            top: 50%;
-            left: 10%;
-            transform: translateY(-50%);
-            width: 40%;
+        .content-box {{
             background-color: {text_box_bg_color};
-            padding: 30px;
+            padding: 5rem; /* 80px - much larger padding */
+            border-radius: 0.5rem;
             z-index: 2;
+            position: relative;
+            width: 90%; /* 90% of left-content width */
+            height: 85%; /* 85% of left-content height */
+            max-width: none; /* Remove max-width constraint */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }}
         
         .main-title {{
             font-size: {main_title_font_size};
             color: {title_color};
-            margin: 0 0 15px 0;
+            margin: 0 0 3rem 0; /* 48px - even larger margin */
             font-weight: bold;
             font-style: {main_title_font_style};
             line-height: 1.2;
+            text-align: center;
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 5px 0;
+            margin: 1rem 0; /* 16px - increased margin */
+            line-height: 1.4;
+            text-align: center;
         }}
         
         .divider {{
-            width: 100%;
-            height: 2px;
+            width: 80%; /* 80% width instead of 100% */
+            height: 0.25rem; /* 4px - thicker */
             background-color: {line_color};
-            margin-top: 15px;
+            margin: 3rem auto 0 auto; /* 48px top margin, centered */
+            border-radius: 0.125rem;
         }}
         
-        .image-frame {{
+        .decorative-element {{
             position: absolute;
-            top: 50%;
-            right: 10%;
-            transform: translateY(-50%);
-            width: 30%;
-            height: 70%;
-            border: 10px solid white;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            overflow: hidden;
-            z-index: 2;
+            background-color: {text_box_bg_color};
+            opacity: 0.5;
+            z-index: 1;
         }}
         
-        .image-frame img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
+        .deco-1 {{
+            top: 1rem;
+            right: 1rem;
+            width: 4rem; /* 64px - smaller so they don't interfere with image */
+            height: 4rem;
+            border-radius: 50%;
+        }}
+        
+        .deco-2 {{
+            bottom: 1rem;
+            right: 1rem;
+            width: 3rem; /* 48px - smaller square */
+            height: 3rem;
+            transform: rotate(45deg);
         }}
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <!-- Left and right sections -->
-        <div class="left-section"></div>
-        <div class="right-section"></div>
-        
-        <!-- Small green bar at top left -->
-        <div class="green-bar-top"></div>
-        
-        <!-- Green bar across the middle -->
-        <div class="green-bar-middle"></div>
-        
-        <!-- Text box -->
-        <div class="text-box">
-            <h1 class="main-title">{main_title}</h1>
-            <p class="subtitle">{subtitle1}</p>
-            <p class="subtitle">{subtitle2}</p>
-            <div class="divider"></div>
-        </div>
-        
-        <!-- Image frame -->
-        <div class="image-frame">
-            <img src="{image_url}" alt="slide visual">
+        <div class="slide-inner-container">
+            <!-- Accent bars -->
+            <div class="accent-bar-top"></div>
+            <div class="accent-bar-middle"></div>
+            
+            <!-- Left content area -->
+            <div class="left-content">
+                <div class="content-box">
+                    <h1 class="main-title">{main_title}</h1>
+                    <p class="subtitle">{subtitle1}</p>
+                    <p class="subtitle">{subtitle2}</p>
+                    <div class="divider"></div>
+                </div>
+            </div>
+            
+            <!-- Right content area -->
+            <div class="right-content">
+                <div class="image-container">
+                    <img src="{image_url}" alt="slide visual">
+                </div>
+                <div class="decorative-element deco-1"></div>
+                <div class="decorative-element deco-2"></div>
+            </div>
         </div>
     </div>
 </body>
@@ -2836,10 +3016,6 @@ def generate_intro_slide(
     
     return html_code
     
-
-
-
-
 def generate_credits_slide(
     main_text="Main Text",
     credits_text="Credits Text",
@@ -2863,44 +3039,73 @@ def generate_credits_slide(
             box-sizing: border-box;
         }}
         
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            background: linear-gradient(135deg, #FFE5D4 0%, #FFD4C4 50%, #FFC4B4 100%);
-            overflow: hidden;
-            position: relative;
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {{
+            background: linear-gradient(135deg, #FFE5D4 0%, #FFD4C4 50%, #FFC4B4 100%) !important;
+            background-color: transparent !important;
         }}
         
-        .slide-container {{
-            height: 50vh;
-            width: 100vw;
-            padding: 2rem;
+        html#html.html {{ 
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family} !important;
+            background: linear-gradient(135deg, #FFE5D4 0%, #FFD4C4 50%, #FFC4B4 100%) !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }}
+        
+        body#body.body, html#html.html {{
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family} !important;
+            background: linear-gradient(135deg, #FFE5D4 0%, #FFD4C4 50%, #FFC4B4 100%) !important;
+            overflow: hidden !important;
+            position: relative !important;
+        }}
+        
+       .slide-container {{
+            height: 80vh;
+            width: 85vw;
+            padding: 4rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             position: relative;
             text-align: center;
+            transform: scale(1.8);
+            background: rgba(255, 255, 255, 0.25);
+            backdrop-filter: blur(20px);
+            border-radius: 30px;
+            border: 3px solid rgba(255, 255, 255, 0.4);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
+            margin: auto;
         }}
         
         .main-text {{
             font-family: 'Dancing Script', cursive;
-            font-size: 5rem;
+            font-size: 4rem;
             color: #E91E63;
             line-height: 1.3;
             margin-bottom: 2rem;
-            max-width: 800px;
-            font-weight: 400;
+            max-width: 1200px;
+            font-weight: 700;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.25);
         }}
-        
+
         .credits-text {{
             font-size: 3rem;
             color: #8B4513;
             margin-bottom: 2rem;
-            font-weight: 500;
+            font-weight: 600;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
         }}
-        
+
         .closing-text {{
             font-family: 'Dancing Script', cursive;
             font-size: 2.5rem;
@@ -2910,19 +3115,22 @@ def generate_credits_slide(
         
         .character-left {{
             position: absolute;
-            left: 8%;
-            bottom: 15%;
-            font-size: 4rem;
+            left: 15%;
+            bottom: 20%;
+            font-size: 5rem;
             transform: rotate(-10deg);
+            z-index: 10;
         }}
         
         .character-right {{
             position: absolute;
-            right: 8%;
-            bottom: 15%;
-            font-size: 4rem;
+            right: 15%;
+            bottom: 20%;
+            font-size: 5rem;
             transform: rotate(10deg);
+            z-index: 10;
         }}
+        
         
         .decorative-dots {{
             position: absolute;
@@ -2983,7 +3191,7 @@ def generate_credits_slide(
         }}
     </style>
 </head>
-<body>
+<body id="body" class="body">
     <div class="decorative-dots">
         <div class="dot"></div>
         <div class="dot"></div>
@@ -3005,7 +3213,6 @@ def generate_credits_slide(
     return html_code
 
 #------------------------SLIDE CONTENT
-
 def generate_content_slide(
     main_title="CONTENT",
     items=None,
@@ -3063,9 +3270,9 @@ def generate_content_slide(
         item_title = items[i]
         
         grid_items_html += f"""
-        <div class="grid-item">
-            <div class="item-number" style="font-size: {number_font_size}; color: {number_color};">{item_number}</div>
-            <div class="item-title" style="font-size: {item_title_font_size}; color: {item_title_color};">{item_title}</div>
+        <div class="content-card">
+            <div class="item-number">{item_number}</div>
+            <div class="item-title">{item_title}</div>
         </div>
         """
     
@@ -3076,106 +3283,179 @@ def generate_content_slide(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Content Slide</title>
     <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; }}
         body {{
-            margin: 0;
-            padding: 0;
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background: {accent_color};
+            width: 100vw;
+            height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+            justify-content: center;
             overflow: hidden;
         }}
-        
-        /* Background with accent color */
-        .slide-background {{
+
+        .slide-container {{
+            width: 95vw;
+            height: 90vh;
+            max-width: 1400px;
+            max-height: 900px;
+            background: {background_color};
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 4rem;
+            position: relative;
+        }}
+
+        .slide-container::before {{
+            content: '';
             position: absolute;
             top: 0;
             left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: {accent_color};
-        }}
-        
-        /* Main content area with white background */
-        .slide-content {{
-            position: absolute;
-            top: {border_width};
-            left: {border_width};
-            right: {border_width};
-            bottom: {border_width};
-            background-color: {background_color};
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            padding: 40px;
-            box-sizing: border-box;
-            overflow: hidden; /* Prevent scrolling */
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, {accent_color}, {number_color});
+            border-radius: 20px 20px 0 0;
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 3.5rem;
+            font-weight: 700;
             color: {main_title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 50px;
-            font-weight: bold;
+            margin-bottom: 3rem;
+            letter-spacing: 0.02em;
+            position: relative;
+        }}
+
+        .main-title::after {{
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: {number_color};
+            border-radius: 2px;
         }}
         
         .grid-container {{
             display: grid;
             grid-template-columns: repeat({num_columns}, 1fr);
             grid-template-rows: repeat({num_rows}, 1fr);
-            gap: 30px;
+            gap: 2rem;
             flex: 1;
+            padding: 1rem 0;
         }}
         
-        .grid-item {{
+        .content-card {{
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            border: 2px solid {accent_color}20;
+            border-radius: 16px;
+            padding: 2rem;
             display: flex;
             flex-direction: column;
             align-items: center;
             text-align: center;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }}
+
+        .content-card::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, {number_color}, {accent_color});
         }}
         
         .item-number {{
-            font-weight: bold;
-            margin-bottom: 10px;
+            font-size: 4rem;
+            font-weight: 700;
+            color: {number_color};
+            margin-bottom: 1rem;
+            line-height: 1;
+            position: relative;
+        }}
+
+        .item-number::after {{
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: {number_color}40;
+            border-radius: 1px;
         }}
         
         .item-title {{
-            font-weight: normal;
+            font-size: 1.25rem;
+            font-weight: 500;
+            color: {item_title_color};
+            line-height: 1.4;
+        }}
+
+        /* Responsive Design */
+        @media (max-width: 75rem) {{
+            .slide-container {{ padding: 3rem; }}
+            .main-title {{ font-size: 3rem; }}
+            .item-number {{ font-size: 3rem; }}
+            .item-title {{ font-size: 1.1rem; }}
+        }}
+
+        @media (max-width: 50rem) {{
+            .slide-container {{ 
+                width: 98vw;
+                height: 95vh;
+                padding: 2rem;
+            }}
+            .main-title {{ 
+                font-size: 2.5rem; 
+                margin-bottom: 2rem;
+            }}
+            .grid-container {{ 
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                gap: 1.5rem;
+            }}
+            .content-card {{ padding: 1.5rem; }}
+            .item-number {{ font-size: 2.5rem; }}
+            .item-title {{ font-size: 1rem; }}
+        }}
+
+        @media (max-width: 30rem) {{
+            .grid-container {{ 
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(6, 1fr);
+                gap: 1rem;
+            }}
+            .content-card {{ padding: 1rem; }}
+            .item-number {{ font-size: 2rem; }}
+            .item-title {{ font-size: 0.9rem; }}
         }}
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <!-- Background with accent color -->
-        <div class="slide-background"></div>
+        <h1 class="main-title">{main_title}</h1>
         
-        <!-- Main content area with white background -->
-        <div class="slide-content">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="grid-container">
-                {grid_items_html}
-            </div>
+        <div class="grid-container">
+            {grid_items_html}
         </div>
     </div>
 </body>
 </html>"""
     
     return html_code
-
-
-
-
 
 def generate_two_column_slide(
     main_title="Your Title Here",
@@ -3230,9 +3510,9 @@ def generate_two_column_slide(
     left_sections_html = ""
     for i, (title, text) in enumerate(zip(left_column_titles, left_column_texts)):
         left_sections_html += f"""
-        <div class="left-section" style="margin-bottom: 30px;">
-            <h2 style="font-size: {column_title_font_size}; color: {left_text_color}; margin-top: 0; margin-bottom: 10px;">{title}</h2>
-            <p style="font-size: {column_text_font_size}; color: {left_text_color}; margin: 0;">{text}</p>
+        <div class="left-section" style="margin-bottom: 50px;">
+            <h2 style="font-size: {column_title_font_size}; color: {left_text_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
+            <p style="font-size: {column_text_font_size}; color: {left_text_color}; margin: 0; line-height: 1.6;">{text}</p>
         </div>
         """
     
@@ -3240,13 +3520,13 @@ def generate_two_column_slide(
     right_sections_html = ""
     icons = [
         # Document with pencil icon
-        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <path d="M16 13l-4 4h-4v-4l8-8z"></path>
         </svg>""",
         # Magnifying glass icon
-        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>"""
@@ -3255,16 +3535,16 @@ def generate_two_column_slide(
     for i, (title, text) in enumerate(zip(right_column_titles, right_column_texts)):
         icon = icons[i % len(icons)].replace("ICON_COLOR", icon_color)
         right_sections_html += f"""
-        <div class="right-section" style="display: flex; align-items: flex-start; margin-bottom: 30px;">
-            <div style="margin-right: 15px; flex-shrink: 0;">{icon}</div>
+        <div class="right-section" style="display: flex; align-items: flex-start; margin-bottom: 50px;">
+            <div style="margin-right: 20px; flex-shrink: 0;">{icon}</div>
             <div>
-                <h2 style="font-size: {column_title_font_size}; color: {right_title_color}; margin-top: 0; margin-bottom: 10px;">{title}</h2>
-                <p style="font-size: {column_text_font_size}; color: {right_text_color}; margin: 0;">{text}</p>
+                <h2 style="font-size: {column_title_font_size}; color: {right_title_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
+                <p style="font-size: {column_text_font_size}; color: {right_text_color}; margin: 0; line-height: 1.6;">{text}</p>
             </div>
         </div>
         """
     
-    # Create the HTML content with CSS
+    # Create the HTML content with CSS - Flat structure without nested containers
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -3272,86 +3552,93 @@ def generate_two_column_slide(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Two Column Slide</title>
     <style>
-        body {{
-            margin: 0;
-            padding: 0;
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-outer-container {{
-            width: 1000px;
-            height: 560px;
             background-color: {border_color};
-            padding: 30px;
-            box-sizing: border-box;
+            color: {main_title_color};
+            overflow: hidden;
         }}
-        
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
+
+        .slide-background {{
+            position: absolute;
+            left: 120px;
+            top: 80px;
+            width: 1680px;
+            height: 920px;
             background-color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            padding: 40px;
-            box-sizing: border-box;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+        }}
+
+        .slide-content {{
+            position: absolute;
+            left: 200px;
+            top: 140px;
+            width: 1520px;
+            height: 800px;
         }}
         
         .main-title {{
+            position: absolute;
+            left: 200px;
+            top: 140px;
+            width: 1520px;
             font-size: {main_title_font_size};
+            font-weight: 700;
             color: {main_title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 40px;
-        }}
-        
-        .columns-container {{
-            display: flex;
-            flex: 1;
-            gap: 30px;
+            margin: 0 0 40px 0;
+            line-height: 1.2;
         }}
         
         .left-column {{
-            flex: 1;
+            position: absolute;
+            left: 200px;
+            top: 223px;
+            width: 730px;
+            height: 717px;
             background-color: {left_bg_color};
-            padding: 30px;
+            padding: 40px;
+            border-radius: 12px;
         }}
         
         .right-column {{
-            flex: 1;
+            position: absolute;
+            left: 990px;
+            top: 223px;
+            width: 730px;
+            height: 717px;
             background-color: #ffffff;
-            border: 1px solid {border_color};
-            padding: 30px;
+            border: 2px solid {border_color};
+            padding: 40px;
+            border-radius: 12px;
         }}
     </style>
 </head>
 <body>
-    <div class="slide-outer-container">
-        <div class="slide-inner-container">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="columns-container">
-                <div class="left-column">
-                    {left_sections_html}
-                </div>
-                
-                <div class="right-column">
-                    {right_sections_html}
-                </div>
-            </div>
-        </div>
+    <!-- Background layer -->
+    <div class="slide-background"></div>
+    
+    <!-- Main title -->
+    <h1 class="main-title">{main_title}</h1>
+    
+    <!-- Left column -->
+    <div class="left-column">
+        {left_sections_html}
+    </div>
+    
+    <!-- Right column -->
+    <div class="right-column">
+        {right_sections_html}
     </div>
 </body>
 </html>"""
     
     return html_code
-
-
-
 
 def generate_project_circles_slide(
     main_title="Your Title Here",
@@ -3408,20 +3695,23 @@ def generate_project_circles_slide(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Circles Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html, body {{
+            height: 100vh;
+            width: 100vw;
             font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
+            background-color: {background_color};
+            overflow: hidden;
         }}
         
         .slide-container {{
-            width: 1000px;
-            height: 560px;
+            width: 100vw;
+            height: 100vh;
             position: relative;
             background-color: {background_color};
         }}
@@ -3431,8 +3721,8 @@ def generate_project_circles_slide(
             position: absolute;
             top: 0;
             left: 0;
-            width: 300px;
-            height: 300px;
+            width: 25vw;
+            height: 25vh;
             background-color: {accent_color};
             clip-path: polygon(0 0, 100% 0, 0 100%);
             z-index: 0;
@@ -3443,8 +3733,8 @@ def generate_project_circles_slide(
             position: absolute;
             top: 0;
             right: 0;
-            width: 300px;
-            height: 300px;
+            width: 25vw;
+            height: 25vh;
             background-color: {accent_color};
             clip-path: polygon(100% 0, 0 0, 100% 100%);
             z-index: 0;
@@ -3455,8 +3745,8 @@ def generate_project_circles_slide(
             position: absolute;
             bottom: 0;
             left: 0;
-            width: 300px;
-            height: 300px;
+            width: 25vw;
+            height: 25vh;
             background-color: {accent_color};
             clip-path: polygon(0 100%, 100% 100%, 0 0);
             z-index: 0;
@@ -3467,8 +3757,8 @@ def generate_project_circles_slide(
             position: absolute;
             bottom: 0;
             right: 0;
-            width: 300px;
-            height: 300px;
+            width: 25vw;
+            height: 25vh;
             background-color: {accent_color};
             clip-path: polygon(100% 100%, 0 100%, 100% 0);
             z-index: 0;
@@ -3476,15 +3766,15 @@ def generate_project_circles_slide(
         
         .content {{
             position: absolute;
-            top: 30px;
-            left: 30px;
-            right: 30px;
-            bottom: 30px;
+            top: 3vh;
+            left: 3vw;
+            right: 3vw;
+            bottom: 3vh;
             background-color: {background_color};
             z-index: 1;
             display: flex;
             flex-direction: column;
-            padding: 40px;
+            padding: 5vh 4vw;
             box-sizing: border-box;
         }}
         
@@ -3493,13 +3783,13 @@ def generate_project_circles_slide(
             color: {title_color};
             text-align: center;
             margin-top: 0;
-            margin-bottom: 40px;
+            margin-bottom: 4vh;
         }}
         
         .content-container {{
             display: flex;
             flex: 1;
-            margin-bottom: 30px;
+            margin-bottom: 3vh;
         }}
         
         .text-column {{
@@ -3507,7 +3797,7 @@ def generate_project_circles_slide(
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
-            padding: 0 20px;
+            padding: 0 2vw;
         }}
         
         .left-column {{
@@ -3527,8 +3817,8 @@ def generate_project_circles_slide(
         }}
         
         .circle {{
-            width: 150px;
-            height: 150px;
+            width: 12vw;
+            height: 12vw;
             border-radius: 50%;
             display: flex;
             justify-content: center;
@@ -3536,7 +3826,7 @@ def generate_project_circles_slide(
             position: absolute;
             color: {circle_text_color};
             font-weight: bold;
-            font-size: 20px;
+            font-size: 1.2vw;
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
         }}
         
@@ -3553,10 +3843,10 @@ def generate_project_circles_slide(
             left: 50%;
             top: 50%;
             transform: translate(-50%, -30%);
-            width: 180px;
-            height: 180px;
+            width: 15vw;
+            height: 15vw;
             z-index: 3;
-            font-size: 24px;
+            font-size: 1.5vw;
         }}
         
         .circle-3 {{
@@ -3627,8 +3917,6 @@ def generate_project_circles_slide(
     
     return html_code
 
-
-
 def generate_comparison_slide(
     main_title="Your Title Here",
     left_title="Your Title Here",
@@ -3639,9 +3927,9 @@ def generate_comparison_slide(
     right_icon="scales",  # Options: "scales", "custom"
     custom_left_icon="",  # Custom SVG code if left_icon is "custom"
     custom_right_icon="",  # Custom SVG code if right_icon is "custom"
-    main_title_font_size="36px",
-    column_title_font_size="28px",
-    text_font_size="16px",
+    main_title_font_size="48px",
+    column_title_font_size="36px",
+    text_font_size="22px",
     title_color="#555555",
     text_color="#555555",
     icon_color="#a2c4c9",
@@ -3711,137 +3999,149 @@ def generate_comparison_slide(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparison Slide</title>
     <style>
-        body {{
-            margin: 0;
-            padding: 0;
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+            background-color: {accent_color};
+            color: {title_color};
             overflow: hidden;
         }}
-        
-        /* Background with accent color */
+
         .slide-background {{
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: {accent_color};
-        }}
-        
-        /* Main content area with white background */
-        .slide-content {{
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            right: 30px;
-            bottom: 30px;
+            left: 120px;
+            top: 80px;
+            width: 1680px;
+            height: 920px;
             background-color: {background_color};
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            display: flex;
-            flex-direction: column;
-            padding: 40px;
-            box-sizing: border-box;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }}
         
         .main-title {{
+            position: absolute;
+            left: 200px;
+            top: 140px;
+            width: 1520px;
             font-size: {main_title_font_size};
+            font-weight: 700;
             color: {title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 40px;
+            line-height: 1.2;
         }}
         
-        .columns-container {{
-            display: flex;
-            flex: 1;
-            position: relative;
-        }}
-        
-        .column {{
-            flex: 1;
+        .left-column {{
+            position: absolute;
+            left: 200px;
+            top: 260px;
+            width: 730px;
+            height: 680px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0 30px;
-        }}
-        
-        .icon-container {{
-            margin-bottom: 30px;
-        }}
-        
-        .column-title {{
-            font-size: {column_title_font_size};
-            color: {title_color};
+            justify-content: flex-start;
+            padding: 50px 40px;
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 20px;
         }}
         
-        .column-text {{
-            font-size: {text_font_size};
-            color: {text_color};
+        .right-column {{
+            position: absolute;
+            left: 990px;
+            top: 260px;
+            width: 730px;
+            height: 680px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 50px 40px;
             text-align: center;
-            line-height: 1.5;
         }}
         
         .divider {{
             position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 2px;
-            border-left: 2px dashed {divider_color};
-            transform: translateX(-50%);
+            left: 960px;
+            top: 280px;
+            width: 3px;
+            height: 640px;
+            border-left: 3px dashed {divider_color};
+        }}
+        
+        .left-icon {{
+            margin-bottom: 40px;
+        }}
+        
+        .right-icon {{
+            margin-bottom: 40px;
+        }}
+        
+        .left-title {{
+            font-size: {column_title_font_size};
+            font-weight: 700;
+            color: {title_color};
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }}
+        
+        .right-title {{
+            font-size: {column_title_font_size};
+            font-weight: 700;
+            color: {title_color};
+            text-align: center;
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }}
+        
+        .left-text {{
+            font-size: {text_font_size};
+            color: {text_color};
+            text-align: center;
+            line-height: 1.6;
+        }}
+        
+        .right-text {{
+            font-size: {text_font_size};
+            color: {text_color};
+            text-align: center;
+            line-height: 1.6;
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <!-- Background with accent color -->
-        <div class="slide-background"></div>
-        
-        <!-- Main content area with white background -->
-        <div class="slide-content">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="columns-container">
-                <div class="column">
-                    <div class="icon-container">
-                        {left_icon_html}
-                    </div>
-                    <h2 class="column-title">{left_title}</h2>
-                    <p class="column-text">{left_text}</p>
-                </div>
-                
-                <div class="divider"></div>
-                
-                <div class="column">
-                    <div class="icon-container">
-                        {right_icon_html}
-                    </div>
-                    <h2 class="column-title">{right_title}</h2>
-                    <p class="column-text">{right_text}</p>
-                </div>
-            </div>
+    <!-- Background layer -->
+    <div class="slide-background"></div>
+    
+    <!-- Main title -->
+    <h1 class="main-title">{main_title}</h1>
+    
+    <!-- Left column -->
+    <div class="left-column">
+        <div class="left-icon">
+            {left_icon_html}
         </div>
+        <h2 class="left-title">{left_title}</h2>
+        <p class="left-text">{left_text}</p>
+    </div>
+    
+    <!-- Divider -->
+    <div class="divider"></div>
+    
+    <!-- Right column -->
+    <div class="right-column">
+        <div class="right-icon">
+            {right_icon_html}
+        </div>
+        <h2 class="right-title">{right_title}</h2>
+        <p class="right-text">{right_text}</p>
     </div>
 </body>
 </html>"""
     
     return html_code
-
-
 
 def generate_process_slide(
     main_title="Your Title Here",
@@ -3854,7 +4154,7 @@ def generate_process_slide(
     content_font_size="16px",
     title_color="#555555",
     left_box_color="#8cbeca",
-    right_box_color="#c5e1e8",
+    right_box_color="#70c5da",
     text_color="#ffffff",
     arrow_color="#f0f0f0",
     background_color="#ffffff",
@@ -3901,56 +4201,40 @@ def generate_process_slide(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Process Slide</title>
     <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; }}
         body {{
-            margin: 0;
-            padding: 0;
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background: {accent_color};
+            width: 100vw;
+            height: 100vh;
             display: flex;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+            justify-content: center;
             overflow: hidden;
         }}
-        
-        /* Background with accent color */
-        .slide-background {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: {accent_color};
-        }}
-        
-        /* Main content area with white background */
-        .slide-content {{
-            position: absolute;
-            top: {border_width};
-            left: {border_width};
-            right: {border_width};
-            bottom: {border_width};
-            background-color: {background_color};
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+
+        .slide-container {{
+            width: 98vw;
+            height: 96vh;
+            max-width: 1600px;
+            max-height: 1000px;
+            background: {background_color};
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
             display: flex;
             flex-direction: column;
-            padding: 40px;
-            box-sizing: border-box;
-            overflow: hidden; /* Prevent scrolling */
+            padding: 5rem;
+            position: relative;
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 3.5rem;
+            font-weight: 700;
             color: {title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 50px;
+            margin-bottom: 4rem;
+            line-height: 1.2;
         }}
         
         .boxes-container {{
@@ -3959,79 +4243,125 @@ def generate_process_slide(
             align-items: center;
             position: relative;
             flex: 1;
+            gap: 2rem;
         }}
         
-        /* Arrow connecting the boxes */
-        .arrow {{
+        .process-box {{
+            flex: 1;
+            max-width: 650px;
+            background: var(--box-color);
+            border-radius: 25px;
+            padding: 5rem;
+            color: {text_color};
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            z-index: 2;
+        }}
+
+        .left-box {{
+            --box-color: {left_box_color};
+        }}
+        
+        .right-box {{
+            --box-color: {right_box_color};
+        }}
+        
+        .box-title {{
+            font-size: 2.8rem;
+            font-weight: 600;
+            margin-bottom: 2.5rem;
+            text-align: center;
+        }}
+        
+        .box-content {{
+            font-size: 1.6rem;
+            line-height: 1.8;
+            text-align: center;
+        }}
+        
+        .arrow-container {{
             position: absolute;
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            width: 200px;
-            height: 100px;
-            background-color: {arrow_color};
-            clip-path: polygon(0 40%, 75% 40%, 75% 0, 100% 50%, 75% 100%, 75% 60%, 0 60%);
-            z-index: 1;
+            z-index: 3;
         }}
-        
-        .box {{
-            width: {box_width};
-            height: {box_height};
-            border-radius: {box_border_radius};
-            padding: 25px;
-            box-sizing: border-box;
+
+        .arrow {{
+            width: 80px;
+            height: 80px;
+            background: {left_box_color};
+            border-radius: 50%;
             display: flex;
-            flex-direction: column;
             align-items: center;
-            text-align: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }}
+
+        .arrow::before {{
+            content: '→';
+            font-size: 2.2rem;
             color: {text_color};
-            z-index: 2;
+            font-weight: bold;
         }}
-        
-        .left-box {{
-            background-color: {left_box_color};
+
+     
+
+        /* Responsive Design */
+        @media (max-width: 75rem) {{
+            .slide-container {{ padding: 3rem; }}
+            .main-title {{ font-size: 2.25rem; }}
+            .box-title {{ font-size: 1.5rem; }}
+            .box-content {{ font-size: 1rem; }}
         }}
-        
-        .right-box {{
-            background-color: {right_box_color};
-        }}
-        
-        .box-title {{
-            font-size: {box_title_font_size};
-            margin-top: 0;
-            margin-bottom: 20px;
-        }}
-        
-        .box-content {{
-            font-size: {content_font_size};
-            line-height: 1.5;
+
+        @media (max-width: 50rem) {{
+            .slide-container {{ 
+                padding: 2rem;
+                width: 95vw;
+                height: 90vh;
+            }}
+            .main-title {{ font-size: 2rem; margin-bottom: 2.5rem; }}
+            .boxes-container {{ 
+                flex-direction: column; 
+                gap: 2rem;
+            }}
+            .process-box {{ 
+                max-width: 100%;
+                padding: 2rem;
+            }}
+            .arrow-container {{
+                position: relative;
+                top: auto;
+                left: auto;
+                transform: none;
+                margin: 1rem 0;
+            }}
+            .arrow::before {{
+                content: '↓';
+            }}
         }}
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <!-- Background with accent color -->
-        <div class="slide-background"></div>
+        <h1 class="main-title">{main_title}</h1>
         
-        <!-- Main content area with white background -->
-        <div class="slide-content">
-            <h1 class="main-title">{main_title}</h1>
+        <div class="boxes-container">
+            <!-- Left Process Box -->
+            <div class="process-box left-box">
+                <h2 class="box-title">{left_title}</h2>
+                <p class="box-content">{left_content}</p>
+            </div>
             
-            <div class="boxes-container">
-                <!-- Arrow connecting the boxes -->
+            <!-- Arrow Connection -->
+            <div class="arrow-container">
                 <div class="arrow"></div>
-                
-                <!-- Left box -->
-                <div class="box left-box">
-                    <h2 class="box-title">{left_title}</h2>
-                    <p class="box-content">{left_content}</p>
-                </div>
-                
-                <!-- Right box -->
-                <div class="box right-box">
-                    <h2 class="box-title">{right_title}</h2>
-                    <p class="box-content">{right_content}</p>
-                </div>
+            </div>
+            
+            <!-- Right Process Box -->
+            <div class="process-box right-box">
+                <h2 class="box-title">{right_title}</h2>
+                <p class="box-content">{right_content}</p>
             </div>
         </div>
     </div>
@@ -4040,10 +4370,7 @@ def generate_process_slide(
     
     return html_code
 
-
 # form business
-
-
 def generate_process_steps_slide(
     main_title="Cách tiếp cận đề xuất",
     steps=[
@@ -4307,6 +4634,8 @@ def generate_icon_list_slide_2(
             align-items: center;
             width: 100%;
             max-width: 70rem; /* 1120px */
+            transform: scale(1.2);
+            min-height: 60vh;
         }}
         
         .title-section {{
@@ -4316,20 +4645,20 @@ def generate_icon_list_slide_2(
         
         .main-title {{
             font-family: {font_family_title};
-            font-size: 4.5rem;
-            font-weight: 500;
+            font-size: 3rem;
+            font-weight: 700;
             font-style: italic;
             color: {title_color};
-            margin: 0 0 1rem 0;
+            margin-bottom: 4rem;
             line-height: 1.1;
         }}
         
         .subtitle {{
-            font-size: 1rem;
-            font-weight: 600;
             color: {subtitle_color};
+            font-size: 1.2rem;
+            font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0.2em;
+            letter-spacing: 0em;
         }}
 
         .list-section {{
@@ -4347,23 +4676,24 @@ def generate_icon_list_slide_2(
 
         .icon-container {{
             flex-shrink: 0;
-            width: 5rem;
-            height: 5rem;
+            width: 6rem;
+            height: 6rem;
             background-color: {accent_color};
             display: flex;
             align-items: center;
             justify-content: center;
         }}
         .icon-container svg {{
-            width: 2.5rem;
-            height: 2.5rem;
+            width: 3rem;
+            height: 3rem;
             fill: {icon_color};
         }}
         
         .item-text {{
-            font-size: 1.1rem;
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin-bottom: 3rem;
             color: {text_color};
-            margin: 0;
         }}
 
         @media (max-width: 48em) {{ /* 768px */
@@ -4577,9 +4907,9 @@ def generate_body_slide2(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="32px",
-    subtitle_font_size="20px",
-    content_font_size="16px",
+    title_font_size="2.75rem",    # Increased from 32px
+    subtitle_font_size="1.5rem",  # Increased from 20px
+    content_font_size="1.125rem", # Increased from 16px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide2/Default_1.png",
 
@@ -4590,7 +4920,7 @@ def generate_body_slide2(
 ):
     """
     Generates an HTML slide with a main title, large image on the left,
-    and three content sections with icons on the right.
+    and three content sections with icons on the right - Full viewport design.
     
     Parameters:
     - main_title: The main title of the slide
@@ -4624,132 +4954,213 @@ def generate_body_slide2(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image with Icons Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
-            position: absolute;
-            top: 40px;
-            left: 40px;
             display: flex;
             align-items: center;
+            margin-bottom: 2.5rem; /* 40px */
         }}
         
         .title-accent {{
-            width: 30px;
-            height: 30px;
-            background-color: {accent_color};
-            margin-right: 15px;
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
-            position: absolute;
-            top: 100px;
-            left: 0;
             width: 100%;
-            height: calc(100% - 100px);
+            flex: 1;
+            gap: 2.5rem; /* 40px */
         }}
         
         .image-section {{
-            width: 45%;
-            height: 100%;
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.5rem; /* 24px */
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
             position: relative;
-            padding: 20px;
-            box-sizing: border-box;
+            overflow: hidden;
         }}
         
         .image-frame {{
             width: 100%;
-            height: 80%;
+            height: 100%;
             position: relative;
             overflow: hidden;
+            border-radius: 0.75rem; /* 12px */
         }}
         
         .image-accent {{
             position: absolute;
             top: 0;
             left: 0;
-            width: 90%;
-            height: 90%;
-            border: 15px solid {accent_color};
-            box-sizing: border-box;
+            width: 95%;
+            height: 95%;
+            border: 0.5rem solid {accent_color}; /* 8px */
+            border-radius: 0.75rem; /* 12px */
             z-index: 1;
+            transition: all 0.3s ease;
+        }}
+        
+        .image-section:hover .image-accent {{
+            border-width: 0.75rem; /* 12px - expand on hover */
+            background: linear-gradient(45deg, {accent_color}20, transparent);
         }}
         
         .image-container {{
             position: absolute;
-            top: 20px;
-            left: 20px;
-            width: 90%;
-            height: 90%;
-            background-color: #f0f0f0;
+            top: 1.5rem; /* 24px */
+            left: 1.5rem; /* 24px */
+            width: 95%;
+            height: 95%;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
             overflow: hidden;
             z-index: 2;
+            border-radius: 0.75rem; /* 12px */
+            transition: transform 0.3s ease;
+        }}
+        
+        .image-section:hover .image-container {{
+            transform: scale(1.02); /* subtle zoom on hover */
         }}
         
         .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 0.75rem; /* 12px */
+            transition: transform 0.3s ease;
+        }}
+        
+        .image-section:hover .image-container img {{
+            transform: scale(1.05); /* image zoom effect */
         }}
         
         .content-section {{
-            width: 55%;
-            height: 100%;
-            padding: 20px 40px;
-            box-sizing: border-box;
+            flex: 3;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            gap: 2rem; /* 32px */
         }}
         
         .content-item {{
             display: flex;
             align-items: flex-start;
-            margin-bottom: 30px;
+            background: rgba(255,255,255,0.9);
+            padding: 1.5rem; /* 24px */
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 0.25rem solid {accent_color}; /* 4px */
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .content-item:hover {{
+            transform: translateX(0.5rem); /* 8px horizontal shift */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+            border-left-width: 0.5rem; /* 8px - expand border */
+        }}
+        
+        .content-item::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 0.25rem; /* 4px */
+            height: 100%;
+            background: linear-gradient(to bottom, {accent_color}, rgba(213, 232, 185, 0.5));
+            transform: scaleY(0);
+            transition: transform 0.3s ease;
+            transform-origin: top;
+        }}
+        
+        .content-item:hover::before {{
+            transform: scaleY(1);
         }}
         
         .icon-container {{
-            width: 50px;
-            height: 50px;
-            background-color: {accent_color};
+            width: 4rem; /* 64px - increased size */
+            height: 4rem; /* 64px */
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 20px;
+            margin-right: 1.5rem; /* 24px */
             flex-shrink: 0;
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }}
+        
+        .content-item:hover .icon-container {{
+            transform: scale(1.1) rotate(5deg); /* hover effect */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
         }}
         
         .icon-container svg {{
-            width: 24px;
-            height: 24px;
+            width: 2rem; /* 32px - increased size */
+            height: 2rem; /* 32px */
             stroke: #333333;
+            transition: all 0.3s ease;
+        }}
+        
+        .content-item:hover .icon-container svg {{
+            stroke: #ffffff;
+            transform: scale(1.1);
         }}
         
         .content-text {{
@@ -4759,19 +5170,105 @@ def generate_body_slide2(
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 5px 0;
+            margin: 0 0 0.75rem 0; /* 12px */
+            font-weight: 600;
+            position: relative;
+        }}
+        
+        .subtitle::after {{
+            content: '';
+            position: absolute;
+            bottom: -0.25rem; /* -4px */
+            left: 0;
+            width: 2rem; /* 32px */
+            height: 0.125rem; /* 2px */
+            background: {accent_color};
+            border-radius: 0.0625rem; /* 1px */
+            transition: width 0.3s ease;
+        }}
+        
+        .content-item:hover .subtitle::after {{
+            width: 4rem; /* 64px - expand underline on hover */
         }}
         
         .content {{
             font-size: {content_font_size};
             color: {content_color};
             margin: 0;
-            line-height: 1.4;
+            line-height: 1.6;
+            padding: 0.75rem; /* 12px */
+            background: rgba(213, 232, 185, 0.1);
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.3s ease;
+        }}
+        
+        .content-item:hover .content {{
+            background: rgba(213, 232, 185, 0.2);
+            transform: translateY(-0.125rem); /* -2px */
+        }}
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .content-layout {{
+                flex-direction: column;
+                gap: 2rem;
+            }}
+            
+            .image-section {{
+                flex: none;
+                height: 20rem;
+            }}
+            
+            .content-section {{
+                flex: none;
+                gap: 1.5rem;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .content-item {{
+                padding: 1rem;
+            }}
+            
+            .icon-container {{
+                width: 3rem;
+                height: 3rem;
+                margin-right: 1rem;
+            }}
+            
+            .icon-container svg {{
+                width: 1.5rem;
+                height: 1.5rem;
+            }}
+            
+            .main-title {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle {{
+                font-size: 1.25rem;
+            }}
+            
+            .content {{
+                font-size: 1rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -4849,13 +5346,13 @@ def generate_body_slide3(
     # Style parameters
     main_bg_color="#ffffff",  # White background
     box_bg_color="#e6f2dd",   # Light green background for boxes
-    accent_color="#8cc63f",   # Green accent color
+    accent_color="#d8f3b4",   # Green accent color
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="32px",
-    subtitle_font_size="20px",
-    content_font_size="16px",
+    title_font_size="2.75rem",    # Increased from 32px
+    subtitle_font_size="1.5rem",  # Increased from 20px
+    content_font_size="1.125rem", # Increased from 16px
     font_family="'Segoe UI', Arial, sans-serif",
     box_height="250px",       # Adjusted height for content boxes
     
@@ -4865,7 +5362,7 @@ def generate_body_slide3(
     icon3="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>""",  # Presentation chart
 ):
     """
-    Generates an HTML slide with a main title and three content boxes with icons.
+    Generates an HTML slide with a main title and three content boxes with icons - Full viewport design.
     
     Parameters:
     - main_title: The main title of the slide
@@ -4901,103 +5398,258 @@ def generate_body_slide3(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Three Column Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 60px; /* Increased margin to move content boxes down */
+            margin-bottom: 3rem; /* 48px */
         }}
         
         .title-accent {{
-            width: 30px;
-            height: 30px;
-            background-color: {box_bg_color};
-            margin-right: 15px;
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, {box_bg_color}, rgba(230, 242, 221, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
             justify-content: space-between;
-            align-items: center; /* Center content boxes vertically */
-            height: calc(100% - 120px); /* Adjusted to account for larger title margin */
+            align-items: stretch;
+            flex: 1;
+            gap: 2rem; /* 32px */
         }}
         
         .content-box {{
-            width: 31%;
-            height: {box_height}; /* Fixed height for content boxes */
-            background-color: {box_bg_color};
+            flex: 1;
+            background: linear-gradient(135deg, {box_bg_color}, rgba(230, 242, 221, 0.9));
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 60px 20px 20px;
-            box-sizing: border-box;
+            padding: 4.5rem 1.5rem 2rem; /* 72px 24px 32px */
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
             text-align: center;
+            transition: all 0.3s ease;
+            border: 0.125rem solid transparent; /* 2px */
+            overflow: hidden;
+        }}
+        
+        .content-box:hover {{
+            transform: translateY(-0.75rem); /* -12px hover lift */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            border-color: {accent_color};
+        }}
+        
+        .content-box::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, {accent_color}, rgba(140, 198, 63, 0.6));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }}
+        
+        .content-box:hover::before {{
+            transform: scaleX(1);
         }}
         
         .icon-circle {{
-            width: 70px;
-            height: 70px;
+            width: 5rem; /* 80px - increased size */
+            height: 5rem; /* 80px */
             border-radius: 50%;
-            background-color: #ffffff;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
             position: absolute;
-            top: -35px;
+            top: -2.5rem; /* -40px */
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+            transition: all 0.3s ease;
+            border: 0.1875rem solid {accent_color}; /* 3px */
+        }}
+        
+        .content-box:hover .icon-circle {{
+            transform: scale(1.1) rotate(5deg); /* hover effect */
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.2);
         }}
         
         .icon-circle svg {{
             stroke: {accent_color};
+            width: 2rem; /* 32px - increased size */
+            height: 2rem; /* 32px */
+            transition: all 0.3s ease;
+        }}
+        
+        .content-box:hover .icon-circle svg {{
+            stroke: {box_bg_color};
+            transform: scale(1.1);
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 15px 0;
-            font-weight: bold;
+            margin: 0 0 1rem 0; /* 16px */
+            font-weight: 700;
+            position: relative;
+        }}
+        
+        .subtitle::after {{
+            content: '';
+            position: absolute;
+            bottom: -0.375rem; /* -6px */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2.5rem; /* 40px */
+            height: 0.125rem; /* 2px */
+            background: {accent_color};
+            border-radius: 0.0625rem; /* 1px */
+            transition: width 0.3s ease;
+        }}
+        
+        .content-box:hover .subtitle::after {{
+            width: 5rem; /* 80px - expand underline on hover */
         }}
         
         .content {{
             font-size: {content_font_size};
             color: {content_color};
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.6;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem; /* 20px */
+            background: rgba(255,255,255,0.7);
+            border-radius: 0.75rem; /* 12px */
+            transition: all 0.3s ease;
+        }}
+        
+        .content-box:hover .content {{
+            background: rgba(255,255,255,0.9);
+            transform: translateY(-0.125rem); /* -2px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+        }}
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .content-layout {{
+                flex-direction: column;
+                gap: 1.5rem;
+            }}
+            
+            .content-box {{
+                padding: 3rem 2rem 2rem;
+            }}
+            
+            .icon-circle {{
+                top: -1.5rem;
+                width: 4rem;
+                height: 4rem;
+            }}
+            
+            .icon-circle svg {{
+                width: 1.5rem;
+                height: 1.5rem;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .content-box {{
+                padding: 2.5rem 1.5rem 1.5rem;
+            }}
+            
+            .main-title {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle {{
+                font-size: 1.25rem;
+            }}
+            
+            .content {{
+                font-size: 1rem;
+            }}
+            
+            .icon-circle {{
+                top: -1rem;
+                width: 3rem;
+                height: 3rem;
+            }}
+            
+            .icon-circle svg {{
+                width: 1.25rem;
+                height: 1.25rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -5038,6 +5690,7 @@ def generate_body_slide3(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -5060,9 +5713,9 @@ def generate_body_slide4(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    title_font_size="32px",
-    content_font_size="16px",
-    subtitle_font_size="18px",
+    title_font_size="2.75rem",    # Increased from 32px
+    content_font_size="1.25rem",  # Increased from 16px
+    subtitle_font_size="1.5rem",  # Increased from 18px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide4/Default_1.png",
     image_url_2="Image/generate_body_slide4/Default_2.png",
@@ -5070,12 +5723,11 @@ def generate_body_slide4(
 ):
     """
     Generates an HTML slide with a main title, horizontal content bar,
-    and three images with subtitles and content.
+    and three images with subtitles and content - Full viewport design.
     
     Parameters:
     - main_title: The main title of the slide
     - main_content: Content for the horizontal bar
-    
     
     Content parameters:
     - subtitle1, subtitle2, subtitle3: Subtitles for each image
@@ -5103,78 +5755,128 @@ def generate_body_slide4(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Gallery Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 30px;
+            margin-bottom: 2.5rem; /* 40px */
         }}
         
         .title-accent {{
-            width: 30px;
-            height: 30px;
-            background-color: {accent_color};
-            margin-right: 15px;
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-bar {{
             width: 100%;
-            background-color: {accent_color};
-            padding: 10px 20px;
-            margin-bottom: 30px;
-            box-sizing: border-box;
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.9));
+            padding: 1.25rem 2rem; /* 20px 32px */
+            margin-bottom: 2.5rem; /* 40px */
+            border-radius: 0.75rem; /* 12px */
             text-align: center;
             color: {content_color};
             font-size: {content_font_size};
-            font-style: italic;
+            font-weight: 500;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .content-bar::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, {title_color}, {accent_color});
         }}
         
         .image-gallery {{
             display: flex;
             justify-content: space-between;
             width: 100%;
+            flex: 1;
+            align-items: stretch;
+            gap: 2rem; /* 32px */
         }}
         
         .image-item {{
-            width: 30%;
-            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 0.125rem solid transparent; /* 2px */
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .image-item:hover {{
+            transform: translateY(-0.5rem); /* -8px hover lift */
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+            border-color: {accent_color};
         }}
         
         .image-container {{
             position: relative;
             width: 100%;
-            height: 200px;
-            margin-bottom: 15px;
+            height: 15rem; /* 240px - increased height */
+            margin-bottom: 1.25rem; /* 20px */
             overflow: hidden;
+            border-radius: 0.75rem; /* 12px */
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         }}
         
         .image-border {{
@@ -5183,22 +5885,53 @@ def generate_body_slide4(
             left: 0;
             width: 100%;
             height: 100%;
-            border-left: 8px solid {accent_color};
-            box-sizing: border-box;
+            border-left: 0.5rem solid {accent_color}; /* 8px */
+            border-radius: 0.75rem 0 0 0.75rem; /* 12px */
+            z-index: 1;
+            transition: all 0.3s ease;
+        }}
+        
+        .image-item:hover .image-border {{
+            border-left-width: 1rem; /* 16px - expand on hover */
+            background: linear-gradient(to right, {accent_color}, transparent 70%);
         }}
         
         .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
+            border-radius: 0.75rem; /* 12px */
+        }}
+        
+        .image-item:hover .image-container img {{
+            transform: scale(1.05); /* zoom effect on hover */
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 5px 0;
-            font-style: italic;
+            margin: 0 0 0.75rem 0; /* 12px */
+            font-weight: 600;
             text-align: center;
+            position: relative;
+        }}
+        
+        .subtitle::after {{
+            content: '';
+            position: absolute;
+            bottom: -0.25rem; /* -4px */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2rem; /* 32px */
+            height: 0.125rem; /* 2px */
+            background: {accent_color};
+            border-radius: 0.0625rem; /* 1px */
+            transition: width 0.3s ease;
+        }}
+        
+        .image-item:hover .subtitle::after {{
+            width: 4rem; /* 64px - expand underline on hover */
         }}
         
         .image-content {{
@@ -5206,12 +5939,87 @@ def generate_body_slide4(
             color: {content_color};
             margin: 0;
             text-align: center;
-            font-style: italic;
+            line-height: 1.6;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem; /* 16px */
+            background: rgba(213, 232, 185, 0.1);
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.3s ease;
+        }}
+        
+        .image-item:hover .image-content {{
+            background: rgba(213, 232, 185, 0.2);
+            transform: translateY(-0.125rem); /* -2px */
+        }}
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .image-gallery {{
+                flex-direction: column;
+                gap: 1.5rem;
+            }}
+            
+            .image-item {{
+                flex-direction: row;
+                align-items: center;
+            }}
+            
+            .image-container {{
+                width: 40%;
+                height: 12rem;
+                margin-bottom: 0;
+                margin-right: 1.5rem;
+            }}
+            
+            .content-area {{
+                flex: 1;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .image-item {{
+                flex-direction: column;
+                padding: 1rem;
+            }}
+            
+            .image-container {{
+                width: 100%;
+                height: 10rem;
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }}
+            
+            .main-title {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle {{
+                font-size: 1.25rem;
+            }}
+            
+            .image-content {{
+                font-size: 1rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -5231,8 +6039,10 @@ def generate_body_slide4(
                     <div class="image-border"></div>
                     <img src="{image_url_1}" alt="Image 1">
                 </div>
-                <h3 class="subtitle">{subtitle1}</h3>
-                <p class="image-content">{content1}</p>
+                <div class="content-area">
+                    <h3 class="subtitle">{subtitle1}</h3>
+                    <p class="image-content">{content1}</p>
+                </div>
             </div>
             
             <!-- Image Item 2 -->
@@ -5241,8 +6051,10 @@ def generate_body_slide4(
                     <div class="image-border"></div>
                     <img src="{image_url_2}" alt="Image 2">
                 </div>
-                <h3 class="subtitle">{subtitle2}</h3>
-                <p class="image-content">{content2}</p>
+                <div class="content-area">
+                    <h3 class="subtitle">{subtitle2}</h3>
+                    <p class="image-content">{content2}</p>
+                </div>
             </div>
             
             <!-- Image Item 3 -->
@@ -5251,8 +6063,10 @@ def generate_body_slide4(
                     <div class="image-border"></div>
                     <img src="{image_url_3}" alt="Image 3">
                 </div>
-                <h3 class="subtitle">{subtitle3}</h3>
-                <p class="image-content">{content3}</p>
+                <div class="content-area">
+                    <h3 class="subtitle">{subtitle3}</h3>
+                    <p class="image-content">{content3}</p>
+                </div>
             </div>
         </div>
     </div>
@@ -5260,6 +6074,7 @@ def generate_body_slide4(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -5283,9 +6098,9 @@ def generate_body_slide5(
     title_color="#333333",
     subtitle_color="#6b9d34", # Green color for subtitles
     content_color="#555555",
-    title_font_size="32px",
-    subtitle_font_size="18px",
-    content_font_size="14px",
+    title_font_size="2.75rem",    # Increased from 32px
+    subtitle_font_size="1.5rem",  # Increased from 18px
+    content_font_size="1.125rem", # Increased from 14px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide5/Default_1.png",
     image_url_2="Image/generate_body_slide5/Default_2.png",
@@ -5294,11 +6109,10 @@ def generate_body_slide5(
 ):
     """
     Generates an HTML slide with a main title, 2x2 image grid on the left,
-    and four content sections on the right.
+    and four content sections on the right - Full viewport design.
     
     Parameters:
     - main_title: The main title of the slide
-    
     
     Content parameters:
     - subtitle1, subtitle2, subtitle3, subtitle4: Subtitles for each content section
@@ -5326,95 +6140,125 @@ def generate_body_slide5(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Grid Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-        }}
-        
-        .left-accent {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 10px;
-            height: 100%;
-            background-color: {accent_color};
-        }}
-        
-        .right-accent {{
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 10px;
-            height: 100%;
-            background-color: {accent_color};
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
-            position: absolute;
-            top: 30px;
-            left: 30px;
             display: flex;
             align-items: center;
+            margin-bottom: 2.5rem; /* 40px */
         }}
         
         .title-accent {{
-            width: 30px;
-            height: 30px;
-            background-color: {accent_color};
-            margin-right: 15px;
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
-            position: absolute;
-            top: 100px;
-            left: 30px;
-            width: calc(100% - 60px);
-            height: calc(100% - 130px);
+            width: 100%;
+            flex: 1;
+            gap: 2.5rem; /* 40px */
+        }}
+        
+        .image-section {{
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            border-left: 0.25rem solid {accent_color}; /* accent border */
         }}
         
         .image-grid {{
-            width: 45%;
+            width: 100%;
+            height: 100%;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 10px;
+            gap: 1rem; /* 16px */
         }}
         
-        .grid-image {{
+        .image-card {{
+            position: relative;
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }}
+        
+        .image-card:hover {{
+            transform: scale(1.05) rotate(1deg); /* hover effect */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+            z-index: 2;
+        }}
+        
+        .image-container {{
             width: 100%;
             height: 100%;
-            overflow: hidden;
             position: relative;
+            overflow: hidden;
         }}
         
-        .grid-image img {{
+        .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
+        }}
+        
+        .image-card:hover .image-container img {{
+            transform: scale(1.1); /* zoom effect on hover */
         }}
         
         .image-overlay {{
@@ -5422,45 +6266,148 @@ def generate_body_slide5(
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 10px;
-            background-color: {accent_color};
+            height: 0.5rem; /* 8px - increased overlay */
+            background: linear-gradient(90deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            transition: all 0.3s ease;
+        }}
+        
+        .image-card:hover .image-overlay {{
+            height: 25%; /* expand overlay on hover */
+            background: linear-gradient(to top, {accent_color}, transparent);
         }}
         
         .content-sections {{
-            width: 55%;
-            padding-left: 40px;
+            flex: 3;
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 20px;
+            gap: 1.5rem; /* 24px */
         }}
         
-        .content-section {{
-            display: flex;
-            flex-direction: column;
+        .content-item {{
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 0.25rem solid {subtitle_color}; /* subtitle color border */
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .content-item:hover {{
+            transform: translateY(-0.25rem); /* -4px hover lift */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+        }}
+        
+        .content-item::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, {subtitle_color}, rgba(107, 157, 52, 0.6));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }}
+        
+        .content-item:hover::before {{
+            transform: scaleX(1);
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 10px 0;
-            font-style: italic;
+            margin: 0 0 0.75rem 0; /* 12px */
+            font-weight: 600;
+            position: relative;
+        }}
+        
+        .subtitle::after {{
+            content: '';
+            position: absolute;
+            bottom: -0.25rem; /* -4px */
+            left: 0;
+            width: 2rem; /* 32px */
+            height: 0.125rem; /* 2px */
+            background: {subtitle_color};
+            border-radius: 0.0625rem; /* 1px */
         }}
         
         .content {{
             font-size: {content_font_size};
             color: {content_color};
             margin: 0;
-            line-height: 1.4;
-            font-style: italic;
+            line-height: 1.6;
+            padding: 0.75rem; /* 12px */
+            background: rgba(107, 157, 52, 0.05); /* subtitle color with low opacity */
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.3s ease;
+        }}
+        
+        .content-item:hover .content {{
+            background: rgba(107, 157, 52, 0.1);
+            transform: translateX(0.25rem); /* 4px */
+        }}
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .content-layout {{
+                flex-direction: column;
+                gap: 2rem;
+            }}
+            
+            .image-section {{
+                flex: none;
+                height: 20rem;
+            }}
+            
+            .content-sections {{
+                flex: none;
+                gap: 1rem;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .content-sections {{
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+            }}
+            
+            .content-item {{
+                padding: 1rem;
+            }}
+            
+            .main-title {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle {{
+                font-size: 1.25rem;
+            }}
+            
+            .content {{
+                font-size: 1rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <div class="left-accent"></div>
-        <div class="right-accent"></div>
-        
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -5469,41 +6416,51 @@ def generate_body_slide5(
         
         <!-- Content Layout -->
         <div class="content-layout">
-            <!-- Image Grid -->
-            <div class="image-grid">
-                <div class="grid-image">
-                    <img src="{image_url_1}" alt="Image 1">
-                    <div class="image-overlay"></div>
-                </div>
-                <div class="grid-image">
-                    <img src="{image_url_2}" alt="Image 2">
-                    <div class="image-overlay"></div>
-                </div>
-                <div class="grid-image">
-                    <img src="{image_url_3}" alt="Image 3">
-                    <div class="image-overlay"></div>
-                </div>
-                <div class="grid-image">
-                    <img src="{image_url_4}" alt="Image 4">
-                    <div class="image-overlay"></div>
+            <!-- Image Section -->
+            <div class="image-section">
+                <div class="image-grid">
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="{image_url_1}" alt="Image 1">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="{image_url_2}" alt="Image 2">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="{image_url_3}" alt="Image 3">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="{image_url_4}" alt="Image 4">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
                 </div>
             </div>
             
             <!-- Content Sections -->
             <div class="content-sections">
-                <div class="content-section">
+                <div class="content-item">
                     <h3 class="subtitle">{subtitle1}</h3>
                     <p class="content">{content1}</p>
                 </div>
-                <div class="content-section">
+                <div class="content-item">
                     <h3 class="subtitle">{subtitle2}</h3>
                     <p class="content">{content2}</p>
                 </div>
-                <div class="content-section">
+                <div class="content-item">
                     <h3 class="subtitle">{subtitle3}</h3>
                     <p class="content">{content3}</p>
                 </div>
-                <div class="content-section">
+                <div class="content-item">
                     <h3 class="subtitle">{subtitle4}</h3>
                     <p class="content">{content4}</p>
                 </div>
@@ -5514,6 +6471,7 @@ def generate_body_slide5(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -5533,16 +6491,16 @@ def generate_body_slide6(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="32px",
-    subtitle_font_size="18px",
-    content_font_size="16px",
+    title_font_size="2.75rem",    # Increased from 32px
+    subtitle_font_size="1.5rem",  # Increased from 18px
+    content_font_size="1.25rem",  # Increased from 16px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide6/Default_1.png",
 
 ):
     """
     Generates an HTML slide with a main title, image on the right,
-    and two content sections on the left.
+    and two content sections on the left - Full viewport design.
     
     Parameters:
     - main_title: The main title of the slide
@@ -5573,72 +6531,194 @@ def generate_body_slide6(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Right Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 2.5rem; /* 40px */
         }}
         
         .title-accent {{
-            width: 30px;
-            height: 30px;
-            background-color: {accent_color};
-            margin-right: 15px;
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
             width: 100%;
-            height: calc(100% - 80px);
+            flex: 1;
+            gap: 2.5rem; /* 40px */
         }}
         
-        .left-column {{
-            width: 40%;
+        .content-section {{
+            flex: 2;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 40px;
+            gap: 2rem; /* 32px */
         }}
         
-        .right-column {{
-            width: 60%;
-            padding-left: 40px;
+        .content-item {{
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 0.25rem solid {accent_color}; /* accent border */
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .content-item:hover {{
+            transform: translateY(-0.5rem); /* -8px hover lift */
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+        }}
+        
+        .content-item::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, {accent_color}, rgba(213, 232, 185, 0.6));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }}
+        
+        .content-item:hover::before {{
+            transform: scaleX(1);
+        }}
+        
+        .subtitle-container {{
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            padding: 0.75rem 1.5rem; /* 12px 24px */
+            display: inline-block;
+            margin-bottom: 1rem; /* 16px */
+            border-radius: 2rem; /* 32px - pill shape */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }}
+        
+        .content-item:hover .subtitle-container {{
+            transform: scale(1.05);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        }}
+        
+        .subtitle {{
+            font-size: {subtitle_font_size};
+            color: {subtitle_color};
+            margin: 0;
+            font-weight: 600;
+        }}
+        
+        .content {{
+            font-size: {content_font_size};
+            color: {content_color};
+            margin: 0;
+            line-height: 1.6;
+            padding: 1rem; /* 16px */
+            background: rgba(85, 85, 85, 0.03); /* subtle content background */
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.3s ease;
+        }}
+        
+        .content-item:hover .content {{
+            background: rgba(85, 85, 85, 0.06);
+            transform: translateX(0.25rem); /* 4px */
+        }}
+        
+        .image-section {{
+            flex: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            border-left: 0.25rem solid {accent_color}; /* accent border */
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .image-frame {{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }}
+        
+        .image-accent {{
+            position: absolute;
+            top: -0.5rem; /* -8px */
+            left: -0.5rem; /* -8px */
+            width: calc(100% + 1rem);
+            height: calc(100% + 1rem);
+            border: 0.25rem solid {accent_color}; /* 4px */
+            border-radius: 1rem; /* 16px */
             box-sizing: border-box;
+            z-index: 1;
+            opacity: 0.7;
         }}
         
         .image-container {{
+            position: relative;
             width: 100%;
             height: 100%;
+            z-index: 2;
+            border-radius: 0.75rem; /* 12px */
             overflow: hidden;
         }}
         
@@ -5646,39 +6726,80 @@ def generate_body_slide6(
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
         }}
         
-        .content-section {{
-            display: flex;
-            flex-direction: column;
+        .image-section:hover .image-container img {{
+            transform: scale(1.05); /* zoom effect on hover */
         }}
         
-        .subtitle-container {{
-            background-color: {accent_color};
-            padding: 8px 15px;
-            display: inline-block;
-            margin-bottom: 10px;
-            align-self: flex-start;
+        .image-overlay {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25%;
+            background: linear-gradient(to top, rgba(213, 232, 185, 0.8), transparent);
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }}
         
-        .subtitle {{
-            font-size: {subtitle_font_size};
-            color: {subtitle_color};
-            margin: 0;
-            font-weight: bold;
+        .image-section:hover .image-overlay {{
+            opacity: 1;
         }}
         
-        .content {{
-            font-size: {content_font_size};
-            color: {content_color};
-            margin: 0;
-            line-height: 1.5;
-            padding-left: 15px;
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .content-layout {{
+                flex-direction: column;
+                gap: 2rem;
+            }}
+            
+            .content-section {{
+                flex: none;
+                gap: 1.5rem;
+            }}
+            
+            .image-section {{
+                flex: none;
+                height: 25rem;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .content-item {{
+                padding: 1.5rem;
+            }}
+            
+            .main-title {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle {{
+                font-size: 1.25rem;
+            }}
+            
+            .content {{
+                font-size: 1rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -5687,18 +6808,18 @@ def generate_body_slide6(
         
         <!-- Content Layout -->
         <div class="content-layout">
-            <!-- Left Column with Content Sections -->
-            <div class="left-column">
-                <!-- Content Section 1 -->
-                <div class="content-section">
+            <!-- Content Section -->
+            <div class="content-section">
+                <!-- Content Item 1 -->
+                <div class="content-item">
                     <div class="subtitle-container">
                         <h3 class="subtitle">{subtitle1}</h3>
                     </div>
                     <p class="content">{content1}</p>
                 </div>
                 
-                <!-- Content Section 2 -->
-                <div class="content-section">
+                <!-- Content Item 2 -->
+                <div class="content-item">
                     <div class="subtitle-container">
                         <h3 class="subtitle">{subtitle2}</h3>
                     </div>
@@ -5706,10 +6827,14 @@ def generate_body_slide6(
                 </div>
             </div>
             
-            <!-- Right Column with Image -->
-            <div class="right-column">
-                <div class="image-container">
-                    <img src="{image_url}" alt="Slide image">
+            <!-- Image Section -->
+            <div class="image-section">
+                <div class="image-frame">
+                    <div class="image-accent"></div>
+                    <div class="image-container">
+                        <img src="{image_url}" alt="Slide image">
+                        <div class="image-overlay"></div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -5718,6 +6843,7 @@ def generate_body_slide6(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -5738,9 +6864,9 @@ def generate_body_slide7(
     subtitle_color="#333333",
     content_color="#4a90a0",  # Teal/blue color for content
     divider_color="#d5e8b9",  # Light green divider
-    title_font_size="32px",
-    subtitle_font_size="28px",
-    content_font_size="16px",
+    title_font_size="2.75rem",    # Increased from 32px
+    subtitle_font_size="2rem",    # Increased from 28px  
+    content_font_size="1.25rem", # Increased from 16px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide7/Default_1.png",
     image_url_2="Image/generate_body_slide7/Default_2.png",
@@ -5749,7 +6875,7 @@ def generate_body_slide7(
 ):
     """
     Generates an HTML slide with a main title, three vertical images on the left,
-    and content with subtitle on the right.
+    and content with subtitle on the right - Full viewport design.
     
     Parameters:
     - main_title: The main title of the slide
@@ -5781,108 +6907,227 @@ def generate_body_slide7(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vertical Images Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-            padding: 40px;
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 40px;
+            margin-bottom: 2.5rem; /* 40px */
         }}
         
         .title-accent {{
-            width: 30px;
-            height: 30px;
-            background-color: {accent_color};
-            margin-right: 15px;
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
             width: 100%;
-            height: calc(100% - 80px);
+            flex: 1;
+            gap: 2.5rem; /* 40px */
         }}
         
-        .left-column {{
-            width: 40%;
+        .image-section {{
+            flex: 2;
             display: flex;
             flex-direction: column;
-            gap: 10px;
+            gap: 1rem; /* 16px */
+        }}
+        
+        .image-card {{
+            flex: 1;
+            background: rgba(255,255,255,0.9);
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            position: relative;
+            border-left: 0.25rem solid {accent_color}; /* accent border */
+        }}
+        
+        .image-card:hover {{
+            transform: translateX(0.5rem) scale(1.02); /* hover effect */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
         }}
         
         .image-container {{
             width: 100%;
-            height: calc(33.33% - 7px);
+            height: 100%;
             overflow: hidden;
+            position: relative;
         }}
         
         .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
         }}
         
-        .right-column {{
-            width: 60%;
-            padding-left: 40px;
-            box-sizing: border-box;
+        .image-card:hover .image-container img {{
+            transform: scale(1.05); /* zoom effect on hover */
+        }}
+        
+        .image-overlay {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, {accent_color}, rgba(213, 232, 185, 0.8));
+        }}
+        
+        .content-section {{
+            flex: 3;
             display: flex;
             flex-direction: column;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2.5rem; /* 40px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            border-left: 0.25rem solid {accent_color}; /* accent border */
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 15px 0;
-            font-weight: normal;
-            font-style: italic;
+            margin: 0 0 1.5rem 0; /* 24px */
+            font-weight: 600;
+            position: relative;
         }}
         
-        .divider {{
-            width: 100%;
-            height: 3px;
-            background-color: {divider_color};
-            margin-bottom: 30px;
+        .subtitle::after {{
+            content: '';
+            position: absolute;
+            bottom: -0.5rem; /* -8px */
+            left: 0;
+            width: 4rem; /* 64px */
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, {divider_color}, rgba(213, 232, 185, 0.6));
+            border-radius: 0.125rem; /* 2px */
         }}
         
         .content {{
             font-size: {content_font_size};
             color: {content_color};
-            margin: 0 0 20px 0;
+            margin: 0 0 1.5rem 0; /* 24px */
             line-height: 1.6;
-            font-style: italic;
+            padding: 1rem; /* 16px */
+            background: rgba(74, 144, 160, 0.05); /* content color with low opacity */
+            border-radius: 0.5rem; /* 8px */
+            border-left: 0.25rem solid {content_color}; /* content accent */
+            transition: all 0.3s ease;
+        }}
+        
+        .content:hover {{
+            background: rgba(74, 144, 160, 0.1);
+            transform: translateX(0.25rem); /* 4px */
+        }}
+        
+        .content:last-child {{
+            margin-bottom: 0;
+        }}
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .content-layout {{
+                flex-direction: column;
+                gap: 2rem;
+            }}
+            
+            .image-section {{
+                flex: none;
+                height: 20rem;
+                flex-direction: row;
+            }}
+            
+            .content-section {{
+                flex: none;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .image-section {{
+                flex-direction: column;
+                height: 15rem;
+            }}
+            
+            .main-title {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle {{
+                font-size: 1.5rem;
+            }}
+            
+            .content {{
+                font-size: 1rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -5891,23 +7136,31 @@ def generate_body_slide7(
         
         <!-- Content Layout -->
         <div class="content-layout">
-            <!-- Left Column with Images -->
-            <div class="left-column">
-                <div class="image-container">
-                    <img src="{image_url_1}" alt="Image 1">
+            <!-- Image Section -->
+            <div class="image-section">
+                <div class="image-card">
+                    <div class="image-container">
+                        <img src="{image_url_1}" alt="Image 1">
+                        <div class="image-overlay"></div>
+                    </div>
                 </div>
-                <div class="image-container">
-                    <img src="{image_url_2}" alt="Image 2">
+                <div class="image-card">
+                    <div class="image-container">
+                        <img src="{image_url_2}" alt="Image 2">
+                        <div class="image-overlay"></div>
+                    </div>
                 </div>
-                <div class="image-container">
-                    <img src="{image_url_3}" alt="Image 3">
+                <div class="image-card">
+                    <div class="image-container">
+                        <img src="{image_url_3}" alt="Image 3">
+                        <div class="image-overlay"></div>
+                    </div>
                 </div>
             </div>
             
-            <!-- Right Column with Content -->
-            <div class="right-column">
+            <!-- Content Section -->
+            <div class="content-section">
                 <h2 class="subtitle">{subtitle}</h2>
-                <div class="divider"></div>
                 <p class="content">{content1}</p>
                 <p class="content">{content2}</p>
             </div>
@@ -5917,6 +7170,7 @@ def generate_body_slide7(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -5933,17 +7187,16 @@ def generate_body_slide10(
     content3="Content3",
     
     # Style parameters
-    main_bg_color="#ffffff",  # White background
-    accent_color="#d5e8b9",   # Light green accent
+    main_bg_color="#ffffff",
+    accent_color="#d5e8b9",
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2rem",      # Converted from 32px (32/16 = 2rem)
-    subtitle_font_size="1.25rem", # Converted from 20px (20/16 = 1.25rem)
-    content_font_size="1rem",     # Converted from 16px (16/16 = 1rem)
+    title_font_size="2.75rem",       # Tăng từ 2rem
+    subtitle_font_size="1.5rem",     # Tăng từ 1.25rem
+    content_font_size="1.25rem",     # Tăng từ 1rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide10/Default_1.png",
-
 
     # Icon parameters - SVG paths for each icon
     icon1="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M12 2v6M12 18v4M14.5 8a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM16.5 13a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0z"></path></svg>""",  # Lightbulb
@@ -5952,32 +7205,7 @@ def generate_body_slide10(
 ):
     """
     Generates an HTML slide with a main title, large image on the left,
-    and three content sections with icons on the right.
-    Now uses REM units for better responsiveness and accessibility.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    
-    Content parameters:
-    - subtitle1, subtitle2, subtitle3: Subtitles for each content section
-    - content1, content2, content3: Content text for each section
-    
-    Style parameters:
-    - main_bg_color: Background color for the slide
-    - accent_color: Color for accents and icon backgrounds
-    - title_color: Color for the main title
-    - subtitle_color: Color for subtitles
-    - content_color: Color for content text
-    - title_font_size: Font size for the main title (in rem)
-    - subtitle_font_size: Font size for subtitles (in rem)
-    - content_font_size: Font size for content text (in rem)
-    - font_family: Font family for the slide
-    
-    Icon parameters:
-    - icon1, icon2, icon3: SVG code for each icon
-    
-    Returns:
-    - HTML code for the slide
+    and three content sections with icons on the right - Full viewport design.
     """
     
     html_code = f"""<!DOCTYPE html>
@@ -5987,137 +7215,173 @@ def generate_body_slide10(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image with Icons Slide</title>
     <style>
-        /* 
-        KHÔNG cố định font-size cho html - để trình duyệt quyết định
-        Điều này tôn trọng cài đặt accessibility của người dùng
-        */
-        
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 62.5rem;         /* Converted from 1000px (1000/16 = 62.5rem) */
-            height: 35rem;          /* Converted from 560px (560/16 = 35rem) */
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* Converted shadow */
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
-            position: absolute;
-            top: 2.5rem;            /* Converted from 40px (40/16 = 2.5rem) */
-            left: 2.5rem;           /* Converted from 40px */
             display: flex;
             align-items: center;
+            margin-bottom: 2.5rem; /* 40px */
         }}
         
         .title-accent {{
-            width: 1.875rem;        /* Converted from 30px (30/16 = 1.875rem) */
-            height: 1.875rem;       /* Converted from 30px */
+            width: 2.5rem; /* 40px - tăng kích thước */
+            height: 2.5rem; /* 40px */
             background-color: {accent_color};
-            margin-right: 0.9375rem; /* Converted from 15px (15/16 = 0.9375rem) */
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
-            position: absolute;
-            top: 6.25rem;           /* Converted from 100px (100/16 = 6.25rem) */
-            left: 0;
             width: 100%;
-            height: calc(100% - 6.25rem); /* Converted from 100px */
+            flex: 1;
+            gap: 2.5rem; /* 40px - gap giữa image và content */
         }}
         
         .image-section {{
-            width: 45%;
-            height: 100%;
-            position: relative;
-            padding: 1.25rem;       /* Converted from 20px (20/16 = 1.25rem) */
-            box-sizing: border-box;
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
         }}
         
         .image-frame {{
             width: 100%;
-            height: 80%;
+            height: 100%;
             position: relative;
+            max-height: 28rem; /* 448px */
+            border-radius: 0.75rem; /* 12px */
             overflow: hidden;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         }}
         
         .image-accent {{
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 90%;
-            height: 90%;
-            border: 0.9375rem solid {accent_color}; /* Converted from 15px */
+            top: -0.5rem; /* -8px */
+            left: -0.5rem; /* -8px */
+            width: calc(100% + 1rem);
+            height: calc(100% + 1rem);
+            border: 0.25rem solid {accent_color}; /* 4px */
+            border-radius: 1rem; /* 16px */
             box-sizing: border-box;
             z-index: 1;
         }}
         
         .image-container {{
-            position: absolute;
-            top: 1.25rem;           /* Converted from 20px */
-            left: 1.25rem;          /* Converted from 20px */
-            width: 90%;
-            height: 90%;
-            background-color: #f0f0f0;
-            overflow: hidden;
+            position: relative;
+            width: 100%;
+            height: 100%;
             z-index: 2;
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
         }}
         
         .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
+        }}
+        
+        .image-section:hover .image-container img {{
+            transform: scale(1.05); /* zoom effect on hover */
         }}
         
         .content-section {{
-            width: 55%;
-            height: 100%;
-            padding: 1.25rem 2.5rem; /* Converted from 20px 40px */
-            box-sizing: border-box;
+            flex: 3;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            gap: 2rem; /* 32px - gap giữa content items */
         }}
         
         .content-item {{
             display: flex;
             align-items: flex-start;
-            margin-bottom: 1.875rem; /* Converted from 30px */
+            background: rgba(255,255,255,0.9);
+            border-radius: 0.75rem; /* 12px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 0.25rem solid {accent_color}; /* accent border */
+        }}
+        
+        .content-item:hover {{
+            transform: translateX(0.5rem); /* 8px - hover effect */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
         }}
         
         .icon-container {{
-            width: 3.125rem;        /* Converted from 50px (50/16 = 3.125rem) */
-            height: 3.125rem;       /* Converted from 50px */
-            background-color: {accent_color};
+            width: 4rem; /* 64px - tăng kích thước */
+            height: 4rem; /* 64px */
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: 1.25rem;  /* Converted from 20px */
+            margin-right: 1.5rem; /* 24px */
             flex-shrink: 0;
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }}
+        
+        .content-item:hover .icon-container {{
+            transform: scale(1.1) rotate(5deg); /* hover animation */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
         }}
         
         .icon-container svg {{
-            width: 1.5rem;          /* Converted from 24px (24/16 = 1.5rem) */
-            height: 1.5rem;         /* Converted from 24px */
+            width: 2rem; /* 32px - tăng kích thước icon */
+            height: 2rem; /* 32px */
             stroke: #333333;
+            filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1));
         }}
         
         .content-text {{
@@ -6127,75 +7391,50 @@ def generate_body_slide10(
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 0.3125rem 0; /* Converted from 5px (5/16 = 0.3125rem) */
+            margin: 0 0 0.75rem 0; /* 12px */
+            font-weight: 600;
         }}
         
         .content {{
             font-size: {content_font_size};
             color: {content_color};
             margin: 0;
-            line-height: 1.4;
+            line-height: 1.6;
         }}
         
-        /* Media queries for responsive design */
+        /* Responsive design */
         @media screen and (max-width: 75rem) {{
-            .slide-container {{
-                width: 95vw;
-                max-width: 62.5rem;
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .content-layout {{
+                flex-direction: column;
+                gap: 2rem;
+            }}
+            
+            .image-section {{
+                flex: none;
+                height: 20rem;
+            }}
+            
+            .content-section {{
+                flex: none;
+                gap: 1.5rem;
             }}
         }}
         
         @media screen and (max-width: 50rem) {{
-            .slide-container {{
-                width: 95vw;
-                height: auto;
-                min-height: 70vh;
+            body {{
+                padding: 2rem 3rem;
             }}
             
-            .title-section {{
-                position: static;
-                padding: 1.5rem;
-                justify-content: center;
-            }}
-            
-            .content-layout {{
-                position: static;
-                flex-direction: column;
-                height: auto;
-            }}
-            
-            .image-section {{
-                width: 100%;
-                height: 20rem;
-                order: 2;
-            }}
-            
-            .content-section {{
-                width: 100%;
-                padding: 1.5rem;
-                order: 1;
+            .slide-inner-container {{
+                padding: 2rem 3rem;
             }}
             
             .content-item {{
-                margin-bottom: 1.5rem;
-            }}
-            
-            .icon-container {{
-                width: 2.5rem;
-                height: 2.5rem;
-                margin-right: 1rem;
-            }}
-            
-            .icon-container svg {{
-                width: 1.25rem;
-                height: 1.25rem;
-            }}
-        }}
-        
-        @media screen and (max-width: 30rem) {{
-            .content-item {{
                 flex-direction: column;
-                align-items: center;
                 text-align: center;
             }}
             
@@ -6203,11 +7442,23 @@ def generate_body_slide10(
                 margin-right: 0;
                 margin-bottom: 1rem;
             }}
+            
+            .title-font-size {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle-font-size {{
+                font-size: 1.25rem;
+            }}
+            
+            .content-font-size {{
+                font-size: 1rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -6267,6 +7518,7 @@ def generate_body_slide10(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -6283,18 +7535,18 @@ def generate_body_slide11(
     subtitle3="SUBTITLE3",
     content3="Content3",
     
-    # Style parameters (đã chuyển sang rem)
+    # Style parameters
     main_bg_color="#ffffff",
     box_bg_color="#e6f2dd",
-    accent_color="#8cc63f",
+    accent_color="#e6f2dd",
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2rem",         # THAY ĐỔI: 32px -> 2rem
-    subtitle_font_size="1.25rem",   # THAY ĐỔI: 20px -> 1.25rem
-    content_font_size="1rem",       # THAY ĐỔI: 16px -> 1rem
+    title_font_size="2.75rem",      # Tăng từ 2rem
+    subtitle_font_size="1.5rem",    # Tăng từ 1.25rem
+    content_font_size="1.25rem",    # Tăng từ 1rem
     font_family="'Segoe UI', Arial, sans-serif",
-    box_height="15.625rem",         # THAY ĐỔI: 250px -> 15.625rem
+    box_height="15.625rem",
     
     # Icon parameters - SVG paths for each icon
     icon1="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-2-2-4 4"></path></svg>""",
@@ -6303,7 +7555,7 @@ def generate_body_slide11(
 ):
     """
     Generates an HTML slide with a main title and three content boxes with icons.
-    All size parameters are now in REM.
+    Full viewport design with modern styling.
     """
     
     html_code = f"""<!DOCTYPE html>
@@ -6313,103 +7565,196 @@ def generate_body_slide11(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Three Column Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 62.5rem; /* THAY ĐỔI: 1000px -> 62.5rem */
-            height: 35rem; /* THAY ĐỔI: 560px -> 35rem */
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: 2.5rem; /* THAY ĐỔI: 40px -> 2.5rem */
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 3.75rem; /* THAY ĐỔI: 60px -> 3.75rem */
+            margin-bottom: 3rem; /* 48px */
         }}
         
         .title-accent {{
-            width: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            height: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
+            width: 2.5rem; /* 40px - tăng kích thước */
+            height: 2.5rem; /* 40px */
             background-color: {box_bg_color};
-            margin-right: 0.9375rem; /* THAY ĐỔI: 15px -> 0.9375rem */
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
             justify-content: space-between;
-            align-items: center;
-            height: calc(100% - 7.5rem); /* THAY ĐỔI: 120px -> 7.5rem */
+            flex: 1;
+            gap: 2rem; /* 32px - tạo gap giữa boxes */
+            align-items: stretch;
         }}
         
         .content-box {{
-            width: 31%;
-            height: {box_height};
-            background-color: {box_bg_color};
+            flex: 1;
+            background: linear-gradient(135deg, {box_bg_color}, rgba(230, 242, 221, 0.8));
             position: relative;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 3.75rem 1.25rem 1.25rem; /* THAY ĐỔI: 60px 20px 20px */
-            box-sizing: border-box;
+            padding: 4rem 1.5rem 2rem; /* 64px 24px 32px - tăng top padding */
+            border-radius: 1rem; /* 16px */
             text-align: center;
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 0.125rem solid rgba(255,255,255,0.3);
+        }}
+        
+        .content-box:hover {{
+            transform: translateY(-0.5rem); /* 8px - hover effect */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
         }}
         
         .icon-circle {{
-            width: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
-            height: 4.375rem; /* THAY ĐỔI: 70px -> 4.375rem */
+            width: 5rem; /* 80px - tăng kích thước */
+            height: 5rem; /* 80px */
             border-radius: 50%;
-            background-color: #ffffff;
+            background: linear-gradient(135deg, #ffffff, #f8f9fa);
             position: absolute;
-            top: -2.1875rem; /* THAY ĐỔI: -35px -> -2.1875rem */
+            top: -2.5rem; /* -40px */
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 0.25rem 0.375rem rgba(0, 0, 0, 0.1); /* 4px 6px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.15);
+            border: 0.25rem solid rgba(255,255,255,0.8);
+            transition: all 0.3s ease;
+        }}
+        
+        .content-box:hover .icon-circle {{
+            transform: scale(1.1) rotate(5deg); /* hover animation */
+            box-shadow: 0 1rem 2rem rgba(0, 0, 0, 0.2);
         }}
         
         .icon-circle svg {{
             stroke: {accent_color};
+            width: 2rem; /* 32px - tăng kích thước icon */
+            height: 2rem; /* 32px */
+            filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1));
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 0.9375rem 0; /* THAY ĐỔI: 15px -> 0.9375rem */
-            font-weight: bold;
+            margin: 0 0 1.25rem 0; /* 20px */
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05rem;
         }}
         
         .content {{
             font-size: {content_font_size};
             color: {content_color};
             margin: 0;
-            line-height: 1.5;
+            line-height: 1.6;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .content-layout {{
+                flex-direction: column;
+                gap: 1.5rem;
+            }}
+            
+            .content-box {{
+                padding: 3rem 1.5rem 1.5rem;
+            }}
+            
+            .icon-circle {{
+                width: 4rem;
+                height: 4rem;
+                top: -2rem;
+            }}
+            
+            .icon-circle svg {{
+                width: 1.5rem;
+                height: 1.5rem;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .title-section {{
+                margin-bottom: 2rem;
+            }}
+            
+            .title-font-size {{
+                font-size: 2rem;
+            }}
+            
+            .subtitle-font-size {{
+                font-size: 1.25rem;
+            }}
+            
+            .content-font-size {{
+                font-size: 1rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -6450,6 +7795,7 @@ def generate_body_slide11(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -6467,24 +7813,24 @@ def generate_body_slide12(
     subtitle3="Subtitle3",
     content3="Content3",
     
-    # Style parameters (đã chuyển sang rem)
+    # Style parameters
     main_bg_color="#ffffff",
     accent_color="#d5e8b9",
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    title_font_size="2rem",         # THAY ĐỔI: 32px -> 2rem
-    content_font_size="1rem",       # THAY ĐỔI: 16px -> 1rem
-    subtitle_font_size="1.125rem",  # THAY ĐỔI: 18px -> 1.125rem
+    title_font_size="2.75rem",    # Tăng từ 2rem
+    content_font_size="1.375rem", # Tăng từ 1rem
+    subtitle_font_size="1.5rem",  # Tăng từ 1.125rem
     font_family="'Segoe UI', Arial, sans-serif",
-    image_url_1="Image/generate_body_slide12/Default_1.png",  # Default image path
+    image_url_1="Image/generate_body_slide12/Default_1.png",
     image_url_2="Image/generate_body_slide12/Default_2.png",
     image_url_3="Image/generate_body_slide12/Default_3.png",
 
 ):
     """
     Generates an HTML slide with a main title, horizontal content bar,
-    and three images with subtitles and content. All size parameters are now in REM.
+    and three images with subtitles and content - Full viewport design.
     """
     
     html_code = f"""<!DOCTYPE html>
@@ -6494,78 +7840,111 @@ def generate_body_slide12(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Gallery Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 62.5rem; /* THAY ĐỔI: 1000px -> 62.5rem */
-            height: 35rem; /* THAY ĐỔI: 560px -> 35rem */
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: 2.5rem; /* THAY ĐỔI: 40px -> 2.5rem */
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
+            margin-bottom: 2rem; /* 32px */
         }}
         
         .title-accent {{
-            width: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            height: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
+            width: 2.5rem; /* 40px - tăng kích thước */
+            height: 2.5rem; /* 40px */
             background-color: {accent_color};
-            margin-right: 0.9375rem; /* THAY ĐỔI: 15px -> 0.9375rem */
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600;
             margin: 0;
         }}
         
         .content-bar {{
             width: 100%;
-            background-color: {accent_color};
-            padding: 0.625rem 1.25rem; /* THAY ĐỔI: 10px 20px */
-            margin-bottom: 1.875rem; /* THAY ĐỔI: 30px -> 1.875rem */
-            box-sizing: border-box;
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            padding: 1.25rem 2rem; /* 20px 32px - tăng padding */
+            margin-bottom: 2.5rem; /* 40px */
+            border-radius: 0.75rem; /* 12px */
             text-align: center;
             color: {content_color};
             font-size: {content_font_size};
-            font-style: italic;
+            font-weight: 500;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            border: 0.125rem solid rgba(255,255,255,0.3); /* subtle border */
         }}
         
         .image-gallery {{
             display: flex;
             justify-content: space-between;
-            width: 100%;
+            flex: 1;
+            gap: 2rem; /* 32px - tạo gap giữa items */
+            align-items: stretch;
         }}
         
         .image-item {{
-            width: 30%;
-            text-align: center;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }}
+        
+        .image-item:hover {{
+            transform: translateY(-0.5rem); /* 8px - hover effect */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
         }}
         
         .image-container {{
             position: relative;
             width: 100%;
-            height: 12.5rem; /* THAY ĐỔI: 200px -> 12.5rem */
-            margin-bottom: 0.9375rem; /* THAY ĐỔİ: 15px -> 0.9375rem */
+            height: 18rem; /* 288px - tăng chiều cao */
+            margin-bottom: 1.5rem; /* 24px */
             overflow: hidden;
+            border-radius: 0.75rem; /* 12px */
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         }}
         
         .image-border {{
@@ -6574,22 +7953,31 @@ def generate_body_slide12(
             left: 0;
             width: 100%;
             height: 100%;
-            border-left: 0.5rem solid {accent_color}; /* THAY ĐỔI: 8px -> 0.5rem */
+            border: 0.25rem solid {accent_color}; /* 4px border all around */
+            border-radius: 0.75rem; /* 12px */
             box-sizing: border-box;
+            z-index: 1;
         }}
         
         .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 0.5rem; /* 8px */
+            transition: transform 0.3s ease;
+        }}
+        
+        .image-item:hover .image-container img {{
+            transform: scale(1.05); /* zoom effect on hover */
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 0.3125rem 0; /* THAY ĐỔI: 5px -> 0.3125rem */
-            font-style: italic;
+            margin: 0 0 1rem 0; /* 16px */
+            font-weight: 600;
             text-align: center;
+            color: {accent_color};
         }}
         
         .image-content {{
@@ -6597,12 +7985,54 @@ def generate_body_slide12(
             color: {content_color};
             margin: 0;
             text-align: center;
-            font-style: italic;
+            line-height: 1.6;
+            flex: 1; /* fill remaining space */
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {{
+            body {{
+                padding: 3rem 5rem;
+            }}
+            
+            .image-gallery {{
+                flex-direction: column;
+                gap: 1.5rem;
+            }}
+            
+            .image-container {{
+                height: 15rem;
+            }}
+        }}
+        
+        @media screen and (max-width: 50rem) {{
+            body {{
+                padding: 2rem 3rem;
+            }}
+            
+            .slide-inner-container {{
+                padding: 2rem 3rem;
+            }}
+            
+            .title-font-size {{
+                font-size: 2rem;
+            }}
+            
+            .content-font-size {{
+                font-size: 1rem;
+            }}
+            
+            .subtitle-font-size {{
+                font-size: 1.25rem;
+            }}
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -6651,6 +8081,7 @@ def generate_body_slide12(
 </html>"""
     
     return html_code
+# sửa biến trong tool
 
 
 
@@ -6688,9 +8119,9 @@ def generate_body_slide13(
     title_color="#333333",
     section_title_color="#ffffff",
     content_color="#333333",
-    main_title_font_size="1.625rem",   # THAY ĐỔI: 26px -> 1.625rem
-    section_title_font_size="0.9375rem",# THAY ĐỔI: 15px -> 0.9375rem
-    content_font_size="0.8125rem",    # THAY ĐỔI: 13px -> 0.8125rem
+    main_title_font_size="2.25rem",    # TĂNG: 1.625rem -> 2.25rem
+    section_title_font_size="1.125rem", # TĂNG: 0.9375rem -> 1.125rem
+    content_font_size="1rem",           # TĂNG: 0.8125rem -> 1rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide13/Default_1.png",  # Default image path
     # Layout parameters (đã chuyển sang rem)
@@ -6723,107 +8154,144 @@ def generate_body_slide13(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Two Column Icon Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Accent color cho toàn màn hình */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 62.5rem; /* 1000px */
-            height: 35rem; /* 560px */
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: {container_padding};
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 5rem; /* 40px 80px */
+            position: relative;
+            justify-content: space-between;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: {title_margin_bottom};
+            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
         }}
         
         .title-accent {{
-            width: 1.5625rem; /* 25px */
-            height: 1.5625rem; /* 25px */
+            width: 1.875rem; /* 30px */
+            height: 1.875rem; /* 30px */
             background-color: {accent_color};
-            margin-right: 0.75rem; /* 12px */
+            margin-right: 0.9375rem; /* 15px */
+            border-radius: 0.25rem; /* 4px - thêm border radius */
         }}
         
         .main-title {{
             font-size: {main_title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600; /* tăng font weight */
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
             width: 100%;
-            height: calc(100% - 4.375rem); /* 70px */
+            flex: 1; /* chiếm toàn bộ space còn lại */
+            gap: 2rem; /* 32px - tạo gap giữa columns */
         }}
         
         .left-column {{
-            width: {left_column_width};
+            flex: 3; /* tỷ lệ 3:2 */
             background-color: {left_bg_color};
-            padding: {left_column_padding};
-            box-sizing: border-box;
+            padding: 2rem; /* 32px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
             display: flex;
             flex-direction: column;
             justify-content: space-evenly;
         }}
         
         .right-column {{
-            width: {right_column_width};
+            flex: 2; /* tỷ lệ 3:2 */
             position: relative;
             overflow: hidden;
-            background-color: #f8f8f8;
+            background-color: rgba(255,255,255,0.7); /* light background */
+            border-radius: 0.5rem; /* 8px */
             display: flex;
             align-items: center;
             justify-content: center;
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
         }}
         
         .right-column img {{
             max-width: 90%;
             max-height: 90%;
             object-fit: contain;
+            border-radius: 0.5rem; /* 8px */
+            transition: transform 0.3s ease; /* thêm hover effect */
+        }}
+        
+        .right-column:hover img {{
+            transform: scale(1.05); /* zoom khi hover */
         }}
         
         .content-section {{
             display: flex;
             align-items: flex-start;
-            margin: {section_margin} 0;
+            margin: 0.75rem 0; /* 12px */
         }}
         
         .icon-circle {{
-            width: {icon_size};
-            height: {icon_size};
+            width: 3.5rem; /* 56px - tăng kích thước */
+            height: 3.5rem; /* 56px */
             border-radius: 50%;
-            background-color: white;
+            background: linear-gradient(135deg, white, #f8f9fa); /* gradient background */
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-right: {icon_margin_right};
+            margin-right: 1.25rem; /* 20px - tăng margin */
             flex-shrink: 0;
-            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.1); /* 2px 4px */
+            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2); /* tăng shadow */
+            border: 0.125rem solid rgba(255,255,255,0.8); /* subtle border */
+            transition: all 0.3s ease; /* smooth transition */
+        }}
+        
+        .icon-circle:hover {{
+            transform: translateY(-0.125rem) scale(1.05); /* hover effect */
+            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.25); /* tăng shadow khi hover */
         }}
         
         .icon-circle svg {{
             stroke: {accent_color};
+            width: 1.75rem; /* 28px - tăng kích thước icon */
+            height: 1.75rem; /* 28px */
+            filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1)); /* shadow cho icon */
         }}
         
         .section-content {{
             flex: 1;
-            padding-top: 0.125rem; /* 2px */
+            padding-top: 0.25rem; /* 4px */
         }}
         
         .section-content ul {{
@@ -6837,30 +8305,60 @@ def generate_body_slide13(
             color: {section_title_color};
             font-weight: bold;
             text-transform: uppercase;
-            letter-spacing: 0.03125rem; /* 0.5px */
-            margin-bottom: 0.375rem; /* 6px */
+            letter-spacing: 0.05rem; /* 0.8px - tăng letter spacing */
+            margin-bottom: 0.75rem; /* 12px - tăng margin */
+           
         }}
         
         .section-content li {{
             font-size: {content_font_size};
             color: {content_color};
-            margin: 0.1875rem 0; /* 3px */
-            padding-left: 0.75rem; /* 12px */
+            margin: 0.375rem 0; /* 6px - tăng margin */
+            padding: 0.375rem 0 0.375rem 1.25rem; /* 6px 0 6px 20px - thêm padding */
             position: relative;
-            line-height: 1.4;
+            line-height: 1.6; /* tăng line height */
+            
+        }}
+        
+        .section-content li:hover {{
+            background: rgba(255,255,255,0.2); /* hover effect */
+            transform: translateX(0.25rem); /* 4px - nhẹ nhàng shift khi hover */
         }}
         
         .section-content li:before {{
-            content: "•";
+            content: "▶"; /* đổi từ bullet thành arrow */
             position: absolute;
-            left: 0;
-            color: {content_color};
+            left: 0.5rem; /* 8px */
+            color: white;
+            font-weight: bold;
+            font-size: 0.75rem; /* 12px - nhỏ hơn text */
         }}
         
         .divider {{
             width: 100%;
-            border-top: 0.0625rem dashed rgba(255, 255, 255, 0.4); /* 1px */
-            margin: {divider_margin} 0;
+            height: 0.125rem; /* 2px */
+            background: linear-gradient(90deg, 
+                transparent 0%, 
+                rgba(255,255,255,0.3) 10%, 
+                rgba(255,255,255,0.8) 50%, 
+                rgba(255,255,255,0.3) 90%, 
+                transparent 100%); /* gradient divider */
+            margin: 1.5rem 0; /* 24px - tăng margin */
+            border-radius: 0.0625rem; /* 1px */
+            position: relative;
+        }}
+        
+        .divider::before {{
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 0.5rem; /* 8px */
+            height: 0.5rem; /* 8px */
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 0 0.125rem rgba(255,255,255,0.3); /* ring effect */
         }}
         
         .image-placeholder {{
@@ -6879,7 +8377,7 @@ def generate_body_slide13(
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -6939,9 +8437,8 @@ def generate_body_slide13(
 </html>"""
     
     return html_code
-
-
-
+# sửa biến trong tool
+# lỗi màu chữ li
 
 def generate_body_slide14(
     # Main parameters
@@ -6982,9 +8479,9 @@ def generate_body_slide14(
     title_color="#333333",
     subtitle_color="#6b9d34",
     content_color="#555555",
-    title_font_size="2rem",         # THAY ĐỔI: 32px -> 2rem
-    subtitle_font_size="1.125rem",  # THAY ĐỔI: 18px -> 1.125rem
-    content_font_size="0.875rem",   # THAY ĐỔI: 14px -> 0.875rem
+    title_font_size="2.5rem",         # TĂNG: 2rem -> 2.5rem
+    subtitle_font_size="1.375rem",   # TĂNG: 1.125rem -> 1.375rem
+    content_font_size="1.125rem",    # TĂNG: 0.875rem -> 1.125rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide14/Default_1.png",
     image_url_2="Image/generate_body_slide14/Default_2.png",
@@ -7004,50 +8501,49 @@ def generate_body_slide14(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Grid Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Accent color cho toàn màn hình */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 62.5rem; /* 1000px */
-            height: 35rem; /* 560px */
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-        }}
-        
-        .left-accent {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0.625rem; /* 10px */
-            height: 100%;
-            background-color: {accent_color};
-        }}
-        
-        .right-accent {{
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 0.625rem; /* 10px */
-            height: 100%;
-            background-color: {accent_color};
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 5rem; /* 40px 80px */
+            position: relative;
+            justify-content: space-between;
         }}
         
         .title-section {{
-            position: absolute;
-            top: 1.875rem; /* 30px */
-            left: 1.875rem; /* 30px */
             display: flex;
             align-items: center;
+            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
         }}
         
         .title-accent {{
@@ -7055,31 +8551,29 @@ def generate_body_slide14(
             height: 1.875rem; /* 30px */
             background-color: {accent_color};
             margin-right: 0.9375rem; /* 15px */
+            border-radius: 0.25rem; /* 4px - thêm border radius */
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600; /* tăng font weight */
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
-            position: absolute;
-            top: 6.25rem; /* 100px */
-            left: 1.875rem; /* 30px */
-            width: calc(100% - 3.75rem); /* 60px */
-            height: calc(100% - 8.125rem); /* 130px */
+            width: 100%;
+            flex: 1; /* chiếm toàn bộ space còn lại */
+            gap: 2.5rem; /* 40px - tạo gap giữa columns */
         }}
         
         .image-grid {{
-            width: 45%;
+            flex: 2; /* tỷ lệ 2:3 */
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 0.625rem; /* 10px */
+            gap: 0.75rem; /* 12px - tăng gap */
         }}
         
         .grid-image {{
@@ -7087,12 +8581,19 @@ def generate_body_slide14(
             height: 100%;
             overflow: hidden;
             position: relative;
+            border-radius: 0.5rem; /* 8px - thêm border radius */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
         }}
         
         .grid-image img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease; /* thêm hover effect */
+        }}
+        
+        .grid-image:hover img {{
+            transform: scale(1.05); /* zoom khi hover */
         }}
         
         .image-overlay {{
@@ -7100,61 +8601,62 @@ def generate_body_slide14(
             bottom: 0;
             left: 0;
             width: 100%;
-            height: 0.625rem; /* 10px */
+            height: 0.5rem; /* 8px - tăng thickness */
             background-color: {accent_color};
         }}
         
         .content-sections {{
-            width: 55%;
-            padding-left: 2.5rem; /* 40px */
+            flex: 3; /* tỷ lệ 2:3 */
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 1.25rem; /* 20px */
-            box-sizing: border-box; /* Thêm vào để padding không làm thay đổi kích thước */
+            gap: 1.5rem; /* 24px - tăng gap */
         }}
         
         .content-section {{
             display: flex;
             flex-direction: column;
+            padding: 1rem; /* 16px - thêm padding */
+            background-color: rgba(255,255,255,0.5); /* light background */
+            border-radius: 0.5rem; /* 8px */
+            /* bỏ border-left accent */
         }}
         
-        /* Cần thêm CSS cho nội dung được chèn vào */
+        /* CSS cho nội dung được chèn vào */
         .content-section ul {{
             list-style: none;
             padding: 0;
             margin: 0;
-            font-style: italic;
         }}
 
         .content-section ul li {{
             font-size: {content_font_size};
             color: {content_color};
-            line-height: 1.4;
-            padding-left: 1rem; /* Tạo khoảng trống cho bullet */
+            line-height: 1.5; /* tăng line height */
+            padding-left: 1rem; /* 16px */
             position: relative;
+            margin-bottom: 0.25rem; /* 4px - thêm space giữa items */
         }}
         
         .content-section ul li::before {{
             content: '•';
-            color: {subtitle_color};
+            color: {accent_color}; /* đổi màu bullet */
             position: absolute;
             left: 0;
+            font-weight: bold;
         }}
 
         /* Giả định dòng đầu tiên của <ul> là subtitle */
         .content-section ul {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin-bottom: 0.625rem; /* 10px */
+            font-weight: 600; /* tăng font weight */
+            margin-bottom: 0.75rem; /* 12px */
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <div class="left-accent"></div>
-        <div class="right-accent"></div>
-        
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -7205,8 +8707,7 @@ def generate_body_slide14(
     
     return html_code
 
-
-
+# sửa biến trong tool 
 
 def generate_body_slide15(
     # Main parameters
@@ -7234,9 +8735,9 @@ def generate_body_slide15(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2rem",         # THAY ĐỔI: 32px -> 2rem
-    subtitle_font_size="1.125rem",  # THAY ĐỔI: 18px -> 1.125rem
-    content_font_size="1rem",       # THAY ĐỔI: 16px -> 1rem
+    title_font_size="2.75rem",        # TĂNG: 2.5rem -> 2.75rem
+    subtitle_font_size="1.5rem",     # TĂNG: 1.375rem -> 1.5rem  
+    content_font_size="1.25rem",     # TĂNG: 1.125rem -> 1.25rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide15/Default_1.png",  # Default image path
 ):
@@ -7252,32 +8753,49 @@ def generate_body_slide15(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Image Right Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Accent color cho toàn màn hình */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 62.5rem; /* 1000px */
-            height: 35rem; /* 560px */
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: 2.5rem; /* 40px */
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 5rem; /* 40px 80px */
+            position: relative;
+            justify-content: space-between;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
+            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
         }}
         
         .title-accent {{
@@ -7285,46 +8803,55 @@ def generate_body_slide15(
             height: 1.875rem; /* 30px */
             background-color: {accent_color};
             margin-right: 0.9375rem; /* 15px */
+            border-radius: 0.25rem; /* 4px - thêm border radius */
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600; /* tăng font weight */
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
             width: 100%;
-            height: calc(100% - 5rem); /* 80px */
+            flex: 1; /* chiếm toàn bộ space còn lại */
+            gap: 2.5rem; /* 40px - tạo gap giữa columns */
         }}
         
         .left-column {{
-            width: 40%;
+            flex: 2.5; /* tăng từ 2 lên 2.5 để content có nhiều space hơn */
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 2.5rem; /* 40px */
+            gap: 2rem; /* 32px */
         }}
         
         .right-column {{
-            width: 60%;
-            padding-left: 2.5rem; /* 40px */
-            box-sizing: border-box;
+            flex: 2.5; /* giảm từ 3 xuống 2.5 để ảnh nhỏ hơn */
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }}
         
         .image-container {{
             width: 100%;
             height: 100%;
             overflow: hidden;
+            border-radius: 0.5rem; /* 8px - thêm border radius */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
         }}
         
         .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease; /* thêm hover effect */
+        }}
+        
+        .image-container:hover img {{
+            transform: scale(1.02); /* zoom nhẹ khi hover */
         }}
         
         .content-section {{
@@ -7334,10 +8861,10 @@ def generate_body_slide15(
         
         .subtitle-container {{
             background-color: {accent_color};
-            padding: 0.5rem 0.9375rem; /* 8px 15px */
-            display: inline-block;
-            margin-bottom: 0.625rem; /* 10px */
-            align-self: flex-start;
+            padding: 1rem 1.5rem; /* tăng từ 0.75rem 1.25rem để to hơn */
+            border-radius: 0.25rem; /* 4px - thêm border radius */
+            margin-bottom: 0.75rem; /* 12px */
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1); /* thêm shadow */
         }}
         
         /* CSS cho nội dung chèn vào */
@@ -7350,29 +8877,32 @@ def generate_body_slide15(
         .content-section ul li {{
             font-size: {content_font_size};
             color: {content_color};
-            line-height: 1.5;
-            padding-left: 0.9375rem; /* 15px */
+            line-height: 1.6; /* tăng line height */
+            padding-left: 1rem; /* 16px */
             position: relative;
+            margin-bottom: 0.25rem; /* 4px - thêm space giữa items */
         }}
         
         .content-section ul li::before {{
             content: '•';
-            color: {content_color};
+            color: {accent_color}; /* đổi màu bullet */
             position: absolute;
             left: 0;
+            font-weight: bold;
         }}
 
         /* Giả định dòng đầu tiên của <ul> là subtitle */
         .content-section ul {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            font-weight: bold;
+            font-weight: 600; /* tăng font weight */
+            margin-bottom: 0.5rem; /* 8px */
         }}
 
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -7410,6 +8940,7 @@ def generate_body_slide15(
 </html>"""
     
     return html_code
+# sửa biến trong tool 
 
 
 
@@ -7430,9 +8961,9 @@ def generate_body_slide16(
     subtitle_color="#333333",
     content_color="#4a90a0",
     divider_color="#d5e8b9",
-    title_font_size="2rem",         # THAY ĐỔI: 32px -> 2rem
-    subtitle_font_size="1.75rem",   # THAY ĐỔI: 28px -> 1.75rem
-    content_font_size="1rem",       # THAY ĐỔI: 16px -> 1rem
+    title_font_size="2.5rem",         # TĂNG: 2rem -> 2.5rem
+    subtitle_font_size="2rem",        # TĂNG: 1.75rem -> 2rem
+    content_font_size="1.125rem",     # TĂNG: 1rem -> 1.125rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide16/Default_1.png",
     image_url_2="Image/generate_body_slide16/Default_2.png",
@@ -7441,7 +8972,7 @@ def generate_body_slide16(
 ):
     """
     Generates an HTML slide with three vertical images on the left,
-    and content with subtitle on the right. All size parameters are now in REM.
+    and content with subtitle on the right. Full viewport design with tran viền styling.
     """
     
     html_code = f"""<!DOCTYPE html>
@@ -7451,32 +8982,49 @@ def generate_body_slide16(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Vertical Images Slide</title>
     <style>
-        body {{
+        * {{
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }}
+        
+        body {{
             font-family: {font_family};
-            background-color: #f5f5f5;
+            background-color: {accent_color}; /* Accent color cho toàn màn hình */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        .slide-container {{
-            width: 62.5rem; /* 1000px */
-            height: 35rem; /* 560px */
-            position: relative;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {main_bg_color};
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            padding: 2.5rem; /* 40px */
-            box-sizing: border-box;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem 5rem; /* 40px 80px */
+            position: relative;
+            justify-content: space-between;
         }}
         
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
+            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
         }}
         
         .title-accent {{
@@ -7484,75 +9032,84 @@ def generate_body_slide16(
             height: 1.875rem; /* 30px */
             background-color: {accent_color};
             margin-right: 0.9375rem; /* 15px */
+            border-radius: 0.25rem; /* 4px - thêm border radius */
         }}
         
         .main-title {{
             font-size: {title_font_size};
             color: {title_color};
-            font-weight: normal;
-            font-style: italic;
+            font-weight: 600; /* tăng font weight */
             margin: 0;
         }}
         
         .content-layout {{
             display: flex;
             width: 100%;
-            height: calc(100% - 5rem); /* 80px */
+            flex: 1; /* chiếm toàn bộ space còn lại */
+            gap: 2.5rem; /* 40px - tạo gap giữa columns */
         }}
         
         .left-column {{
-            width: 40%;
+            flex: 2; /* tỷ lệ 2:3 thay vì 40% */
             display: flex;
             flex-direction: column;
-            gap: 0.625rem; /* 10px */
+            gap: 0.75rem; /* 12px - tăng gap giữa images */
         }}
         
         .image-container {{
-            width: 100%;
-            height: calc(33.33% - 0.4375rem); /* 7px */
+            flex: 1; /* chia đều cho 3 images */
             overflow: hidden;
+            border-radius: 0.5rem; /* 8px - thêm border radius */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
         }}
         
         .image-container img {{
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease; /* thêm hover effect */
+        }}
+        
+        .image-container:hover img {{
+            transform: scale(1.05); /* zoom khi hover */
         }}
         
         .right-column {{
-            width: 60%;
-            padding-left: 2.5rem; /* 40px */
-            box-sizing: border-box;
+            flex: 3; /* tỷ lệ 2:3 */
             display: flex;
             flex-direction: column;
+            justify-content: flex-start;
         }}
         
         .subtitle {{
             font-size: {subtitle_font_size};
             color: {subtitle_color};
-            margin: 0 0 0.9375rem 0; /* 15px */
-            font-weight: normal;
-            font-style: italic;
+            margin: 0 0 1rem 0; /* 16px */
+            font-weight: 600; /* tăng font weight */
         }}
         
         .divider {{
             width: 100%;
-            height: 0.1875rem; /* 3px */
+            height: 0.25rem; /* 4px - tăng thickness */
             background-color: {divider_color};
-            margin-bottom: 1.875rem; /* 30px */
+            margin-bottom: 2rem; /* 32px */
+            border-radius: 0.125rem; /* 2px */
         }}
         
         .content {{
             font-size: {content_font_size};
             color: {content_color};
-            margin: 0 0 1.25rem 0; /* 20px */
+            margin: 0 0 1.5rem 0; /* 24px */
             line-height: 1.6;
-            font-style: italic;
+        }}
+        
+        .content:last-child {{
+            margin-bottom: 0; /* bỏ margin cho content cuối */
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -7587,223 +9144,7 @@ def generate_body_slide16(
 </html>"""
     
     return html_code
-
-
-
-
-def generate_body_slide17(
-    main_title="Main title",
-    left_title="Subtitle 1",
-    right_title="Subtitle 2",
-    left_text="content1",
-    right_text="content2",
-    footer_text="summary text",
-    circle_colors=["#e1eff2", "#8cbeca", "#e1eff2"],
-    
-    # Style parameters (đã chuyển sang rem)
-    main_title_font_size="2.25rem",    # THAY ĐỔI: 36px -> 2.25rem
-    section_title_font_size="1.5rem",   # THAY ĐỔI: 24px -> 1.5rem
-    text_font_size="1rem",        # THAY ĐỔI: 16px -> 1rem
-    footer_font_size="0.875rem",  # THAY ĐỔI: 14px -> 0.875rem
-    
-    title_color="#555555",
-    text_color="#555555",
-    circle_text_color="#ffffff",
-    background_color="#ffffff",
-    accent_color="#a2c4c9",
-    font_family="Arial, sans-serif",
-):
-    """
-    Generates an HTML slide with three project circles.
-    All size parameters are now in REM.
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Circles Slide</title>
-    <style>
-        body {{
-            margin: 0;
-            padding: 0;
-            font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-container {{
-            width: 62.5rem; /* 1000px */
-            height: 35rem; /* 560px */
-            position: relative;
-            background-color: {background_color};
-        }}
-        
-        /* Corner decorations */
-        .corner-tl, .corner-tr, .corner-bl, .corner-br {{
-            position: absolute;
-            width: 18.75rem; /* 300px */
-            height: 18.75rem; /* 300px */
-            background-color: {accent_color};
-            z-index: 0;
-        }}
-        
-        .corner-tl {{ top: 0; left: 0; clip-path: polygon(0 0, 100% 0, 0 100%); }}
-        .corner-tr {{ top: 0; right: 0; clip-path: polygon(100% 0, 0 0, 100% 100%); }}
-        .corner-bl {{ bottom: 0; left: 0; clip-path: polygon(0 100%, 100% 100%, 0 0); }}
-        .corner-br {{ bottom: 0; right: 0; clip-path: polygon(100% 100%, 0 100%, 100% 0); }}
-        
-        .content {{
-            position: absolute;
-            top: 1.875rem; /* 30px */
-            left: 1.875rem; /* 30px */
-            right: 1.875rem; /* 30px */
-            bottom: 1.875rem; /* 30px */
-            background-color: {background_color};
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 2.5rem; /* 40px */
-            box-sizing: border-box;
-        }}
-        
-        .main-title {{
-            font-size: {main_title_font_size};
-            color: {title_color};
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 2.5rem; /* 40px */
-        }}
-        
-        .content-container {{
-            display: flex;
-            flex: 1;
-            margin-bottom: 1.875rem; /* 30px */
-        }}
-        
-        .text-column {{
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 0 1.25rem; /* 20px */
-        }}
-        
-        .left-column {{ text-align: right; }}
-        .right-column {{ text-align: left; }}
-        
-        .circles-column {{
-            flex: 1;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }}
-        
-        .circle {{
-            width: 9.375rem; /* 150px */
-            height: 9.375rem; /* 150px */
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-            color: {circle_text_color};
-            font-weight: bold;
-            font-size: 1.25rem; /* 20px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.1); /* 4px 8px */
-        }}
-        
-        .circle-1 {{
-            background-color: {circle_colors[0]};
-            left: 50%;
-            top: 0;
-            transform: translateX(-100%);
-            z-index: 1;
-        }}
-        
-        .circle-2 {{
-            background-color: {circle_colors[1]};
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -30%);
-            width: 11.25rem; /* 180px */
-            height: 11.25rem; /* 180px */
-            z-index: 3;
-            font-size: 1.5rem; /* 24px */
-        }}
-        
-        .circle-3 {{
-            background-color: {circle_colors[2]};
-            left: 50%;
-            top: 0;
-            transform: translateX(0%);
-            z-index: 2;
-        }}
-        
-        .section-title {{
-            font-size: {section_title_font_size};
-            color: {title_color};
-            margin-top: 0;
-            margin-bottom: 0.9375rem; /* 15px */
-        }}
-        
-        .section-text {{
-            font-size: {text_font_size};
-            color: {text_color};
-            line-height: 1.5;
-            margin: 0;
-        }}
-        
-        .footer {{
-            font-size: {footer_font_size};
-            color: {text_color};
-            text-align: center;
-            line-height: 1.5;
-            margin: 0;
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <!-- Corner decorations for alternating border -->
-        <div class="corner-tl"></div>
-        <div class="corner-tr"></div>
-        <div class="corner-bl"></div>
-        <div class="corner-br"></div>
-        
-        <div class="content">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="content-container">
-                <div class="text-column left-column">
-                    <h2 class="section-title">{left_title}</h2>
-                    <p class="section-text">{left_text}</p>
-                </div>
-                
-                <div class="circles-column">
-                    <div class="circle circle-1"></div>
-                    <div class="circle circle-2"></div>
-                    <div class="circle circle-3"></div>
-                </div>
-                
-                <div class="text-column right-column">
-                    <h2 class="section-title">{right_title}</h2>
-                    <p class="section-text">{right_text}</p>
-                </div>
-            </div>
-            
-            <p class="footer">{footer_text}</p>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
+# sửa biến trong tool 
 
 
 
@@ -7818,9 +9159,10 @@ def generate_body_slide18(
     right_icon="scales",  # Options: "scales", "custom"
     custom_left_icon="",  # Custom SVG code if left_icon is "custom"
     custom_right_icon="",  # Custom SVG code if right_icon is "custom"
-    main_title_font_size="36px",
-    column_title_font_size="28px",
-    text_font_size="16px",
+    # Style parameters (đã chuyển sang rem cho consistency)
+    main_title_font_size="3rem",          # THAY ĐỔI: 48px -> 3rem
+    column_title_font_size="2.25rem",     # THAY ĐỔI: 36px -> 2.25rem
+    text_font_size="1.375rem",            # THAY ĐỔI: 22px -> 1.375rem
     title_color="#555555",
     text_color="#555555",
     icon_color="#a2c4c9",
@@ -7890,81 +9232,87 @@ def generate_body_slide18(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparison Slide</title>
     <style>
-        body {{
-            margin: 0;
-            padding: 0;
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; }}
+        body, html {{
+            height: 100vh;
+            width: 100vw;
             font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-container {{
-            width: 1000px;
-            height: 560px;
-            position: relative;
+            background-color: {accent_color};
+            color: {text_color};
             overflow: hidden;
         }}
-        
-        /* Background with accent color */
-        .slide-background {{
-            position: absolute;
-            top: 0;
-            left: 0;
+
+        .slide-container {{
             width: 100%;
             height: 100%;
+            position: relative;
             background-color: {accent_color};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }}
-        
-        /* Main content area with white background */
-        .slide-content {{
-            position: absolute;
-            top: 30px;
-            left: 30px;
-            right: 30px;
-            bottom: 30px;
+
+        .slide-inner-container {{
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: {background_color};
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
             display: flex;
             flex-direction: column;
-            padding: 40px;
-            box-sizing: border-box;
+            padding: 3.75rem 5rem; /* 60px 80px */
+            position: relative;
+            justify-content: center;
         }}
         
         .main-title {{
             font-size: {main_title_font_size};
+            font-weight: 700;
             color: {title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 40px;
+            margin-bottom: 3rem; /* 48px */
+            line-height: 1.2;
         }}
         
         .columns-container {{
             display: flex;
             flex: 1;
-            position: relative;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem; /* 32px */
+            height: 100%;
+            max-width: 100%;
         }}
         
         .column {{
-            flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0 30px;
+            justify-content: center;
+            flex: 1;
+            padding: 1rem 2rem;
+            max-width: calc(50% - 1rem);
         }}
         
         .icon-container {{
-            margin-bottom: 30px;
+            margin-bottom: 1.5rem; /* 24px */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 5rem; /* 80px */
         }}
         
         .column-title {{
             font-size: {column_title_font_size};
+            font-weight: 600;
             color: {title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 20px;
+            margin: 0 0 1rem 0; /* 16px */
+            line-height: 1.3;
         }}
         
         .column-text {{
@@ -7972,26 +9320,23 @@ def generate_body_slide18(
             color: {text_color};
             text-align: center;
             line-height: 1.5;
+            max-width: 100%;
         }}
         
         .divider {{
-            position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 2px;
-            border-left: 2px dashed {divider_color};
-            transform: translateX(-50%);
+            width: 0.125rem; /* 2px */
+            height: 60%;
+            background: {divider_color};
+            border: none;
+            align-self: center;
+            opacity: 0.4;
+            flex-shrink: 0;
         }}
     </style>
 </head>
 <body>
     <div class="slide-container">
-        <!-- Background with accent color -->
-        <div class="slide-background"></div>
-        
-        <!-- Main content area with white background -->
-        <div class="slide-content">
+        <div class="slide-inner-container">
             <h1 class="main-title">{main_title}</h1>
             
             <div class="columns-container">
@@ -8019,8 +9364,7 @@ def generate_body_slide18(
 </html>"""
     
     return html_code
-
-
+# sửa biến trong tool 
 
 
 def generate_body_slide19(
@@ -8036,9 +9380,9 @@ def generate_body_slide19(
         "Presentations are communication tools that can be used as speeches, reports, and more."
     ],
     # Style parameters (đã chuyển sang rem)
-    main_title_font_size="2.25rem",     # THAY ĐỔI: 36px -> 2.25rem
-    column_title_font_size="1.5rem",     # THAY ĐỔI: 24px -> 1.5rem
-    column_text_font_size="1rem",        # THAY ĐỔI: 16px -> 1rem
+    main_title_font_size="2.75rem",     # THAY ĐỔI: 2.25rem -> 2.75rem (tăng từ 36px lên 44px)
+    column_title_font_size="1.75rem",     # THAY ĐỔI: 1.5rem -> 1.75rem (tăng từ 24px lên 28px)
+    column_text_font_size="1.125rem",        # THAY ĐỔI: 1rem -> 1.125rem (tăng từ 16px lên 18px)
     
     main_title_color="#555555",
     left_bg_color="#a2c4c9",
@@ -8056,11 +9400,10 @@ def generate_body_slide19(
     # Create left column sections HTML
     left_sections_html = ""
     for i, (title, text) in enumerate(zip(left_column_titles, left_column_texts)):
-        # Chuyển đổi px sang rem trong inline styles
         left_sections_html += f"""
-        <div class="left-section" style="margin-bottom: 1.875rem;">
-            <h2 style="font-size: {column_title_font_size}; color: {left_text_color}; margin-top: 0; margin-bottom: 0.625rem;">{title}</h2>
-            <p style="font-size: {column_text_font_size}; color: {left_text_color}; margin: 0;">{text}</p>
+        <div class="left-section">
+            <h2>{title}</h2>
+            <p>{text}</p>
         </div>
         """
     
@@ -8068,13 +9411,13 @@ def generate_body_slide19(
     right_sections_html = ""
     icons = [
         # Document with pencil icon
-        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
             <polyline points="14 2 14 8 20 8"></polyline>
             <path d="M16 13l-4 4h-4v-4l8-8z"></path>
         </svg>""",
         # Magnifying glass icon
-        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="48" height="48" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
         </svg>"""
@@ -8082,18 +9425,15 @@ def generate_body_slide19(
     
     for i, (title, text) in enumerate(zip(right_column_titles, right_column_texts)):
         icon = icons[i % len(icons)].replace("ICON_COLOR", icon_color)
-        # Chuyển đổi px sang rem trong inline styles
         right_sections_html += f"""
-        <div class="right-section" style="display: flex; align-items: flex-start; margin-bottom: 1.875rem;">
-            <div style="margin-right: 0.9375rem; flex-shrink: 0;">{icon}</div>
-            <div>
-                <h2 style="font-size: {column_title_font_size}; color: {right_title_color}; margin-top: 0; margin-bottom: 0.625rem;">{title}</h2>
-                <p style="font-size: {column_text_font_size}; color: {right_text_color}; margin: 0;">{text}</p>
-            </div>
+        <div class="right-section-{i}">
+            <div class="icon-{i}">{icon}</div>
+            <h2 class="right-title-{i}">{title}</h2>
+            <p class="right-text-{i}">{text}</p>
         </div>
         """
     
-    # Create the HTML content with CSS
+    # Create the HTML content with CSS - Flat absolute positioning
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -8101,84 +9441,188 @@ def generate_body_slide19(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Two Column Slide</title>
     <style>
-        body {{
-            margin: 0;
-            padding: 0;
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-outer-container {{
-            width: 62.5rem; /* 1000px */
-            height: 35rem; /* 560px */
             background-color: {border_color};
-            padding: 1.875rem; /* 30px */
-            box-sizing: border-box;
+            color: {right_text_color};
+            overflow: hidden;
         }}
-        
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
+
+        .slide-background {{
+            position: absolute;
+            left: 120px;
+            top: 80px;
+            width: 1680px;
+            height: 920px;
             background-color: #ffffff;
-            display: flex;
-            flex-direction: column;
-            padding: 2.5rem; /* 40px */
-            box-sizing: border-box;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }}
         
         .main-title {{
+            position: absolute;
+            left: 200px;
+            top: 140px;
+            width: 1520px;
             font-size: {main_title_font_size};
+            font-weight: 700;
             color: {main_title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 2.5rem; /* 40px */
-        }}
-        
-        .columns-container {{
-            display: flex;
-            flex: 1;
-            gap: 1.875rem; /* 30px */
+            line-height: 1.2;
         }}
         
         .left-column {{
-            flex: 1;
+            position: absolute;
+            left: 200px;
+            top: 243px;
+            width: 730px;
+            height: 717px;
             background-color: {left_bg_color};
-            padding: 1.875rem; /* 30px */
+            border-radius: 8px;
+            padding: 32px;
         }}
         
-        .right-column {{
-            flex: 1;
-            background-color: #ffffff;
-            border: 0.0625rem solid {border_color}; /* 1px */
-            padding: 1.875rem; /* 30px */
+        .left-section {{
+            margin-bottom: 24px;
+        }}
+        
+        .left-section:last-child {{
+            margin-bottom: 0;
+        }}
+        
+        .left-section h2 {{
+            font-size: {column_title_font_size};
+            font-weight: 600;
+            color: {left_text_color};
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }}
+        
+        .left-section p {{
+            font-size: {column_text_font_size};
+            color: {left_text_color};
+            line-height: 1.5;
+            opacity: 0.95;
+        }}
+        
+        .right-section-0 {{
+            position: absolute;
+            left: 990px;
+            top: 243px;
+            width: 730px;
+            height: 340px;
+        }}
+        
+        .icon-0 {{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 64px;
+            height: 64px;
+            background-color: rgba(162, 196, 201, 0.1);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .icon-0 svg {{
+            width: 48px;
+            height: 48px;
+        }}
+        
+        .right-title-0 {{
+            position: absolute;
+            left: 88px;
+            top: 0;
+            width: 642px;
+            font-size: {column_title_font_size};
+            font-weight: 600;
+            color: {right_title_color};
+            line-height: 1.3;
+        }}
+        
+        .right-text-0 {{
+            position: absolute;
+            left: 88px;
+            top: 50px;
+            width: 642px;
+            font-size: {column_text_font_size};
+            color: {right_text_color};
+            line-height: 1.5;
+        }}
+        
+        .right-section-1 {{
+            position: absolute;
+            left: 990px;
+            top: 620px;
+            width: 730px;
+            height: 340px;
+        }}
+        
+        .icon-1 {{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 64px;
+            height: 64px;
+            background-color: rgba(162, 196, 201, 0.1);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .icon-1 svg {{
+            width: 48px;
+            height: 48px;
+        }}
+        
+        .right-title-1 {{
+            position: absolute;
+            left: 88px;
+            top: 0;
+            width: 642px;
+            font-size: {column_title_font_size};
+            font-weight: 600;
+            color: {right_title_color};
+            line-height: 1.3;
+        }}
+        
+        .right-text-1 {{
+            position: absolute;
+            left: 88px;
+            top: 50px;
+            width: 642px;
+            font-size: {column_text_font_size};
+            color: {right_text_color};
+            line-height: 1.5;
         }}
     </style>
 </head>
 <body>
-    <div class="slide-outer-container">
-        <div class="slide-inner-container">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="columns-container">
-                <div class="left-column">
-                    {left_sections_html}
-                </div>
-                
-                <div class="right-column">
-                    {right_sections_html}
-                </div>
-            </div>
-        </div>
+    <!-- Background layer -->
+    <div class="slide-background"></div>
+    
+    <!-- Main title -->
+    <h1 class="main-title">{main_title}</h1>
+    
+    <!-- Left column -->
+    <div class="left-column">
+        {left_sections_html}
     </div>
+    
+    <!-- Right column sections -->
+    {right_sections_html}
 </body>
 </html>"""
     
     return html_code
-
+# sửa biến trong tool 
 
 
 
@@ -8193,9 +9637,9 @@ def generate_body_slide20(
     custom_left_icon="",
     custom_right_icon="",
     # Style parameters (đã chuyển sang rem)
-    main_title_font_size="2.25rem",    # THAY ĐỔI: 36px -> 2.25rem
-    column_title_font_size="1.75rem",   # THAY ĐỔI: 28px -> 1.75rem
-    text_font_size="1rem",        # THAY ĐỔI: 16px -> 1rem
+    main_title_font_size="3.25rem",    # THAY ĐỔI: 2.75rem -> 3.25rem (tăng từ 44px lên 52px)
+    column_title_font_size="2rem",   # THAY ĐỔI: 1.75rem -> 2rem (tăng từ 28px lên 32px)
+    text_font_size="1.25rem",        # THAY ĐỔI: 1.125rem -> 1.25rem (tăng từ 18px lên 20px)
     
     title_color="#555555",
     text_color="#555555",
@@ -8210,12 +9654,12 @@ def generate_body_slide20(
     """
     
     # Define the SVG icons
-    # Kích thước icon cũng được chuyển đổi sang rem (70 -> 4.375rem)
-    gavel_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="4.375rem" height="4.375rem" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    # Kích thước icon cũng được chuyển đổi sang rem và tăng lên
+    gavel_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 13L3 2M14 13L9 18M14 13L16 11L20 15L18 17M14 6L17 9M9 1L3 7M20 21H4"/>
     </svg>"""
     
-    scales_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="4.375rem" height="4.375rem" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    scales_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3v18M8 21h8M7 8l-4 4M17 8l4 4M5 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0M15 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/>
         <path d="M5 12h14"/>
     </svg>"""
@@ -8242,134 +9686,177 @@ def generate_body_slide20(
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Comparison Slide</title>
     <style>
-        body {{
-            margin: 0;
-            padding: 0;
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
-            background-color: #f5f5f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }}
-        
-        .slide-container {{
-            width: 62.5rem; /* 1000px */
-            height: 35rem; /* 560px */
-            position: relative;
+            background-color: {accent_color};
+            color: {text_color};
             overflow: hidden;
         }}
-        
+
         .slide-background {{
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: {accent_color};
-        }}
-        
-        .slide-content {{
-            position: absolute;
-            top: 1.875rem; /* 30px */
-            left: 1.875rem; /* 30px */
-            right: 1.875rem; /* 30px */
-            bottom: 1.875rem; /* 30px */
+            left: 120px;
+            top: 80px;
+            width: 1680px;
+            height: 920px;
             background-color: {background_color};
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* 5px 15px */
-            display: flex;
-            flex-direction: column;
-            padding: 2.5rem; /* 40px */
-            box-sizing: border-box;
+            border-radius: 16px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
         }}
         
         .main-title {{
+            position: absolute;
+            left: 200px;
+            top: 140px;
+            width: 1520px;
             font-size: {main_title_font_size};
+            font-weight: 700;
             color: {title_color};
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 2.5rem; /* 40px */
+            line-height: 1.2;
         }}
         
-        .columns-container {{
-            display: flex;
-            flex: 1;
-            position: relative;
-        }}
-        
-        .column {{
-            flex: 1;
+        .left-column {{
+            position: absolute;
+            left: 260px;
+            top: 280px;
+            width: 650px;
+            height: 620px;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 0 1.875rem; /* 30px */
-        }}
-        
-        .icon-container {{
-            margin-bottom: 1.875rem; /* 30px */
-        }}
-        
-        .column-title {{
-            font-size: {column_title_font_size};
-            color: {title_color};
+            justify-content: flex-start;
+            padding: 0 32px;
             text-align: center;
-            margin-top: 0;
-            margin-bottom: 1.25rem; /* 20px */
         }}
         
-        .column-text {{
-            font-size: {text_font_size};
-            color: {text_color};
+        .right-column {{
+            position: absolute;
+            left: 1010px;
+            top: 280px;
+            width: 650px;
+            height: 620px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 0 32px;
             text-align: center;
-            line-height: 1.5;
         }}
         
         .divider {{
             position: absolute;
-            top: 0;
-            bottom: 0;
-            left: 50%;
-            width: 0.125rem; /* 2px */
-            border-left: 0.125rem dashed {divider_color}; /* 2px */
-            transform: translateX(-50%);
+            left: 960px;
+            top: 290px;
+            width: 2px;
+            height: 600px;
+            background-color: {divider_color};
+            opacity: 0.3;
+        }}
+        
+        .left-icon {{
+            width: 80px;
+            height: 80px;
+            background-color: rgba(162, 196, 201, 0.1);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }}
+        
+        .left-icon svg {{
+            width: 64px;
+            height: 64px;
+        }}
+        
+        .right-icon {{
+            width: 80px;
+            height: 80px;
+            background-color: rgba(162, 196, 201, 0.1);
+            border-radius: 16px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 20px;
+        }}
+        
+        .right-icon svg {{
+            width: 64px;
+            height: 64px;
+        }}
+        
+        .left-title {{
+            font-size: {column_title_font_size};
+            font-weight: 600;
+            color: {title_color};
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }}
+        
+        .right-title {{
+            font-size: {column_title_font_size};
+            font-weight: 600;
+            color: {title_color};
+            text-align: center;
+            margin-bottom: 16px;
+            line-height: 1.3;
+        }}
+        
+        .left-text {{
+            font-size: {text_font_size};
+            color: {text_color};
+            text-align: center;
+            line-height: 1.6;
+            max-width: 90%;
+        }}
+        
+        .right-text {{
+            font-size: {text_font_size};
+            color: {text_color};
+            text-align: center;
+            line-height: 1.6;
+            max-width: 90%;
         }}
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <!-- Background with accent color -->
-        <div class="slide-background"></div>
-        
-        <!-- Main content area with white background -->
-        <div class="slide-content">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="columns-container">
-                <div class="column">
-                    <div class="icon-container">
-                        {left_icon_html}
-                    </div>
-                    <h2 class="column-title">{left_title}</h2>
-                    <p class="column-text">{left_text}</p>
-                </div>
-                
-                <div class="divider"></div>
-                
-                <div class="column">
-                    <div class="icon-container">
-                        {right_icon_html}
-                    </div>
-                    <h2 class="column-title">{right_title}</h2>
-                    <p class="column-text">{right_text}</p>
-                </div>
-            </div>
+    <!-- Background layer -->
+    <div class="slide-background"></div>
+    
+    <!-- Main title -->
+    <h1 class="main-title">{main_title}</h1>
+    
+    <!-- Divider -->
+    <div class="divider"></div>
+    
+    <!-- Left column -->
+    <div class="left-column">
+        <div class="left-icon">
+            {left_icon_html}
         </div>
+        <h2 class="left-title">{left_title}</h2>
+        <p class="left-text">{left_text}</p>
+    </div>
+    
+    <!-- Right column -->
+    <div class="right-column">
+        <div class="right-icon">
+            {right_icon_html}
+        </div>
+        <h2 class="right-title">{right_title}</h2>
+        <p class="right-text">{right_text}</p>
     </div>
 </body>
 </html>"""
     
     return html_code
-
+# sửa biến trong tool 
 
 
 def generate_strategy_slide(
@@ -8418,93 +9905,17 @@ def generate_strategy_slide(
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            overflow: hidden;
-            background-color: {content_bg_color};
-        }}
-        
-        .slide-container {{
-            height: 100vh;
-            width: 100vw;
-            display: flex;
-            flex-direction: column;
-        }}
-        
-        .header-section {{
-            background: {header_bg_color};
-            /* ĐÃ SỬA ĐỔI: Giảm padding để thu nhỏ header */
-            padding: 2.5rem 3rem; 
-            text-align: center;
-        }}
-        
-        .main-title {{
-            /* ĐÃ SỬA ĐỔI: Font nhỏ hơn đáng kể */
-            font-size: clamp(1.8rem, 4vw, 2.2rem);
-            color: {title_color};
-            font-weight: 700;
-            margin-bottom: 0.75rem;
-        }}
-        
-        .subtitle {{
-            /* ĐÃ SỬA ĐỔI: Font nhỏ hơn */
-            font-size: 1.1rem;
-            color: {subtitle_color};
-            line-height: 1.5;
-            max-width: 50rem;
-            margin: 0 auto;
-        }}
-        
-        .content-section {{
-            flex: 1; /* Chiếm phần lớn không gian còn lại */
-            padding: 4rem; /* Tăng padding để tạo không gian */
-            display: flex;
-            gap: 4rem; /* Tăng khoảng cách giữa các cột */
-            align-items: stretch;
-        }}
-        
-        .column {{
-            flex: 1;
-            text-align: center;
-            background: {card_bg_color};
-            /* ĐÃ SỬA ĐỔI: Tăng padding bên trong thẻ */
-            padding: 3rem; 
-            border-radius: 1.25rem;
-            border: 1px solid #E5E7EB;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }}
-        
-        .column-icon {{
-            color: {accent_color};
-            margin-bottom: 2rem;
-        }}
-        
-        .column-title {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn */
-            font-size: 1.75rem;
-            color: {title_color};
-            font-weight: 700;
-            margin-bottom: 1.5rem;
-        }}
-        
-        .column-content {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn và giãn dòng tốt hơn */
-            font-size: 1.2rem;
-            color: {subtitle_color};
-            line-height: 1.8;
-            text-align: left;
-        }}
-        
-        @media (max-width: 48rem) {{
-            .header-section {{ padding: 2rem 1.5rem; }}
-            .content-section {{ flex-direction: column; padding: 2.5rem 1.5rem; gap: 2rem; }}
-        }}
+        body, html {{ height: 100vh; width: 100vw; font-family: {font_family}; overflow: hidden; background-color: {content_bg_color}; }}
+        .slide-container {{ width: 100%; height: 100%; display: flex; flex-direction: column; }}
+        .header-section {{ background: {header_bg_color}; padding: 2.5rem 3rem; text-align: center; }}
+        .main-title {{ font-size: clamp(1.8rem, 4vw, 2.2rem); color: {title_color}; font-weight: 700; margin-bottom: 0.75rem; }}
+        .subtitle {{ font-size: 1.1rem; color: {subtitle_color}; line-height: 1.5; text-align: center; width: 100%; }}
+        .content-section {{ flex: 1; padding: 4rem; display: flex; gap: 4rem; align-items: stretch; }}
+        .column {{ flex: 1; text-align: center; background: {card_bg_color}; padding: 3rem; border-radius: 1.25rem; border: 1px solid #E5E7EB; box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05); display: flex; flex-direction: column; align-items: center; }}
+        .column-icon {{ color: {accent_color}; margin-bottom: 2rem; }}
+        .column-title {{ font-size: 1.75rem; color: {title_color}; font-weight: 700; margin-bottom: 1.5rem; }}
+        .column-content {{ font-size: 1.2rem; color: {subtitle_color}; line-height: 1.8; text-align: left; }}
+        @media (max-width: 48rem) {{ .header-section {{ padding: 2rem 1.5rem; }} .content-section {{ flex-direction: column; padding: 2.5rem 1.5rem; gap: 2rem; }} }}
     </style>
 </head>
 <body>
@@ -8513,14 +9924,12 @@ def generate_strategy_slide(
             <h1 class="main-title">{main_title}</h1>
             <p class="subtitle">{subtitle}</p>
         </div>
-        
         <div class="content-section">
             <div class="column">
                 <div class="column-icon">{icon_left_svg}</div>
                 <h2 class="column-title">{left_column_title}</h2>
                 <p class="column-content">{left_column_content}</p>
             </div>
-            
             <div class="column">
                 <div class="column-icon">{icon_right_svg}</div>
                 <h2 class="column-title">{right_column_title}</h2>
@@ -8568,7 +9977,7 @@ def generate_main_points_slide(
             height: 100vh;
             width: 100vw;
             font-family: {font_family};
-            background: linear-gradient(135deg, #4c1d95 0%, #5b21b6 25%, #7c3aed 50%, #8b5cf6 75%, #a78bfa 100%);
+            background-color: #111827;
             overflow: hidden;
             position: relative;
         }}
@@ -9007,12 +10416,11 @@ def generate_elegant_points_slide(
     accent_color="#B99C6B"
 ):
     """
-    Generates an elegant, STATIC points slide with an adjusted layout.
-    Hover effects have been removed.
+    Generates an elegant points slide optimized for 1920x1080 screenshots
+    with an adjusted layout that emphasizes the content grid over the title.
     """
 
     icons_svg = [
-        # Icons remain the same
         """<svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2A7 7 0 0 0 5 9c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74A7 7 0 0 0 12 2M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9z"></path></svg>""",
         """<svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8m0-14a6 6 0 1 0 6 6a6 6 0 0 0-6-6m0 10a4 4 0 1 1 4-4a4 4 0 0 1-4 4m0-6a2 2 0 1 0 2 2a2 2 0 0 0-2-2"></path></svg>""",
         """<svg class="point-icon" viewBox="0 0 24 24"><path fill="currentColor" d="m3.5 18.49l6-6.01l4 4L22 6.92L20.59 5.51L13.5 12.5l-4-4l-7.5 7.5z"></path></svg>""",
@@ -9036,44 +10444,47 @@ def generate_elegant_points_slide(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Elegant Points Slide - Adjusted Layout</title>
+    <title>Elegant Points Slide - 1920x1080</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
-            height: 100vh;
-            width: 100vw;
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
             background-color: {bg_color};
             color: {text_color};
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
-            padding: 2rem;
         }}
 
         .slide-container {{
-            width: 100%;
-            max-width: 90rem;
-            padding: 3rem 2rem;
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            padding: 80px 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
             text-align: center;
         }}
 
         .main-title {{
-            font-size: clamp(2rem, 4vw, 3.5rem);
+            font-size: 70px;
             font-weight: 800;
             color: {title_color};
-            margin-bottom: 4rem;
+            margin-bottom: 80px;
             line-height: 1.2;
         }}
 
         .points-grid {{
             display: grid;
             grid-template-columns: repeat(4, 1fr);
-            gap: 3rem;
+            gap: 60px;
+            flex: 1;
+            align-items: center;
         }}
 
         .point-card {{
@@ -9081,64 +10492,79 @@ def generate_elegant_points_slide(
             flex-direction: column;
             align-items: center;
             background-color: {card_bg_color};
-            padding: 3rem 2.5rem;
-            border-radius: 1rem;
+            padding: 50px 40px;
+            border-radius: 20px;
             border: 1px solid #EAE2D6;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
-            /* ĐÃ XÓA: transition: transform 0.3s ease, box-shadow 0.3s ease; */
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            height: 100%;
         }}
-
-        /* ĐÃ XÓA: Khối CSS .point-card:hover đã được loại bỏ hoàn toàn. */
         
         .point-icon {{
-            width: 4rem;
-            height: 4rem;
+            width: 80px;
+            height: 80px;
             color: {accent_color};
         }}
         
         .icon-divider {{
-            width: 50px;
-            height: 3px;
+            width: 60px;
+            height: 4px;
             background-color: {accent_color};
             border-radius: 2px;
-            margin: 1.5rem 0;
+            margin: 30px 0;
         }}
 
         .point-title {{
-            font-size: 2rem;
+            font-size: 32px;
             font-weight: 600;
             color: {title_color};
-            margin-bottom: 1.5rem;
-            min-height: 5.5rem; 
+            margin-bottom: 25px;
+            line-height: 1.3;
         }}
 
         .point-description {{
-            font-size: 1.2rem;
+            font-size: 20px;
             line-height: 1.7;
-        }}
-        
-        @media (max-width: 64rem) {{
-            .points-grid {{ grid-template-columns: repeat(2, 1fr); gap: 3rem; }}
+            text-align: center;
         }}
 
-        @media (max-width: 48rem) {{
-            .points-grid {{ grid-template-columns: 1fr; }}
-            .point-title {{ min-height: auto; }}
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
         }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }}
+
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <h1 class="main-title">{main_title}</h1>
-        <div class="points-grid">
-            {points_html}
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <h1 class="main-title">{main_title}</h1>
+                <div class="points-grid">
+                    {points_html}
+                </div>
+            </div>
         </div>
     </div>
 </body>
 </html>"""
     
     return html_code
-
+#xong
 
 
 def generate_horizontal_timeline_slide(
@@ -9377,8 +10803,6 @@ def generate_horizontal_timeline_slide(
 </html>"""
     
     return html_code
-
-
 
 
 def generate_corporate_content_slide(
@@ -9883,7 +11307,6 @@ def generate_corporate_grid_slide(
 </html>"""
     
     return html_code
-
 
 
 def generate_business_overview_slide(
@@ -10540,7 +11963,6 @@ def generate_vision_mission_slide(
     return html_code
 
 
-
 def generate_strategic_goals_slide(
     main_title="STRATEGIC GOALS",
     goals=[
@@ -10727,8 +12149,9 @@ def generate_strategic_goals_slide(
             display: flex;
             align-items: center;
             justify-content: center;
-            margin-right: -20px;
-            z-index: 15;
+            margin-right: 20px;
+            z-index: 20;
+            position: relative;
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
         }}
         
@@ -10743,8 +12166,10 @@ def generate_strategic_goals_slide(
             background-color: {content_bg_color};
             border-radius: 8px;
             padding: {content_padding};
-            padding-left: 40px;
+            padding-left: {content_padding};
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+            position: relative;
         }}
         
         .content-text {{
@@ -10782,6 +12207,7 @@ def generate_strategic_goals_slide(
                 width: 60px;
                 height: 60px;
                 min-width: 60px;
+                margin-right: 15px;
             }}
             
             .number-circle span {{
@@ -10790,7 +12216,6 @@ def generate_strategic_goals_slide(
             
             .content-box {{
                 padding: 15px;
-                padding-left: 30px;
             }}
             
             .content-text {{
@@ -11670,10 +13095,6 @@ def generate_centered_tech_columns_slide(
             position: relative; 
             padding: 6rem 4rem;
             background-color: {sky_top_color};
-            background-image: 
-                radial-gradient(circle, {grid_dot_color} 1px, transparent 1px),
-                linear-gradient(to bottom, {sky_top_color}, {sky_bottom_color});
-            background-size: 25px 25px, 100% 100%;
         }}
         
         /* ĐÃ XÓA: Toàn bộ CSS cho tên lửa và animation peek */
@@ -11681,9 +13102,9 @@ def generate_centered_tech_columns_slide(
         .content-wrapper {{ z-index: 10; color: {text_color}; text-align: center; width: 100%; max-width: 75rem; }}
         
         .slide-title {{
-            font-size: clamp(3rem, 5vw, 4.5rem);
+            font-size: clamp(3rem, 5vw, 3.5rem);
             font-weight: 800;
-            margin-bottom: 5rem;
+            margin-bottom: 15rem;
         }}
         
         .columns-grid {{
@@ -12044,6 +13465,7 @@ def generate_reference_slide(
 
 
 
+
 def generate_icon_list_slide(
     main_title="Write your topic or idea",
     points=[
@@ -12059,8 +13481,8 @@ def generate_icon_list_slide(
     accent_color="#3B82F6"
 ):
     """
-    Generates an icon list slide with an adjusted layout that emphasizes the
-    list of points over the main title.
+    Generates an icon list slide optimized for 1920x1080 screenshots
+    with an adjusted layout that emphasizes the list of points over the main title.
     """
 
     icons = {
@@ -12075,7 +13497,7 @@ def generate_icon_list_slide(
         points_html += f"""
         <div class="point-item">
             <div class="icon-circle" style="background-color: {accent_color};">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="42px" height="42px">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="50px" height="50px">
                     {icon_svg_path}
                 </svg>
             </div>
@@ -12091,119 +13513,121 @@ def generate_icon_list_slide(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Icon List Slide - Adjusted Layout</title>
+    <title>Icon List Slide - 1920x1080</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
-            height: 100vh;
-            width: 100vw;
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
             background-color: {bg_color};
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
-            padding: 2rem;
         }}
 
         .slide-container {{
-            width: 100%;
-            max-width: 85rem; /* Tăng max-width */
-            /* ĐÃ SỬA ĐỔI: Đảo ngược tỷ lệ, cho cột phải rộng hơn */
+            width: 1920px;
+            height: 1080px;
+            position: relative;
             display: grid;
             grid-template-columns: 1fr 1.2fr;
             align-items: center;
-            gap: 4rem;
+            gap: 80px;
+            padding: 80px 120px;
         }}
 
         .title-column {{
-            padding-right: 2rem;
+            padding-right: 40px;
         }}
 
         .main-title {{
-            /* ĐÃ SỬA ĐỔI: Font nhỏ hơn */
-            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-size: 80px;
             font-weight: 800;
             line-height: 1.2;
             color: {main_title_color};
-            margin-bottom: 1.5rem;
+            margin-bottom: 30px;
         }}
 
         .title-divider {{
-            height: 5px;
-            width: 100px;
+            height: 8px;
+            width: 120px;
             background-color: {accent_color};
-            border-radius: 3px;
+            border-radius: 4px;
             border: none;
         }}
 
         .points-column {{
             display: flex;
             flex-direction: column;
-            gap: 3.5rem; /* Tăng khoảng cách */
+            gap: 60px;
         }}
 
         .point-item {{
             display: flex;
             align-items: center;
-            gap: 2.5rem; /* Tăng khoảng cách */
+            gap: 40px;
         }}
 
         .icon-circle {{
-            /* ĐÃ SỬA ĐỔI: Icon to hơn */
-            width: 6rem;
-            height: 6rem;
+            width: 100px;
+            height: 100px;
             border-radius: 50%;
             flex-shrink: 0;
             display: flex;
             justify-content: center;
             align-items: center;
-            box-shadow: 0 4px 15px {accent_color}33;
+            box-shadow: 0 6px 20px {accent_color}33;
         }}
 
         .point-title {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn */
-            font-size: 1.75rem;
+            font-size: 36px;
             font-weight: 700;
-            margin-bottom: 0.75rem;
+            margin-bottom: 15px;
         }}
 
         .point-description {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn và giãn dòng tốt hơn */
-            font-size: 1.2rem;
+            font-size: 24px;
             line-height: 1.8;
             font-weight: 400;
         }}
+
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }}
         
-        @media (max-width: 48rem) {{
-            .slide-container {{
-                grid-template-columns: 1fr;
-                gap: 3rem;
-                text-align: center;
-            }}
-            .title-column {{ padding-right: 0; }}
-            .title-divider {{ margin: 0 auto; }}
-            .point-item {{
-                flex-direction: column;
-                text-align: center;
-                gap: 1.5rem;
-            }}
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
         }}
 
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <div class="title-column">
-            <h1 class="main-title">{main_title}</h1>
-            <hr class="title-divider" />
-        </div>
-        <div class="points-column">
-            {points_html}
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="title-column">
+                    <h1 class="main-title">{main_title}</h1>
+                    <hr class="title-divider" />
+                </div>
+                <div class="points-column">
+                    {points_html}
+                </div>
+            </div>
         </div>
     </div>
 </body>
@@ -12211,7 +13635,7 @@ def generate_icon_list_slide(
     
     return html_code
 
-
+#ngon
 
 
 def generate_flexible_columns_slide(
@@ -12267,40 +13691,56 @@ def generate_flexible_columns_slide(
             padding: 0;
         }}
 
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family_body};
-            color: {text_color};
-            overflow: hidden;
-            background-color: #F8F8F8;
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {{
+            background-color: #F8F8F8 !important;
             background-image: 
                 linear-gradient(to bottom, transparent 98%, #E0E0E0 98%),
-                url('{bg_url}');
-            background-repeat: repeat, repeat;
-            background-position: top, top;
-            background-size: 3.5rem 3.5rem, auto;
+                url('{bg_url}') !important;
+            background-repeat: repeat, repeat !important;
+            background-position: top, top !important;
+            background-size: 3.5rem 3.5rem, auto !important;
+        }}
+
+        body#body.body, html#html.html {{
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family_body} !important;
+            color: {text_color} !important;
+            overflow: hidden !important;
+            background-color: #F8F8F8 !important;
+            background-image: 
+                linear-gradient(to bottom, transparent 98%, #E0E0E0 98%),
+                url('{bg_url}') !important;
+            background-repeat: repeat, repeat !important;
+            background-position: top, top !important;
+            background-size: 3.5rem 3.5rem, auto !important;
         }}
 
         .slide-container {{
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            align-items: center;
-            padding: 3rem 3rem;
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            padding: 3rem 3rem !important;
+            background: transparent !important;
         }}
 
         .main-title {{
-            font-family: {font_family_heading};
-            font-size: clamp(2.75rem, 8vw, 4.5rem); 
+            font-family: 'Patrick Hand', cursive;
+            font-size: clamp(2.75rem, 8vw, 3.5rem); 
             text-transform: uppercase;
-            margin-bottom: 4.5rem; 
+            margin-bottom: 10rem; 
             font-weight: 400;
             text-align: center;
         }}
-
         .content-grid {{
             width: 100%;
             max-width: 90rem;
@@ -12335,7 +13775,7 @@ def generate_flexible_columns_slide(
         }}
     </style>
 </head>
-<body>
+<body id="body" class="body">
     <div class="slide-container">
         <h1 class="main-title">{main_title}</h1>
         <div class="content-grid">
@@ -12350,10 +13790,11 @@ def generate_flexible_columns_slide(
 
 
 
+
 def generate_text_with_image_slide(
     title="Tiltle",
     text_content="Content.",
-    image_url="https://images.pexels.com/photos/1778412/pexels-photo-1778412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80",
     font_family_heading="'Patrick Hand', cursive",
     font_family_body="'Lato', sans-serif",
     text_color="#34495E",
@@ -12398,13 +13839,10 @@ def generate_text_with_image_slide(
             flex-direction: column;
             justify-content: center;
             /* Layered background for the text column only */
-            background-image:
-                url('{doodle_border_url}'),
-                linear-gradient(to bottom, transparent 97.5%, #E0E0E0 97.5%),
-                url('{bg_url}');
-            background-repeat: repeat-x, repeat, repeat;
-            background-position: bottom, top, top;
-            background-size: auto 4rem, 2.5rem 2.5rem, auto;
+            background-image: url('{bg_url}');
+            background-repeat: repeat;
+            background-position: center;
+            background-size: auto;
         }}
         
         .image-column {{
@@ -13389,10 +14827,6 @@ def generate_memphis_content_slide(
         .content-list li {{ font-size: 1.5rem; line-height: 1.7; padding-left: 2.5rem; position: relative; margin-bottom: 0.5rem; }}
         .content-list li::before {{ content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid {palette[1]}; }}
         .concluding-text {{ font-family: {font_family_body}; font-size: 1.5rem; line-height: 1.7; max-width: 60ch; }}
-        .divider-icon {{ position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 20; width: 4rem; height: 4rem; }}
-        .divider-icon .dashed-circle {{ stroke: {palette[3]}; stroke-width: 2; stroke-dasharray: 4 4; fill: none; animation: rotate 20s linear infinite; transform-origin: center; }}
-        .divider-icon .arrow {{ fill: {palette[1]}; transform: rotate(180deg); transform-origin: center; }}
-        @keyframes rotate {{ from {{ transform: rotate(0deg); }} to {{ transform: rotate(360deg); }} }}
         .shape {{ position: absolute; }}
         .shape-tl-1 {{ width: 4rem; height: 4rem; border: 2px dashed {palette[0]}; top: 2rem; left: 2rem; transform: rotate(-25deg); }}
         .shape-tl-2 {{ width: 0; height: 0; border-left: 1.5rem solid transparent; border-right: 1.5rem solid transparent; border-bottom: 2.5rem solid {palette[0]}; top: 3.5rem; left: 7rem; transform: rotate(20deg); opacity: 0.8; }}
@@ -13416,12 +14850,10 @@ def generate_memphis_content_slide(
             <div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div>
             <div class="shape shape-br-1"></div><div class="shape shape-br-2"></div>
         </div>
-        <div class="divider-icon"><svg viewBox="0 0 100 100" style="overflow:visible;"><circle class="dashed-circle" cx="50" cy="50" r="48"/><polygon class="arrow" points="50,30 70,60 30,60" /></svg></div>
     </div>
 </body>
 </html>"""
     return html_code
-
 
 
 
@@ -13461,9 +14893,6 @@ def generate_memphis_multicolumn_slide(
         .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 2rem 4rem; }}
         .column-title {{ font-family: {font_family_body}; font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }}
         .column-description {{ font-family: {font_family_body}; font-size: 1.25rem; line-height: 1.6; }}
-        .divider-icon {{ position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 20; width: 4rem; height: 4rem; }}
-        .divider-icon .dashed-circle {{ stroke: {palette[3]}; stroke-width: 2; stroke-dasharray: 4 4; fill: none; transform-origin: center; }}
-        .divider-icon .arrow {{ fill: {palette[1]}; transform: rotate(180deg); transform-origin: center;}}
         .shape {{ position: absolute; }} .pentagon {{ clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
         .shape-tl-1 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.4; top: 1rem; left: 8rem; }}
         .shape-tl-2 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: -1rem; left: 1rem; border-radius: 50%; opacity: 0.8; }}
@@ -13484,7 +14913,6 @@ def generate_memphis_multicolumn_slide(
     <div class="slide-container">
         <div class="top-panel"><div class="panel-content"><h1 class="main-title">{main_title}</h1></div><div class="shape shape-tl-1 pentagon"></div><div class="shape shape-tl-2"></div><div class="shape shape-tl-3 pentagon"></div><div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3 pentagon"></div></div>
         <div class="bottom-panel"><div class="panel-content"><div class="columns-grid">{columns_html}</div></div><div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div><div class="shape shape-br-1"></div><div class="shape shape-br-2"></div><div class="shape shape-br-3"></div></div>
-        <div class="divider-icon"><svg viewBox="0 0 100 100" style="overflow:visible;"><circle class="dashed-circle" cx="50" cy="50" r="48"/><polygon class="arrow" points="50,30 70,60 30,60" /></svg></div>
     </div>
 </body>
 </html>"""
@@ -13534,9 +14962,6 @@ def generate_memphis_grid_slide(
         .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 3rem 4rem; }}
         .item-title {{ font-family: {font_family_body}; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }}
         .item-description {{ font-family: {font_family_body}; font-size: 1.1rem; line-height: 1.6; }}
-        .divider-icon {{ position: absolute; top: 20%; left: 50%; transform: translate(-50%, -50%); z-index: 20; width: 4rem; height: 4rem; }}
-        .divider-icon .dashed-circle {{ stroke: {palette[3]}; stroke-width: 2; stroke-dasharray: 4 4; fill: none; transform-origin: center; }}
-        .divider-icon .arrow {{ fill: {palette[1]}; transform: rotate(180deg); transform-origin: center; }}
         .shape {{ position: absolute; }} .pentagon {{ clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
         .shape-tl-1 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.4; top: 1rem; left: 8rem; }}
         .shape-tl-2 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: -1rem; left: 1rem; border-radius: 50%; opacity: 0.8; }}
@@ -13557,7 +14982,6 @@ def generate_memphis_grid_slide(
     <div class="slide-container">
         <div class="top-panel"><div class="panel-content"><h1 class="main-title">{main_title}</h1></div><div class="shape shape-tl-1 pentagon"></div><div class="shape shape-tl-2"></div><div class="shape shape-tl-3 pentagon"></div><div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3 pentagon"></div></div>
         <div class="bottom-panel"><div class="panel-content"><div class="columns-grid">{grid_html}</div></div><div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div><div class="shape shape-br-1"></div><div class="shape shape-br-2"></div><div class="shape shape-br-3"></div></div>
-        <div class="divider-icon"><svg viewBox="0 0 100 100" style="overflow:visible;"><circle class="dashed-circle" cx="50" cy="50" r="48"/><polygon class="arrow" points="50,30 70,60 30,60" /></svg></div>
     </div>
 </body>
 </html>"""
@@ -13807,7 +15231,6 @@ def generate_premium_abstract_slide(
 
 #-------------------  # slide giới thiệu team
 
-
 def generate_team_slide(
     main_title="Our Team",
     team_members=[
@@ -14020,119 +15443,133 @@ def generate_colorful_team_grid_slide(
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
-            height: 100vh;
-            width: 100vw;
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
             background-color: {bg_color};
-            display: flex;
-            justify-content: center;
-            align-items: center;
             overflow: hidden;
-            padding: 2rem;
         }}
 
         .slide-container {{
-            width: 100%;
-            max-width: 80rem;
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background-color: {bg_color};
             display: grid;
             grid-template-columns: 1fr 1.2fr;
             align-items: center;
-            gap: 4rem;
+            gap: 80px;
+            padding: 80px 120px;
         }}
 
-        .text-column {{ padding-right: 2rem; }}
+        .text-column {{ padding-right: 40px; }}
 
         .main-title {{
-            font-size: clamp(3rem, 6vw, 4.5rem);
+            font-size: 94px;
             font-weight: 800;
             line-height: 1.2;
             color: {title_color};
-            margin-bottom: 1rem;
+            margin-bottom: 20px;
         }}
         
         .title-divider {{
-            height: 5px;
-            width: 80px;
+            height: 8px;
+            width: 120px;
             background: linear-gradient(90deg, #8A44A1, #2E9A94, #F3C314);
             border: none;
-            border-radius: 3px;
-            margin-bottom: 2rem;
+            border-radius: 4px;
+            margin-bottom: 40px;
         }}
         
         .team-grid {{
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 4rem;
+            gap: 60px;
         }}
         
         .team-card {{
             position: relative;
             background-color: #FFFFFF;
-            border-radius: 1rem;
-            padding-top: 4.25rem; 
-            box-shadow: 0 10px 30px rgba(0,0,0,0.07);
+            border-radius: 20px;
+            padding-top: 80px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
             text-align: center;
-            /* ĐÃ XÓA: transition: transform 0.3s ease, box-shadow 0.3s ease; */
         }}
-
-        /* ĐÃ XÓA: Khối CSS .team-card:hover đã được loại bỏ hoàn toàn. */
         
         .member-photo {{
-            width: 8.5rem;
-            height: 8.5rem;
+            width: 120px;
+            height: 120px;
             border-radius: 50%;
             object-fit: cover;
             display: block;
             position: absolute;
-            top: -4.25rem; 
+            top: -60px; 
             left: 50%;
             transform: translateX(-50%);
-            border: 6px solid var(--member-color);
+            border: 8px solid var(--member-color);
             background-color: white;
         }}
         
         .member-info {{
-            padding: 1.5rem 1rem 2rem;
+            padding: 30px 20px 40px;
             color: {card_text_color};
         }}
         
         .member-name {{
-            font-size: 1.5rem;
+            font-size: 28px;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 10px;
         }}
 
         .member-role {{
-            font-size: 1rem;
+            font-size: 18px;
             font-weight: 400;
             opacity: 0.8;
         }}
+
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }}
         
-        @media (max-width: 64rem) {{
-            .slide-container {{ grid-template-columns: 1fr; gap: 3rem; text-align: center; }}
-            .text-column {{ padding-right: 0; }}
-            .title-divider {{ margin: 0 auto 2rem; }}
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
         }}
 
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <div class="text-column">
-            <h1 class="main-title">{main_title}</h1>
-            <hr class="title-divider" />
-        </div>
-        <div class="team-grid">
-            {team_members_html}
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="text-column">
+                    <h1 class="main-title">{main_title}</h1>
+                    <hr class="title-divider" />
+                </div>
+                <div class="team-grid">
+                    {team_members_html}
+                </div>
+            </div>
         </div>
     </div>
 </body>
 </html>"""
     
     return html_code
-
+#ngon
 
 
 def generate_corporate_team_slide(
@@ -14160,10 +15597,43 @@ def generate_corporate_team_slide(
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Team Presentation - Polaroid Style</title>
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
-        body, html {{ height: 100vh; width: 100vw; font-family: {font_family_body}; overflow: hidden; background-color: #F8F8F8; background-image: url('{bg_url}'); }}
-        .slide-container {{ width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 4rem; }}
-        .main-title {{ font-family: {font_family_heading}; font-size: clamp(3rem, 7vw, 5rem); font-weight: 400; color: {text_color}; margin-bottom: 3rem; text-align: center; }}
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {{
+            background: url('{bg_url}') repeat center !important;
+            background-color: #F8F8F8 !important;
+        }}
+        
+        html#html.html {{ font-size: 16px !important; }}
+        
+        body#body.body, html#html.html {{
+            height: 100vh !important; 
+            width: 100vw !important; 
+            font-family: {font_family_body} !important; 
+            overflow: hidden !important; 
+            background-color: #F8F8F8 !important; 
+            background-image: url('{bg_url}') !important;
+            background-repeat: repeat !important;
+            background-position: center !important;
+            background-size: auto !important;
+        }}
+        
+        .slide-container {{ 
+            width: 100% !important; 
+            height: 100% !important; 
+            display: flex !important; 
+            flex-direction: column !important;
+            background: transparent !important;
+        }}
+        .title-section {{ width: 100%; display: flex; justify-content: center; align-items: center; padding: 4rem 4rem 2rem 4rem; }}
+        .main-title {{ font-family: {font_family_heading}; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 400; color: {text_color}; margin: 0; text-align: center; }}
+        .content-section {{ flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 0 4rem 4rem 4rem; }}
         .team-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; width: 100%; max-width: 80rem; }}
         .polaroid-card {{
             background: #FFFFFF; padding: 1rem 1rem 1.5rem 1rem; border-radius: 0.25rem;
@@ -14180,11 +15650,19 @@ def generate_corporate_team_slide(
         @media (max-width: 48rem) {{ body, html {{ height: auto; min-height: 100vh; overflow-y: auto; }} }}
     </style>
 </head>
-<body>
-    <div class="slide-container"><h1 class="main-title">{main_title}</h1><div class="team-grid">{team_members_html}</div></div>
+<body id="body" class="body">
+    <div class="slide-container">
+        <div class="title-section">
+            <h1 class="main-title">{main_title}</h1>
+        </div>
+        <div class="content-section">
+            <div class="team-grid">{team_members_html}</div>
+        </div>
+    </div>
 </body>
 </html>"""
     return html_code
+
 
 #------------------------ SLIDE THANK YOU
 
@@ -14227,59 +15705,116 @@ def generate_thank_you_slide_2(
     <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family_body};
-            color: {text_color};
-            overflow: hidden;
-            background-color: #FFFFFF;
-            background-image: 
-                linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%),
-                url('{bg_url}');
-            /* ĐÃ SỬA ĐỔI: Tăng khoảng cách dòng kẻ giấy */
-            background-size: 3.5rem 3.5rem, auto;
+        
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {{
+            background: linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%), url('{bg_url}') !important;
+            background-size: 3.5rem 3.5rem, auto !important;
+            background-color: #FFFFFF !important;
+        }}
+        
+        html#html.html {{ 
+            font-size: 16px !important;
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family_body} !important;
+            color: {text_color} !important;
+            overflow: hidden !important;
+            background-color: #FFFFFF !important;
+            background-image: linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%), url('{bg_url}') !important;
+            background-size: 3.5rem 3.5rem, auto !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+        }}
+        
+        body#body.body, html#html.html {{
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: {font_family_body} !important;
+            color: {text_color} !important;
+            overflow: hidden !important;
+            background-color: #FFFFFF !important;
+            background-image: linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%), url('{bg_url}') !important;
+            background-size: 3.5rem 3.5rem, auto !important;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
         }}
 
         .slide-container {{
-            width: 100%;
-            height: 100%;
+            width: 100vw;
+            height: 100vh;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
             text-align: center;
-            padding: 2rem;
+            padding: 3rem;
             position: relative;
+            box-sizing: border-box;
+            margin: 0;
         }}
 
         .heart-icon {{
-            /* ĐÃ SỬA ĐỔI: Icon to hơn */
-            width: 10rem;
-            margin-bottom: 2rem; /* Tăng lề */
+            /* ĐÃ SỬA ĐỔI: Icon to hơn để nổi bật */
+            width: 8rem;
+            margin-bottom: 2rem;
         }}
         
         .main-text {{
             font-family: {font_family_heading};
-            /* ĐÃ SỬA ĐỔI: Font to hơn rất nhiều */
-            font-size: clamp(4.5rem, 12vw, 7.5rem);
+            /* ĐÃ SỬA ĐỔI: Font to hơn để dễ nhìn trên web */
+            font-size: clamp(4rem, 12vw, 8rem);
             color: {main_color};
-            margin-bottom: 2.5rem; /* Tăng lề */
+            margin-bottom: 2rem;
+            line-height: 1;
+            white-space: nowrap;
+            overflow: visible;
+            transform: scale(1.1);
         }}
 
         .question-text {{
             /* ĐÃ SỬA ĐỔI: Font to hơn */
-            font-size: 1.75rem;
+            font-size: 2rem;
             font-weight: 700;
+            line-height: 1.3;
         }}
         
         @media (max-width: 48rem) {{
-            .heart-icon {{ width: 8rem; }}
+            .heart-icon {{ width: 6rem; }}
+            .main-text {{ 
+                font-size: clamp(3rem, 10vw, 6rem);
+                transform: scale(1);
+            }}
+            .question-text {{ font-size: 1.5rem; }}
+            .slide-container {{ padding: 2rem; }}
+        }}
+        
+        @media (max-width: 30rem) {{
+            .main-text {{ 
+                font-size: 2.5rem;
+                letter-spacing: -1px;
+            }}
+            .question-text {{ font-size: 1.2rem; }}
+        }}
+        
+        /* Web container override */
+        @media (min-width: 769px) {{
+            .slide-container {{
+                transform: scale(1.2);
+                transform-origin: center center;
+            }}
         }}
     </style>
 </head>
-<body>
+<body id="body" class="body">
     <div class="slide-container">
         {heart_svg}
         <h1 class="main-text">{main_text}</h1>
@@ -14289,6 +15824,7 @@ def generate_thank_you_slide_2(
 </html>"""
     
     return html_code
+
 
 
 
@@ -14894,6 +16430,4 @@ def generate_corporate_thank_you_slide(
 </html>"""
     
     return html_code
-
-
 
