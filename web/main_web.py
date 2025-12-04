@@ -257,7 +257,12 @@ def build_slides_from_output(output_folder: str):
 
     logger.info(f"Building slides from {'converted' if use_converted else 'original'} HTML directory")
     
-    html_files = sorted([f for f in os.listdir(source_html_dir) if f.endswith('.html')])
+    #Sort numerically thay vì alphabetical
+    html_files_list = [f for f in os.listdir(source_html_dir) if f.endswith('.html')]
+    html_files = sorted(html_files_list,
+                       key=lambda x: int(''.join(filter(str.isdigit, x)) or 0))
+    logger.info(f"Sorted HTML files: {html_files}")
+    
     for index, html_file in enumerate(html_files):
         html_path = os.path.join(source_html_dir, html_file)
         with open(html_path, 'r', encoding='utf-8') as f:
