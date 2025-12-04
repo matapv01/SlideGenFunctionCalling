@@ -2106,6 +2106,299 @@
             z-index: 10;
             animation: pulse 2s infinite;
         }
+
+        /* Presentation Mode Styles */
+        .presentation-mode {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 100000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .presentation-mode.active {
+            display: flex;
+        }
+
+        .presentation-slide-container {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            transform-origin: center center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        .presentation-controls {
+            position: fixed;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            background: rgba(255, 255, 255, 0.95);
+            padding: 12px 24px;
+            border-radius: 50px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            z-index: 100001;
+        }
+
+        .presentation-controls button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #2d3748;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s;
+        }
+
+        .presentation-controls button:hover {
+            background: rgba(102, 126, 234, 0.1);
+            color: #667eea;
+        }
+
+        .presentation-controls button:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .presentation-counter {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        .presentation-exit {
+            width: 40px;
+            height: 40px;
+            padding: 0;
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+        }
+
+        .presentation-exit:hover {
+            background: rgba(239, 68, 68, 0.9);
+            transform: translateY(-2px);
+        }
+
+        #presentBtn {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            position: relative;
+        }
+
+        #presentBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            position: relative;
+        }
+
+        .present-btn-wrapper {
+            position: relative;
+        }
+
+        .present-dropdown {
+            position: absolute;
+            top: calc(100% + 8px);
+            left: 0;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.2);
+            min-width: 240px;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(-10px);
+            transition: all 0.2s ease;
+            z-index: 10001;
+            overflow: hidden;
+        }
+
+        .present-dropdown.show {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0);
+        }
+
+        .present-dropdown-item {
+            padding: 12px 16px;
+            cursor: pointer;
+            color: #2d3748;
+            font-size: 14px;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .present-dropdown-item:first-child {
+            border-radius: 8px 8px 0 0;
+        }
+
+        .present-dropdown-item:last-child {
+            border-radius: 0 0 8px 8px;
+        }
+
+        .present-dropdown-item:hover {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .present-dropdown-item .icon {
+            font-size: 16px;
+            width: 20px;
+            text-align: center;
+        }
+
+        .present-dropdown-item .label {
+            flex: 1;
+        }
+
+        .present-dropdown-item .shortcut {
+            font-size: 11px;
+            opacity: 0.7;
+        }
+
+        /* Presentation Timeline */
+        .presentation-timeline {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 100002;
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            gap: 15px;
+        }
+
+        .timeline-track {
+            flex: 1;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 4px;
+            position: relative;
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .timeline-progress {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+
+        .timeline-slides {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 100%;
+            display: flex;
+        }
+
+        .timeline-slide-marker {
+            flex: 1;
+            height: 100%;
+            position: relative;
+            cursor: pointer;
+            border-right: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-slide-marker:hover {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        .timeline-slide-marker.active {
+            background: rgba(102, 126, 234, 0.3);
+        }
+
+        .timeline-slide-marker .slide-number {
+            position: absolute;
+            top: -25px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 11px;
+            color: rgba(255, 255, 255, 0.6);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .timeline-slide-marker:hover .slide-number {
+            opacity: 1;
+        }
+
+        .timeline-current-indicator {
+            position: absolute;
+            top: -4px;
+            width: 16px;
+            height: 16px;
+            background: #fff;
+            border-radius: 50%;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+            transform: translateX(-50%);
+            transition: left 0.3s ease;
+            z-index: 10;
+        }
+
+        .presentation-controls {
+            bottom: 80px;
+        }
+
+        /* Cursor Navigation Zones */
+        .presentation-click-zone {
+            position: fixed;
+            top: 0;
+            bottom: 60px;
+            width: 50%;
+            z-index: 100000;
+        }
+
+        .presentation-click-zone.left {
+            left: 0;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text x="8" y="24" font-size="24" fill="white" stroke="black" stroke-width="1">←</text></svg>') 16 16, w-resize;
+        }
+
+        .presentation-click-zone.right {
+            right: 0;
+            cursor: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 32 32"><text x="8" y="24" font-size="24" fill="white" stroke="black" stroke-width="1">→</text></svg>') 16 16, e-resize;
+        }
+
+        .presentation-click-zone.disabled {
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
     </style>
 </head>
 
@@ -2147,6 +2440,19 @@
         </div>
 
         <div class="toolbar-right">
+            <div class="present-btn-wrapper">
+                <button id="presentBtn" title="Start presentation">▶️ Present</button>
+                <div class="present-dropdown" id="presentDropdown">
+                    <div class="present-dropdown-item" data-action="from-start">
+                        <span class="icon">⏮</span>
+                        <span class="label">From Beginning</span>
+                    </div>
+                    <div class="present-dropdown-item" data-action="from-current">
+                        <span class="icon">▶️</span>
+                        <span class="label">From Current Slide</span>
+                    </div>
+                </div>
+            </div>
             <div class="btn-group">
                 <button id="propertiesBtn">⚙️ Properties</button>
                 <button id="resetViewBtn">🔄 Reset View</button>
@@ -2159,6 +2465,26 @@
     <input type="file" id="importFile" accept=".html,text/html" style="display: none;" multiple>
     <input type="file" id="imageFile" accept="image/*" style="display: none;">
     <input type="file" id="videoFile" accept="video/*" style="display: none;">
+
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="presentation-click-zone left" id="presentationZoneLeft"></div>
+        <div class="presentation-click-zone right" id="presentationZoneRight"></div>
+        <div class="presentation-slide-container" id="presentationSlideContainer"></div>
+        <div class="presentation-controls">
+            <button id="prevSlideBtn">←</button>
+            <span class="presentation-counter" id="presentationCounter">1 / 1</span>
+            <button id="nextSlideBtn">→</button>
+        </div>
+        <div class="presentation-timeline" id="presentationTimeline">
+            <div class="timeline-track" id="timelineTrack">
+                <div class="timeline-progress" id="timelineProgress"></div>
+                <div class="timeline-slides" id="timelineSlides"></div>
+                <div class="timeline-current-indicator" id="timelineIndicator"></div>
+            </div>
+            <button class="presentation-exit" id="exitPresentation">⤢</button>
+        </div>
+    </div>
 
     <div class="left-panels">
         <div class="left-panel-tabs">
@@ -3046,6 +3372,12 @@
 
                 // Initialize SlideCapture
                 this.slideCapture = new SlideCapture(this);
+
+                // Presentation mode
+                this.presentationMode = false;
+                this.presentationSlideIndex = 0;
+                this.presentationKeyboardHandler = null;
+                this.fullscreenChangeHandler = null;
 
                 this.createFirstSlide();
                 this.bindEvents();
@@ -4333,7 +4665,7 @@
                     }
                 }, 1000);
 
-                console.log('  DOM monitoring started for:', backgroundColor);
+                console.log('� DOM monitoring started for:', backgroundColor);
             }
 
             stopBackgroundMonitoring() {
@@ -4800,6 +5132,36 @@
                 document.getElementById('toggleSlidesBtn').addEventListener('click', () => this.toggleSlides());
                 document.getElementById('resetViewBtn').addEventListener('click', () => this.fitToScreen());
                 document.getElementById('resetAllBtn').addEventListener('click', () => this.resetToOriginalState());
+
+                // Present button - show dropdown
+                const presentBtn = document.getElementById('presentBtn');
+                const presentDropdown = document.getElementById('presentDropdown');
+
+                presentBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    presentDropdown.classList.toggle('show');
+                });
+
+                // Handle dropdown items
+                document.querySelectorAll('.present-dropdown-item').forEach(item => {
+                    item.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        const action = item.dataset.action;
+                        presentDropdown.classList.remove('show');
+
+                        if (action === 'from-start') {
+                            this.startPresentation(true);
+                        } else if (action === 'from-current') {
+                            this.startPresentation(false);
+                        }
+                    });
+                });
+
+                // Close dropdown when clicking outside
+                document.addEventListener('click', () => {
+                    presentDropdown.classList.remove('show');
+                });
+
                 // document.getElementById('exportBtn').addEventListener('click', () => this.showExportOptions());
 
                 // Capture buttons
@@ -10041,6 +10403,306 @@
             // === END DEBUG FUNCTIONALITY ===
 
             // === END RESET FUNCTIONALITY ===
+
+            // === PRESENTATION MODE ===
+            startPresentation(fromStart = true) {
+                if (this.slides.length === 0) return;
+
+                // Save current slide
+                this.saveCurrentSlide();
+
+                // Start from first slide or current slide based on parameter
+                this.presentationSlideIndex = fromStart ? 0 : this.currentSlideIndex;
+
+                // Show presentation mode
+                const presentationMode = document.getElementById('presentationMode');
+                presentationMode.classList.add('active');
+                this.presentationMode = true;
+
+                // Hide scrollbars
+                document.body.style.overflow = 'hidden';
+
+                // Request fullscreen API (che cả thanh địa chỉ Chrome)
+                const elem = presentationMode;
+                if (elem.requestFullscreen) {
+                    elem.requestFullscreen();
+                } else if (elem.webkitRequestFullscreen) { // Safari
+                    elem.webkitRequestFullscreen();
+                } else if (elem.msRequestFullscreen) { // IE11
+                    elem.msRequestFullscreen();
+                }
+
+                // Render first slide
+                this.renderPresentationSlide();
+
+                // Setup keyboard navigation
+                this.setupPresentationKeyboard();
+
+                // Scale to fit screen
+                this.scalePresentationToFit();
+            }
+
+            renderPresentationSlide() {
+                const slide = this.slides[this.presentationSlideIndex];
+                if (!slide) return;
+
+                const container = document.getElementById('presentationSlideContainer');
+
+                // Clear container
+                container.innerHTML = '';
+
+                // Create slide element (canvas is already 1920x1080, no scaling needed)
+                const slideEl = document.createElement('div');
+                slideEl.style.cssText = `
+                    width: 1920px;
+                    height: 1080px;
+                    position: relative;
+                    background: ${slide.backgroundColor || 'white'};
+                    overflow: hidden;
+                `;
+
+                // Clean content - remove editor-specific elements
+                const tempDiv = document.createElement('div');
+                tempDiv.innerHTML = slide.content;
+
+                // Remove editor-specific elements
+                tempDiv.querySelectorAll('.resize-handle').forEach(el => el.remove());
+
+                // Clean up element attributes (no scaling needed since canvas is already 1920x1080)
+                tempDiv.querySelectorAll('.element').forEach(el => {
+                    el.removeAttribute('contenteditable');
+                    el.classList.remove('selected');
+                    el.style.cursor = 'default';
+                    // Keep original positions and sizes since they're already for 1920x1080
+                });
+
+                slideEl.innerHTML = tempDiv.innerHTML;
+                container.appendChild(slideEl);
+
+                // Update counter
+                document.getElementById('presentationCounter').textContent =
+                    `${this.presentationSlideIndex + 1} / ${this.slides.length}`;
+
+                // Update button states
+                document.getElementById('prevSlideBtn').disabled = this.presentationSlideIndex === 0;
+                document.getElementById('nextSlideBtn').disabled = this.presentationSlideIndex === this.slides.length - 1;
+
+                // Update cursor zones
+                const zoneLeft = document.getElementById('presentationZoneLeft');
+                const zoneRight = document.getElementById('presentationZoneRight');
+                if (this.presentationSlideIndex === 0) {
+                    zoneLeft.classList.add('disabled');
+                } else {
+                    zoneLeft.classList.remove('disabled');
+                }
+                if (this.presentationSlideIndex === this.slides.length - 1) {
+                    zoneRight.classList.add('disabled');
+                } else {
+                    zoneRight.classList.remove('disabled');
+                }
+
+                // Update timeline
+                this.updatePresentationTimeline();
+            }
+
+            scalePresentationToFit() {
+                const container = document.getElementById('presentationSlideContainer');
+                const windowWidth = window.innerWidth;
+                const windowHeight = window.innerHeight;
+
+                const scaleX = windowWidth / 1920;
+                const scaleY = windowHeight / 1080;
+                const scale = Math.min(scaleX, scaleY); // Full screen, no padding
+
+                container.style.transform = `scale(${scale})`;
+            }
+
+            setupPresentationKeyboard() {
+                this.presentationKeyboardHandler = (e) => {
+                    switch (e.key) {
+                        case 'ArrowRight':
+                        case 'ArrowDown':
+                        case ' ':
+                        case 'PageDown':
+                            e.preventDefault();
+                            this.nextPresentationSlide();
+                            break;
+                        case 'ArrowLeft':
+                        case 'ArrowUp':
+                        case 'PageUp':
+                            e.preventDefault();
+                            this.previousPresentationSlide();
+                            break;
+                        case 'Escape':
+                            e.preventDefault();
+                            this.exitPresentation();
+                            break;
+                        case 'Home':
+                            e.preventDefault();
+                            this.presentationSlideIndex = 0;
+                            this.renderPresentationSlide();
+                            break;
+                        case 'End':
+                            e.preventDefault();
+                            this.presentationSlideIndex = this.slides.length - 1;
+                            this.renderPresentationSlide();
+                            break;
+                    }
+                };
+
+                document.addEventListener('keydown', this.presentationKeyboardHandler);
+
+                // Navigation buttons
+                document.getElementById('prevSlideBtn').onclick = () => this.previousPresentationSlide();
+                document.getElementById('nextSlideBtn').onclick = () => this.nextPresentationSlide();
+                document.getElementById('exitPresentation').onclick = () => this.exitPresentation();
+
+                // Click zones for navigation
+                document.getElementById('presentationZoneLeft').onclick = () => this.previousPresentationSlide();
+                document.getElementById('presentationZoneRight').onclick = () => this.nextPresentationSlide();
+
+                // Listen for fullscreen exit (when user presses ESC)
+                this.fullscreenChangeHandler = () => {
+                    if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                        if (this.presentationMode) {
+                            this.exitPresentation();
+                        }
+                    }
+                };
+                document.addEventListener('fullscreenchange', this.fullscreenChangeHandler);
+                document.addEventListener('webkitfullscreenchange', this.fullscreenChangeHandler);
+                document.addEventListener('msfullscreenchange', this.fullscreenChangeHandler);
+
+                // Window resize
+                window.addEventListener('resize', () => this.scalePresentationToFit());
+
+                // Setup timeline
+                this.setupPresentationTimeline();
+            }
+
+            setupPresentationTimeline() {
+                const timelineSlides = document.getElementById('timelineSlides');
+                const timelineTrack = document.getElementById('timelineTrack');
+
+                // Clear existing markers
+                timelineSlides.innerHTML = '';
+
+                // Create slide markers
+                this.slides.forEach((slide, index) => {
+                    const marker = document.createElement('div');
+                    marker.className = 'timeline-slide-marker';
+                    if (index === this.presentationSlideIndex) {
+                        marker.classList.add('active');
+                    }
+
+                    const slideNumber = document.createElement('div');
+                    slideNumber.className = 'slide-number';
+                    slideNumber.textContent = `Slide ${index + 1}`;
+                    marker.appendChild(slideNumber);
+
+                    marker.addEventListener('click', () => {
+                        this.goToPresentationSlide(index);
+                    });
+
+                    timelineSlides.appendChild(marker);
+                });
+
+                // Click on track to jump to slide
+                timelineTrack.addEventListener('click', (e) => {
+                    const rect = timelineTrack.getBoundingClientRect();
+                    const x = e.clientX - rect.left;
+                    const percentage = x / rect.width;
+                    const targetSlide = Math.floor(percentage * this.slides.length);
+                    this.goToPresentationSlide(Math.max(0, Math.min(targetSlide, this.slides.length - 1)));
+                });
+
+                this.updatePresentationTimeline();
+            }
+
+            updatePresentationTimeline() {
+                const progress = document.getElementById('timelineProgress');
+                const indicator = document.getElementById('timelineIndicator');
+                const markers = document.querySelectorAll('.timeline-slide-marker');
+
+                // Update progress bar
+                const percentage = ((this.presentationSlideIndex + 1) / this.slides.length) * 100;
+                progress.style.width = percentage + '%';
+
+                // Update indicator position
+                const slidePercentage = (this.presentationSlideIndex / (this.slides.length - 1)) * 100;
+                indicator.style.left = slidePercentage + '%';
+
+                // Update active marker
+                markers.forEach((marker, index) => {
+                    if (index === this.presentationSlideIndex) {
+                        marker.classList.add('active');
+                    } else {
+                        marker.classList.remove('active');
+                    }
+                });
+            }
+
+            goToPresentationSlide(index) {
+                if (index >= 0 && index < this.slides.length) {
+                    this.presentationSlideIndex = index;
+                    this.renderPresentationSlide();
+                }
+            }
+
+            nextPresentationSlide() {
+                if (this.presentationSlideIndex < this.slides.length - 1) {
+                    this.presentationSlideIndex++;
+                    this.renderPresentationSlide();
+                }
+            }
+
+            previousPresentationSlide() {
+                if (this.presentationSlideIndex > 0) {
+                    this.presentationSlideIndex--;
+                    this.renderPresentationSlide();
+                }
+            }
+
+            exitPresentation() {
+                // Remove fullscreen change handler
+                if (this.fullscreenChangeHandler) {
+                    document.removeEventListener('fullscreenchange', this.fullscreenChangeHandler);
+                    document.removeEventListener('webkitfullscreenchange', this.fullscreenChangeHandler);
+                    document.removeEventListener('msfullscreenchange', this.fullscreenChangeHandler);
+                    this.fullscreenChangeHandler = null;
+                }
+
+                // Exit fullscreen API (only if still in fullscreen)
+                if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+                    if (document.exitFullscreen) {
+                        document.exitFullscreen();
+                    } else if (document.webkitExitFullscreen) {
+                        document.webkitExitFullscreen();
+                    } else if (document.msExitFullscreen) {
+                        document.msExitFullscreen();
+                    }
+                }
+
+                // Remove keyboard handler
+                if (this.presentationKeyboardHandler) {
+                    document.removeEventListener('keydown', this.presentationKeyboardHandler);
+                    this.presentationKeyboardHandler = null;
+                }
+
+                // Hide presentation mode
+                const presentationMode = document.getElementById('presentationMode');
+                presentationMode.classList.remove('active');
+                this.presentationMode = false;
+
+                // Restore scrollbars
+                document.body.style.overflow = '';
+
+                // Always return to the slide we were viewing in presentation
+                this.currentSlideIndex = this.presentationSlideIndex;
+                this.loadSlide(this.currentSlideIndex);
+                this.renderSlidesList();
+            }
+            // === END PRESENTATION MODE ===
         }
 
         // SlideCapture Class - Chụp ảnh slides
