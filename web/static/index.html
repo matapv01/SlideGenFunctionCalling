@@ -15,11 +15,10 @@
             padding: 0;
             height: 100%;
             font-family: 'Segoe UI', sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #f093fb 100%);
+            background: linear-gradient(135deg, #f5f7fa 0%, #e8eef5 50%, #f0e6ff 100%);
             background-attachment: fixed;
             position: relative;
             overflow-x: hidden;
-            /* Prevent horizontal scroll due to fixed background */
         }
 
         body::before {
@@ -30,9 +29,39 @@
             width: 100%;
             height: 100%;
             background-image:
-                radial-gradient(circle at 20% 80%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
-                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.15) 0%, transparent 50%),
-                radial-gradient(circle at 40% 40%, rgba(255, 255, 255, 0.08) 0%, transparent 50%);
+                /* Diagonal stripes */
+                repeating-linear-gradient(45deg,
+                    transparent,
+                    transparent 10px,
+                    rgba(102, 126, 234, 0.03) 10px,
+                    rgba(102, 126, 234, 0.03) 20px),
+                /* Vertical stripes */
+                repeating-linear-gradient(90deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(168, 85, 247, 0.02) 50px,
+                    rgba(168, 85, 247, 0.02) 51px),
+                /* Horizontal stripes */
+                repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(59, 130, 246, 0.02) 50px,
+                    rgba(59, 130, 246, 0.02) 51px),
+                /* Grid pattern */
+                repeating-linear-gradient(0deg,
+                    transparent,
+                    transparent 30px,
+                    rgba(100, 150, 255, 0.02) 30px,
+                    rgba(100, 150, 255, 0.02) 31px),
+                repeating-linear-gradient(90deg,
+                    transparent,
+                    transparent 30px,
+                    rgba(100, 150, 255, 0.02) 30px,
+                    rgba(100, 150, 255, 0.02) 31px),
+                /* Radial circles */
+                radial-gradient(circle at 20% 80%, rgba(167, 139, 250, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(96, 165, 250, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(236, 72, 153, 0.03) 0%, transparent 50%);
             pointer-events: none;
             z-index: -1;
         }
@@ -46,33 +75,74 @@
             padding: 2rem;
             text-align: center;
             color: #ffffff;
-            /* Ensure text is visible on the gradient */
         }
 
         .hero-title {
-            font-size: 3rem;
+            font-size: 4rem;
             font-weight: bold;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            animation: fadeInDown 0.8s ease-out;
+        }
+
+        .hero-subtitle {
+            font-size: 1.5rem;
+            color: #4a5568;
             margin-bottom: 1rem;
-            color: #ffffff;
-            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            font-weight: 300;
+            animation: fadeInUp 0.8s ease-out 0.2s both;
         }
 
         .hero-description {
             font-size: 1.2rem;
-            color: rgba(255, 255, 255, 0.9);
+            color: #5a6c7d;
             max-width: 700px;
             margin-bottom: 2rem;
-            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.1);
+            text-shadow: none;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .hero-buttons {
+            animation: fadeInUp 0.8s ease-out 0.6s both;
+            gap: 1rem;
         }
 
         .hero-buttons .btn {
             margin: 0.5rem;
-            padding: 0.75rem 1.5rem;
-            font-size: 1rem;
-            border-radius: 0.5rem;
+            padding: 0.875rem 2rem;
+            font-size: 1.05rem;
+            border-radius: 50px;
             backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
             transition: all 0.3s ease;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
         .hero-buttons .btn-outline-primary {
@@ -83,85 +153,212 @@
 
         .hero-buttons .btn-outline-primary:hover {
             background: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.25);
+            border-color: rgba(255, 255, 255, 0.5);
         }
 
         .hero-buttons .btn-primary {
-            /* Changed to btn-success in new code for 'Create New Slide' */
             background: linear-gradient(45deg, #4f46e5, #7c3aed);
             border: none;
             color: #ffffff;
         }
 
         .hero-buttons .btn-primary:hover {
-            /* For Import DOCX/ZIP */
             background: linear-gradient(45deg, #3b82f6, #8b5cf6);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(79, 70, 229, 0.4);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.5);
         }
 
-        /* Specific style for the green 'Create New Slide' button from the new code */
         .hero-buttons .btn-success {
-            background: linear-gradient(45deg, #28a745, #218838);
-            /* Green gradient */
+            background: linear-gradient(45deg, #10b981, #059669);
             border: none;
             color: #ffffff;
         }
 
         .hero-buttons .btn-success:hover {
-            background: linear-gradient(45deg, #218838, #1e7e34);
-            transform: translateY(-2px);
-            box-shadow: 0 6px 16px rgba(40, 167, 69, 0.4);
+            background: linear-gradient(45deg, #059669, #047857);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(16, 185, 129, 0.5);
         }
 
-        .slide-stack {
-            position: relative;
-            width: 600px;
-            /* Adjust as needed */
-            height: 400px;
-            /* Adjust as needed */
-            margin-top: 3rem;
+        /* Features Section */
+        .features-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(240, 230, 255, 0.7) 100%);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(100, 150, 255, 0.15);
+            color: #2d3748;
+        }
+
+        .section-title {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            text-shadow: none;
+        }
+
+        .feature-card {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(167, 139, 250, 0.2);
+            padding: 2rem;
+            border-radius: 15px;
+            text-align: center;
+            transition: all 0.3s ease;
+            height: 100%;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-card:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(167, 139, 250, 0.5);
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(167, 139, 250, 0.15);
+        }
+
+        .feature-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            display: block;
+        }
+
+        .feature-card h3 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #2d3748;
+        }
+
+        .feature-card p {
+            font-size: 0.95rem;
+            color: #5a6c7d;
+            margin: 0;
+        }
+
+        /* How It Works Section */
+        .how-it-works-section {
+            background: linear-gradient(135deg, rgba(224, 242, 254, 0.6) 0%, rgba(240, 230, 255, 0.6) 100%);
+            backdrop-filter: blur(8px);
+            border-top: 1px solid rgba(100, 150, 255, 0.15);
+            color: #2d3748;
+        }
+
+        .step-number {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(135deg, #4f46e5, #7c3aed);
+            border-radius: 50%;
             display: flex;
+            align-items: center;
             justify-content: center;
+            font-size: 1.8rem;
+            font-weight: bold;
+            margin: 0 auto 1rem;
+            color: #ffffff;
+            box-shadow: 0 8px 20px rgba(79, 70, 229, 0.3);
         }
 
-        .slide-stack img {
-            position: absolute;
-            width: 100%;
-            border-radius: 0.75rem;
-            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.25);
-            transition: transform 0.3s;
-            border: 2px solid rgba(255, 255, 255, 0.1);
+        .how-it-works-section h4 {
+            font-size: 1.3rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
         }
 
-        /* Layered slide effect */
-        .slide-stack img:nth-child(1) {
-            z-index: 4;
-            transform: rotate(0deg) translate(0px, 0px);
+        .how-it-works-section p {
+            color: #5a6c7d;
+            font-size: 0.95rem;
         }
 
-        .slide-stack img:nth-child(2) {
-            z-index: 3;
-            transform: rotate(-3deg) translate(-15px, 15px);
+        /* Capabilities Section */
+        .capabilities-section {
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.7) 0%, rgba(248, 240, 255, 0.7) 100%);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(100, 150, 255, 0.15);
+            color: #2d3748;
         }
 
-        .slide-stack img:nth-child(3) {
-            z-index: 2;
-            transform: rotate(4deg) translate(-30px, 30px);
+        .capability-item {
+            background: rgba(255, 255, 255, 0.8);
+            backdrop-filter: blur(10px);
+            border: 2px solid rgba(96, 165, 250, 0.15);
+            padding: 1.5rem;
+            border-radius: 12px;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
         }
 
-        .slide-stack img:nth-child(4) {
-            z-index: 1;
-            transform: rotate(-5deg) translate(-45px, 45px);
+        .capability-item:hover {
+            background: rgba(255, 255, 255, 0.95);
+            border-color: rgba(96, 165, 250, 0.4);
+            transform: translateX(5px);
+            box-shadow: 0 8px 20px rgba(96, 165, 250, 0.15);
+        }
+
+        .capability-icon {
+            font-size: 2.5rem;
+            flex-shrink: 0;
+            display: block;
+        }
+
+        .capability-item h5 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 0.3rem;
+        }
+
+        .capability-item p {
+            font-size: 0.9rem;
+            color: #5a6c7d;
+            margin: 0;
+        }
+
+        /* CTA Section */
+        .cta-section {
+            background: linear-gradient(135deg, rgba(168, 85, 247, 0.15), rgba(96, 165, 250, 0.15));
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(100, 150, 255, 0.15);
+            border-bottom: 1px solid rgba(100, 150, 255, 0.15);
+            color: #2d3748;
+        }
+
+        .cta-description {
+            font-size: 1.1rem;
+            color: #5a6c7d;
+        }
+
+        .cta-section .btn-light {
+            background: linear-gradient(45deg, #4f46e5, #7c3aed);
+            color: #ffffff;
+            border: none;
+            font-weight: 600;
+            transition: all 0.3s ease;
+        }
+
+        .cta-section .btn-light:hover {
+            background: linear-gradient(45deg, #3b82f6, #8b5cf6);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(79, 70, 229, 0.3);
+            color: #ffffff;
+        }
+
+        /* Footer */
+        .footer-section {
+            background: linear-gradient(135deg, rgba(226, 232, 240, 0.8), rgba(240, 230, 255, 0.8));
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(100, 150, 255, 0.15);
+            color: #5a6c7d;
+            font-size: 0.9rem;
         }
 
         /* Styles for the editor page to blend with the theme if visible */
         #editorPage {
             min-height: 100vh;
-            /* Ensure editor page takes full height */
-            background: rgba(255, 255, 255, 0.1);
-            /* Slightly transparent background for editor */
+            background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(8px);
             padding-top: 20px;
         }
@@ -172,7 +369,6 @@
             border-radius: 0.5rem;
             color: #ffffff;
             height: calc(100vh - 40px);
-            /* Adjust height */
             overflow-y: auto;
         }
 
@@ -182,7 +378,6 @@
             border-radius: 0.5rem;
             color: #ffffff;
             height: calc(100vh - 40px);
-            /* Adjust height */
             display: flex;
             flex-direction: column;
         }
@@ -204,7 +399,6 @@
             padding: 0.375rem 0.75rem;
             border-radius: 0.25rem;
             appearance: none;
-            /* Remove default arrow */
             background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3e%3cpath fill='none' stroke='%23ffffff' stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='m2 5 6 6 6-6'/%3e%3c/svg%3e");
             background-repeat: no-repeat;
             background-position: right 0.75rem center;
@@ -213,7 +407,6 @@
 
         #toolbar select option {
             background-color: #764ba2;
-            /* Darker background for dropdown options */
             color: #ffffff;
         }
 
@@ -232,7 +425,6 @@
             border: 1px solid rgba(255, 255, 255, 0.3);
             background: rgba(255, 255, 255, 0.05);
             min-height: 400px;
-            /* Placeholder height */
             flex-grow: 1;
             padding: 20px;
             border-radius: 0.5rem;
@@ -303,27 +495,166 @@
 
 <body>
 
-    <div id="homePage" class="hero-section">
-        <h1 class="hero-title">SlideGen - AI Presentation Maker</h1>
-        <p class="hero-description">
-            Quickly create beautiful slide decks from your documents or ideas using AI. Import, customize, and export
-            your slides in just a few clicks.
-        </p>
+    <div id="homePage">
+        <div class="hero-section">
+            <h1 class="hero-title">✨ SlideGen</h1>
+            <p class="hero-subtitle">AI-Powered Presentation Generator</p>
+            <p class="hero-description">
+                Transform your ideas into stunning presentations in seconds. Powered by advanced AI technology.
+            </p>
 
-        <div class="hero-buttons d-flex flex-wrap justify-content-center">
-            <button class="btn btn-primary btn-lg" onclick="document.getElementById('docxFile').click()">Import
-                DOCX</button>
-            <input type="file" id="docxFile" accept=".docx" style="display: none;">
+            <div class="hero-buttons d-flex flex-wrap justify-content-center">
+                <button class="btn btn-primary btn-lg" onclick="document.getElementById('docxFile').click()">
+                    <i class="bi bi-file-earmark-word"></i> Import DOCX/ZIP
+                </button>
+                <input type="file" id="docxFile" accept=".docx,.zip" style="display: none;">
 
-            <button class="btn btn-success btn-lg" onclick="createNewSlide()">Create New Slide</button>
+                <button class="btn btn-success btn-lg" onclick="createNewSlide()">
+                    <i class="bi bi-plus-circle"></i> Create New Slide
+                </button>
+            </div>
         </div>
 
-        <!-- <div class="slide-stack">
-            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_8.png" alt="Slide 1">
-            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_9.png" alt="Slide 2">
-            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_10.png" alt="Slide 3">
-            <img src="./output/VẤN ĐỀ VỀ CHỦ QUYỀN BIỂN ĐẢO VIỆT NAM/png/slide_11.png" alt="Slide 4">
-        </div> -->
+        <!-- Features Section -->
+        <section class="features-section">
+            <div class="container py-5">
+                <h2 class="section-title mb-5">Why Choose SlideGen?</h2>
+                <div class="row">
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h3>Lightning Fast</h3>
+                            <p>Create professional presentations in seconds with AI-powered content generation</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">🎨</div>
+                            <h3>Beautiful Design</h3>
+                            <p>Modern templates and layouts that make your presentations stand out</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">✏️</div>
+                            <h3>Easy Editing</h3>
+                            <p>Intuitive editor to customize every detail of your slides</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="how-it-works-section">
+            <div class="container py-5">
+                <h2 class="section-title mb-5">How It Works</h2>
+                <div class="row">
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="step-number">1</div>
+                        <h4>Import</h4>
+                        <p>Upload your DOCX or ZIP file</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="step-number">2</div>
+                        <h4>Generate</h4>
+                        <p>AI creates beautiful slides</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="step-number">3</div>
+                        <h4>Customize</h4>
+                        <p>Edit and refine your content</p>
+                    </div>
+                    <div class="col-md-3 text-center mb-4">
+                        <div class="step-number">4</div>
+                        <h4>Export</h4>
+                        <p>Download as PDF or HTML</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Capabilities Section -->
+        <section class="capabilities-section">
+            <div class="container py-5">
+                <h2 class="section-title mb-5">Powerful Features</h2>
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <div class="capability-item">
+                            <span class="capability-icon">📄</span>
+                            <div>
+                                <h5>Multiple Import Formats</h5>
+                                <p>DOCX, ZIP, and more - import your content from any source</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="capability-item">
+                            <span class="capability-icon">🎯</span>
+                            <div>
+                                <h5>Smart Content Organization</h5>
+                                <p>AI automatically structures your content into logical slides</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="capability-item">
+                            <span class="capability-icon">🖼️</span>
+                            <div>
+                                <h5>Rich Media Support</h5>
+                                <p>Add images, videos, shapes, and custom layouts</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="capability-item">
+                            <span class="capability-icon">📊</span>
+                            <div>
+                                <h5>Multiple Export Options</h5>
+                                <p>Export to PDF, HTML, PNG and more formats</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="capability-item">
+                            <span class="capability-icon">🎪</span>
+                            <div>
+                                <h5>Presentation Mode</h5>
+                                <p>Built-in presentation mode with fullscreen support</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6 mb-3">
+                        <div class="capability-item">
+                            <span class="capability-icon">⌨️</span>
+                            <div>
+                                <h5>Keyboard Shortcuts</h5>
+                                <p>Professional keyboard navigation for efficient workflow</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container py-5 text-center">
+                <h2 class="section-title mb-4">Ready to Create Amazing Presentations?</h2>
+                <p class="cta-description mb-4">Start for free today - no credit card required</p>
+                <button class="btn btn-light btn-lg"
+                    onclick="document.getElementById('homePage').scrollIntoView({behavior: 'smooth'});">
+                    Get Started Now
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer-section">
+            <div class="container py-4 text-center">
+                <p class="mb-0">&copy; 2025 SlideGen. All rights reserved. Made with ❤️ for creators.</p>
+            </div>
+        </footer>
     </div>
 
     <div id="editorPage" class="container-fluid" style="display: none;">

@@ -2412,29 +2412,7 @@
 
         <div class="toolbar-center">
             <div class="btn-group">
-                <button id="selectBtn" class="active">🎯 Select</button>
                 <button id="textBtn">📝 Text</button>
-            </div>
-
-            <div class="btn-group-separator"></div>
-
-            <div class="btn-group">
-                <button id="importBtn">📂 Import Slides</button>
-            </div>
-
-            <div class="btn-group-separator"></div>
-
-            <!-- 
-            <div class="btn-group">
-                <button id="captureCurrentBtn" class="capture-btn" title="Chụp slide hiện tại">📸 Capture</button>
-                <button id="captureAll Btn" class="capture-btn" title="Chụp tất cả slides">📸 All</button>
-            </div>
-
-            <div class="btn-group-separator"></div>
-            -->
-
-            <div class="btn-group">
-                <!-- <button id="exportPdfBtn" class="capture-btn" title="Xuất slide hiện tại thành PDF">📄 Export PDF</button> -->
                 <button id="exportAllPdfBtn" class="capture-btn" title="Xuất tất cả slides thành PDF">📄 Export</button>
             </div>
         </div>
@@ -5126,7 +5104,6 @@
             }
 
             bindEvents() {
-                document.getElementById('selectBtn').addEventListener('click', () => this.setMode('select'));
                 document.getElementById('textBtn').addEventListener('click', () => this.setMode('text'));
                 document.getElementById('propertiesBtn').addEventListener('click', () => this.toggleProperties());
                 document.getElementById('toggleSlidesBtn').addEventListener('click', () => this.toggleSlides());
@@ -5175,7 +5152,6 @@
                 document.getElementById('newSlideBtn').addEventListener('click', () => this.createNewSlide());
                 document.getElementById('duplicateSlideBtn').addEventListener('click', () => this.duplicateCurrentSlide());
 
-                document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
                 document.getElementById('importFile').addEventListener('change', (e) => this.importSlides(e));
 
                 document.getElementById('zoomIn').addEventListener('click', () => this.zoom(this.zoomLevel * 1.2));
