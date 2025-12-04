@@ -1,0 +1,23 @@
+# GEMINI_API_KEY
+GEMINI_API_KEY=""
+
+LITELLM__MODEL=gemini-2.5-flash
+LITELLM__URL=http://litellm:4000
+# LITELLM__URL=http://localhost:9510
+LITELLM__EMBEDDING_MODEL=embedding-004
+
+# AGENT__URL
+AGENT__URL=https://generativelanguage.googleapis.com/v1beta/openai/
+
+# MINIO
+MINIO__BUCKET=slidegen
+MINIO__ENDPOINT=minio:9000
+MINIO__ACCESS_KEY=minioadmin
+MINIO__SECRET_KEY=minioadmin
+
+#CHROMADB
+CHROMADB__HOST=chromadb
+CHROMADB__PORT=8000
+
+#TOOL
+TOOL_RETRIEVER_URL=http://tool_service:9229
