@@ -158,75 +158,11 @@ async function handleZipImport() {
 }
 
 function createNewSlide() {
-    const slideList = document.getElementById('slideList');
-    const slideCount = slideList.children.length + 1;
-    const defaultContent = `
-        <!DOCTYPE html>
-        <html>
-            <head>
-                <meta charset="UTF-8">
-                <style>
-                    body {
-                        margin: 0;
-                        padding: 0;
-                        width: 1920px;
-                        height: 1080px;
-                        background-color: #1a2526;
-                        color: #fff;
-                        font-family: Arial, sans-serif;
-                    }
-                    .slide-container {
-                        width: 100%;
-                        height: 100%;
-                        display: flex;
-                        flex-direction: row;
-                    }
-                    .left-container {
-                        min-width: 600px;
-                        height: 100%;
-                        flex: 1;
-                        padding: 32px;
-                        display: flex;
-                        flex-direction: column;
-                        justify-content: center;
-                    }
-                    .right-container {
-                        height: 100%;
-                        flex: 2;
-                        padding: 32px;
-                    }
-                    .title {
-                        font-size: 32px;
-                        white-space: nowrap;
-                        margin-bottom: 16px;
-                    }
-                    .subtitle {
-                        font-size: 24px;
-                        white-space: nowrap;
-                        margin-bottom: 16px;
-                    }
-                    p {
-                        font-size: 20px;
-                        line-height: 1.5;
-                    }
-                </style>
-            </head>
-            <body>
-                <div class="slide-container">
-                    <div class="left-container">
-                        <h1 class="title">New Slide</h1>
-                        <h2 class="subtitle">Click to edit this slide</h2>
-                        <p>Start adding your content here.</p>
-                    </div>
-                    <div class="right-container">
-                        <!-- Nội dung bên phải có thể để trống hoặc thêm hình ảnh -->
-                    </div>
-                </div>
-            </body>
-        </html>
-    `;
-    addNewSlide(defaultContent, slideCount);
-    showEditor();
+    // Chuyển hướng đến trang edit.html để sử dụng giao diện mới
+    showLoading("Đang chuyển đến trang editor...");
+    setTimeout(() => {
+        window.location.href = '/edit?source=new&mode=create';
+    }, 500);
 }
 
 function addNewSlide(content, index) {
