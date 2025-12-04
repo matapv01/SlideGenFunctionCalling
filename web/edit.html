@@ -2112,24 +2112,25 @@
 <body>
     <div class="toolbar">
         <div class="toolbar-left">
-            <div class="logo" onclick="window.location.href='/static/index.html'" style="cursor: pointer;" title="Quay về trang chủ">SlideGenius</div>
+            <div class="logo" onclick="window.location.href='/static/index.html'" style="cursor: pointer;"
+                title="Quay về trang chủ">SlideGenius</div>
             <button id="toggleSlidesBtn" title="Thu gọn/Mở rộng Slides">📑</button>
         </div>
-        
+
         <div class="toolbar-center">
             <div class="btn-group">
                 <button id="selectBtn" class="active">🎯 Select</button>
                 <button id="textBtn">📝 Text</button>
             </div>
-            
+
             <div class="btn-group-separator"></div>
-            
+
             <div class="btn-group">
                 <button id="importBtn">📂 Import Slides</button>
             </div>
-            
+
             <div class="btn-group-separator"></div>
-            
+
             <!-- 
             <div class="btn-group">
                 <button id="captureCurrentBtn" class="capture-btn" title="Chụp slide hiện tại">📸 Capture</button>
@@ -2138,19 +2139,20 @@
 
             <div class="btn-group-separator"></div>
             -->
-            
+
             <div class="btn-group">
                 <!-- <button id="exportPdfBtn" class="capture-btn" title="Xuất slide hiện tại thành PDF">📄 Export PDF</button> -->
                 <button id="exportAllPdfBtn" class="capture-btn" title="Xuất tất cả slides thành PDF">📄 Export</button>
             </div>
         </div>
-        
+
         <div class="toolbar-right">
             <div class="btn-group">
                 <button id="propertiesBtn">⚙️ Properties</button>
                 <button id="resetViewBtn">🔄 Reset View</button>
             </div>
-            <button id="resetAllBtn" title="Reset slide hiện tại về trạng thái ban đầu" style="display: none;">🔄 Reset Slide</button>
+            <button id="resetAllBtn" title="Reset slide hiện tại về trạng thái ban đầu" style="display: none;">🔄 Reset
+                Slide</button>
         </div>
     </div>
 
@@ -3052,13 +3054,6 @@
                 this.updateProperties();
                 this.renderSlidesList();
 
-                // Load slides từ localStorage nếu có
-                const slidesLoaded = this.loadSlidesFromStorage();
-                if (!slidesLoaded) {
-                    // Nếu không load được slides từ storage, tạo slide đầu tiên
-                    // (createFirstSlide() đã được gọi ở trên)
-                }
-
                 // Debounced functions for performance optimization - sau khi tất cả đã init
                 this.debouncedUpdateConnectorLines = this.debounce(() => {
                     this.updateConnectorLines();
@@ -3860,10 +3855,10 @@
             handleMouseMove(e) {
                 if (this.isResizing) {
                     if (this.selectedElements.length !== 1) return;
-                    
+
                     // Store reference to prevent tampering
                     const targetElement = this.selectedElements[0];
-                    
+
                     const dx = (e.clientX - this.dragStart.x) / this.zoomLevel;
                     const dy = (e.clientY - this.dragStart.y) / this.zoomLevel;
                     const el = targetElement;
@@ -3900,13 +3895,13 @@
                             console.warn('Element mismatch during resize!');
                             return;
                         }
-                        
+
                         // Get current actual dimensions
                         const currentWidth = parseInt(el.style.width) || newWidth;
                         const currentHeight = parseInt(el.style.height) || newHeight;
                         const minDimension = Math.min(currentWidth, currentHeight);
                         const fontSize = Math.max(16, Math.min(300, minDimension * 0.7));
-                        
+
                         // Apply ONLY to this specific element
                         el.style.fontSize = `${fontSize}px`;
                     }
@@ -4047,12 +4042,10 @@
                 this.slides.push(slide);
                 this.loadSlide(0);
                 this.saveState();
-                
+
                 // Lưu trạng thái ban đầu cho chức năng reset (chỉ khi là slide đầu tiên)
                 if (this.slides.length === 1) {
-                    setTimeout(() => {
-                        this.saveOriginalState();
-                    }, 100); // Delay nhỏ để đảm bảo slide đã load xong
+                    this.saveOriginalState();
                 }
             }
 
@@ -4087,6 +4080,11 @@
                 // Save state
                 this.saveState();
 
+                // Update originalSlides to include new slide
+                if (this.originalSlides) {
+                    this.originalSlides.push(JSON.parse(JSON.stringify(slide)));
+                }
+
                 // Add a small visual feedback
                 const newSlideElement = this.slidesList.querySelector(`.slide-item:last-child`);
                 if (newSlideElement) {
@@ -4111,6 +4109,12 @@
                     zIndexCounter: currentSlide.zIndexCounter
                 };
                 this.slides.push(newSlide);
+
+                // Update originalSlides to include duplicated slide
+                if (this.originalSlides) {
+                    this.originalSlides.push(JSON.parse(JSON.stringify(newSlide)));
+                }
+
                 this.switchToSlide(this.slides.length - 1);
                 this.updateSlideNames(); // Update all slide names after duplicating
             }
@@ -4329,7 +4333,7 @@
                     }
                 }, 1000);
 
-                console.log('� DOM monitoring started for:', backgroundColor);
+                console.log('  DOM monitoring started for:', backgroundColor);
             }
 
             stopBackgroundMonitoring() {
@@ -4797,7 +4801,7 @@
                 document.getElementById('resetViewBtn').addEventListener('click', () => this.fitToScreen());
                 document.getElementById('resetAllBtn').addEventListener('click', () => this.resetToOriginalState());
                 // document.getElementById('exportBtn').addEventListener('click', () => this.showExportOptions());
-                
+
                 // Capture buttons
                 // document.getElementById('captureCurrentBtn').addEventListener('click', () => this.captureCurrentSlide());
                 // document.getElementById('captureAllBtn').addEventListener('click', () => this.captureAllSlides());
@@ -8773,7 +8777,6 @@
                 let importedCount = 0;
                 const totalFiles = files.length;
 
-
                 files.forEach((file) => {
                     const reader = new FileReader();
                     reader.onload = (event) => {
@@ -8837,6 +8840,7 @@
                                         this.renderSlidesList();
                                         this.switchToSlide(this.slides.length - totalFiles);
                                         console.log('🎯 Switched to newly imported slide:', this.slides.length - totalFiles);
+                                        this.showSuccessMessage(`✅ Imported ${totalFiles} slide(s) successfully!`);
                                     }
                                 } else {
                                     throw new Error("No valid content found.");
@@ -8846,7 +8850,7 @@
                             const doc = iframe.contentDocument;
                             doc.open(); doc.write(content); doc.close();
                         } catch (error) {
-                            alert(`Error importing slide ${file.name}: ${error.message}`);
+                            this.showErrorMessage(`Error importing slide ${file.name}: ${error.message}`);
                             console.error("Import failed:", error);
                             importedCount++;
                             if (importedCount === totalFiles) {
@@ -8859,6 +8863,8 @@
 
                 e.target.value = '';
             }
+
+
 
 
             findSolidBackgroundColor(startNode, sourceWindow) {
@@ -8877,23 +8883,37 @@
                     for (let style of styleElements) {
                         const cssText = style.textContent || style.innerHTML;
 
-                        // Regex để tìm body background-color
-                        const bodyBgMatch = cssText.match(/body[^{]*\{[^}]*background-color:\s*([^;]+);/i);
-                        if (bodyBgMatch) {
-                            const color = bodyBgMatch[1].trim();
-                            console.log('🎨 Found BODY background from CSS:', color);
-                            return color;
-                        }
+                        // ✅ FIX: Tìm background hoặc background-image (hỗ trợ gradient)
+                        // Tìm toàn bộ block body {...}
+                        const bodyBlockMatch = cssText.match(/body[^{]*\{([^}]+)\}/i);
+                        if (bodyBlockMatch) {
+                            const bodyBlock = bodyBlockMatch[1];
 
-                        // Regex để tìm body background (general)
-                        const bodyBgGeneralMatch = cssText.match(/body[^{]*\{[^}]*background:\s*([^;]+);/i);
-                        if (bodyBgGeneralMatch) {
-                            const bgValue = bodyBgGeneralMatch[1].trim();
-                            // Extract chỉ color part nếu có
-                            const colorMatch = bgValue.match(/rgb\([^)]+\)|#[a-fA-F0-9]{3,6}|[a-zA-Z]+/);
-                            if (colorMatch) {
-                                console.log('🎨 Found BODY background (general) from CSS:', colorMatch[0]);
-                                return colorMatch[0];
+                            // Ưu tiên: background (shorthand - có thể chứa gradient)
+                            const bgMatch = bodyBlock.match(/background:\s*([^;]+);/i);
+                            if (bgMatch) {
+                                const bgValue = bgMatch[1].trim();
+                                console.log('🎨 Found BODY background (with gradient) from CSS:', bgValue);
+                                return bgValue;
+                            }
+
+                            // Thứ hai: background-image (cho gradient riêng)
+                            const bgImageMatch = bodyBlock.match(/background-image:\s*([^;]+);/i);
+                            if (bgImageMatch) {
+                                const bgImage = bgImageMatch[1].trim();
+                                // Kiểm tra có gradient không
+                                if (bgImage.includes('gradient')) {
+                                    console.log('🎨 Found BODY gradient from CSS:', bgImage);
+                                    return bgImage;
+                                }
+                            }
+
+                            // Cuối cùng: background-color (solid color)
+                            const bgColorMatch = bodyBlock.match(/background-color:\s*([^;]+);/i);
+                            if (bgColorMatch) {
+                                const color = bgColorMatch[1].trim();
+                                console.log('🎨 Found BODY background-color from CSS:', color);
+                                return color;
                             }
                         }
                     }
@@ -8938,7 +8958,19 @@
             }
 
             applyCanvasBackground(sourceElement, sourceWindow, targetCanvas) {
-                targetCanvas.style.backgroundColor = this.findSolidBackgroundColor(sourceElement, sourceWindow);
+                const bgValue = this.findSolidBackgroundColor(sourceElement, sourceWindow);
+
+                // ✅ FIX: Kiểm tra xem có phải gradient không
+                if (bgValue.includes('gradient')) {
+                    // Đây là gradient - apply vào background (không phải backgroundColor)
+                    targetCanvas.style.background = bgValue;
+                    console.log('🎨 Applied gradient background:', bgValue);
+                } else {
+                    // Đây là solid color
+                    targetCanvas.style.backgroundColor = bgValue;
+                    console.log('🎨 Applied solid backgroundColor:', bgValue);
+                }
+
                 const beforeStyle = sourceWindow.getComputedStyle(sourceElement, '::before');
                 if (beforeStyle.content !== 'none' && beforeStyle.backgroundImage !== 'none') {
                     const pseudoBgLayer = document.createElement('div');
@@ -9272,138 +9304,18 @@
                 this.renderSlidesList();
                 this.saveState();
 
+                // Update originalSlides to include new slide from template
+                if (this.originalSlides) {
+                    this.originalSlides.push(JSON.parse(JSON.stringify(newSlide)));
+                }
+
                 // Show success message
                 this.showSuccessMessage(`✨ Created new slide: ${newSlide.name}`);
             }
 
-            loadSlidesFromStorage() {
-                // Luôn cố gắng nạp nếu có dữ liệu trong localStorage (không phụ thuộc source)
-                const urlParams = new URLSearchParams(window.location.search);
-                const source = urlParams.get('source');
 
-                // Lấy dữ liệu slides từ localStorage
-                const storedSlides = localStorage.getItem('generatedSlides');
-                const slidesSource = localStorage.getItem('slidesSource');
-                const originalFileName = localStorage.getItem('originalFileName');
-
-                if (storedSlides) {
-                    try {
-                        const slidesData = JSON.parse(storedSlides);
-                        console.log('Loading slides from storage:', slidesData);
-
-                        // Clear slides hiện tại
-                        this.slides = [];
-                        this.currentSlideIndex = 0;
-                        this.slideIdCounter = 1;
-
-                        // Convert dữ liệu slides từ API thành format của editor
-                        slidesData.forEach((slideData, index) => {
-                            const slide = {
-                                id: this.slideIdCounter++,
-                                name: slideData.title || `Slide ${index + 1}`,
-                                content: this.convertApiSlideToEditorFormat(slideData.content, slideData.metadata),
-                                backgroundColor: slideData.backgroundColor || this.extractBackgroundColor(slideData.content) || 'white',
-                                zIndexCounter: 1
-                            };
-                            this.slides.push(slide);
-                        });
-
-                        // Load slide đầu tiên
-                        if (this.slides.length > 0) {
-                            this.loadSlide(0);
-                            this.renderSlidesList();
-
-                            // Hiển thị thông báo thành công
-                            this.showSuccessMessage(`✨ Đã load ${this.slides.length} slides từ ${originalFileName || 'file'}`);
-
-                            // Xóa dữ liệu khỏi localStorage sau khi load
-                            localStorage.removeItem('generatedSlides');
-                            localStorage.removeItem('slidesSource');
-                            localStorage.removeItem('originalFileName');
-
-                            // Lưu trạng thái ban đầu cho chức năng reset
-                            setTimeout(() => {
-                                this.saveOriginalState();
-                            }, 100);
-
-                            return true; // Đã load thành công
-                        }
-                    } catch (error) {
-                        console.error('Error loading slides from storage:', error);
-                        this.showErrorMessage('Lỗi khi load slides từ storage');
-                    }
-                }
-                return false; // Không có slides để load
-            }
 
             // Helper function để convert HTML từ API thành format của editor
-            convertApiSlideToEditorFormat(htmlContent, metadata = null) {
-                try {
-                    // Dựng iframe như Import Slides để dùng lại processAndAppendImportedNode
-                    const iframe = document.createElement('iframe');
-                    iframe.style.display = 'none';
-                    document.body.appendChild(iframe);
-
-                    const doc = iframe.contentDocument;
-                    doc.open();
-                    doc.write(htmlContent);
-                    doc.close();
-
-                    const sourceDoc = iframe.contentDocument;
-                    const sourceWindow = iframe.contentWindow;
-                    const sourceBody = sourceDoc.body;
-                    const contentSource = sourceBody.querySelector('.content-wrapper') || sourceBody;
-
-                    const tempCanvas = document.createElement('div');
-                    tempCanvas.style.position = 'relative';
-                    tempCanvas.style.width = '1920px';
-                    tempCanvas.style.height = '1080px';
-
-                    // Copy tất cả <style>
-                    sourceDoc.querySelectorAll('style').forEach(styleEl => {
-                        tempCanvas.appendChild(styleEl.cloneNode(true));
-                    });
-
-                    // Copy SVG defs
-                    sourceBody.querySelectorAll('svg > defs').forEach(defs => {
-                        const svgWrapper = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-                        svgWrapper.setAttribute('width', '0');
-                        svgWrapper.setAttribute('height', '0');
-                        svgWrapper.appendChild(defs.cloneNode(true));
-                        tempCanvas.appendChild(svgWrapper);
-                    });
-
-                    // Áp background
-                    const bg = this.findSolidBackgroundColor(contentSource, sourceWindow);
-                    this.applyCanvasBackground(contentSource, sourceWindow, tempCanvas);
-                    tempCanvas.style.backgroundColor = bg || 'white';
-
-                    // Duyệt child và tách element
-                    Array.from(contentSource.children).forEach(child => {
-                        if (child.tagName && child.tagName.toLowerCase() === 'svg' && child.querySelector('defs')) return;
-                        this.processAndAppendImportedNode(child, tempCanvas, sourceWindow);
-                    });
-
-                    // Dọn dẹp iframe
-                    document.body.removeChild(iframe);
-
-                    return tempCanvas.innerHTML;
-                } catch (error) {
-                    console.error('Error converting API slide (iframe pipeline):', error);
-                    // Fallback cũ
-                    try {
-                        const wrapperElement = document.createElement('div');
-                        wrapperElement.className = 'element html-slide-content';
-                        wrapperElement.dataset.type = 'html-slide';
-                        wrapperElement.innerHTML = htmlContent;
-                        wrapperElement.style.cssText = `position:absolute;left:10px;top:10px;width:calc(100% - 20px);height:calc(100% - 20px);overflow:hidden;z-index:1;`;
-                        return wrapperElement.outerHTML;
-                    } catch (_) {
-                        return `<div class="element" style="position:absolute;left:50px;top:50px;width:500px;height:200px;padding:20px;background:#f8f9fa;border:1px solid #dee2e6;border-radius:8px;">Không thể hiển thị nội dung slide.</div>`;
-                    }
-                }
-            }
-
             // Convert từ metadata elements (cải thiện hơn HTML parsing)
             convertFromMetadataElements(metadataElements) {
                 const editorElements = [];
@@ -9637,7 +9549,7 @@
             }
 
             // === RESET FUNCTIONALITY ===
-            
+
             // Lưu trạng thái ban đầu khi import slides hoặc tạo mới
             saveOriginalState() {
                 this.originalSlides = JSON.parse(JSON.stringify(this.slides));
@@ -9659,52 +9571,67 @@
 
             // Reset slide hiện tại về trạng thái ban đầu
             resetToOriginalState() {
-                if (!this.originalSlides) {
-                    alert('Không có trạng thái ban đầu để reset!');
-                    return;
+                try {
+                    if (!this.originalSlides) {
+                        this.showErrorMessage('❌ Không có trạng thái ban đầu để reset!');
+                        console.error('originalSlides is null or undefined');
+                        return;
+                    }
+
+                    const currentSlideIndex = this.currentSlideIndex;
+                    console.log(`🔄 Attempting to reset slide ${currentSlideIndex + 1}, originalSlides length: ${this.originalSlides.length}`);
+
+                    if (currentSlideIndex < 0 || currentSlideIndex >= this.originalSlides.length) {
+                        this.showErrorMessage(`❌ Không tìm thấy trạng thái ban đầu của slide ${currentSlideIndex + 1}!`);
+                        console.error(`Invalid slide index: ${currentSlideIndex}, originalSlides length: ${this.originalSlides.length}`);
+                        return;
+                    }
+
+                    const originalSlide = this.originalSlides[currentSlideIndex];
+
+                    if (!originalSlide) {
+                        this.showErrorMessage(`❌ Slide ${currentSlideIndex + 1} không có dữ liệu ban đầu!`);
+                        console.error(`Original slide at index ${currentSlideIndex} is null`);
+                        return;
+                    }
+
+                    // Hiển thị confirmation dialog
+                    if (!confirm(`Bạn có chắc chắn muốn reset slide ${currentSlideIndex + 1} về trạng thái ban đầu?\n\nTất cả thay đổi trên slide này sẽ bị mất!`)) {
+                        return;
+                    }
+
+                    console.log(`🔄 Đang reset slide ${currentSlideIndex + 1} về trạng thái ban đầu...`);
+
+                    // Save current slide before reset
+                    this.saveCurrentSlide();
+
+                    // Reset chỉ slide hiện tại
+                    this.slides[currentSlideIndex] = JSON.parse(JSON.stringify(originalSlide));
+
+                    // Clear canvas và reload slide hiện tại
+                    this.canvas.innerHTML = '';
+                    this.loadSlide(currentSlideIndex);
+                    this.renderSlidesList();
+                    this.updateProperties();
+
+                    // Clear selection
+                    this.selectedElements = [];
+
+                    console.log(`✅ Đã reset slide ${currentSlideIndex + 1} về trạng thái ban đầu thành công!`);
+                    this.showSuccessMessage(`✅ Đã reset slide ${currentSlideIndex + 1} về trạng thái ban đầu!`);
+                } catch (error) {
+                    console.error('❌ Lỗi khi reset slide:', error);
+                    this.showErrorMessage(`❌ Lỗi khi reset slide: ${error.message}`);
                 }
-
-                const currentSlideIndex = this.currentSlideIndex;
-                const originalSlide = this.originalSlides[currentSlideIndex];
-                
-                if (!originalSlide) {
-                    alert('Không tìm thấy trạng thái ban đầu của slide này!');
-                    return;
-                }
-
-                // Hiển thị confirmation dialog
-                if (!confirm(`Bạn có chắc chắn muốn reset slide ${currentSlideIndex + 1} về trạng thái ban đầu?\n\nTất cả thay đổi trên slide này sẽ bị mất!`)) {
-                    return;
-                }
-
-                console.log(`🔄 Đang reset slide ${currentSlideIndex + 1} về trạng thái ban đầu...`);
-
-                // Save current slide before reset
-                this.saveCurrentSlide();
-
-                // Reset chỉ slide hiện tại
-                this.slides[currentSlideIndex] = JSON.parse(JSON.stringify(originalSlide));
-                
-                // Clear canvas và reload slide hiện tại
-                this.canvas.innerHTML = '';
-                this.loadSlide(currentSlideIndex);
-                this.renderSlidesList();
-                this.updateProperties();
-                
-                // Clear selection
-                this.selectedElements = [];
-                
-                console.log(`✅ Đã reset slide ${currentSlideIndex + 1} về trạng thái ban đầu thành công!`);
-                alert(`✅ Đã reset slide ${currentSlideIndex + 1} về trạng thái ban đầu!`);
             }
 
             // === CAPTURE SLIDE FUNCTIONALITY ===
             async captureCurrentSlide() {
                 try {
                     this.showSuccessMessage('📸 Đang chụp slide...');
-                    
+
                     const result = await this.slideCapture.captureCurrentSlide();
-                    
+
                     if (result.success) {
                         this.showCaptureSuccessDialog(result);
                     } else {
@@ -9718,9 +9645,9 @@
             async captureAllSlides() {
                 try {
                     this.showSuccessMessage('📸 Đang chụp tất cả slides...');
-                    
+
                     const result = await this.slideCapture.captureAllSlides();
-                    
+
                     if (result.success) {
                         this.showCaptureAllSuccessDialog(result);
                     } else {
@@ -9734,7 +9661,7 @@
             async exportCurrentSlideToPdf() {
                 try {
                     this.showSuccessMessage('📄 Đang xuất slide thành PDF...');
-                    
+
                     const currentSlide = this.slides[this.currentSlideIndex];
                     if (!currentSlide) {
                         throw new Error('Không có slide để xuất');
@@ -9752,7 +9679,7 @@
                     });
 
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         this.showPdfExportSuccessDialog(result);
                     } else {
@@ -9766,7 +9693,7 @@
             async exportAllSlidesToPdf() {
                 try {
                     this.showSuccessMessage('📄 Đang xuất tất cả slides thành PDF...');
-                    
+
                     if (this.slides.length === 0) {
                         throw new Error('Không có slide để xuất');
                     }
@@ -9787,7 +9714,7 @@
                     });
 
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         this.showPdfExportAllSuccessDialog(result);
                     } else {
@@ -9842,7 +9769,7 @@
                 document.addEventListener('keydown', handleEscape);
 
                 document.body.appendChild(modal);
-                
+
                 // Auto close after 10 seconds
                 setTimeout(() => {
                     if (document.getElementById('captureSuccessModal')) {
@@ -9900,7 +9827,7 @@
                 document.addEventListener('keydown', handleEscape);
 
                 document.body.appendChild(modal);
-                
+
                 // Auto close after 15 seconds
                 setTimeout(() => {
                     if (document.getElementById('captureAllSuccessModal')) {
@@ -9949,7 +9876,7 @@
                 document.addEventListener('keydown', handleEscape);
 
                 document.body.appendChild(modal);
-                
+
                 // Auto close after 10 seconds
                 setTimeout(() => {
                     if (document.getElementById('pdfExportSuccessModal')) {
@@ -9998,7 +9925,7 @@
                 document.addEventListener('keydown', handleEscape);
 
                 document.body.appendChild(modal);
-                
+
                 // Auto close after 10 seconds
                 setTimeout(() => {
                     if (document.getElementById('pdfExportAllSuccessModal')) {
@@ -10021,10 +9948,10 @@
                     `;
                     document.body.appendChild(msgEl);
                 }
-                
+
                 msgEl.textContent = message;
                 msgEl.style.display = 'block';
-                
+
                 setTimeout(() => {
                     if (msgEl && msgEl.parentNode) {
                         msgEl.parentNode.removeChild(msgEl);
@@ -10046,10 +9973,10 @@
                     `;
                     document.body.appendChild(msgEl);
                 }
-                
+
                 msgEl.textContent = message;
                 msgEl.style.display = 'block';
-                
+
                 setTimeout(() => {
                     if (msgEl && msgEl.parentNode) {
                         msgEl.parentNode.removeChild(msgEl);
@@ -10062,20 +9989,20 @@
             testCapture() {
                 // Enhanced test function
                 console.group('🧪 TEST: Capture Process');
-                
+
                 try {
                     console.log('Testing capture process...');
-                    
+
                     // Test HTML generation
                     const html = this.slideCapture.getCurrentSlideHTML();
                     if (html) {
                         console.log('✅ HTML generated successfully');
                         console.log('HTML length:', html.length);
                         console.log('HTML preview (first 200 chars):', html.substring(0, 200) + '...');
-                        
+
                         // Show preview
                         this.slideCapture.previewSlide();
-                        
+
                         // Show success message
                         this.showSuccessMessage('✅ HTML generated successfully! Check console for details.');
                     } else {
@@ -10086,21 +10013,21 @@
                     console.error('❌ Error in test capture:', error);
                     this.showErrorMessage(`❌ Error: ${error.message}`);
                 }
-                
+
                 console.groupEnd();
             }
 
             // Enhanced logging for capture functions
             async captureCurrentSlide() {
                 console.log('🎯 Starting capture current slide...');
-                
+
                 try {
                     this.showSuccessMessage('📸 Đang chụp slide...');
-                    
+
                     const result = await this.slideCapture.captureCurrentSlide();
-                    
+
                     console.log('✅ Capture result:', result);
-                    
+
                     if (result.success) {
                         this.showCaptureSuccessDialog(result);
                     } else {
@@ -10125,33 +10052,33 @@
 
             getCurrentSlideHTML() {
                 console.log('🔍 SlideCapture.getCurrentSlideHTML() called');
-                
+
                 const currentSlide = this.slideEditor.slides[this.slideEditor.currentSlideIndex];
                 if (!currentSlide) {
                     console.error('❌ No current slide found');
                     return null;
                 }
-                
+
                 console.log('📄 Current slide data:', {
                     index: this.slideEditor.currentSlideIndex,
                     name: currentSlide.name,
                     backgroundColor: currentSlide.backgroundColor,
                     contentLength: currentSlide.content?.length || 0
                 });
-                
+
                 const html = this.createCompleteHTML(currentSlide);
-                
+
                 console.log('✅ HTML generated, length:', html?.length || 0);
-                
+
                 return html;
             }
 
             createCompleteHTML(slide) {
                 console.log('🏗️ SlideCapture.createCompleteHTML() called for slide:', slide.name);
-                
+
                 const backgroundColor = slide.backgroundColor || 'white';
                 const content = slide.content || '';
-                
+
                 console.log('🎨 Slide properties:', {
                     backgroundColor,
                     contentLength: content.length,
@@ -10239,7 +10166,7 @@
     </div>
 </body>
 </html>`;
-                
+
                 console.log('📝 Complete HTML generated, length:', html.length);
                 return html;
             }
@@ -10247,12 +10174,12 @@
             cleanSlideContent(content) {
                 console.log('🧹 SlideCapture.cleanSlideContent() called');
                 console.log('📥 Original content length:', content?.length || 0);
-                
+
                 if (!content) {
                     console.log('⚠️ No content to clean');
                     return '';
                 }
-                
+
                 // Tạo temporary DOM để xử lý
                 const tempDiv = document.createElement('div');
                 tempDiv.innerHTML = content;
@@ -10264,7 +10191,7 @@
                 const controlPoints = tempDiv.querySelectorAll('.connector-control-point');
                 const smartGuides = tempDiv.querySelectorAll('.smart-guide');
                 const distanceIndicators = tempDiv.querySelectorAll('.distance-indicator');
-                
+
                 console.log('🗑️ Removing editor elements:', {
                     resizeHandles: resizeHandles.length,
                     controlPoints: controlPoints.length,
@@ -10276,10 +10203,10 @@
                 controlPoints.forEach(el => el.remove());
                 smartGuides.forEach(el => el.remove());
                 distanceIndicators.forEach(el => el.remove());
-                
+
                 const elements = tempDiv.querySelectorAll('.element');
                 console.log('🎨 Processing elements:', elements.length);
-                
+
                 elements.forEach((el, index) => {
                     console.log(`  Element ${index + 1}:`, {
                         tagName: el.tagName,
@@ -10287,16 +10214,16 @@
                         hasContentEditable: el.hasAttribute('contenteditable'),
                         textContent: el.textContent?.substring(0, 50) + '...'
                     });
-                    
+
                     el.removeAttribute('contenteditable');
                     el.classList.remove('selected', 'dragging', 'editing', 'hover');
                     el.style.outline = 'none';
                     el.style.cursor = 'default';
-                    
+
                     if (el.style.border && el.style.border.includes('dashed')) {
                         el.style.border = 'none';
                     }
-                    
+
                     if (el.style.backgroundColor === 'rgba(255, 0, 0, 0.1)') {
                         el.style.backgroundColor = '';
                     }
@@ -10335,7 +10262,7 @@
                     }
 
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         return {
                             success: true,
@@ -10381,7 +10308,7 @@
                     }
 
                     const result = await response.json();
-                    
+
                     if (result.success) {
                         return {
                             success: true,
@@ -10402,14 +10329,14 @@
             previewSlide(slideIndex = null) {
                 const index = slideIndex !== null ? slideIndex : this.slideEditor.currentSlideIndex;
                 const slide = this.slideEditor.slides[index];
-                
+
                 if (!slide) {
                     console.error('Slide không tồn tại');
                     return;
                 }
 
                 const html = this.createCompleteHTML(slide);
-                
+
                 const previewWindow = window.open('', '_blank', 'width=1200,height=800');
                 previewWindow.document.write(html);
                 previewWindow.document.close();
@@ -10424,15 +10351,15 @@
             window.testCapture = () => {
                 return window.slideEditor.testCapture();
             };
-            
+
             window.getSlideHTML = () => {
                 return window.slideEditor.slideCapture.getCurrentSlideHTML();
             };
-            
+
             window.logSlideData = () => {
                 return window.slideEditor.debugLogSlideData();
             };
-            
+
             console.log('🚀 SlideEditor loaded! Available debug functions:');
             console.log('  - debugSlide() - Get current slide HTML');
             console.log('  - testCapture() - Test capture process');
@@ -10509,7 +10436,7 @@
                 // Preserve inline <style> from head but scope it to #canvas
                 const headStyles = Array.from(doc.head ? doc.head.querySelectorAll('style') : [])
                     .map(s => {
-                        const scoped = this.scopeCssToCanvas(s.textContent || '');
+                        const scoped = window.slideEditor.scopeCssToCanvas(s.textContent || '');
                         return `<style>${scoped}</style>`;
                     })
                     .join('');
@@ -10518,7 +10445,7 @@
                 const elementsHtml = convertHtmlToEditorElements(container, index) || '';
 
                 // Add base background element to mimic slide canvas
-                const detectedBg = this.extractBackgroundColor(completeHtml);
+                const detectedBg = window.slideEditor.extractBackgroundColor(completeHtml);
                 const baseBg = apiSlide.backgroundColor || detectedBg || 'white';
                 const bgElement = `<div class="element" data-type="background" style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background: ${baseBg}; z-index: 0;"></div>`;
 
@@ -10550,277 +10477,88 @@
 
         // Function to convert HTML to editor elements
         function convertHtmlToEditorElements(htmlContainer, slideIndex) {
-            console.log('Converting HTML elements for slide', slideIndex + 1, htmlContainer);
-
-            let elements = '';
-            let yOffset = 100;
+            const elements = [];
             let zIndex = 1;
 
-            // New: handle converted absolute-position HTML (from converter.js)
-            try {
-                const absWrapper = htmlContainer.querySelector('.content-wrapper');
-                if (absWrapper) {
-                    const children = Array.from(absWrapper.children).filter(n => n.tagName && !['SCRIPT', 'STYLE', 'META', 'LINK', 'TITLE'].includes(n.tagName));
-                    const extract = (styleStr, key) => {
-                        const m = styleStr.match(new RegExp(key + '\\s*:\\s*([^;]+)'));
-                        return m ? m[1].trim() : '';
+            function processNode(node, parentLeft = 0, parentTop = 0) {
+                if (!node || node.nodeType !== Node.ELEMENT_NODE) return;
+
+                const tagName = node.tagName.toLowerCase();
+                if (['script', 'style', 'meta', 'link', 'title', 'head'].includes(tagName)) return;
+
+                const computedStyle = window.getComputedStyle ? null : node.style;
+                const position = node.style.position || (computedStyle ? computedStyle.position : 'static');
+                const display = node.style.display || (computedStyle ? computedStyle.display : 'block');
+
+                if (display === 'none' || node.style.visibility === 'hidden') return;
+
+                let left = parentLeft;
+                let top = parentTop;
+                let width = 'auto';
+                let height = 'auto';
+
+                if (position === 'absolute' || position === 'fixed') {
+                    left = parseInt(node.style.left) || 0;
+                    top = parseInt(node.style.top) || 0;
+                    width = node.style.width || 'auto';
+                    height = node.style.height || 'auto';
+                }
+
+                const textContent = node.textContent?.trim() || '';
+                const hasVisibleContent = textContent.length > 0 || node.querySelector('img, video, svg, canvas');
+
+                if (hasVisibleContent) {
+                    const elementType = determineElementType(node);
+                    const innerHTML = node.innerHTML;
+
+                    const styles = {
+                        position: 'absolute',
+                        left: `${left}px`,
+                        top: `${top}px`,
+                        width: width,
+                        height: height,
+                        fontSize: node.style.fontSize || '16px',
+                        fontWeight: node.style.fontWeight || 'normal',
+                        color: node.style.color || '#333',
+                        backgroundColor: node.style.backgroundColor || 'transparent',
+                        textAlign: node.style.textAlign || 'left',
+                        padding: node.style.padding || '0',
+                        margin: '0',
+                        border: node.style.border || 'none',
+                        borderRadius: node.style.borderRadius || '0',
+                        zIndex: zIndex++,
+                        cursor: 'move'
                     };
-                    children.forEach((node, idx) => {
-                        const rawStyle = node.getAttribute('style') || '';
-                        const left = extract(rawStyle, 'left') || '0px';
-                        const top = extract(rawStyle, 'top') || '0px';
-                        const width = extract(rawStyle, 'width') || (node.getAttribute('width') ? node.getAttribute('width') + 'px' : '200px');
-                        const height = extract(rawStyle, 'height') || (node.getAttribute('height') ? node.getAttribute('height') + 'px' : '50px');
-                        const zi = extract(rawStyle, 'z-index') || (100 + idx);
 
-                        // preserve key visual props; strip absolute box props
-                        const keepProps = [
-                            'color', 'background', 'background-color', 'background-image', 'background-size', 'background-position', 'background-repeat', 'background-clip', 'background-attachment',
-                            'font-family', 'font-size', 'font-weight', 'font-style', 'line-height', 'letter-spacing', 'word-spacing', 'text-align', 'text-transform', 'text-decoration', 'text-shadow', 'white-space',
-                            'border', 'border-top', 'border-right', 'border-bottom', 'border-left', 'border-radius', 'box-shadow', 'filter', 'opacity',
-                            'padding', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'margin', 'outline', 'clip-path',
-                            'transform', 'transform-origin', 'writing-mode'
-                        ];
-                        const pick = (styleStr, prop) => {
-                            const m = styleStr.match(new RegExp(prop + '\\s*:\\s*([^;]+)'));
-                            return m ? `${prop}: ${m[1].trim()}; ` : '';
-                        };
-                        let innerStyle = '';
-                        keepProps.forEach(p => innerStyle += pick(rawStyle, p));
+                    const styleString = Object.entries(styles)
+                        .map(([key, value]) => `${key.replace(/([A-Z])/g, '-$1').toLowerCase()}: ${value}`)
+                        .join('; ');
 
-                        // clone node html with cleaned style
-                        const cloned = node.cloneNode(true);
-                        if (innerStyle) cloned.setAttribute('style', innerStyle); else cloned.removeAttribute('style');
-                        // normalize image srcs
-                        if (cloned.querySelectorAll) {
-                            cloned.querySelectorAll('img').forEach(img => {
-                                const src = img.getAttribute('src') || '';
-                                if (src && !/^https?:\/\//i.test(src) && !/^\//.test(src) && !/^data:/i.test(src)) {
-                                    img.setAttribute('src', `/api/images/${src}`);
-                                }
-                            });
-                        }
-                        const inner = cloned.outerHTML;
+                    const isEditable = ['text', 'heading'].includes(elementType);
+                    const editableAttr = isEditable ? ' contenteditable="true"' : '';
 
-                        elements += `
-                            <div class="element" data-type="content" style="position: absolute; left: ${left}; top: ${top}; width: ${width}; height: ${height}; z-index: ${zi};">
-                                ${inner}
-                            </div>
-                        `;
-                    });
-
-                    // If we handled absolute HTML, return early
-                    if (elements.trim()) {
-                        return elements;
-                    }
+                    elements.push(`<div class="element" data-type="${elementType}" style="${styleString}"${editableAttr}>${innerHTML}</div>`);
                 }
-            } catch (e) {
-                console.warn('Absolute HTML import branch failed:', e);
+
+                Array.from(node.children).forEach(child => {
+                    processNode(child, left, top);
+                });
             }
 
-            // First, try to find slide-container or main content area
-            let contentElements = htmlContainer.querySelectorAll('.slide-container, .content, main, article, section');
-
-            if (contentElements.length === 0) {
-                // If no containers, get direct children
-                contentElements = htmlContainer.children;
+            function determineElementType(node) {
+                const tagName = node.tagName.toLowerCase();
+                if (['h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) return 'heading';
+                if (tagName === 'p' || tagName === 'span' || tagName === 'div') return 'text';
+                if (tagName === 'img') return 'image';
+                if (tagName === 'video') return 'video';
+                return 'text';
             }
 
-            if (contentElements.length === 0) {
-                // If still no elements, create from text content
-                const textContent = htmlContainer.textContent.trim();
-                if (textContent) {
-                    elements = `
-                        <div class="element" style="position: absolute; left: 100px; top: 100px; width: 700px; height: auto; min-height: 200px; font-size: 16px; color: #333; line-height: 1.6; z-index: 1; cursor: move; padding: 30px; border: 2px solid #e2e8f0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" data-type="text" contenteditable="true">
-                            ${textContent}
-                        </div>
-                    `;
-                }
-                return elements;
-            }
-
-            // Process each content element
-            for (let i = 0; i < contentElements.length; i++) {
-                const element = contentElements[i];
-                const elementType = element.tagName.toLowerCase();
-
-                // Skip empty elements
-                if (!element.textContent.trim() && !element.querySelector('img')) {
-                    continue;
-                }
-
-                let elementHtml = '';
-                let width = 700;
-                let height = 60;
-
-                switch (elementType) {
-                    case 'h1':
-                        height = 80;
-                        elementHtml = `
-                            <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 28px; font-weight: bold; color: #2d3748; text-align: center; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="heading" contenteditable="true">
-                                ${element.innerHTML}
-                            </div>
-                        `;
-                        yOffset += height + 40;
-                        break;
-
-                    case 'h2':
-                        height = 60;
-                        elementHtml = `
-                            <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 22px; font-weight: bold; color: #2d3748; z-index: ${zIndex}; cursor: move; padding: 15px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="heading" contenteditable="true">
-                                ${element.innerHTML}
-                            </div>
-                        `;
-                        yOffset += height + 30;
-                        break;
-
-                    case 'h3':
-                        height = 50;
-                        elementHtml = `
-                            <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 18px; font-weight: bold; color: #4a5568; z-index: ${zIndex}; cursor: move; padding: 12px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="heading" contenteditable="true">
-                                ${element.innerHTML}
-                            </div>
-                        `;
-                        yOffset += height + 25;
-                        break;
-
-                    case 'p':
-                        const textLength = element.textContent.length;
-                        height = Math.max(60, Math.ceil(textLength / 100) * 25 + 40);
-                        elementHtml = `
-                            <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.6; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="text" contenteditable="true">
-                                ${element.innerHTML}
-                            </div>
-                        `;
-                        yOffset += height + 20;
-                        break;
-
-                    case 'ul':
-                    case 'ol':
-                        const listItems = element.children.length;
-                        height = Math.max(100, listItems * 30 + 60);
-                        elementHtml = `
-                            <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.8; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="list" contenteditable="true">
-                                ${element.outerHTML}
-                            </div>
-                        `;
-                        yOffset += height + 25;
-                        break;
-
-                    case 'img':
-                        height = 300;
-                        elementHtml = `
-                            <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; height: ${height}px; z-index: ${zIndex}; cursor: move; border: 2px solid transparent; border-radius: 8px; overflow: hidden;" data-type="image">
-                                <img src="${element.src}" alt="${element.alt || ''}" style="width: 100%; height: 100%; object-fit: contain;">
-                            </div>
-                        `;
-                        yOffset += height + 30;
-                        break;
-
-                    case 'div':
-                    case 'section':
-                    case 'article':
-                        // Handle container elements
-                        const containerContent = element.innerHTML.trim();
-                        if (containerContent) {
-                            // Estimate height based on content
-                            const estimatedHeight = Math.max(150, Math.ceil(element.textContent.length / 120) * 30 + 100);
-                            elementHtml = `
-                                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${estimatedHeight}px; font-size: 16px; color: #4a5568; line-height: 1.6; z-index: ${zIndex}; cursor: move; padding: 25px; border: 2px solid transparent; background: rgba(255,255,255,0.95); border-radius: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" data-type="container" contenteditable="true">
-                                    ${containerContent}
-                                </div>
-                            `;
-                            yOffset += estimatedHeight + 30;
-                        }
-                        break;
-
-                    default:
-                        // Generic elements
-                        if (element.innerHTML.trim()) {
-                            const estimatedHeight = Math.max(60, Math.ceil(element.textContent.length / 100) * 25 + 40);
-                            elementHtml = `
-                                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${estimatedHeight}px; font-size: 16px; color: #4a5568; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="content" contenteditable="true">
-                                    ${element.innerHTML}
-                                </div>
-                            `;
-                            yOffset += estimatedHeight + 20;
-                        }
-                        break;
-                }
-
-                if (elementHtml) {
-                    elements += elementHtml;
-                    zIndex++;
-                }
-            }
-
-            // Add CSS for better element interaction
-            elements += `
-                <style>
-                    .element {
-                        transition: border-color 0.2s ease, box-shadow 0.2s ease;
-                    }
-                    .element:hover {
-                        border-color: #667eea !important;
-                        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2) !important;
-                    }
-                    .element[contenteditable="true"]:focus {
-                        border-color: #667eea !important;
-                        outline: none !important;
-                        box-shadow: 0 6px 16px rgba(102, 126, 234, 0.3) !important;
-                    }
-                    .element::before {
-                        content: attr(data-type);
-                        position: absolute;
-                        top: -8px;
-                        left: 8px;
-                        background: #667eea;
-                        color: white;
-                        padding: 2px 8px;
-                        font-size: 10px;
-                        border-radius: 4px;
-                        opacity: 0;
-                        transition: opacity 0.2s ease;
-                        pointer-events: none;
-                        text-transform: uppercase;
-                        font-weight: 600;
-                        letter-spacing: 0.5px;
-                    }
-                    .element:hover::before {
-                        opacity: 1;
-                    }
-                    /* Styles for raw HTML container */
-                    .raw-html-container {
-                        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-                        font-family: inherit;
-                        line-height: 1.6;
-                    }
-                    .raw-html-container h1, .raw-html-container h2, .raw-html-container h3 {
-                        margin-top: 0;
-                        margin-bottom: 1rem;
-                    }
-                    .raw-html-container p {
-                        margin-bottom: 1rem;
-                    }
-                    .raw-html-container ul, .raw-html-container ol {
-                        margin-bottom: 1rem;
-                        padding-left: 2rem;
-                    }
-                    .raw-html-container img {
-                        max-width: 100%;
-                        height: auto;
-                        border-radius: 4px;
-                    }
-                    .raw-html-container::before {
-                        content: "RAW HTML";
-                        background: #f59e0b;
-                    }
-                </style>
-            `;
-
-            console.log('Generated', elements.split('<div class="element"').length - 1, 'editable elements');
-            return elements;
+            processNode(htmlContainer);
+            return elements.join('\n');
         }
+
+
 
         // Function to show notification
         function showNotification(message, type = 'info') {
