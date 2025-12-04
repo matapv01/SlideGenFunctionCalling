@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image with Icons Slide</title>
+    <style>
+        /* 
+        KHÔNG cố định font-size cho html - để trình duyệt quyết định
+        Điều này tôn trọng cài đặt accessibility của người dùng
+        */
+        
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Montserrat, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .slide-container {
+            width: 62.5rem;         /* Converted from 1000px (1000/16 = 62.5rem) */
+            height: 35rem;          /* Converted from 560px (560/16 = 35rem) */
+            position: relative;
+            background-color: #ffffff;
+            overflow: hidden;
+            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* Converted shadow */
+        }
+        
+        .title-section {
+            position: absolute;
+            top: 2.5rem;            /* Converted from 40px (40/16 = 2.5rem) */
+            left: 2.5rem;           /* Converted from 40px */
+            display: flex;
+            align-items: center;
+        }
+        
+        .title-accent {
+            width: 1.875rem;        /* Converted from 30px (30/16 = 1.875rem) */
+            height: 1.875rem;       /* Converted from 30px */
+            background-color: #1a4b8c;
+            margin-right: 0.9375rem; /* Converted from 15px (15/16 = 0.9375rem) */
+        }
+        
+        .main-title {
+            font-size: 2.5rem;
+            color: #333333;
+            font-weight: normal;
+            font-style: italic;
+            margin: 0;
+        }
+        
+        .content-layout {
+            display: flex;
+            position: absolute;
+            top: 6.25rem;           /* Converted from 100px (100/16 = 6.25rem) */
+            left: 0;
+            width: 100%;
+            height: calc(100% - 6.25rem); /* Converted from 100px */
+        }
+        
+        .image-section {
+            width: 45%;
+            height: 100%;
+            position: relative;
+            padding: 1.25rem;       /* Converted from 20px (20/16 = 1.25rem) */
+            box-sizing: border-box;
+        }
+        
+        .image-frame {
+            width: 100%;
+            height: 80%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .image-accent {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 90%;
+            height: 90%;
+            border: 0.9375rem solid #1a4b8c; /* Converted from 15px */
+            box-sizing: border-box;
+            z-index: 1;
+        }
+        
+        .image-container {
+            position: absolute;
+            top: 1.25rem;           /* Converted from 20px */
+            left: 1.25rem;          /* Converted from 20px */
+            width: 90%;
+            height: 90%;
+            background-color: #f0f0f0;
+            overflow: hidden;
+            z-index: 2;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .content-section {
+            width: 55%;
+            height: 100%;
+            padding: 1.25rem 2.5rem; /* Converted from 20px 40px */
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .content-item {
+            display: flex;
+            align-items: flex-start;
+            margin-bottom: 1.875rem; /* Converted from 30px */
+        }
+        
+        .icon-container {
+            width: 3.125rem;        /* Converted from 50px (50/16 = 3.125rem) */
+            height: 3.125rem;       /* Converted from 50px */
+            background-color: #1a4b8c;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 1.25rem;  /* Converted from 20px */
+            flex-shrink: 0;
+        }
+        
+        .icon-container svg {
+            width: 1.5rem;          /* Converted from 24px (24/16 = 1.5rem) */
+            height: 1.5rem;         /* Converted from 24px */
+            stroke: #333333;
+        }
+        
+        .content-text {
+            flex: 1;
+        }
+        
+        .subtitle {
+            font-size: 1.35rem;
+            color: #1a4b8c;
+            margin: 0 0 0.3125rem 0; /* Converted from 5px (5/16 = 0.3125rem) */
+        }
+        
+        .content {
+            font-size: 1.0rem;
+            color: #4B5563;
+            margin: 0;
+            line-height: 1.4;
+        }
+        
+        /* Media queries for responsive design */
+        @media screen and (max-width: 75rem) {
+            .slide-container {
+                width: 95vw;
+                max-width: 62.5rem;
+            }
+        }
+        
+        @media screen and (max-width: 50rem) {
+            .slide-container {
+                width: 95vw;
+                height: auto;
+                min-height: 70vh;
+            }
+            
+            .title-section {
+                position: static;
+                padding: 1.5rem;
+                justify-content: center;
+            }
+            
+            .content-layout {
+                position: static;
+                flex-direction: column;
+                height: auto;
+            }
+            
+            .image-section {
+                width: 100%;
+                height: 20rem;
+                order: 2;
+            }
+            
+            .content-section {
+                width: 100%;
+                padding: 1.5rem;
+                order: 1;
+            }
+            
+            .content-item {
+                margin-bottom: 1.5rem;
+            }
+            
+            .icon-container {
+                width: 2.5rem;
+                height: 2.5rem;
+                margin-right: 1rem;
+            }
+            
+            .icon-container svg {
+                width: 1.25rem;
+                height: 1.25rem;
+            }
+        }
+        
+        @media screen and (max-width: 30rem) {
+            .content-item {
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }
+            
+            .icon-container {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">Phong cách thi đấu</h1>
+        </div>
+        
+        <!-- Content Layout -->
+        <div class="content-layout">
+            <!-- Image Section -->
+            <div class="image-section">
+                <div class="image-frame">
+                    <div class="image-accent"></div>
+                    <div class="image-container">
+                        <img src="https://images.unsplash.com/photo-1548805625-78c772274415?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Slide image">
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Section -->
+            <div class="content-section">
+                <!-- Content Item 1 -->
+                <div class="content-item">
+                    <div class="icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 0-9.09 5.5L12 12l9.09-4.5A10 10 0 0 0 12 2zM3 12l9 9 9-9"></path></svg>
+                    </div>
+                    <div class="content-text">
+                        <h3 class="subtitle"><b>Rê bóng & Dứt điểm</b></h3>
+                        <p class="content">Messi nổi tiếng với khả năng <b>rê bóng sát chân</b>, di chuyển <i>linh hoạt</i> và <u>dứt điểm chính xác</u> bằng chân trái.</p>
+                    </div>
+                </div>
+                
+                <!-- Content Item 2 -->
+                <div class="content-item">
+                    <div class="icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                    </div>
+                    <div class="content-text">
+                        <h3 class="subtitle"><b>Tầm nhìn & Sáng tạo</b></h3>
+                        <p class="content">Anh có <b>tầm nhìn chiến thuật xuất sắc</b>, khả năng <i>chuyền bóng sáng tạo</i> và <u>kỹ năng sút phạt hàng đầu</u>.</p>
+                    </div>
+                </div>
+                
+                <!-- Content Item 3 -->
+                <div class="content-item">
+                    <div class="icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
+                    </div>
+                    <div class="content-text">
+                        <h3 class="subtitle"><b>Kiểm soát & Kiến tạo</b></h3>
+                        <p class="content">Điểm đặc biệt là khả năng <b>giữ bóng trong không gian hẹp</b>, vượt qua nhiều hậu vệ. Không chỉ là <i>cây săn bàn</i>, anh còn là một <u>“nhạc trưởng” thực thụ</u>, kiến tạo hàng trăm bàn thắng.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
