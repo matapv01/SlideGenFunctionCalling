@@ -169,10 +169,32 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                 } else if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'a', 'button'].includes(tagName)) {
                     content = el.innerHTML;
                     el.querySelectorAll('*').forEach(child => processedElements.add(child));
+                } else if (['span', 'strong', 'b', 'em', 'i', 'u', 'mark', 'small', 'code', 'sub', 'sup'].includes(tagName)) {
+                    // ✅ BỎ QUA inline elements - chúng sẽ được giữ trong innerHTML của parent
+                    return;
                 } else if (tagName === 'svg') {
                     content = el.outerHTML;
                 } else if (['img', 'input', 'br', 'hr', 'iframe', 'video'].includes(tagName)) {
                     content = '';
+                } else if (tagName === 'div') {
+                    // ✅ DIV: Kiểm tra có text hoặc inline elements không
+                    const hasOnlyTextAndInline = Array.from(el.childNodes).every(node => {
+                        if (node.nodeType === Node.TEXT_NODE) return true;
+                        if (node.nodeType === Node.ELEMENT_NODE) {
+                            const childTag = node.tagName.toLowerCase();
+                            return ['span', 'strong', 'b', 'em', 'i', 'u', 'mark', 'small', 'code', 'sub', 'sup', 'br'].includes(childTag);
+                        }
+                        return false;
+                    });
+                    
+                    if (hasOnlyTextAndInline) {
+                        // Chỉ có text và inline → lấy innerHTML, mark inline elements
+                        content = el.innerHTML;
+                        el.querySelectorAll('span, strong, b, em, i, u, mark, small, code, sub, sup').forEach(child => processedElements.add(child));
+                    } else {
+                        // Có block elements con → không lấy innerHTML, để các con tự xử lý
+                        content = '';
+                    }
                 } else {
                     el.childNodes.forEach(node => {
                         if (node.nodeType === Node.TEXT_NODE && node.textContent.trim()) {
@@ -246,6 +268,150 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                     }
                 }
             });
+
+            // ✅ TRÍCH XUẤT STYLE TỪ CONTAINER VÀ MERGE VÀO BODY
+            let containerStyles = { background: '', padding: { top: 0, right: 0, bottom: 0, left: 0 }, borderRadius: '', boxShadow: '' };
+            
+            // Bước 1: Tìm các div con có background (như top-panel, bottom-panel)
+            const divsWithBackground = [];
+            elementsData.forEach(el => {
+                if (el.tagName === 'div') {
+                    const style = el.style.toLowerCase();
+                    const hasBackground = 
+                        (style.includes('background-color') && !style.includes('background-color: rgba(0, 0, 0, 0)') && !style.includes('background-color: transparent')) ||
+                        (style.includes('background-image') && !style.includes('background-image: none')) ||
+                        (style.includes('background:') && !style.includes('background: none') && !style.includes('background: rgba(0, 0, 0, 0)'));
+                    
+                    if (hasBackground) {
+                        divsWithBackground.push(el);
+                    }
+                }
+            });
+            
+            // Bước 2: Phân loại container và trích xuất style
+            let shouldRemoveContainer = false;
+            
+            elementsData.forEach((el, idx) => {
+                if (el.tagName === 'div') {
+                    const isFullScreenContainer = 
+                        (el.rect.width >= 1900 && el.rect.height >= 1000) || 
+                        (el.relativeX <= 10 && el.relativeY <= 10 && el.rect.width >= containerRect.width * 0.95);
+                    
+                    if (isFullScreenContainer) {
+                        // Kiểm tra xem container có chứa child panels với background không
+                        const hasChildPanelsWithBg = divsWithBackground.some(child => {
+                            return child !== el && // Không phải chính nó
+                                   child.relativeX >= el.relativeX && 
+                                   child.relativeY >= el.relativeY &&
+                                   child.relativeX + child.rect.width <= el.relativeX + el.rect.width + 50 && // +50 tolerance
+                                   child.relativeY + child.rect.height <= el.relativeY + el.rect.height + 50;
+                        });
+                        
+                        // ✅ THÊM: Kiểm tra pseudo-elements (::before, ::after)
+                        const realElement = elements[idx];
+                        let hasPseudoElementsWithBg = false;
+                        if (realElement) {
+                            const beforeStyle = window.getComputedStyle(realElement, '::before');
+                            const afterStyle = window.getComputedStyle(realElement, '::after');
+                            
+                            const checkPseudoBg = (pseudoStyle) => {
+                                if (!pseudoStyle) return false;
+                                const bgColor = pseudoStyle.backgroundColor;
+                                const bgImage = pseudoStyle.backgroundImage;
+                                return (bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent') ||
+                                       (bgImage && bgImage !== 'none');
+                            };
+                            
+                            hasPseudoElementsWithBg = checkPseudoBg(beforeStyle) || checkPseudoBg(afterStyle);
+                        }
+                        
+                        if (!hasChildPanelsWithBg && !hasPseudoElementsWithBg) {
+                            // TRƯỜNG HỢP 1: Container có background đơn giản, không có child panels màu, không có pseudo-elements
+                            // → Trích xuất background và đánh dấu để loại bỏ
+                            shouldRemoveContainer = true;
+                            
+                            const style = el.style;
+                            
+                            // Trích xuất background-color
+                            const bgColorMatch = style.match(/background-color:\s*(rgb\([^)]+\)|rgba\([^)]+\)|#[a-fA-F0-9]{3,8}|[a-z]+)/i);
+                            if (bgColorMatch) containerStyles.background = bgColorMatch[1];
+                            
+                            // Trích xuất background-image nếu có
+                            const bgImageMatch = style.match(/background-image:\s*([^;]+)/i);
+                            if (bgImageMatch && !bgImageMatch[1].includes('none')) {
+                                containerStyles.background = bgImageMatch[1];
+                            }
+                            
+                            // Trích xuất padding
+                            const paddingMatch = style.match(/padding:\s*([\d.]+)px\s+([\d.]+)px\s+([\d.]+)px\s+([\d.]+)px/i);
+                            if (paddingMatch) {
+                                containerStyles.padding = {
+                                    top: parseFloat(paddingMatch[1]),
+                                    right: parseFloat(paddingMatch[2]),
+                                    bottom: parseFloat(paddingMatch[3]),
+                                    left: parseFloat(paddingMatch[4])
+                                };
+                            }
+                            
+                            // Trích xuất border-radius
+                            const borderRadiusMatch = style.match(/border-radius:\s*([^;]+)/i);
+                            if (borderRadiusMatch) containerStyles.borderRadius = borderRadiusMatch[1];
+                            
+                            // Trích xuất box-shadow
+                            const boxShadowMatch = style.match(/box-shadow:\s*([^;]+)/i);
+                            if (boxShadowMatch && !boxShadowMatch[1].includes('none')) {
+                                containerStyles.boxShadow = boxShadowMatch[1];
+                            }
+                        }
+                        // else: TRƯỜNG HỢP 2 - Container có child panels màu → Giữ lại container
+                    }
+                }
+            });
+
+            // ✅ LỌC BỎ các div rỗng/trong suốt không có nội dung
+            const filteredElements = elementsData.filter(el => {
+                // Giữ lại tất cả các thẻ không phải div
+                if (el.tagName !== 'div') return true;
+                
+                // ❌ BỎ QUA các container chính (full-screen divs) - CHỈ nếu shouldRemoveContainer = true
+                const isFullScreenContainer = 
+                    (el.rect.width >= 1900 && el.rect.height >= 1000) || // Gần full viewport
+                    (el.relativeX <= 10 && el.relativeY <= 10 && el.rect.width >= containerRect.width * 0.95); // Bắt đầu từ góc và chiếm >95% width
+                
+                if (isFullScreenContainer && shouldRemoveContainer) {
+                    // Loại bỏ container đơn giản - style đã được trích xuất
+                    return false;
+                }
+                
+                // Kiểm tra div có nội dung không (text hoặc innerHTML)
+                const hasContent = el.content && el.content.trim().length > 0;
+                if (hasContent) return true;
+                
+                // Kiểm tra div có background không (màu sắc hoặc hình ảnh)
+                const style = el.style.toLowerCase();
+                const hasBackground = 
+                    (style.includes('background-color') && !style.includes('background-color: rgba(0, 0, 0, 0)') && !style.includes('background-color: transparent')) ||
+                    (style.includes('background-image') && !style.includes('background-image: none')) ||
+                    (style.includes('background:') && !style.includes('background: none') && !style.includes('background: rgba(0, 0, 0, 0)'));
+                
+                if (hasBackground) return true;
+                
+                // Kiểm tra div có border không
+                const hasBorder = 
+                    style.includes('border-top:') && !style.includes('border-top: 0px') && !style.includes('border-top: none') ||
+                    style.includes('border-right:') && !style.includes('border-right: 0px') && !style.includes('border-right: none') ||
+                    style.includes('border-bottom:') && !style.includes('border-bottom: 0px') && !style.includes('border-bottom: none') ||
+                    style.includes('border-left:') && !style.includes('border-left: 0px') && !style.includes('border-left: none');
+                
+                if (hasBorder) return true;
+                
+                // Kiểm tra div có shadow không
+                const hasShadow = style.includes('box-shadow') && !style.includes('box-shadow: none');
+                if (hasShadow) return true;
+                
+                // Nếu không có gì → bỏ qua
+                return false;
+            });
             
 
             const svgDefsHtml = document.querySelector('svg[width="0"][height="0"]')?.outerHTML || '';
@@ -253,15 +419,16 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
             const bodyStyle = window.getComputedStyle(document.body);
             const bg = (bodyStyle.backgroundImage && bodyStyle.backgroundImage !== 'none') ? bodyStyle.background : bodyStyle.backgroundColor;
 
-            // THÊM svgDefsHtml VÀO ĐỐI TƯỢNG TRẢ VỀ
+            // THÊM svgDefsHtml VÀ containerStyles VÀO ĐỐI TƯỢNG TRẢ VỀ
             return {
-                svgDefsHtml: svgDefsHtml, // <== DÒNG MỚI
+                svgDefsHtml: svgDefsHtml,
                 bodyBg: bg,
+                containerStyles: containerStyles, // ✅ Style từ container
                 contentBlock: {
                     width: containerRect.width,
                     height: containerRect.height
                 },
-                elements: elementsData
+                elements: filteredElements  // ✅ Trả về danh sách đã lọc
             };
         });
 
@@ -271,14 +438,22 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
 
         console.log(`[JS] ✅ Browser-side processing complete. Analyzed ${pageData.elements.length} final elements.`);
 
+        // ✅ Áp dụng background từ container (nếu có) vào body
+        const finalBodyBg = pageData.containerStyles.background || pageData.bodyBg;
+        const bodyPadding = pageData.containerStyles.padding;
+        const bodyBorderRadius = pageData.containerStyles.borderRadius;
+        const bodyBoxShadow = pageData.containerStyles.boxShadow;
+        
         let newHtmlContent = `<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title>${inputHeadHtml}<style>
 *{box-sizing:border-box;}
 html { width: 1920px; height: 1080px; }
 body {
   margin: 0;
   padding: 2rem;
-  background: ${pageData.bodyBg};
+  background: ${finalBodyBg};
   overflow: auto;
+  ${bodyBorderRadius ? `border-radius: ${bodyBorderRadius};` : ''}
+  ${bodyBoxShadow ? `box-shadow: ${bodyBoxShadow};` : ''}
   /* KHÔNG đặt width/height cho body */
 }
 .outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
@@ -287,6 +462,10 @@ body {
 `;
         pageData.elements.sort((a, b) => a.index - b.index).forEach(data => {
             const styleContent = data.style.replace(/z-index\s*:\s*[^;]+;?/g, '').replace(/'/g, '&#39;');
+            
+            // ✅ Điều chỉnh vị trí dựa trên padding của container
+            const adjustedX = data.relativeX - bodyPadding.left;
+            const adjustedY = data.relativeY - bodyPadding.top;
             
             // ✅ SPECIAL FIX: Xử lý đặc biệt cho hình ảnh với kích thước container cha  
             let finalStyle;
@@ -306,9 +485,9 @@ body {
                     cleanStyleContent += ';';
                 }
                 
-                finalStyle = `position:absolute;z-index:${data.zIndex};left:${data.relativeX}px;top:${data.relativeY}px;width:${data.rect.width}px;height:${data.rect.height}px;object-fit:cover!important;box-sizing:border-box;${cleanStyleContent}`;
+                finalStyle = `position:absolute;z-index:${data.zIndex};left:${adjustedX}px;top:${adjustedY}px;width:${data.rect.width}px;height:${data.rect.height}px;object-fit:cover!important;box-sizing:border-box;${cleanStyleContent}`;
             } else {
-                finalStyle = `position:absolute;z-index:${data.zIndex};left:${data.relativeX}px;top:${data.relativeY}px;width:${data.rect.width}px;height:${data.rect.height}px;box-sizing:border-box;${styleContent}`;
+                finalStyle = `position:absolute;z-index:${data.zIndex};left:${adjustedX}px;top:${adjustedY}px;width:${data.rect.width}px;height:${data.rect.height}px;box-sizing:border-box;${styleContent}`;
             }
             
             let attributesString = '';

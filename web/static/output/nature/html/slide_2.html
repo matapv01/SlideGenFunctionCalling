@@ -1,19 +1,99 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>1. Thiên nhiên và những điều kì thú</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Two Column Slide</title>
     <style>
-        body { font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }
-        .slide { width: 800px; height: 600px; margin: 0 auto; background-color: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 40px; position: relative; }
-        .title { font-size: 32px; color: #2c3e50; margin-bottom: 30px; text-align: center; }
-        .content { font-size: 24px; line-height: 1.5; color: #34495e; }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Montserrat, sans-serif;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        
+        .slide-outer-container {
+            width: 62.5rem; /* 1000px */
+            height: 35rem; /* 560px */
+            background-color: #2E8B57;
+            padding: 1.875rem; /* 30px */
+            box-sizing: border-box;
+        }
+        
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            background-color: #ffffff;
+            display: flex;
+            flex-direction: column;
+            padding: 2.5rem; /* 40px */
+            box-sizing: border-box;
+        }
+        
+        .main-title {
+            font-size: 2.25rem;
+            color: #2E8B57;
+            text-align: center;
+            margin-top: 0;
+            margin-bottom: 2.5rem; /* 40px */
+        }
+        
+        .columns-container {
+            display: flex;
+            flex: 1;
+            gap: 1.875rem; /* 30px */
+        }
+        
+        .left-column {
+            flex: 1;
+            background-color: #C8E6C9;
+            padding: 1.875rem; /* 30px */
+        }
+        
+        .right-column {
+            flex: 1;
+            background-color: #ffffff;
+            border: 0.0625rem solid #2E8B57; /* 1px */
+            padding: 1.875rem; /* 30px */
+        }
     </style>
 </head>
 <body>
-    <div class="slide">
-        <div class="title">1. Thiên nhiên và những điều kì thú</div>
-        <div class="content"><br>	- Phần 3: Núi đồi<br>	  * Đỉnh núi cao: những ngọn núi như Fansipan là nguồn cảm hứng và thử thách cho con người.<br>	  * Động vật núi: hệ sinh thái núi có nhiều loài đặc hữu thích nghi với điều kiện khắc nghiệt.<br>	  * Du lịch sinh thái: du lịch bền vững giúp bảo tồn vẻ đẹp tự nhiên của núi non.<br><br>	- Phần 4: Chung tay<br>	  * Trồng cây xanh: trồng cây hấp thụ CO2, cải thiện không khí và chống biến đổi khí hậu.<br>	  * Tái chế rác thải: tái chế giảm rác, bảo vệ tài nguyên thiên nhiên và môi trường.<br>	  * Giáo dục cộng đồng: nâng cao nhận thức về bảo vệ thiên nhiên qua trường học và truyền thông.<br>	  * Hợp tác toàn cầu: các quốc gia cùng hành động để bảo vệ môi trường và hệ sinh thái toàn cầu.</div>
+    <div class="slide-outer-container">
+        <div class="slide-inner-container">
+            <h1 class="main-title">Thiên nhiên và những điều kì thú</h1>
+            
+            <div class="columns-container">
+                <div class="left-column">
+                    
+        <div class="left-section" style="margin-bottom: 1.875rem;">
+            <h2 style="font-size: 1.5rem; color: #333333; margin-top: 0; margin-bottom: 0.625rem;"><b>Phần 3: Núi đồi</b></h2>
+            <p style="font-size: 1rem; color: #333333; margin: 0;"><ul><li><b>Đỉnh núi cao:</b> những ngọn núi như Fansipan là nguồn cảm hứng và thử thách cho con người.</li><li><b>Động vật núi:</b> hệ sinh thái núi có nhiều loài đặc hữu thích nghi với điều kiện khắc nghiệt.</li><li><b>Du lịch sinh thái:</b> du lịch bền vững giúp bảo tồn vẻ đẹp tự nhiên của núi non.</li></ul></p>
+        </div>
+        
+                </div>
+                
+                <div class="right-column">
+                    
+        <div class="right-section" style="display: flex; align-items: flex-start; margin-bottom: 1.875rem;">
+            <div style="margin-right: 0.9375rem; flex-shrink: 0;"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="30" height="30" fill="none" stroke="#2E8B57" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+            <polyline points="14 2 14 8 20 8"></polyline>
+            <path d="M16 13l-4 4h-4v-4l8-8z"></path>
+        </svg></div>
+            <div>
+                <h2 style="font-size: 1.5rem; color: #333333; margin-top: 0; margin-bottom: 0.625rem;"><b>Phần 4: Chung tay</b></h2>
+                <p style="font-size: 1rem; color: #333333; margin: 0;"><ul><li><b>Trồng cây xanh:</b> trồng cây hấp thụ CO2, cải thiện không khí và chống biến đổi khí hậu.</li><li><b>Tái chế rác thải:</b> tái chế giảm rác, bảo vệ tài nguyên thiên nhiên và môi trường.</li><li><b>Giáo dục cộng đồng:</b> nâng cao nhận thức về bảo vệ thiên nhiên qua trường học và truyền thông.</li><li><b>Hợp tác toàn cầu:</b> các quốc gia cùng hành động để bảo vệ môi trường và hệ sinh thái toàn cầu.</li></ul></p>
+            </div>
+        </div>
+        
+                </div>
+            </div>
+        </div>
     </div>
 </body>
 </html>
