@@ -1,122 +1,150 @@
 <!DOCTYPE html>
-<html lang="vi">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thiên nhiên và những điều kì thú</title>
+    <title>Dynamic Intro Slide - Large Text</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;800&display=swap" rel="stylesheet">
     <style>
-        :root { font-size: 16px; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
         body, html {
-            margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: Montserrat;
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Poppins', sans-serif;
             overflow: hidden;
-            background-color: #FDFDFD;
         }
-        
+
         .slide-container {
-            width: 100%; height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            padding: 4vw; box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            background-color: white;
         }
-        
-        .content-wrapper {
-            display: flex; align-items: center; justify-content: center;
-            width: 100%; max-width: 75rem; /* 1200px */
+
+        .text-column {
+            flex: 1.5;
+            background-color: #004D40;
+            color: #FFFFFF;
+            clip-path: url(#angled-divider);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 5rem 4rem; /* Tăng padding để có thêm không gian */
         }
-        
-        /* Image Section with Decorative Frame */
-        .image-section {
+
+        .image-column {
             flex: 1;
-            position: relative;
-            height: 28rem; /* 448px */
+            background-image: url('https://images.unsplash.com/photo-1469474968028-56623f02e42e?q=80&w=2070&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
         }
-        .accent-bg {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 90%;
-            height: 90%;
-            background-color: #C8E6C9;
-            z-index: 1;
+
+        .title-group {
+            /* Sits at the top because of space-between on parent */
         }
-        .main-image {
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 90%;
-            height: 90%;
-            object-fit: cover;
-            z-index: 2;
-            box-shadow: 0 1rem 2rem rgba(0,0,0,0.1);
-        }
-        
-        /* Text Section */
-        .text-section {
-            flex: 1;
-            padding-left: 5rem;
-        }
-        
+
         .main-title {
-            font-family: Playfair Display;
-            font-size: 3.5rem;
-            font-weight: 500;
-            font-style: italic;
-            color: #2E8B57;
-            margin: 0 0 1.5rem 0;
+            /* ĐÃ SỬA ĐỔI: Font to hơn rất nhiều */
+            font-size: clamp(3rem, 7vw, 5rem);
+            font-weight: 800;
             line-height: 1.2;
+            /* ĐÃ SỬA ĐỔI: Tăng lề dưới */
+            margin-bottom: 1.5rem;
+        }
+
+        .subtitle {
+            /* ĐÃ SỬA ĐỔI: Font to hơn và giãn dòng tốt hơn */
+            font-size: 1.3rem;
+            font-weight: 400;
+            line-height: 1.7;
+            opacity: 0.9;
+            max-width: 35rem; /* Tăng max-width một chút */
+        }
+
+        .footer-decor {
+            width: 100%;
+            height: 5rem;
+            background-color: #00332C;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 2rem;
         }
         
-        .subtitle {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: #6B8E23;
-            text-transform: uppercase;
-            letter-spacing: 0.2em;
-            margin-bottom: 2rem;
+        .arcs {
+            width: 5rem;
+            height: 5rem;
+            position: relative;
+        }
+        .arcs::before, .arcs::after {
+            content: '';
+            position: absolute;
+            border-radius: 50%;
+            border: 0.125rem solid #FFFFFF;
+            left: -3.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+        }
+        .arcs::before { width: 7rem; height: 7rem; }
+        .arcs::after { width: 6rem; height: 6rem; }
+
+        .dots-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.5rem;
+        }
+        .dot {
+            width: 0.75rem;
+            height: 0.75rem;
+            background-color: #FFFFFF;
+            border-radius: 50%;
+        }
+        
+        @media (max-width: 64rem) {
+            .text-column {
+                flex: 1;
+                clip-path: none;
+            }
+            .image-column { flex: 1; }
         }
 
-        .agenda-list {
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }
-        .agenda-item {
-            font-size: 1.1rem;
-            color: #333333;
-            margin-bottom: 1rem;
-        }
-
-        /* Responsive Design */
-        @media (max-width: 56.25em) { /* 900px */
-            .text-section { padding-left: 3rem; }
-            .main-title { font-size: 3rem; }
-            .agenda-item { font-size: 1rem; }
-        }
-        @media (max-width: 48em) { /* 768px */
-            .content-wrapper { flex-direction: column; }
-            .image-section { width: 80%; height: 20rem; margin-bottom: 3rem; }
-            .text-section { width: 80%; padding-left: 0; text-align: center; }
+        @media (max-width: 48rem) {
+            .slide-container { flex-direction: column; }
+            .text-column, .image-column { flex: none; width: 100%; }
+            .text-column { height: 60vh; padding: 2.5rem; justify-content: center; text-align: center; }
+            .image-column { height: 40vh; }
+            .footer-decor { display: none; }
         }
     </style>
 </head>
 <body>
+    
+    <svg width="0" height="0">
+      <defs>
+        <clipPath id="angled-divider" clipPathUnits="objectBoundingBox">
+          <polygon points="0 0, 1 0, 1 0.85, 0.85 1, 0 1" />
+        </clipPath>
+      </defs>
+    </svg>
+    
     <div class="slide-container">
-        <div class="content-wrapper">
-            <div class="image-section">
-                <div class="accent-bg"></div>
-                <img src="https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?q=80&w=1948&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Workspace" class="main-image">
+        <div class="text-column">
+            <div class="title-group">
+                <h1 class="main-title">Mở đầu: Thiên nhiên kỳ diệu</h1>
+                <p class="subtitle">Thiên nhiên mang lại sự sống, cân bằng và cảm hứng. Cùng nhau, chúng ta có trách nhiệm bảo tồn vẻ đẹp này cho thế hệ mai sau.</p>
             </div>
-            <div class="text-section">
-                <h1 class="main-title">Thiên nhiên và những điều kì thú</h1>
-                <h3 class="subtitle">MỞ ĐẦU: THIÊN NHIÊN KỲ DIỆU</h3>
-                <ul class="agenda-list">
-                    <li class='agenda-item'><b>Mở đầu: Thiên nhiên kỳ diệu</b><br>- Vẻ đẹp thiên nhiên: sự sống, cân bằng sinh thái, cảm hứng.<br>- Trách nhiệm bảo vệ: hành động vì tương lai.</li><li class='agenda-item'><b>Phần 1: Môi trường xanh</b><br>- Rừng nhiệt đới: lá phổi xanh, cung cấp oxy, đa dạng sinh học.<br>- Cây cổ thụ: biểu tượng sức sống, bền vững.<br>- Bảo vệ rừng: trồng rừng, chống phá rừng.</li><li class='agenda-item'><b>Phần 2: Môi trường biển</b><br>- Rạn san hô: ngôi nhà biển, bị đe dọa ô nhiễm.<br>- Cá voi: động vật lớn nhất, vai trò hệ sinh thái.<br>- Bảo vệ đại dương: giảm rác thải, khai thác bền vững.</li>
-                </ul>
+            <div class="footer-decor">
+                <div class="arcs"></div>
+                <div class="dots-grid">
+                    <div class="dot"></div><div class="dot"></div>
+                    <div class="dot"></div><div class="dot"></div>
+                </div>
             </div>
         </div>
+        <div class="image-column"></div>
     </div>
 </body>
 </html>

@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Icon List Slide - Adjusted Layout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Montserrat', sans-serif;
+            background-color: #111827;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+            padding: 2rem;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 85rem; /* Tăng max-width */
+            /* ĐÃ SỬA ĐỔI: Đảo ngược tỷ lệ, cho cột phải rộng hơn */
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            align-items: center;
+            gap: 4rem;
+        }
+
+        .title-column {
+            padding-right: 2rem;
+        }
+
+        .main-title {
+            /* ĐÃ SỬA ĐỔI: Font nhỏ hơn */
+            font-size: clamp(2.5rem, 5vw, 4rem);
+            font-weight: 800;
+            line-height: 1.2;
+            color: #FFFFFF;
+            margin-bottom: 1.5rem;
+        }
+
+        .title-divider {
+            height: 5px;
+            width: 100px;
+            background-color: #22D3EE;
+            border-radius: 3px;
+            border: none;
+        }
+
+        .points-column {
+            display: flex;
+            flex-direction: column;
+            gap: 3.5rem; /* Tăng khoảng cách */
+        }
+
+        .point-item {
+            display: flex;
+            align-items: center;
+            gap: 2.5rem; /* Tăng khoảng cách */
+        }
+
+        .icon-circle {
+            /* ĐÃ SỬA ĐỔI: Icon to hơn */
+            width: 6rem;
+            height: 6rem;
+            border-radius: 50%;
+            flex-shrink: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            box-shadow: 0 4px 15px #22D3EE33;
+        }
+
+        .point-title {
+            /* ĐÃ SỬA ĐỔI: Font to hơn */
+            font-size: 1.75rem;
+            font-weight: 700;
+            margin-bottom: 0.75rem;
+        }
+
+        .point-description {
+            /* ĐÃ SỬA ĐỔI: Font to hơn và giãn dòng tốt hơn */
+            font-size: 1.2rem;
+            line-height: 1.8;
+            font-weight: 400;
+        }
+        
+        @media (max-width: 48rem) {
+            .slide-container {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+                text-align: center;
+            }
+            .title-column { padding-right: 0; }
+            .title-divider { margin: 0 auto; }
+            .point-item {
+                flex-direction: column;
+                text-align: center;
+                gap: 1.5rem;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="title-column">
+            <h1 class="main-title">3. Giữ tư duy phản biện như <b>chiếc la bàn</b></h1>
+            <hr class="title-divider" />
+        </div>
+        <div class="points-column">
+            
+        <div class="point-item">
+            <div class="icon-circle" style="background-color: #22D3EE;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="42px" height="42px">
+                    
+                </svg>
+            </div>
+            <div class="text-content">
+                <h2 class="point-title" style="color: #FFFFFF;">“Dữ liệu này đến từ đâu?”</h2>
+                <p class="point-description" style="color: #E5E7EB;">Trong kỷ nguyên AI đầy thông tin nhiễu, hãy luôn là người kiểm tra nguồn gốc và độ tin cậy.</p>
+            </div>
+        </div>
+        
+        <div class="point-item">
+            <div class="icon-circle" style="background-color: #22D3EE;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="42px" height="42px">
+                    
+                </svg>
+            </div>
+            <div class="text-content">
+                <h2 class="point-title" style="color: #FFFFFF;">“Điều này có hợp lý không?”</h2>
+                <p class="point-description" style="color: #E5E7EB;">Sử dụng trực giác và kinh nghiệm của bạn để đánh giá tính hợp lý của các kết quả do AI tạo ra.</p>
+            </div>
+        </div>
+        
+        <div class="point-item">
+            <div class="icon-circle" style="background-color: #22D3EE;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" width="42px" height="42px">
+                    
+                </svg>
+            </div>
+            <div class="text-content">
+                <h2 class="point-title" style="color: #FFFFFF;">“AI đang bỏ sót điều gì?”</h2>
+                <p class="point-description" style="color: #E5E7EB;">AI giỏi trả lời, nhưng <b>bạn</b> phải giỏi chất vấn. Hãy tìm kiếm những góc nhìn mà máy móc bỏ qua.</p>
+            </div>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>
