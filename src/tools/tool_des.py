@@ -54,7 +54,6 @@ from src.tools.html_tool import (
     generate_body_slide14,  # slide content
     generate_body_slide15,  # slide content
     generate_body_slide16,  # slide content
-    generate_body_slide17,  # slide content
     generate_body_slide18,  # slide content
     generate_body_slide19,  # slide content
     generate_body_slide20,  # slide content
@@ -820,26 +819,6 @@ class GenerateBodySlide16Input(BaseModel):
     icon2: str = Field(default="<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>", description="SVG code for the second section icon.")
     icon3: str = Field(default="<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>", description="SVG code for the third section icon.")
     image_path: str = Field(default="Picture2.png", description="Path to the image file for the right column.")
-
-class GenerateBodySlide17Input(BaseModel):
-    """Input schema for generate_body_slide17."""
-    main_title: str = Field(..., description="The main title displayed at the top center of the slide (e.g., 'Main title').")
-    left_title: str = Field(..., description="The subtitle for the left column content (e.g., 'Subtitle 1').")
-    right_title: str = Field(..., description="The subtitle for the right column content (e.g., 'Subtitle 2').")
-    left_text: str = Field(..., description="The main text content for the left column. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
-    right_text: str = Field(..., description="The main text content for the right column. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Achieving <b>sustainable growth</b> through <i>innovation</i>: <ul><li>Market <u>expansion</u></li><li>Product <span style=\"color: #e74c3c;\">differentiation</span></li><li>Customer satisfaction</li></ul>'")
-    footer_text: str = Field(..., description="Summary or concluding text displayed at the bottom of the slide. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. Can also include structured content with <ul> and <li> tags for bullet points.")
-    circle_colors: List[str] = Field(default=["#e1eff2", "#8cbeca", "#e1eff2"], description="Array of three CSS color values for the circles. Order: [left circle, center circle, right circle].")
-    main_title_font_size: str = Field(default="2.25rem", description="CSS font size for the main title, should be in REM units.")
-    section_title_font_size: str = Field(default="1.5rem", description="CSS font size for the section titles (left and right), should be in REM units.")
-    text_font_size: str = Field(default="1rem", description="CSS font size for the main text content, should be in REM units.")
-    footer_font_size: str = Field(default="0.875rem", description="CSS font size for the footer text, should be in REM units.")
-    title_color: str = Field(default="#555555", description="CSS color for all titles (main title and section titles).")
-    text_color: str = Field(default="#555555", description="CSS color for all text content including footer.")
-    circle_text_color: str = Field(default="#ffffff", description="CSS color for any text that might be displayed inside the circles.")
-    background_color: str = Field(default="#ffffff", description="CSS background color for the slide content area.")
-    accent_color: str = Field(default="#a2c4c9", description="CSS color for the decorative corner elements.")
-    font_family: str = Field(default="Arial, sans-serif", description="The CSS font family for all text on the slide.")
 
 class GenerateBodySlide18Input(BaseModel):
     """Input schema for generate_body_slide18."""
@@ -1681,12 +1660,6 @@ CONTENT_TOOLS = [
         name="generate_body_slide16",
         description="Generates an HTML slide with a two-column layout: left column contains a main title and three icon-based content sections with bullet points, right column displays an image.",
         args_schema=GenerateBodySlide16Input
-    ),
-    StructuredTool.from_function(
-        func=generate_body_slide17,
-        name="generate_body_slide17",
-        description="Generates an HTML slide with three overlapping circles in the center, text content on left and right sides, and decorative corner elements.",
-        args_schema=GenerateBodySlide17Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide18,
