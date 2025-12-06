@@ -1,0 +1,12 @@
+        .element:not([contenteditable="true"]) {
+    user-select: none;
+}
+
+.element[contenteditable="true"] {
+    cursor: move;
+    outline-offset: 5px;
+}
+
+.element[contenteditable="true"]:focus {
+    cursor: text;
+}

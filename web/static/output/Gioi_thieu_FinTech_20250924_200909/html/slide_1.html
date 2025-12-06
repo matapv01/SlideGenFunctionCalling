@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Intro Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #EAE3D9;
+            color: #4A403A;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100%;
+            max-width: 75rem; /* 1200px */
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            align-items: center;
+            gap: 2rem;
+            padding: 2rem;
+        }
+
+        .text-column {
+            padding-right: 2rem;
+        }
+
+        .main-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            line-height: 1.6;
+            opacity: 0.9;
+            max-width: 25rem;
+        }
+
+        .image-column {
+            position: relative;
+        }
+
+        .image-wrapper {
+            position: relative;
+            padding-top: 66.66%; /* 3:2 Aspect Ratio */
+            border-radius: 0.75rem;
+            overflow: hidden;
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.15);
+        }
+
+        .main-image {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* --- Decorations --- */
+        .star-cluster {
+            position: absolute;
+            top: -1rem;
+            left: -1rem;
+            width: 4rem;
+            height: 4rem;
+            pointer-events: none;
+        }
+        .star-cluster .star { position: absolute; opacity: 0.8; }
+        .star-cluster .star:nth-child(1) { width: 1.5rem; height: 1.5rem; top: 0; left: 0; }
+        .star-cluster .star:nth-child(2) { width: 1.2rem; height: 1.2rem; top: 1.5rem; left: 0.5rem; }
+        .star-cluster .star:nth-child(3) { width: 1rem; height: 1rem; top: 0.5rem; left: 1.8rem; }
+
+        .botanical-frame {
+            position: absolute;
+            bottom: -2rem;
+            right: -2rem;
+            width: 12rem;
+            height: 12rem;
+            opacity: 0.9;
+            pointer-events: none;
+            transform: scaleX(-1); /* Flip horizontally to match image */
+        }
+
+        /* --- Responsive Design --- */
+        @media (max-width: 48rem) { /* 768px */
+            .slide-container {
+                grid-template-columns: 1fr;
+                text-align: center;
+                padding-top: 4rem;
+                height: 100vh;
+                overflow-y: auto;
+            }
+            .text-column {
+                padding-right: 0;
+                order: 1; /* Text comes first */
+            }
+            .image-column {
+                order: 2; /* Image comes second */
+                width: 90%;
+                margin: 0 auto;
+            }
+            .subtitle {
+                margin: 0 auto;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="text-column">
+            <h1 class="main-title">Giới thiệu về FinTech</h1>
+            <p class="subtitle">Giới thiệu sơ khai</p>
+        </div>
+        <div class="image-column">
+            <div class="image-wrapper">
+                <img class="main-image" src="https://images.pexels.com/photos/844124/pexels-photo-844124.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1" alt="Introductory image" />
+            </div>
+            <div class="star-cluster">
+                
+    <svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,0 61,39 100,50 61,61 50,100 39,61 0,50 39,39" fill="url(#goldGradient)"/>
+    </svg>
+    
+                
+    <svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,0 61,39 100,50 61,61 50,100 39,61 0,50 39,39" fill="url(#goldGradient)"/>
+    </svg>
+    
+                
+    <svg class="star" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,0 61,39 100,50 61,61 50,100 39,61 0,50 39,39" fill="url(#goldGradient)"/>
+    </svg>
+    
+            </div>
+            
+    <svg class="botanical-frame" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+    <linearGradient id="goldGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" style="stop-color:#F7DC6F;stop-opacity:1" />
+        <stop offset="100%" style="stop-color:#C9A842;stop-opacity:1" />
+    </linearGradient>
+    </defs>
+        <g fill="url(#goldGradient)" stroke="url(#goldGradient)" stroke-width="1" stroke-linecap="round">
+            <!-- Main Stem -->
+            <path d="M 190,10 C 120,80 110,120 10,190" fill="none" stroke-width="2"/>
+
+            <!-- Leaves on the right -->
+            <path d="M 190,10 C 180,50 160,60 145,60 C 160,60 170,80 185,90" fill="none"/>
+            <path d="M 160,65 C 150,95 120,110 110,105 C 120,110 130,130 145,140" fill="none"/>
+
+            <!-- Leaves on the left -->
+            <path d="M 80,185 C 110,175 125,150 120,140 C 125,150 145,160 160,170" fill="none"/>
+            <path d="M 15,190 C 45,180 60,150 55,145 C 60,150 80,165 95,175" fill="none"/>
+
+            <!-- Berries -->
+            <circle cx="120" cy="80" r="4"/>
+            <circle cx="105" cy="125" r="4"/>
+            <circle cx="70" cy="165" r="4"/>
+        </g>
+    </svg>
+    
+        </div>
+    </div>
+</body>
+</html>

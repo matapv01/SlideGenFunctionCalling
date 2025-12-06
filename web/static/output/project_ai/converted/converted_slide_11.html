@@ -1,0 +1,140 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title><link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+<style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background-color: #1E3A8A;
+            color: #FFFFFF;
+        }
+
+        .slide-container {
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            padding: 5rem 8rem;
+        }
+
+        .content-area {
+            position: relative;
+            z-index: 10;
+            max-width: 65ch;
+        }
+
+        .slide-title {
+            font-size: 2.75rem;
+            /* FIX: Title is now Extra-Bold */
+            font-weight: 800;
+            margin-bottom: 3rem;
+        }
+        
+        .content-list {
+            list-style: none;
+            margin-bottom: 3rem;
+        }
+
+        .content-list li {
+            font-size: 1.75rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            padding-left: 2.5rem;
+            position: relative;
+            /* FIX: Body text is now Semi-Bold */
+            font-weight: 600;
+        }
+
+        .content-list li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            top: 5px;
+            color: #FBBF24;
+            font-weight: 800; /* Made bullet heavier to match text */
+        }
+        
+        .concluding-text {
+            font-size: 1.75rem;
+            line-height: 1.6;
+            /* FIX: Body text is now Semi-Bold */
+            font-weight: 600;
+        }
+
+        /* Shapes are unchanged from the previous fix */
+        .shape-cluster {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+            transform: scale(0.85); 
+        }
+        .shape { position: absolute; border-radius: 8px; }
+        .top-right { top: 5rem; right: 5rem; width: 25rem; height: 20rem; }
+        .shape-tr-1 { width: 14rem; height: 14rem; background-color: #1E3A8A; opacity: 0.6; top: 0; right: 8rem; transform: rotate(15deg); }
+        .shape-tr-2 { width: 15rem; height: 15rem; background-color: #34D399; opacity: 0.7; top: 2rem; right: 0; transform: rotate(25deg); }
+        .shape-tr-3 { width: 13rem; height: 13rem; background-color: #6366F1; opacity: 0.6; top: 8rem; right: 10rem; transform: rotate(35deg); }
+        .shape-tr-4 { width: 12rem; height: 12rem; background: linear-gradient(45deg, #F59E0B, #FBBF24); opacity: 0.8; top: 12rem; right: 2rem; transform: rotate(10deg); }
+        .bottom-left { bottom: 3rem; left: -5rem; width: 25rem; height: 20rem; }
+        .shape-bl-1 { width: 12rem; height: 12rem; background-color: #4F46E5; opacity: 0.5; bottom: 0; left: 10rem; transform: rotate(-25deg); }
+        .shape-bl-2 { width: 14rem; height: 14rem; background-color: #10B981; opacity: 0.4; bottom: 8rem; left: 2rem; transform: rotate(-35deg); }
+        .shape-bl-3 { width: 16rem; height: 16rem; background: linear-gradient(45deg, #EF4444, #F97316); opacity: 0.7; bottom: 0; left: 0; transform: rotate(-15deg); }
+        
+        @media (max-width: 96rem) { .slide-container { padding: 4rem; } }
+        @media (max-width: 64rem) {
+            .slide-title { font-size: 2.25rem; }
+            .content-list li, .concluding-text { font-size: 1.4rem; }
+            .shape-cluster { transform: scale(0.7); }
+        }
+         @media (max-width: 48rem) {
+            .shape-cluster { display: none; }
+            .slide-container { justify-content: center; text-align: center; }
+        }
+    </style><style>
+*{box-sizing:border-box;}
+html { width: 1920px; height: 1080px; }
+body {
+  margin: 0;
+  padding: 2rem;
+  background: rgb(30, 58, 138);
+  overflow: auto;
+  
+  
+  /* KHÔNG đặt width/height cho body */
+}
+.outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
+.content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:1920px;height:1080px;overflow:visible;background:inherit;box-sizing:border-box;}
+</style></head><body><div class="outer-wrapper"><div class="content-wrapper">
+    <div style='position:absolute;z-index:102;left:1489.404296875px;top:82.60428619384766px;width:233.19140625px;height:233.19143676757812px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgb(30, 58, 138) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(30, 58, 138); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 8px; opacity: 0.6; transform: matrix(0.965926, 0.258819, -0.258819, 0.965926, 0, 0); transform-origin: 112px 112px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 224px; height: 224px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="shape shape-tr-1"></div>
+    <div style='position:absolute;z-index:103;left:1572.4495849609375px;top:97.64954376220703px;width:271.1009521484375px;height:271.1009216308594px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgb(52, 211, 153) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(52, 211, 153); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 8px; opacity: 0.7; transform: matrix(0.906308, 0.422618, -0.422618, 0.906308, 0, 0); transform-origin: 120px 120px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 240px; height: 240px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="shape shape-tr-2"></div>
+    <div style='position:absolute;z-index:104;left:1462.4827880859375px;top:178.08279418945312px;width:246.234375px;height:246.23440551757812px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgb(99, 102, 241) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(99, 102, 241); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 8px; opacity: 0.6; transform: matrix(0.819152, 0.573576, -0.573576, 0.819152, 0, 0); transform-origin: 104px 104px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 208px; height: 208px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="shape shape-tr-3"></div>
+    <div style='position:absolute;z-index:105;left:1606.6700439453125px;top:254.26998901367188px;width:189.0599365234375px;height:189.06002807617188px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) linear-gradient(45deg, rgb(245, 158, 11), rgb(251, 191, 36)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(45deg, rgb(245, 158, 11), rgb(251, 191, 36)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 8px; opacity: 0.8; transform: matrix(0.984808, 0.173648, -0.173648, 0.984808, 0, 0); transform-origin: 96px 96px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 192px; height: 192px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="shape shape-tr-4"></div>
+    <div style='position:absolute;z-index:107;left:59.159637451171875px;top:817.9596557617188px;width:216.8807373046875px;height:216.88067626953125px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgb(79, 70, 229) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(79, 70, 229); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 8px; opacity: 0.5; transform: matrix(0.906308, -0.422618, 0.422618, 0.906308, 0, 0); transform-origin: 96px 96px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 192px; height: 192px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="shape shape-bl-1"></div>
+    <div style='position:absolute;z-index:108;left:-60.18775177001953px;top:671.4122314453125px;width:265.1755065917969px;height:265.175537109375px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgb(16, 185, 129) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(16, 185, 129); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 8px; opacity: 0.4; transform: matrix(0.819152, -0.573576, 0.573576, 0.819152, 0, 0); transform-origin: 112px 112px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 224px; height: 224px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="shape shape-bl-2"></div>
+    <div style='position:absolute;z-index:109;left:-74.45223999023438px;top:765.94775390625px;width:266.5044860839844px;height:266.5045166015625px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) linear-gradient(45deg, rgb(239, 68, 68), rgb(249, 115, 22)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(45deg, rgb(239, 68, 68), rgb(249, 115, 22)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); border-radius: 8px; opacity: 0.7; transform: matrix(0.965926, -0.258819, 0.258819, 0.965926, 0, 0); transform-origin: 128px 128px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 256px; height: 256px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="shape shape-bl-3"></div>
+    <h2 style='position:absolute;z-index:111;left:128px;top:203.515625px;width:653.109375px;height:65px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 44px; font-weight: 800; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 1; transform-origin: 326.555px 32.5px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 48px; margin-bottom: 48px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 653.109px; height: 65px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="slide-title">PHIÊN HỎI ĐÁP</h2>
+    <ul style='position:absolute;z-index:112;left:128px;top:316.515625px;width:653.109375px;height:332.78125px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 1; transform-origin: 326.555px 166.391px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-position: outside; margin: 0px 0px 48px; margin-bottom: 48px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 653.109px; height: 332.781px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="content-list">
+                <li>Chi tiết về công nghệ AI được sử dụng?</li>
+<li>Kế hoạch bảo mật dữ liệu như thế nào?</li>
+<li>Làm thế nào để tích hợp với hệ thống hiện tại?</li>
+<li>Chính sách giá cả và gói dịch vụ?</li>
+<li>Roadmap phát triển trong tương lai?</li>
+
+            </ul>
+    <p style='position:absolute;z-index:118;left:128px;top:697.296875px;width:653.109375px;height:179.1875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Poppins, sans-serif; font-size: 28px; font-weight: 600; line-height: 44.8px; text-align: start; text-decoration: rgb(255, 255, 255); opacity: 1; transform-origin: 326.555px 89.5938px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: start; vertical-align: baseline; width: 653.109px; height: 179.188px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="concluding-text">Cảm ơn các bạn đã lắng nghe! Bây giờ là thời gian dành cho các câu hỏi. Chúng tôi rất mong nhận được những góp ý, thắc mắc và đề xuất từ các bạn để hoàn thiện dự án.</p>
+</div><script>
+(function() {
+  function resizeContent() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    var ww = window.innerWidth, wh = window.innerHeight;
+    var cw = wrapper.offsetWidth, ch = wrapper.offsetHeight;
+    var scale = Math.min(ww / cw, wh / ch);
+    wrapper.style.setProperty('--scale', scale);
+  }
+  window.addEventListener('resize', resizeContent);
+  window.addEventListener('DOMContentLoaded', resizeContent);
+})();
+</script></body></html>

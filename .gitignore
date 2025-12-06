@@ -5,8 +5,3 @@ __pycache__/
 
 venv/
 .env
-
-web/static/output/
-*.zip
-*.png
-*.html

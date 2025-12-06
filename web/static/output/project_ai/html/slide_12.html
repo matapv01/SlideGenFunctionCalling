@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometric Content Slide - Bolder Text</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <!-- FIX: Imported bolder font weights (600, 800) -->
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600;800&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            background-color: #1E3A8A;
+            color: #FFFFFF;
+        }
+
+        .slide-container {
+            width: 100%; height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            position: relative;
+            padding: 5rem 8rem;
+        }
+
+        .content-area {
+            position: relative;
+            z-index: 10;
+            max-width: 65ch;
+        }
+
+        .slide-title {
+            font-size: 2.75rem;
+            /* FIX: Title is now Extra-Bold */
+            font-weight: 800;
+            margin-bottom: 3rem;
+        }
+        
+        .content-list {
+            list-style: none;
+            margin-bottom: 3rem;
+        }
+
+        .content-list li {
+            font-size: 1.75rem;
+            line-height: 1.6;
+            margin-bottom: 1rem;
+            padding-left: 2.5rem;
+            position: relative;
+            /* FIX: Body text is now Semi-Bold */
+            font-weight: 600;
+        }
+
+        .content-list li::before {
+            content: '>';
+            position: absolute;
+            left: 0;
+            top: 5px;
+            color: #FBBF24;
+            font-weight: 800; /* Made bullet heavier to match text */
+        }
+        
+        .concluding-text {
+            font-size: 1.75rem;
+            line-height: 1.6;
+            /* FIX: Body text is now Semi-Bold */
+            font-weight: 600;
+        }
+
+        /* Shapes are unchanged from the previous fix */
+        .shape-cluster {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1;
+            transform: scale(0.85); 
+        }
+        .shape { position: absolute; border-radius: 8px; }
+        .top-right { top: 5rem; right: 5rem; width: 25rem; height: 20rem; }
+        .shape-tr-1 { width: 14rem; height: 14rem; background-color: #1E3A8A; opacity: 0.6; top: 0; right: 8rem; transform: rotate(15deg); }
+        .shape-tr-2 { width: 15rem; height: 15rem; background-color: #34D399; opacity: 0.7; top: 2rem; right: 0; transform: rotate(25deg); }
+        .shape-tr-3 { width: 13rem; height: 13rem; background-color: #6366F1; opacity: 0.6; top: 8rem; right: 10rem; transform: rotate(35deg); }
+        .shape-tr-4 { width: 12rem; height: 12rem; background: linear-gradient(45deg, #F59E0B, #FBBF24); opacity: 0.8; top: 12rem; right: 2rem; transform: rotate(10deg); }
+        .bottom-left { bottom: 3rem; left: -5rem; width: 25rem; height: 20rem; }
+        .shape-bl-1 { width: 12rem; height: 12rem; background-color: #4F46E5; opacity: 0.5; bottom: 0; left: 10rem; transform: rotate(-25deg); }
+        .shape-bl-2 { width: 14rem; height: 14rem; background-color: #10B981; opacity: 0.4; bottom: 8rem; left: 2rem; transform: rotate(-35deg); }
+        .shape-bl-3 { width: 16rem; height: 16rem; background: linear-gradient(45deg, #EF4444, #F97316); opacity: 0.7; bottom: 0; left: 0; transform: rotate(-15deg); }
+        
+        @media (max-width: 96rem) { .slide-container { padding: 4rem; } }
+        @media (max-width: 64rem) {
+            .slide-title { font-size: 2.25rem; }
+            .content-list li, .concluding-text { font-size: 1.4rem; }
+            .shape-cluster { transform: scale(0.7); }
+        }
+         @media (max-width: 48rem) {
+            .shape-cluster { display: none; }
+            .slide-container { justify-content: center; text-align: center; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="shape-cluster top-right">
+            <div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div><div class="shape shape-tr-4"></div>
+        </div>
+        <div class="shape-cluster bottom-left">
+             <div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div>
+        </div>
+        <div class="content-area">
+            <h2 class="slide-title">CẢM ƠN</h2>
+            <ul class="content-list">
+                <li><b>Cảm ơn sự quan tâm và thời gian quý báu của các bạn!</b> Chúng tôi hy vọng buổi thuyết trình hôm nay đã cung cấp cái nhìn tổng quan về dự án và tiềm năng phát triển trong tương lai.</li>
+<li><b>Thông tin liên hệ:</b><br>Email: contact@borcelle-group.com<br>Website: www.borcelle-ai.com<br>Hotline: 1900-xxxx<br>Địa chỉ: Tầng 10, Tòa nhà ABC, Quận 1, TP.HCM</li>
+<li><b>Kết nối với chúng tôi:</b><br>LinkedIn: Borcelle Group<br>Facebook: @BorcelleAI<br>Twitter: @BorcelleGroup</li>
+
+            </ul>
+            <p class="concluding-text">Chúng tôi luôn sẵn sàng lắng nghe và hợp tác cùng các bạn!</p>
+        </div>
+    </div>
+</body>
+</html>

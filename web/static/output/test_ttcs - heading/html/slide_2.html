@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GIỚI THIỆU DỰ ÁN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { font-size: 16px; width: 1920px; height: 1080px; }
+        body, html {
+            height: 1080px;
+            width: 1920px;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a4b8c 0%, #2a6cb7 100%);
+            position: relative;
+            color: #FFFFFF;
+            padding: 60px;
+            box-sizing: border-box;
+        }
+        
+        /* Content wrapper for scaling */
+        .content-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }
+        
+        .outer-wrapper {
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }
+
+        .content-frame {
+            width: 100%;
+            max-width: 1400px;
+            padding: 80px;
+            position: relative;
+            text-align: center;
+        }
+        
+        .content-frame:not(.no-border) {
+            border: 3px dashed rgba(255, 255, 255, 0.4);
+            border-radius: 12px;
+        }
+        
+        
+        .title {
+            font-size: 4rem;
+            font-weight: 700;
+            margin-bottom: 40px;
+            letter-spacing: 0.1em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .content {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            font-weight: 300;
+            text-align: center;
+            max-width: 90%;
+            margin: 0 auto;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+        }
+        
+        /* Decorative triangles */
+        .triangle {
+            position: absolute;
+            opacity: 0.15;
+            z-index: 1;
+        }
+        
+        .triangle-top-left {
+            top: 5%;
+            left: 5%;
+            width: 0;
+            height: 0;
+            border-left: 120px solid transparent;
+            border-right: 120px solid transparent;
+            border-bottom: 200px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(15deg);
+        }
+        
+        .triangle-top-right {
+            top: 8%;
+            right: 8%;
+            width: 0;
+            height: 0;
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 180px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-25deg);
+        }
+        
+        .triangle-bottom-left {
+            bottom: 10%;
+            left: 3%;
+            width: 0;
+            height: 0;
+            border-left: 80px solid transparent;
+            border-right: 80px solid transparent;
+            border-bottom: 140px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(45deg);
+        }
+        
+        .triangle-bottom-right {
+            bottom: 5%;
+            right: 5%;
+            width: 0;
+            height: 0;
+            border-left: 110px solid transparent;
+            border-right: 110px solid transparent;
+            border-bottom: 190px solid rgba(255, 255, 255, 0.1);
+            transform: rotate(-35deg);
+        }
+        
+        /* Additional geometric shapes */
+        .geometric-shape {
+            position: absolute;
+            opacity: 0.105;
+            z-index: 2;
+        }
+        
+        .shape-1 {
+            top: 15%;
+            left: 15%;
+            width: 60px;
+            height: 60px;
+            background: rgba(255, 255, 255, 0.05);
+            transform: rotate(45deg);
+        }
+        
+        .shape-2 {
+            top: 20%;
+            right: 20%;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 50%;
+        }
+        
+        .shape-3 {
+            bottom: 25%;
+            left: 20%;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.05);
+            clip-path: polygon(50% 0%, 0% 100%, 100% 100%);
+        }
+        
+        @media (max-width: 768px) {
+            .outer-wrapper {
+                transform: scale(0.4);
+                transform-origin: top left;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .outer-wrapper {
+                transform: scale(0.25);
+                transform-origin: top left;
+            }
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <!-- Decorative triangles -->
+                <div class="triangle triangle-top-left"></div>
+                <div class="triangle triangle-top-right"></div>
+                <div class="triangle triangle-bottom-left"></div>
+                <div class="triangle triangle-bottom-right"></div>
+                
+                <!-- Additional geometric shapes -->
+                <div class="geometric-shape shape-1"></div>
+                <div class="geometric-shape shape-2"></div>
+                <div class="geometric-shape shape-3"></div>
+                
+                <!-- Main content -->
+                <div class="content-frame">
+                    <h1 class="title">GIỚI THIỆU DỰ ÁN</h1>
+                    <div class="content">Innovatech Solutions được thành lập với mục tiêu cung cấp các giải pháp phần mềm tùy chỉnh và dịch vụ tư vấn công nghệ thông tin tiên tiến cho các doanh nghiệp vừa và nhỏ (SMEs). Trong bối cảnh chuyển đổi số đang diễn ra mạnh mẽ, chúng tôi nhận thấy nhu cầu cấp thiết về các công cụ công nghệ hiệu quả, dễ tiếp cận và có khả năng mở rộng để giúp SMEs nâng cao năng lực cạnh tranh. Kế hoạch kinh doanh này sẽ trình bày chi tiết về mô hình hoạt động, chiến lược thị trường, mục tiêu phát triển và các dự phóng tài chính của Innovatech Solutions trong 5 năm tới. Chúng tôi tin tưởng vào tiềm năng tăng trưởng vượt trội và khả năng tạo ra giá trị bền vững cho khách hàng cũng như các nhà đầu tư.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

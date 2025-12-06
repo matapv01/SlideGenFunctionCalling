@@ -1,0 +1,25 @@
+        .presentation-mode {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 100000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .presentation-mode.active {
+            display: flex;
+        }
+
+        .presentation-slide-container {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            transform-origin: center center;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+

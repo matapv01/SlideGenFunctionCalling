@@ -1,0 +1,94 @@
+.canvas.drag-over {
+    background: rgba(102, 126, 234, 0.05) !important;
+    border: 2px dashed #667eea !important;
+}
+
+.canvas-container {
+    position: absolute;
+    top: 65px;
+    left: 300px;
+    right: 0;
+    bottom: 0;
+    overflow: auto;
+    background: var(--bg-canvas);
+    padding: 30px;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.canvas-container.left-collapsed {
+    left: 12%;
+    right: -10%;
+}
+
+/* Center canvas when both side panels are closed */
+.canvas-container.left-collapsed.both-collapsed {
+    left: 0;
+    right: 0;
+}
+
+.canvas-container.properties-open {
+    right: 320px;
+}
+
+.canvas {
+    position: relative;
+    width: 1920px;
+    height: 1080px;
+    background: white;
+    margin: 0 auto;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    border-radius: 8px;
+    transform-origin: top left;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    overflow: hidden;
+}
+
+.canvas-drag-over {
+    border: 3px dashed #48bb78 !important;
+    background: rgba(72, 187, 120, 0.1) !important;
+}
+
+.drag-drop-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(72, 187, 120, 0.2);
+    border: 3px dashed #48bb78;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 10000;
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+}
+
+.drag-drop-overlay.active {
+    opacity: 1;
+}
+
+.drag-drop-message {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+    text-align: center;
+    font-size: 18px;
+    color: #2d3748;
+    font-weight: 600;
+}
+
+.drag-drop-message::before {
+    content: "📎";
+    display: block;
+    font-size: 48px;
+    margin-bottom: 10px;
+}
+
+.group-container {
+    border: 2px dashed #a0aec0 !important;
+    border-radius: 8px;
+}

@@ -1,0 +1,233 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title><link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+<style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background: linear-gradient(135deg, #4A90E2 0%, #2E5BBA 100%);
+            padding: 40px;
+            box-sizing: border-box;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .slide-border {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            pointer-events: none;
+            z-index: 5;
+        }
+        
+        .triangle {
+            position: absolute;
+            width: 0;
+            height: 0;
+            z-index: 2;
+        }
+        
+        .triangle-top-left {
+            top: 0;
+            left: 0;
+            border-left: 120px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 120px solid transparent;
+        }
+        
+        .triangle-top-right {
+            top: 0;
+            right: 0;
+            border-right: 120px solid rgba(255, 255, 255, 0.1);
+            border-bottom: 120px solid transparent;
+        }
+        
+        .triangle-bottom-left {
+            bottom: 0;
+            left: 0;
+            border-left: 120px solid rgba(255, 255, 255, 0.1);
+            border-top: 120px solid transparent;
+        }
+        
+        .triangle-bottom-right {
+            bottom: 0;
+            right: 0;
+            border-right: 120px solid rgba(255, 255, 255, 0.1);
+            border-top: 120px solid transparent;
+        }
+        
+        .content-wrapper {
+            position: relative;
+            z-index: 10;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .title-section {
+            text-align: center;
+            margin-bottom: 60px;
+            margin-top: 40px;
+        }
+        
+        .main-title {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            letter-spacing: 0.1em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+            margin: 0;
+        }
+        
+        .roadmap-grid {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+            width: 100%;
+        }
+        
+        .roadmap-card {
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            padding: 25px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .roadmap-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 12px 32px rgba(0, 0, 0, 0.2);
+        }
+        
+        .roadmap-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #4A90E2, #2E5BBA);
+        }
+        
+        .card-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #1A4480;
+            margin: 0 0 15px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        .card-content {
+            font-size: 0.9rem;
+            color: #1A4B8C;
+            line-height: 1.6;
+            margin: 0;
+        }
+        
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 20px;
+            }
+            
+            .main-title {
+                font-size: 2.5rem;
+            }
+            
+            .roadmap-grid {
+                grid-template-columns: 1fr;
+                gap: 20px;
+            }
+            
+            .roadmap-card {
+                padding: 20px;
+            }
+            
+            .card-title {
+                font-size: 1rem;
+            }
+            
+            .card-content {
+                font-size: 0.8rem;
+            }
+            
+            .triangle {
+                display: none;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .title-section {
+                margin-bottom: 30px;
+                margin-top: 20px;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+        }
+        
+        
+    </style><style>
+*{box-sizing:border-box;}
+html { width: 1920px; height: 1080px; }
+body {
+  margin: 0;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0);
+  overflow: auto;
+  
+  
+  /* KHÔNG đặt width/height cho body */
+}
+.outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
+.content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:1920px;height:1080px;overflow:visible;background:inherit;box-sizing:border-box;}
+</style></head><body><div class="outer-wrapper"><div class="content-wrapper">
+    <div style='position:absolute;z-index:100;left:0px;top:0px;width:1920px;height:1080px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(74, 144, 226) 0%, rgb(46, 91, 186) 100%) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgb(74, 144, 226) 0%, rgb(46, 91, 186) 100%); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 960px 540px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 40px; padding-top: 40px; padding-right: 40px; padding-bottom: 40px; padding-left: 40px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1920px; height: 1080px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="slide-container"></div>
+    <div style='position:absolute;z-index:101;left:0px;top:0px;width:120px;height:120px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 60px 60px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; text-align: start; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 120px solid rgba(0, 0, 0, 0); border-left: 120px solid rgba(255, 255, 255, 0.1); ' class="triangle triangle-top-left"></div>
+    <div style='position:absolute;z-index:102;left:1800px;top:0px;width:120px;height:120px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 60px 60px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; text-align: start; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 120px solid rgba(255, 255, 255, 0.1); border-bottom: 120px solid rgba(0, 0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="triangle triangle-top-right"></div>
+    <div style='position:absolute;z-index:103;left:0px;top:960px;width:120px;height:120px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 60px 60px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; text-align: start; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: block; border-top: 120px solid rgba(0, 0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 120px solid rgba(255, 255, 255, 0.1); ' class="triangle triangle-bottom-left"></div>
+    <div style='position:absolute;z-index:104;left:1800px;top:960px;width:120px;height:120px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 60px 60px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; text-align: start; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: block; border-top: 120px solid rgba(0, 0, 0, 0); border-right: 120px solid rgba(255, 255, 255, 0.1); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="triangle triangle-bottom-right"></div>
+    <div style='position:absolute;z-index:105;left:20px;top:20px;width:1880px;height:1040px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 940px 520px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; text-align: start; vertical-align: baseline; width: 1876px; height: 1036px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 2px dashed rgba(255, 255, 255, 0.3); border-right: 2px dashed rgba(255, 255, 255, 0.3); border-bottom: 2px dashed rgba(255, 255, 255, 0.3); border-left: 2px dashed rgba(255, 255, 255, 0.3); ' class="slide-border"></div>
+    <h1 style='position:absolute;z-index:108;left:40px;top:80px;width:1840px;height:74px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 64px; font-weight: 700; text-align: center; text-decoration: rgb(255, 255, 255); text-shadow: rgba(0, 0, 0, 0.3) 0px 2px 4px; letter-spacing: 6.4px; opacity: 1; transform-origin: 920px 37px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; letter-spacing: 6.4px; text-align: center; vertical-align: baseline; width: 1840px; height: 74px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="main-title">LỘ TRÌNH PHÁT TRIỂN DỊCH VỤ VÀ SẢN PHẨM</h1>
+    <div style='position:absolute;z-index:110;left:360px;top:214px;width:585px;height:409.515625px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(255, 255, 255); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 20px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px 0px; transform-origin: 292.5px 204.758px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: transform 0.3s, box-shadow 0.3s; list-style-type: disc; list-style-position: outside; padding: 25px; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; box-sizing: content-box; text-align: start; vertical-align: baseline; width: 535px; height: 359.516px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="roadmap-card"></div>
+    <h3 style='position:absolute;z-index:111;left:385px;top:239px;width:535px;height:54px;box-sizing:border-box;color: rgb(26, 68, 128); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 19.2px; font-weight: 700; text-align: start; text-decoration: rgb(26, 68, 128); text-transform: uppercase; letter-spacing: 0.96px; opacity: 1; transform-origin: 267.5px 27px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 15px; margin-bottom: 15px; box-sizing: content-box; letter-spacing: 0.96px; text-align: start; vertical-align: baseline; width: 535px; height: 54px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 68, 128); border-right: 0px none rgb(26, 68, 128); border-bottom: 0px none rgb(26, 68, 128); border-left: 0px none rgb(26, 68, 128); ' class="card-title">Giai đoạn 1 (Năm 1 - 2024): <b>Nền tảng &amp; Thâm nhập</b></h3>
+    <div style='position:absolute;z-index:113;left:385px;top:308px;width:535px;height:69.140625px;box-sizing:border-box;color: rgb(26, 75, 140); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 14.4px; font-weight: 400; line-height: 23.04px; text-align: start; text-decoration: rgb(26, 75, 140); opacity: 1; transform-origin: 267.5px 34.5703px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; line-height: 23.04px; text-align: start; vertical-align: baseline; width: 535px; height: 69.1406px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 75, 140); border-right: 0px none rgb(26, 75, 140); border-bottom: 0px none rgb(26, 75, 140); border-left: 0px none rgb(26, 75, 140); ' class="card-content">Xây dựng đội ngũ nòng cốt, hoàn thiện các gói dịch vụ tư vấn cơ bản và phát triển module phần mềm quản lý bán hàng (POS) cho ngành bán lẻ. Tiếp cận 20 khách hàng đầu tiên.</div>
+    <div style='position:absolute;z-index:114;left:975px;top:214px;width:585px;height:409.515625px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(255, 255, 255); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 20px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px 0px; transform-origin: 292.5px 204.758px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: transform 0.3s, box-shadow 0.3s; list-style-type: disc; list-style-position: outside; padding: 25px; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; box-sizing: content-box; text-align: start; vertical-align: baseline; width: 535px; height: 359.516px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="roadmap-card"></div>
+    <h3 style='position:absolute;z-index:115;left:1000px;top:239px;width:535px;height:54px;box-sizing:border-box;color: rgb(26, 68, 128); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 19.2px; font-weight: 700; text-align: start; text-decoration: rgb(26, 68, 128); text-transform: uppercase; letter-spacing: 0.96px; opacity: 1; transform-origin: 267.5px 27px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 15px; margin-bottom: 15px; box-sizing: content-box; letter-spacing: 0.96px; text-align: start; vertical-align: baseline; width: 535px; height: 54px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 68, 128); border-right: 0px none rgb(26, 68, 128); border-bottom: 0px none rgb(26, 68, 128); border-left: 0px none rgb(26, 68, 128); ' class="card-title">Giai đoạn 2 (Năm 2 - 2025): <b>Tăng trưởng &amp; Đa dạng hóa</b></h3>
+    <div style='position:absolute;z-index:117;left:1000px;top:308px;width:535px;height:46.09375px;box-sizing:border-box;color: rgb(26, 75, 140); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 14.4px; font-weight: 400; line-height: 23.04px; text-align: start; text-decoration: rgb(26, 75, 140); opacity: 1; transform-origin: 267.5px 23.0469px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; line-height: 23.04px; text-align: start; vertical-align: baseline; width: 535px; height: 46.0938px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 75, 140); border-right: 0px none rgb(26, 75, 140); border-bottom: 0px none rgb(26, 75, 140); border-left: 0px none rgb(26, 75, 140); ' class="card-content">Mở rộng danh mục dịch vụ sang tư vấn giải pháp Cloud (AWS, Azure). Phát triển thêm module CRM tích hợp với POS. Mục tiêu đạt 50 khách hàng.</div>
+    <div style='position:absolute;z-index:118;left:360px;top:653.515625px;width:585px;height:386.484375px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(255, 255, 255); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 20px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px 0px; transform-origin: 292.5px 193.242px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: transform 0.3s, box-shadow 0.3s; list-style-type: disc; list-style-position: outside; padding: 25px; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; box-sizing: content-box; text-align: start; vertical-align: baseline; width: 535px; height: 336.484px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="roadmap-card"></div>
+    <h3 style='position:absolute;z-index:119;left:385px;top:678.515625px;width:535px;height:54px;box-sizing:border-box;color: rgb(26, 68, 128); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 19.2px; font-weight: 700; text-align: start; text-decoration: rgb(26, 68, 128); text-transform: uppercase; letter-spacing: 0.96px; opacity: 1; transform-origin: 267.5px 27px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 15px; margin-bottom: 15px; box-sizing: content-box; letter-spacing: 0.96px; text-align: start; vertical-align: baseline; width: 535px; height: 54px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 68, 128); border-right: 0px none rgb(26, 68, 128); border-bottom: 0px none rgb(26, 68, 128); border-left: 0px none rgb(26, 68, 128); ' class="card-title">Giai đoạn 3 (Năm 3 - 2026): <b>Tối ưu hóa &amp; Mở rộng</b></h3>
+    <div style='position:absolute;z-index:121;left:385px;top:747.515625px;width:535px;height:46.09375px;box-sizing:border-box;color: rgb(26, 75, 140); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 14.4px; font-weight: 400; line-height: 23.04px; text-align: start; text-decoration: rgb(26, 75, 140); opacity: 1; transform-origin: 267.5px 23.0469px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; line-height: 23.04px; text-align: start; vertical-align: baseline; width: 535px; height: 46.0938px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 75, 140); border-right: 0px none rgb(26, 75, 140); border-bottom: 0px none rgb(26, 75, 140); border-left: 0px none rgb(26, 75, 140); ' class="card-content">Tối ưu hóa quy trình cung cấp dịch vụ. Nghiên cứu và phát triển sản phẩm SaaS đầu tiên (Quản lý kho thông minh). Bắt đầu tìm kiếm cơ hội hợp tác.</div>
+    <div style='position:absolute;z-index:122;left:975px;top:653.515625px;width:585px;height:386.484375px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(255, 255, 255) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(255, 255, 255); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 20px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.15) 0px 8px 24px 0px; transform-origin: 292.5px 193.242px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: transform 0.3s, box-shadow 0.3s; list-style-type: disc; list-style-position: outside; padding: 25px; padding-top: 25px; padding-right: 25px; padding-bottom: 25px; padding-left: 25px; box-sizing: content-box; text-align: start; vertical-align: baseline; width: 535px; height: 336.484px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="roadmap-card"></div>
+    <h3 style='position:absolute;z-index:123;left:1000px;top:678.515625px;width:535px;height:54px;box-sizing:border-box;color: rgb(26, 68, 128); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 19.2px; font-weight: 700; text-align: start; text-decoration: rgb(26, 68, 128); text-transform: uppercase; letter-spacing: 0.96px; opacity: 1; transform-origin: 267.5px 27px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 15px; margin-bottom: 15px; box-sizing: content-box; letter-spacing: 0.96px; text-align: start; vertical-align: baseline; width: 535px; height: 54px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 68, 128); border-right: 0px none rgb(26, 68, 128); border-bottom: 0px none rgb(26, 68, 128); border-left: 0px none rgb(26, 68, 128); ' class="card-title">Giai đoạn 4 (Năm 4 &amp; 5 - 2027-2028): <b>Dẫn đầu &amp; Đổi mới</b></h3>
+    <div style='position:absolute;z-index:125;left:1000px;top:747.515625px;width:535px;height:46.09375px;box-sizing:border-box;color: rgb(26, 75, 140); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Arial, sans-serif; font-size: 14.4px; font-weight: 400; line-height: 23.04px; text-align: start; text-decoration: rgb(26, 75, 140); opacity: 1; transform-origin: 267.5px 23.0469px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: content-box; line-height: 23.04px; text-align: start; vertical-align: baseline; width: 535px; height: 46.0938px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(26, 75, 140); border-right: 0px none rgb(26, 75, 140); border-bottom: 0px none rgb(26, 75, 140); border-left: 0px none rgb(26, 75, 140); ' class="card-content">Ra mắt sản phẩm SaaS thứ hai. Mở rộng sang thị trường khu vực (nếu có cơ hội). Tập trung vào R&amp;D cho các công nghệ mới như AI và IoT.</div>
+</div><script>
+(function() {
+  function resizeContent() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    var ww = window.innerWidth, wh = window.innerHeight;
+    var cw = wrapper.offsetWidth, ch = wrapper.offsetHeight;
+    var scale = Math.min(ww / cw, wh / ch);
+    wrapper.style.setProperty('--scale', scale);
+  }
+  window.addEventListener('resize', resizeContent);
+  window.addEventListener('DOMContentLoaded', resizeContent);
+})();
+</script></body></html>
