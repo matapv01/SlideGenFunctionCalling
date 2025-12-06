@@ -18,8 +18,8 @@ LOG_LEVEL=INFO
 
 ## Chạy Backend (Terminal 1)
 
-cd web\backend
-uv run python run.py
+uv run ./web/backend/run.py
+
 
 
 → Backend: http://localhost:3000
@@ -27,8 +27,7 @@ uv run python run.py
 ## Chạy Frontend (Terminal 2)
 
 
-cd web\frontend
-python -m http.server 8000
+python -m http.server 8000 --directory web/frontend
 
 
 → Frontend: http://localhost:8000/index.html

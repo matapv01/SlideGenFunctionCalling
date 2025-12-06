@@ -4,8 +4,7 @@
  */
 
 // Detect if running in development or production
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-
+const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'|| window.location.hostname === '0.0.0.0';
 // Backend API URL
 const API_BASE_URL = isDevelopment 
     ? 'http://localhost:3000/api'  // Development: backend on port 3000
