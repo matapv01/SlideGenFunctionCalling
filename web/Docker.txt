@@ -1,8 +1,0 @@
-docker build -t web .
-docker run -v ${pwd}:/app -w /app -p 8080:8000 web
-http://localhost:3000/
-cd SlideGen
-cd web
-conda activate slide
-python main.py
-python main_web.py
