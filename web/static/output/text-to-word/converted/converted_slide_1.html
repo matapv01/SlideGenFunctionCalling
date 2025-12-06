@@ -1,0 +1,159 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title><style>
+        :root {
+            --base-font-size: 16px; 
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: Montserrat, sans-serif;
+            overflow: hidden;
+            font-size: var(--base-font-size);
+        }
+        
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            background-color: #121212; 
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .left-column {
+            /* ĐÃ SỬA ĐỔI: Tăng không gian cho cột văn bản (từ 2 thành 3) */
+            flex: 3; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto; 
+        }
+
+        .left-column-top-content {
+            background-color: #1A202C;
+            padding: 3rem 4rem; /* Điều chỉnh lại padding */
+            border-top-right-radius: 1.5rem; 
+            border-bottom-right-radius: 1.5rem; 
+            /* ĐÃ SỬA ĐỔI: Giảm chiều cao tối thiểu để nhường không gian cho description */
+            min-height: 45vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .top-text {
+            /* ĐÃ SỬA ĐỔI: Giảm kích thước chữ */
+            font-size: 1rem;
+            color: #CCCCCC;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .main-title {
+            /* ĐÃ SỬA ĐỔI: Giảm kích thước chữ của tiêu đề chính */
+            font-size: clamp(2.2rem, 4vw, 3.5rem); 
+            color: #E80000;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle-text {
+            /* ĐÃ SỬA ĐỔI: Tăng kích thước chữ của description và padding */
+            font-size: 1.4rem; 
+            color: #E0E0E0;
+            line-height: 1.8;
+            padding: 3rem 4rem; 
+            flex-grow: 1; 
+        }
+        
+        .right-column {
+            /* ĐÃ SỬA ĐỔI: Giữ nguyên flex: 1 để cột trái rộng hơn */
+            flex: 1; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 2rem; 
+        }
+        
+        .right-column img {
+            display: block;
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            border-radius: 1rem; 
+        }
+
+        @media (max-width: 48rem) { 
+            .slide-container {
+                flex-direction: column;
+            }
+            .left-column, .right-column {
+                flex: none; /* Reset flex ratio on mobile */
+            }
+            .left-column {
+                order: 1;
+                width: 100%; 
+                height: auto; 
+            }
+            .left-column-top-content {
+                border-radius: 0; 
+                padding: 2.5rem 2rem;
+                min-height: 0; 
+            }
+            .main-title {
+                font-size: clamp(2rem, 7vw, 2.8rem);
+            }
+            .subtitle-text {
+                font-size: 1.1rem;
+                padding: 2rem;
+            }
+            .right-column {
+                order: 2;
+                width: 100%; 
+                height: 40vh; 
+                padding: 1.5rem; 
+            }
+        }
+
+    </style><style>
+*{box-sizing:border-box;}
+html { width: 1920px; height: 1080px; }
+body {
+  margin: 0;
+  padding: 2rem;
+  background: rgba(0, 0, 0, 0);
+  overflow: auto;
+  
+  
+  /* KHÔNG đặt width/height cho body */
+}
+.outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
+.content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:1920px;height:1080px;overflow:visible;background:inherit;box-sizing:border-box;}
+</style></head><body><div class="outer-wrapper"><div class="content-wrapper">
+    <div style='position:absolute;z-index:100;left:0px;top:0px;width:1920px;height:1080px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(18, 18, 18) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(18, 18, 18); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 960px 540px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1920px; height: 1080px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="slide-container"></div>
+    <div style='position:absolute;z-index:102;left:0px;top:0px;width:1392px;height:486px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(26, 32, 44) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(26, 32, 44); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 0px 24px 24px 0px; opacity: 1; transform-origin: 696px 243px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 48px 64px; padding-top: 48px; padding-right: 64px; padding-bottom: 48px; padding-left: 64px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1392px; height: 486px; min-height: 486px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="left-column-top-content"></div>
+    <p style='position:absolute;z-index:103;left:64px;top:149.8125px;width:1264px;height:18px;box-sizing:border-box;color: rgb(204, 204, 204); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 600; text-align: start; text-decoration: rgb(204, 204, 204); opacity: 1; transform-origin: 632px 9px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 12px; margin-bottom: 12px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1264px; height: 18px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(204, 204, 204); border-right: 0px none rgb(204, 204, 204); border-bottom: 0px none rgb(204, 204, 204); border-left: 0px none rgb(204, 204, 204); ' class="top-text">Giới thiệu</p>
+    <h1 style='position:absolute;z-index:104;left:64px;top:179.8125px;width:1264px;height:140.375px;box-sizing:border-box;color: rgb(232, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 56px; font-weight: 700; line-height: 67.2px; text-align: start; text-decoration: rgb(232, 0, 0); opacity: 1; transform-origin: 632px 70.1875px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 16px; margin-bottom: 16px; box-sizing: border-box; line-height: 67.2px; text-align: start; vertical-align: baseline; width: 1264px; height: 140.375px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(232, 0, 0); border-right: 0px none rgb(232, 0, 0); border-bottom: 0px none rgb(232, 0, 0); border-left: 0px none rgb(232, 0, 0); ' class="main-title"><b>Cristiano Ronaldo: Biểu Tượng Của Tham Vọng Bất Tận và Kỷ Lục Vượt Thời Gian</b></h1>
+    <p style='position:absolute;z-index:106;left:0px;top:486px;width:1392px;height:594px;box-sizing:border-box;color: rgb(224, 224, 224); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 22.4px; font-weight: 400; line-height: 40.32px; text-align: start; text-decoration: rgb(224, 224, 224); opacity: 1; transform-origin: 696px 297px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 48px 64px; padding-top: 48px; padding-right: 64px; padding-bottom: 48px; padding-left: 64px; box-sizing: border-box; line-height: 40.32px; text-align: start; vertical-align: baseline; width: 1392px; height: 594px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(224, 224, 224); border-right: 0px none rgb(224, 224, 224); border-bottom: 0px none rgb(224, 224, 224); border-left: 0px none rgb(224, 224, 224); ' class="subtitle-text">Cristiano Ronaldo dos Santos Aveiro (sinh năm 1985) là cái tên đồng nghĩa với sự vĩ đại, một huyền thoại sống mà di sản của anh được xây dựng trên nền tảng của tài năng vô song, ý chí chiến thắng sắt đá và một kỷ luật rèn luyện gần như ám ảnh. Với hơn hai thập kỷ thống trị các đấu trường danh giá nhất, Ronaldo không chỉ là cầu thủ bóng đá, mà còn là một trường hợp nghiên cứu về tuổi thọ và khả năng thích ứng trong thể thao đỉnh cao.</p>
+    <img style='position:absolute;z-index:108;left:1424px;top:32px;width:464px;height:1016px;object-fit:cover!important;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 16px; opacity: 1; transform-origin: 232px 508px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-stroke-width: 1px; stroke-linecap: butt; stroke-width: 1px; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0);' src="https://images.unsplash.com/photo-1549078278-d42129524028?q=80&w=2070&auto=format&fit=crop" alt="Cristiano Ronaldo in action on a football field">
+</div><script>
+(function() {
+  function resizeContent() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    var ww = window.innerWidth, wh = window.innerHeight;
+    var cw = wrapper.offsetWidth, ch = wrapper.offsetHeight;
+    var scale = Math.min(ww / cw, wh / ch);
+    wrapper.style.setProperty('--scale', scale);
+  }
+  window.addEventListener('resize', resizeContent);
+  window.addEventListener('DOMContentLoaded', resizeContent);
+})();
+</script></body></html>

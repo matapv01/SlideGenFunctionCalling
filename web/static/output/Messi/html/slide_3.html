@@ -3,229 +3,277 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image with Icons Slide</title>
+    <title>Image Right Slide</title>
     <style>
-        /* 
-        KHÔNG cố định font-size cho html - để trình duyệt quyết định
-        Điều này tôn trọng cài đặt accessibility của người dùng
-        */
-        
-        body {
+        * {
             margin: 0;
             padding: 0;
-            font-family: Montserrat, sans-serif;
-            background-color: #f5f5f5;
+            box-sizing: border-box;
+        }
+        
+        html { 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #FFD700; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
             display: flex;
             justify-content: center;
             align-items: center;
-            min-height: 100vh;
+            padding: 5rem 7.5rem; /* 80px 120px */
         }
-        
-        .slide-container {
-            width: 62.5rem;         /* Converted from 1000px (1000/16 = 62.5rem) */
-            height: 35rem;          /* Converted from 560px (560/16 = 35rem) */
-            position: relative;
+
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
             background-color: #ffffff;
-            overflow: hidden;
-            box-shadow: 0 0.3125rem 0.9375rem rgba(0, 0, 0, 0.1); /* Converted shadow */
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
         }
         
         .title-section {
-            position: absolute;
-            top: 2.5rem;            /* Converted from 40px (40/16 = 2.5rem) */
-            left: 2.5rem;           /* Converted from 40px */
             display: flex;
             align-items: center;
+            margin-bottom: 2.5rem; /* 40px */
         }
         
         .title-accent {
-            width: 1.875rem;        /* Converted from 30px (30/16 = 1.875rem) */
-            height: 1.875rem;       /* Converted from 30px */
-            background-color: #1a4b8c;
-            margin-right: 0.9375rem; /* Converted from 15px (15/16 = 0.9375rem) */
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, #FFD700, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }
         
         .main-title {
-            font-size: 2.5rem;
-            color: #333333;
-            font-weight: normal;
-            font-style: italic;
+            font-size: 2.75rem;
+            color: #004D98;
+            font-weight: 600;
             margin: 0;
         }
         
         .content-layout {
             display: flex;
+            width: 100%;
+            flex: 1;
+            gap: 2.5rem; /* 40px */
+        }
+        
+        .content-section {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2rem; /* 32px */
+        }
+        
+        .content-item {
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 0.25rem solid #FFD700; /* accent border */
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .content-item:hover {
+            transform: translateY(-0.5rem); /* -8px hover lift */
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+        }
+        
+        .content-item::before {
+            content: '';
             position: absolute;
-            top: 6.25rem;           /* Converted from 100px (100/16 = 6.25rem) */
+            top: 0;
             left: 0;
             width: 100%;
-            height: calc(100% - 6.25rem); /* Converted from 100px */
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, #FFD700, rgba(213, 232, 185, 0.6));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+        
+        .content-item:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .subtitle-container {
+            background: linear-gradient(135deg, #FFD700, rgba(213, 232, 185, 0.8));
+            padding: 0.75rem 1.5rem; /* 12px 24px */
+            display: inline-block;
+            margin-bottom: 1rem; /* 16px */
+            border-radius: 2rem; /* 32px - pill shape */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .content-item:hover .subtitle-container {
+            transform: scale(1.05);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            color: #004D98;
+            margin: 0;
+            font-weight: 600;
+        }
+        
+        .content {
+            font-size: 1.25rem;
+            color: #555555;
+            margin: 0;
+            line-height: 1.6;
+            padding: 1rem; /* 16px */
+            background: rgba(85, 85, 85, 0.03); /* subtle content background */
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.3s ease;
+        }
+        
+        .content-item:hover .content {
+            background: rgba(85, 85, 85, 0.06);
+            transform: translateX(0.25rem); /* 4px */
         }
         
         .image-section {
-            width: 45%;
-            height: 100%;
+            flex: 3;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            border-left: 0.25rem solid #FFD700; /* accent border */
             position: relative;
-            padding: 1.25rem;       /* Converted from 20px (20/16 = 1.25rem) */
-            box-sizing: border-box;
+            overflow: hidden;
         }
         
         .image-frame {
             width: 100%;
-            height: 80%;
+            height: 100%;
             position: relative;
+            border-radius: 0.75rem; /* 12px */
             overflow: hidden;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         }
         
         .image-accent {
             position: absolute;
-            top: 0;
-            left: 0;
-            width: 90%;
-            height: 90%;
-            border: 0.9375rem solid #1a4b8c; /* Converted from 15px */
+            top: -0.5rem; /* -8px */
+            left: -0.5rem; /* -8px */
+            width: calc(100% + 1rem);
+            height: calc(100% + 1rem);
+            border: 0.25rem solid #FFD700; /* 4px */
+            border-radius: 1rem; /* 16px */
             box-sizing: border-box;
             z-index: 1;
+            opacity: 0.7;
         }
         
         .image-container {
-            position: absolute;
-            top: 1.25rem;           /* Converted from 20px */
-            left: 1.25rem;          /* Converted from 20px */
-            width: 90%;
-            height: 90%;
-            background-color: #f0f0f0;
-            overflow: hidden;
+            position: relative;
+            width: 100%;
+            height: 100%;
             z-index: 2;
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
         }
         
         .image-container img {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            transition: transform 0.3s ease;
         }
         
-        .content-section {
-            width: 55%;
-            height: 100%;
-            padding: 1.25rem 2.5rem; /* Converted from 20px 40px */
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
+        .image-section:hover .image-container img {
+            transform: scale(1.05); /* zoom effect on hover */
         }
         
-        .content-item {
-            display: flex;
-            align-items: flex-start;
-            margin-bottom: 1.875rem; /* Converted from 30px */
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 25%;
+            background: linear-gradient(to top, rgba(213, 232, 185, 0.8), transparent);
+            z-index: 3;
+            opacity: 0;
+            transition: opacity 0.3s ease;
         }
         
-        .icon-container {
-            width: 3.125rem;        /* Converted from 50px (50/16 = 3.125rem) */
-            height: 3.125rem;       /* Converted from 50px */
-            background-color: #1a4b8c;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 1.25rem;  /* Converted from 20px */
-            flex-shrink: 0;
+        .image-section:hover .image-overlay {
+            opacity: 1;
         }
         
-        .icon-container svg {
-            width: 1.5rem;          /* Converted from 24px (24/16 = 1.5rem) */
-            height: 1.5rem;         /* Converted from 24px */
-            stroke: #333333;
-        }
-        
-        .content-text {
-            flex: 1;
-        }
-        
-        .subtitle {
-            font-size: 1.35rem;
-            color: #1a4b8c;
-            margin: 0 0 0.3125rem 0; /* Converted from 5px (5/16 = 0.3125rem) */
-        }
-        
-        .content {
-            font-size: 1.0rem;
-            color: #4B5563;
-            margin: 0;
-            line-height: 1.4;
-        }
-        
-        /* Media queries for responsive design */
+        /* Responsive design */
         @media screen and (max-width: 75rem) {
-            .slide-container {
-                width: 95vw;
-                max-width: 62.5rem;
+            body {
+                padding: 3rem 5rem;
+            }
+            
+            .content-layout {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .content-section {
+                flex: none;
+                gap: 1.5rem;
+            }
+            
+            .image-section {
+                flex: none;
+                height: 25rem;
             }
         }
         
         @media screen and (max-width: 50rem) {
-            .slide-container {
-                width: 95vw;
-                height: auto;
-                min-height: 70vh;
+            body {
+                padding: 2rem 3rem;
             }
             
-            .title-section {
-                position: static;
-                padding: 1.5rem;
-                justify-content: center;
-            }
-            
-            .content-layout {
-                position: static;
-                flex-direction: column;
-                height: auto;
-            }
-            
-            .image-section {
-                width: 100%;
-                height: 20rem;
-                order: 2;
-            }
-            
-            .content-section {
-                width: 100%;
-                padding: 1.5rem;
-                order: 1;
+            .slide-inner-container {
+                padding: 2rem 3rem;
             }
             
             .content-item {
-                margin-bottom: 1.5rem;
+                padding: 1.5rem;
             }
             
-            .icon-container {
-                width: 2.5rem;
-                height: 2.5rem;
-                margin-right: 1rem;
+            .main-title {
+                font-size: 2rem;
             }
             
-            .icon-container svg {
-                width: 1.25rem;
-                height: 1.25rem;
-            }
-        }
-        
-        @media screen and (max-width: 30rem) {
-            .content-item {
-                flex-direction: column;
-                align-items: center;
-                text-align: center;
+            .subtitle {
+                font-size: 1.25rem;
             }
             
-            .icon-container {
-                margin-right: 0;
-                margin-bottom: 1rem;
+            .content {
+                font-size: 1rem;
             }
         }
     </style>
 </head>
 <body>
-    <div class="slide-container">
+    <div class="slide-inner-container">
         <!-- Title Section -->
         <div class="title-section">
             <div class="title-accent"></div>
@@ -234,48 +282,32 @@
         
         <!-- Content Layout -->
         <div class="content-layout">
+            <!-- Content Section -->
+            <div class="content-section">
+                <!-- Content Item 1 -->
+                <div class="content-item">
+                    <div class="subtitle-container">
+                        <h3 class="subtitle">Kỹ năng vượt trội</h3>
+                    </div>
+                    <p class="content"><ul><li>Khả năng rê bóng sát chân, di chuyển linh hoạt và dứt điểm chính xác bằng chân trái.</li><li>Tầm nhìn chiến thuật xuất sắc và khả năng chuyền bóng sáng tạo.</li><li>Kỹ năng sút phạt hàng đầu.</li></ul></p>
+                </div>
+                
+                <!-- Content Item 2 -->
+                <div class="content-item">
+                    <div class="subtitle-container">
+                        <h3 class="subtitle">Tầm ảnh hưởng độc đáo</h3>
+                    </div>
+                    <p class="content"><ul><li>Khả năng giữ bóng trong không gian hẹp, vượt qua nhiều hậu vệ.</li><li>Không chỉ là cây săn bàn mà còn là <b>"nhạc trưởng"</b> kiến tạo hàng trăm bàn thắng.</li></ul></p>
+                </div>
+            </div>
+            
             <!-- Image Section -->
             <div class="image-section">
                 <div class="image-frame">
                     <div class="image-accent"></div>
                     <div class="image-container">
-                        <img src="https://images.unsplash.com/photo-1548805625-78c772274415?q=80&w=2940&auto=format&fit=crop&ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" alt="Slide image">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Content Section -->
-            <div class="content-section">
-                <!-- Content Item 1 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a10 10 0 0 0-9.09 5.5L12 12l9.09-4.5A10 10 0 0 0 12 2zM3 12l9 9 9-9"></path></svg>
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle"><b>Rê bóng & Dứt điểm</b></h3>
-                        <p class="content">Messi nổi tiếng với khả năng <b>rê bóng sát chân</b>, di chuyển <i>linh hoạt</i> và <u>dứt điểm chính xác</u> bằng chân trái.</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 2 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle"><b>Tầm nhìn & Sáng tạo</b></h3>
-                        <p class="content">Anh có <b>tầm nhìn chiến thuật xuất sắc</b>, khả năng <i>chuyền bóng sáng tạo</i> và <u>kỹ năng sút phạt hàng đầu</u>.</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 3 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle"><b>Kiểm soát & Kiến tạo</b></h3>
-                        <p class="content">Điểm đặc biệt là khả năng <b>giữ bóng trong không gian hẹp</b>, vượt qua nhiều hậu vệ. Không chỉ là <i>cây săn bàn</i>, anh còn là một <u>“nhạc trưởng” thực thụ</u>, kiến tạo hàng trăm bàn thắng.</p>
+                        <img src="https://images.unsplash.com/photo-1551958219-ac4508a5a40a?q=80&w=2940&auto=format&fit=crop" alt="Slide image">
+                        <div class="image-overlay"></div>
                     </div>
                 </div>
             </div>

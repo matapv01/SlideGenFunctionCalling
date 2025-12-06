@@ -1,0 +1,295 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title><style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: Montserrat, sans-serif;
+            background-color: #E74C3C; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
+        }
+
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
+            background-color: #0A192F;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.5rem; /* 40px */
+        }
+        
+        .title-accent {
+            width: 2.5rem; /* 40px - tăng kích thước */
+            height: 2.5rem; /* 40px */
+            background-color: #E74C3C;
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+        }
+        
+        .main-title {
+            font-size: 2.5rem;
+            color: #E0E0E0;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .content-layout {
+            display: flex;
+            width: 100%;
+            flex: 1;
+            gap: 2.5rem; /* 40px - gap giữa image và content */
+        }
+        
+        .image-section {
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+        }
+        
+        .image-frame {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            max-height: 28rem; /* 448px */
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .image-accent {
+            position: absolute;
+            top: -0.5rem; /* -8px */
+            left: -0.5rem; /* -8px */
+            width: calc(100% + 1rem);
+            height: calc(100% + 1rem);
+            border: 0.25rem solid #E74C3C; /* 4px */
+            border-radius: 1rem; /* 16px */
+            box-sizing: border-box;
+            z-index: 1;
+        }
+        
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-section:hover .image-container img {
+            transform: scale(1.05); /* zoom effect on hover */
+        }
+        
+        .content-section {
+            flex: 3;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2rem; /* 32px - gap giữa content items */
+        }
+        
+        .content-item {
+            display: flex;
+            align-items: flex-start;
+            background: rgba(255,255,255,0.9);
+            border-radius: 0.75rem; /* 12px */
+            padding: 1.5rem; /* 24px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 0.25rem solid #E74C3C; /* accent border */
+        }
+        
+        .content-item:hover {
+            transform: translateX(0.5rem); /* 8px - hover effect */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+        }
+        
+        .icon-container {
+            width: 4rem; /* 64px - tăng kích thước */
+            height: 4rem; /* 64px */
+            background: linear-gradient(135deg, #E74C3C, rgba(213, 232, 185, 0.8));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 1.5rem; /* 24px */
+            flex-shrink: 0;
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .content-item:hover .icon-container {
+            transform: scale(1.1) rotate(5deg); /* hover animation */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
+        }
+        
+        .icon-container svg {
+            width: 2rem; /* 32px - tăng kích thước icon */
+            height: 2rem; /* 32px */
+            stroke: #333333;
+            filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1));
+        }
+        
+        .content-text {
+            flex: 1;
+        }
+        
+        .subtitle {
+            font-size: 1.5rem;
+            color: #E0E0E0;
+            margin: 0 0 0.75rem 0; /* 12px */
+            font-weight: 600;
+        }
+        
+        .content {
+            font-size: 1rem;
+            color: #C0C0C0;
+            margin: 0;
+            line-height: 1.6;
+        }
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {
+            body {
+                padding: 3rem 5rem;
+            }
+            
+            .content-layout {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .image-section {
+                flex: none;
+                height: 20rem;
+            }
+            
+            .content-section {
+                flex: none;
+                gap: 1.5rem;
+            }
+        }
+        
+        @media screen and (max-width: 50rem) {
+            body {
+                padding: 2rem 3rem;
+            }
+            
+            .slide-inner-container {
+                padding: 2rem 3rem;
+            }
+            
+            .content-item {
+                flex-direction: column;
+                text-align: center;
+            }
+            
+            .icon-container {
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .title-font-size {
+                font-size: 2rem;
+            }
+            
+            .subtitle-font-size {
+                font-size: 1.25rem;
+            }
+            
+            .content-font-size {
+                font-size: 1rem;
+            }
+        }
+    </style><style>
+*{box-sizing:border-box;}
+html { width: 1920px; height: 1080px; }
+body {
+  margin: 0;
+  padding: 2rem;
+  background: rgb(231, 76, 60);
+  overflow: auto;
+  
+  
+  /* KHÔNG đặt width/height cho body */
+}
+.outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
+.content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:1920px;height:1080px;overflow:visible;background:inherit;box-sizing:border-box;}
+</style></head><body><div class="outer-wrapper"><div class="content-wrapper">
+    <div style='position:absolute;z-index:100;left:120px;top:80px;width:1680px;height:920px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(10, 25, 47) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(10, 25, 47); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 16px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.15) 0px 20px 40px 0px; transform-origin: 840px 460px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 48px 64px; padding-top: 48px; padding-right: 64px; padding-bottom: 48px; padding-left: 64px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1680px; height: 920px; max-width: 1680px; max-height: 920px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="slide-inner-container"></div>
+    <div style='position:absolute;z-index:102;left:184px;top:130.5px;width:40px;height:40px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(231, 76, 60) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(231, 76, 60); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 8px; opacity: 1; transform-origin: 20px 20px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 20px 0px 0px; margin-right: 20px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 40px; height: 40px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="title-accent"></div>
+    <h1 style='position:absolute;z-index:103;left:244px;top:128px;width:1005.375px;height:45px;box-sizing:border-box;color: rgb(224, 224, 224); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 40px; font-weight: 600; text-align: start; text-decoration: rgb(224, 224, 224); opacity: 1; transform-origin: 502.688px 22.5px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1005.38px; height: 45px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(224, 224, 224); border-right: 0px none rgb(224, 224, 224); border-bottom: 0px none rgb(224, 224, 224); border-left: 0px none rgb(224, 224, 224); ' class="main-title">Vượt Giới Hạn Tuổi Tác và Vai Trò Truyền Cảm Hứng</h1>
+    <div style='position:absolute;z-index:105;left:184px;top:213px;width:643.203125px;height:739px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(255, 255, 255, 0.9) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(255, 255, 255, 0.9); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 16px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.1) 0px 12px 24px 0px; transform-origin: 321.602px 369.5px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 32px; padding-top: 32px; padding-right: 32px; padding-bottom: 32px; padding-left: 32px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 643.203px; height: 739px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="image-section"></div>
+    <div style='position:absolute;z-index:106;left:216px;top:358.5px;width:579.203125px;height:448px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(248, 249, 250), rgb(233, 236, 239)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgb(248, 249, 250), rgb(233, 236, 239)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 12px; opacity: 1; transform-origin: 289.602px 224px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 579.203px; height: 448px; max-height: 448px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="image-frame"></div>
+    <div style='position:absolute;z-index:107;left:208px;top:350.5px;width:595.203125px;height:464px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 16px; opacity: 1; transform-origin: 297.602px 232px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 595.203px; height: 464px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 4px solid rgb(231, 76, 60); border-right: 4px solid rgb(231, 76, 60); border-bottom: 4px solid rgb(231, 76, 60); border-left: 4px solid rgb(231, 76, 60); ' class="image-accent"></div>
+    <img style='position:absolute;z-index:109;left:216px;top:358.5px;width:579.203125px;height:448px;object-fit:cover!important;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 49.8047px 9px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-stroke-width: 1px; stroke-linecap: butt; stroke-width: 1px; stroke-linejoin: miter; transition: transform 0.3s; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0);' src="https://images.unsplash.com/photo-1629853874315-b28096231c54?q=80&w=2940&auto=format&fit=crop" alt="Slide image">
+    <div style='position:absolute;z-index:111;left:867.203125px;top:354.515625px;width:868.796875px;height:139.1875px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(255, 255, 255, 0.9) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(255, 255, 255, 0.9); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 12px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.1) 0px 8px 16px 0px; transform-origin: 434.398px 69.5938px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: 0.3s; list-style-type: disc; list-style-position: outside; padding: 24px; padding-top: 24px; padding-right: 24px; padding-bottom: 24px; padding-left: 24px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 868.797px; height: 139.188px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 4px solid rgb(231, 76, 60); ' class="content-item"></div>
+    <div style='position:absolute;z-index:112;left:895.203125px;top:378.515625px;width:64px;height:64px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(231, 76, 60), rgba(213, 232, 185, 0.8)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgb(231, 76, 60), rgba(213, 232, 185, 0.8)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 12px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px 0px; transform-origin: 32px 32px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: 0.3s; list-style-type: disc; list-style-position: outside; margin: 0px 24px 0px 0px; margin-right: 24px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 64px; height: 64px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="icon-container"></div>
+    <div style='position:absolute;z-index:113;left:911.203125px;top:394.515625px;width:32px;height:32px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; filter: drop-shadow(rgba(0, 0, 0, 0.1) 0px 2px 4px); transform-origin: 16px 16px; stroke: rgb(51, 51, 51); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 32px; height: 32px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline></svg></div>
+    <polyline style='position:absolute;z-index:114;left:913.8698120117188px;top:398.515625px;width:26.6666259765625px;height:24px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 0px 0px; stroke: rgb(51, 51, 51); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '></polyline>
+    <h3 style='position:absolute;z-index:116;left:983.203125px;top:378.515625px;width:728.796875px;height:28px;box-sizing:border-box;color: rgb(224, 224, 224); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 24px; font-weight: 600; text-align: start; text-decoration: rgb(224, 224, 224); opacity: 1; transform-origin: 364.398px 14px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 12px; margin-bottom: 12px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 728.797px; height: 28px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(224, 224, 224); border-right: 0px none rgb(224, 224, 224); border-bottom: 0px none rgb(224, 224, 224); border-left: 0px none rgb(224, 224, 224); ' class="subtitle">Không Chấp Nhận <span style="color:#E74C3C;">Giới Hạn Tuổi Tác</span></h3>
+    <p style='position:absolute;z-index:118;left:983.203125px;top:418.515625px;width:728.796875px;height:51.1875px;box-sizing:border-box;color: rgb(192, 192, 192); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; line-height: 25.6px; text-align: start; text-decoration: rgb(192, 192, 192); opacity: 1; transform-origin: 364.398px 25.5938px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 25.6px; text-align: start; vertical-align: baseline; width: 728.797px; height: 51.1875px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(192, 192, 192); border-right: 0px none rgb(192, 192, 192); border-bottom: 0px none rgb(192, 192, 192); border-left: 0px none rgb(192, 192, 192); ' class="content">Ronaldo là hiện thân của một vận động viên <b>không chấp nhận giới hạn tuổi tác</b>, liên tục thách thức các quy tắc.</p>
+    <div style='position:absolute;z-index:120;left:867.203125px;top:525.703125px;width:868.796875px;height:113.59375px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(255, 255, 255, 0.9) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(255, 255, 255, 0.9); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 12px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.1) 0px 8px 16px 0px; transform-origin: 434.398px 56.7969px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: 0.3s; list-style-type: disc; list-style-position: outside; padding: 24px; padding-top: 24px; padding-right: 24px; padding-bottom: 24px; padding-left: 24px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 868.797px; height: 113.594px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 4px solid rgb(231, 76, 60); ' class="content-item"></div>
+    <div style='position:absolute;z-index:121;left:895.203125px;top:549.703125px;width:64px;height:64px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(231, 76, 60), rgba(213, 232, 185, 0.8)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgb(231, 76, 60), rgba(213, 232, 185, 0.8)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 12px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px 0px; transform-origin: 32px 32px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: 0.3s; list-style-type: disc; list-style-position: outside; margin: 0px 24px 0px 0px; margin-right: 24px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 64px; height: 64px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="icon-container"></div>
+    <div style='position:absolute;z-index:122;left:911.203125px;top:565.703125px;width:32px;height:32px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; filter: drop-shadow(rgba(0, 0, 0, 0.1) 0px 2px 4px); transform-origin: 16px 16px; stroke: rgb(51, 51, 51); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 32px; height: 32px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg></div>
+    <polygon style='position:absolute;z-index:123;left:913.8698120117188px;top:568.3698120117188px;width:26.6666259765625px;height:25.3599853515625px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 0px 0px; stroke: rgb(51, 51, 51); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '></polygon>
+    <h3 style='position:absolute;z-index:125;left:983.203125px;top:549.703125px;width:728.796875px;height:28px;box-sizing:border-box;color: rgb(224, 224, 224); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 24px; font-weight: 600; text-align: start; text-decoration: rgb(224, 224, 224); opacity: 1; transform-origin: 364.398px 14px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 12px; margin-bottom: 12px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 728.797px; height: 28px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(224, 224, 224); border-right: 0px none rgb(224, 224, 224); border-bottom: 0px none rgb(224, 224, 224); border-left: 0px none rgb(224, 224, 224); ' class="subtitle">Duy Trì <span style="color:#E74C3C;">Phong Độ Đỉnh Cao</span></h3>
+    <p style='position:absolute;z-index:127;left:983.203125px;top:589.703125px;width:728.796875px;height:25.59375px;box-sizing:border-box;color: rgb(192, 192, 192); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; line-height: 25.6px; text-align: start; text-decoration: rgb(192, 192, 192); opacity: 1; transform-origin: 364.398px 12.7969px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 25.6px; text-align: start; vertical-align: baseline; width: 728.797px; height: 25.5938px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(192, 192, 192); border-right: 0px none rgb(192, 192, 192); border-bottom: 0px none rgb(192, 192, 192); border-left: 0px none rgb(192, 192, 192); ' class="content">Ở tuổi 40, anh vẫn tiếp tục <b>phá vỡ các rào cản</b>, duy trì phong độ và thể chất đỉnh cao.</p>
+    <div style='position:absolute;z-index:129;left:867.203125px;top:671.296875px;width:868.796875px;height:139.1875px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(255, 255, 255, 0.9) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(255, 255, 255, 0.9); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 12px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.1) 0px 8px 16px 0px; transform-origin: 434.398px 69.5938px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: 0.3s; list-style-type: disc; list-style-position: outside; padding: 24px; padding-top: 24px; padding-right: 24px; padding-bottom: 24px; padding-left: 24px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 868.797px; height: 139.188px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 4px solid rgb(231, 76, 60); ' class="content-item"></div>
+    <div style='position:absolute;z-index:130;left:895.203125px;top:695.296875px;width:64px;height:64px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgb(231, 76, 60), rgba(213, 232, 185, 0.8)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgb(231, 76, 60), rgba(213, 232, 185, 0.8)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); border-radius: 12px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.1) 0px 4px 8px 0px; transform-origin: 32px 32px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: 0.3s; list-style-type: disc; list-style-position: outside; margin: 0px 24px 0px 0px; margin-right: 24px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 64px; height: 64px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="icon-container"></div>
+    <div style='position:absolute;z-index:131;left:911.203125px;top:711.296875px;width:32px;height:32px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; filter: drop-shadow(rgba(0, 0, 0, 0.1) 0px 2px 4px); transform-origin: 16px 16px; stroke: rgb(51, 51, 51); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 32px; height: 32px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2zm6-11c0 3.07-1.63 5.64-4.5 6.32V19c0 .55-.45 1-1 1s-1-.45-1-1v-1.68C7.63 17.64 6 15.07 6 12c0-3.87 3.13-7 7-7s7 3.13 7 7zm-2-1c0-2.76-2.24-5-5-5s-5 2.24-5 5c0 2.22 1.45 4.1 3.5 4.76V19h3v-2.24c2.05-.66 3.5-2.54 3.5-4.76z"></path></svg></div>
+    <path style='position:absolute;z-index:132;left:919.203125px;top:717.9635620117188px;width:18.66668701171875px;height:22.6666259765625px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; text-align: start; text-decoration: rgb(0, 0, 0); opacity: 1; transform-origin: 0px 0px; stroke: rgb(51, 51, 51); stroke-width: 2px; stroke-linecap: round; stroke-linejoin: round; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; text-align: start; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '></path>
+    <h3 style='position:absolute;z-index:134;left:983.203125px;top:695.296875px;width:728.796875px;height:28px;box-sizing:border-box;color: rgb(224, 224, 224); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 24px; font-weight: 600; text-align: start; text-decoration: rgb(224, 224, 224); opacity: 1; transform-origin: 364.398px 14px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 12px; margin-bottom: 12px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 728.797px; height: 28px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(224, 224, 224); border-right: 0px none rgb(224, 224, 224); border-bottom: 0px none rgb(224, 224, 224); border-left: 0px none rgb(224, 224, 224); ' class="subtitle">Doanh Nhân và <span style="color:#E74C3C;">Nguồn Cảm Hứng</span></h3>
+    <p style='position:absolute;z-index:136;left:983.203125px;top:735.296875px;width:728.796875px;height:51.1875px;box-sizing:border-box;color: rgb(192, 192, 192); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: Montserrat, sans-serif; font-size: 16px; font-weight: 400; line-height: 25.6px; text-align: start; text-decoration: rgb(192, 192, 192); opacity: 1; transform-origin: 364.398px 25.5938px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 25.6px; text-align: start; vertical-align: baseline; width: 728.797px; height: 51.1875px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(192, 192, 192); border-right: 0px none rgb(192, 192, 192); border-bottom: 0px none rgb(192, 192, 192); border-left: 0px none rgb(192, 192, 192); ' class="content">Anh không chỉ là người săn tìm danh hiệu mà còn là một <b>doanh nhân tỷ phú</b> và là một người truyền cảm hứng về sự cống hiến không ngừng nghỉ.</p>
+</div><script>
+(function() {
+  function resizeContent() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    var ww = window.innerWidth, wh = window.innerHeight;
+    var cw = wrapper.offsetWidth, ch = wrapper.offsetHeight;
+    var scale = Math.min(ww / cw, wh / ch);
+    wrapper.style.setProperty('--scale', scale);
+  }
+  window.addEventListener('resize', resizeContent);
+  window.addEventListener('DOMContentLoaded', resizeContent);
+})();
+</script></body></html>
