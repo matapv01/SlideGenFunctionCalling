@@ -6,7 +6,7 @@ __pycache__/
 venv/
 .env
 
+web/static/capures/
 web/static/output/
-*.zip
-*.png
-*.html
+web/static/temp/
+web/static/uploads/
