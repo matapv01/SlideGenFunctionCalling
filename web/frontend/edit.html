@@ -50,9 +50,14 @@
         <div class="presentation-click-zone right" id="presentationZoneRight"></div>
         <div class="presentation-slide-container" id="presentationSlideContainer"></div>
         <div class="presentation-controls">
-            <button id="prevSlideBtn" title="Previous Slide (←)">◀</button>
-            <span class="presentation-counter" id="presentationCounter">1 / 1</span>
-            <button id="nextSlideBtn" title="Next Slide (→)">▶</button>
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button id="prevSlideBtn" title="Previous Slide (←)">◀</button>
+                <span class="presentation-counter" id="presentationCounter">1 / 1</span>
+                <button id="nextSlideBtn" title="Next Slide (→)">▶</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button id="exitPresentation" title="Exit Presentation (ESC)">✕</button>
+            </div>
         </div>
         <div class="presentation-timeline" id="presentationTimeline">
             <div class="timeline-track" id="timelineTrack">
@@ -60,7 +65,6 @@
                 <div class="timeline-slides" id="timelineSlides"></div>
                 <div class="timeline-current-indicator" id="timelineIndicator"></div>
             </div>
-            <button class="presentation-exit" id="exitPresentation" title="Exit Presentation (ESC)">✕</button>
         </div>
     </div>
     

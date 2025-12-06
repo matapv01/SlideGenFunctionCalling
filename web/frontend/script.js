@@ -24,6 +24,30 @@ document.addEventListener('DOMContentLoaded', function () {
     if (slideContainer) {
         slideContainer.addEventListener('mouseup', updateToolbarFromSelection);
     }
+
+    // Attach createNewSlide to all buttons
+    document.querySelectorAll('button[onclick*="createNewSlide"]').forEach(btn => {
+        btn.removeAttribute('onclick');
+        btn.addEventListener('click', createNewSlide);
+    });
+
+    // Attach showHome to back button
+    document.querySelectorAll('button[onclick*="showHome"]').forEach(btn => {
+        btn.removeAttribute('onclick');
+        btn.addEventListener('click', showHome);
+    });
+
+    // Attach exportToPDF
+    document.querySelectorAll('button[onclick*="exportToPDF"]').forEach(btn => {
+        btn.removeAttribute('onclick');
+        btn.addEventListener('click', exportToPDF);
+    });
+
+    // Attach exportToZip
+    document.querySelectorAll('button[onclick*="exportToZip"]').forEach(btn => {
+        btn.removeAttribute('onclick');
+        btn.addEventListener('click', exportToZip);
+    });
 });
 
 function showEditor() {
