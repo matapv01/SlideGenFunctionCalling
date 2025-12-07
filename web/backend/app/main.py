@@ -735,8 +735,12 @@ async def serve_temp_file(path: str):
     """Serve file from temporary workflow directory via query parameter"""
     logger.info(f"📂 Serving temp file request: {path}")
     
-    # Security: only allow serving from /tmp/slidegen_workflow_* directories
-    if not path.startswith('/tmp/slidegen_workflow_'):
+    # Security: only allow serving from slidegen_workflow_* directories (both Linux and Windows)
+    normalized_path = path.replace('\\', '/')
+    is_linux_temp = normalized_path.startswith('/tmp/slidegen_workflow_')
+    is_windows_temp = 'slidegen_workflow_' in normalized_path and ('Temp' in path or 'temp' in path)
+    
+    if not (is_linux_temp or is_windows_temp):
         logger.warning(f"⚠️ Access denied for path: {path}")
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -759,8 +763,12 @@ async def cleanup_temp_directory(request: Request):
         if not temp_dir:
             return JSONResponse(content={"success": False, "message": "No temp directory specified"})
         
-        # Security: only allow deleting /tmp/slidegen_workflow_* directories
-        if not temp_dir.startswith('/tmp/slidegen_workflow_'):
+        # Security: only allow deleting slidegen_workflow_* directories (both Linux and Windows)
+        normalized_path = temp_dir.replace('\\', '/')
+        is_linux_temp = normalized_path.startswith('/tmp/slidegen_workflow_')
+        is_windows_temp = 'slidegen_workflow_' in normalized_path and ('Temp' in temp_dir or 'temp' in temp_dir)
+        
+        if not (is_linux_temp or is_windows_temp):
             raise HTTPException(status_code=403, detail="Invalid temp directory")
         
         temp_path = Path(temp_dir)
