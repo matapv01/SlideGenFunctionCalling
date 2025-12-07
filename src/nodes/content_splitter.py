@@ -114,6 +114,16 @@ def split_content(state: State, config: RunnableConfig) -> State: # <-- 2. ADD C
     # --- 3. GET RESOURCES FROM CONFIG ---
     configurable = config["configurable"]
     llm = configurable.get('llm')
+    
+    # Emit streaming event
+    stream_callback = configurable.get('stream_callback')
+    if stream_callback:
+        stream_callback('status', {
+            'step': 2,
+            'title': 'Chuẩn bị nội dung',
+            'description': 'Đang phân tích và tổ chức nội dung...',
+            'message': 'Đang xử lý cấu trúc tài liệu'
+        })
 
     if not llm:
         raise ValueError("LLM is not found in config. Cannot proceed with content splitting.")

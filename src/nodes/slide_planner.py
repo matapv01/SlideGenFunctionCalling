@@ -71,6 +71,17 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     start_time = time.time()
     configurable = config["configurable"]
     llm = configurable.get('llm')
+    
+    # Emit streaming event
+    stream_callback = configurable.get('stream_callback')
+    if stream_callback:
+        stream_callback('status', {
+            'step': 3,
+            'title': 'Thiết kế slide',
+            'description': 'Đang lập kế hoạch thiết kế cho các slide...',
+            'message': 'Đang phân tích nội dung để thiết kế slide'
+        })
+    
     if not llm:
         raise ValueError("LLM instance not found in config.")
 

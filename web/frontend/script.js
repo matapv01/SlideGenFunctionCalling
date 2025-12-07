@@ -97,12 +97,12 @@ async function handleDocxImport() {
 
     const file = docxInput.files[0];
     try {
-        showLoading("Đang xử lý file DOCX...");
+        showLoading("Đang tải file lên...");
         const formData = new FormData();
         formData.append('file', file);
 
-        console.log('Sending DOCX file to', config.BACKEND_URL + '/api/upload-docx');
-        const response = await fetch(config.BACKEND_URL + '/api/upload-docx', {
+        console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/upload-docx-for-stream');
+        const response = await fetch(config.BACKEND_URL + '/api/upload-docx-for-stream', {
             method: 'POST',
             body: formData
         });
@@ -114,21 +114,18 @@ async function handleDocxImport() {
 
         const data = await response.json();
         console.log('Response data:', data);
-        if (data.project_name) {
-            // Lưu thông tin project vào localStorage
-            localStorage.setItem('projectName', data.project_name);
-            localStorage.setItem('slidesSource', 'docx-generated');
-            
-            // Chuyển hướng đến edit.html local với project name
-            showToast('Generate slides thành công! Đang chuyển đến trang edit...', 'success');
+        
+        if (data.filename) {
+            // Redirect to streaming page
+            hideLoading();
+            showToast('Đã upload thành công! Đang chuyển đến trang xử lý...', 'success');
             setTimeout(() => {
-                window.location.href = `edit.html?project=${encodeURIComponent(data.project_name)}&source=generated`;
-            }, 1500);
+                window.location.href = `streaming.html?filename=${encodeURIComponent(data.filename)}`;
+            }, 500);
         }
     } catch (error) {
         console.error('Error in handleDocxImport:', error);
-        showToast(`Lỗi khi import file DOCX: ${error.message}`, 'error');
-    } finally {
+        showToast(`Lỗi khi upload file DOCX: ${error.message}`, 'error');
         hideLoading();
     }
 }

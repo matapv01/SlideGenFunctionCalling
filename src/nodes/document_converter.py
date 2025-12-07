@@ -4,9 +4,10 @@ import tempfile
 import os
 import re
 import json
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from markitdown import MarkItDown
 from src.graph.stage import State
+from langchain_core.runnables import RunnableConfig
 import time
 
 def parse_markdown_to_hierarchical_json(markdown_text: str) -> Tuple[str, List[Dict[str, Any]]]:
@@ -58,7 +59,7 @@ def parse_markdown_to_hierarchical_json(markdown_text: str) -> Tuple[str, List[D
     preamble_content = "\n".join(preamble_lines).strip()
     return preamble_content, root_nodes
 
-def convert_document(state: State) -> State:
+def convert_document(state: State, config: Optional[RunnableConfig] = None) -> State:
     """
     Node 1: Reads DOCX, converts to Markdown, parses it into a clean hierarchical
     JSON structure, and initializes the state.
@@ -66,6 +67,18 @@ def convert_document(state: State) -> State:
     print("\n---------------- Executing Node: convert_document ----------------")
     start_time = time.time()
     docx_file = state['docx_file']
+    
+    # Emit streaming event
+    if config:
+        configurable = config.get('configurable', {})
+        stream_callback = configurable.get('stream_callback')
+        if stream_callback:
+            stream_callback('status', {
+                'step': 1,
+                'title': 'Phân tích nội dung',
+                'description': 'Đang đọc và chuyển đổi tài liệu...',
+                'message': f'Đang xử lý file: {os.path.basename(docx_file)}'
+            })
 
     print(f"--- Processing DOCX file: {docx_file} ---")
     if not os.path.exists(docx_file):

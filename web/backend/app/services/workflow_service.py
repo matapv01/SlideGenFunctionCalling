@@ -57,7 +57,8 @@ class WorkflowService:
         self, 
         docx_path: str, 
         output_folder: str,
-        router_flags: bool = False
+        router_flags: bool = False,
+        callback: Optional[Any] = None
     ) -> Optional[str]:
         """
         Process DOCX file using LangGraph AI workflow - EXACT COPY from main_web.py
@@ -66,6 +67,7 @@ class WorkflowService:
             docx_path: Path to DOCX file
             output_folder: Output folder for slides
             router_flags: Enable router flags in workflow
+            callback: Optional callback for streaming events
             
         Returns:
             Path to result ZIP file or None if failed
@@ -111,13 +113,17 @@ class WorkflowService:
                 dir_path = os.path.join(temp_workflow_dir, subdir)
                 os.makedirs(dir_path, exist_ok=True)
             
+            # Store temp directory path to return
+            result_zip_path = None
+            
             try:
                 # Run workflow in temporary directory
                 logger.info(f"Running workflow with temp directory: {temp_workflow_dir}")
                 result = await main_workflow(
                     router_flags=router_flags,
                     docx_file=docx_path,
-                    output_folder=temp_workflow_dir
+                    output_folder=temp_workflow_dir,
+                    callback=callback
                 )
                 
                 # Find result ZIP file
@@ -125,19 +131,25 @@ class WorkflowService:
                 
                 if result_zip and os.path.exists(result_zip):
                     logger.info(f"✅ Workflow completed successfully: {result_zip}")
-                    return result_zip
+                    # Return tuple of (zip_path, temp_dir) instead of just zip_path
+                    result_zip_path = result_zip
+                    return (result_zip_path, temp_workflow_dir)
                 else:
                     logger.error("❌ Workflow did not produce valid output")
                     return None
                     
-            finally:
-                # Cleanup temporary directory
+            except Exception as e:
+                # Cleanup temp directory on error
+                logger.error(f"Error during workflow: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
                 try:
                     if os.path.exists(temp_workflow_dir):
                         shutil.rmtree(temp_workflow_dir, ignore_errors=True)
-                        logger.info(f"Cleaned up temp directory: {temp_workflow_dir}")
-                except Exception as e:
-                    logger.warning(f"Could not cleanup temp directory: {e}")
+                        logger.info(f"Cleaned up temp directory after error: {temp_workflow_dir}")
+                except Exception as cleanup_error:
+                    logger.warning(f"Could not cleanup temp directory: {cleanup_error}")
+                return None
                     
         except Exception as e:
             logger.error(f"❌ Error in workflow processing: {e}")

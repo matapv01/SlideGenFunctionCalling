@@ -1,8 +1,8 @@
 """
 SlideGen Backend - Main FastAPI Application
 """
-from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
 import logging
@@ -11,8 +11,10 @@ import shutil
 import zipfile
 import json
 import re
+import asyncio
 from pathlib import Path
 from datetime import datetime
+from typing import AsyncGenerator
 
 from .config import (
     PROJECT_DIR, STATIC_DIR, IMAGE_DIR, UPLOAD_DIR, 
@@ -238,6 +240,194 @@ async def upload_docx(file: UploadFile = File(...)):
     slides = slide_service.build_slides_from_output(str(output_folder))
     
     return JSONResponse(content={"slides": slides, "project_name": project_name})
+
+
+@app.post("/api/upload-docx-for-stream")
+async def upload_docx_for_stream(file: UploadFile = File(...)):
+    """Upload DOCX file and return filename for streaming"""
+    if not file.filename.endswith('.docx'):
+        raise HTTPException(status_code=400, detail="Only DOCX files accepted")
+    
+    # Save temp file
+    temp_path = TEMP_DIR / file.filename
+    with open(temp_path, "wb") as f:
+        content = await file.read()
+        f.write(content)
+    
+    return JSONResponse(content={"filename": file.filename})
+
+
+@app.get("/api/upload-docx-stream")
+async def upload_docx_stream(filename: str):
+    """Stream processing of DOCX file with Server-Sent Events"""
+    
+    # Validate file
+    temp_path = TEMP_DIR / filename
+    if not temp_path.exists() or not filename.endswith('.docx'):
+        raise HTTPException(status_code=400, detail="Invalid file")
+    
+    # Create project name from filename
+    project_name = os.path.splitext(filename)[0]
+    output_folder = OUTPUT_DIR / project_name
+    
+    # Handle existing project folder
+    if output_folder.exists():
+        try:
+            shutil.rmtree(output_folder)
+        except PermissionError:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            project_name = f"{project_name}_{timestamp}"
+            output_folder = OUTPUT_DIR / project_name
+    
+    output_folder.mkdir(parents=True, exist_ok=True)
+    
+    # Store temp directory path for cleanup later
+    temp_workflow_dir = None
+    
+    async def event_generator() -> AsyncGenerator[str, None]:
+        """Generate Server-Sent Events for workflow progress"""
+        nonlocal temp_workflow_dir
+        
+        # Queue for events
+        event_queue = asyncio.Queue()
+        workflow_done = asyncio.Event()
+        workflow_error = None
+        
+        def stream_callback(event_type: str, data: dict):
+            """Callback to receive events from workflow"""
+            try:
+                logger.info(f"🔔 Stream callback: {event_type} - {data}")
+                
+                # For slide_completed, keep the temp path for real-time access
+                if event_type == 'slide_completed' and 'html_path' in data:
+                    # Keep the original temp path from workflow
+                    # Format: /tmp/slidegen_workflow_xxx/output/html/slide_1.html
+                    temp_path = data['html_path']
+                    # Store as temp path for frontend to access
+                    data['html_path'] = temp_path
+                    data['is_temp'] = True
+                    logger.info(f"🎯 Streaming temp file: {temp_path}")
+                
+                # Send all events immediately for real-time streaming
+                event_queue.put_nowait((event_type, data))
+            except Exception as e:
+                logger.error(f"Error in stream callback: {e}")
+        
+        async def run_workflow():
+            """Run workflow in background"""
+            nonlocal workflow_error, temp_workflow_dir
+            try:
+                if not workflow_service or not workflow_service.is_available():
+                    raise Exception("Workflow service not available")
+                
+                # Workflow now returns tuple of (result_zip, temp_dir)
+                workflow_result = await workflow_service.process_docx_with_workflow(
+                    docx_path=str(temp_path),
+                    output_folder=str(output_folder),
+                    router_flags=False,
+                    callback=stream_callback
+                )
+                
+                if not workflow_result:
+                    raise Exception("Workflow did not produce valid output")
+                
+                # Unpack result
+                result_zip, temp_workflow_dir = workflow_result
+                logger.info(f"📁 Temp workflow directory: {temp_workflow_dir}")
+                logger.info(f"📦 Result ZIP: {result_zip}")
+                
+                if result_zip and os.path.exists(result_zip):
+                    # Extract ZIP to output folder
+                    html_folder = output_folder / "html"
+                    html_folder.mkdir(exist_ok=True)
+                    
+                    with zipfile.ZipFile(result_zip, 'r') as zip_ref:
+                        for file_info in zip_ref.infolist():
+                            if not file_info.filename.endswith('/') and 'temp_debug' not in file_info.filename:
+                                try:
+                                    zip_ref.extract(file_info, output_folder)
+                                except Exception as e:
+                                    logger.warning(f"Error extracting {file_info.filename}: {e}")
+                    
+                    # Convert slides if converter available
+                    if conversion_service and conversion_service.is_available():
+                        converted_folder = output_folder / "converted"
+                        converted_folder.mkdir(exist_ok=True)
+                        conversion_service.convert_slides_batch(html_folder, converted_folder)
+                    
+                    # Count total slides
+                    html_files = list(html_folder.glob("*.html"))
+                    total_slides = len(html_files)
+                    logger.info(f"📁 Found {total_slides} HTML files")
+                    
+                    # Emit complete event with temp directory path for cleanup
+                    await event_queue.put(('complete', {
+                        'project_name': project_name,
+                        'total_slides': total_slides,
+                        'temp_dir': temp_workflow_dir
+                    }))
+                else:
+                    raise Exception("Workflow did not produce valid output")
+                    
+            except Exception as e:
+                logger.error(f"Workflow error: {e}")
+                workflow_error = str(e)
+            finally:
+                workflow_done.set()
+                # Delete uploaded temp file but keep workflow temp directory
+                if temp_path.exists():
+                    try:
+                        temp_path.unlink()
+                    except:
+                        pass
+                # DON'T delete temp_workflow_dir yet - will be cleaned when user goes to editor
+        
+        # Start workflow in background
+        workflow_task = asyncio.create_task(run_workflow())
+        
+        try:
+            # Stream events
+            while not workflow_done.is_set() or not event_queue.empty():
+                try:
+                    # Wait for event with timeout
+                    event_type, data = await asyncio.wait_for(event_queue.get(), timeout=0.5)
+                    
+                    logger.info(f"📤 Sending SSE: {event_type} - {data}")
+                    
+                    # Format SSE message
+                    event_data = json.dumps(data)
+                    yield f"event: {event_type}\ndata: {event_data}\n\n"
+                    
+                except asyncio.TimeoutError:
+                    # Send keepalive
+                    yield f": keepalive\n\n"
+                    continue
+            
+            # Check for errors
+            if workflow_error:
+                error_data = json.dumps({"message": workflow_error})
+                yield f"event: error_event\ndata: {error_data}\n\n"
+            
+        except Exception as e:
+            logger.error(f"Error in event generator: {e}")
+            error_data = json.dumps({"message": str(e)})
+            yield f"event: error_event\ndata: {error_data}\n\n"
+        finally:
+            # Ensure workflow completes
+            try:
+                await workflow_task
+            except:
+                pass
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
 
 
 @app.post("/api/upload-zip")
@@ -536,3 +726,51 @@ async def check_workflow_health():
             "error": str(e),
             "message": "Workflow health check failed"
         })
+
+
+# ========================== TEMP FILE SERVING ==========================
+
+@app.get("/api/temp-file")
+async def serve_temp_file(path: str):
+    """Serve file from temporary workflow directory via query parameter"""
+    logger.info(f"📂 Serving temp file request: {path}")
+    
+    # Security: only allow serving from /tmp/slidegen_workflow_* directories
+    if not path.startswith('/tmp/slidegen_workflow_'):
+        logger.warning(f"⚠️ Access denied for path: {path}")
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    file_path = Path(path)
+    if not file_path.exists():
+        logger.warning(f"⚠️ File not found: {path}")
+        raise HTTPException(status_code=404, detail="File not found")
+    
+    logger.info(f"✅ Serving temp file: {path}")
+    return FileResponse(file_path)
+
+
+@app.post("/api/cleanup-temp")
+async def cleanup_temp_directory(request: Request):
+    """Clean up temporary workflow directory when user navigates to editor"""
+    try:
+        data = await request.json()
+        temp_dir = data.get('temp_dir')
+        
+        if not temp_dir:
+            return JSONResponse(content={"success": False, "message": "No temp directory specified"})
+        
+        # Security: only allow deleting /tmp/slidegen_workflow_* directories
+        if not temp_dir.startswith('/tmp/slidegen_workflow_'):
+            raise HTTPException(status_code=403, detail="Invalid temp directory")
+        
+        temp_path = Path(temp_dir)
+        if temp_path.exists():
+            shutil.rmtree(temp_path)
+            logger.info(f"🗑️ Cleaned up temp directory: {temp_dir}")
+            return JSONResponse(content={"success": True, "message": "Temp directory cleaned"})
+        else:
+            return JSONResponse(content={"success": False, "message": "Temp directory not found"})
+    
+    except Exception as e:
+        logger.error(f"Cleanup error: {e}")
+        return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)

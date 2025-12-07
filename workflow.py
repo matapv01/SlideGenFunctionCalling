@@ -10,23 +10,60 @@ from src.utils.tool_retriever import ToolRetriever
 from src.graph.builder import build_workflow
 from src.utils.config import initialize_playwright
 import time
+from typing import Optional, Callable, Dict, Any
 
 FAISS_INDEX_PATH = "faiss_tool_retriever_index"
 
 # --- 1. Wrap the entire logic in an async function ---
-async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, max_retries_per_slide: int = 1):
+async def main_workflow(
+    router_flags: bool, 
+    docx_file: str, 
+    output_folder: str, 
+    max_retries_per_slide: int = 1,
+    callback: Optional[Callable[[str, Dict[Any, Any]], None]] = None
+):
     """
     Asynchronous main function to build and run the LangGraph workflow
     within a single, consistent event loop.
+    
+    Args:
+        router_flags: Enable router flags for workflow
+        docx_file: Path to input DOCX file
+        output_folder: Output folder for generated slides
+        max_retries_per_slide: Maximum retry attempts per slide
+        callback: Optional callback function for streaming updates
+                  Signature: callback(event_type: str, data: Dict[Any, Any])
     """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
+    
+    # Helper function to emit events
+    def emit_event(event_type: str, data: Dict[Any, Any]):
+        if callback:
+            try:
+                callback(event_type, data)
+            except Exception as e:
+                print(f"Error in callback: {e}")
 
     # ===== INITIALIZE STATIC RESOURCES =====
+    emit_event('status', {
+        'step': 1,
+        'title': 'Khởi động hệ thống',
+        'description': 'Đang khởi tạo AI models...',
+        'message': 'Khởi động LangGraph workflow'
+    })
+    
     playwright_instance = None
     final_state = None
     try:
         # Initialize LLM
+        emit_event('status', {
+            'step': 1,
+            'title': 'Khởi động hệ thống',
+            'description': 'Đang kết nối AI model...',
+            'message': 'Đang khởi tạo LLM'
+        })
+        
         env_keys = config.setup_environment()
         api_keys = [v for v in env_keys.values() if v]
         if not api_keys:
@@ -45,9 +82,22 @@ async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, 
             index_path=FAISS_INDEX_PATH # Pass the path to the retriever
         )
         
+        emit_event('status', {
+            'step': 1,
+            'title': 'Khởi động hệ thống',
+            'description': 'Đang khởi động trình duyệt...',
+            'message': 'Khởi tạo Playwright'
+        })
 
         # Initialize Playwright - use 'await' directly
         playwright_instance = await initialize_playwright()
+
+        emit_event('status', {
+            'step': 1,
+            'title': 'Phân tích nội dung',
+            'description': 'Đang đọc và phân tích tài liệu...',
+            'message': 'Chuẩn bị xử lý tài liệu'
+        })
 
         # Create temporary directories
         output_dir = os.path.join(output_folder, "output")
@@ -81,6 +131,7 @@ async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, 
                 "max_retries": max_retries_per_slide,
                 "temp_dir": output_dir,
                 "temp_debug_dir": output_debug_dir,
+                "stream_callback": emit_event,  # Pass callback to nodes
             },
             "recursion_limit": 500
         }
@@ -89,6 +140,14 @@ async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, 
         # Use 'await' directly instead of asyncio.run()
         print("\nStarting LangGraph workflow...")
         start_time = time.time()
+        
+        emit_event('status', {
+            'step': 1,
+            'title': 'Phân tích nội dung',
+            'description': 'Đang xử lý tài liệu...',
+            'message': 'Bắt đầu workflow'
+        })
+        
         final_state = await app.ainvoke(initial_input, config=graph_config)
         end_time = time.time()
         print(f"LangGraph workflow completed in {end_time - start_time:.2f} seconds.")
@@ -109,7 +168,17 @@ async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, 
     # ===== 5. PROCESS FINAL OUTPUT =====
     if not final_state or not final_state.get('final_slides'):
         print("Processing finished, but no final slides were generated.")
+        emit_event('error', {
+            'message': 'Không có slide nào được tạo'
+        })
         return
+
+    emit_event('status', {
+        'step': 3,
+        'title': 'Hoàn tất',
+        'description': 'Đang đóng gói kết quả...',
+        'message': f'Đã tạo {len(final_state.get("final_slides", []))} slide'
+    })
 
     # --- Zip final slides ---
     final_zip_path = os.path.join(output_folder, "slides_langgraph.zip")
@@ -130,6 +199,13 @@ async def main_workflow(router_flags: bool, docx_file: str, output_folder: str, 
                 zipf.write(slide['png_path'], os.path.join("png", os.path.basename(slide['png_path'])))
 
     print(f"\nHoàn thành! Files have been saved and cleaned up.")
+    
+    # Note: Don't emit 'complete' event here, let backend emit it with correct project_name
+    # emit_event('complete', {
+    #     'project_name': os.path.basename(output_folder),
+    #     'total_slides': len(final_state.get('final_slides', [])),
+    #     'zip_path': final_zip_path
+    # })
 
     return final_zip_path
 

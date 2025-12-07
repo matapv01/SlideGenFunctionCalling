@@ -1,9 +1,10 @@
 
 from src.graph.stage import State
 from typing import Dict, Any
+from langchain_core.runnables import RunnableConfig
 import time
 
-def finalize_slide(state: State) -> Dict[str, Any]:
+def finalize_slide(state: State, config: RunnableConfig) -> Dict[str, Any]:
     """
     Node hoàn tất: Lưu slide đã được chấp nhận và cập nhật context.
     """
@@ -25,7 +26,37 @@ def finalize_slide(state: State) -> Dict[str, Any]:
         "original_text": state['current_slide_text']
     }
     state['final_slides'].append(final_slide_data)
-    state['slide_chunks'].pop(0)  # Xóa slide đã hoàn tất khỏi hàng đợi
+    
+    # Pop slide đã hoàn tất trước khi emit event để tính đúng total
+    state['slide_chunks'].pop(0)
+    
+    # Emit streaming event for slide completion
+    stream_callback = config.get('configurable', {}).get('stream_callback')
+    if stream_callback:
+        # Extract slide title from text
+        slide_text = state.get('current_slide_text', {})
+        slide_title = slide_text.get('title', 'Untitled') if isinstance(slide_text, dict) else 'Untitled'
+        
+        # Total = slides đã tạo + slides còn lại trong queue
+        total_slides = len(state['final_slides']) + len(state.get('slide_chunks', []))
+        percentage = (len(state['final_slides']) / total_slides * 100) if total_slides > 0 else 0
+        
+        stream_callback('slide_completed', {
+            'index': idx,
+            'title': slide_title,
+            'html_path': state.get('current_html_path', ''),
+            'png_path': state.get('current_image_path', ''),
+            'current': len(state['final_slides']),
+            'total': total_slides
+        })
+        
+        stream_callback('progress', {
+            'current': len(state['final_slides']),
+            'total': total_slides,
+            'percentage': percentage,
+            'title': 'Đang tạo slide',
+            'message': f'Đã hoàn thành {len(state["final_slides"])}/{total_slides} slide'
+        })
     print(f"Đã thêm slide {idx + 1} vào danh sách final_slides (tổng: {len(state['final_slides'])})")
     
     # Reset retry_count cho slide tiếp theo
