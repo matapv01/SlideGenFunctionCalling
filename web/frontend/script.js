@@ -190,7 +190,6 @@ function addNewSlide(content, index) {
     const slideDiv = document.createElement("div");
     slideDiv.className = "slide-item";
     slideDiv.innerHTML = `
-        <div class="slide-title">Slide ${index}</div>
         <div class="slide-content" style="display: none;">
             ${content}
         </div>

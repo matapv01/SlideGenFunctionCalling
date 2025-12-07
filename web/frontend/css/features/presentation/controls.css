@@ -7,13 +7,18 @@
             align-items: center;
             justify-content: space-between;
             gap: 20px;
-            background: rgba(60, 60, 60, 0.95);
+            background: rgba(60, 60, 60, 0.4);
             backdrop-filter: blur(10px);
             padding: 12px 40px;
             border-radius: 0;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
             z-index: 100003;
+            opacity: 0;
             transition: opacity 0.3s ease;
+        }
+
+        .presentation-controls.show {
+            opacity: 1 !important;
         }
 
         .presentation-controls button {
@@ -77,12 +82,19 @@
         #presentBtn {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
             position: relative;
         }
 
         #presentBtn:hover {
+            background: linear-gradient(135deg, #5a67d8, #6b46c1);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.5), 0 0 25px rgba(102, 126, 234, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .present-btn-wrapper {

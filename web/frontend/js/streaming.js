@@ -5,6 +5,10 @@ let eventSource = null;
 let projectName = null;
 let totalSlides = 0;
 let completedSlides = 0;
+let slides = []; // Store all slides for presentation
+let currentPresentationIndex = 0;
+let isPresentationMode = false;
+let presentationKeyboardHandler = null;
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function () {
@@ -22,8 +26,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Extract project name from filename (remove .docx extension)
     projectName = filename.replace(/\.docx$/i, '');
     
-    // Start streaming
-    startStreaming(filename);
+    // Try to restore previous state
+    const restored = restoreStreamingState(filename);
+    
+    if (!restored) {
+        // Start streaming if not restored
+        startStreaming(filename);
+    }
     
     // Setup button handlers
     document.getElementById('goToEditor')?.addEventListener('click', goToEditor);
@@ -32,6 +41,13 @@ document.addEventListener('DOMContentLoaded', function () {
     });
     document.getElementById('retryButton')?.addEventListener('click', () => {
         window.location.href = 'index.html';
+    });
+    
+    // Setup presentation button (will be shown when slides complete)
+    document.getElementById('presentButton')?.addEventListener('click', () => {
+        if (slides.length > 0) {
+            startPresentation(0);
+        }
     });
 });
 
@@ -168,7 +184,13 @@ function handleSlideCompletedEvent(event) {
     const data = JSON.parse(event.data);
     console.log('Slide data:', data);
     
+    // Store slide for presentation
+    slides.push(data);
+    
     completedSlides++;
+    
+    // Save state to sessionStorage
+    saveStreamingState();
     
     // Always add new slide directly (no placeholders for real-time streaming)
     addSlidePreview(data);
@@ -181,7 +203,7 @@ function handleSlideCompletedEvent(event) {
     
     // Show toast notification
     showToast(
-        `✨ Slide ${data.index + 1} hoàn tất: ${data.title || 'Untitled'}`,
+        `✨ Slide ${data.index + 1} hoàn tất`,
         'success'
     );
     
@@ -208,6 +230,9 @@ function handleCompleteEvent(event) {
     projectName = data.project_name;
     totalSlides = data.total_slides;
     tempDirectory = data.temp_dir; // Store for cleanup later
+    
+    // Save completed state
+    saveStreamingState(true);
     
     // Update total count with actual number from complete event
     const totalCountEl = document.getElementById('totalSlideCount');
@@ -409,7 +434,6 @@ function replacePlaceholderWithSlide(placeholder, slideData) {
                          onerror="console.error('❌ Iframe load error:', '${displayName}'); this.parentElement.innerHTML = '<div class=\\'slide-placeholder\\'><i class=\\'bi bi-exclamation-triangle\\'></i></div>';"></iframe>
             </div>
             <div class="slide-info">
-                <div class="slide-title">${slideData.title || 'Untitled'}</div>
                 <div class="slide-status">
                     <i class="bi bi-check-circle-fill"></i>
                     Hoàn tất
@@ -474,7 +498,6 @@ function addSlidePreview(slideData) {
                      onerror="console.error('❌ Iframe load error:', '${displayName}');"></iframe>
         </div>
         <div class="slide-info">
-            <div class="slide-title">${slideData.title || 'Untitled'}</div>
             <div class="slide-status">
                 <i class="bi bi-check-circle-fill"></i>
                 Hoàn tất
@@ -482,7 +505,19 @@ function addSlidePreview(slideData) {
         </div>
     `;
     
+    // Add click handler to open presentation from this slide
+    slideCard.addEventListener('click', () => {
+        const slideIndex = slides.findIndex(s => s.index === slideData.index);
+        if (slideIndex !== -1) {
+            startPresentation(slideIndex);
+        }
+    });
+    slideCard.style.cursor = 'pointer';
+    
     slidesGrid.appendChild(slideCard);
+    
+    // Notify presentation mode if active
+    onNewSlideAdded(slideData);
     
     // Animate in with slight delay
     setTimeout(() => {
@@ -521,6 +556,9 @@ async function goToEditor() {
         return;
     }
     
+    // Clear streaming state when going to editor
+    clearStreamingState();
+    
     // Cleanup temp directory before navigating
     if (tempDirectory) {
         try {
@@ -551,10 +589,331 @@ window.addEventListener('beforeunload', function() {
     }
 });
 
+// ================== PRESENTATION MODE ==================
+
+function startPresentation(startIndex = 0) {
+    if (slides.length === 0) {
+        showToast('❌ Chưa có slide nào để trình chiếu', 'error');
+        return;
+    }
+    
+    isPresentationMode = true;
+    currentPresentationIndex = startIndex;
+    
+    // Create presentation overlay
+    const overlay = document.createElement('div');
+    overlay.id = 'presentationOverlay';
+    overlay.className = 'presentation-overlay';
+    overlay.innerHTML = `
+        <div class="presentation-click-zone left" id="presZoneLeft"></div>
+        <div class="presentation-click-zone right" id="presZoneRight"></div>
+        <div class="presentation-slide-container" id="presSlideContainer"></div>
+        <div class="presentation-controls">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button id="prevSlideBtn" title="Previous Slide (←)">◀</button>
+                <span class="presentation-counter" id="presCounter">1 / 1</span>
+                <button id="nextSlideBtn" title="Next Slide (→)">▶</button>
+            </div>
+            <button id="exitPresBtn" title="Exit (ESC)">✕</button>
+        </div>
+        <div class="presentation-timeline" id="presTimeline">
+            <div class="timeline-track" id="presTimelineTrack">
+                <div class="timeline-progress" id="presProgress"></div>
+                <div class="timeline-slides" id="presTimelineSlides"></div>
+                <div class="timeline-current-indicator" id="presIndicator"></div>
+            </div>
+        </div>
+        <div class="toast-container" id="presentationToastContainer"></div>
+    `;
+    
+    document.body.appendChild(overlay);
+    document.body.style.overflow = 'hidden';
+    
+    // Request fullscreen
+    if (overlay.requestFullscreen) {
+        overlay.requestFullscreen();
+    } else if (overlay.webkitRequestFullscreen) {
+        overlay.webkitRequestFullscreen();
+    }
+    
+    // Render initial slide
+    renderPresentationSlide();
+    
+    // Setup controls
+    setupPresentationControls();
+    setupPresentationTimeline();
+    
+    // Show overlay
+    setTimeout(() => overlay.classList.add('active'), 10);
+    
+    showToast('🎬 Bắt đầu trình chiếu', 'success');
+}
+
+function renderPresentationSlide() {
+    const slide = slides[currentPresentationIndex];
+    if (!slide) return;
+    
+    const container = document.getElementById('presSlideContainer');
+    if (!container) return;
+    
+    // Build iframe URL
+    let iframeUrl = '';
+    if (slide.is_temp && slide.html_path) {
+        iframeUrl = `${config.BACKEND_URL}/api/temp-file?path=${encodeURIComponent(slide.html_path)}`;
+    } else {
+        const htmlFilename = slide.html_path ? slide.html_path.split('/').pop() : `slide_${slide.index + 1}.html`;
+        iframeUrl = `${config.BACKEND_URL}/static/output/${projectName}/html/${htmlFilename}`;
+    }
+    
+    container.innerHTML = `
+        <iframe src="${iframeUrl}" 
+                frameborder="0" 
+                scrolling="no"
+                style="width: 1920px; height: 1080px; border: none; background: white;"></iframe>
+    `;
+    
+    // Scale to fit
+    scalePresentationToFit();
+    
+    // Update counter
+    const counter = document.getElementById('presCounter');
+    if (counter) {
+        counter.textContent = `${currentPresentationIndex + 1} / ${slides.length}`;
+    }
+    
+    // Update button states
+    const prevBtn = document.getElementById('prevSlideBtn');
+    const nextBtn = document.getElementById('nextSlideBtn');
+    if (prevBtn) prevBtn.disabled = currentPresentationIndex === 0;
+    if (nextBtn) nextBtn.disabled = currentPresentationIndex === slides.length - 1;
+    
+    // Update zones
+    const zoneLeft = document.getElementById('presZoneLeft');
+    const zoneRight = document.getElementById('presZoneRight');
+    if (zoneLeft) {
+        zoneLeft.classList.toggle('disabled', currentPresentationIndex === 0);
+    }
+    if (zoneRight) {
+        zoneRight.classList.toggle('disabled', currentPresentationIndex === slides.length - 1);
+    }
+    
+    updatePresentationTimeline();
+}
+
+function scalePresentationToFit() {
+    const container = document.getElementById('presSlideContainer');
+    if (!container) return;
+    
+    const windowWidth = window.innerWidth;
+    const windowHeight = window.innerHeight;
+    const scaleX = windowWidth / 1920;
+    const scaleY = windowHeight / 1080;
+    const scale = Math.min(scaleX, scaleY);
+    
+    container.style.transform = `scale(${scale})`;
+}
+
+function setupPresentationControls() {
+    // Keyboard navigation
+    presentationKeyboardHandler = (e) => {
+        if (!isPresentationMode) return;
+        
+        switch(e.key) {
+            case 'ArrowRight':
+            case 'ArrowDown':
+            case ' ':
+            case 'PageDown':
+                e.preventDefault();
+                nextPresentationSlide();
+                break;
+            case 'ArrowLeft':
+            case 'ArrowUp':
+            case 'PageUp':
+                e.preventDefault();
+                previousPresentationSlide();
+                break;
+            case 'Escape':
+                e.preventDefault();
+                exitPresentation();
+                break;
+            case 'Home':
+                e.preventDefault();
+                goToPresentationSlide(0);
+                break;
+            case 'End':
+                e.preventDefault();
+                goToPresentationSlide(slides.length - 1);
+                break;
+        }
+    };
+    
+    document.addEventListener('keydown', presentationKeyboardHandler);
+    
+    // Button handlers
+    document.getElementById('prevSlideBtn')?.addEventListener('click', previousPresentationSlide);
+    document.getElementById('nextSlideBtn')?.addEventListener('click', nextPresentationSlide);
+    document.getElementById('exitPresBtn')?.addEventListener('click', exitPresentation);
+    
+    // Click zones
+    document.getElementById('presZoneLeft')?.addEventListener('click', previousPresentationSlide);
+    document.getElementById('presZoneRight')?.addEventListener('click', nextPresentationSlide);
+    
+    // Window resize
+    window.addEventListener('resize', scalePresentationToFit);
+    
+    // Timeline and Controls auto-hide
+    let hideTimeout;
+    const timeline = document.getElementById('presTimeline');
+    const controls = document.querySelector('.presentation-controls');
+    const overlay = document.getElementById('presentationOverlay');
+    
+    if (overlay && timeline && controls) {
+        const showControls = () => {
+            timeline.classList.add('show');
+            controls.classList.add('show');
+            clearTimeout(hideTimeout);
+            hideTimeout = setTimeout(() => {
+                timeline.classList.remove('show');
+                controls.classList.remove('show');
+            }, 1500);
+        };
+        
+        overlay.addEventListener('mousemove', showControls);
+        
+        // Show initially
+        showControls();
+    }
+}
+
+function setupPresentationTimeline() {
+    const timelineSlides = document.getElementById('presTimelineSlides');
+    const timelineTrack = document.getElementById('presTimelineTrack');
+    
+    if (!timelineSlides || !timelineTrack) return;
+    
+    // Clear existing
+    timelineSlides.innerHTML = '';
+    
+    // Create markers
+    slides.forEach((slide, index) => {
+        const marker = document.createElement('div');
+        marker.className = 'timeline-slide-marker';
+        if (index === currentPresentationIndex) {
+            marker.classList.add('active');
+        }
+        
+        const slideNumber = document.createElement('div');
+        slideNumber.className = 'slide-number';
+        slideNumber.textContent = `Slide ${index + 1}`;
+        marker.appendChild(slideNumber);
+        
+        marker.addEventListener('click', () => goToPresentationSlide(index));
+        timelineSlides.appendChild(marker);
+    });
+    
+    // Click on track
+    timelineTrack.addEventListener('click', (e) => {
+        const rect = timelineTrack.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const percentage = x / rect.width;
+        const targetSlide = Math.floor(percentage * slides.length);
+        goToPresentationSlide(Math.max(0, Math.min(targetSlide, slides.length - 1)));
+    });
+}
+
+function updatePresentationTimeline() {
+    const progress = document.getElementById('presProgress');
+    const indicator = document.getElementById('presIndicator');
+    const markers = document.querySelectorAll('.timeline-slide-marker');
+    
+    if (progress) {
+        const percentage = ((currentPresentationIndex + 1) / slides.length) * 100;
+        progress.style.width = percentage + '%';
+    }
+    
+    if (indicator && slides.length > 1) {
+        const slidePercentage = (currentPresentationIndex / (slides.length - 1)) * 100;
+        indicator.style.left = slidePercentage + '%';
+    }
+    
+    markers.forEach((marker, index) => {
+        marker.classList.toggle('active', index === currentPresentationIndex);
+    });
+}
+
+function goToPresentationSlide(index) {
+    if (index >= 0 && index < slides.length) {
+        currentPresentationIndex = index;
+        renderPresentationSlide();
+    }
+}
+
+function nextPresentationSlide() {
+    if (currentPresentationIndex < slides.length - 1) {
+        currentPresentationIndex++;
+        renderPresentationSlide();
+    }
+}
+
+function previousPresentationSlide() {
+    if (currentPresentationIndex > 0) {
+        currentPresentationIndex--;
+        renderPresentationSlide();
+    }
+}
+
+function exitPresentation() {
+    isPresentationMode = false;
+    
+    // Remove keyboard handler
+    if (presentationKeyboardHandler) {
+        document.removeEventListener('keydown', presentationKeyboardHandler);
+        presentationKeyboardHandler = null;
+    }
+    
+    // Exit fullscreen
+    if (document.fullscreenElement || document.webkitFullscreenElement) {
+        if (document.exitFullscreen) {
+            document.exitFullscreen();
+        } else if (document.webkitExitFullscreen) {
+            document.webkitExitFullscreen();
+        }
+    }
+    
+    // Remove overlay
+    const overlay = document.getElementById('presentationOverlay');
+    if (overlay) {
+        overlay.classList.remove('active');
+        setTimeout(() => overlay.remove(), 300);
+    }
+    
+    document.body.style.overflow = '';
+    showToast('👋 Đã thoát chế độ trình chiếu', 'info');
+}
+
+// Listen for new slides being added during presentation
+function onNewSlideAdded(slideData) {
+    // If in presentation mode and new slide added, update timeline
+    if (isPresentationMode) {
+        setupPresentationTimeline();
+        updatePresentationTimeline();
+        
+        // Show toast notification
+        showToast(`✨ Slide ${slideData.index + 1} vừa được thêm!`, 'info');
+    }
+}
+
 // ================== TOAST NOTIFICATIONS ==================
 
 function showToast(message, type = 'info') {
-    const toastContainer = document.getElementById('toastContainer');
+    // Use presentation toast container if in presentation mode, otherwise use main container
+    let toastContainer = isPresentationMode 
+        ? document.getElementById('presentationToastContainer')
+        : document.getElementById('toastContainer');
+    
+    if (!toastContainer) {
+        toastContainer = document.getElementById('toastContainer');
+    }
     if (!toastContainer) return;
     
     const icons = {
@@ -592,4 +951,105 @@ function showToast(message, type = 'info') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+}
+
+// ================== STATE PERSISTENCE ==================
+
+function saveStreamingState(isComplete = false) {
+    const state = {
+        filename: new URLSearchParams(window.location.search).get('filename'),
+        projectName: projectName,
+        totalSlides: totalSlides,
+        completedSlides: completedSlides,
+        slides: slides,
+        tempDirectory: tempDirectory,
+        isComplete: isComplete,
+        timestamp: Date.now()
+    };
+    
+    try {
+        sessionStorage.setItem('streamingState', JSON.stringify(state));
+        console.log('💾 Saved streaming state:', state);
+    } catch (e) {
+        console.error('⚠️ Failed to save state:', e);
+    }
+}
+
+function restoreStreamingState(filename) {
+    try {
+        const savedState = sessionStorage.getItem('streamingState');
+        if (!savedState) return false;
+        
+        const state = JSON.parse(savedState);
+        
+        // Check if state is for current file and not too old (within 1 hour)
+        const isExpired = (Date.now() - state.timestamp) > 3600000;
+        const isSameFile = state.filename === filename;
+        
+        if (!isSameFile || isExpired) {
+            sessionStorage.removeItem('streamingState');
+            return false;
+        }
+        
+        console.log('🔄 Restoring streaming state:', state);
+        
+        // Restore variables
+        projectName = state.projectName;
+        totalSlides = state.totalSlides;
+        completedSlides = state.completedSlides;
+        slides = state.slides || [];
+        tempDirectory = state.tempDirectory;
+        
+        // Update UI
+        const slideCountEl = document.getElementById('slideCount');
+        const totalCountEl = document.getElementById('totalSlideCount');
+        if (slideCountEl) slideCountEl.textContent = completedSlides;
+        if (totalCountEl) totalCountEl.textContent = totalSlides;
+        
+        // Restore slides in UI
+        slides.forEach(slideData => {
+            addSlidePreview(slideData);
+        });
+        
+        if (state.isComplete) {
+            // Show completion state
+            updateActivity(
+                '🎉 Hoàn tất!',
+                `Đã tạo thành công ${totalSlides} slide`
+            );
+            updateProgress(100, 100, 100);
+            updateAllStepsComplete();
+            document.getElementById('actionButtons').style.display = 'flex';
+            document.querySelector('.activity-icon .spinner').style.display = 'none';
+            showToast('✅ Đã khôi phục trạng thái hoàn tất', 'success');
+        } else {
+            // Show incomplete state - don't restart streaming
+            const percentage = totalSlides > 0 ? (completedSlides / totalSlides) * 100 : 0;
+            updateActivity(
+                '⚠️ Đã khôi phục trạng thái',
+                `Đã tạo ${completedSlides}/${totalSlides} slide (phiên streaming đã kết thúc)`
+            );
+            updateProgress(completedSlides, totalSlides, percentage);
+            
+            // If we have some slides, show them
+            if (completedSlides > 0) {
+                showToast(`🔄 Đã khôi phục ${completedSlides} slide`, 'info');
+            }
+            
+            // Hide spinner since streaming won't continue
+            const spinner = document.querySelector('.activity-icon .spinner');
+            if (spinner) spinner.style.display = 'none';
+        }
+        
+        return true;
+    } catch (e) {
+        console.error('⚠️ Failed to restore state:', e);
+        sessionStorage.removeItem('streamingState');
+        return false;
+    }
+}
+
+function clearStreamingState() {
+    sessionStorage.removeItem('streamingState');
+    console.log('🗑️ Cleared streaming state');
 }

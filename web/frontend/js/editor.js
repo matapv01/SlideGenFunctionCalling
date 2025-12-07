@@ -389,8 +389,7 @@ ${this.slides.map((slide, index) => {
         const slideNumber = (index + 1).toString().padStart(3, '0');
         return `
         <div class="slide-card">
-            <div class="slide-title">${slide.name || `Slide ${index + 1}`}</div>
-            <a href="slide_${slideNumber}.html" class="slide-link" target="_blank">Xem Slide</a>
+            <a href="slide_${slideNumber}.html" class="slide-link" target="_blank">Slide ${index + 1}</a>
         </div>
     `;
     }).join('')}
@@ -1903,6 +1902,17 @@ bindEvents() {
 
     document.querySelectorAll('.left-panel-tab').forEach(tab => {
         tab.addEventListener('click', () => {
+            // Nếu panel đang collapsed, mở rộng nó ra
+            const leftPanels = document.querySelector('.left-panels');
+            if (leftPanels && leftPanels.classList.contains('collapsed')) {
+                leftPanels.classList.remove('collapsed');
+                const toggleBtn = document.getElementById('toggleSlidesBtn');
+                if (toggleBtn) {
+                    toggleBtn.title = 'Thu gọn Slides';
+                    toggleBtn.setAttribute('aria-pressed', 'true');
+                }
+            }
+            
             document.querySelectorAll('.left-panel-tab').forEach(t => t.classList.remove('active'));
             document.querySelectorAll('.left-panel-content').forEach(c => c.classList.remove('active'));
 
@@ -5718,7 +5728,6 @@ toggleProperties() {
     const toggleBtn = document.getElementById('toggleSlidesBtn');
     if (toggleBtn) {
         const isCollapsed = leftPanels.classList.contains('collapsed');
-        toggleBtn.textContent = isCollapsed ? '📁' : '📑';
         toggleBtn.title = isCollapsed ? 'Mở rộng Slides' : 'Thu gọn Slides';
         toggleBtn.setAttribute('aria-pressed', (!isCollapsed).toString());
     }
@@ -5735,7 +5744,6 @@ toggleSlides() {
     // Cập nhật icon nút dựa trên trạng thái
     const isCollapsed = leftPanels.classList.contains('collapsed');
     if (toggleBtn) {
-        toggleBtn.textContent = isCollapsed ? '📁' : '📑';
         toggleBtn.title = isCollapsed ? 'Mở rộng Slides' : 'Thu gọn Slides';
         toggleBtn.setAttribute('aria-pressed', (!isCollapsed).toString());
     }

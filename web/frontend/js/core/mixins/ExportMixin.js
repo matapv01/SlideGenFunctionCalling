@@ -261,8 +261,7 @@ ${this.slides.map((slide, index) => {
             const slideNumber = (index + 1).toString().padStart(3, '0');
             return `
             <div class="slide-card">
-                <div class="slide-title">${slide.name || `Slide ${index + 1}`}</div>
-                <a href="slide_${slideNumber}.html" class="slide-link" target="_blank">Xem Slide</a>
+                <a href="slide_${slideNumber}.html" class="slide-link" target="_blank">Slide ${index + 1}</a>
             </div>
         `;
         }).join('')}
