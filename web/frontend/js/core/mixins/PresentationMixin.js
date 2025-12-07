@@ -185,6 +185,9 @@ export const PresentationMixin = {
 
         // Setup timeline
         this.setupPresentationTimeline();
+        
+        // Setup auto-hide for timeline and controls
+        this.setupPresentationAutoHide();
     },
 
     /**
@@ -287,6 +290,34 @@ export const PresentationMixin = {
     },
 
     /**
+     * Setup auto-hide for timeline and controls
+     */
+    setupPresentationAutoHide() {
+        let hideTimeout;
+        const timeline = document.getElementById('presentationTimeline');
+        const controls = document.querySelector('.presentation-controls');
+        
+        if (timeline && controls) {
+            const showControls = () => {
+                timeline.classList.add('show');
+                controls.classList.add('show');
+                clearTimeout(hideTimeout);
+                hideTimeout = setTimeout(() => {
+                    timeline.classList.remove('show');
+                    controls.classList.remove('show');
+                }, 1500);
+            };
+            
+            // Listen on document to catch all mouse movements
+            this.presentationMouseMoveHandler = showControls;
+            document.addEventListener('mousemove', this.presentationMouseMoveHandler);
+            
+            // Show initially
+            showControls();
+        }
+    },
+
+    /**
      * Exit presentation mode
      */
     exitPresentation() {
@@ -296,6 +327,12 @@ export const PresentationMixin = {
             document.removeEventListener('webkitfullscreenchange', this.fullscreenChangeHandler);
             document.removeEventListener('msfullscreenchange', this.fullscreenChangeHandler);
             this.fullscreenChangeHandler = null;
+        }
+        
+        // Remove auto-hide mouse handler
+        if (this.presentationMouseMoveHandler) {
+            document.removeEventListener('mousemove', this.presentationMouseMoveHandler);
+            this.presentationMouseMoveHandler = null;
         }
 
         // Exit fullscreen API (only if still in fullscreen)

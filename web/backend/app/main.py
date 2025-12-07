@@ -127,9 +127,7 @@ async def read_root():
         "docs": "/docs",
         "endpoints": {
             "upload_docx": "POST /api/upload-docx",
-            "upload_zip": "POST /api/upload-zip",
             "slides": "GET /api/slides/{project_name}",
-            "capture": "POST /api/capture-slide",
             "export_pdf": "POST /api/export-slides-pdf",
             "images": "GET /api/images/{name}"
         },
@@ -430,40 +428,6 @@ async def upload_docx_stream(filename: str):
     )
 
 
-@app.post("/api/upload-zip")
-async def upload_zip(file: UploadFile = File(...)):
-    """Upload and extract ZIP file"""
-    if not file.filename.endswith('.zip'):
-        raise HTTPException(status_code=400, detail="Only ZIP files accepted")
-    
-    temp_path = TEMP_DIR / file.filename
-    with open(temp_path, "wb") as buffer:
-        shutil.copyfileobj(file.file, buffer)
-    
-    project_name = os.path.splitext(file.filename)[0]
-    output_folder = OUTPUT_DIR / project_name
-    
-    # Handle existing folder
-    if output_folder.exists():
-        try:
-            shutil.rmtree(output_folder)
-        except Exception as e:
-            logger.warning(f"Could not remove existing folder: {e}")
-    
-    output_folder.mkdir(parents=True, exist_ok=True)
-    
-    # Extract ZIP
-    with zipfile.ZipFile(temp_path, 'r') as zip_ref:
-        zip_ref.extractall(output_folder)
-    
-    # Build slides
-    slides = slide_service.build_slides_from_output(str(output_folder))
-    
-    temp_path.unlink()
-    
-    return JSONResponse(content={"slides": slides})
-
-
 # ========================== SLIDES API ==========================
 
 @app.get("/api/slides/{project_name}")
@@ -577,26 +541,6 @@ async def check_converter_health():
 
 # ========================== CAPTURE ENDPOINTS ==========================
 
-@app.post("/api/capture-slide")
-async def capture_slide(request: CaptureSlideRequest):
-    """Capture single slide from HTML content"""
-    if capture_service is None or not capture_service.is_available():
-        raise HTTPException(status_code=503, detail="Capture service not available")
-    
-    try:
-        result = await capture_service.capture_single_slide(
-            request.html_content,
-            request.slide_name
-        )
-        return JSONResponse(content=result)
-    except Exception as e:
-        logger.error(f"Capture error: {e}")
-        return JSONResponse(
-            content={'success': False, 'error': str(e)},
-            status_code=500
-        )
-
-
 @app.post("/api/capture-slides-batch")
 async def capture_slides_batch(request: CaptureMultipleSlidesRequest):
     """Capture multiple slides and return as ZIP"""
@@ -632,18 +576,6 @@ async def download_capture(filename: str):
     except Exception as e:
         logger.error(f"Download error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/api/capture-health")
-async def check_capture_health():
-    """Check capture system health"""
-    if capture_service is None:
-        return JSONResponse(content={
-            "healthy": False,
-            "message": "Capture service not initialized"
-        })
-    
-    return JSONResponse(content=capture_service.check_health())
 
 
 # ========================== PDF EXPORT ENDPOINTS ==========================

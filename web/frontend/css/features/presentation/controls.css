@@ -7,13 +7,18 @@
             align-items: center;
             justify-content: space-between;
             gap: 20px;
-            background: rgba(60, 60, 60, 0.95);
+            background: rgba(60, 60, 60, 0.4);
             backdrop-filter: blur(10px);
             padding: 12px 40px;
             border-radius: 0;
             box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.3);
             z-index: 100003;
+            opacity: 0;
             transition: opacity 0.3s ease;
+        }
+
+        .presentation-controls.show {
+            opacity: 1 !important;
         }
 
         .presentation-controls button {
