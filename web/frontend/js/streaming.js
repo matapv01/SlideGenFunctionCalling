@@ -26,8 +26,13 @@ document.addEventListener('DOMContentLoaded', function () {
     // Extract project name from filename (remove .docx extension)
     projectName = filename.replace(/\.docx$/i, '');
     
-    // Start streaming
-    startStreaming(filename);
+    // Try to restore previous state
+    const restored = restoreStreamingState(filename);
+    
+    if (!restored) {
+        // Start streaming if not restored
+        startStreaming(filename);
+    }
     
     // Setup button handlers
     document.getElementById('goToEditor')?.addEventListener('click', goToEditor);
@@ -184,6 +189,9 @@ function handleSlideCompletedEvent(event) {
     
     completedSlides++;
     
+    // Save state to sessionStorage
+    saveStreamingState();
+    
     // Always add new slide directly (no placeholders for real-time streaming)
     addSlidePreview(data);
     
@@ -195,7 +203,7 @@ function handleSlideCompletedEvent(event) {
     
     // Show toast notification
     showToast(
-        `✨ Slide ${data.index + 1} hoàn tất: ${data.title || 'Untitled'}`,
+        `✨ Slide ${data.index + 1} hoàn tất`,
         'success'
     );
     
@@ -222,6 +230,9 @@ function handleCompleteEvent(event) {
     projectName = data.project_name;
     totalSlides = data.total_slides;
     tempDirectory = data.temp_dir; // Store for cleanup later
+    
+    // Save completed state
+    saveStreamingState(true);
     
     // Update total count with actual number from complete event
     const totalCountEl = document.getElementById('totalSlideCount');
@@ -423,7 +434,6 @@ function replacePlaceholderWithSlide(placeholder, slideData) {
                          onerror="console.error('❌ Iframe load error:', '${displayName}'); this.parentElement.innerHTML = '<div class=\\'slide-placeholder\\'><i class=\\'bi bi-exclamation-triangle\\'></i></div>';"></iframe>
             </div>
             <div class="slide-info">
-                <div class="slide-title">${slideData.title || 'Untitled'}</div>
                 <div class="slide-status">
                     <i class="bi bi-check-circle-fill"></i>
                     Hoàn tất
@@ -488,7 +498,6 @@ function addSlidePreview(slideData) {
                      onerror="console.error('❌ Iframe load error:', '${displayName}');"></iframe>
         </div>
         <div class="slide-info">
-            <div class="slide-title">${slideData.title || 'Untitled'}</div>
             <div class="slide-status">
                 <i class="bi bi-check-circle-fill"></i>
                 Hoàn tất
@@ -546,6 +555,9 @@ async function goToEditor() {
         showError('Không tìm thấy thông tin project');
         return;
     }
+    
+    // Clear streaming state when going to editor
+    clearStreamingState();
     
     // Cleanup temp directory before navigating
     if (tempDirectory) {
@@ -939,4 +951,105 @@ function showToast(message, type = 'info') {
         toast.classList.remove('show');
         setTimeout(() => toast.remove(), 300);
     }, 4000);
+}
+
+// ================== STATE PERSISTENCE ==================
+
+function saveStreamingState(isComplete = false) {
+    const state = {
+        filename: new URLSearchParams(window.location.search).get('filename'),
+        projectName: projectName,
+        totalSlides: totalSlides,
+        completedSlides: completedSlides,
+        slides: slides,
+        tempDirectory: tempDirectory,
+        isComplete: isComplete,
+        timestamp: Date.now()
+    };
+    
+    try {
+        sessionStorage.setItem('streamingState', JSON.stringify(state));
+        console.log('💾 Saved streaming state:', state);
+    } catch (e) {
+        console.error('⚠️ Failed to save state:', e);
+    }
+}
+
+function restoreStreamingState(filename) {
+    try {
+        const savedState = sessionStorage.getItem('streamingState');
+        if (!savedState) return false;
+        
+        const state = JSON.parse(savedState);
+        
+        // Check if state is for current file and not too old (within 1 hour)
+        const isExpired = (Date.now() - state.timestamp) > 3600000;
+        const isSameFile = state.filename === filename;
+        
+        if (!isSameFile || isExpired) {
+            sessionStorage.removeItem('streamingState');
+            return false;
+        }
+        
+        console.log('🔄 Restoring streaming state:', state);
+        
+        // Restore variables
+        projectName = state.projectName;
+        totalSlides = state.totalSlides;
+        completedSlides = state.completedSlides;
+        slides = state.slides || [];
+        tempDirectory = state.tempDirectory;
+        
+        // Update UI
+        const slideCountEl = document.getElementById('slideCount');
+        const totalCountEl = document.getElementById('totalSlideCount');
+        if (slideCountEl) slideCountEl.textContent = completedSlides;
+        if (totalCountEl) totalCountEl.textContent = totalSlides;
+        
+        // Restore slides in UI
+        slides.forEach(slideData => {
+            addSlidePreview(slideData);
+        });
+        
+        if (state.isComplete) {
+            // Show completion state
+            updateActivity(
+                '🎉 Hoàn tất!',
+                `Đã tạo thành công ${totalSlides} slide`
+            );
+            updateProgress(100, 100, 100);
+            updateAllStepsComplete();
+            document.getElementById('actionButtons').style.display = 'flex';
+            document.querySelector('.activity-icon .spinner').style.display = 'none';
+            showToast('✅ Đã khôi phục trạng thái hoàn tất', 'success');
+        } else {
+            // Show incomplete state - don't restart streaming
+            const percentage = totalSlides > 0 ? (completedSlides / totalSlides) * 100 : 0;
+            updateActivity(
+                '⚠️ Đã khôi phục trạng thái',
+                `Đã tạo ${completedSlides}/${totalSlides} slide (phiên streaming đã kết thúc)`
+            );
+            updateProgress(completedSlides, totalSlides, percentage);
+            
+            // If we have some slides, show them
+            if (completedSlides > 0) {
+                showToast(`🔄 Đã khôi phục ${completedSlides} slide`, 'info');
+            }
+            
+            // Hide spinner since streaming won't continue
+            const spinner = document.querySelector('.activity-icon .spinner');
+            if (spinner) spinner.style.display = 'none';
+        }
+        
+        return true;
+    } catch (e) {
+        console.error('⚠️ Failed to restore state:', e);
+        sessionStorage.removeItem('streamingState');
+        return false;
+    }
+}
+
+function clearStreamingState() {
+    sessionStorage.removeItem('streamingState');
+    console.log('🗑️ Cleared streaming state');
 }

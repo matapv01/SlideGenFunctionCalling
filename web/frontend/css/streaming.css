@@ -759,17 +759,6 @@ html {
     background: linear-gradient(to bottom, transparent 0%, rgba(255,255,255,0.9) 100%);
 }
 
-.slide-title {
-    font-size: 1rem;
-    font-weight: 600;
-    color: #333;
-    margin-bottom: 0.5rem;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    animation: fadeInText 0.5s ease 0.3s both;
-}
-
 @keyframes fadeInText {
     from {
         opacity: 0;

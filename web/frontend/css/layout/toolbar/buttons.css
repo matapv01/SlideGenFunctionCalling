@@ -26,7 +26,7 @@
             font-weight: 600;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
             min-height: 42px;
@@ -50,7 +50,7 @@
             background: rgba(255, 255, 255, 0.25);
             border-color: rgba(255, 255, 255, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2), 0 0 20px rgba(255, 255, 255, 0.15), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         .toolbar button:hover::before {
@@ -71,31 +71,36 @@
         #toggleSlidesBtn {
             background: linear-gradient(135deg, #4ade80, #22c55e);
             color: white;
-            border: none;
-            font-size: 16px;
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
             min-width: 45px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.3);
+            box-shadow: 0 4px 15px rgba(74, 222, 128, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         #toggleSlidesBtn:hover {
             background: linear-gradient(135deg, #22c55e, #16a34a);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.4);
+            box-shadow: 0 6px 20px rgba(74, 222, 128, 0.5), 0 0 25px rgba(74, 222, 128, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         #resetAllBtn {
             background: linear-gradient(135deg, #ef4444, #dc2626);
             color: white;
-            border: none;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         #resetAllBtn:hover {
             background: linear-gradient(135deg, #dc2626, #b91c1c);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.4);
+            box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5), 0 0 25px rgba(239, 68, 68, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         /* Capture buttons styling */
@@ -156,16 +161,18 @@
         #exportAllPdfBtn {
             background: linear-gradient(135deg, #f97316, #ea580c);
             color: white;
-            border: none;
-            border-radius: 12px;
-            font-weight: 700;
-            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.25);
+            padding: 10px 16px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
         }
 
         #exportAllPdfBtn:hover {
             background: linear-gradient(135deg, #ea580c, #dc2626);
             transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.4);
+            box-shadow: 0 6px 20px rgba(249, 115, 22, 0.5), 0 0 25px rgba(249, 115, 22, 0.3), inset 0 1px 0 rgba(255, 255, 255, 0.3);
         }
 
         .left-panels {
@@ -190,34 +197,49 @@
 
         .left-panels.collapsed .left-panel-tabs {
             flex-direction: column;
+            border-bottom: none;
+            border-right: 2px solid rgba(0, 0, 0, 0.05);
         }
 
         .left-panels.collapsed .left-panel-tab {
-            font-size: 18px;
-            padding: 15px 5px;
+            font-size: 22px;
+            padding: 12px 5px;
             min-height: 60px;
             display: flex;
             align-items: center;
             justify-content: center;
             position: relative;
+            border-bottom: none;
+            border-right: 3px solid transparent;
+            flex-direction: column;
+            gap: 0;
         }
 
-        .left-panels.collapsed .left-panel-tab::before {
-            content: '';
-            position: absolute;
-            font-size: 18px;
-        }
-
-        .left-panels.collapsed .left-panel-tab[data-tab="slides"]::before {
-            content: '📑';
-        }
-
-        .left-panels.collapsed .left-panel-tab[data-tab="elements"]::before {
-            content: '🎨';
+        .left-panels.collapsed .left-panel-tab .tab-icon {
+            display: block !important;
+            font-size: 24px;
+            filter: grayscale(0%);
+            opacity: 1;
+            transform: none;
         }
 
         .left-panels.collapsed .left-panel-tab .tab-text {
             display: none;
+        }
+
+        .left-panels.collapsed .left-panel-tab:hover .tab-icon {
+            transform: scale(1.2);
+        }
+
+        .left-panels.collapsed .left-panel-tab.active {
+            border-bottom: none;
+            border-right-color: #667eea;
+            box-shadow: inset -3px 0 0 0 #667eea, 2px 0 8px rgba(102, 126, 234, 0.15);
+            background: linear-gradient(to right, rgba(102, 126, 234, 0.1), transparent);
+        }
+
+        .left-panels.collapsed .left-panel-tab.active .tab-icon {
+            animation: none;
         }
 
         .left-panels.collapsed .left-panel-content {
@@ -227,30 +249,69 @@
 
         .left-panel-tabs {
             display: flex;
-            border-bottom: 1px solid var(--border-color);
+            border-bottom: 2px solid rgba(0, 0, 0, 0.05);
             flex-shrink: 0;
+            background: linear-gradient(to bottom, #ffffff, #f8f9fa);
         }
 
         .left-panel-tab {
             flex: 1;
-            padding: 15px;
+            padding: 12px 15px;
             text-align: center;
             cursor: pointer;
             font-weight: 600;
-            font-size: 14px;
-            color: var(--text-light);
-            transition: all 0.2s ease;
+            font-size: 13px;
+            color: #718096;
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             border-bottom: 3px solid transparent;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .left-panel-tab .tab-icon {
+            font-size: 20px;
+            transition: all 0.3s ease;
+            filter: grayscale(100%);
+            opacity: 0.6;
+        }
+
+        .left-panel-tab .tab-text {
+            font-size: 12px;
+            letter-spacing: 0.3px;
         }
 
         .left-panel-tab:hover {
-            background: rgba(102, 126, 234, 0.05);
-            color: var(--primary-color);
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+            color: #667eea;
+            transform: translateY(-2px);
+        }
+
+        .left-panel-tab:hover .tab-icon {
+            filter: grayscale(0%);
+            opacity: 1;
+            transform: scale(1.15);
         }
 
         .left-panel-tab.active {
-            color: var(--primary-color);
-            border-bottom-color: var(--primary-color);
+            color: #667eea;
+            border-bottom-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+            box-shadow: inset 0 -3px 0 0 #667eea, 0 2px 8px rgba(102, 126, 234, 0.15);
+        }
+
+        .left-panel-tab.active .tab-icon {
+            filter: grayscale(0%);
+            opacity: 1;
+            transform: scale(1.2);
+            animation: tabIconBounce 0.5s ease;
+        }
+
+        @keyframes tabIconBounce {
+            0%, 100% { transform: scale(1.2); }
+            50% { transform: scale(1.35); }
         }
 
         .left-panel-content {
