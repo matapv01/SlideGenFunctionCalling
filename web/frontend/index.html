@@ -1441,6 +1441,74 @@
             display: none;
         }
 
+        /* Dropdown options styling */
+        .dropdown-menu {
+            z-index: 9999 !important;
+            background-color: rgba(30, 30, 30, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .dropdown-menu .form-check {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dropdown-menu .form-check-input {
+            cursor: pointer;
+            width: 1.2em;
+            height: 1.2em;
+            margin-right: 0.5rem;
+        }
+
+        .dropdown-menu .form-check-label {
+            cursor: pointer;
+            color: #fff;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dropdown-menu .text-muted {
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-size: 0.8rem;
+            margin-top: 0.2rem;
+        }
+
+        .dropdown-menu .dropdown-item-text {
+            color: #fff;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+        }
+
+        .dropdown-menu .dropdown-item-text i {
+            margin-right: 0.3rem;
+        }
+
+        .dropdown-menu li {
+            padding: 0;
+        }
+
+        .dropdown-menu .form-check:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.25rem;
+        }
+
+        #slideOptionsDropdown {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        #slideOptionsDropdown:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
         /* Editor Page Styles */
         .sidebar {
             background-color: rgba(0, 0, 0, 0.3);
@@ -1687,10 +1755,41 @@
             </p>
 
             <div class="hero-buttons">
-                <button class="btn-glow btn-primary-glow" onclick="document.getElementById('docxFile').click()">
-                    <i class="bi bi-file-earmark-word"></i> Import DOCX
-                </button>
-                <input type="file" id="docxFile" accept=".docx,.zip">
+                <div class="d-flex align-items-center gap-2" style="position: relative; z-index: 1000;">
+                    <button class="btn-glow btn-primary-glow" onclick="document.getElementById('docxFile').click()">
+                        <i class="bi bi-file-earmark-word"></i> Import DOCX
+                    </button>
+                    <div class="dropdown">
+                        <button class="btn btn-outline-light dropdown-toggle" type="button" id="slideOptionsDropdown" data-bs-toggle="dropdown" aria-expanded="false" style="height: 50px; min-width: 50px;">
+                            <i class="bi bi-gear"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="slideOptionsDropdown" style="min-width: 280px;">
+                            <li class="dropdown-item-text">
+                                <strong><i class="bi bi-sliders"></i> Slide Options</strong>
+                            </li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li class="px-3 py-2" onclick="event.stopPropagation();">
+                                <div class="form-check" onclick="toggleCheckbox('enableTransitionSlides', event)">
+                                    <input class="form-check-input" type="checkbox" id="enableTransitionSlides" onclick="event.stopPropagation();">
+                                    <label class="form-check-label" for="enableTransitionSlides">
+                                        <i class="bi bi-arrow-right-circle"></i> Auto add Transition Slides
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block ms-4">Add slides between sections</small>
+                            </li>
+                            <li class="px-3 py-2" onclick="event.stopPropagation();">
+                                <div class="form-check" onclick="toggleCheckbox('enableThankYouSlide', event)">
+                                    <input class="form-check-input" type="checkbox" id="enableThankYouSlide" onclick="event.stopPropagation();">
+                                    <label class="form-check-label" for="enableThankYouSlide">
+                                        <i class="bi bi-hand-thumbs-up"></i> Auto add Thank You Slide
+                                    </label>
+                                </div>
+                                <small class="text-muted d-block ms-4">Add ending slide</small>
+                            </li>
+                        </ul>
+                    </div>
+                    <input type="file" id="docxFile" accept=".docx,.zip">
+                </div>
 
                 <button class="btn-glow btn-success-glow" onclick="createNewSlide()">
                     <i class="bi bi-plus-circle"></i> Create New Slide

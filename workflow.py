@@ -20,7 +20,8 @@ async def main_workflow(
     docx_file: str, 
     output_folder: str, 
     max_retries_per_slide: int = 1,
-    callback: Optional[Callable[[str, Dict[Any, Any]], None]] = None
+    callback: Optional[Callable[[str, Dict[Any, Any]], None]] = None,
+    slide_options: Optional[Dict[str, bool]] = None
 ):
     """
     Asynchronous main function to build and run the LangGraph workflow
@@ -33,6 +34,7 @@ async def main_workflow(
         max_retries_per_slide: Maximum retry attempts per slide
         callback: Optional callback function for streaming updates
                   Signature: callback(event_type: str, data: Dict[Any, Any])
+        slide_options: Options for slide generation (enable_transition_slides, enable_thank_you_slide)
     """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -111,6 +113,16 @@ async def main_workflow(
         app = workflow.compile()
 
         # ===== DEFINE CONFIG AND INITIAL INPUT =====
+        # Default slide options
+        if slide_options is None:
+            slide_options = {
+                "enable_transition_slides": True,
+                "enable_thank_you_slide": True
+            }
+        
+        print(f"🔧 DEBUG workflow.py: slide_options = {slide_options}")
+        print(f"🔧 DEBUG workflow.py: type = {type(slide_options)}")
+        
         initial_input = {
             "docx_file": docx_file,
             "current_slide_index": -1,
@@ -118,7 +130,8 @@ async def main_workflow(
             "final_slides": [],
             "all_debug_info": [],
             "llm": llm,
-            "vlm_decision": "accept"
+            "vlm_decision": "accept",
+            "slide_options": slide_options
         }
 
         graph_config = {

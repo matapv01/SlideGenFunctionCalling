@@ -1,7 +1,25 @@
 // Backend API base URL
 import { config } from './config.js';
 
+// Toggle checkbox function for dropdown
+window.toggleCheckbox = function(checkboxId, event) {
+    const checkbox = document.getElementById(checkboxId);
+    if (checkbox && event.target !== checkbox) {
+        checkbox.checked = !checkbox.checked;
+    }
+};
+
 document.addEventListener('DOMContentLoaded', function () {
+    // Set default checkbox values
+    const transitionCheckbox = document.getElementById('enableTransitionSlides');
+    const thankYouCheckbox = document.getElementById('enableThankYouSlide');
+    if (transitionCheckbox) transitionCheckbox.checked = true;
+    if (thankYouCheckbox) thankYouCheckbox.checked = true;
+    console.log('✅ Initialized checkboxes:', {
+        transition: transitionCheckbox?.checked,
+        thankYou: thankYouCheckbox?.checked
+    });
+    
     const docxInput = document.getElementById('docxFile');
     if (docxInput) {
         docxInput.addEventListener('change', function (e) {
@@ -89,6 +107,8 @@ function showToast(message, type) {
 }
 
 async function handleDocxImport() {
+    console.log('🚀 handleDocxImport called - NEW VERSION');
+    
     const docxInput = document.getElementById('docxFile');
     if (docxInput.files.length === 0) {
         showToast('Vui lòng chọn file DOCX!', 'error');
@@ -100,8 +120,31 @@ async function handleDocxImport() {
         showLoading("Đang tải file lên...");
         const formData = new FormData();
         formData.append('file', file);
+        
+        // Get slide options - explicitly convert to string
+        const transitionCheckbox = document.getElementById('enableTransitionSlides');
+        const thankYouCheckbox = document.getElementById('enableThankYouSlide');
+        
+        console.log('🔍 Checkbox elements:', { 
+            transitionCheckbox, 
+            thankYouCheckbox,
+            transitionChecked: transitionCheckbox?.checked,
+            thankYouChecked: thankYouCheckbox?.checked
+        });
+        
+        const enableTransitionSlides = transitionCheckbox ? transitionCheckbox.checked : true;
+        const enableThankYouSlide = thankYouCheckbox ? thankYouCheckbox.checked : true;
+        
+        // Convert boolean to string explicitly
+        formData.append('enable_transition_slides', enableTransitionSlides.toString());
+        formData.append('enable_thank_you_slide', enableThankYouSlide.toString());
 
         console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/upload-docx-for-stream');
+        console.log('Options (boolean):', { enableTransitionSlides, enableThankYouSlide });
+        console.log('Options (string):', { 
+            enable_transition_slides: enableTransitionSlides.toString(), 
+            enable_thank_you_slide: enableThankYouSlide.toString() 
+        });
         const response = await fetch(config.BACKEND_URL + '/api/upload-docx-for-stream', {
             method: 'POST',
             body: formData

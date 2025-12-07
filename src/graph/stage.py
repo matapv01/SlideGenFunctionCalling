@@ -9,6 +9,7 @@ class State(TypedDict, total=False):
     """
     # Input
     docx_file: str
+    slide_options: Dict  # Options for slide generation
 
     # Document processing state
     document_title: str
@@ -17,6 +18,7 @@ class State(TypedDict, total=False):
     slide_chunks: List[str]
     slide_positions: List[Any]
     slide_context_maps: List[str]
+    slide_types: List[str]  # 'intro', 'transition', or 'content'
     slide_plans: List[Dict]
 
     # Slide generation loop state

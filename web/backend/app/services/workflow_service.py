@@ -58,7 +58,8 @@ class WorkflowService:
         docx_path: str, 
         output_folder: str,
         router_flags: bool = False,
-        callback: Optional[Any] = None
+        callback: Optional[Any] = None,
+        slide_options: Optional[Dict[str, bool]] = None
     ) -> Optional[str]:
         """
         Process DOCX file using LangGraph AI workflow - EXACT COPY from main_web.py
@@ -68,6 +69,7 @@ class WorkflowService:
             output_folder: Output folder for slides
             router_flags: Enable router flags in workflow
             callback: Optional callback for streaming events
+            slide_options: Options for slide generation (transition_slides, thank_you_slide)
             
         Returns:
             Path to result ZIP file or None if failed
@@ -119,11 +121,13 @@ class WorkflowService:
             try:
                 # Run workflow in temporary directory
                 logger.info(f"Running workflow with temp directory: {temp_workflow_dir}")
+                logger.info(f"Slide options: {slide_options}")
                 result = await main_workflow(
                     router_flags=router_flags,
                     docx_file=docx_path,
                     output_folder=temp_workflow_dir,
-                    callback=callback
+                    callback=callback,
+                    slide_options=slide_options or {}
                 )
                 
                 # Find result ZIP file

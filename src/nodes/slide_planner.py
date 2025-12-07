@@ -37,6 +37,10 @@ You are an expert presentation designer and slide planner. Your task is to analy
     *   Suggest color themes, font styles, and whether an image or icon would enhance the message.
 3.  **Select the Right Tool Category (`action`):** Based on your vision and the content's purpose (e.g., introduction, main point, transition), you MUST choose exactly one tool category from the provided list. This choice determines which set of slide templates will be available in the next step.
 
+**SPECIAL RULE FOR FIRST SLIDE:**
+- If this is the FIRST slide of the presentation (slide number 1), you MUST use 'INTRO_TOOLS' regardless of content.
+- The first slide should always be an introduction/title slide.
+
 **CRITICAL OUTPUT REQUIREMENT:**
 - You MUST return ONLY a single, valid JSON object that strictly follows the required schema.
 - Do not add any text, explanations, or markdown formatting before or after the JSON object.
@@ -44,6 +48,9 @@ You are an expert presentation designer and slide planner. Your task is to analy
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """
+---
+**SLIDE NUMBER:** {slide_number}
+
 ---
 **PRESENTATION CONTEXT (OUTLINE):**
 This is the structure of the entire presentation. The "YOU ARE HERE" marker shows the position of the current slide you are planning.
@@ -106,6 +113,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     all_inputs = []
     for i, content in enumerate(slide_chunks):
         all_inputs.append({
+            "slide_number": i + 1,  # Add slide number (1-indexed)
             "slide_context_map": slide_context_maps[i],
             "slide_content": content
         })

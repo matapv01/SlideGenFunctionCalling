@@ -1,7 +1,7 @@
 """
 SlideGen Backend - Main FastAPI Application
 """
-from fastapi import FastAPI, File, UploadFile, HTTPException, Request
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Form
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -241,16 +241,83 @@ async def upload_docx(file: UploadFile = File(...)):
 
 
 @app.post("/api/upload-docx-for-stream")
-async def upload_docx_for_stream(file: UploadFile = File(...)):
+async def upload_docx_for_stream(
+    file: UploadFile = File(...),
+    enable_transition_slides: str = Form("true"),
+    enable_thank_you_slide: str = Form("true")
+):
     """Upload DOCX file and return filename for streaming"""
     if not file.filename.endswith('.docx'):
         raise HTTPException(status_code=400, detail="Only DOCX files accepted")
+    
+    # Clean up old temp files first
+    try:
+        deleted_count = 0
+        for old_file in TEMP_DIR.glob("*"):
+            if old_file.is_file():
+                try:
+                    old_file.unlink()
+                    deleted_count += 1
+                except Exception as e:
+                    logger.warning(f"Could not delete {old_file}: {e}")
+        if deleted_count > 0:
+            logger.info(f"🗑️ Cleaned up {deleted_count} old temp files")
+    except Exception as e:
+        logger.warning(f"Error cleaning temp directory: {e}")
+    
+    # Convert string to boolean
+    def str_to_bool(value: str) -> bool:
+        if isinstance(value, bool):
+            return value
+        return value.lower() in ('true', '1', 'yes', 'on')
+    
+    logger.info(f"📥 Received form data:")
+    logger.info(f"   - enable_transition_slides (raw): '{enable_transition_slides}' (type: {type(enable_transition_slides)})")
+    logger.info(f"   - enable_thank_you_slide (raw): '{enable_thank_you_slide}' (type: {type(enable_thank_you_slide)})")
+    
+    enable_transition = str_to_bool(enable_transition_slides)
+    enable_thank_you = str_to_bool(enable_thank_you_slide)
+    
+    logger.info(f"🔄 After parsing:")
+    logger.info(f"   - enable_transition: {enable_transition}")
+    logger.info(f"   - enable_thank_you: {enable_thank_you}")
     
     # Save temp file
     temp_path = TEMP_DIR / file.filename
     with open(temp_path, "wb") as f:
         content = await file.read()
         f.write(content)
+    
+    # Save options to JSON file with same name
+    import json
+    options_path = TEMP_DIR / f"{file.filename}.options.json"
+    
+    # Delete old options file if exists to avoid caching
+    if options_path.exists():
+        try:
+            options_path.unlink()
+            logger.info(f"🗑️ Deleted old options file: {options_path}")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not delete old options file: {e}")
+    
+    # Write new options
+    options_data = {
+        "enable_transition_slides": enable_transition,
+        "enable_thank_you_slide": enable_thank_you
+    }
+    
+    try:
+        with open(options_path, "w") as f:
+            json.dump(options_data, f, indent=2)
+        logger.info(f"💾 Successfully saved slide options to {options_path}")
+        logger.info(f"📄 File content: {options_data}")
+        
+        # Verify file was written correctly
+        with open(options_path, "r") as f:
+            verified = json.load(f)
+        logger.info(f"✅ Verified saved options: {verified}")
+    except Exception as e:
+        logger.error(f"❌ Error saving options: {e}")
     
     return JSONResponse(content={"filename": file.filename})
 
@@ -263,6 +330,24 @@ async def upload_docx_stream(filename: str):
     temp_path = TEMP_DIR / filename
     if not temp_path.exists() or not filename.endswith('.docx'):
         raise HTTPException(status_code=400, detail="Invalid file")
+    
+    # Load slide options
+    options_path = TEMP_DIR / f"{filename}.options.json"
+    slide_options = {
+        "enable_transition_slides": True,
+        "enable_thank_you_slide": True
+    }
+    if options_path.exists():
+        try:
+            with open(options_path, "r") as f:
+                slide_options = json.load(f)
+            logger.info(f"📋 Loaded slide options from file: {slide_options}")
+            logger.info(f"   - Transition slides: {slide_options.get('enable_transition_slides')}")
+            logger.info(f"   - Thank you slide: {slide_options.get('enable_thank_you_slide')}")
+        except Exception as e:
+            logger.warning(f"⚠️ Could not load slide options: {e}")
+    else:
+        logger.warning(f"⚠️ Options file not found: {options_path}")
     
     # Create project name from filename
     project_name = os.path.splitext(filename)[0]
@@ -323,7 +408,8 @@ async def upload_docx_stream(filename: str):
                     docx_path=str(temp_path),
                     output_folder=str(output_folder),
                     router_flags=False,
-                    callback=stream_callback
+                    callback=stream_callback,
+                    slide_options=slide_options
                 )
                 
                 if not workflow_result:

@@ -14,17 +14,24 @@ SLIDEGEN_SYSTEM_PROMPT = """
 
 **INSTRUCTIONS FOR FUNCTION CALL GENERATION:**
 
-1.  **Consult the Outline:** You will receive a `PRESENTATION OUTLINE` showing where the current slide fits. Use this to ensure your slide's tone and content logically connect with the rest of the presentation.
+1.  **Consult the Outline:** You will receive a `PRESENTATION OUTLINE` showing where the current slide fits. Use this to ensure your slide's tone and content logically connect with the rest of the presentation.  
+    – **The current slide MUST be consistent with the slide immediately before it**, including tone, structure, and narrative flow.
+
 2.  **Understand the Plan:** You will be given a `creative_plan` containing a `thought` (design direction) and an `action` (the required tool category). The tools available to you are limited to the category specified in the `action`.
+
 3.  **Analyze the Content:** You are given the raw `slide_content`. All information from this content must be preserved and represented in the slide.
+
 4.  **Select the Best Function:** From the available tools (defined by the plan's `action`), choose the single best function that matches the `thought` and the structure of the `slide_content`.
+
 5.  **Populate Parameters Thoughtfully:**
-    *   Synthesize the `slide_content` into concise bullet points, titles, and descriptions suitable for a presentation slide. Do not copy raw text directly.
-    *   Use the `thought` from the creative plan to guide your choices for colors, titles, and other visual parameters.
-    *   Ensure all text arguments are in the correct language of the presentation.
+    * Synthesize the `slide_content` into concise bullet points, titles, and descriptions suitable for a presentation slide. Do not copy raw text directly.
+    * Use the `thought` from the creative plan to guide your choices for colors, titles, and other visual parameters.
+    * Ensure all text arguments are in the correct language of the presentation.
+
 6.  **Handle Retries:**
-    *   If `previous_evaluation` feedback exists, you MUST address the critique.
-    *   Prioritize adjusting the parameters of your `previous_function_call` to fix the noted issues. Do not change the function/tool unless the feedback explicitly states the chosen tool was fundamentally wrong.
+    * If `previous_evaluation` feedback exists, you MUST address the critique.
+    * Prioritize adjusting the parameters of your `previous_function_call` to fix the noted issues. Do not change the function/tool unless the feedback explicitly states the chosen tool was fundamentally wrong.
+
 7.  **HTML Formatting:** Use HTML tags like `<b>`, `<i>`, and `<span style='color:...'>` within text parameters to add emphasis and visual interest, as guided by the content's importance.
 
 **Output Requirement:**

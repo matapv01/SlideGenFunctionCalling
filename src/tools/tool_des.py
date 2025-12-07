@@ -57,7 +57,6 @@ from src.tools.html_tool import (
     generate_body_slide18,  # slide content
     generate_body_slide19,  # slide content
     generate_body_slide20,  # slide content
-    generate_strategy_slide,  # slide content    
     generate_main_points_slide, # slide content
     generate_elegant_points_slide,  # slide content
     generate_horizontal_timeline_slide, # slide content
@@ -883,22 +882,6 @@ class GenerateBodySlide20Input(BaseModel):
     divider_color: str = Field(default="#555555", description="CSS color for the dashed divider line between columns.")
     font_family: str = Field(default="Arial, sans-serif", description="The CSS font family for all text on the slide.")
 
-class GenerateStrategySlideInput(BaseModel):
-    """Input schema for generate_strategy_slide."""
-    main_title: str = Field(..., description="A brief, concise title for the header section. Default: 'Your Strategic Topic Here'.")
-    subtitle: str = Field(..., description="A short subtitle providing context, displayed below the main title. Default: 'Add your key message or objective statement.'.")
-    left_column_title: str = Field(..., description="The main, large title for the left content card. Default: 'First Strategic Point'.")
-    left_column_content: str = Field(..., description="The detailed description text for the left content card. Default: 'Elaborate on your first main point or strategy. Provide details and benefits.'.")
-    right_column_title: str = Field(..., description="The main, large title for the right content card. Default: 'Second Strategic Point'.")
-    right_column_content: str = Field(..., description="The detailed description text for the right content card. Default: 'Elaborate on your second main point or strategy. Provide details and benefits.'.")
-    font_family: str = Field(default="'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", description="The font family for all text elements.")
-    header_bg_color: str = Field(default="#E0F2FE", description="Background color for the minimalist header section (light blue).")
-    content_bg_color: str = Field(default="#F8FAFC", description="Overall background color for the main content area (off-white).")
-    card_bg_color: str = Field(default="#FFFFFF", description="Background color for the two prominent content cards.")
-    title_color: str = Field(default="#1E3A8A", description="Text color for all titles (header and column titles) (dark navy).")
-    subtitle_color: str = Field(default="#475569", description="Text color for the header subtitle and the column content text (neutral gray).")
-    accent_color: str = Field(default="#3B82F6", description="The accent color used for the decorative icons above each column (vibrant blue).")
-
 class GenerateMainPointsSlideInput(BaseModel):
     """Input schema for generate_main_points_slide."""
     title: str = Field(..., description="Main title displayed at the top of the slide in uppercase")
@@ -1678,12 +1661,6 @@ CONTENT_TOOLS = [
         name="generate_body_slide20",
         description="Generates an HTML slide with a main title and two comparison columns separated by a dashed divider. Each column has an icon, title, and text content. The slide features a border design with accent color background.",
         args_schema=GenerateBodySlide20Input
-    ),
-    StructuredTool.from_function(
-        func=generate_strategy_slide,
-        name="generate_strategy_slide",
-        description="Generates a **Content Slide** with a two-column layout, specifically designed to emphasize the main content over the header. This slide features a bright, clean, and professional aesthetic with a minimalist header, an off-white background, and two prominent content cards, each highlighted by a large icon. It's ideal for presenting detailed strategies, in-depth comparisons, or core business pillars where the two main points require maximum space and attention.",
-        args_schema=GenerateStrategySlideInput
     ),
     StructuredTool.from_function(
         func=generate_main_points_slide,
