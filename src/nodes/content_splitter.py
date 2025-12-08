@@ -6,10 +6,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from src.graph.stage import State
 from langchain_core.runnables import RunnableConfig # <-- 1. IMPORT
+from src.utils.config import CONTENT_CHAR_LIMIT_FOR_SPLIT
 import time
-
-# Define a character limit. Content longer than this will be split by the LLM.
-CONTENT_CHAR_LIMIT_FOR_SPLIT = 1000 # You can adjust this value
 
 # --- REVISED PROMPTS FOR HIERARCHICAL SPLITTING ---
 

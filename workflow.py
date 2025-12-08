@@ -8,7 +8,15 @@ from src.utils import config
 from src.tools.tool_des import TOOLS_DICT
 from src.utils.tool_retriever import ToolRetriever
 from src.graph.builder import build_workflow
-from src.utils.config import initialize_playwright
+from src.utils.config import (
+    initialize_playwright,
+    LLM_MODEL,
+    LLM_BASE_URL,
+    LLM_TEMPERATURE,
+    LLM_MAX_TOKENS,
+    LLM_TOP_P,
+    VLM_MAX_RETRIES
+)
 import time
 from typing import Optional, Callable, Dict, Any
 
@@ -73,10 +81,11 @@ async def main_workflow(
         
         llm = LLM(
             api_keys=api_keys,
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            model="gemini-2.5-flash",
-            temperature=0.5,
-            max_tokens=20000,
+            base_url=LLM_BASE_URL,
+            model=LLM_MODEL,
+            temperature=LLM_TEMPERATURE,
+            max_tokens=LLM_MAX_TOKENS,
+            top_p=LLM_TOP_P
         )
 
         tool_retriever = ToolRetriever(

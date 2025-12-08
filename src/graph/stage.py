@@ -18,8 +18,7 @@ class State(TypedDict, total=False):
     slide_chunks: List[str]
     slide_positions: List[Any]
     slide_context_maps: List[str]
-    slide_types: List[str]  # 'intro', 'transition', or 'content'
-    slide_plans: List[Dict]
+    slide_plans: List[Dict]  # Contains 'action' field from planner (INTRO_TOOLS, etc.)
 
     # Slide generation loop state
     current_slide_index: int
@@ -32,6 +31,8 @@ class State(TypedDict, total=False):
     previous_image_path: str
     previous_accepted_tool_call: Dict
     previous_slide_context: slide_context
+    highlight_color: str  # Color for highlighting key phrases in content slides
+    previous_transition_tool_call: Dict  # Store previous transition tool for consistency
 
     # Retry and evaluation state
     retry_count: int

@@ -29,7 +29,6 @@ from src.tools.html_tool import (
     generate_memphis_transition_slide, # slide chuyển slide
     generate_pushpin_section_header,    # slide chuyển slide
     generate_section_header_slide,  # slide chuyển slide
-    generate_corporate_transition_slide,    # slide chuyển slide
     generate_intro_slide, # slide chuyển slide
     generate_credits_slide,     # slide chuyen slide
 
@@ -117,13 +116,14 @@ class GenerateTitleSlideInput(BaseModel):
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of the title and subtitle text (hex code).")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
+    font_family: str = Field(default="'Arial', sans-serif", description="Font family for all text elements.")
     show_skyline: Optional[bool] = Field(default=True, description="Whether to show the city skyline silhouette at the bottom. Default: True.")
-    skyline_opacity: Optional[float] = Field(default=0, description="Opacity of the skyline silhouette (0.0 to 1.0). Default: 0.3.")
-    triangle_opacity: Optional[float] = Field(default=0, description="Opacity of the triangle decorative elements (0.0 to 1.0). Default: 0.2.")
+    skyline_opacity: Optional[float] = Field(default=0.3, description="Opacity of the skyline silhouette (0.0 to 1.0). Default: 0.3.")
+    triangle_opacity: Optional[float] = Field(default=0.2, description="Opacity of the triangle decorative elements (0.0 to 1.0). Default: 0.2.")
     title_font_size: str = Field(default="5rem", description="Font size for the main title.")
     subtitle_font_size: str = Field(default="2rem", description="Font size for the subtitle.")
-    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
+    show_border: Optional[bool] = Field(default=True, description="Whether to show the border frame. Default: True.")
+    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
 
 
 class GenerateIntroductionSlideInput(BaseModel):
@@ -135,15 +135,15 @@ class GenerateIntroductionSlideInput(BaseModel):
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
     title_font_size: str = Field(default="4rem", description="Font size for the main title.")
     content_font_size: str = Field(default="1.4rem", description="Font size for the content text.")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
+    font_family: str = Field(default="'Arial', sans-serif", description="Font family for all text elements.")
     show_decorative_triangles: Optional[bool] = Field(default=True, description="Whether to show decorative triangle elements. Default: True.")
-    triangle_opacity: Optional[float] = Field(default=0, description="Opacity of the decorative triangles (0.0 to 1.0). Default: 0.15.")
+    triangle_opacity: Optional[float] = Field(default=0.15, description="Opacity of the decorative triangles (0.0 to 1.0). Default: 0.15.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
-    border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
+    border_opacity: Optional[float] = Field(default=0.4, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
     content_max_width: str = Field(default="800px", description="Maximum width of the content area.")
     line_height: str = Field(default="1.6", description="Line height for the content text.")
     letter_spacing: str = Field(default="0.1em", description="Letter spacing for the title.")
-    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
+    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
 
 class GenerateIntroSlide1Input(BaseModel):
     """Input schema for generate_intro_slide1."""
@@ -274,7 +274,6 @@ class GenerateMissionSlideInput(BaseModel):
 
 class GenerateGeometricTransitionSlideInput(BaseModel):
     """Input schema for generate_geometric_transition_slide."""
-    section_number: str = Field(default="1.", description="The number for the new section (e.g., '1.', '02', 'B.').")
     headline: str = Field(..., description="The main, uppercase headline for the transition. Default: 'TRANSITION HEADLINE'.")
     subtitle: str = Field(..., description="The smaller subtitle text displayed below the headline. Default: 'Let's start with the first set of slides'.")
     font_family: str = Field(default="'Poppins', sans-serif", description="The font family for all text elements.")
@@ -284,7 +283,6 @@ class GenerateGeometricTransitionSlideInput(BaseModel):
 
 class GenerateTransitionSlide2Input(BaseModel):
     """Input schema for generate_transition_slide_2."""
-    section_number: str = Field(default=None, description="The number or letter for the section (e.g., '1.', '2.', 'A.').")
     main_headline: str = Field(..., description="The large, uppercase headline for the transition. Default: 'HEADLINE'.")
     subtitle: str = Field(..., description="The smaller text below the headline. Default: 'Content'.")
     font_family_heading: str = Field(default="'Patrick Hand', cursive", description="The handwritten-style font for the headline and section number.")
@@ -335,16 +333,6 @@ class GenerateSectionHeaderSlideInput(BaseModel):
     gradient_color_2: str = Field(default="#F472B6", description="The second color for the soft aurora gradient background (e.g., pink).")
     gradient_color_3: str = Field(default="#7DD3FC", description="The third color for the soft aurora gradient background (e.g., light blue).")
 
-class GenerateCorporateTransitionSlideInput(BaseModel):
-    """Input schema for generate_corporate_transition_slide."""
-    headline: str = Field(default="TRANSITION<br>HEADLINE", description="The main headline text. Use <br> for a new line to control line breaks.")
-    subtitle: str = Field(default="Let's start with the first set of slides", description="The smaller subtitle text displayed below the main headline.")
-    font_family: str = Field(default="'Montserrat', sans-serif", description="The font family for all text elements.")
-    primary_color: str = Field(default="#FBBF24", description="The primary color for the angled panel.")
-    shadow_color: str = Field(default="#EAB308", description="The shadow color for the panel behind.")
-    headline_color: str = Field(default="#6B7280", description="The color for the main headline text.")
-    subtitle_color: str = Field(default="#FFFFFF", description="The color for the subtitle text.")
-
 class GenerateIntroSlideInput(BaseModel):
     """Input schema for generate_intro_slide."""
     main_title: str = Field(..., description="Main title text. Default: 'Main Title'.")
@@ -357,9 +345,10 @@ class GenerateIntroSlideInput(BaseModel):
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="16px", description="CSS font size for the subtitles.")
+    main_title_font_size: str = Field(default="4rem", description="CSS font size for the main title.")
+    subtitle_font_size: str = Field(default="1.5rem", description="CSS font size for the subtitles.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
+    image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide.")
 
 class GenerateCreditsSlideInput(BaseModel):
     """Input schema for generate_credits_slide."""
@@ -1495,12 +1484,6 @@ TRANSITION_TOOLS = [
         name="generate_section_header_slide",
         description="Generates a vibrant and dynamic Title or Section Header Slide. Its most distinctive feature is the animated 'geometric confetti' background, where sharp, minimalist shapes float upwards over a soft, aurora-like gradient. With its extra-large, centered title, this slide is perfect for creating a high-energy, modern opening or a memorable transition between topics.",
         args_schema=GenerateSectionHeaderSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_corporate_transition_slide,
-        name="generate_corporate_transition_slide",
-        description="Generates a modern and architectural **Section Header or Transition Slide**. It features a striking design with multiple overlapping, angled color panels on the right, creating a strong sense of depth and structure. The left side is a clean text area with large, impactful typography (including a section number), making this slide perfect for introducing new chapters in a professional, high-tech, or corporate presentation.",
-        args_schema=GenerateCorporateTransitionSlideInput
     ),
     StructuredTool.from_function(
         func=generate_intro_slide,

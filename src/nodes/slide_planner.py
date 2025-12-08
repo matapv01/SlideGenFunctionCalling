@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from src.graph.stage import State
 from langchain_core.runnables import RunnableConfig
+from src.utils.config import PLANNING_BATCH_SIZE
 import time
 
 # --- Pydantic Model for Structured LLM Output ---
@@ -29,17 +30,22 @@ You are an expert presentation designer and slide planner. Your task is to analy
 
 **INSTRUCTIONS:**
 
-1.  **Analyze the Inputs:** You will be given the slide's content and its context within the overall presentation outline.
+1.  **Check Slide Number FIRST:** Before anything else, check the SLIDE NUMBER provided.
 2.  **Develop a Creative Vision (`thought`):** Based on the content, describe your vision for the slide.
     *   What is the key message?
     *   What layout would be best (e.g., two-column, grid, single image with text)?
     *   What is the appropriate mood or tone (e.g., professional, playful, minimalist, high-tech)?
     *   Suggest color themes, font styles, and whether an image or icon would enhance the message.
-3.  **Select the Right Tool Category (`action`):** Based on your vision and the content's purpose (e.g., introduction, main point, transition), you MUST choose exactly one tool category from the provided list. This choice determines which set of slide templates will be available in the next step.
+3.  **Select the Right Tool Category (`action`):** Based on the slide number and content type, choose the appropriate tool category.
 
-**SPECIAL RULE FOR FIRST SLIDE:**
-- If this is the FIRST slide of the presentation (slide number 1), you MUST use 'INTRO_TOOLS' regardless of content.
-- The first slide should always be an introduction/title slide.
+**CRITICAL RULES FOR TOOL SELECTION:**
+- **SLIDE NUMBER 1 ONLY**: MUST use 'INTRO_TOOLS' - This is the title/introduction slide
+- **SLIDE NUMBER 2+**: Choose based on content:
+  * If content starts with "TRANSITION SLIDE" → use 'TRANSITION_TOOLS'
+  * If content starts with "THANK YOU SLIDE" → use 'THANK_YOU_TOOLS'
+  * If content is about team members → use 'TEAM_TOOLS'
+  * For all other content (main points, details, lists) → use 'CONTENT_TOOLS'
+- **NEVER use INTRO_TOOLS for slides after slide 1**
 
 **CRITICAL OUTPUT REQUIREMENT:**
 - You MUST return ONLY a single, valid JSON object that strictly follows the required schema.
@@ -48,8 +54,13 @@ You are an expert presentation designer and slide planner. Your task is to analy
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """
----
-**SLIDE NUMBER:** {slide_number}
+===============================================
+🔢 SLIDE NUMBER: {slide_number}
+===============================================
+
+IMPORTANT: 
+- If slide number is 1 → MUST use INTRO_TOOLS
+- If slide number is 2 or higher → NEVER use INTRO_TOOLS
 
 ---
 **PRESENTATION CONTEXT (OUTLINE):**
@@ -63,10 +74,6 @@ This is the raw text content for the slide you need to create a plan for.
 
 {slide_content}
 """
-
-
-# Define a manageable batch size to avoid overwhelming the API.
-PLANNING_BATCH_SIZE = 5 # You can adjust this value
 
 def planning_slide(state: State, config: RunnableConfig) -> State:
     """
