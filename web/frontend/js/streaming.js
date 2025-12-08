@@ -17,21 +17,27 @@ document.addEventListener('DOMContentLoaded', function () {
     // Get project info from URL params
     const urlParams = new URLSearchParams(window.location.search);
     const filename = urlParams.get('filename');
+    const session = urlParams.get('session');
     
-    if (!filename) {
-        showError('Không tìm thấy thông tin file');
+    // Check if this is from idea generation or file upload
+    if (session) {
+        // From "Create with Idea"
+        projectName = `idea_${session}`;
+        startStreamingFromIdea(session);
+    } else if (filename) {
+        // From file upload
+        projectName = filename.replace(/\.docx$/i, '');
+        
+        // Try to restore previous state
+        const restored = restoreStreamingState(filename);
+        
+        if (!restored) {
+            // Start streaming if not restored
+            startStreaming(filename);
+        }
+    } else {
+        showError('Không tìm thấy thông tin file hoặc session');
         return;
-    }
-    
-    // Extract project name from filename (remove .docx extension)
-    projectName = filename.replace(/\.docx$/i, '');
-    
-    // Try to restore previous state
-    const restored = restoreStreamingState(filename);
-    
-    if (!restored) {
-        // Start streaming if not restored
-        startStreaming(filename);
     }
     
     // Setup button handlers
@@ -134,6 +140,54 @@ function startStreaming(filename) {
             showToast('❌ Kết nối bị đóng', 'error');
             showError('Mất kết nối với server. Vui lòng thử lại.');
         }
+    };
+}
+
+function startStreamingFromIdea(session_id) {
+    console.log('Starting streaming from idea for session:', session_id);
+    showToast('🔗 Đang kết nối đến server...', 'info');
+    
+    // Make sure slides preview is visible
+    const slidesPreview = document.getElementById('slidesPreview');
+    if (slidesPreview) {
+        slidesPreview.style.display = 'block';
+    }
+    
+    // Close existing connection if any
+    if (eventSource) {
+        eventSource.close();
+    }
+    
+    // Create EventSource for idea-based SSE
+    const url = `${config.BACKEND_URL}/api/generate-from-idea-stream?session_id=${encodeURIComponent(session_id)}`;
+    console.log('Connecting to:', url);
+    eventSource = new EventSource(url);
+    
+    eventSource.onopen = function() {
+        console.log('✅ EventSource connected successfully');
+        showToast('✅ Đã kết nối thành công!', 'success');
+    };
+    
+    eventSource.onerror = function(error) {
+        console.error('❌ EventSource error:', error);
+        if (eventSource.readyState === EventSource.CLOSED) {
+            console.error('Connection was closed');
+            showToast('⚠️ Mất kết nối với server', 'error');
+        } else if (eventSource.readyState === EventSource.CONNECTING) {
+            console.log('🔄 Reconnecting...');
+        }
+    };
+    
+    // Handle different event types (same as file upload)
+    eventSource.addEventListener('status', handleStatusEvent);
+    eventSource.addEventListener('progress', handleProgressEvent);
+    eventSource.addEventListener('slide_completed', handleSlideCompletedEvent);
+    eventSource.addEventListener('complete', handleCompleteEvent);
+    eventSource.addEventListener('error_event', handleErrorEvent);
+    
+    // Also listen for generic message event (fallback)
+    eventSource.onmessage = function(event) {
+        console.log('Generic message received:', event.data);
     };
 }
 

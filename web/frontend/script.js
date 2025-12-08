@@ -552,3 +552,72 @@ async function exportToZip() {
         hideLoading();
     }
 }
+
+// Show idea modal
+window.showIdeaModal = function() {
+    const modal = new bootstrap.Modal(document.getElementById('ideaModal'));
+    modal.show();
+};
+
+// Generate slides from idea
+window.generateFromIdea = async function() {
+    const title = document.getElementById('ideaTitle').value.trim();
+    const prompt = document.getElementById('ideaPrompt').value.trim();
+    const contentLength = document.getElementById('ideaContentLength').value;
+    const enableTransitions = document.getElementById('ideaEnableTransitions').checked;
+    const enableThankYou = document.getElementById('ideaEnableThankYou').checked;
+
+    // Validation
+    if (!title) {
+        showToast('Vui lòng nhập tiêu đề presentation', 'error');
+        return;
+    }
+    if (!prompt) {
+        showToast('Vui lòng nhập ý tưởng của bạn', 'error');
+        return;
+    }
+
+    try {
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('ideaModal'));
+        modal.hide();
+
+        // Show loading
+        showLoading("Đang tạo slide từ ý tưởng của bạn...");
+
+        // Call backend API
+        const apiUrl = `${config.API_BASE_URL}/generate-from-idea`;
+        console.log('📡 Calling API:', apiUrl);
+        const response = await fetch(apiUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+                title: title,
+                prompt: prompt,
+                content_length: contentLength,
+                enable_transition_slides: enableTransitions,
+                enable_thank_you_slide: enableThankYou
+            })
+        });
+
+        if (!response.ok) {
+            const errorData = await response.json();
+            throw new Error(errorData.detail || 'Failed to generate slides from idea');
+        }
+
+        const result = await response.json();
+        
+        // Redirect to streaming page with session_id
+        if (result.session_id) {
+            window.location.href = `streaming.html?session=${result.session_id}`;
+        } else {
+            throw new Error('No session ID returned from server');
+        }
+
+    } catch (error) {
+        console.error('Error generating from idea:', error);
+        showToast(`Lỗi: ${error.message}`, 'error');
+    } finally {
+        hideLoading();
+    }
+};

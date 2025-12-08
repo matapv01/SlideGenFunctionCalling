@@ -101,11 +101,102 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
     slide_chunks = state.get('slide_chunks', [])
     slide_context_maps = state.get('slide_context_maps', [])
+    document_structure = state.get('document_structure', {})
     
-    if not slide_chunks or not slide_context_maps:
-        print("WARNING: No slide chunks or context maps found. Skipping planning.")
+    if not slide_chunks:
+        print("WARNING: No slide chunks found. Skipping planning.")
         state['slide_plans'] = []
         return state
+    
+    # --- DEBUG: Check slide_chunks type ---
+    print(f"🔍 DEBUG: slide_chunks type: {type(slide_chunks)}")
+    print(f"🔍 DEBUG: slide_chunks length: {len(slide_chunks)}")
+    if slide_chunks:
+        print(f"🔍 DEBUG: First chunk type: {type(slide_chunks[0])}")
+        print(f"🔍 DEBUG: First chunk: {slide_chunks[0]}")
+    
+    # --- VALIDATE slide_chunks format ---
+    # Ensure all chunks are dictionaries
+    validated_chunks = []
+    for i, chunk in enumerate(slide_chunks):
+        if isinstance(chunk, str):
+            print(f"⚠️  WARNING: Chunk {i} is a string, converting to dict format")
+            # Try to parse if it's JSON string
+            try:
+                import json
+                chunk = json.loads(chunk)
+            except:
+                # Create default dict format
+                chunk = {
+                    'position': i,
+                    'heading': f'Slide {i+1}',
+                    'text_content': chunk
+                }
+        elif not isinstance(chunk, dict):
+            print(f"⚠️  WARNING: Chunk {i} is not dict or string, creating default")
+            chunk = {
+                'position': i,
+                'heading': f'Slide {i+1}',
+                'text_content': str(chunk)
+            }
+        validated_chunks.append(chunk)
+    
+    slide_chunks = validated_chunks
+    state['slide_chunks'] = slide_chunks
+    
+    # --- AUTO-CREATE INTRO SLIDE IF MISSING ---
+    first_chunk = slide_chunks[0] if slide_chunks else {}
+    if first_chunk.get('position', 0) != 0:
+        print("⚠️  First chunk is not an intro slide. Creating intro slide...")
+        
+        # Get title from document structure
+        title = document_structure.get('title', 'Presentation Title')
+        
+        # Create intro chunk
+        intro_chunk = {
+            'position': 0,
+            'heading': '',
+            'text_content': f"Title: {title}\nSubtitle: Overview"
+        }
+        
+        # Insert at beginning
+        slide_chunks.insert(0, intro_chunk)
+        print(f"✅ Created intro slide with title: {title}")
+    
+    # --- REMOVE DUPLICATE THANK YOU SLIDES ---
+    thank_you_positions = []
+    for i, chunk in enumerate(slide_chunks):
+        if chunk.get('position') == -2 or chunk.get('heading') == 'THANK_YOU':
+            thank_you_positions.append(i)
+    
+    if len(thank_you_positions) > 1:
+        print(f"⚠️  Found {len(thank_you_positions)} thank you slides at positions: {thank_you_positions}")
+        # Keep only the last one (remove duplicates from end to start to preserve indices)
+        for pos in reversed(thank_you_positions[:-1]):
+            print(f"   Removing duplicate thank you slide at index {pos}")
+            slide_chunks.pop(pos)
+        print(f"✅ Kept only the last thank you slide")
+    
+    # Update state with cleaned chunks
+    state['slide_chunks'] = slide_chunks
+    
+    # Recreate or update context maps to match current chunks
+    if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
+        print(f"⚠️  Context maps mismatch (maps: {len(slide_context_maps)}, chunks: {len(slide_chunks)}). Regenerating...")
+        slide_context_maps = []
+        for i, chunk in enumerate(slide_chunks):
+            heading = chunk.get('heading', '')
+            position = chunk.get('position', i)
+            
+            if position == 0 or i == 0:
+                context = f"[Slide {i+1}] INTRO SLIDE"
+            elif heading == 'TRANSITION' or position == -1:
+                context = f"[Slide {i+1}] TRANSITION SLIDE"
+            elif heading == 'THANK_YOU' or position == -2:
+                context = f"[Slide {i+1}] THANK YOU SLIDE"
+            else:
+                context = f"[Slide {i+1}] {heading}"
+            slide_context_maps.append(context)
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
@@ -150,12 +241,15 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
         print(f"\n  -> Successfully generated plans for all {len(all_slide_plans)} slides.")
         state['slide_plans'] = all_slide_plans
+        # Save context maps to state (important for idea workflow)
+        state['slide_context_maps'] = slide_context_maps
 
     except Exception as e:
         print(f"  -> FAILED during batch planning. Error: {e}")
         # As a fallback, create default plans for all slides.
         default_plan = {"thought": "Default plan due to a batch error.", "action": "CONTENT_TOOLS"}
         state['slide_plans'] = [default_plan for _ in slide_chunks]
+        state['slide_context_maps'] = slide_context_maps  # Still save context maps
         print(f"  -> Created {len(state['slide_plans'])} default plans as a fallback.")
 
     end_time = time.time()

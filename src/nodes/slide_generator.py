@@ -13,28 +13,35 @@ import time
 INTRO_PROMPT = """
 🎯 **INTRO SLIDE** - This is the TITLE SLIDE of the entire presentation!
 
-**CRITICAL STYLING (NON-NEGOTIABLE):**
-* Title: font-size MUST be 96-120px! This is HUGE - think billboard size!
-* Subtitle: 44-52px
-* Make it visually DOMINATING - this is the first impression!
-* If tool has title_size parameter, set it to AT LEAST 100px
+**FONT SIZES (MANDATORY):**
+* Title: 120-140px (HUGE - readable from back of room!)
+* Subtitle: 50-60px
+* If tool has title_size param → set to 120px minimum
 
 **COLOR CONTRAST (CRITICAL - SLIDE WILL BE REJECTED IF UNREADABLE):**
-⚠️ Text color and background color MUST have EXTREME contrast! ⚠️
+🚨 TEXT MUST POP OUT FROM BACKGROUND - EXTREME CONTRAST REQUIRED! 🚨
 
-* SAFE COMBINATIONS (use these!):
-  ✅ White text (#FFFFFF) on dark blue (#1a4b8c, #2c3e50)
-  ✅ White text (#FFFFFF) on black (#000000, #1a1a1a)
-  ✅ Black text (#000000) on white (#FFFFFF)
-  ✅ Dark navy (#2c3e50) on light gray (#F5F5F5)
+* ONLY USE THESE SAFE COMBINATIONS:
+  ✅ #FFFFFF (pure white) on #000000 (black)
+  ✅ #FFFFFF (pure white) on #1a4b8c (dark blue)
+  ✅ #FFFFFF (pure white) on #2c3e50 (dark navy)
+  ✅ #000000 (pure black) on #FFFFFF (white)
+  ✅ #000000 (pure black) on #F8F9FA (off-white)
+  ✅ #1a1a1a (near black) on #ECF0F1 (light gray)
 
-* FORBIDDEN COMBINATIONS (NEVER use!):
-  ❌ Gray text on gray background
-  ❌ Light blue text on white background
-  ❌ Dark blue text on black background
-  ❌ Any text color within 3 shades of background color
+* ABSOLUTELY FORBIDDEN COMBINATIONS:
+  ❌ #555555 on #333333 (gray on dark gray - INVISIBLE!)
+  ❌ #CCCCCC on #FFFFFF (light gray on white - CAN'T READ!)
+  ❌ #3498db on #5DADE2 (blue on light blue - SAME COLOR!)
+  ❌ #444444 on #666666 (dark gray on gray - TOO SIMILAR!)
+  ❌ #2c3e50 on #34495e (navy on navy - BLENDS IN!)
+  ❌ ANY text color that looks similar to background
 
-* RULE: If you can't immediately tell the difference, DON'T USE IT!
+* MANDATORY RULE: 
+  - Background DARK? → Text MUST be #FFFFFF (white)
+  - Background LIGHT? → Text MUST be #000000 (black)
+  - Background COLORED? → Text MUST be #FFFFFF (white)
+  - NO EXCEPTIONS! When in doubt, use white on dark or black on light!
 
 **IMAGE SELECTION:**
 * Extract the MAIN TOPIC from content (AI, business, technology, etc.)
@@ -54,25 +61,28 @@ INTRO_PROMPT = """
 TRANSITION_PROMPT = """
 🎯 **TRANSITION SLIDE** - Section divider between major topics!
 
-**CRITICAL STYLING:**
-* Main text: font-size MUST be 64-80px (bold, centered)
-* This is a CHAPTER TITLE - needs to be HUGE!
+**FONT SIZES:**
+* Main text: 70-90px (bold, centered)
 
-**COLOR CONTRAST (CRITICAL - NO EXCEPTIONS):**
-⚠️ HUGE TEXT NEEDS EXTREME CONTRAST! ⚠️
+**COLOR CONTRAST (CRITICAL - TRANSITION MUST BE HIGHLY VISIBLE):**
+🚨 HUGE SECTION TITLE MUST BE READABLE FROM ACROSS THE ROOM! 🚨
 
-* ONLY USE THESE COMBINATIONS:
-  ✅ #FFFFFF (white) on #000000 (black)
-  ✅ #FFFFFF (white) on #1a4b8c (dark blue)
-  ✅ #FFFFFF (white) on #2c3e50 (dark navy)
-  ✅ #000000 (black) on #FFFFFF (white)
-  ✅ #2c3e50 (navy) on #ECF0F1 (light gray)
+* MANDATORY SAFE COMBINATIONS (PICK ONE):
+  ✅ #FFFFFF (pure white) on #000000 (black)
+  ✅ #FFFFFF (pure white) on #1a4b8c (dark blue)
+  ✅ #FFFFFF (pure white) on #2c3e50 (dark navy)
+  ✅ #000000 (pure black) on #FFFFFF (white)
+  ✅ #000000 (pure black) on #F8F9FA (off-white)
 
-* ABSOLUTELY FORBIDDEN:
-  ❌ Any shade of gray on another gray
-  ❌ Colored text on colored background
-  ❌ Light text on light background
-  ❌ Dark text on dark background
+* STRICTLY FORBIDDEN (WILL BE REJECTED):
+  ❌ #555555 on #333333 (gray on gray - INVISIBLE!)
+  ❌ #CCCCCC on #FFFFFF (too light - CAN'T READ!)
+  ❌ #3498db on #5DADE2 (blue on blue - SAME COLOR!)
+  ❌ #2c3e50 on #34495e (navy on navy - BLENDS!)
+  ❌ Any colored text on colored background
+  ❌ Any text within 5 shades of background
+
+* SIMPLE RULE: White text on dark OR Black text on light - NOTHING ELSE!
 
 **IMAGE SELECTION:**
 * Extract the SECTION TOPIC from the heading (e.g., "Data Analysis" → seed/data/1600/900)
@@ -94,36 +104,72 @@ TRANSITION_PROMPT = """
 CONTENT_PROMPT = """
 🎯 **CONTENT SLIDE** - Main informational slide with details.
 
-**CRITICAL STYLING:**
-* Title: font-size 40-48px (clear hierarchy)
-* Body text: 26-32px (readable from distance)
-* Use bullet points for lists
+**FONT SIZES:**
+* Title: 48-56px
+* Body text: 32-38px
+* Bullets: use • or numbered lists
 
 **COLOR CONTRAST (CRITICAL - READABILITY IS PRIORITY #1):**
-⚠️ If audience can't read it from 3 meters away, it's WRONG! ⚠️
+🚨 TEXT MUST BE READABLE FROM 5 METERS AWAY - NO EXCEPTIONS! 🚨
 
-* TEXT COLOR RULES:
-  - Dark background? → Use ONLY #FFFFFF or #F8F9FA (pure white/off-white)
-  - Light background? → Use ONLY #000000, #1a1a1a, or #2c3e50 (black/navy)
-  - NO middle ground! Contrast must be EXTREME!
+* MANDATORY TEXT COLOR RULES (FOLLOW EXACTLY):
+  1. If background is DARK (black, navy, dark blue, dark gray):
+     → Main text MUST be #FFFFFF (pure white)
+     → Secondary text MUST be #E0E0E0 or lighter
+     
+  2. If background is LIGHT (white, light gray, light blue, cream):
+     → Main text MUST be #000000 or #1a1a1a (pure black/near black)
+     → Secondary text MUST be #333333 or darker
+     
+  3. If background is COLORED (blue, purple, green, etc.):
+     → ALWAYS use #FFFFFF (white) text
+     → NEVER use colored text on colored background
+
+* STRICT CONTRAST REQUIREMENTS:
+  ✅ CORRECT EXAMPLES:
+     - #FFFFFF text on #1a1a1a background
+     - #000000 text on #FFFFFF background
+     - #FFFFFF text on #3498db background
+     - #000000 text on #F8F9FA background
+     
+  ❌ ABSOLUTELY FORBIDDEN (WILL BE REJECTED):
+     - #555555 text on #333333 background (gray on gray)
+     - #CCCCCC text on #FFFFFF background (too light)
+     - #444444 text on #666666 background (similar shades)
+     - #3498db text on #5DADE2 background (blue on blue)
+     - #e74c3c text on #EC7063 background (red on red)
+     - ANY text color within 5 shades of background color
 
 * HIGHLIGHT COLOR RULES:
-  - On white bg: Use #e74c3c (bright red), #3498db (bright blue), #f39c12 (bright orange)
-  - On dark bg: Use #FFFFFF with bold weight
-  - NEVER use pastel colors or muted tones
-
-* FORBIDDEN:
-  ❌ #555555 on #333333
-  ❌ #CCCCCC on #FFFFFF
-  ❌ #444444 on #666666
-  ❌ ANY similar shades
+  - On white/light bg: Use ONLY #e74c3c (red), #3498db (blue), #f39c12 (orange), #9b59b6 (purple)
+  - On dark bg: Use ONLY #FFFFFF with bold weight, or very bright colors (#00FF00, #FFFF00)
+  - NEVER use pastel, muted, or similar tones to background
 
 **KEY PHRASE HIGHLIGHTING (MANDATORY):**
 * Identify 2-4 KEY PHRASES in the content (important terms, concepts)
 * Wrap them with: `<span style="color: COLOR; font-weight: bold;">phrase</span>`
-* COLOR SELECTION:
+
+* HIGHLIGHT COLOR RULES (CRITICAL):
   {highlight_instruction}
-* Good color choices: #e74c3c (red), #3498db (blue), #f39c12 (orange), #9b59b6 (purple), #16a085 (teal)
+  
+  ON WHITE/LIGHT BACKGROUNDS - Use these BRIGHT colors:
+  ✅ #e74c3c (bright red)
+  ✅ #3498db (bright blue) 
+  ✅ #f39c12 (bright orange)
+  ✅ #9b59b6 (bright purple)
+  ✅ #16a085 (teal)
+  
+  ON DARK BACKGROUNDS - Use white with bold:
+  ✅ #FFFFFF (white) + font-weight: bold
+  ✅ #FFD700 (gold) for emphasis
+  ✅ #00FF00 (bright green) for success
+  
+  NEVER USE on any background:
+  ❌ Pastel colors (#E8DAEF, #D5F4E6, #FAD7A0)
+  ❌ Light colors on light bg (#CCCCCC on #FFFFFF)
+  ❌ Dark colors on dark bg (#333333 on #000000)
+  ❌ Similar shade to background
+
 * Example: "AI can help with <span style=\"color: #e74c3c; font-weight: bold;\">automation</span>"
 
 **IMAGE SELECTION:**
@@ -141,8 +187,8 @@ CONTENT_PROMPT = """
 THANK_YOU_PROMPT = """
 🎯 **THANK YOU SLIDE** - Final closing slide!
 
-**CRITICAL STYLING:**
-* Main text: font-size 60-72px (elegant, centered)
+**FONT SIZES:**
+* Main text: 70-80px (centered)
 * Simple and professional
 
 **COLOR CONTRAST (CRITICAL - FINAL IMPRESSION MUST BE CLEAR):**
@@ -168,9 +214,9 @@ THANK_YOU_PROMPT = """
 TEAM_PROMPT = """
 🎯 **TEAM SLIDE** - Team introduction or contact info.
 
-**CRITICAL STYLING:**
-* Names: font-size 36-44px
-* Roles/titles: 24-28px
+**FONT SIZES:**
+* Names: 40-48px
+* Roles: 28-32px
 
 **COLOR CONTRAST (MANDATORY - NAMES MUST BE READABLE):**
 ⚠️ People's names deserve CLEAR visibility! ⚠️

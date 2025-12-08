@@ -753,12 +753,13 @@ async def serve_temp_file(path: str):
     """Serve file from temporary workflow directory via query parameter"""
     logger.info(f"📂 Serving temp file request: {path}")
     
-    # Security: only allow serving from slidegen_workflow_* directories (both Linux and Windows)
+    # Security: only allow serving from slidegen_workflow_* or slidegen_idea_* directories
     normalized_path = path.replace('\\', '/')
-    is_linux_temp = normalized_path.startswith('/tmp/slidegen_workflow_')
-    is_windows_temp = 'slidegen_workflow_' in normalized_path and ('Temp' in path or 'temp' in path)
+    is_linux_workflow = normalized_path.startswith('/tmp/slidegen_workflow_')
+    is_linux_idea = normalized_path.startswith('/tmp/slidegen_idea_')
+    is_windows_temp = ('slidegen_workflow_' in normalized_path or 'slidegen_idea_' in normalized_path) and ('Temp' in path or 'temp' in path)
     
-    if not (is_linux_temp or is_windows_temp):
+    if not (is_linux_workflow or is_linux_idea or is_windows_temp):
         logger.warning(f"⚠️ Access denied for path: {path}")
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -781,12 +782,13 @@ async def cleanup_temp_directory(request: Request):
         if not temp_dir:
             return JSONResponse(content={"success": False, "message": "No temp directory specified"})
         
-        # Security: only allow deleting slidegen_workflow_* directories (both Linux and Windows)
+        # Security: only allow deleting slidegen_workflow_* or slidegen_idea_* directories
         normalized_path = temp_dir.replace('\\', '/')
-        is_linux_temp = normalized_path.startswith('/tmp/slidegen_workflow_')
-        is_windows_temp = 'slidegen_workflow_' in normalized_path and ('Temp' in temp_dir or 'temp' in temp_dir)
+        is_linux_workflow = normalized_path.startswith('/tmp/slidegen_workflow_')
+        is_linux_idea = normalized_path.startswith('/tmp/slidegen_idea_')
+        is_windows_temp = ('slidegen_workflow_' in normalized_path or 'slidegen_idea_' in normalized_path) and ('Temp' in temp_dir or 'temp' in temp_dir)
         
-        if not (is_linux_temp or is_windows_temp):
+        if not (is_linux_workflow or is_linux_idea or is_windows_temp):
             raise HTTPException(status_code=403, detail="Invalid temp directory")
         
         temp_path = Path(temp_dir)
@@ -800,3 +802,429 @@ async def cleanup_temp_directory(request: Request):
     except Exception as e:
         logger.error(f"Cleanup error: {e}")
         return JSONResponse(content={"success": False, "error": str(e)}, status_code=500)
+
+
+@app.post("/api/generate-from-idea")
+async def generate_from_idea(request: Request):
+    """Generate slides from natural language idea using LLM"""
+    try:
+        data = await request.json()
+        title = data.get('title', '').strip()
+        prompt = data.get('prompt', '').strip()
+        content_length = data.get('content_length', 'standard')
+        enable_transition_slides = data.get('enable_transition_slides', True)
+        enable_thank_you_slide = data.get('enable_thank_you_slide', True)
+        
+        if not title or not prompt:
+            raise HTTPException(status_code=400, detail="Title and prompt are required")
+        
+        # Map content length to slide range (TOTAL slides including all types)
+        length_map = {
+            'brief': {'min': 5, 'max': 8, 'desc': 'Quick overview'},
+            'standard': {'min': 8, 'max': 12, 'desc': 'Balanced coverage'},
+            'detailed': {'min': 12, 'max': 18, 'desc': 'Comprehensive'},
+            'extensive': {'min': 18, 'max': 25, 'desc': 'In-depth analysis'}
+        }
+        length_info = length_map.get(content_length, length_map['standard'])
+        
+        # Calculate actual content slide target by subtracting overhead
+        # Assumptions:
+        # - 1 intro slide (always)
+        # - Estimate sections: brief=2, standard=3, detailed=4, extensive=5
+        # - 1 transition per section (if enabled)
+        # - 1 thank you slide (if enabled)
+        
+        estimated_sections = {
+            'brief': 2,
+            'standard': 3,
+            'detailed': 4,
+            'extensive': 5
+        }.get(content_length, 3)
+        
+        overhead_slides = 1  # Always 1 intro
+        if enable_transition_slides:
+            # Estimate transitions: typically sections - 1 (no transition before first section)
+            estimated_transitions = max(0, estimated_sections - 1)
+            overhead_slides += estimated_transitions
+            logger.info(f"   Estimated {estimated_transitions} transition slides for {estimated_sections} sections")
+        
+        if enable_thank_you_slide:
+            overhead_slides += 1
+            logger.info(f"   Including 1 thank you slide")
+        
+        # Calculate target content slide range
+        content_min = max(1, length_info['min'] - overhead_slides)
+        content_max = max(content_min + 1, length_info['max'] - overhead_slides)
+        
+        logger.info(f"🤖 Generating slides from idea:")
+        logger.info(f"   Title: {title}")
+        logger.info(f"   Prompt length: {len(prompt)} chars")
+        logger.info(f"   Total slide range: {length_info['min']}-{length_info['max']} slides")
+        logger.info(f"   Overhead slides: {overhead_slides} (intro + transitions + thank you)")
+        logger.info(f"   Target content slides: {content_min}-{content_max}")
+        logger.info(f"   Options: transitions={enable_transition_slides}, thank_you={enable_thank_you_slide}")
+        
+        # Call LLM to generate slide structure
+        from src.models.llm import LLM
+        import os
+        
+        gemini_api_key = os.getenv('GEMINI_API_KEY')
+        if not gemini_api_key:
+            raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
+        
+        llm = LLM(
+            api_keys=[gemini_api_key],
+            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
+            model="gemini-2.0-flash-exp",
+            temperature=0.7,
+            max_tokens=4096
+        )
+        
+        # Build structured prompt for slide generation
+        structure_prompt = f"""You are a presentation structure generator. Given a title and description, create a logical slide structure.
+
+PRESENTATION TITLE: {title}
+
+USER DESCRIPTION:
+{prompt}
+
+CONTENT DEPTH: {content_length.upper()} ({length_info['desc']})
+TOTAL SLIDE TARGET: {length_info['min']}-{length_info['max']} slides (including ALL types)
+CONTENT SLIDE TARGET: {content_min}-{content_max} slides (after accounting for intro, transitions, thank you)
+
+SLIDE COMPOSITION:
+- 1 intro slide (position 0) - MANDATORY
+- {content_min} to {content_max} content slides (position 1, 2, 3...) - MAIN CONTENT
+- {"~" + str(estimated_sections - 1) + " transition slides (position -1) - between sections" if enable_transition_slides else "No transition slides"}
+- {"1 thank you slide (position -2) - at end" if enable_thank_you_slide else "No thank you slide"}
+- Expected total: {length_info['min']}-{length_info['max']} slides
+
+INSTRUCTIONS:
+1. Organize content into approximately {estimated_sections} major sections
+2. First slide MUST be intro/title slide (position 0)
+3. Generate EXACTLY {content_min} to {content_max} content slides (position 1, 2, 3...)
+4. Each section should have a clear heading (use markdown ## for major sections)
+5. Provide brief bullet points for each slide's content (3-5 points per slide)
+6. If transitions enabled: Add transition slide (position -1) BETWEEN each major section
+7. If thank you enabled: End with thank you slide (position -2)
+
+OUTPUT FORMAT (JSON):
+{{
+  "slide_chunks": [
+    {{"position": 0, "heading": "", "text_content": "Title: [title]\\nSubtitle: [subtitle]"}},
+    {{"position": 1, "heading": "Section 1 Title", "text_content": "- Point 1\\n- Point 2\\n- Point 3"}},
+    {{"position": -1, "heading": "TRANSITION", "text_content": "Moving to: Next Section"}},
+    {{"position": 2, "heading": "Section 2 Title", "text_content": "- Point A\\n- Point B"}},
+    ...
+    {{"position": -2, "heading": "THANK_YOU", "text_content": "Thank you for your attention!"}}
+  ]
+}}
+
+IMPORTANT RULES - FOLLOW EXACTLY:
+- position: 0 for intro, -1 for transitions, -2 for thank you, regular numbers (1,2,3...) for content slides
+- heading: Empty string for intro, "TRANSITION" for transitions, "THANK_YOU" for thank you, actual section titles for content
+- text_content: For intro use "Title: X\\nSubtitle: Y" format, for content use bullet points with "-", keep concise
+
+CRITICAL REQUIREMENTS:
+1. Generate EXACTLY {content_min} to {content_max} CONTENT slides (position 1, 2, 3...)
+   - This is calculated to ensure total slides fit in range {length_info['min']}-{length_info['max']}
+   - DO NOT exceed {content_max} content slides
+   
+2. Structure with approximately {estimated_sections} major sections
+   - Distribute content slides across these sections
+   - Each section should have multiple slides
+   
+3. Transition slides (position -1):
+   - {"Add transition between each major section change" if enable_transition_slides else "DO NOT add any transitions"}
+   - {"Expected ~" + str(estimated_sections - 1) + " transitions total" if enable_transition_slides else ""}
+   
+4. Thank you slide (position -2):
+   - {"Add ONE thank you slide at the very end" if enable_thank_you_slide else "DO NOT add thank you slide"}
+
+FINAL CHECK:
+- Intro: 1 slide
+- Content: {content_min}-{content_max} slides
+- Transitions: {"~" + str(estimated_sections - 1) if enable_transition_slides else "0"} slides
+- Thank you: {"1" if enable_thank_you_slide else "0"} slide
+- TOTAL should be approximately {length_info['min']}-{length_info['max']} slides
+
+Now generate the slide structure as valid JSON only (no markdown code blocks):"""
+        
+        # Call LLM
+        logger.info("📤 Calling LLM for slide structure generation...")
+        response_text = llm.invoke(structure_prompt)
+        logger.info(f"📥 LLM response length: {len(response_text)} chars")
+        
+        # Parse JSON response
+        import json
+        import re
+        
+        # Try to extract JSON from response (handle markdown code blocks)
+        json_match = re.search(r'\{[\s\S]*\}', response_text)
+        if json_match:
+            json_str = json_match.group(0)
+        else:
+            json_str = response_text
+        
+        try:
+            structure_data = json.loads(json_str)
+            slide_chunks = structure_data.get('slide_chunks', [])
+        except json.JSONDecodeError as e:
+            logger.error(f"Failed to parse LLM response as JSON: {e}")
+            logger.error(f"Response text: {response_text[:500]}")
+            raise HTTPException(status_code=500, detail="Failed to parse LLM response")
+        
+        if not slide_chunks:
+            raise HTTPException(status_code=500, detail="No slides generated")
+        
+        # Validate and adjust slide count
+        content_slides = [s for s in slide_chunks if isinstance(s.get('position'), int) and s.get('position') > 0]
+        intro_slides = [s for s in slide_chunks if s.get('position') == 0]
+        transition_slides = [s for s in slide_chunks if s.get('position') == -1]
+        thank_you_slides = [s for s in slide_chunks if s.get('position') == -2]
+        
+        total_slides = len(slide_chunks)
+        
+        logger.info(f"📊 Slide breakdown:")
+        logger.info(f"   Intro: {len(intro_slides)}")
+        logger.info(f"   Content: {len(content_slides)}")
+        logger.info(f"   Transitions: {len(transition_slides)}")
+        logger.info(f"   Thank you: {len(thank_you_slides)}")
+        logger.info(f"   TOTAL: {total_slides} slides")
+        
+        # Validate content slide count
+        if not (content_min <= len(content_slides) <= content_max):
+            logger.warning(f"⚠️  Content slides: {len(content_slides)} (expected: {content_min}-{content_max})")
+        
+        # Validate total slide count
+        if not (length_info['min'] <= total_slides <= length_info['max']):
+            logger.warning(f"⚠️  Total slides: {total_slides} (target range: {length_info['min']}-{length_info['max']})")
+        else:
+            logger.info(f"✅ Total slide count within target range!")
+        
+        logger.info(f"✅ Generated {len(slide_chunks)} total slide chunks")
+        
+        # Save to temp file (mimic DOCX upload flow)
+        import uuid
+        session_id = str(uuid.uuid4())[:8]
+        temp_filename = f"idea_{session_id}.json"
+        temp_path = TEMP_DIR / temp_filename
+        
+        # Save slide chunks
+        with open(temp_path, 'w', encoding='utf-8') as f:
+            json.dump({
+                'title': title,
+                'slide_chunks': slide_chunks,
+                'enable_transition_slides': enable_transition_slides,
+                'enable_thank_you_slide': enable_thank_you_slide
+            }, f, indent=2, ensure_ascii=False)
+        
+        # Save options file
+        options_path = TEMP_DIR / f"{temp_filename}.options.json"
+        with open(options_path, 'w') as f:
+            json.dump({
+                'enable_transition_slides': enable_transition_slides,
+                'enable_thank_you_slide': enable_thank_you_slide
+            }, f, indent=2)
+        
+        logger.info(f"💾 Saved slide structure to {temp_path}")
+        
+        return JSONResponse(content={
+            'session_id': session_id,
+            'filename': temp_filename,
+            'slide_count': len(slide_chunks),
+            'is_from_idea': True  # Flag to use different streaming endpoint
+        })
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Error generating from idea: {e}")
+        import traceback
+        logger.error(traceback.format_exc())
+        raise HTTPException(status_code=500, detail=f"Failed to generate slides: {str(e)}")
+
+
+@app.get("/api/generate-from-idea-stream")
+async def generate_from_idea_stream(session_id: str):
+    """Stream processing of idea-generated slides with Server-Sent Events"""
+    
+    # Validate session file
+    temp_filename = f"idea_{session_id}.json"
+    temp_path = TEMP_DIR / temp_filename
+    if not temp_path.exists():
+        raise HTTPException(status_code=400, detail="Invalid session")
+    
+    # Load slide chunks and options
+    try:
+        with open(temp_path, 'r', encoding='utf-8') as f:
+            idea_data = json.load(f)
+        
+        title = idea_data.get('title', 'Untitled')
+        slide_chunks = idea_data.get('slide_chunks', [])
+        slide_options = {
+            'enable_transition_slides': idea_data.get('enable_transition_slides', True),
+            'enable_thank_you_slide': idea_data.get('enable_thank_you_slide', True)
+        }
+        
+        logger.info(f"📋 Loaded idea data: {len(slide_chunks)} chunks, title='{title}'")
+        
+    except Exception as e:
+        logger.error(f"Failed to load idea data: {e}")
+        raise HTTPException(status_code=500, detail="Failed to load idea data")
+    
+    # Create project name
+    project_name = f"idea_{session_id}"
+    output_folder = OUTPUT_DIR / project_name
+    
+    # Handle existing project folder
+    if output_folder.exists():
+        try:
+            shutil.rmtree(output_folder)
+        except PermissionError:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            project_name = f"{project_name}_{timestamp}"
+            output_folder = OUTPUT_DIR / project_name
+    
+    output_folder.mkdir(parents=True, exist_ok=True)
+    
+    # Store temp directory path for cleanup later
+    temp_workflow_dir = None
+    
+    async def event_generator() -> AsyncGenerator[str, None]:
+        """Generate Server-Sent Events for workflow progress"""
+        nonlocal temp_workflow_dir
+        
+        # Queue for events
+        event_queue = asyncio.Queue()
+        workflow_done = asyncio.Event()
+        workflow_error = None
+        
+        def stream_callback(event_type: str, data: dict):
+            """Callback to receive events from workflow"""
+            try:
+                logger.info(f"🔔 Stream callback: {event_type} - {data}")
+                
+                # For slide_completed, keep the temp path for real-time access
+                if event_type == 'slide_completed' and 'html_path' in data:
+                    temp_path_slide = data['html_path']
+                    data['html_path'] = temp_path_slide
+                    data['is_temp'] = True
+                    logger.info(f"🎯 Streaming temp file: {temp_path_slide}")
+                
+                # Send all events immediately for real-time streaming
+                event_queue.put_nowait((event_type, data))
+            except Exception as e:
+                logger.error(f"Error in stream callback: {e}")
+        
+        async def run_workflow():
+            """Run workflow in background with pre-loaded slide chunks"""
+            nonlocal workflow_error, temp_workflow_dir
+            try:
+                if not workflow_service or not workflow_service.is_available():
+                    raise Exception("Workflow service not available")
+                
+                # Call workflow with slide_chunks directly (skip document conversion)
+                workflow_result = await workflow_service.process_idea_with_workflow(
+                    slide_chunks=slide_chunks,
+                    title=title,
+                    output_folder=str(output_folder),
+                    callback=stream_callback,
+                    slide_options=slide_options
+                )
+                
+                if not workflow_result:
+                    raise Exception("Workflow did not produce valid output")
+                
+                # Unpack result
+                result_zip, temp_workflow_dir = workflow_result
+                logger.info(f"📁 Temp workflow directory: {temp_workflow_dir}")
+                logger.info(f"📦 Result ZIP: {result_zip}")
+                
+                if result_zip and os.path.exists(result_zip):
+                    # Extract ZIP to output folder
+                    html_folder = output_folder / "html"
+                    html_folder.mkdir(exist_ok=True)
+                    
+                    with zipfile.ZipFile(result_zip, 'r') as zip_ref:
+                        for file_info in zip_ref.infolist():
+                            if not file_info.filename.endswith('/') and 'temp_debug' not in file_info.filename:
+                                try:
+                                    zip_ref.extract(file_info, output_folder)
+                                except Exception as e:
+                                    logger.warning(f"Error extracting {file_info.filename}: {e}")
+                    
+                    # Convert slides if converter available
+                    if conversion_service and conversion_service.is_available():
+                        converted_folder = output_folder / "converted"
+                        converted_folder.mkdir(exist_ok=True)
+                        conversion_service.convert_slides_batch(html_folder, converted_folder)
+                    
+                    # Count total slides
+                    html_files = list(html_folder.glob("*.html"))
+                    total_slides = len(html_files)
+                    logger.info(f"📁 Found {total_slides} HTML files")
+                    
+                    # Emit complete event with temp directory path for cleanup
+                    await event_queue.put(('complete', {
+                        'project_name': project_name,
+                        'total_slides': total_slides,
+                        'temp_dir': temp_workflow_dir
+                    }))
+                else:
+                    raise Exception("Workflow did not produce output files")
+                
+            except Exception as e:
+                workflow_error = str(e)
+                logger.error(f"Workflow error: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
+            finally:
+                workflow_done.set()
+        
+        # Start workflow task
+        workflow_task = asyncio.create_task(run_workflow())
+        
+        try:
+            while not workflow_done.is_set() or not event_queue.empty():
+                try:
+                    # Wait for event with timeout
+                    event_type, data = await asyncio.wait_for(
+                        event_queue.get(),
+                        timeout=1.0
+                    )
+                    
+                    # Format SSE message
+                    event_data = json.dumps(data)
+                    yield f"event: {event_type}\ndata: {event_data}\n\n"
+                    
+                except asyncio.TimeoutError:
+                    # Send keepalive
+                    yield f": keepalive\n\n"
+                    continue
+            
+            # Check for errors
+            if workflow_error:
+                error_data = json.dumps({"message": workflow_error})
+                yield f"event: error_event\ndata: {error_data}\n\n"
+            
+        except Exception as e:
+            logger.error(f"Error in event generator: {e}")
+            error_data = json.dumps({"message": str(e)})
+            yield f"event: error_event\ndata: {error_data}\n\n"
+        finally:
+            # Ensure workflow completes
+            try:
+                await workflow_task
+            except:
+                pass
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )

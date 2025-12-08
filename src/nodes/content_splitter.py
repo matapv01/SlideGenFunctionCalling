@@ -106,8 +106,15 @@ def split_content(state: State, config: RunnableConfig) -> State: # <-- 2. ADD C
     """
     Traverses the document structure and uses an LLM to hierarchically split
     any nodes with content exceeding a defined character limit.
+    SKIP if slide_chunks already exists (from idea generation)
     """
     print("\n---------------- Executing Node: split_content ----------------")
+    
+    # Skip if slide_chunks already provided (idea-based workflow)
+    if state.get('slide_chunks'):
+        print("⏭️  Skipping split_content: slide_chunks already exists")
+        return state
+    
     start_time = time.time()
     # --- 3. GET RESOURCES FROM CONFIG ---
     configurable = config["configurable"]

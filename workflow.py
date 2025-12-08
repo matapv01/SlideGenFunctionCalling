@@ -232,6 +232,193 @@ async def main_workflow(
     return final_zip_path
 
 
+async def main_workflow_from_chunks(
+    slide_chunks: list,
+    title: str,
+    output_folder: str,
+    callback: Optional[Callable[[str, Dict[Any, Any]], None]] = None,
+    slide_options: Optional[Dict[str, bool]] = None
+):
+    """
+    Asynchronous workflow starting from pre-generated slide chunks (bypasses document conversion)
+    Used for "Create with Idea" feature where LLM generates structure directly
+    
+    Args:
+        slide_chunks: Pre-generated slide structure from LLM
+        title: Presentation title
+        output_folder: Output folder for generated slides
+        callback: Optional callback for streaming updates
+        slide_options: Options for slide generation
+    """
+    if not os.path.exists(output_folder):
+        os.makedirs(output_folder)
+    
+    # Helper function to emit events
+    def emit_event(event_type: str, data: Dict[Any, Any]):
+        if callback:
+            try:
+                callback(event_type, data)
+            except Exception as e:
+                print(f"Error in callback: {e}")
+    
+    # Output directories
+    output_dir = os.path.join(output_folder, "output")
+    output_debug_dir = os.path.join(output_folder, "output_debug")
+    os.makedirs(output_dir, exist_ok=True)
+    os.makedirs(output_debug_dir, exist_ok=True)
+    
+    # Create html and png subdirectories
+    os.makedirs(os.path.join(output_dir, "html"), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, "png"), exist_ok=True)
+    os.makedirs(os.path.join(output_debug_dir, "html"), exist_ok=True)
+    os.makedirs(os.path.join(output_debug_dir, "png"), exist_ok=True)
+    
+    playwright_instance = None
+    final_state = None
+    
+    try:
+        # Initialize resources
+        emit_event('status', {
+            'step': 1,
+            'title': 'Khởi động hệ thống',
+            'description': 'Đang khởi tạo AI models...',
+            'message': 'Khởi động workflow từ ý tưởng'
+        })
+        
+        # Initialize LLM
+        env_keys = config.setup_environment()
+        api_keys = [v for v in env_keys.values() if v]
+        if not api_keys:
+            raise RuntimeError("Không có API key hợp lệ trong biến môi trường.")
+        
+        llm = LLM(
+            api_keys=api_keys,
+            base_url=LLM_BASE_URL,
+            model=LLM_MODEL,
+            temperature=LLM_TEMPERATURE,
+            max_tokens=LLM_MAX_TOKENS,
+            top_p=LLM_TOP_P
+        )
+        
+        tool_retriever = ToolRetriever(
+            tools_dict=TOOLS_DICT,
+            index_path=FAISS_INDEX_PATH
+        )
+        
+        # Initialize Playwright
+        emit_event('status', {
+            'step': 1,
+            'title': 'Khởi động hệ thống',
+            'description': 'Đang khởi động trình duyệt...',
+            'message': 'Khởi tạo Playwright'
+        })
+        
+        playwright_instance = await initialize_playwright()
+        
+        # Build workflow
+        workflow = build_workflow(False)
+        app = workflow.compile()
+        
+        # Default slide options
+        if slide_options is None:
+            slide_options = {
+                "enable_transition_slides": True,
+                "enable_thank_you_slide": True
+            }
+        
+        print(f"🔧 DEBUG: Processing {len(slide_chunks)} pre-generated chunks")
+        print(f"🔧 DEBUG: slide_options = {slide_options}")
+        
+        # Initial input with pre-loaded slide_chunks (skip document conversion)
+        initial_input = {
+            "docx_file": None,  # No DOCX file
+            "slide_chunks": slide_chunks,  # Pre-loaded chunks
+            "document_structure": {"title": title},  # Minimal structure
+            "current_slide_index": -1,
+            "retry_count": 0,
+            "final_slides": [],
+            "all_debug_info": [],
+            "llm": llm,
+            "vlm_decision": "accept",
+            "slide_options": slide_options
+        }
+        
+        graph_config = {
+            "configurable": {
+                "llm": llm,
+                "tool_retriever": tool_retriever,
+                "tools_dict": TOOLS_DICT,
+                "playwright_instance": playwright_instance,
+                "output_folder": output_folder,
+                "max_retries": 1,
+                "temp_dir": output_dir,
+                "temp_debug_dir": output_debug_dir,
+                "stream_callback": emit_event,
+            },
+            "recursion_limit": 500
+        }
+        
+        # Run workflow
+        print("\nStarting idea-based workflow...")
+        start_time = time.time()
+        
+        emit_event('status', {
+            'step': 2,
+            'title': 'Tạo slides',
+            'description': f'Đang tạo {len(slide_chunks)} slides...',
+            'message': 'Bắt đầu tạo slides'
+        })
+        
+        final_state = await app.ainvoke(initial_input, config=graph_config)
+        end_time = time.time()
+        print(f"Idea workflow completed in {end_time - start_time:.2f} seconds.")
+        
+    except Exception as e:
+        print(f"\nError in idea workflow: {e}")
+        import traceback
+        traceback.print_exc()
+    finally:
+        # Clean up Playwright
+        if playwright_instance:
+            print("\nCleaning up Playwright...")
+            await playwright_instance['browser'].close()
+            await playwright_instance['playwright'].stop()
+    
+    # Process final output
+    if not final_state or not final_state.get('final_slides'):
+        print("No final slides generated")
+        emit_event('error', {'message': 'Không có slide nào được tạo'})
+        return None
+    
+    emit_event('status', {
+        'step': 3,
+        'title': 'Hoàn tất',
+        'description': 'Đang đóng gói kết quả...',
+        'message': f'Đã tạo {len(final_state.get("final_slides", []))} slide'
+    })
+    
+    # Zip final slides
+    final_zip_path = os.path.join(output_folder, "slides_langgraph.zip")
+    with zipfile.ZipFile(final_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for slide in final_state.get('final_slides', []):
+            if slide.get('html_path') and os.path.exists(slide['html_path']):
+                zipf.write(slide['html_path'], os.path.join("html", os.path.basename(slide['html_path'])))
+            if slide.get('png_path') and os.path.exists(slide['png_path']):
+                zipf.write(slide['png_path'], os.path.join("png", os.path.basename(slide['png_path'])))
+    
+    # Zip debug slides
+    debug_zip_path = os.path.join(output_folder, "slides_debug_langgraph.zip")
+    with zipfile.ZipFile(debug_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
+        for slide in final_state.get('all_debug_info', []):
+            if slide.get('html_path') and os.path.exists(slide['html_path']):
+                zipf.write(slide['html_path'], os.path.join("html", os.path.basename(slide['html_path'])))
+            if slide.get('png_path') and os.path.exists(slide['png_path']):
+                zipf.write(slide['png_path'], os.path.join("png", os.path.basename(slide['png_path'])))
+    
+    print(f"\nCompleted! ZIP saved at: {final_zip_path}")
+    return final_zip_path
+
+
 # # --- 2. Call the async main function using asyncio.run() only ONCE ---
 # if __name__ == "__main__":
 #     sample_docx_path = os.path.join("data", "input", "test_ttcs - heading.docx")

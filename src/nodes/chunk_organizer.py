@@ -11,10 +11,18 @@ def organize_chunks(state: State) -> State:
     Node 3: A consolidated function that handles renumbering the document structure,
     grouping content into slides, and sorting them into the correct final order.
     Creates intro slide, transition slides for level 1 headings, and content slides.
+    SKIP numbering if slide_chunks already exists (from idea generation).
     """
     print("\n---------------- Executing Node: organize_chunks ----------------")
 
     start_time = time.time()
+    
+    # Check if slide_chunks already exists (idea-based workflow)
+    if state.get('slide_chunks'):
+        print("⏭️  Skipping organize_chunks: slide_chunks already exists")
+        print(f"   Using {len(state['slide_chunks'])} pre-generated chunks")
+        return state
+    
     document_structure = state.get('document_structure', [])
     document_title = state.get('document_title', '')
     slide_options = state.get('slide_options', {})

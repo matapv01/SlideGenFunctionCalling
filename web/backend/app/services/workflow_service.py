@@ -238,6 +238,105 @@ class WorkflowService:
             logger.error(traceback.format_exc())
             return None
     
+    async def process_idea_with_workflow(
+        self,
+        slide_chunks: list,
+        title: str,
+        output_folder: str,
+        callback: Optional[Any] = None,
+        slide_options: Optional[Dict[str, bool]] = None
+    ) -> Optional[tuple]:
+        """
+        Process idea-generated slide chunks using LangGraph workflow
+        Bypasses document conversion and splits, directly starts from organize_chunks
+        
+        Args:
+            slide_chunks: Pre-generated slide structure from LLM
+            title: Presentation title
+            output_folder: Output folder for slides
+            callback: Optional callback for streaming events
+            slide_options: Options for slide generation
+            
+        Returns:
+            Tuple of (result_zip_path, temp_workflow_dir) or None if failed
+        """
+        if not self.workflow_available:
+            logger.error("Workflow not available")
+            return None
+        
+        try:
+            logger.info(f"🤖 Processing idea with {len(slide_chunks)} chunks")
+            
+            # Load environment variables
+            from dotenv import load_dotenv
+            backend_env = os.path.join(os.path.dirname(self.project_dir), 'backend', '.env')
+            root_env = os.path.join(os.path.dirname(self.project_dir), '.env')
+            
+            if os.path.exists(backend_env):
+                load_dotenv(backend_env)
+            if os.path.exists(root_env):
+                load_dotenv(root_env)
+            
+            # Verify GEMINI_API_KEY
+            gemini_key = os.getenv('GEMINI_API_KEY')
+            if not gemini_key:
+                logger.error("❌ GEMINI_API_KEY not found")
+                return None
+            
+            # Import workflow function
+            from workflow import main_workflow_from_chunks
+            
+            # Create temporary workflow directory
+            temp_workflow_dir = tempfile.mkdtemp(prefix="slidegen_idea_")
+            logger.info(f"Created temp directory: {temp_workflow_dir}")
+            
+            # Pre-create subdirectories
+            subdirs = ["html", "png", "temp_debug", "temp_debug/html", "temp_debug/png"]
+            for subdir in subdirs:
+                dir_path = os.path.join(temp_workflow_dir, subdir)
+                os.makedirs(dir_path, exist_ok=True)
+            
+            result_zip_path = None
+            
+            try:
+                # Run workflow with pre-loaded chunks
+                logger.info(f"Running idea workflow with {len(slide_chunks)} chunks")
+                result = await main_workflow_from_chunks(
+                    slide_chunks=slide_chunks,
+                    title=title,
+                    output_folder=temp_workflow_dir,
+                    callback=callback,
+                    slide_options=slide_options or {}
+                )
+                
+                # Find result ZIP
+                result_zip = self._find_result_zip(result, temp_workflow_dir, output_folder)
+                
+                if result_zip and os.path.exists(result_zip):
+                    logger.info(f"✅ Idea workflow completed: {result_zip}")
+                    result_zip_path = result_zip
+                    return (result_zip_path, temp_workflow_dir)
+                else:
+                    logger.error("❌ Workflow did not produce valid output")
+                    return None
+                    
+            except Exception as e:
+                logger.error(f"Error during idea workflow: {e}")
+                import traceback
+                logger.error(traceback.format_exc())
+                try:
+                    if os.path.exists(temp_workflow_dir):
+                        shutil.rmtree(temp_workflow_dir, ignore_errors=True)
+                except Exception as cleanup_error:
+                    logger.warning(f"Could not cleanup temp directory: {cleanup_error}")
+                return None
+                    
+        except Exception as e:
+            logger.error(f"❌ Error in idea workflow processing: {e}")
+            import traceback
+            logger.error(traceback.format_exc())
+            return None
+
     def check_health(self) -> Dict[str, Any]:
         """Check workflow service health"""
         try:
