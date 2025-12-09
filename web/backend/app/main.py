@@ -1054,13 +1054,33 @@ async def approve_structure(request: StructureApproveRequest):
         def _add_numbering_recursively(nodes, counters=None, parent_level=0):
             counters = [0] * 6 if counters is None else counters
             for node in nodes:
-                counters[parent_level] += 1
-                for i in range(parent_level + 1, len(counters)):
-                    counters[i] = 0
-                index = ".".join(map(str, counters[:parent_level + 1]))
-                node['index'] = index
-                node['numbered_title'] = f"{index}. {node['title']}"
-                node['level'] = parent_level + 1
+                # For transition nodes: peek at next index (increment then decrement)
+                if node.get('is_transition') == True:
+                    # Temporarily increment to get the "next" index
+                    counters[parent_level] += 1
+                    for i in range(parent_level + 1, len(counters)):
+                        counters[i] = 0
+                    
+                    # Assign index
+                    index = ".".join(map(str, counters[:parent_level + 1]))
+                    node['index'] = index
+                    node['numbered_title'] = f"{index}. {node['title']}"
+                    node['level'] = parent_level + 1
+                    
+                    # Decrement back (so next content node gets same index)
+                    counters[parent_level] -= 1
+                else:
+                    # For content nodes: normal increment
+                    counters[parent_level] += 1
+                    for i in range(parent_level + 1, len(counters)):
+                        counters[i] = 0
+                    
+                    # Assign index
+                    index = ".".join(map(str, counters[:parent_level + 1]))
+                    node['index'] = index
+                    node['numbered_title'] = f"{index}. {node['title']}"
+                    node['level'] = parent_level + 1
+                
                 if node.get('children'):
                     _add_numbering_recursively(node['children'], list(counters), parent_level + 1)
             return nodes
@@ -1158,8 +1178,8 @@ async def approve_structure(request: StructureApproveRequest):
                         final_slides_types.append('transition')
                         logger.info(f"✅ Created transition slide: {node.get('numbered_title', '')}")
                     
-                    # Process content
-                    if node.get("content"):
+                    # Process content ONLY for non-transition nodes (is_transition=False)
+                    if node.get("content") and node.get('is_transition') != True:
                         pos = [node.get('index', '')]
                         final_slides_content.append(_render_slide_content("", [node]))
                         final_slides_positions.append(pos)
@@ -1217,10 +1237,13 @@ async def approve_structure(request: StructureApproveRequest):
             if pos_str == '999':
                 return (999999,)
             if pos_str.endswith('.T'):
+                # Transition slides: place before content of same section
                 parts = pos_str[:-2].split('.')
-                return tuple(int(p) for p in parts) + (0.5,)
+                return tuple(int(p) for p in parts) + (0,)  # e.g. "1.T" → (1, 0)
+            
+            # Content slides: place after transitions
             parts = pos_str.split('.')
-            return tuple(int(p) for p in parts)
+            return tuple(int(p) for p in parts) + (1,)  # e.g. "1" → (1, 1)
         
         combined = list(zip(final_slides_content, final_slides_positions, final_slides_context_maps, final_slides_types))
         
