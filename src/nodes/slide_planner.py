@@ -108,42 +108,6 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         state['slide_plans'] = []
         return state
     
-    # --- DEBUG: Check slide_chunks type ---
-    print(f"🔍 DEBUG: slide_chunks type: {type(slide_chunks)}")
-    print(f"🔍 DEBUG: slide_chunks length: {len(slide_chunks)}")
-    if slide_chunks:
-        print(f"🔍 DEBUG: First chunk type: {type(slide_chunks[0])}")
-        print(f"🔍 DEBUG: First chunk: {slide_chunks[0]}")
-    
-    # --- VALIDATE slide_chunks format ---
-    # Ensure all chunks are dictionaries
-    validated_chunks = []
-    for i, chunk in enumerate(slide_chunks):
-        if isinstance(chunk, str):
-            print(f"⚠️  WARNING: Chunk {i} is a string, converting to dict format")
-            # Try to parse if it's JSON string
-            try:
-                import json
-                chunk = json.loads(chunk)
-            except:
-                # Create default dict format
-                chunk = {
-                    'position': i,
-                    'heading': f'Slide {i+1}',
-                    'text_content': chunk
-                }
-        elif not isinstance(chunk, dict):
-            print(f"⚠️  WARNING: Chunk {i} is not dict or string, creating default")
-            chunk = {
-                'position': i,
-                'heading': f'Slide {i+1}',
-                'text_content': str(chunk)
-            }
-        validated_chunks.append(chunk)
-    
-    slide_chunks = validated_chunks
-    state['slide_chunks'] = slide_chunks
-    
     # --- AUTO-CREATE INTRO SLIDE IF MISSING ---
     first_chunk = slide_chunks[0] if slide_chunks else {}
     if first_chunk.get('position', 0) != 0:

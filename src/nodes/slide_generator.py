@@ -11,228 +11,93 @@ import time
 # === SLIDE TYPE SPECIFIC PROMPTS ===
 
 INTRO_PROMPT = """
-🎯 **INTRO SLIDE** - This is the TITLE SLIDE of the entire presentation!
+🎯 INTRO SLIDE - Title slide, first impression!
 
-**FONT SIZES (MANDATORY):**
-* Title: 120-140px (HUGE - readable from back of room!)
-* Subtitle: 50-60px
-* If tool has title_size param → set to 120px minimum
+**CRITICAL: TEXT COLOR MUST BE EASY TO READ!**
+⚠️ Dark background (#000, #1a1a1a, #2c3e50) → Use #FFFFFF or very light text
+⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → Use #000000 or very dark text
+❌ NEVER: Gray on gray, #555 on #333, #ddd on #fff, colored text on colored bg
 
-**COLOR CONTRAST (CRITICAL - SLIDE WILL BE REJECTED IF UNREADABLE):**
-🚨 TEXT MUST POP OUT FROM BACKGROUND - EXTREME CONTRAST REQUIRED! 🚨
+**RULES:**
+1. CONTENT: Short title + brief subtitle. No fluff!
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
+3. IMAGE: https://picsum.photos/seed/TOPIC/1600/900
+4. MATCH previous slide's style
 
-* ONLY USE THESE SAFE COMBINATIONS:
-  ✅ #FFFFFF (pure white) on #000000 (black)
-  ✅ #FFFFFF (pure white) on #1a4b8c (dark blue)
-  ✅ #FFFFFF (pure white) on #2c3e50 (dark navy)
-  ✅ #000000 (pure black) on #FFFFFF (white)
-  ✅ #000000 (pure black) on #F8F9FA (off-white)
-  ✅ #1a1a1a (near black) on #ECF0F1 (light gray)
-
-* ABSOLUTELY FORBIDDEN COMBINATIONS:
-  ❌ #555555 on #333333 (gray on dark gray - INVISIBLE!)
-  ❌ #CCCCCC on #FFFFFF (light gray on white - CAN'T READ!)
-  ❌ #3498db on #5DADE2 (blue on light blue - SAME COLOR!)
-  ❌ #444444 on #666666 (dark gray on gray - TOO SIMILAR!)
-  ❌ #2c3e50 on #34495e (navy on navy - BLENDS IN!)
-  ❌ ANY text color that looks similar to background
-
-* MANDATORY RULE: 
-  - Background DARK? → Text MUST be #FFFFFF (white)
-  - Background LIGHT? → Text MUST be #000000 (black)
-  - Background COLORED? → Text MUST be #FFFFFF (white)
-  - NO EXCEPTIONS! When in doubt, use white on dark or black on light!
-
-**IMAGE SELECTION:**
-* Extract the MAIN TOPIC from content (AI, business, technology, etc.)
-* Use: `https://picsum.photos/seed/TOPIC/1600/900` where TOPIC is the main subject
-* Examples based on content:
-  - AI/Technology → seed/technology/1600/900
-  - Business/Strategy → seed/business/1600/900
-  - Education/Learning → seed/education/1600/900
-  - Nature/Environment → seed/nature/1600/900
-
-**CONSISTENCY:**
-* Review PREVIOUS SLIDE to match overall tone and style
-
-**FORMATTING:** Use HTML tags for emphasis. Generate ONE function call only.
+Generate clean, HIGHLY READABLE function call.
 """
 
 TRANSITION_PROMPT = """
-🎯 **TRANSITION SLIDE** - Section divider between major topics!
+🎯 TRANSITION SLIDE - Section divider!
 
-**FONT SIZES:**
-* Main text: 70-90px (bold, centered)
+**CRITICAL: TEXT COLOR MUST BE INSTANTLY READABLE!**
+⚠️ Dark background → #FFFFFF (white) text preferred
+⚠️ Light background → #000000 (black) text preferred
+❌ NEVER: Medium colors, gray tones, similar shades
 
-**COLOR CONTRAST (CRITICAL - TRANSITION MUST BE HIGHLY VISIBLE):**
-🚨 HUGE SECTION TITLE MUST BE READABLE FROM ACROSS THE ROOM! 🚨
+**RULES:**
+1. CONTENT: 3-6 words ONLY
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
+3. IMAGE: https://picsum.photos/seed/SECTION_TOPIC/1600/900
+4. CONSISTENCY: {previous_transition_context}
 
-* MANDATORY SAFE COMBINATIONS (PICK ONE):
-  ✅ #FFFFFF (pure white) on #000000 (black)
-  ✅ #FFFFFF (pure white) on #1a4b8c (dark blue)
-  ✅ #FFFFFF (pure white) on #2c3e50 (dark navy)
-  ✅ #000000 (pure black) on #FFFFFF (white)
-  ✅ #000000 (pure black) on #F8F9FA (off-white)
-
-* STRICTLY FORBIDDEN (WILL BE REJECTED):
-  ❌ #555555 on #333333 (gray on gray - INVISIBLE!)
-  ❌ #CCCCCC on #FFFFFF (too light - CAN'T READ!)
-  ❌ #3498db on #5DADE2 (blue on blue - SAME COLOR!)
-  ❌ #2c3e50 on #34495e (navy on navy - BLENDS!)
-  ❌ Any colored text on colored background
-  ❌ Any text within 5 shades of background
-
-* SIMPLE RULE: White text on dark OR Black text on light - NOTHING ELSE!
-
-**IMAGE SELECTION:**
-* Extract the SECTION TOPIC from the heading (e.g., "Data Analysis" → seed/data/1600/900)
-* Use: `https://picsum.photos/seed/SECTION_TOPIC/1600/900` where SECTION_TOPIC is the heading
-
-**CONSISTENCY WITH PREVIOUS TRANSITION (CRITICAL):**
-{previous_transition_context}
-
-**CONTENT FORMATTING CONSISTENCY:**
-* If previous transition used numbering (1., 2., 3.), continue the sequence
-* If previous used bullet points, use bullet points
-* If previous had no numbering, don't add numbering
-* Match font sizes, colors, and text alignment EXACTLY
-* Keep the same visual hierarchy and spacing
-
-**FORMATTING:** Bold, centered text. Generate ONE function call only.
+Generate BOLD, ULTRA-VISIBLE function call.
 """
 
 CONTENT_PROMPT = """
-🎯 **CONTENT SLIDE** - Main informational slide with details.
+🎯 CONTENT SLIDE - Main information!
 
-**FONT SIZES:**
-* Title: 48-56px
-* Body text: 32-38px
-* Bullets: use • or numbered lists
+**CRITICAL: TEXT COLOR MUST BE EASY TO READ VS BACKGROUND!**
+⚠️ Dark background (#000, #1a1a1a, #2c3e50) → #FFFFFF or very light text
+⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → #000000 or very dark text
+❌ FORBIDDEN: Gray on gray, #555 on #333, #ccc on #fff, colored text on colored bg
 
-**COLOR CONTRAST (CRITICAL - READABILITY IS PRIORITY #1):**
-🚨 TEXT MUST BE READABLE FROM 5 METERS AWAY - NO EXCEPTIONS! 🚨
+**RULES:**
+1. HIGHLIGHT 2-3 key phrases ONLY:
+   {highlight_instruction}
+   Example: "AI improves <span style="color: #e74c3c; font-weight: bold;">efficiency</span> by 80%"
+   ⚠️ ONLY use <span style="color:... font-weight:bold"> for KEY PHRASES!
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
+   ❌ NO style attributes except for key phrase highlights!
+3. CONTENT: Concise, no filler words
+4. IMAGE: https://picsum.photos/seed/KEY_CONCEPT/1600/900
 
-* MANDATORY TEXT COLOR RULES (FOLLOW EXACTLY):
-  1. If background is DARK (black, navy, dark blue, dark gray):
-     → Main text MUST be #FFFFFF (pure white)
-     → Secondary text MUST be #E0E0E0 or lighter
-     
-  2. If background is LIGHT (white, light gray, light blue, cream):
-     → Main text MUST be #000000 or #1a1a1a (pure black/near black)
-     → Secondary text MUST be #333333 or darker
-     
-  3. If background is COLORED (blue, purple, green, etc.):
-     → ALWAYS use #FFFFFF (white) text
-     → NEVER use colored text on colored background
-
-* STRICT CONTRAST REQUIREMENTS:
-  ✅ CORRECT EXAMPLES:
-     - #FFFFFF text on #1a1a1a background
-     - #000000 text on #FFFFFF background
-     - #FFFFFF text on #3498db background
-     - #000000 text on #F8F9FA background
-     
-  ❌ ABSOLUTELY FORBIDDEN (WILL BE REJECTED):
-     - #555555 text on #333333 background (gray on gray)
-     - #CCCCCC text on #FFFFFF background (too light)
-     - #444444 text on #666666 background (similar shades)
-     - #3498db text on #5DADE2 background (blue on blue)
-     - #e74c3c text on #EC7063 background (red on red)
-     - ANY text color within 5 shades of background color
-
-* HIGHLIGHT COLOR RULES:
-  - On white/light bg: Use ONLY #e74c3c (red), #3498db (blue), #f39c12 (orange), #9b59b6 (purple)
-  - On dark bg: Use ONLY #FFFFFF with bold weight, or very bright colors (#00FF00, #FFFF00)
-  - NEVER use pastel, muted, or similar tones to background
-
-**KEY PHRASE HIGHLIGHTING (MANDATORY):**
-* Identify 2-4 KEY PHRASES in the content (important terms, concepts)
-* Wrap them with: `<span style="color: COLOR; font-weight: bold;">phrase</span>`
-
-* HIGHLIGHT COLOR RULES (CRITICAL):
-  {highlight_instruction}
-  
-  ON WHITE/LIGHT BACKGROUNDS - Use these BRIGHT colors:
-  ✅ #e74c3c (bright red)
-  ✅ #3498db (bright blue) 
-  ✅ #f39c12 (bright orange)
-  ✅ #9b59b6 (bright purple)
-  ✅ #16a085 (teal)
-  
-  ON DARK BACKGROUNDS - Use white with bold:
-  ✅ #FFFFFF (white) + font-weight: bold
-  ✅ #FFD700 (gold) for emphasis
-  ✅ #00FF00 (bright green) for success
-  
-  NEVER USE on any background:
-  ❌ Pastel colors (#E8DAEF, #D5F4E6, #FAD7A0)
-  ❌ Light colors on light bg (#CCCCCC on #FFFFFF)
-  ❌ Dark colors on dark bg (#333333 on #000000)
-  ❌ Similar shade to background
-
-* Example: "AI can help with <span style=\"color: #e74c3c; font-weight: bold;\">automation</span>"
-
-**IMAGE SELECTION:**
-* Extract KEY CONCEPT from slide content
-* Use: `https://picsum.photos/seed/KEY_CONCEPT/1600/900` where KEY_CONCEPT is the main concept
-* Be specific: "machine learning" → seed/machinelearning/1600/900
-
-**CONSISTENCY:**
-* Match tone, pacing, and visual style with PREVIOUS SLIDE
-* Keep the same level of detail density
-
-**FORMATTING:** Use HTML tags, bullet points. Generate ONE function call only.
+Generate READABLE, professional function call.
 """
 
 THANK_YOU_PROMPT = """
-🎯 **THANK YOU SLIDE** - Final closing slide!
+🎯 THANK YOU SLIDE - Final closing!
 
-**FONT SIZES:**
-* Main text: 70-80px (centered)
-* Simple and professional
+**CRITICAL: TEXT MUST BE CRYSTAL CLEAR!**
+⚠️ Dark background → #FFFFFF (white) text
+⚠️ Light background → #000000 (black) text
+❌ NO colored text, NO gray tones, NO low contrast
 
-**COLOR CONTRAST (CRITICAL - FINAL IMPRESSION MUST BE CLEAR):**
-⚠️ This is the last slide - make it READABLE! ⚠️
+**RULES:**
+1. CONTENT: "Thank You" ONLY
+2. IMAGE: seed/success/1600/900 or gradient
 
-* SAFE CHOICES:
-  ✅ #FFFFFF on #2c3e50 (white on navy)
-  ✅ #000000 on #FFFFFF (black on white)
-  ✅ #FFFFFF on #000000 (white on black)
-
-* DO NOT USE:
-  ❌ Colored text on colored backgrounds
-  ❌ Gray tones on gray tones
-  ❌ Anything that's not obviously high contrast
-
-**IMAGE SELECTION:**
-* Use generic positive theme: seed/success/1600/900 or seed/celebration/1600/900
-* Or use gradient: `linear-gradient(135deg, #667eea 0%, #764ba2 100%)`
-
-**FORMATTING:** Centered, clean design. Generate ONE function call only.
+Generate simple, HIGHLY VISIBLE function call.
 """
 
 TEAM_PROMPT = """
-🎯 **TEAM SLIDE** - Team introduction or contact info.
+🎯 TEAM SLIDE - Team intro!
 
-**FONT SIZES:**
-* Names: 40-48px
-* Roles: 28-32px
+**CRITICAL: NAMES MUST BE EASY TO READ!**
+⚠️ Dark background → #FFFFFF (white) text for names
+⚠️ Light background → #000000 (black) text for names
+❌ NEVER: Gray tones, colored text, low contrast
 
-**COLOR CONTRAST (MANDATORY - NAMES MUST BE READABLE):**
-⚠️ People's names deserve CLEAR visibility! ⚠️
+**RULES:**
+1. CONTENT: Name + role only
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
+3. IMAGE: https://picsum.photos/seed/team/1600/900
 
-* USE ONLY:
-  ✅ #000000 (black) or #2c3e50 (navy) on #FFFFFF (white)
-  ✅ #FFFFFF (white) on #2c3e50 (navy) or #000000 (black)
-
-* NEVER:
-  ❌ Medium colors on medium colors
-  ❌ Subtle color differences
-
-**IMAGE SELECTION:**
-* Use: seed/team/1600/900 or seed/people/1600/900
-
-**FORMATTING:** Clean layout with emphasis. Generate ONE function call only.
+Generate professional, READABLE function call.
 """
 
 # Map slide types to their specific prompts
@@ -245,30 +110,32 @@ SLIDE_TYPE_PROMPTS = {
 }
 
 HUMAN_PROMPT_TEMPLATE = """
-**CONTEXT:**
-{slide_context_map}
+CONTEXT: {slide_context_map}
 
-**PREVIOUS SLIDE (maintain consistency with this!):**
-{previous_slide_function_call}
+PREVIOUS SLIDE (match this style!): {previous_slide_function_call}
 
-**PLAN:**
-{slide_plan}
+DESIGN PLAN: {slide_plan}
 
-**CONTENT (Slide {slide_index}/{length_slide_chunks}):**
+SLIDE {slide_index}/{length_slide_chunks} CONTENT:
 {slide_content}
 
-**RETRY (if any):**
 {previous_function_call}
 {previous_evaluation}
 """
 
-def create_default_html(content_text: str) -> str:
+def create_default_html(content_data) -> str:
     """Create default HTML when unable to get from LLM"""
-    if not content_text:
-        content_text = "Default slide content"
+    # Handle both dict and string formats
+    if isinstance(content_data, dict):
+        title = content_data.get('heading', 'Slide')
+        content_text = content_data.get('text_content', 'Default slide content')
+    else:
+        content_text = content_data if content_data else "Default slide content"
+        title = "Slide"
     
     lines = content_text.split('\n')
-    title = lines[0] if lines else "Slide"
+    if not title:
+        title = lines[0] if lines else "Slide"
     content = '<br>'.join(lines[1:]) if len(lines) > 1 else content_text
     
     html = f"""<!DOCTYPE html>

@@ -872,12 +872,20 @@ async def generate_from_idea(request: Request):
         if not gemini_api_key:
             raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
         
+        # Import config for idea structure LLM
+        from src.utils.config import (
+            IDEA_STRUCTURE_LLM_MODEL,
+            IDEA_STRUCTURE_LLM_TEMPERATURE,
+            IDEA_STRUCTURE_LLM_MAX_TOKENS,
+            LLM_BASE_URL
+        )
+        
         llm = LLM(
             api_keys=[gemini_api_key],
-            base_url="https://generativelanguage.googleapis.com/v1beta/openai/",
-            model="gemini-2.0-flash-exp",
-            temperature=0.7,
-            max_tokens=4096
+            base_url=LLM_BASE_URL,
+            model=IDEA_STRUCTURE_LLM_MODEL,
+            temperature=IDEA_STRUCTURE_LLM_TEMPERATURE,
+            max_tokens=IDEA_STRUCTURE_LLM_MAX_TOKENS
         )
         
         # Build structured prompt for slide generation

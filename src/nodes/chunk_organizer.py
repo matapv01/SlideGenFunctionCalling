@@ -64,8 +64,12 @@ def organize_chunks(state: State) -> State:
 
     # Create intro slide first (if enabled)
     if enable_intro_slide and document_title:
-        intro_content = f"INTRO SLIDE\n\nTitle: {document_title}"
-        final_slides_content.append(intro_content)
+        intro_chunk = {
+            'position': 0,
+            'heading': 'INTRO',
+            'text_content': f"Title: {document_title}"
+        }
+        final_slides_content.append(intro_chunk)
         final_slides_positions.append(['0'])  # Special position for intro
         final_slides_context_maps.append("INTRO SLIDE")
         print("Created intro slide with document title.")
@@ -101,18 +105,28 @@ def organize_chunks(state: State) -> State:
         for item in leaves:
             tentative_buffer = buffer + [item]
             if len(_render_slide_content(header, tentative_buffer)) > THRESHOLD_CHAR_LIMIT and buffer:
-                content = _render_slide_content(header, buffer)
+                content_text = _render_slide_content(header, buffer)
                 pos = [i.get('index', '') for i in buffer]
-                final_slides_content.append(content)
+                content_chunk = {
+                    'position': len(final_slides_content) + 1,
+                    'heading': header or buffer[0].get('title', ''),
+                    'text_content': content_text
+                }
+                final_slides_content.append(content_chunk)
                 final_slides_positions.append(pos)
                 final_slides_context_maps.append(_create_context_map(renumbered_structure, pos))
                 buffer = [item]
             else:
                 buffer.append(item)
         if buffer:
-            content = _render_slide_content(header, buffer)
+            content_text = _render_slide_content(header, buffer)
             pos = [i.get('index', '') for i in buffer]
-            final_slides_content.append(content)
+            content_chunk = {
+                'position': len(final_slides_content) + 1,  # Sequential position
+                'heading': header or buffer[0].get('title', ''),
+                'text_content': content_text
+            }
+            final_slides_content.append(content_chunk)
             final_slides_positions.append(pos)
             final_slides_context_maps.append(_create_context_map(renumbered_structure, pos))
 
@@ -120,16 +134,26 @@ def organize_chunks(state: State) -> State:
         for node in nodes:
             # Create transition slide for level 1 headings (root level) - if enabled
             if enable_transition_slides and is_root_level and node.get('level') == 1:
-                transition_content = f"TRANSITION SLIDE\n\n{node.get('numbered_title', node.get('title', ''))}"
+                transition_chunk = {
+                    'position': -1,  # Special position for transitions
+                    'heading': node.get('numbered_title', node.get('title', '')),
+                    'text_content': node.get('numbered_title', node.get('title', ''))
+                }
                 pos = [f"{node.get('index', '')}.T"]  # Special marker for transition
-                final_slides_content.append(transition_content)
+                final_slides_content.append(transition_chunk)
                 final_slides_positions.append(pos)
                 final_slides_context_maps.append(_create_context_map(renumbered_structure, [node.get('index', '')]))
                 print(f"Created transition slide for: {node.get('numbered_title', '')}")
             
             if node.get("content"):
                 pos = [node.get('index', '')]
-                final_slides_content.append(_render_slide_content("", [node]))
+                content_text = _render_slide_content("", [node])
+                content_chunk = {
+                    'position': len(final_slides_content) + 1,
+                    'heading': node.get('numbered_title', node.get('title', '')),
+                    'text_content': content_text
+                }
+                final_slides_content.append(content_chunk)
                 final_slides_positions.append(pos)
                 final_slides_context_maps.append(_create_context_map(renumbered_structure, pos))
             leaves = [child for child in node.get("children", []) if not child.get("children")]
@@ -141,8 +165,12 @@ def organize_chunks(state: State) -> State:
     
     # Add thank you slide at the end (if enabled)
     if enable_thank_you_slide:
-        thank_you_content = "THANK YOU SLIDE\n\nThank you for your attention!"
-        final_slides_content.append(thank_you_content)
+        thank_you_chunk = {
+            'position': -2,  # Special position for thank you
+            'heading': 'THANK_YOU',
+            'text_content': 'Thank you for your attention!'
+        }
+        final_slides_content.append(thank_you_chunk)
         final_slides_positions.append(['999'])  # Special position for thank you (always last)
         final_slides_context_maps.append("THANK YOU SLIDE")
         print("Created thank you slide.")
