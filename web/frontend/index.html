@@ -2929,15 +2929,69 @@
             }
         });
 
-        // Placeholder for editor page functions from script.js
-        // These functions would be defined in script.js
-        // function createNewSlide() { console.log('createNewSlide called'); }
-        // function showHome() { console.log('showHome called'); }
-        // function exportToPDF() { console.log('exportToPDF called'); }
-        // function exportToZip() { console.log('exportToZip called'); }
-        // function applyTextColor() { console.log('applyTextColor called'); }
-        // function changeFontSize() { console.log('changeFontSize called'); }
-        // function changeFontFamily() { console.log('changeFontFamily called'); }
+        // Function to create new slide - creates project in database immediately
+        async function createNewSlide() {
+            console.log('Creating new slide from index.html...');
+            const token = localStorage.getItem('access_token');
+            
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const apiUrl = window.SLIDEGEN_CONFIG?.BACKEND_URL || 'http://localhost:3000';
+                
+                // Create new project in database
+                const response = await fetch(`${apiUrl}/api/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Untitled Project',
+                        description: '',
+                        source_type: 'manual'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    const projectId = data.project_id || data.id; // Handle both response formats
+                    console.log('✅ Project created with ID:', projectId);
+                    
+                    // Create first slide in database
+                    const slideResponse = await fetch(`${apiUrl}/api/projects/${projectId}/slides`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            slide_index: 0,
+                            slide_type: 'content',
+                            title: 'Slide 1',
+                            html_content: '<div class="slide-container"><div class="content-wrapper" style="background: white;"></div></div>'
+                        })
+                    });
+                    
+                    if (slideResponse.ok) {
+                        console.log('✅ First slide created');
+                        // Redirect to editor with project ID
+                        window.location.href = `edit.html?id=${projectId}`;
+                    } else {
+                        throw new Error('Failed to create first slide');
+                    }
+                } else {
+                    throw new Error('Failed to create project');
+                }
+            } catch (error) {
+                console.error('Error creating new slide:', error);
+                alert('Failed to create new slide. Please try again.');
+            }
+        }
     </script>
 
     <!-- Idea Modal -->

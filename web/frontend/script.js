@@ -229,13 +229,7 @@ async function handleZipImport() {
     }
 }
 
-function createNewSlide() {
-    // Chuyển hướng đến edit.html local
-    showLoading("Đang chuyển đến trang editor...");
-    setTimeout(() => {
-        window.location.href = 'edit.html?source=new&mode=create';
-    }, 500);
-}
+// createNewSlide() is now defined in index.html inline script
 
 function addNewSlide(content, index) {
     const slideList = document.getElementById('slideList');

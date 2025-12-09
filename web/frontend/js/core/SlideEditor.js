@@ -60,6 +60,7 @@ constructor() {
     
     // Database auto-save
     this.currentProjectId = null; // Will be set when loading from database
+    this.currentProjectTitle = null; // Store project title
     this.slideIds = []; // Store database slide IDs for each slide
     this._saveTimeout = null;
 

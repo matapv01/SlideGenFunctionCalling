@@ -323,6 +323,30 @@
             font-weight: bold;
             color: #333;
             margin: 0;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .project-title:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .project-title.editing {
+            background: rgba(102, 126, 234, 0.15);
+        }
+
+        .project-title-input {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            padding: 4px 8px;
+            outline: none;
+            width: 100%;
+            background: white;
         }
 
         .project-meta {
@@ -756,6 +780,13 @@
             }
         }
         
+        // Simple toast notification
+        function showToast(message, type = 'info') {
+            // For now, just use console.log and don't show alert
+            // Can implement a proper toast UI later if needed
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const body = document.body;
@@ -955,7 +986,7 @@
             projectsList.innerHTML = projects.map(project => `
                 <div class="project-card">
                     <div class="project-header">
-                        <h3 class="project-title">${escapeHtml(project.title)}</h3>
+                        <h3 class="project-title" data-project-id="${project.id}" ondblclick="editProjectTitle(${project.id}, this)" title="Double-click to edit">${escapeHtml(project.title)}</h3>
                         <span class="status-badge status-${project.status}">
                             ${project.status === 'completed' ? 'Hoàn thành' : 'Nháp'}
                         </span>
@@ -1109,6 +1140,71 @@
                     setTimeout(() => overlay.remove(), 200);
                 }
             };
+        }
+
+        // Edit project title inline
+        function editProjectTitle(projectId, titleElement) {
+            const currentTitle = titleElement.textContent;
+            
+            // Create input
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'project-title-input';
+            input.value = currentTitle;
+            
+            // Replace title with input
+            titleElement.replaceWith(input);
+            input.focus();
+            input.select();
+            
+            // Save on blur or enter
+            const saveTitle = async () => {
+                const newTitle = input.value.trim() || currentTitle;
+                
+                // Replace input with title
+                const newTitleElement = document.createElement('h3');
+                newTitleElement.className = 'project-title';
+                newTitleElement.setAttribute('data-project-id', projectId);
+                newTitleElement.setAttribute('ondblclick', `editProjectTitle(${projectId}, this)`);
+                newTitleElement.setAttribute('title', 'Double-click to edit');
+                newTitleElement.textContent = newTitle;
+                input.replaceWith(newTitleElement);
+                
+                // Save to database if changed
+                if (newTitle !== currentTitle) {
+                    try {
+                        const token = localStorage.getItem('access_token');
+                        const response = await fetch(`${config.BACKEND_URL}/api/projects/${projectId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ title: newTitle })
+                        });
+                        
+                        if (response.ok) {
+                            showToast('✓ Đã cập nhật tên dự án', 'success');
+                            console.log('✅ Project title updated:', newTitle);
+                        } else {
+                            showToast('✗ Lỗi cập nhật tên dự án', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error updating project title:', error);
+                        showToast('✗ Lỗi cập nhật tên dự án', 'error');
+                    }
+                }
+            };
+            
+            input.addEventListener('blur', saveTitle);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    input.value = currentTitle;
+                    input.blur();
+                }
+            });
         }
 
         async function executeDeleteProject(projectId, projectTitle) {

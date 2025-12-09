@@ -45,7 +45,7 @@ console.log('📋 URL params:', { projectId, projectName, source });
 
 if (projectId) {
     console.log('🎯 Found project_id in URL:', projectId);
-    // Wait a bit for editor to be fully initialized
+    // Always load from database if we have project ID (even if source=generated)
     setTimeout(() => {
         console.log('📥 Starting to load project from database...');
         loadProjectFromDatabase(projectId);
@@ -91,6 +91,23 @@ if (document.readyState === 'loading') {
                 // Use config.BACKEND_URL for consistent API calls
                 const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
                 
+                // First fetch project info
+                console.log('📡 Fetching project info from:', `${apiUrl}/api/projects/${projectId}`);
+                const projectResponse = await fetch(`${apiUrl}/api/projects/${projectId}`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (!projectResponse.ok) {
+                    throw new Error(`Failed to load project info: ${projectResponse.status}`);
+                }
+                
+                const projectData = await projectResponse.json();
+                const project = projectData.project || projectData; // Handle both formats
+                console.log('📋 Project info:', project);
+                
+                // Then fetch slides
                 console.log('📡 Fetching slides from:', `${apiUrl}/api/projects/${projectId}/slides`);
                 const response = await fetch(`${apiUrl}/api/projects/${projectId}/slides`, {
                     headers: {
@@ -100,7 +117,7 @@ if (document.readyState === 'loading') {
 
                 console.log('📥 Response status:', response.status, response.statusText);
                 if (!response.ok) {
-                    throw new Error(`Failed to load project: ${response.status} ${response.statusText}`);
+                    throw new Error(`Failed to load slides: ${response.status} ${response.statusText}`);
                 }
 
                 const data = await response.json();
@@ -174,10 +191,15 @@ if (document.readyState === 'loading') {
                     window.slideEditor.slides = editorSlides;
                     window.slideEditor.currentSlideIndex = 0;
                     window.slideEditor.currentProjectId = projectId; // Set project ID for auto-save
+                    window.slideEditor.currentProjectTitle = project.title; // Store project title
                     
                     // Store slide IDs for save
                     window.slideEditor.slideIds = slides.map(slide => slide.id);
                     console.log('💾 Stored slide IDs:', window.slideEditor.slideIds);
+                    console.log('📌 Project title:', project.title);
+                    
+                    // Update project name display
+                    updateProjectNameDisplay(project.title);
                     
                     // IMPORTANT: Reset history when loading from database
                     // This prevents undo from going back to the default welcome slide
@@ -199,5 +221,172 @@ if (document.readyState === 'loading') {
                 showNotification('Failed to load project: ' + error.message, 'error');
             }
         }
+
+        // Project name editing functionality
+        function updateProjectNameDisplay(name) {
+            const projectNameText = document.getElementById('projectNameText');
+            if (projectNameText) {
+                projectNameText.textContent = name || 'Untitled Project';
+                console.log('📝 Updated project name display to:', name);
+            } else {
+                console.warn('⚠️ projectNameText element not found, retrying...');
+                // Retry after a short delay if element not ready
+                setTimeout(() => {
+                    const elem = document.getElementById('projectNameText');
+                    if (elem) {
+                        elem.textContent = name || 'Untitled Project';
+                        console.log('📝 Updated project name display to:', name);
+                    }
+                }, 100);
+            }
+        }
+
+        function initProjectNameEditor() {
+            const projectNameDisplay = document.getElementById('projectNameDisplay');
+            const projectNameText = document.getElementById('projectNameText');
+            
+            if (!projectNameDisplay || !projectNameText) return;
+
+            // Double-click to edit
+            projectNameDisplay.addEventListener('dblclick', () => {
+                const currentName = projectNameText.textContent;
+                
+                // Create input
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.id = 'projectNameInput';
+                input.value = currentName;
+                input.style.width = Math.max(150, currentName.length * 10) + 'px';
+                
+                // Replace text with input
+                projectNameDisplay.classList.add('editing');
+                projectNameText.replaceWith(input);
+                input.focus();
+                input.select();
+                
+                // Save on blur or enter
+                const saveProjectName = async () => {
+                    const newName = input.value.trim() || currentName;
+                    
+                    // Replace input with text
+                    const newText = document.createElement('span');
+                    newText.id = 'projectNameText';
+                    newText.textContent = newName;
+                    input.replaceWith(newText);
+                    projectNameDisplay.classList.remove('editing');
+                    
+                    // Save to database - create project if not exists
+                    if (newName !== currentName) {
+                        const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
+                        const token = localStorage.getItem('access_token');
+                        
+                        if (!token) {
+                            showNotification('⚠️ Please login to save project', 'warning');
+                            return;
+                        }
+                        
+                        try {
+                            // If no project ID, create new project first
+                            if (!window.slideEditor?.currentProjectId) {
+                                console.log('📝 Creating new project in database...');
+                                const createResponse = await fetch(`${apiUrl}/api/projects`, {
+                                    method: 'POST',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({
+                                        title: newName,
+                                        description: '',
+                                        source_type: 'manual'
+                                    })
+                                });
+                                
+                                if (createResponse.ok) {
+                                    const data = await createResponse.json();
+                                    window.slideEditor.currentProjectId = data.id;
+                                    window.slideEditor.currentProjectTitle = newName;
+                                    
+                                    // Create all existing slides in database
+                                    for (let i = 0; i < window.slideEditor.slides.length; i++) {
+                                        const slide = window.slideEditor.slides[i];
+                                        const htmlContent = `
+                                            <div class="slide-container">
+                                                <div class="content-wrapper" style="background: ${slide.backgroundColor};">
+                                                    ${slide.content}
+                                                </div>
+                                            </div>
+                                        `;
+                                        
+                                        const slideResponse = await fetch(`${apiUrl}/api/projects/${data.id}/slides`, {
+                                            method: 'POST',
+                                            headers: {
+                                                'Authorization': `Bearer ${token}`,
+                                                'Content-Type': 'application/json'
+                                            },
+                                            body: JSON.stringify({
+                                                slide_index: i,
+                                                slide_type: 'content',
+                                                title: slide.name,
+                                                html_content: htmlContent
+                                            })
+                                        });
+                                        
+                                        if (slideResponse.ok) {
+                                            const slideData = await slideResponse.json();
+                                            window.slideEditor.slideIds.push(slideData.id);
+                                        }
+                                    }
+                                    
+                                    showNotification('✓ Project created and saved', 'success');
+                                    console.log('✅ Project created with ID:', data.id);
+                                    
+                                    // Update URL with project ID
+                                    const newUrl = new URL(window.location);
+                                    newUrl.searchParams.set('id', data.id);
+                                    window.history.replaceState({}, '', newUrl);
+                                } else {
+                                    showNotification('✗ Failed to create project', 'error');
+                                }
+                            } else {
+                                // Update existing project
+                                const response = await fetch(`${apiUrl}/api/projects/${window.slideEditor.currentProjectId}`, {
+                                    method: 'PUT',
+                                    headers: {
+                                        'Authorization': `Bearer ${token}`,
+                                        'Content-Type': 'application/json'
+                                    },
+                                    body: JSON.stringify({ title: newName })
+                                });
+                                
+                                if (response.ok) {
+                                    window.slideEditor.currentProjectTitle = newName;
+                                    showNotification('✓ Project name updated', 'success');
+                                    console.log('✅ Project name updated:', newName);
+                                } else {
+                                    showNotification('✗ Failed to update project name', 'error');
+                                }
+                            }
+                        } catch (error) {
+                            console.error('Error saving project:', error);
+                            showNotification('✗ Error saving project', 'error');
+                        }
+                    }
+                };
+                
+                input.addEventListener('blur', saveProjectName);
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    } else if (e.key === 'Escape') {
+                        input.value = currentName;
+                        input.blur();
+                    }
+                });
+            });
+        }
+
+        // Initialize project name editor
+        initProjectNameEditor();
 
         // Function to load slides generated from DOCX
