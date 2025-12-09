@@ -54,31 +54,28 @@ export const PresentationMixin = {
         const container = document.getElementById('presentationSlideContainer');
         container.innerHTML = '';
 
-        // Create slide element
-        const slideEl = document.createElement('div');
-        slideEl.style.cssText = `
+        // Create temporary HTML file for this slide and render via iframe
+        const slideHtml = this.createPresentationSlideHtml(slide);
+        const blob = new Blob([slideHtml], { type: 'text/html' });
+        const iframeUrl = URL.createObjectURL(blob);
+
+        // Create iframe to render the slide
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = `
             width: 1920px;
             height: 1080px;
-            background: ${slide.backgroundColor || 'white'};
-            position: relative;
+            border: none;
+            background: white;
             box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         `;
+        iframe.src = iframeUrl;
 
-        // Clean up content before rendering
-        const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = slide.content;
+        // Clean up blob URL after iframe loads
+        iframe.onload = () => {
+            setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
+        };
 
-        // Remove editor-specific elements
-        tempDiv.querySelectorAll('.resize-handle').forEach(el => el.remove());
-        tempDiv.querySelectorAll('.element').forEach(el => {
-            el.removeAttribute('contenteditable');
-            el.classList.remove('selected');
-            el.style.cursor = 'default';
-            // Keep original positions and sizes since they're already for 1920x1080
-        });
-
-        slideEl.innerHTML = tempDiv.innerHTML;
-        container.appendChild(slideEl);
+        container.appendChild(iframe);
 
         // Update counter
         document.getElementById('presentationCounter').textContent = 
@@ -104,6 +101,64 @@ export const PresentationMixin = {
 
         // Update timeline
         this.updatePresentationTimeline();
+    },
+
+    /**
+     * Create standalone HTML for presentation slide
+     * @param {Object} slide - Slide object
+     * @returns {string} Complete HTML document
+     */
+    createPresentationSlideHtml(slide) {
+        // Clean up content before rendering
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = slide.content;
+
+        // Remove editor-specific elements
+        tempDiv.querySelectorAll('.resize-handle').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.element').forEach(el => {
+            el.removeAttribute('contenteditable');
+            el.classList.remove('selected');
+            el.style.cursor = 'default';
+        });
+
+        const cleanContent = tempDiv.innerHTML;
+        const backgroundColor = slide.backgroundColor || 'white';
+
+        // Determine background CSS
+        let backgroundStyle = '';
+        if (backgroundColor.startsWith('linear-gradient') || 
+            backgroundColor.startsWith('radial-gradient') || 
+            backgroundColor.startsWith('url(')) {
+            backgroundStyle = `background: ${backgroundColor};`;
+        } else {
+            backgroundStyle = `background-color: ${backgroundColor};`;
+        }
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            width: 1920px;
+            height: 1080px;
+            ${backgroundStyle}
+            position: relative;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    ${cleanContent}
+</body>
+</html>`;
     },
 
     /**
