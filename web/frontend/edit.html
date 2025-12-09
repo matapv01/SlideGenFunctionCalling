@@ -1,0 +1,972 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SlideGenius Pro with Distance Guides</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+    <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <!-- PDFKit for high-quality vector PDF generation -->
+    <script src="https://cdn.jsdelivr.net/npm/pdfkit@0.13.0/js/pdfkit.standalone.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/blob-stream@0.1.3/blob-stream.js"></script>
+
+    <!-- Editor Styles - Modular CSS -->
+    <!-- Base -->
+    <link rel="stylesheet" href="css/base/variables.css">
+    
+    <!-- Layout -->
+    <link rel="stylesheet" href="css/layout/toolbar/base.css">
+    <link rel="stylesheet" href="css/layout/toolbar/buttons.css">
+    <link rel="stylesheet" href="css/layout/toolbar/logo.css">
+    <link rel="stylesheet" href="css/layout/canvas/base.css">
+    <link rel="stylesheet" href="css/layout/canvas/grid.css">
+    <link rel="stylesheet" href="css/layout/properties.css">
+    <link rel="stylesheet" href="css/layout/slides.css">
+    
+    <!-- Features -->
+    <link rel="stylesheet" href="css/features/presentation/base.css?v=2">
+    <link rel="stylesheet" href="css/features/presentation/controls.css?v=2">
+    <link rel="stylesheet" href="css/features/presentation/timeline.css?v=2">
+    <link rel="stylesheet" href="css/features/connector/base.css">
+    <link rel="stylesheet" href="css/features/connector/arrows.css">
+    <link rel="stylesheet" href="css/features/connector/styles.css">
+    <link rel="stylesheet" href="css/features/connector/controls.css">
+    <link rel="stylesheet" href="css/features/guides.css">
+    
+    <!-- Components -->
+    <link rel="stylesheet" href="css/components/elements/base.css">
+    <link rel="stylesheet" href="css/components/elements/selection.css">
+    <link rel="stylesheet" href="css/components/elements/resize.css">
+    <link rel="stylesheet" href="css/components/elements/editing.css">
+    <link rel="stylesheet" href="css/components/controls.css">
+</head>
+
+<body>
+    <!-- Presentation Mode -->
+    <div class="presentation-mode" id="presentationMode">
+        <div class="presentation-click-zone left" id="presentationZoneLeft"></div>
+        <div class="presentation-click-zone right" id="presentationZoneRight"></div>
+        <div class="presentation-slide-container" id="presentationSlideContainer"></div>
+        <div class="presentation-controls">
+            <div style="display: flex; align-items: center; gap: 20px;">
+                <button id="prevSlideBtn" title="Previous Slide (←)">◀</button>
+                <span class="presentation-counter" id="presentationCounter">1 / 1</span>
+                <button id="nextSlideBtn" title="Next Slide (→)">▶</button>
+            </div>
+            <div style="display: flex; align-items: center; gap: 12px;">
+                <button id="exitPresentation" title="Exit Presentation (ESC)">✕</button>
+            </div>
+        </div>
+        <div class="presentation-timeline" id="presentationTimeline">
+            <div class="timeline-track" id="timelineTrack">
+                <div class="timeline-progress" id="timelineProgress"></div>
+                <div class="timeline-slides" id="timelineSlides"></div>
+                <div class="timeline-current-indicator" id="timelineIndicator"></div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="toolbar">
+        <div class="toolbar-left">
+            <div class="logo" onclick="window.location.href='/'" style="cursor: pointer;" title="Quay về trang chủ">SlideGenius</div>
+            <div class="btn-group-separator"></div>
+            <div class="btn-group">
+                <button id="toggleSlidesBtn" title="Thu gọn/Mở rộng Slides">
+                    <span class="toggle-icon">☰</span>
+                    <span class="toggle-text">Slides</span>
+                </button>
+            </div>
+        </div>
+        
+        <div class="toolbar-center">
+            <div class="btn-group">
+                <button id="selectBtn" class="active" style="display: none;">🎯 Select</button>
+                <button id="textBtn">📝 Text</button>
+            </div>
+            
+            <div class="btn-group-separator"></div>
+            
+            <div class="btn-group">
+                <button id="exportAllPdfBtn" class="capture-btn" title="Xuất tất cả slides thành PDF">📄 Export</button>
+            </div>
+            
+            <div class="btn-group-separator"></div>
+            
+            <div class="btn-group">
+                <div class="present-btn-wrapper">
+                    <button id="presentBtn" title="Start presentation">▶️ Present</button>
+                    <div class="present-dropdown" id="presentDropdown">
+                        <div class="present-dropdown-item" data-action="from-start">
+                            <span class="icon">⏮</span>
+                            <span class="label">From Beginning</span>
+                        </div>
+                        <div class="present-dropdown-item" data-action="from-current">
+                            <span class="icon">▶️</span>
+                            <span class="label">From Current Slide</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="toolbar-right">
+            <div class="btn-group">
+                <button id="propertiesBtn">⚙️ Properties</button>
+            </div>
+            <div class="btn-group-separator"></div>
+
+            <div class="btn-group">
+                <button id="resetViewBtn">🔄 Reset View</button>
+            </div>
+            <div class="btn-group-separator"></div>
+
+            <div class="btn-group">
+                <button id="resetAllBtn" title="Reset slide hiện tại về trạng thái ban đầu" style="display: none;">🔄 Reset Slide</button>
+            </div>
+            <div class="btn-group">
+                <button id="importBtn" style="display: none;">📂 Import</button>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFile" accept=".html,text/html" style="display: none;" multiple>
+    <input type="file" id="imageFile" accept="image/*" style="display: none;">
+    <input type="file" id="videoFile" accept="video/*" style="display: none;">
+
+    <div class="left-panels">
+        <div class="left-panel-tabs">
+            <div class="left-panel-tab active" data-tab="slides" data-target="slides-panel-content">
+                <span class="tab-icon">📊</span>
+                <span class="tab-text">Slides</span>
+            </div>
+            <div class="left-panel-tab" data-tab="templates" data-target="templates-panel-content">
+                <span class="tab-icon">🎨</span>
+                <span class="tab-text">Templates</span>
+            </div>
+            <div class="left-panel-tab" data-tab="elements" data-target="elements-panel-content">
+                <span class="tab-icon">✨</span>
+                <span class="tab-text">Elements</span>
+            </div>
+        </div>
+
+        <div id="slides-panel-content" class="left-panel-content active">
+            <div class="panel-header">
+                <h3>Slides</h3>
+                <div class="slide-controls">
+                    <button id="newSlideBtn">+ New</button>
+                    <button id="duplicateSlideBtn">Duplicate</button>
+                </div>
+            </div>
+            <div class="slides-list" id="slidesList"></div>
+        </div>
+
+        <div id="templates-panel-content" class="left-panel-content">
+            <div class="panel-header">
+                <h3>Slide Templates</h3>
+                <p style="font-size: 12px; color: #718096; margin-top: 5px;">Drag templates to canvas to create new
+                    slides</p>
+            </div>
+            <div class="templates-content">
+                <div class="template-category">
+                    <div class="category-title">Basic Layouts</div>
+                    <div class="template-grid">
+                        <div class="template-item" draggable="true" data-template="title-slide">
+                            <div class="template-preview"
+                                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                                <div class="template-title">Title Slide</div>
+                                <div class="template-subtitle">Subtitle here</div>
+                            </div>
+                            <div class="template-label">Title Slide</div>
+                        </div>
+
+                        <div class="template-item" draggable="true" data-template="content-slide">
+                            <div class="template-preview" style="background: #ffffff; color: #333;">
+                                <div class="template-header">Content</div>
+                                <div class="template-bullets">
+                                    <div>• Point 1</div>
+                                    <div>• Point 2</div>
+                                    <div>• Point 3</div>
+                                </div>
+                            </div>
+                            <div class="template-label">Content</div>
+                        </div>
+
+                        <div class="template-item" draggable="true" data-template="two-column">
+                            <div class="template-preview" style="background: #f7fafc;">
+                                <div class="template-columns">
+                                    <div class="template-col">Left</div>
+                                    <div class="template-col">Right</div>
+                                </div>
+                            </div>
+                            <div class="template-label">Two Columns</div>
+                        </div>
+
+                        <div class="template-item" draggable="true" data-template="image-content">
+                            <div class="template-preview" style="background: #edf2f7;">
+                                <div class="template-image-placeholder">🖼️</div>
+                                <div class="template-content-text">Content</div>
+                            </div>
+                            <div class="template-label">Image + Text</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="template-category">
+                    <div class="category-title">Special Layouts</div>
+                    <div class="template-grid">
+                        <div class="template-item" draggable="true" data-template="quote-slide">
+                            <div class="template-preview" style="background: linear-gradient(45deg, #667eea, #764ba2);">
+                                <div class="template-quote">"Quote"</div>
+                                <div class="template-author">- Author</div>
+                            </div>
+                            <div class="template-label">Quote</div>
+                        </div>
+
+                        <div class="template-item" draggable="true" data-template="thank-you">
+                            <div class="template-preview"
+                                style="background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);">
+                                <div class="template-center">Thank You</div>
+                            </div>
+                            <div class="template-label">Thank You</div>
+                        </div>
+
+                        <div class="template-item" draggable="true" data-template="blank-slide">
+                            <div class="template-preview" style="background: #ffffff; border: 2px dashed #cbd5e0;">
+                                <div class="template-center" style="color: #a0aec0;">Blank</div>
+                            </div>
+                            <div class="template-label">Blank Slide</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="elements-panel-content" class="left-panel-content">
+            <div class="panel-header">
+                <h3>Design Elements</h3>
+                <p style="font-size: 12px; color: #718096; margin-top: 5px;">Click to add elements to your slide</p>
+            </div>
+            <div class="elements-content">
+                <!-- Media Elements - Moved to top for easy access -->
+                <div class="element-category">
+                    <div class="category-title">📱 Import từ máy</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="image" title="Click để chọn ảnh từ máy tính">
+                            <div class="element-icon">
+                                <div class="media-placeholder"
+                                    style="width: 24px; height: 18px; background: linear-gradient(45deg, #48bb78, #38a169); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white;">
+                                    📁</div>
+                            </div>
+                            <div class="element-label">Thêm Ảnh</div>
+                        </div>
+                        <div class="element-item" data-element="video" title="Click để chọn video từ máy tính">
+                            <div class="element-icon">
+                                <div class="media-placeholder"
+                                    style="width: 24px; height: 18px; background: linear-gradient(45deg, #4299e1, #3182ce); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white;">
+                                    🎬</div>
+                            </div>
+                            <div class="element-label">Thêm Video</div>
+                        </div>
+                        <div class="element-item" data-element="avatar">
+                            <div class="element-icon" style="font-size: 20px;">👤</div>
+                            <div class="element-label">Avatar</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Basic Shapes -->
+                <div class="element-category">
+                    <div class="category-title">🔷 Basic Shapes</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="rectangle">
+                            <div class="element-icon">
+                                <div class="shape-rectangle"
+                                    style="width: 24px; height: 16px; background: linear-gradient(45deg, #667eea, #764ba2); border-radius: 4px;">
+                                </div>
+                            </div>
+                            <div class="element-label">Rectangle</div>
+                        </div>
+                        <div class="element-item" data-element="circle">
+                            <div class="element-icon">
+                                <div class="shape-circle"
+                                    style="width: 24px; height: 24px; background: linear-gradient(45deg, #48bb78, #38a169); border-radius: 50%;">
+                                </div>
+                            </div>
+                            <div class="element-label">Circle</div>
+                        </div>
+                        <div class="element-item" data-element="triangle">
+                            <div class="element-icon">
+                                <div class="shape-triangle"
+                                    style="width: 0; height: 0; border-left: 12px solid transparent; border-right: 12px solid transparent; border-bottom: 20px solid #f56565;">
+                                </div>
+                            </div>
+                            <div class="element-label">Triangle</div>
+                        </div>
+                        <div class="element-item" data-element="line">
+                            <div class="element-icon">
+                                <div class="shape-line"
+                                    style="width: 30px; height: 3px; background: linear-gradient(90deg, #ed8936, #f6ad55); border-radius: 2px;">
+                                </div>
+                            </div>
+                            <div class="element-label">Line</div>
+                        </div>
+                        <div class="element-item" data-element="square">
+                            <div class="element-icon">
+                                <div class="shape-square"
+                                    style="width: 20px; height: 20px; background: linear-gradient(45deg, #9f7aea, #805ad5); border-radius: 2px;">
+                                </div>
+                            </div>
+                            <div class="element-label">Square</div>
+                        </div>
+                        <div class="element-item" data-element="oval">
+                            <div class="element-icon">
+                                <div class="shape-oval"
+                                    style="width: 30px; height: 18px; background: linear-gradient(45deg, #38b2ac, #319795); border-radius: 50%;">
+                                </div>
+                            </div>
+                            <div class="element-label">Oval</div>
+                        </div>
+                        <div class="element-item" data-element="diamond">
+                            <div class="element-icon">
+                                <div class="shape-diamond"
+                                    style="width: 20px; height: 20px; background: #e53e3e; transform: rotate(45deg);">
+                                </div>
+                            </div>
+                            <div class="element-label">Diamond</div>
+                        </div>
+                        <div class="element-item" data-element="hexagon">
+                            <div class="element-icon" style="font-size: 18px; color: #667eea;">⬡</div>
+                            <div class="element-label">Hexagon</div>
+                        </div>
+                        <div class="element-item" data-element="pentagon">
+                            <div class="element-icon" style="font-size: 18px; color: #48bb78;">⬟</div>
+                            <div class="element-label">Pentagon</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Arrows & Directions -->
+                <div class="element-category">
+                    <div class="category-title">➡️ Arrows & Directions</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="arrow-right">
+                            <div class="element-icon" style="font-size: 20px; color: #4299e1;">→</div>
+                            <div class="element-label">Right</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-left">
+                            <div class="element-icon" style="font-size: 20px; color: #4299e1;">←</div>
+                            <div class="element-label">Left</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-up">
+                            <div class="element-icon" style="font-size: 20px; color: #4299e1;">↑</div>
+                            <div class="element-label">Up</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-down">
+                            <div class="element-icon" style="font-size: 20px; color: #4299e1;">↓</div>
+                            <div class="element-label">Down</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-curved">
+                            <div class="element-icon" style="font-size: 20px; color: #667eea;">↪</div>
+                            <div class="element-label">Curved</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-double">
+                            <div class="element-icon" style="font-size: 20px; color: #ed8936;">⇄</div>
+                            <div class="element-label">Double</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-thick">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">➤</div>
+                            <div class="element-label">Thick</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-circle">
+                            <div class="element-icon" style="font-size: 20px; color: #9f7aea;">⟲</div>
+                            <div class="element-label">Circle</div>
+                        </div>
+                        <div class="element-item" data-element="arrow-diagonal">
+                            <div class="element-icon" style="font-size: 20px; color: #f56565;">↗</div>
+                            <div class="element-label">Diagonal</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Symbols & Icons -->
+                <div class="element-category">
+                    <div class="category-title">🎨 Symbols & Icons</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="star">
+                            <div class="element-icon" style="font-size: 20px; color: #ffd700;">⭐</div>
+                            <div class="element-label">Star</div>
+                        </div>
+                        <div class="element-item" data-element="star-outline">
+                            <div class="element-icon" style="font-size: 20px; color: #ffd700;">☆</div>
+                            <div class="element-label">Star Outline</div>
+                        </div>
+                        <div class="element-item" data-element="heart">
+                            <div class="element-icon" style="font-size: 20px; color: #e53e3e;">❤️</div>
+                            <div class="element-label">Heart</div>
+                        </div>
+                        <div class="element-item" data-element="heart-outline">
+                            <div class="element-icon" style="font-size: 20px; color: #e53e3e;">♡</div>
+                            <div class="element-label">Heart Outline</div>
+                        </div>
+                        <div class="element-item" data-element="check">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">✓</div>
+                            <div class="element-label">Check</div>
+                        </div>
+                        <div class="element-item" data-element="cross">
+                            <div class="element-icon" style="font-size: 20px; color: #f56565;">✗</div>
+                            <div class="element-label">Cross</div>
+                        </div>
+                        <div class="element-item" data-element="plus">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">➕</div>
+                            <div class="element-label">Plus</div>
+                        </div>
+                        <div class="element-item" data-element="minus">
+                            <div class="element-icon" style="font-size: 20px; color: #f56565;">➖</div>
+                            <div class="element-label">Minus</div>
+                        </div>
+                        <div class="element-item" data-element="exclamation">
+                            <div class="element-icon" style="font-size: 20px; color: #ed8936;">❗</div>
+                            <div class="element-label">Warning</div>
+                        </div>
+                        <div class="element-item" data-element="question">
+                            <div class="element-icon" style="font-size: 20px; color: #4299e1;">❓</div>
+                            <div class="element-label">Question</div>
+                        </div>
+                        <div class="element-item" data-element="info">
+                            <div class="element-icon" style="font-size: 20px; color: #3182ce;">ℹ️</div>
+                            <div class="element-label">Info</div>
+                        </div>
+                        <div class="element-item" data-element="thumbs-up">
+                            <div class="element-icon" style="font-size: 20px;">👍</div>
+                            <div class="element-label">Thumbs Up</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Business & Office -->
+                <div class="element-category">
+                    <div class="category-title">💼 Business & Office</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="lightbulb">
+                            <div class="element-icon" style="font-size: 20px; color: #ed8936;">💡</div>
+                            <div class="element-label">Idea</div>
+                        </div>
+                        <div class="element-item" data-element="target">
+                            <div class="element-icon" style="font-size: 20px; color: #e53e3e;">🎯</div>
+                            <div class="element-label">Target</div>
+                        </div>
+                        <div class="element-item" data-element="rocket">
+                            <div class="element-icon" style="font-size: 20px; color: #667eea;">🚀</div>
+                            <div class="element-label">Rocket</div>
+                        </div>
+                        <div class="element-item" data-element="trophy">
+                            <div class="element-icon" style="font-size: 20px; color: #ffd700;">🏆</div>
+                            <div class="element-label">Trophy</div>
+                        </div>
+                        <div class="element-item" data-element="medal">
+                            <div class="element-icon" style="font-size: 20px; color: #ffd700;">🏅</div>
+                            <div class="element-label">Medal</div>
+                        </div>
+                        <div class="element-item" data-element="briefcase">
+                            <div class="element-icon" style="font-size: 20px; color: #4a5568;">💼</div>
+                            <div class="element-label">Briefcase</div>
+                        </div>
+                        <div class="element-item" data-element="graph">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">📈</div>
+                            <div class="element-label">Growth</div>
+                        </div>
+                        <div class="element-item" data-element="calendar">
+                            <div class="element-icon" style="font-size: 20px; color: #3182ce;">📅</div>
+                            <div class="element-label">Calendar</div>
+                        </div>
+                        <div class="element-item" data-element="clock">
+                            <div class="element-icon" style="font-size: 20px; color: #718096;">🕐</div>
+                            <div class="element-label">Clock</div>
+                        </div>
+                        <div class="element-item" data-element="money">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">💰</div>
+                            <div class="element-label">Money</div>
+                        </div>
+                        <div class="element-item" data-element="handshake">
+                            <div class="element-icon" style="font-size: 20px;">🤝</div>
+                            <div class="element-label">Partnership</div>
+                        </div>
+                        <div class="element-item" data-element="key">
+                            <div class="element-icon" style="font-size: 20px; color: #ed8936;">🔑</div>
+                            <div class="element-label">Key</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Technology -->
+                <div class="element-category">
+                    <div class="category-title">💻 Technology</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="laptop">
+                            <div class="element-icon" style="font-size: 20px; color: #4a5568;">💻</div>
+                            <div class="element-label">Laptop</div>
+                        </div>
+                        <div class="element-item" data-element="phone">
+                            <div class="element-icon" style="font-size: 20px; color: #3182ce;">📱</div>
+                            <div class="element-label">Phone</div>
+                        </div>
+                        <div class="element-item" data-element="wifi">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">📶</div>
+                            <div class="element-label">WiFi</div>
+                        </div>
+                        <div class="element-item" data-element="database">
+                            <div class="element-icon" style="font-size: 20px; color: #667eea;">🗄️</div>
+                            <div class="element-label">Database</div>
+                        </div>
+                        <div class="element-item" data-element="cloud">
+                            <div class="element-icon" style="font-size: 20px; color: #90cdf4;">☁️</div>
+                            <div class="element-label">Cloud</div>
+                        </div>
+                        <div class="element-item" data-element="gear">
+                            <div class="element-icon" style="font-size: 20px; color: #718096;">⚙️</div>
+                            <div class="element-label">Settings</div>
+                        </div>
+                        <div class="element-item" data-element="code">
+                            <div class="element-icon" style="font-size: 20px; color: #2d3748;">💻</div>
+                            <div class="element-label">Code</div>
+                        </div>
+                        <div class="element-item" data-element="bug">
+                            <div class="element-icon" style="font-size: 20px; color: #f56565;">🐛</div>
+                            <div class="element-label">Bug</div>
+                        </div>
+                        <div class="element-item" data-element="shield">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">🛡️</div>
+                            <div class="element-label">Security</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Nature & Weather -->
+                <div class="element-category">
+                    <div class="category-title">🌿 Nature & Weather</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="sun">
+                            <div class="element-icon" style="font-size: 20px; color: #ffd700;">☀️</div>
+                            <div class="element-label">Sun</div>
+                        </div>
+                        <div class="element-item" data-element="moon">
+                            <div class="element-icon" style="font-size: 20px; color: #a0aec0;">🌙</div>
+                            <div class="element-label">Moon</div>
+                        </div>
+                        <div class="element-item" data-element="tree">
+                            <div class="element-icon" style="font-size: 20px; color: #48bb78;">🌳</div>
+                            <div class="element-label">Tree</div>
+                        </div>
+                        <div class="element-item" data-element="flower">
+                            <div class="element-icon" style="font-size: 20px; color: #f093fb;">🌸</div>
+                            <div class="element-label">Flower</div>
+                        </div>
+                        <div class="element-item" data-element="leaf">
+                            <div class="element-icon" style="font-size: 20px; color: #38a169;">🍃</div>
+                            <div class="element-label">Leaf</div>
+                        </div>
+                        <div class="element-item" data-element="fire">
+                            <div class="element-icon" style="font-size: 20px; color: #ed8936;">🔥</div>
+                            <div class="element-label">Fire</div>
+                        </div>
+                        <div class="element-item" data-element="water">
+                            <div class="element-icon" style="font-size: 20px; color: #3182ce;">💧</div>
+                            <div class="element-label">Water</div>
+                        </div>
+                        <div class="element-item" data-element="lightning">
+                            <div class="element-icon" style="font-size: 20px; color: #ffd700;">⚡</div>
+                            <div class="element-label">Lightning</div>
+                        </div>
+                        <div class="element-item" data-element="rainbow">
+                            <div class="element-icon" style="font-size: 20px;">🌈</div>
+                            <div class="element-label">Rainbow</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- People & Emotions -->
+                <div class="element-category">
+                    <div class="category-title">😊 People & Emotions</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="avatar">
+                            <div class="element-icon" style="font-size: 20px;">👤</div>
+                            <div class="element-label">Avatar</div>
+                        </div>
+                        <div class="element-item" data-element="team">
+                            <div class="element-icon" style="font-size: 20px;">👥</div>
+                            <div class="element-label">Team</div>
+                        </div>
+                        <div class="element-item" data-element="smile">
+                            <div class="element-icon" style="font-size: 20px;">😊</div>
+                            <div class="element-label">Happy</div>
+                        </div>
+                        <div class="element-item" data-element="thinking">
+                            <div class="element-icon" style="font-size: 20px;">🤔</div>
+                            <div class="element-label">Thinking</div>
+                        </div>
+                        <div class="element-item" data-element="celebration">
+                            <div class="element-icon" style="font-size: 20px;">🎉</div>
+                            <div class="element-label">Celebration</div>
+                        </div>
+                        <div class="element-item" data-element="eyes">
+                            <div class="element-icon" style="font-size: 20px;">👀</div>
+                            <div class="element-label">Eyes</div>
+                        </div>
+                        <div class="element-item" data-element="brain">
+                            <div class="element-icon" style="font-size: 20px;">🧠</div>
+                            <div class="element-label">Brain</div>
+                        </div>
+                        <div class="element-item" data-element="muscle">
+                            <div class="element-icon" style="font-size: 20px;">💪</div>
+                            <div class="element-label">Strong</div>
+                        </div>
+                        <div class="element-item" data-element="clap">
+                            <div class="element-icon" style="font-size: 20px;">👏</div>
+                            <div class="element-label">Applause</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Charts & Diagrams -->
+                <div class="element-category">
+                    <div class="category-title">📊 Charts</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="bar-chart">
+                            <div class="element-icon">
+                                <div class="chart-placeholder"
+                                    style="width: 24px; height: 18px; background: linear-gradient(45deg, #48bb78, #38a169); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white;">
+                                    📊</div>
+                            </div>
+                            <div class="element-label">Bar Chart</div>
+                        </div>
+                        <div class="element-item" data-element="pie-chart">
+                            <div class="element-icon">
+                                <div class="chart-placeholder"
+                                    style="width: 24px; height: 24px; border-radius: 50%; background: linear-gradient(45deg, #ed8936, #f6ad55); display: flex; align-items: center; justify-content: center; font-size: 12px; color: white;">
+                                    🥧</div>
+                            </div>
+                            <div class="element-label">Pie Chart</div>
+                        </div>
+                        <div class="element-item" data-element="progress-bar">
+                            <div class="element-icon" style="font-size: 16px; color: #4299e1;">▓▓▓░░</div>
+                            <div class="element-label">Progress</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Decorative Elements -->
+                <div class="element-category">
+                    <div class="category-title">✨ Decorative</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="badge">
+                            <div class="element-icon" style="font-size: 16px; color: #667eea;">🏷️</div>
+                            <div class="element-label">Badge</div>
+                        </div>
+                        <div class="element-item" data-element="divider">
+                            <div class="element-icon">
+                                <div
+                                    style="width: 24px; height: 2px; background: linear-gradient(90deg, #667eea, #764ba2); border-radius: 1px;">
+                                </div>
+                            </div>
+                            <div class="element-label">Divider</div>
+                        </div>
+                        <div class="element-item" data-element="quote-box">
+                            <div class="element-icon" style="font-size: 16px; color: #718096;">💬</div>
+                            <div class="element-label">Quote Box</div>
+                        </div>
+                        <div class="element-item" data-element="sparkle">
+                            <div class="element-icon" style="font-size: 18px; color: #ffd700;">✨</div>
+                            <div class="element-label">Sparkle</div>
+                        </div>
+                        <div class="element-item" data-element="crown">
+                            <div class="element-icon" style="font-size: 18px; color: #ed8936;">👑</div>
+                            <div class="element-label">Crown</div>
+                        </div>
+                        <div class="element-item" data-element="gem">
+                            <div class="element-icon" style="font-size: 18px; color: #9f7aea;">💎</div>
+                            <div class="element-label">Gem</div>
+                        </div>
+                        <div class="element-item" data-element="confetti">
+                            <div class="element-icon" style="font-size: 18px;">🎊</div>
+                            <div class="element-label">Confetti</div>
+                        </div>
+                        <div class="element-item" data-element="ribbon">
+                            <div class="element-icon" style="font-size: 18px; color: #e53e3e;">🎀</div>
+                            <div class="element-label">Ribbon</div>
+                        </div>
+                        <div class="element-item" data-element="frame">
+                            <div class="element-icon" style="font-size: 18px; color: #8b5a3c;">🖼️</div>
+                            <div class="element-label">Frame</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Food & Objects -->
+                <div class="element-category">
+                    <div class="category-title">🍎 Food & Objects</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="coffee">
+                            <div class="element-icon" style="font-size: 18px; color: #8b5a3c;">☕</div>
+                            <div class="element-label">Coffee</div>
+                        </div>
+                        <div class="element-item" data-element="pizza">
+                            <div class="element-icon" style="font-size: 18px;">🍕</div>
+                            <div class="element-label">Pizza</div>
+                        </div>
+                        <div class="element-item" data-element="apple">
+                            <div class="element-icon" style="font-size: 18px;">🍎</div>
+                            <div class="element-label">Apple</div>
+                        </div>
+                        <div class="element-item" data-element="cake">
+                            <div class="element-icon" style="font-size: 18px;">🎂</div>
+                            <div class="element-label">Cake</div>
+                        </div>
+                        <div class="element-item" data-element="book">
+                            <div class="element-icon" style="font-size: 18px;">📚</div>
+                            <div class="element-label">Book</div>
+                        </div>
+                        <div class="element-item" data-element="music">
+                            <div class="element-icon" style="font-size: 18px; color: #667eea;">🎵</div>
+                            <div class="element-label">Music</div>
+                        </div>
+                        <div class="element-item" data-element="gift">
+                            <div class="element-icon" style="font-size: 18px;">🎁</div>
+                            <div class="element-label">Gift</div>
+                        </div>
+                        <div class="element-item" data-element="balloon">
+                            <div class="element-icon" style="font-size: 18px;">🎈</div>
+                            <div class="element-label">Balloon</div>
+                        </div>
+                        <div class="element-item" data-element="diamond-shape">
+                            <div class="element-icon" style="font-size: 18px; color: #9f7aea;">♦️</div>
+                            <div class="element-label">Diamond</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mathematical & Scientific -->
+                <div class="element-category">
+                    <div class="category-title">🔢 Math & Science</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="infinity">
+                            <div class="element-icon" style="font-size: 18px; color: #667eea;">∞</div>
+                            <div class="element-label">Infinity</div>
+                        </div>
+                        <div class="element-item" data-element="pi">
+                            <div class="element-icon" style="font-size: 18px; color: #48bb78;">π</div>
+                            <div class="element-label">Pi</div>
+                        </div>
+                        <div class="element-item" data-element="sum">
+                            <div class="element-icon" style="font-size: 18px; color: #ed8936;">Σ</div>
+                            <div class="element-label">Sum</div>
+                        </div>
+                        <div class="element-item" data-element="delta">
+                            <div class="element-icon" style="font-size: 18px; color: #f56565;">Δ</div>
+                            <div class="element-label">Delta</div>
+                        </div>
+                        <div class="element-item" data-element="alpha">
+                            <div class="element-icon" style="font-size: 18px; color: #9f7aea;">α</div>
+                            <div class="element-label">Alpha</div>
+                        </div>
+                        <div class="element-item" data-element="beta">
+                            <div class="element-icon" style="font-size: 18px; color: #3182ce;">β</div>
+                            <div class="element-label">Beta</div>
+                        </div>
+                        <div class="element-item" data-element="microscope">
+                            <div class="element-icon" style="font-size: 18px;">🔬</div>
+                            <div class="element-label">Research</div>
+                        </div>
+                        <div class="element-item" data-element="atom">
+                            <div class="element-icon" style="font-size: 18px;">⚛️</div>
+                            <div class="element-label">Atom</div>
+                        </div>
+                        <div class="element-item" data-element="dna">
+                            <div class="element-icon" style="font-size: 18px;">🧬</div>
+                            <div class="element-label">DNA</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Transportation -->
+                <div class="element-category">
+                    <div class="category-title">🚗 Transportation</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="car">
+                            <div class="element-icon" style="font-size: 18px;">🚗</div>
+                            <div class="element-label">Car</div>
+                        </div>
+                        <div class="element-item" data-element="airplane">
+                            <div class="element-icon" style="font-size: 18px;">✈️</div>
+                            <div class="element-label">Airplane</div>
+                        </div>
+                        <div class="element-item" data-element="train">
+                            <div class="element-icon" style="font-size: 18px;">🚆</div>
+                            <div class="element-label">Train</div>
+                        </div>
+                        <div class="element-item" data-element="bike">
+                            <div class="element-icon" style="font-size: 18px;">🚲</div>
+                            <div class="element-label">Bike</div>
+                        </div>
+                        <div class="element-item" data-element="ship">
+                            <div class="element-icon" style="font-size: 18px;">🚢</div>
+                            <div class="element-label">Ship</div>
+                        </div>
+                        <div class="element-item" data-element="bus">
+                            <div class="element-icon" style="font-size: 18px;">🚌</div>
+                            <div class="element-label">Bus</div>
+                        </div>
+                        <div class="element-item" data-element="motorcycle">
+                            <div class="element-icon" style="font-size: 18px;">🏍️</div>
+                            <div class="element-label">Motorcycle</div>
+                        </div>
+                        <div class="element-item" data-element="helicopter">
+                            <div class="element-icon" style="font-size: 18px;">🚁</div>
+                            <div class="element-label">Helicopter</div>
+                        </div>
+                        <div class="element-item" data-element="satellite">
+                            <div class="element-icon" style="font-size: 18px;">🛰️</div>
+                            <div class="element-label">Satellite</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Sports & Activities -->
+                <div class="element-category">
+                    <div class="category-title">⚽ Sports & Activities</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="soccer">
+                            <div class="element-icon" style="font-size: 18px;">⚽</div>
+                            <div class="element-label">Soccer</div>
+                        </div>
+                        <div class="element-item" data-element="basketball">
+                            <div class="element-icon" style="font-size: 18px;">🏀</div>
+                            <div class="element-label">Basketball</div>
+                        </div>
+                        <div class="element-item" data-element="tennis">
+                            <div class="element-icon" style="font-size: 18px;">🎾</div>
+                            <div class="element-label">Tennis</div>
+                        </div>
+                        <div class="element-item" data-element="golf">
+                            <div class="element-icon" style="font-size: 18px;">⛳</div>
+                            <div class="element-label">Golf</div>
+                        </div>
+                        <div class="element-item" data-element="swimming">
+                            <div class="element-icon" style="font-size: 18px;">🏊</div>
+                            <div class="element-label">Swimming</div>
+                        </div>
+                        <div class="element-item" data-element="running">
+                            <div class="element-icon" style="font-size: 18px;">🏃</div>
+                            <div class="element-label">Running</div>
+                        </div>
+                        <div class="element-item" data-element="cycling">
+                            <div class="element-icon" style="font-size: 18px;">🚴</div>
+                            <div class="element-label">Cycling</div>
+                        </div>
+                        <div class="element-item" data-element="weightlifting">
+                            <div class="element-icon" style="font-size: 18px;">🏋️</div>
+                            <div class="element-label">Weights</div>
+                        </div>
+                        <div class="element-item" data-element="yoga">
+                            <div class="element-icon" style="font-size: 18px;">🧘</div>
+                            <div class="element-label">Yoga</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="canvas-container" id="canvasContainer">
+        <div class="canvas" id="canvas"></div>
+        <!-- Drag and drop overlay -->
+        <div class="drag-drop-overlay" id="dragDropOverlay">
+            <div class="drag-drop-message">
+                Thả ảnh/video vào đây để thêm vào slide
+            </div>
+        </div>
+        <!-- Snapping guides -->
+        <div id="vertical-guide" class="guide-line vertical"></div>
+        <div id="horizontal-guide" class="guide-line horizontal"></div>
+        <!-- NEW: Distance measurement guides -->
+        <div id="distance-guides-container">
+            <div class="distance-line" id="dist-line-top"></div>
+            <div class="distance-label" id="dist-label-top">0</div>
+            <div class="distance-line" id="dist-line-right"></div>
+            <div class="distance-label" id="dist-label-right">0</div>
+            <div class="distance-line" id="dist-line-bottom"></div>
+            <div class="distance-label" id="dist-label-bottom">0</div>
+            <div class="distance-line" id="dist-line-left"></div>
+            <div class="distance-label" id="dist-label-left">0</div>
+        </div>
+    </div>
+
+    <div class="properties-panel" id="propertiesPanel">
+        <h2 style="margin-bottom: 25px; color: #2d3748; font-weight: 700;">Properties</h2>
+        <div id="propertiesContent">
+        </div>
+    </div>
+
+    <div class="context-menu" id="contextMenu">
+        <div class="context-menu-item" data-action="group">Group <span class="shortcut">Ctrl+G</span></div>
+        <div class="context-menu-item" data-action="ungroup">Ungroup <span class="shortcut">Ctrl+Shift+G</span></div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="connectElements">Connect with Line</div>
+        <div class="context-menu-item" data-action="disconnectLine">Disconnect Line</div>
+        <div class="context-menu-item" data-action="changeConnectorType">Change Line Style</div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="copy">Copy <span class="shortcut">Ctrl+C</span></div>
+        <div class="context-menu-item" data-action="paste">Paste <span class="shortcut">Ctrl+V</span></div>
+        <div class="context-menu-item" data-action="duplicate">Duplicate <span class="shortcut">Ctrl+D</span></div>
+        <div class="context-menu-item" data-action="delete">Delete <span class="shortcut">Del</span></div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="bringForward">Bring Forward</div>
+        <div class="context-menu-item" data-action="sendBackward">Send Backward</div>
+    </div>
+
+    <!-- Connector Type Selector -->
+    <div class="connector-type-selector" id="connectorTypeSelector">
+        <div class="selector-section">
+            <h4>Line Type</h4>
+            <div class="selector-row">
+                <button data-type="straight" class="active">📏 Straight</button>
+                <button data-type="curved">🌊 Curved</button>
+                <button data-type="step">⚡ Step</button>
+            </div>
+            <div class="selector-row">
+                <button data-type="dashed">⚊ Dashed</button>
+                <button data-type="dotted">⚪ Dotted</button>
+                <button data-type="thick">■ Thick</button>
+            </div>
+        </div>
+        <div class="selector-section">
+            <h4>Arrow Type</h4>
+            <div class="selector-row">
+                <button data-arrow="forward" class="active">➡️ Forward</button>
+                <button data-arrow="backward">⬅️ Backward</button>
+                <button data-arrow="both">⬅️➡️ Both</button>
+            </div>
+            <div class="selector-row">
+                <button data-arrow="none">━ None</button>
+                <button data-arrow="circle">⭕ Circle</button>
+                <button data-arrow="diamond">♦️ Diamond</button>
+            </div>
+            <div class="selector-row">
+                <button data-arrow="square">⬛ Square</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="zoom-controls">
+        <button class="zoom-btn" id="zoomOut">−</button>
+        <div class="zoom-level" id="zoomLevel">Fit</div>
+        <button class="zoom-btn" id="zoomIn">+</button>
+    </div>
+
+
+    <!-- Editor Script - ES6 Modules -->
+    <script type="module" src="js/init/init.js"></script>
+    <script nomodule src="js/editor.js"></script>
+</body>
+</html>

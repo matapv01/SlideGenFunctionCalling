@@ -1,0 +1,24 @@
+        .logo {
+            font-size: 24px;
+            font-weight: 900;
+            color: white;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4), 0 0 20px rgba(255, 255, 255, 0.3);
+            letter-spacing: -0.5px;
+            position: relative;
+            z-index: 1;
+            background: linear-gradient(45deg, #fff, #e0e7ff);
+            -webkit-background-clip: text;
+            background-clip: text;
+            -webkit-text-fill-color: transparent;
+            animation: logoGlow 3s ease-in-out infinite;
+        }
+
+        @keyframes logoGlow {
+            0%, 100% {
+                filter: drop-shadow(0 0 5px rgba(255, 255, 255, 0.5));
+            }
+            50% {
+                filter: drop-shadow(0 0 15px rgba(255, 255, 255, 0.8));
+            }
+        }
+

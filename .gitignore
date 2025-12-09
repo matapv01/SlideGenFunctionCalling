@@ -1,0 +1,12 @@
+__pycache__/
+
+
+*.pyc
+
+venv/
+.env
+
+web/static/capures/
+web/static/output/
+web/static/temp/
+web/static/uploads/

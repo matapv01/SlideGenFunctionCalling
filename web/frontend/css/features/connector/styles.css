@@ -1,0 +1,64 @@
+        /* Curved connector using SVG */
+        .connector-line.curved {
+            pointer-events: none;
+            background: none !important;
+            min-height: auto;
+        }
+
+        .connector-line.curved svg {
+            overflow: visible;
+            pointer-events: all;
+        }
+
+        .connector-line.curved svg path {
+            fill: none;
+            stroke: #667eea;
+            stroke-width: 3;
+            stroke-linecap: round;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .connector-line.curved svg path:hover {
+            stroke: #5a67d8;
+            stroke-width: 4;
+        }
+
+        .connector-line.curved.selected svg path {
+            stroke: #ff6b9d;
+            stroke-width: 4;
+        }
+
+        /* Step connector using SVG */
+        .connector-line.step {
+            pointer-events: none;
+            background: none !important;
+            min-height: auto;
+        }
+
+        .connector-line.step svg {
+            overflow: visible;
+            pointer-events: all;
+        }
+
+        .connector-line.step svg path {
+            fill: none;
+            stroke: #667eea;
+            stroke-width: 3;
+            stroke-linecap: round;
+            stroke-linejoin: round;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .connector-line.step svg path:hover {
+            stroke: #5a67d8;
+            stroke-width: 4;
+        }
+
+        .connector-line.step.selected svg path {
+            stroke: #ff6b9d;
+            stroke-width: 4;
+        }
+
+        /* Control points for curved connectors */

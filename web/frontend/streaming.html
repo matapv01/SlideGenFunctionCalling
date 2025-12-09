@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SlideGen - Generating Slides...</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <link rel="stylesheet" href="css/streaming.css?v=2">
+</head>
+
+<body>
+    <!-- Aurora overlay for animated background -->
+    <div class="aurora-overlay"></div>
+    
+    <!-- Floating particles -->
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <div class="streaming-container">
+            <!-- Header -->
+            <div class="header">
+                <h1 class="title">
+                    <i class="bi bi-stars"></i>
+                    SlideGen AI
+                </h1>
+                <p class="subtitle">Đang tạo bài thuyết trình của bạn...</p>
+            </div>
+
+            <!-- Progress Steps -->
+            <div class="progress-steps">
+                <div class="step" id="step-1">
+                    <div class="step-icon">
+                        <i class="bi bi-file-earmark-text"></i>
+                    </div>
+                    <div class="step-label">Phân tích nội dung</div>
+                    <div class="step-status">
+                        <span class="status-text">Đang chờ...</span>
+                    </div>
+                </div>
+                
+                <div class="step-connector"></div>
+                
+                <div class="step" id="step-2">
+                    <div class="step-icon">
+                        <i class="bi bi-puzzle"></i>
+                    </div>
+                    <div class="step-label">Chuẩn bị nội dung</div>
+                    <div class="step-status">
+                        <span class="status-text">Đang chờ...</span>
+                    </div>
+                </div>
+                
+                <div class="step-connector"></div>
+                
+                <div class="step" id="step-3">
+                    <div class="step-icon">
+                        <i class="bi bi-brush"></i>
+                    </div>
+                    <div class="step-label">Thiết kế slide</div>
+                    <div class="step-status">
+                        <span class="status-text">Đang chờ...</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Progress Bar -->
+            <div class="progress-bar-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="progress-text" id="progressText">0%</div>
+            </div>
+
+            <!-- Current Activity -->
+            <div class="current-activity" id="currentActivity">
+                <div class="activity-icon">
+                    <div class="spinner"></div>
+                </div>
+                <div class="activity-text">
+                    <div class="activity-title" id="activityTitle">Đang khởi động...</div>
+                    <div class="activity-description" id="activityDescription">Vui lòng đợi...</div>
+                </div>
+            </div>
+
+            <!-- Slides Preview -->
+            <div class="slides-preview" id="slidesPreview" style="display: block;">
+                <h3 class="preview-title">
+                    <i class="bi bi-collection"></i>
+                    Slides (<span id="slideCount">0</span>/<span id="totalSlideCount">0</span>)
+                </h3>
+                <div class="slides-grid" id="slidesGrid">
+                    <!-- Slides will be added here dynamically -->
+                </div>
+            </div>
+
+            <!-- Action Buttons (hidden initially) -->
+            <div class="action-buttons" id="actionButtons" style="display: none;">
+                <button class="btn-primary" id="goToEditor">
+                    <i class="bi bi-pencil-square"></i>
+                    Chuyển đến Editor
+                </button>
+                <button class="btn-secondary" id="backToHome">
+                    <i class="bi bi-house"></i>
+                    Quay lại trang chủ
+                </button>
+            </div>
+
+            <!-- Slide Preview Modal -->
+            <div class="slide-modal" id="slideModal" style="display: none;">
+                <div class="slide-modal-backdrop" id="modalBackdrop"></div>
+                <div class="slide-modal-content">
+                    <button class="slide-modal-close" id="modalClose">
+                        <i class="bi bi-x-lg"></i>
+                    </button>
+                    <div class="slide-modal-body">
+                        <iframe id="modalIframe" frameborder="0" scrolling="no"></iframe>
+                    </div>
+                    <div class="slide-modal-footer">
+                        <span id="modalSlideTitle">Slide Preview</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Error Display (hidden initially) -->
+            <div class="error-container" id="errorContainer" style="display: none;">
+                <div class="error-icon">
+                    <i class="bi bi-exclamation-triangle"></i>
+                </div>
+                <div class="error-message" id="errorMessage"></div>
+                <button class="btn-secondary" id="retryButton">
+                    <i class="bi bi-arrow-clockwise"></i>
+                    Thử lại
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Toast Notifications Container -->
+    <div class="toast-container" id="toastContainer"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script type="module" src="js/streaming.js?v=2"></script>
+</body>
+
+</html>
