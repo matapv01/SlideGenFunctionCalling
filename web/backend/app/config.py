@@ -7,6 +7,7 @@ from pathlib import Path
 # Base directories
 PROJECT_DIR = Path(__file__).parent.parent.parent  # web/
 STATIC_DIR = PROJECT_DIR / "static"
+FRONTEND_DIR = PROJECT_DIR / "frontend"
 IMAGE_DIR = PROJECT_DIR / "Image"
 
 # Upload and output directories
