@@ -8,7 +8,8 @@
             display: none;
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
             transition: all 0.2s ease;
-            z-index: 10;
+            z-index: 100;
+            pointer-events: auto;
         }
 
         .resize-handle:hover {
@@ -40,5 +41,34 @@
             bottom: -8px;
             right: -8px;
             cursor: nwse-resize;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 24px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 6px 6px 0 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: move !important;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            z-index: 101;
+            user-select: none;
+            pointer-events: auto;
+        }
+
+        .drag-handle:hover {
+            background: var(--secondary-color);
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
         }
 

@@ -1,7 +1,7 @@
 """
 SlideGen Backend - Main FastAPI Application
 """
-from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Form
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Form, Depends
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -47,6 +47,10 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+# Initialize database
+from .database import init_db
+init_db()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
@@ -100,6 +104,99 @@ except Exception as e:
 
 # ========================== UTILITY FUNCTIONS ==========================
 
+def save_workflow_to_database(
+    user_id: int,
+    project_name: str,
+    source_type: str,
+    source_data: dict,
+    slide_options: dict,
+    output_folder: Path
+) -> int:
+    """Save completed workflow to database with converted HTML"""
+    try:
+        # Create project
+        project_id = create_project(
+            user_id=user_id,
+            title=project_name,
+            description=source_data.get('description', ''),
+            source_type=source_type,
+            source_data=source_data
+        )
+        
+        # Save project metadata
+        save_project_metadata(
+            project_id=project_id,
+            slide_options=slide_options,
+            workflow_config={},
+            generation_params={}
+        )
+        
+        # Convert HTML slides to absolute positioning before saving
+        html_folder = output_folder / "html"
+        converted_folder = output_folder / "converted"
+        
+        if html_folder.exists():
+            # Convert HTML slides using converter.js
+            logger.info(f"🔄 Converting HTML slides to absolute positioning...")
+            conversion_result = conversion_service.convert_slides_batch(html_folder, converted_folder)
+            
+            if conversion_result['success']:
+                logger.info(f"✅ Successfully converted {len(conversion_result['success'])} slides")
+            if conversion_result['failed']:
+                logger.warning(f"⚠️ Failed to convert {len(conversion_result['failed'])} slides")
+            
+            # Read and save converted slides (prioritize converted, fallback to original)
+            html_files = sorted(html_folder.glob("*.html"))
+            
+            for idx, html_file in enumerate(html_files):
+                # Try to read converted HTML first
+                converted_file = converted_folder / f"converted_{html_file.name}"
+                if converted_file.exists():
+                    logger.info(f"📄 Reading converted HTML: {converted_file.name}")
+                    with open(converted_file, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                else:
+                    # Fallback to original HTML if conversion failed
+                    logger.warning(f"⚠️ Using original HTML (conversion failed): {html_file.name}")
+                    with open(html_file, 'r', encoding='utf-8') as f:
+                        html_content = f.read()
+                
+                # Extract slide type from filename
+                slide_name = html_file.stem
+                slide_type = 'content'  # Default
+                
+                if 'intro' in slide_name.lower() or idx == 0:
+                    slide_type = 'intro'
+                elif 'transition' in slide_name.lower():
+                    slide_type = 'transition'
+                elif 'thank' in slide_name.lower():
+                    slide_type = 'thank_you'
+                
+                # Create slide in database with converted HTML
+                create_slide(
+                    project_id=project_id,
+                    slide_index=idx,
+                    slide_type=slide_type,
+                    title=f"Slide {idx + 1}",
+                    html_content=html_content,
+                    design_settings={}
+                )
+            
+            # Update project slide count and status
+            update_project(
+                project_id=project_id,
+                slide_count=len(html_files),
+                status='completed'
+            )
+            
+            logger.info(f"✅ Saved project {project_id} with {len(html_files)} slides to database")
+        
+        return project_id
+        
+    except Exception as e:
+        logger.error(f"Failed to save workflow to database: {e}")
+        return 0
+
 def clear_temp_dir(temp_dir: Path):
     """Clear temporary directory"""
     if temp_dir.exists():
@@ -135,11 +232,401 @@ async def read_root():
     }
 
 
+# ========================== AUTHENTICATION ENDPOINTS ==========================
+
+from .models import UserCreate, UserLogin, Token, UserResponse, User
+from .auth import (
+    get_password_hash, 
+    verify_password,
+    authenticate_user, 
+    create_access_token,
+    get_current_active_user
+)
+from .database import get_user_by_email, create_user, get_db
+from datetime import timedelta
+
+@app.post("/api/auth/register", response_model=UserResponse, status_code=201)
+async def register(user_data: UserCreate):
+    """Register a new user"""
+    # Check if user already exists
+    existing_user = get_user_by_email(user_data.email)
+    if existing_user:
+        raise HTTPException(
+            status_code=400,
+            detail="Email already registered"
+        )
+    
+    # Hash password and create user
+    hashed_password = get_password_hash(user_data.password)
+    user_id = create_user(user_data.email, user_data.username, hashed_password)
+    
+    # Get created user
+    user = get_user_by_email(user_data.email)
+    
+    return UserResponse(
+        id=user["id"],
+        email=user["email"],
+        username=user["username"],
+        created_at=user["created_at"],
+        is_active=bool(user["is_active"])
+    )
+
+@app.post("/api/auth/login", response_model=Token)
+async def login(user_data: UserLogin):
+    """Login user and return JWT token"""
+    user = authenticate_user(user_data.email, user_data.password)
+    if not user:
+        raise HTTPException(
+            status_code=401,
+            detail="Incorrect email or password"
+        )
+    
+    # Create access token
+    access_token_expires = timedelta(minutes=60 * 24)  # 24 hours
+    access_token = create_access_token(
+        data={"sub": user["email"]},
+        expires_delta=access_token_expires
+    )
+    
+    return Token(access_token=access_token, token_type="bearer")
+
+@app.get("/api/auth/me", response_model=UserResponse)
+async def get_me(current_user: UserResponse = Depends(get_current_active_user)):
+    """Get current user information"""
+    return current_user
+
+@app.post("/api/auth/logout")
+async def logout():
+    """Logout user (client-side token removal)"""
+    return {"message": "Successfully logged out"}
+
+
+@app.put("/api/auth/change-password")
+async def change_password(
+    password_data: dict,
+    current_user: User = Depends(get_current_active_user)
+):
+    """Change user password"""
+    current_password = password_data.get('current_password')
+    new_password = password_data.get('new_password')
+    
+    if not current_password or not new_password:
+        raise HTTPException(status_code=400, detail="Missing required fields")
+    
+    # Verify current password
+    if not verify_password(current_password, current_user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    
+    # Validate new password
+    if len(new_password) < 6:
+        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+    
+    # Update password in database
+    with get_db() as conn:
+        cursor = conn.cursor()
+        try:
+            new_hashed_password = get_password_hash(new_password)
+            cursor.execute(
+                'UPDATE users SET hashed_password = ? WHERE id = ?',
+                (new_hashed_password, current_user.id)
+            )
+            conn.commit()
+            return {"message": "Password changed successfully"}
+        except Exception as e:
+            conn.rollback()
+            raise HTTPException(status_code=500, detail=f"Failed to change password: {str(e)}")
+
+
+# ========================== USER PROFILE & SETTINGS ==========================
+
+from .database import (
+    get_user_profile, create_or_update_user_profile,
+    get_user_settings, create_default_settings, update_user_settings,
+    create_project, get_user_projects, get_project, update_project, delete_project,
+    create_slide, get_project_slides as db_get_project_slides, get_slide, 
+    update_slide, delete_slide, save_project_metadata, get_project_metadata
+)
+
+@app.get("/api/profile")
+async def get_profile(current_user: UserResponse = Depends(get_current_active_user)):
+    """Get current user profile"""
+    profile = get_user_profile(current_user.id)
+    if not profile:
+        # Return empty profile
+        return {
+            "user_id": current_user.id,
+            "full_name": None,
+            "avatar_url": None,
+            "bio": None
+        }
+    return profile
+
+@app.put("/api/profile")
+async def update_profile(
+    profile_data: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Update user profile"""
+    create_or_update_user_profile(
+        user_id=current_user.id,
+        full_name=profile_data.get("full_name"),
+        avatar_url=profile_data.get("avatar_url"),
+        bio=profile_data.get("bio")
+    )
+    return {"message": "Profile updated"}
+
+@app.get("/api/settings")
+async def get_settings(current_user: UserResponse = Depends(get_current_active_user)):
+    """Get user settings"""
+    settings = get_user_settings(current_user.id)
+    if not settings:
+        # Create default settings
+        create_default_settings(current_user.id)
+        settings = get_user_settings(current_user.id)
+    return settings
+
+@app.put("/api/settings")
+async def update_settings(
+    settings_data: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Update user settings"""
+    update_user_settings(
+        user_id=current_user.id,
+        theme=settings_data.get("theme"),
+        default_transition_enabled=settings_data.get("default_transition_enabled"),
+        default_thank_you_enabled=settings_data.get("default_thank_you_enabled"),
+        default_content_length=settings_data.get("default_content_length"),
+        language=settings_data.get("language"),
+        settings_json=settings_data.get("settings_json")
+    )
+    return {"message": "Settings updated"}
+
+
+# ========================== PROJECTS API ==========================
+
+@app.get("/api/projects")
+async def list_projects(
+    limit: int = 50,
+    offset: int = 0,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Get all projects for current user"""
+    projects = get_user_projects(current_user.id, limit, offset)
+    return {
+        "projects": projects,
+        "total": len(projects)
+    }
+
+@app.post("/api/projects")
+async def create_new_project(
+    project_data: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Create new project"""
+    project_id = create_project(
+        user_id=current_user.id,
+        title=project_data.get("title", "Untitled Project"),
+        description=project_data.get("description"),
+        source_type=project_data.get("source_type", "idea"),
+        source_data=project_data.get("source_data")
+    )
+    return {"project_id": project_id, "message": "Project created"}
+
+@app.get("/api/projects/{project_id}")
+async def get_project_detail(
+    project_id: int,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Get project details with slides"""
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify ownership
+    if project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Get slides
+    slides = db_get_project_slides(project_id)
+    
+    # Get metadata
+    metadata = get_project_metadata(project_id)
+    
+    return {
+        "project": project,
+        "slides": slides,
+        "metadata": metadata
+    }
+
+@app.put("/api/projects/{project_id}")
+async def update_project_detail(
+    project_id: int,
+    project_data: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Update project"""
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify ownership
+    if project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    update_project(
+        project_id=project_id,
+        title=project_data.get("title"),
+        description=project_data.get("description"),
+        status=project_data.get("status"),
+        slide_count=project_data.get("slide_count"),
+        thumbnail_url=project_data.get("thumbnail_url")
+    )
+    return {"message": "Project updated"}
+
+@app.delete("/api/projects/{project_id}")
+async def delete_project_detail(
+    project_id: int,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Delete project"""
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify ownership
+    if project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    delete_project(project_id)
+    return {"message": "Project deleted"}
+
+
+# ========================== SLIDES API (DATABASE) ==========================
+
+@app.get("/api/projects/{project_id}/slides")
+async def get_project_slides_list(
+    project_id: int,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Get all slides for a project"""
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify ownership
+    if project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    slides = db_get_project_slides(project_id)
+    return {"slides": slides, "total": len(slides)}
+
+@app.post("/api/projects/{project_id}/slides")
+async def create_new_slide(
+    project_id: int,
+    slide_data: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Create a new slide in a project"""
+    project = get_project(project_id)
+    if not project:
+        raise HTTPException(status_code=404, detail="Project not found")
+    
+    # Verify ownership
+    if project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    # Create slide
+    slide_id = create_slide(
+        project_id=project_id,
+        slide_index=slide_data.get("slide_index", 0),
+        slide_type=slide_data.get("slide_type", "content"),
+        title=slide_data.get("title"),
+        content_text=slide_data.get("content_text"),
+        html_content=slide_data.get("html_content"),
+        design_settings=slide_data.get("design_settings")
+    )
+    
+    # Update project slide count
+    slides = db_get_project_slides(project_id)
+    update_project(project_id, slide_count=len(slides))
+    
+    return {"id": slide_id, "message": "Slide created"}
+
+@app.get("/api/slides/{slide_id}")
+async def get_slide_detail(
+    slide_id: int,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Get slide details"""
+    slide = get_slide(slide_id)
+    if not slide:
+        raise HTTPException(status_code=404, detail="Slide not found")
+    
+    # Verify ownership through project
+    project = get_project(slide["project_id"])
+    if not project or project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    return slide
+
+@app.put("/api/slides/{slide_id}")
+async def update_slide_content(
+    slide_id: int,
+    slide_data: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Update slide content"""
+    slide = get_slide(slide_id)
+    if not slide:
+        raise HTTPException(status_code=404, detail="Slide not found")
+    
+    # Verify ownership through project
+    project = get_project(slide["project_id"])
+    if not project or project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    update_slide(
+        slide_id=slide_id,
+        title=slide_data.get("title"),
+        content_text=slide_data.get("content_text"),
+        html_content=slide_data.get("html_content"),
+        design_settings=slide_data.get("design_settings")
+    )
+    return {"message": "Slide updated"}
+
+@app.delete("/api/slides/{slide_id}")
+async def delete_slide_detail(
+    slide_id: int,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Delete a slide"""
+    slide = get_slide(slide_id)
+    if not slide:
+        raise HTTPException(status_code=404, detail="Slide not found")
+    
+    # Verify ownership through project
+    project = get_project(slide["project_id"])
+    if not project or project["user_id"] != current_user.id:
+        raise HTTPException(status_code=403, detail="Access denied")
+    
+    delete_slide(slide_id)
+    
+    # Update project slide count
+    slides = db_get_project_slides(slide["project_id"])
+    update_project(slide["project_id"], slide_count=len(slides))
+    
+    return {"message": "Slide deleted"}
+
+
 # ========================== UPLOAD ENDPOINTS ==========================
 
 @app.post("/api/upload-docx")
-async def upload_docx(file: UploadFile = File(...)):
-    """Upload and process DOCX file with AI workflow"""
+async def upload_docx(
+    file: UploadFile = File(...),
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Upload and process DOCX file with AI workflow (Protected route)"""
     if not file.filename.endswith('.docx'):
         raise HTTPException(status_code=400, detail="Only DOCX files accepted")
     
@@ -322,8 +809,13 @@ async def upload_docx_for_stream(
     return JSONResponse(content={"filename": file.filename})
 
 
+from .auth import get_current_user_from_token_param
+
 @app.get("/api/upload-docx-stream")
-async def upload_docx_stream(filename: str):
+async def upload_docx_stream(
+    filename: str,
+    current_user: UserResponse = Depends(get_current_user_from_token_param)
+):
     """Stream processing of DOCX file with Server-Sent Events"""
     
     # Validate file
@@ -444,11 +936,25 @@ async def upload_docx_stream(filename: str):
                     total_slides = len(html_files)
                     logger.info(f"📁 Found {total_slides} HTML files")
                     
+                    # Save to database
+                    project_id = save_workflow_to_database(
+                        user_id=current_user.id,
+                        project_name=project_name,
+                        source_type='docx',
+                        source_data={
+                            'filename': filename,
+                            'description': f'Slides generated from {filename}'
+                        },
+                        slide_options=slide_options,
+                        output_folder=output_folder
+                    )
+                    
                     # Emit complete event with temp directory path for cleanup
                     await event_queue.put(('complete', {
                         'project_name': project_name,
                         'total_slides': total_slides,
-                        'temp_dir': temp_workflow_dir
+                        'temp_dir': temp_workflow_dir,
+                        'project_id': project_id
                     }))
                 else:
                     raise Exception("Workflow did not produce valid output")
@@ -516,21 +1022,42 @@ async def upload_docx_stream(filename: str):
 
 # ========================== SLIDES API ==========================
 
-@app.get("/api/slides/{project_name}")
-async def get_project_slides(project_name: str):
-    """Get slides for a specific project"""
+@app.get("/api/projects/by-name/{project_name}/slides")
+async def get_project_slides_by_name(project_name: str):
+    """Get slides for a project by name - uses converted HTML from database (public access)"""
+    logger.info(f"🔓 Public API: Loading slides for project name: {project_name}")
     try:
-        output_folder = OUTPUT_DIR / project_name
-        if not output_folder.exists():
-            raise HTTPException(status_code=404, detail=f"Project not found: {project_name}")
+        # Find project by title/name
+        from .database import get_all_projects
+        projects = get_all_projects()
+        project = next((p for p in projects if p["title"] == project_name), None)
         
-        slides = slide_service.build_slides_from_output(str(output_folder))
+        if not project:
+            logger.warning(f"Project not found by name: {project_name}")
+            raise HTTPException(status_code=404, detail=f"Project '{project_name}' not found")
         
-        if not slides:
+        # Get slides from database (already converted HTML)
+        from .database import get_project_slides as get_db_slides
+        db_slides = get_db_slides(project["id"])
+        
+        if not db_slides:
             raise HTTPException(status_code=404, detail=f"No slides found for project: {project_name}")
         
+        # Format for frontend
+        slides = []
+        for slide in db_slides:
+            slides.append({
+                "id": slide["id"],
+                "title": slide["title"],
+                "content": slide["html_content"],  # Already converted HTML
+                "type": slide["slide_type"],
+                "index": slide["slide_index"]
+            })
+        
+        logger.info(f"✅ Loaded {len(slides)} slides from database for {project_name}")
         return JSONResponse(content={
             "project_name": project_name,
+            "project_id": project["id"],
             "slides": slides,
             "count": len(slides)
         })
@@ -805,8 +1332,11 @@ async def cleanup_temp_directory(request: Request):
 
 
 @app.post("/api/generate-from-idea")
-async def generate_from_idea(request: Request):
-    """Generate slides from natural language idea using LLM"""
+async def generate_from_idea(
+    request: Request,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Generate slides from natural language idea using LLM (Protected route)"""
     try:
         data = await request.json()
         title = data.get('title', '').strip()
@@ -1054,7 +1584,10 @@ Now generate the slide structure as valid JSON only (no markdown code blocks):""
 
 
 @app.get("/api/generate-from-idea-stream")
-async def generate_from_idea_stream(session_id: str):
+async def generate_from_idea_stream(
+    session_id: str,
+    current_user: UserResponse = Depends(get_current_user_from_token_param)
+):
     """Stream processing of idea-generated slides with Server-Sent Events"""
     
     # Validate session file
@@ -1173,11 +1706,26 @@ async def generate_from_idea_stream(session_id: str):
                     total_slides = len(html_files)
                     logger.info(f"📁 Found {total_slides} HTML files")
                     
+                    # Save to database
+                    project_id = save_workflow_to_database(
+                        user_id=current_user.id,
+                        project_name=project_name,
+                        source_type='idea',
+                        source_data={
+                            'title': title,
+                            'prompt': idea_data.get('prompt', ''),
+                            'description': f'Slides generated from idea: {title}'
+                        },
+                        slide_options=slide_options,
+                        output_folder=output_folder
+                    )
+                    
                     # Emit complete event with temp directory path for cleanup
                     await event_queue.put(('complete', {
                         'project_name': project_name,
                         'total_slides': total_slides,
-                        'temp_dir': temp_workflow_dir
+                        'temp_dir': temp_workflow_dir,
+                        'project_id': project_id
                     }))
                 else:
                     raise Exception("Workflow did not produce output files")

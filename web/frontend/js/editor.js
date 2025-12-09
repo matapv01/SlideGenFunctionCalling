@@ -1,5 +1,8 @@
 import { config } from '../config.js';
 
+// 🔥 CACHE BUSTER: Version 2024-12-10-FIXED
+console.log('🚀 editor.js loaded - Version with data-type validation');
+
 class SlideEditor {
 constructor() {
     this.canvas = document.getElementById('canvas');
@@ -1213,12 +1216,77 @@ loadSlide(index) {
 
     this.canvas.innerHTML = slide.content;
 
+    // 🔧 AUTO-DETECT: Thêm class .element và data-type cho các elements có position:absolute từ converter
+    console.log('🔍 Auto-detecting position:absolute elements...');
+    Array.from(this.canvas.children).forEach(child => {
+        if (child.nodeType !== 1) return; // Skip non-element nodes
+        
+        const tagName = child.tagName.toLowerCase();
+        
+        // Skip style/script/meta/svg tags
+        if (['style', 'script', 'link', 'meta', 'svg'].includes(tagName)) {
+            console.log('⏭️ Skipping non-visual tag:', tagName);
+            return;
+        }
+        
+        // Check if element has position:absolute
+        // Check both inline style property and style attribute
+        const hasAbsolutePosition = child.style.position === 'absolute' || 
+                                     (child.getAttribute('style') && child.getAttribute('style').includes('position: absolute'));
+        const hasElementClass = child.classList.contains('element');
+        
+        if (hasAbsolutePosition) {
+            // Add .element class if missing
+            if (!hasElementClass) {
+                console.log('➕ Auto-adding .element class to:', tagName, child.textContent?.substring(0, 30));
+                child.classList.add('element');
+            }
+            
+            // Auto-detect element type based on content and tag
+            let elementType = 'shape'; // default
+            
+            const hasImage = child.querySelector('img') || tagName === 'img';
+            const hasVideo = child.querySelector('video') || tagName === 'video';
+            const textTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'div', 'li', 'blockquote', 'pre'];
+            const hasText = child.textContent && child.textContent.trim().length > 0;
+            
+            if (hasImage) {
+                elementType = 'image';
+                console.log('🖼️ Detected as image');
+            } else if (hasVideo) {
+                elementType = 'video';
+                console.log('🎥 Detected as video');
+            } else if (textTags.includes(tagName) || hasText) {
+                elementType = 'text';
+                child.setAttribute('contenteditable', 'true');
+                console.log('✏️ Detected as text, added contenteditable');
+            } else {
+                elementType = 'shape';
+                console.log('🔷 Detected as shape');
+            }
+            
+            // Set data-type for properties panel - ALWAYS ensure it's set
+            if (!child.dataset.type) {
+                child.dataset.type = elementType;
+                console.log('🏷️ Set data-type:', elementType);
+            }
+            
+            // Generate unique ID if missing
+            if (!child.id) {
+                child.id = `element_${elementType}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                console.log('🆔 Generated ID:', child.id);
+            }
+        }
+    });
+
     // SIMPLE BUT BULLETPROOF: Direct DOM manipulation
     this.applyDirectBackground(slide.backgroundColor);
 
     console.log('🎨 Applied DIRECT background:', slide.backgroundColor, 'for slide', index);
 
     this.zIndexCounter = slide.zIndexCounter || 1;
+    
+    // Now initElements() will find all elements with .element class (including auto-detected ones)
     this.initElements();
 
     // Cập nhật chiều cao cho tất cả text elements sau khi load slide
@@ -1703,7 +1771,27 @@ moveSlide(fromIndex, toIndex) {
 getSlideElementsCount(slide) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = slide.content;
-    return tempDiv.querySelectorAll('.element').length;
+    
+    // Count elements with .element class OR position:absolute
+    let count = 0;
+    Array.from(tempDiv.children).forEach(child => {
+        if (child.nodeType !== 1) return; // Skip non-element nodes
+        
+        const tagName = child.tagName.toLowerCase();
+        // Skip non-visual tags
+        if (['style', 'script', 'link', 'meta', 'svg'].includes(tagName)) return;
+        
+        const hasElementClass = child.classList.contains('element');
+        // Check both inline style property and style attribute
+        const hasAbsolutePosition = child.style.position === 'absolute' || 
+                                     (child.getAttribute('style') && child.getAttribute('style').includes('position: absolute'));
+        
+        if (hasElementClass || hasAbsolutePosition) {
+            count++;
+        }
+    });
+    
+    return count;
 }
 
 initElements() {
@@ -1720,6 +1808,7 @@ makeElementInteractive(element) {
     newElement.addEventListener('mousedown', (e) => this.handleMouseDown(e, newElement));
     newElement.addEventListener('click', (e) => {
         e.stopPropagation();
+        console.log('🖱️ Element clicked:', newElement.tagName, 'has .element:', newElement.classList.contains('element'), 'data-type:', newElement.dataset.type);
         // Special handling for curved connectors
         if (newElement.classList.contains('connector-line') && newElement.classList.contains('curved')) {
             this.selectElement(newElement);
@@ -2065,6 +2154,14 @@ updateProperties() {
 
     const el = this.selectedElements[0];
     const style = window.getComputedStyle(el);
+
+    console.log('🔍 UpdateProperties for element:', el.tagName, 'data-type:', el.dataset.type, 'classList:', Array.from(el.classList));
+
+    // VALIDATION: Ensure data-type exists, set default if missing
+    if (!el.dataset.type) {
+        console.warn('⚠️ Element missing data-type, setting default to "shape"');
+        el.dataset.type = 'shape';
+    }
 
     let html = '';
 

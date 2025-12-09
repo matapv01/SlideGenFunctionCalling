@@ -15,7 +15,7 @@ const BACKEND_URL = isDevelopment
     ? 'http://localhost:3000'       // Development
     : '';                           // Production: same origin
 
-export const config = {
+const config = {
     // API endpoints
     API_BASE_URL,
     BACKEND_URL,
@@ -40,3 +40,9 @@ export const config = {
 if (isDevelopment) {
     console.log('🔧 Frontend Config:', config);
 }
+
+// Export for ES6 modules
+export { config };
+
+// Also make available as global for non-module scripts
+window.config = config;

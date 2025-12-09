@@ -57,9 +57,11 @@ constructor() {
     this.historyIndex = -1;
 
     this.savedSelectionRange = null;
-
-    // Track changes for reset functionality
-    this.originalSlides = null; // Lưu trạng thái ban đầu
+    
+    // Database auto-save
+    this.currentProjectId = null; // Will be set when loading from database
+    this.slideIds = []; // Store database slide IDs for each slide
+    this._saveTimeout = null;
 
     // Presentation mode
     this.presentationMode = false;
@@ -76,6 +78,7 @@ constructor() {
     this.fitToScreen();
     this.updateProperties();
     this.renderSlidesList();
+    this.updateUndoRedoButtons(); // Initialize undo/redo button states
 
     // Load slides từ URL params hoặc localStorage
     this.loadSlidesFromURLOrStorage();
@@ -613,6 +616,25 @@ showDistanceGuides(sourceEl, targetEl) {
 // --- END NEW ---
 
 handleMouseMove(e) {
+    // Nếu đang chuẩn bị drag, check xem đã di chuyển đủ xa chưa
+    if (this.isPreparedForDrag && !this.isDragging && this.dragStart) {
+        const distanceMoved = Math.sqrt(
+            Math.pow(e.clientX - this.dragStart.x, 2) + 
+            Math.pow(e.clientY - this.dragStart.y, 2)
+        );
+        
+        // Chỉ bắt đầu drag thật khi đã di chuyển >5px
+        if (distanceMoved > 5) {
+            this.isDragging = true;
+            this.isPreparedForDrag = false;
+            // IMPORTANT: Disable template/file drag events khi đang drag element
+            this.disableTemplateDrag = true;
+        } else {
+            // Chưa di chuyển đủ xa, không làm gì
+            return;
+        }
+    }
+    
     if (this.isResizing) {
         if (this.selectedElements.length !== 1) return;
         
@@ -753,7 +775,7 @@ handleMouseMove(e) {
     }
 }
 
-handleMouseUp() {
+handleMouseUp(e) {
     // Reset text selection flag
     this.isTextSelecting = false;
 
@@ -761,31 +783,74 @@ handleMouseUp() {
     this.removeDragVisualFeedback();
     this.hideGuides();
 
+    // Xử lý pending select: chỉ select nếu không có kéo chuột
+    if (this.pendingSelectElement) {
+        let shouldSelect = true;
+        
+        if (this.dragStart && e) {
+            const distanceMoved = Math.sqrt(
+                Math.pow(e.clientX - this.dragStart.x, 2) + 
+                Math.pow(e.clientY - this.dragStart.y, 2)
+            );
+            // Nếu có kéo chuột (>2px) thì không select
+            shouldSelect = distanceMoved <= 2;
+        }
+        
+        if (shouldSelect) {
+            this.selectElement(this.pendingSelectElement);
+        }
+        
+        this.pendingSelectElement = null;
+        this.dragStart = null;
+        return;
+    }
+
     if (this.isDragging || this.isResizing) {
-        // Set flag để tránh click event ngay sau drag
-        this.justFinishedDragging = true;
-        setTimeout(() => {
-            this.justFinishedDragging = false;
-        }, 100);
+        // Check if there was actual movement (not just a click)
+        let hasActualChange = false;
+        
+        if (this.dragStart && e) {
+            // Calculate distance moved
+            const distanceMoved = Math.sqrt(
+                Math.pow(e.clientX - this.dragStart.x, 2) + 
+                Math.pow(e.clientY - this.dragStart.y, 2)
+            );
+            
+            // Only consider it a real change if moved more than 3 pixels
+            // This filters out accidental tiny movements and pure clicks
+            hasActualChange = distanceMoved > 3;
+        }
+        
+        if (hasActualChange) {
+            // Set flag để tránh click event ngay sau drag
+            this.justFinishedDragging = true;
+            setTimeout(() => {
+                this.justFinishedDragging = false;
+            }, 100);
 
-        // ENHANCED: Force final update cho connectors sau khi drag xong
-        // Tạm thời bypass check để force update
-        const wasDragging = this.isDragging;
-        const wasResizing = this.isResizing;
+            // ENHANCED: Force final update cho connectors sau khi drag xong
+            // Tạm thời bypass check để force update
+            const wasDragging = this.isDragging;
+            const wasResizing = this.isResizing;
 
-        // Set flags để bypass the restriction
-        this.forceConnectorUpdate = true;
-        this.updateConnectorLinesForced();
-        this.forceConnectorUpdate = false;
+            // Set flags để bypass the restriction
+            this.forceConnectorUpdate = true;
+            this.updateConnectorLinesForced();
+            this.forceConnectorUpdate = false;
 
-        this.saveState();
+            // Only save state if there was actual movement
+            this.saveState();
+        }
     }
 
     this.isDragging = false;
     this.isResizing = false;
+    this.isPreparedForDrag = false; // Reset prepared flag
+    this.pendingSelectElement = null; // Reset pending select
     this.draggedElement = null; // Reset dragged element
     this.disableTemplateDrag = false; // Re-enable template drag
     this.elementsStartPos.clear();
+    this.dragStart = null; // Reset drag start position
 }
 
 createFirstSlide() {
@@ -802,32 +867,67 @@ createFirstSlide() {
     this.slides.push(slide);
     this.loadSlide(0);
     this.saveState();
-    
-    // Lưu trạng thái ban đầu cho chức năng reset (chỉ khi là slide đầu tiên)
-    if (this.slides.length === 1) {
-        setTimeout(() => {
-            this.saveOriginalState();
-        }, 100); // Delay nhỏ để đảm bảo slide đã load xong
-    }
 }
 
-createNewSlide() {
+async createNewSlide() {
     // Save current slide first
     this.saveCurrentSlide();
+
+    const slideContent = `
+        <div class="element" data-type="text" style="left: 200px; top: 300px; width: 600px; height: auto; font-size: 64px; font-weight: 700; color: #2d3748; z-index: 1;" contenteditable="true">New Slide</div>
+        <div class="element" data-type="rectangle" style="position: absolute; left: 900px; top: 300px; z-index: 2; width: 300px; height: 200px; background: linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162)); border-radius: 12px;"></div>
+    `;
 
     const slide = {
         id: this.slideIdCounter++,
         name: `Slide ${this.slides.length + 1}`,
-        content: `
-            <div class="element" data-type="text" style="left: 200px; top: 300px; width: 600px; height: auto; font-size: 64px; font-weight: 700; color: #2d3748; z-index: 1;" contenteditable="true">New Slide</div>
-            <div class="element" data-type="rectangle" style="position: absolute; left: 900px; top: 300px; z-index: 2; width: 300px; height: 200px; background: linear-gradient(135deg, rgb(102, 126, 234), rgb(118, 75, 162)); border-radius: 12px;"></div>
-        `,
+        content: slideContent,
         backgroundColor: 'linear-gradient(135deg, #ffffff 0%, #f7fafc 100%)',
         zIndexCounter: 3
     };
 
     // Add new slide to the array
     this.slides.push(slide);
+
+    // Create in database if project is loaded from DB
+    if (this.currentProjectId) {
+        try {
+            const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
+            const token = localStorage.getItem('access_token');
+            
+            const htmlContent = `
+                <div class="slide-container">
+                    <div class="content-wrapper" style="background: ${slide.backgroundColor};">
+                        ${slideContent}
+                    </div>
+                </div>
+            `;
+            
+            const response = await fetch(`${apiUrl}/api/projects/${this.currentProjectId}/slides`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    slide_index: this.slides.length - 1,
+                    slide_type: 'content',
+                    title: slide.name,
+                    html_content: htmlContent
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.slideIds.push(data.id);
+                console.log(`✅ Created slide in database with ID: ${data.id}`);
+            } else {
+                console.error('❌ Failed to create slide in database');
+            }
+        } catch (error) {
+            console.error('❌ Error creating slide in database:', error);
+        }
+    }
 
     // Update names for all slides
     this.updateSlideNames();
@@ -854,7 +954,7 @@ createNewSlide() {
     }
 }
 
-duplicateCurrentSlide() {
+async duplicateCurrentSlide() {
     if (this.slides.length === 0) return;
     this.saveCurrentSlide();
     const currentSlide = this.slides[this.currentSlideIndex];
@@ -866,22 +966,215 @@ duplicateCurrentSlide() {
         zIndexCounter: currentSlide.zIndexCounter
     };
     this.slides.push(newSlide);
+
+    // Create in database if project is loaded from DB
+    if (this.currentProjectId) {
+        try {
+            const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
+            const token = localStorage.getItem('access_token');
+            
+            const htmlContent = `
+                <div class="slide-container">
+                    <div class="content-wrapper" style="background: ${newSlide.backgroundColor};">
+                        ${newSlide.content}
+                    </div>
+                </div>
+            `;
+            
+            const response = await fetch(`${apiUrl}/api/projects/${this.currentProjectId}/slides`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    slide_index: this.slides.length - 1,
+                    slide_type: 'content',
+                    title: newSlide.name,
+                    html_content: htmlContent
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                this.slideIds.push(data.id);
+                console.log(`✅ Duplicated slide in database with ID: ${data.id}`);
+            } else {
+                console.error('❌ Failed to duplicate slide in database');
+            }
+        } catch (error) {
+            console.error('❌ Error duplicating slide in database:', error);
+        }
+    }
+
     this.switchToSlide(this.slides.length - 1);
     this.updateSlideNames(); // Update all slide names after duplicating
 }
 
 deleteSlide(index) {
-    if (this.slides.length <= 1) return;
+    if (this.slides.length <= 1) {
+        this.showNotification('❌ Cannot delete the last slide', 'error');
+        return;
+    }
+    
+    // Show custom confirmation modal
+    this.showDeleteConfirmation(index);
+}
+
+showDeleteConfirmation(index) {
+    const slideName = this.slides[index].name || `Slide ${index + 1}`;
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(4px);
+        z-index: 10000;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        animation: fadeIn 0.2s ease;
+    `;
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.style.cssText = `
+        background: white;
+        border-radius: 16px;
+        padding: 32px;
+        max-width: 450px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        animation: slideUp 0.3s ease;
+    `;
+    
+    modal.innerHTML = `
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+        </style>
+        <div style="text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🗑️</div>
+            <h3 style="margin: 0 0 12px 0; font-size: 24px; color: #1f2937;">Delete Slide?</h3>
+            <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">
+                Are you sure you want to delete <strong>${slideName}</strong>?<br>
+                This action cannot be undone.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="cancelDelete" style="
+                    padding: 12px 24px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    background: white;
+                    color: #6b7280;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                ">Cancel</button>
+                <button id="confirmDelete" style="
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 8px;
+                    background: #ef4444;
+                    color: white;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                ">Delete Slide</button>
+            </div>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Add hover effects
+    const cancelBtn = modal.querySelector('#cancelDelete');
+    const confirmBtn = modal.querySelector('#confirmDelete');
+    
+    cancelBtn.onmouseover = () => cancelBtn.style.background = '#f9fafb';
+    cancelBtn.onmouseout = () => cancelBtn.style.background = 'white';
+    
+    confirmBtn.onmouseover = () => confirmBtn.style.background = '#dc2626';
+    confirmBtn.onmouseout = () => confirmBtn.style.background = '#ef4444';
+    
+    // Handle buttons
+    cancelBtn.onclick = () => {
+        overlay.style.animation = 'fadeOut 0.2s ease';
+        setTimeout(() => overlay.remove(), 200);
+    };
+    
+    confirmBtn.onclick = () => {
+        overlay.remove();
+        this.executeDeleteSlide(index);
+    };
+    
+    // Close on overlay click
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            overlay.style.animation = 'fadeOut 0.2s ease';
+            setTimeout(() => overlay.remove(), 200);
+        }
+    };
+}
+
+async executeDeleteSlide(index) {
+    // Delete from database if loaded from DB
+    if (this.currentProjectId && this.slideIds[index]) {
+        const slideId = this.slideIds[index];
+        try {
+            const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
+            const token = localStorage.getItem('access_token');
+            
+            const response = await fetch(`${apiUrl}/api/slides/${slideId}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${token}`
+                }
+            });
+            
+            if (!response.ok) {
+                throw new Error('Failed to delete from database');
+            }
+            
+            console.log(`✅ Deleted slide ${slideId} from database`);
+        } catch (error) {
+            console.error('❌ Error deleting slide from database:', error);
+            this.showNotification('⚠️ Failed to delete from database', 'error');
+        }
+    }
+    
+    // Remove from local arrays
     this.slides.splice(index, 1);
+    if (this.slideIds.length > index) {
+        this.slideIds.splice(index, 1);
+    }
+    
+    // Update current slide index
     if (this.currentSlideIndex >= this.slides.length) {
         this.currentSlideIndex = this.slides.length - 1;
     } else if (this.currentSlideIndex > index) {
         this.currentSlideIndex--;
     }
-    this.updateSlideNames(); // Update all slide names after deletion
+    
+    this.updateSlideNames();
     this.loadSlide(this.currentSlideIndex);
     this.renderSlidesList();
     this.saveState();
+    
+    this.showNotification('✓ Slide deleted successfully', 'success');
 }
 
 switchToSlide(index) {
@@ -890,7 +1183,7 @@ switchToSlide(index) {
     this.currentSlideIndex = index;
     this.loadSlide(index);
     this.renderSlidesList();
-    this.saveState();
+    // Don't save state on slide navigation - only save on content edits
 }
 
 saveCurrentSlide() {
@@ -951,6 +1244,79 @@ loadSlide(index) {
     this.stopBackgroundMonitoring();
 
     this.canvas.innerHTML = slide.content;
+
+    // IMPORTANT: Auto-add .element class to elements from converter HTML
+    // These elements have position:absolute but no .element class yet
+    Array.from(this.canvas.children).forEach(el => {
+        if (el.nodeType !== 1) return; // Skip non-element nodes
+        
+        const tag = el.tagName.toLowerCase();
+        // Skip non-visual elements
+        if (['style', 'script', 'link', 'meta', 'svg'].includes(tag)) return;
+        
+        // Check both inline style property and style attribute
+        const hasAbsolutePosition = el.style.position === 'absolute' || 
+                                     (el.getAttribute('style') && el.getAttribute('style').includes('position: absolute'));
+        
+        if (hasAbsolutePosition) {
+            // Add .element class if missing
+            if (!el.classList.contains('element')) {
+                el.classList.add('element');
+                console.log('➕ Auto-added .element class to:', tag);
+            }
+            
+            // Auto-detect and set data-type if missing
+            if (!el.dataset.type) {
+                let elementType = 'shape'; // default
+                
+                const hasImage = el.querySelector('img') || tag === 'img';
+                const hasVideo = el.querySelector('video') || tag === 'video';
+                const textContent = el.textContent?.trim() || '';
+                const hasSignificantText = textContent.length > 3; // At least 4 characters
+                
+                // Explicit text tags always get text type if they have content
+                const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
+                
+                // DIV only becomes text if it has significant text AND no background/decorative styling
+                const isDivWithText = tag === 'div' && hasSignificantText;
+                const hasBackgroundStyling = el.style.background || el.style.backgroundColor || 
+                                            el.style.backgroundImage || el.style.borderRadius;
+                
+                if (hasImage) {
+                    elementType = 'image';
+                } else if (hasVideo) {
+                    elementType = 'video';
+                } else if (explicitTextTags.includes(tag) && hasSignificantText) {
+                    // Explicit text tags with content are always text
+                    elementType = 'text';
+                } else if (isDivWithText && !hasBackgroundStyling) {
+                    // DIV with text and no decorative styling
+                    elementType = 'text';
+                } else if (hasSignificantText && !hasBackgroundStyling) {
+                    // Any element with text and no decoration
+                    elementType = 'text';
+                } else {
+                    // Everything else is a shape (decorative elements, backgrounds, etc.)
+                    elementType = 'shape';
+                }
+                
+                el.dataset.type = elementType;
+                console.log('🏷️ Auto-set data-type:', elementType, 'for', tag, `(text: "${textContent.substring(0, 30)}...")`);
+            }
+            
+            // Add contenteditable ONLY for text elements
+            if (el.dataset.type === 'text' && !el.hasAttribute('contenteditable')) {
+                el.setAttribute('contenteditable', 'true');
+                console.log('✏️ Auto-added contenteditable to:', tag);
+            }
+            
+            // Generate unique ID if missing
+            if (!el.id) {
+                el.id = `element_${el.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+                console.log('🆔 Generated ID:', el.id);
+            }
+        }
+    });
 
     // SIMPLE BUT BULLETPROOF: Direct DOM manipulation
     this.applyDirectBackground(slide.backgroundColor);
@@ -1442,7 +1808,27 @@ moveSlide(fromIndex, toIndex) {
 getSlideElementsCount(slide) {
     const tempDiv = document.createElement('div');
     tempDiv.innerHTML = slide.content;
-    return tempDiv.querySelectorAll('.element').length;
+    
+    // Count elements with .element class OR position:absolute (same logic as loadSlide auto-detect)
+    let count = 0;
+    Array.from(tempDiv.children).forEach(child => {
+        if (child.nodeType !== 1) return; // Skip non-element nodes
+        
+        const tag = child.tagName.toLowerCase();
+        // Skip non-visual elements
+        if (['style', 'script', 'link', 'meta', 'svg'].includes(tag)) return;
+        
+        // Check both .element class AND position:absolute
+        const hasElementClass = child.classList.contains('element');
+        const hasAbsolutePosition = child.style.position === 'absolute' || 
+                                     (child.getAttribute('style') && child.getAttribute('style').includes('position: absolute'));
+        
+        if (hasElementClass || hasAbsolutePosition) {
+            count++;
+        }
+    });
+    
+    return count;
 }
 
 initElements() {
@@ -1457,6 +1843,55 @@ makeElementInteractive(element) {
     this.addResizeHandles(newElement);
 
     newElement.addEventListener('mousedown', (e) => this.handleMouseDown(e, newElement));
+    
+    // Detect hover near edges for cursor change
+    newElement.addEventListener('mousemove', (e) => {
+        if (!newElement.classList.contains('selected')) return;
+        
+        // Skip if hovering over resize handles or drag handle - LET THEM HANDLE THEIR OWN CURSOR
+        if (e.target.classList.contains('resize-handle') || 
+            e.target.classList.contains('drag-handle')) {
+            return; // Don't interfere with handles
+        }
+        
+        const isTextElement = newElement.hasAttribute('contenteditable') || 
+                            newElement.querySelector('[contenteditable="true"]');
+        
+        // Lấy rect của element chính (không phải contenteditable bên trong)
+        const rect = newElement.getBoundingClientRect();
+        const edgeThreshold = 15; // pixels from edge
+        
+        const isNearEdge = 
+            e.clientX - rect.left < edgeThreshold ||
+            rect.right - e.clientX < edgeThreshold ||
+            e.clientY - rect.top < edgeThreshold ||
+            rect.bottom - e.clientY < edgeThreshold;
+        
+        // Set cursor cho tất cả các phần tử liên quan (KHÔNG BAO GỒM HANDLES)
+        if (isTextElement) {
+            // Tìm tất cả contenteditable elements (có thể là chính nó hoặc con)
+            const editableElements = [];
+            if (newElement.hasAttribute('contenteditable')) {
+                editableElements.push(newElement);
+            }
+            const children = newElement.querySelectorAll('[contenteditable="true"]');
+            children.forEach(child => editableElements.push(child));
+            
+            // Set cursor cho tất cả
+            const targetCursor = isNearEdge ? 'move' : 'text';
+            editableElements.forEach(el => {
+                el.style.cursor = targetCursor;
+            });
+            // Don't override newElement cursor if it's not contenteditable itself
+            if (!newElement.hasAttribute('contenteditable')) {
+                newElement.style.cursor = isNearEdge ? 'move' : 'default';
+            }
+        } else {
+            // Non-text elements
+            newElement.style.cursor = isNearEdge ? 'move' : 'default';
+        }
+    });
+    
     newElement.addEventListener('click', (e) => {
         e.stopPropagation();
         // Special handling for curved connectors
@@ -1505,13 +1940,22 @@ makeElementInteractive(element) {
     // --- END NEW ---
 
     if (newElement.hasAttribute('contenteditable')) {
+        // Store original text content when element is focused
+        newElement.addEventListener('focus', () => {
+            newElement._originalTextContent = newElement.innerHTML;
+        });
+        
         newElement.addEventListener('blur', () => {
             this.savedSelectionRange = null;
 
             // PROTECTION: Ensure background is preserved after text editing
             this.preserveBackgroundAfterTextEdit();
 
-            this.saveState();
+            // Only save state if text actually changed
+            if (newElement._originalTextContent !== newElement.innerHTML) {
+                this.saveState();
+            }
+            delete newElement._originalTextContent;
         });
         newElement.addEventListener('mouseup', () => this._saveSelection());
         newElement.addEventListener('keyup', () => this._saveSelection());
@@ -1537,10 +1981,16 @@ makeElementInteractive(element) {
 addResizeHandles(element) {
     if (element.classList.contains('group-container') || element.querySelector('.resize-handle')) return;
 
-    const handlesHTML = `
+    let handlesHTML = `
         <div class="resize-handle tl"></div> <div class="resize-handle tr"></div>
         <div class="resize-handle bl"></div> <div class="resize-handle br"></div>
     `;
+    
+    // Add drag handle for text elements
+    if (element.dataset.type === 'text' || element.hasAttribute('contenteditable')) {
+        handlesHTML += `<div class="drag-handle" title="Drag to move">⠿</div>`;
+    }
+    
     element.insertAdjacentHTML('beforeend', handlesHTML);
 }
 
@@ -1550,7 +2000,8 @@ bindEvents() {
     document.getElementById('propertiesBtn').addEventListener('click', () => this.toggleProperties());
     document.getElementById('toggleSlidesBtn').addEventListener('click', () => this.toggleSlides());
     document.getElementById('resetViewBtn').addEventListener('click', () => this.fitToScreen());
-    document.getElementById('resetAllBtn').addEventListener('click', () => this.resetToOriginalState());
+    document.getElementById('undoBtn').addEventListener('click', () => this.undo());
+    document.getElementById('redoBtn').addEventListener('click', () => this.redo());
     // document.getElementById('exportBtn').addEventListener('click', () => this.showExportOptions());
     
     // Capture buttons
@@ -1687,46 +2138,80 @@ bindEvents() {
 }
 
 handleMouseDown(e, element) {
+    // Check if clicking on drag handle
+    const isDragHandle = e.target.classList.contains('drag-handle');
+    
     // Check if this is text selection (on text elements with contenteditable)
     const isTextElement = element.hasAttribute('contenteditable') ||
         element.querySelector('[contenteditable="true"]');
     const isClickingOnText = isTextElement && e.target.hasAttribute('contenteditable');
+    
+    const targetElement = element.closest('.group-container') || element;
+    const isAlreadySelected = this.selectedElements.includes(targetElement);
 
-    // Allow text selection for contenteditable elements only when double-clicking or when already editing
-    if (isClickingOnText && (e.detail === 2 || document.activeElement === e.target)) {
-        this.isTextSelecting = true;
-        // Don't prevent default for text selection
+    // For text elements: chỉ chặn nếu chưa selected VÀ đang click vào text area
+    if (isTextElement && !isDragHandle && !e.target.classList.contains('resize-handle') && !isAlreadySelected) {
+        // Allow text interaction - don't prevent default
         e.stopPropagation();
+        
+        // Focus the contenteditable element for text editing
+        if (isClickingOnText) {
+            this.isTextSelecting = true;
+            return;
+        }
+        
+        // If clicking on contenteditable but not for dragging, just select element
+        if (isClickingOnText) {
+            if (!this.selectedElements.includes(targetElement)) {
+                this.selectElement(targetElement);
+            }
+        }
         return;
     }
 
     e.stopPropagation();
-    e.preventDefault(); // Only prevent default for non-text interactions
+    e.preventDefault(); // Only prevent default for drag/resize operations
 
-    // If clicking on contenteditable element but not editing, blur it first
-    if (isClickingOnText && document.activeElement === e.target) {
-        e.target.blur();
-    }
-
-    const targetElement = element.closest('.group-container') || element;
+    // targetElement đã được khai báo ở trên rồi
+    const wasAlreadySelected = isAlreadySelected; // Dùng lại biến đã check
 
     if (e.shiftKey) {
         this.toggleSelection(targetElement);
     } else {
         if (!this.selectedElements.includes(targetElement)) {
-            this.selectElement(targetElement);
+            // Nếu click vào drag handle, select ngay và cho phép drag
+            if (isDragHandle) {
+                this.selectElement(targetElement);
+            } else {
+                // Đánh dấu là pending select - sẽ select khi mouseup nếu không kéo
+                this.pendingSelectElement = targetElement;
+                this.dragStart = { x: e.clientX, y: e.clientY };
+                return;
+            }
         }
     }
 
     if (e.target.classList.contains('resize-handle') && this.selectedElements.length === 1) {
         this.isResizing = true;
         this.resizeHandleType = e.target.classList[1];
-    } else {
-        this.isDragging = true;
-        this.draggedElement = targetElement; // Track element being dragged
-
-        // IMPORTANT: Disable template/file drag events khi đang drag element
-        this.disableTemplateDrag = true;
+    } else if (wasAlreadySelected || isDragHandle) {
+        // Check nếu đang click gần cạnh (có move cursor)
+        const rect = targetElement.getBoundingClientRect();
+        const edgeThreshold = 15;
+        const isNearEdge = 
+            e.clientX - rect.left < edgeThreshold ||
+            rect.right - e.clientX < edgeThreshold ||
+            e.clientY - rect.top < edgeThreshold ||
+            rect.bottom - e.clientY < edgeThreshold;
+        
+        // Chỉ cho phép drag nếu: đang click drag handle, resize handle, HOẶC gần cạnh
+        if (isDragHandle || e.target.classList.contains('resize-handle') || isNearEdge) {
+            this.isPreparedForDrag = true;
+            this.draggedElement = targetElement; // Track element being dragged
+        } else {
+            // Click vào giữa element đã chọn - không làm gì
+            return;
+        }
 
         // Add visual feedback when starting to drag
         this.selectedElements.forEach(el => {
@@ -1805,6 +2290,12 @@ updateProperties() {
     const el = this.selectedElements[0];
     const style = window.getComputedStyle(el);
 
+    // VALIDATION: Ensure data-type exists, set default if missing
+    if (!el.dataset.type) {
+        console.warn('⚠️ Element missing data-type, setting default to "shape"');
+        el.dataset.type = 'shape';
+    }
+
     let html = '';
 
     if (el.classList.contains('group-container')) {
@@ -1861,6 +2352,12 @@ updateProperties() {
                 <p class="property-label" style="margin-bottom: 10px;">Select text inside the element to apply formatting.</p>
                 <div class="button-group">
                     <button class="style-btn" data-format="bold" title="Bold"><b>B</b></button> <button class="style-btn" data-format="italic" title="Italic"><i>I</i></button> <button class="style-btn" data-format="underline" title="Underline"><u>U</u></button> <button class="style-btn" data-format="strikeThrough" title="Strikethrough"><s>S</s></button> <button class="style-btn" data-format="removeFormat" title="Clear Formatting">⌫</button>
+                </div>
+                <div class="property-row">
+                    <div class="property-col">
+                        <label class="property-label">Font Size</label>
+                        <input type="number" class="property-input" data-format-size="fontSize" value="${parseInt(style.fontSize)}" step="1" min="8" max="200" placeholder="Mixed">
+                    </div>
                 </div>
                 <div class="property-row">
                     <div class="property-col"><label class="property-label">Highlight Color</label><input type="color" data-format-color="backColor" class="property-color-input" value="#ffff00" style="height: 40px;"></div>
@@ -1969,6 +2466,27 @@ bindPropertyEvents() {
         });
     });
 
+    // Font size for selected text
+    this.propertiesContent.querySelectorAll('[data-format-size]').forEach(sizeInput => {
+        sizeInput.addEventListener('input', (e) => {
+            const value = e.target.value;
+            if (value && !isNaN(value)) {
+                restoreSelection();
+                // Wrap selection in span with font size
+                const selection = window.getSelection();
+                if (selection.rangeCount > 0 && !selection.isCollapsed) {
+                    const range = selection.getRangeAt(0);
+                    const span = document.createElement('span');
+                    span.style.fontSize = value + 'px';
+                    range.surroundContents(span);
+                }
+            }
+        });
+        sizeInput.addEventListener('change', () => {
+            this.saveState();
+        });
+    });
+
     this.propertiesContent.querySelectorAll('.property-input, .property-color-input:not([data-format-color])').forEach(input => {
         input.addEventListener('input', (e) => {
             let value = e.target.value;
@@ -1984,8 +2502,18 @@ bindPropertyEvents() {
             if (styleProp === 'fontSize') {
                 this.updateTextElementHeight(el);
             }
+            
+            // Debounced save: Save state after 500ms of no changes
+            clearTimeout(this._propertiesSaveTimeout);
+            this._propertiesSaveTimeout = setTimeout(() => {
+                this.saveState();
+            }, 500);
         });
-        input.addEventListener('change', () => this.saveState());
+        input.addEventListener('change', () => {
+            // Clear debounced save and save immediately on change
+            clearTimeout(this._propertiesSaveTimeout);
+            this.saveState();
+        });
     });
 
     this.propertiesContent.querySelectorAll('.color-text-input').forEach(input => {
@@ -2039,8 +2567,17 @@ bindPropertyEvents() {
                 el.style.boxShadow = `${shadowX}px ${shadowY}px ${value}px rgba(0,0,0,0.3)`;
                 if (valueSpan) valueSpan.textContent = `${value}px`;
             }
+            
+            // Debounced save for smooth slider interaction
+            clearTimeout(this._propertiesSaveTimeout);
+            this._propertiesSaveTimeout = setTimeout(() => {
+                this.saveState();
+            }, 500);
         });
-        range.addEventListener('change', () => this.saveState());
+        range.addEventListener('change', () => {
+            clearTimeout(this._propertiesSaveTimeout);
+            this.saveState();
+        });
     });
 
     this.propertiesContent.querySelectorAll('[data-style="shadowX"], [data-style="shadowY"]').forEach(input => {
@@ -2075,7 +2612,101 @@ _saveSelection() {
     const selection = window.getSelection();
     if (selection.rangeCount > 0) {
         this.savedSelectionRange = selection.getRangeAt(0);
+        
+        // Update properties panel with selection styles
+        if (!selection.isCollapsed) {
+            this.updatePropertiesForSelection(selection);
+        }
     }
+}
+
+updatePropertiesForSelection(selection) {
+    if (!selection || selection.isCollapsed) return;
+    
+    try {
+        const range = selection.getRangeAt(0);
+        const container = range.commonAncestorContainer;
+        
+        // Get all text nodes in selection
+        const walker = document.createTreeWalker(
+            range.commonAncestorContainer,
+            NodeFilter.SHOW_TEXT,
+            null
+        );
+        
+        const styles = {
+            fontSize: new Set(),
+            color: new Set(),
+            fontFamily: new Set(),
+            fontWeight: new Set(),
+            fontStyle: new Set(),
+            textDecoration: new Set()
+        };
+        
+        // Collect styles from all nodes in selection
+        let node;
+        while (node = walker.nextNode()) {
+            if (range.intersectsNode(node)) {
+                const element = node.parentElement;
+                if (element) {
+                    const computed = window.getComputedStyle(element);
+                    styles.fontSize.add(computed.fontSize);
+                    styles.color.add(computed.color);
+                    styles.fontFamily.add(computed.fontFamily);
+                    styles.fontWeight.add(computed.fontWeight);
+                    styles.fontStyle.add(computed.fontStyle);
+                    styles.textDecoration.add(computed.textDecoration);
+                }
+            }
+        }
+        
+        // Update input fields in properties panel
+        const fontSizeInput = this.propertiesContent.querySelector('[data-style="fontSize"]');
+        if (fontSizeInput) {
+            if (styles.fontSize.size === 1) {
+                const value = parseInt(Array.from(styles.fontSize)[0]);
+                fontSizeInput.value = value;
+            } else if (styles.fontSize.size > 1) {
+                fontSizeInput.value = '';
+                fontSizeInput.placeholder = 'Mixed';
+            }
+        }
+        
+        const colorInput = this.propertiesContent.querySelector('[data-style="color"]');
+        if (colorInput) {
+            if (styles.color.size === 1) {
+                const color = Array.from(styles.color)[0];
+                // Convert rgb to hex for color input
+                const hex = this.rgbToHex(color);
+                if (hex) colorInput.value = hex;
+            } else if (styles.color.size > 1) {
+                colorInput.value = '#000000';
+                colorInput.style.opacity = '0.5';
+            } else {
+                colorInput.style.opacity = '1';
+            }
+        }
+        
+    } catch (error) {
+        console.error('Error updating properties for selection:', error);
+    }
+}
+
+rgbToHex(rgb) {
+    if (!rgb) return null;
+    
+    // Already hex
+    if (rgb.startsWith('#')) return rgb;
+    
+    // Parse rgb(r, g, b) or rgba(r, g, b, a)
+    const match = rgb.match(/^rgba?\((\d+),\s*(\d+),\s*(\d+)/);
+    if (!match) return null;
+    
+    const r = parseInt(match[1]);
+    const g = parseInt(match[2]);
+    const b = parseInt(match[3]);
+    
+    return "#" + ((1 << 24) + (r << 16) + (g << 8) + b).toString(16).slice(1);
 }
 
 createElement(type) {
@@ -5533,15 +6164,182 @@ fitToScreen() {
 saveState() {
     this.saveCurrentSlide();
     if (this.historyIndex < this.history.length - 1) this.history.splice(this.historyIndex + 1);
+    
+    // Only save slides content, NOT currentSlideIndex
+    // This prevents undo from changing which slide you're viewing
     const currentState = {
-        slides: JSON.parse(JSON.stringify(this.slides)),
-        currentSlideIndex: this.currentSlideIndex
+        slides: JSON.parse(JSON.stringify(this.slides))
     };
 
     const lastState = this.history[this.historyIndex];
     if (!lastState || JSON.stringify(lastState) !== JSON.stringify(currentState)) {
         this.history.push(currentState);
         this.historyIndex++;
+        
+        // Show "Saving..." indicator
+        this.showSavingIndicator();
+        
+        // Auto-save to database (debounced 1 second)
+        if (this.currentProjectId) {
+            clearTimeout(this._saveTimeout);
+            this._saveTimeout = setTimeout(() => {
+                this.saveToDatabase();
+            }, 1000);
+        } else {
+            // Not loaded from DB, just show saved
+            this.showSaveIndicator();
+        }
+        
+        this.updateUndoRedoButtons();
+    }
+}
+
+showSavingIndicator() {
+    const indicator = document.getElementById('saveIndicator');
+    if (!indicator) return;
+    
+    indicator.style.display = 'inline-block';
+    indicator.textContent = '💾 Saving...';
+    indicator.style.color = '#f59e0b';
+}
+
+showSaveIndicator() {
+    const indicator = document.getElementById('saveIndicator');
+    if (!indicator) return;
+    
+    indicator.style.display = 'inline-block';
+    indicator.textContent = '✓ Saved';
+    indicator.style.color = '#10b981';
+    
+    // Don't hide - keep showing saved status
+}
+
+async saveToDatabase() {
+    if (!this.currentProjectId || this.slideIds.length === 0) return;
+    
+    const token = localStorage.getItem('access_token');
+    if (!token) return;
+    
+    try {
+        const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
+        
+        // Save current slide being edited FIRST
+        if (this.slides.length > 0 && this.currentSlideIndex >= 0) {
+            const currentSlide = this.slides[this.currentSlideIndex];
+            currentSlide.content = this.canvas.innerHTML;
+            console.log(`💾 Saving current slide ${this.currentSlideIndex}, content length: ${currentSlide.content.length}`);
+        }
+        
+        for (let i = 0; i < this.slides.length; i++) {
+            const slide = this.slides[i];
+            const slideId = this.slideIds[i];
+            
+            if (!slideId) {
+                console.warn(`No slide ID for slide ${i}, skipping`);
+                continue;
+            }
+            
+            // Rebuild proper HTML structure matching the DB format
+            // slide.content contains: <style>...</style> + absolute positioned elements
+            const bgColor = slide.backgroundColor || 'white';
+            const fullHTML = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Slide ${i + 1}</title>
+<style>
+body {
+    margin: 0;
+    padding: 0;
+    width: 1920px;
+    height: 1080px;
+    overflow: hidden;
+    font-family: 'Arial', sans-serif;
+}
+.slide-container {
+    width: 1920px;
+    height: 1080px;
+    position: relative;
+    background: ${bgColor};
+    overflow: hidden;
+}
+.content-wrapper {
+    width: 100%;
+    height: 100%;
+    position: relative;
+}
+</style>
+</head>
+<body>
+<div class="slide-container">
+<div class="content-wrapper">
+${slide.content}
+</div>
+</div>
+</body>
+</html>`;
+            
+            console.log(`💾 Saving slide ${i} (ID: ${slideId}), content length: ${slide.content.length}, bg: ${bgColor}`);
+            
+            const response = await fetch(`${apiUrl}/api/slides/${slideId}`, {
+                method: 'PUT',
+                headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    html_content: fullHTML,
+                    title: slide.name || `Slide ${i + 1}`
+                })
+            });
+            
+            if (!response.ok) {
+                const errorText = await response.text();
+                throw new Error(`Failed to save slide ${i + 1}: ${errorText}`);
+            }
+        }
+        
+        console.log('✅ Saved to database');
+        this.showSaveIndicator();
+        
+    } catch (error) {
+        console.error('❌ Save error:', error);
+        const indicator = document.getElementById('saveIndicator');
+        if (indicator) {
+            indicator.style.display = 'inline-block';
+            indicator.textContent = '❌ Save failed';
+            indicator.style.color = '#ef4444';
+        }
+    }
+}
+
+updateUndoRedoButtons() {
+    const undoBtn = document.getElementById('undoBtn');
+    const redoBtn = document.getElementById('redoBtn');
+    
+    if (undoBtn) {
+        if (this.historyIndex > 0) {
+            undoBtn.disabled = false;
+            undoBtn.style.opacity = '1';
+            undoBtn.style.cursor = 'pointer';
+        } else {
+            undoBtn.disabled = true;
+            undoBtn.style.opacity = '0.4';
+            undoBtn.style.cursor = 'not-allowed';
+        }
+    }
+    
+    if (redoBtn) {
+        if (this.historyIndex < this.history.length - 1) {
+            redoBtn.disabled = false;
+            redoBtn.style.opacity = '1';
+            redoBtn.style.cursor = 'pointer';
+        } else {
+            redoBtn.disabled = true;
+            redoBtn.style.opacity = '0.4';
+            redoBtn.style.cursor = 'not-allowed';
+        }
     }
 }
 
@@ -5549,15 +6347,28 @@ loadStateFromHistory() {
     const state = this.history[this.historyIndex];
     if (state) {
         this.slides = JSON.parse(JSON.stringify(state.slides));
-        this.currentSlideIndex = state.currentSlideIndex;
+        // DON'T restore currentSlideIndex - stay on current slide
+        // Only reload the current slide content
         this.loadSlide(this.currentSlideIndex);
         this.renderSlidesList();
         this.selectElement(null);
     }
+    this.updateUndoRedoButtons();
 }
 
-undo() { if (this.historyIndex > 0) { this.historyIndex--; this.loadStateFromHistory(); } }
-redo() { if (this.historyIndex < this.history.length - 1) { this.historyIndex++; this.loadStateFromHistory(); } }
+undo() { 
+    if (this.historyIndex > 0) { 
+        this.historyIndex--; 
+        this.loadStateFromHistory(); 
+    } 
+}
+
+redo() { 
+    if (this.historyIndex < this.history.length - 1) { 
+        this.historyIndex++; 
+        this.loadStateFromHistory(); 
+    } 
+}
 
 importSlides(e) {
     const files = Array.from(e.target.files);
@@ -6496,68 +7307,6 @@ debounce(func, wait) {
     };
 }
 
-// === RESET FUNCTIONALITY ===
-
-// Lưu trạng thái ban đầu khi import slides hoặc tạo mới
-saveOriginalState() {
-    this.originalSlides = JSON.parse(JSON.stringify(this.slides));
-    this.updateResetButtonVisibility();
-    console.log('✅ Đã lưu trạng thái ban đầu:', this.originalSlides.length, 'slides');
-}
-
-// Cập nhật visibility của reset button
-updateResetButtonVisibility() {
-    const resetBtn = document.getElementById('resetAllBtn');
-    if (this.originalSlides && this.originalSlides.length > 0) {
-        resetBtn.style.display = 'inline-block';
-        console.log('🔄 Hiển thị button Reset Slide');
-    } else {
-        resetBtn.style.display = 'none';
-        console.log('❌ Ẩn button Reset Slide');
-    }
-}
-
-// Reset slide hiện tại về trạng thái ban đầu
-resetToOriginalState() {
-    if (!this.originalSlides) {
-        alert('Không có trạng thái ban đầu để reset!');
-        return;
-    }
-
-    const currentSlideIndex = this.currentSlideIndex;
-    const originalSlide = this.originalSlides[currentSlideIndex];
-    
-    if (!originalSlide) {
-        alert('Không tìm thấy trạng thái ban đầu của slide này!');
-        return;
-    }
-
-    // Hiển thị confirmation dialog
-    if (!confirm(`Bạn có chắc chắn muốn reset slide ${currentSlideIndex + 1} về trạng thái ban đầu?\n\nTất cả thay đổi trên slide này sẽ bị mất!`)) {
-        return;
-    }
-
-    console.log(`🔄 Đang reset slide ${currentSlideIndex + 1} về trạng thái ban đầu...`);
-
-    // Save current slide before reset
-    this.saveCurrentSlide();
-
-    // Reset chỉ slide hiện tại
-    this.slides[currentSlideIndex] = JSON.parse(JSON.stringify(originalSlide));
-    
-    // Clear canvas và reload slide hiện tại
-    this.canvas.innerHTML = '';
-    this.loadSlide(currentSlideIndex);
-    this.renderSlidesList();
-    this.updateProperties();
-    
-    // Clear selection
-    this.selectedElements = [];
-    
-    console.log(`✅ Đã reset slide ${currentSlideIndex + 1} về trạng thái ban đầu thành công!`);
-    alert(`✅ Đã reset slide ${currentSlideIndex + 1} về trạng thái ban đầu!`);
-}
-
 // === CAPTURE SLIDE FUNCTIONALITY ===
 async captureCurrentSlide() {
     try {
@@ -6983,4 +7732,3 @@ Object.assign(SlideEditor.prototype, ExportMixin, PresentationMixin);
 
 // Apply mixins to SlideEditor prototype
 Object.assign(SlideEditor.prototype, ExportMixin, PresentationMixin);
-

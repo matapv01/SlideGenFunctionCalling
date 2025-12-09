@@ -1,6 +1,14 @@
 // Backend API base URL
 import { config } from './config.js';
 
+// Authentication helper
+function getAuthHeaders() {
+    const token = localStorage.getItem('access_token');
+    return token ? {
+        'Authorization': `Bearer ${token}`
+    } : {};
+}
+
 // Toggle checkbox function for dropdown
 window.toggleCheckbox = function(checkboxId, event) {
     const checkbox = document.getElementById(checkboxId);
@@ -147,6 +155,7 @@ async function handleDocxImport() {
         });
         const response = await fetch(config.BACKEND_URL + '/api/upload-docx-for-stream', {
             method: 'POST',
+            headers: getAuthHeaders(),
             body: formData
         });
 
@@ -259,9 +268,7 @@ function addNewSlide(content, index) {
     const deleteBtn = slideDiv.querySelector(".delete-slide");
     deleteBtn.addEventListener("click", function (e) {
         e.stopPropagation();
-        if (confirm("Bạn có chắc muốn xóa slide này?")) {
-            slideDiv.remove();
-        }
+        showDeleteSlideConfirmation(slideDiv, index);
     });
 
     slideList.appendChild(slideDiv);
@@ -621,3 +628,124 @@ window.generateFromIdea = async function() {
         hideLoading();
     }
 };
+
+// Delete slide confirmation modal
+function showDeleteSlideConfirmation(slideDiv, slideIndex) {
+    const slideNumber = slideIndex !== undefined ? slideIndex + 1 : 
+                       Array.from(slideDiv.parentElement.children).indexOf(slideDiv) + 1;
+    
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'delete-slide-modal-overlay';
+    overlay.style.cssText = `
+        position: fixed !important;
+        top: 0 !important;
+        left: 0 !important;
+        right: 0 !important;
+        bottom: 0 !important;
+        background: rgba(0, 0, 0, 0.5) !important;
+        backdrop-filter: blur(4px) !important;
+        z-index: 99999 !important;
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center !important;
+        animation: fadeIn 0.2s ease !important;
+    `;
+    
+    // Create modal
+    const modal = document.createElement('div');
+    modal.className = 'delete-slide-modal';
+    modal.style.cssText = `
+        background: white !important;
+        border-radius: 16px !important;
+        padding: 32px !important;
+        max-width: 450px !important;
+        width: 90% !important;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+        animation: slideUp 0.3s ease !important;
+        position: relative !important;
+        z-index: 100000 !important;
+    `;
+    
+    modal.innerHTML = `
+        <style>
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+            @keyframes slideUp {
+                from { transform: translateY(20px); opacity: 0; }
+                to { transform: translateY(0); opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        </style>
+        <div style="text-align: center;">
+            <div style="font-size: 48px; margin-bottom: 16px;">🗑️</div>
+            <h3 style="margin: 0 0 12px 0; font-size: 24px; color: #1f2937;">Xóa Slide?</h3>
+            <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">
+                Bạn có chắc muốn xóa <strong>Slide ${slideNumber}</strong>?<br>
+                Hành động này không thể hoàn tác.
+            </p>
+            <div style="display: flex; gap: 12px; justify-content: center;">
+                <button id="cancelDeleteSlide" style="
+                    padding: 12px 24px;
+                    border: 2px solid #e5e7eb;
+                    border-radius: 8px;
+                    background: white;
+                    color: #6b7280;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                ">Hủy</button>
+                <button id="confirmDeleteSlide" style="
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 8px;
+                    background: #ef4444;
+                    color: white;
+                    font-size: 14px;
+                    font-weight: 600;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                ">Xóa Slide</button>
+            </div>
+        </div>
+    `;
+    
+    overlay.appendChild(modal);
+    document.body.appendChild(overlay);
+    
+    // Add hover effects
+    const cancelBtn = modal.querySelector('#cancelDeleteSlide');
+    const confirmBtn = modal.querySelector('#confirmDeleteSlide');
+    
+    cancelBtn.onmouseover = () => cancelBtn.style.background = '#f9fafb';
+    cancelBtn.onmouseout = () => cancelBtn.style.background = 'white';
+    
+    confirmBtn.onmouseover = () => confirmBtn.style.background = '#dc2626';
+    confirmBtn.onmouseout = () => confirmBtn.style.background = '#ef4444';
+    
+    // Handle buttons
+    cancelBtn.onclick = () => {
+        overlay.style.animation = 'fadeOut 0.2s ease';
+        setTimeout(() => overlay.remove(), 200);
+    };
+    
+    confirmBtn.onclick = () => {
+        overlay.remove();
+        slideDiv.remove();
+        showToast('✓ Đã xóa slide thành công', 'success');
+    };
+    
+    // Close on overlay click
+    overlay.onclick = (e) => {
+        if (e.target === overlay) {
+            overlay.style.animation = 'fadeOut 0.2s ease';
+            setTimeout(() => overlay.remove(), 200);
+        }
+    };
+}

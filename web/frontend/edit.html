@@ -113,6 +113,17 @@
         
         <div class="toolbar-right">
             <div class="btn-group">
+                <button id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
+                <button id="redoBtn" title="Redo (Ctrl+Y)">↷ Redo</button>
+            </div>
+            <div class="btn-group-separator"></div>
+
+            <div class="btn-group">
+                <span id="saveIndicator" style="color: #10b981; font-size: 14px; padding: 8px 12px; display: none;">✓ Saved</span>
+            </div>
+            <div class="btn-group-separator"></div>
+
+            <div class="btn-group">
                 <button id="propertiesBtn">⚙️ Properties</button>
             </div>
             <div class="btn-group-separator"></div>
@@ -122,9 +133,6 @@
             </div>
             <div class="btn-group-separator"></div>
 
-            <div class="btn-group">
-                <button id="resetAllBtn" title="Reset slide hiện tại về trạng thái ban đầu" style="display: none;">🔄 Reset Slide</button>
-            </div>
             <div class="btn-group">
                 <button id="importBtn" style="display: none;">📂 Import</button>
             </div>
@@ -966,7 +974,19 @@
 
 
     <!-- Editor Script - ES6 Modules -->
-    <script type="module" src="js/init/init.js"></script>
-    <script nomodule src="js/editor.js"></script>
+    <script type="module">
+        // Force reload editor.js with NEW FILENAME to bypass cache
+        const editorScript = document.createElement('script');
+        editorScript.src = `js/editor-new-1765301429.js`;
+        editorScript.noModule = true;
+        document.body.appendChild(editorScript);
+        
+        console.log('⚡ Starting dynamic import of init.js...');
+        // Force reload init.js with timestamp + random to bypass aggressive cache
+        const bust = Date.now() + Math.random();
+        import(`./js/init/init.js?v=${bust}`)
+            .then(() => console.log('✅ init.js imported successfully'))
+            .catch(err => console.error('❌ Failed to import init.js:', err));
+    </script>
 </body>
 </html>

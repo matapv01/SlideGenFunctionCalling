@@ -3,6 +3,7 @@ import { config } from '../config.js';
 
 let eventSource = null;
 let projectName = null;
+let projectId = null; // Store project ID for redirect
 let totalSlides = 0;
 let completedSlides = 0;
 let slides = []; // Store all slides for presentation
@@ -101,8 +102,9 @@ function startStreaming(filename) {
         eventSource.close();
     }
     
-    // Create EventSource for SSE
-    const url = `${config.BACKEND_URL}/api/upload-docx-stream?filename=${encodeURIComponent(filename)}`;
+    // Create EventSource for SSE with auth token
+    const token = localStorage.getItem('access_token');
+    const url = `${config.BACKEND_URL}/api/upload-docx-stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);
     
@@ -158,8 +160,9 @@ function startStreamingFromIdea(session_id) {
         eventSource.close();
     }
     
-    // Create EventSource for idea-based SSE
-    const url = `${config.BACKEND_URL}/api/generate-from-idea-stream?session_id=${encodeURIComponent(session_id)}`;
+    // Create EventSource for idea-based SSE with auth token
+    const token = localStorage.getItem('access_token');
+    const url = `${config.BACKEND_URL}/api/generate-from-idea-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);
     
@@ -282,6 +285,7 @@ function handleCompleteEvent(event) {
     console.log('Complete event:', data);
     
     projectName = data.project_name;
+    projectId = data.project_id; // Store project ID for redirect
     totalSlides = data.total_slides;
     tempDirectory = data.temp_dir; // Store for cleanup later
     
@@ -632,8 +636,13 @@ async function goToEditor() {
     localStorage.setItem('projectName', projectName);
     localStorage.setItem('slidesSource', 'docx-generated');
     
-    // Redirect to editor
-    window.location.href = `edit.html?project=${encodeURIComponent(projectName)}&source=generated`;
+    // Redirect to editor with project ID
+    if (projectId) {
+        window.location.href = `edit.html?id=${projectId}&source=generated`;
+    } else {
+        // Fallback to project name if ID not available
+        window.location.href = `edit.html?project=${encodeURIComponent(projectName)}&source=generated`;
+    }
 }
 
 // Cleanup on page unload

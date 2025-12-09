@@ -113,8 +113,13 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     if first_chunk.get('position', 0) != 0:
         print("⚠️  First chunk is not an intro slide. Creating intro slide...")
         
-        # Get title from document structure
-        title = document_structure.get('title', 'Presentation Title')
+        # Get title from document structure (handle both dict and list)
+        if isinstance(document_structure, dict):
+            title = document_structure.get('title', 'Presentation Title')
+        elif isinstance(document_structure, list) and len(document_structure) > 0:
+            title = document_structure[0].get('title', 'Presentation Title') if isinstance(document_structure[0], dict) else 'Presentation Title'
+        else:
+            title = 'Presentation Title'
         
         # Create intro chunk
         intro_chunk = {
