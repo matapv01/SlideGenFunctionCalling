@@ -82,3 +82,47 @@ class PDFExportResponse(BaseModel):
     message: str
     filename: Optional[str] = None
     error: Optional[str] = None
+
+
+# Structure Editor Schemas
+class DocumentNode(BaseModel):
+    """Schema for a document structure node"""
+    level: int
+    title: str
+    content: str
+    children: List['DocumentNode'] = []
+    is_transition: bool = False  # Flag for transition slides
+
+
+class StructureUpdateRequest(BaseModel):
+    """Request schema for updating document structure"""
+    session_id: str
+    document_structure: List[DocumentNode]
+    intro_slide: Optional[DocumentNode] = None  # Optional intro slide (level 0)
+
+
+class StructureResponse(BaseModel):
+    """Response schema for getting document structure"""
+    document_title: str
+    document_structure: List[DocumentNode]
+    can_edit: bool = True
+
+
+class StructureApproveRequest(BaseModel):
+    """Request schema for approving structure"""
+    session_id: str
+
+
+class StateOutputResponse(BaseModel):
+    """Response schema matching State output from chunk_organizer"""
+    success: bool
+    message: str
+    session_id: str
+    
+    # State fields (matching chunk_organizer output)
+    document_title: str
+    document_outline: List[Dict[str, Any]]
+    slide_chunks: List[str]
+    slide_positions: List[List[str]]
+    slide_context_maps: List[str]
+    slide_types: List[str]  # 'intro', 'transition', 'content', 'thank_you'

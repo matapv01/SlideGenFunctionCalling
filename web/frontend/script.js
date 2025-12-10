@@ -10,7 +10,7 @@ function getAuthHeaders() {
 }
 
 // Toggle checkbox function for dropdown
-window.toggleCheckbox = function(checkboxId, event) {
+window.toggleCheckbox = function (checkboxId, event) {
     const checkbox = document.getElementById(checkboxId);
     if (checkbox && event.target !== checkbox) {
         checkbox.checked = !checkbox.checked;
@@ -27,7 +27,7 @@ document.addEventListener('DOMContentLoaded', function () {
         transition: transitionCheckbox?.checked,
         thankYou: thankYouCheckbox?.checked
     });
-    
+
     const docxInput = document.getElementById('docxFile');
     if (docxInput) {
         docxInput.addEventListener('change', function (e) {
@@ -116,7 +116,7 @@ function showToast(message, type) {
 
 async function handleDocxImport() {
     console.log('🚀 handleDocxImport called - NEW VERSION');
-    
+
     const docxInput = document.getElementById('docxFile');
     if (docxInput.files.length === 0) {
         showToast('Vui lòng chọn file DOCX!', 'error');
@@ -131,32 +131,75 @@ async function handleDocxImport() {
         localStorage.removeItem('generatedSlides');
         
         showLoading("Đang tải file lên...");
+
+        // ========== READ WORKFLOW MODE ==========
+        const workflowMode = document.querySelector('input[name="workflowMode"]:checked');
+        const isManualMode = workflowMode && workflowMode.value === 'manual';
+
+        console.log('📋 Workflow mode:', isManualMode ? 'MANUAL' : 'AUTO');
+
+        // ========== MANUAL MODE: Upload + Create Session → Structure Editor ==========
+        if (isManualMode) {
+            console.log('🔧 Manual mode: Uploading file for structure editing...');
+
+            const formData = new FormData();
+            formData.append('file', file);
+            formData.append('workflow_mode', 'manual');
+
+            // Upload file and get document structure
+            const response = await fetch(config.BACKEND_URL + '/api/upload-docx-for-manual', {
+                method: 'POST',
+                body: formData
+            });
+
+            if (!response.ok) {
+                throw new Error(`Upload failed with status ${response.status}`);
+            }
+
+            const data = await response.json();
+            console.log('✅ Manual upload response:', data);
+
+            if (data.session_id) {
+                hideLoading();
+                showToast('Đã phân tích tài liệu! Đang chuyển đến Structure Editor...', 'success');
+                setTimeout(() => {
+                    window.location.href = `structure-editor.html?session=${data.session_id}`;
+                }, 500);
+                return;
+            } else {
+                throw new Error('No session ID returned');
+            }
+        }
+
+        // ========== AUTO MODE: Standard workflow ==========
+        console.log('🤖 Auto mode: Starting standard workflow...');
+
         const formData = new FormData();
         formData.append('file', file);
-        
+
         // Get slide options - explicitly convert to string
         const transitionCheckbox = document.getElementById('enableTransitionSlides');
         const thankYouCheckbox = document.getElementById('enableThankYouSlide');
-        
-        console.log('🔍 Checkbox elements:', { 
-            transitionCheckbox, 
+
+        console.log('🔍 Checkbox elements:', {
+            transitionCheckbox,
             thankYouCheckbox,
             transitionChecked: transitionCheckbox?.checked,
             thankYouChecked: thankYouCheckbox?.checked
         });
-        
+
         const enableTransitionSlides = transitionCheckbox ? transitionCheckbox.checked : true;
         const enableThankYouSlide = thankYouCheckbox ? thankYouCheckbox.checked : true;
-        
+
         // Convert boolean to string explicitly
         formData.append('enable_transition_slides', enableTransitionSlides.toString());
         formData.append('enable_thank_you_slide', enableThankYouSlide.toString());
 
         console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/upload-docx-for-stream');
         console.log('Options (boolean):', { enableTransitionSlides, enableThankYouSlide });
-        console.log('Options (string):', { 
-            enable_transition_slides: enableTransitionSlides.toString(), 
-            enable_thank_you_slide: enableThankYouSlide.toString() 
+        console.log('Options (string):', {
+            enable_transition_slides: enableTransitionSlides.toString(),
+            enable_thank_you_slide: enableThankYouSlide.toString()
         });
         const response = await fetch(config.BACKEND_URL + '/api/upload-docx-for-stream', {
             method: 'POST',
@@ -171,7 +214,7 @@ async function handleDocxImport() {
 
         const data = await response.json();
         console.log('Response data:', data);
-        
+
         if (data.filename) {
             // Redirect to streaming page
             hideLoading();
@@ -217,7 +260,7 @@ async function handleZipImport() {
             // Lưu thông tin project vào localStorage
             localStorage.setItem('projectName', data.project_name);
             localStorage.setItem('slidesSource', 'zip-imported');
-            
+
             // Chuyển hướng đến edit.html local với project name
             showToast('Import ZIP thành công! Đang chuyển đến trang edit...', 'success');
             setTimeout(() => {

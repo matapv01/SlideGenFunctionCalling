@@ -31,5 +31,3 @@ python -m http.server 8000 --directory web/frontend
 
 
 → Frontend: http://localhost:8000/index.html
-
-

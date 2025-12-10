@@ -1,0 +1,348 @@
+{
+    "success": true,
+    "message": "Structure approved successfully",
+    "session_id": "92126965-fefc-4f94-8431-e89958759852",
+    "document_title": "Thiên nhiên và những điều thú vị",
+    "document_outline": [
+        {
+            "level": 1,
+            "title": "Mở đầu",
+            "content": "Thiên nhiên kỳ diệu",
+            "children": [],
+            "is_transition": true,
+            "index": "1",
+            "numbered_title": "1. Mở đầu"
+        },
+        {
+            "level": 1,
+            "title": "Mở đầu",
+            "content": "Thiên nhiên kỳ diệu",
+            "children": [
+                {
+                    "level": 2,
+                    "title": "Vẻ đẹp thiên nhiên",
+                    "content": "thiên nhiên mang lại sự sống, cân bằng sinh thái và cảm hứng cho con người.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "1.1",
+                    "numbered_title": "1.1. Vẻ đẹp thiên nhiên"
+                },
+                {
+                    "level": 2,
+                    "title": "Trách nhiệm bảo vệ",
+                    "content": "mỗi người cần hành động để bảo tồn thiên nhiên cho thế hệ tương lai.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "1.2",
+                    "numbered_title": "1.2. Trách nhiệm bảo vệ"
+                }
+            ],
+            "is_transition": false,
+            "index": "1",
+            "numbered_title": "1. Mở đầu"
+        },
+        {
+            "level": 1,
+            "title": "Phần 1",
+            "content": "Môi tường xanh",
+            "children": [],
+            "is_transition": true,
+            "index": "2",
+            "numbered_title": "2. Phần 1"
+        },
+        {
+            "level": 1,
+            "title": "Phần 1",
+            "content": "Môi tường xanh",
+            "children": [
+                {
+                    "level": 2,
+                    "title": "Rừng nhiệt đới",
+                    "content": "rừng là lá phổi xanh, cung cấp oxy và là nhà của hàng triệu loài sinh vật.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "2.1",
+                    "numbered_title": "2.1. Rừng nhiệt đới"
+                },
+                {
+                    "level": 2,
+                    "title": "Cây cổ thụ",
+                    "content": "những cây hàng trăm năm tuổi biểu tượng cho sức sống và sự bền vững.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "2.2",
+                    "numbered_title": "2.2. Cây cổ thụ"
+                }
+            ],
+            "is_transition": false,
+            "index": "2",
+            "numbered_title": "2. Phần 1"
+        },
+        {
+            "level": 1,
+            "title": "Phần 2",
+            "content": "Môi trường biển",
+            "children": [],
+            "is_transition": true,
+            "index": "3",
+            "numbered_title": "3. Phần 2"
+        },
+        {
+            "level": 1,
+            "title": "Phần 2",
+            "content": "Môi trường biển",
+            "children": [
+                {
+                    "level": 2,
+                    "title": "Rạn san hô",
+                    "content": "San hô là ngôi nhà của nhiều loài biển, đang bị đe dọa bởi ô nhiễm.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "3.1",
+                    "numbered_title": "3.1. Rạn san hô"
+                },
+                {
+                    "level": 2,
+                    "title": "Cá voi",
+                    "content": "loài động vật lớn nhất hành tinh đóng vai trò quan trọng trong hệ sinh thái biển.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "3.2",
+                    "numbered_title": "3.2. Cá voi"
+                },
+                {
+                    "level": 2,
+                    "title": "Bảo vệ đại dương",
+                    "content": "giảm rác thải nhựa và khai thác bền vững để bảo vệ môi trường biển.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "3.3",
+                    "numbered_title": "3.3. Bảo vệ đại dương"
+                }
+            ],
+            "is_transition": false,
+            "index": "3",
+            "numbered_title": "3. Phần 2"
+        },
+        {
+            "level": 1,
+            "title": "Phần 3",
+            "content": "Núi đồi",
+            "children": [],
+            "is_transition": true,
+            "index": "4",
+            "numbered_title": "4. Phần 3"
+        },
+        {
+            "level": 1,
+            "title": "Phần 3",
+            "content": "Núi đồi",
+            "children": [
+                {
+                    "level": 2,
+                    "title": "Đỉnh núi cao",
+                    "content": "những ngọn núi như Fansipan là nguồn cảm hứng và thử thách cho con người.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "4.1",
+                    "numbered_title": "4.1. Đỉnh núi cao"
+                },
+                {
+                    "level": 2,
+                    "title": "Động vật núi",
+                    "content": "hệ sinh thái núi có nhiều loài đặc hữu thích nghi với điều kiện khắc nghiệt.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "4.2",
+                    "numbered_title": "4.2. Động vật núi"
+                },
+                {
+                    "level": 2,
+                    "title": "Du lịch sinh thái",
+                    "content": "du lịch bền vững giúp bảo tồn vẻ đẹp tự nhiên của núi non.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "4.3",
+                    "numbered_title": "4.3. Du lịch sinh thái"
+                }
+            ],
+            "is_transition": false,
+            "index": "4",
+            "numbered_title": "4. Phần 3"
+        },
+        {
+            "level": 1,
+            "title": "Phần 4",
+            "content": "Chung tay",
+            "children": [],
+            "is_transition": true,
+            "index": "5",
+            "numbered_title": "5. Phần 4"
+        },
+        {
+            "level": 1,
+            "title": "Phần 4",
+            "content": "Chung tay",
+            "children": [
+                {
+                    "level": 2,
+                    "title": "Trồng cây xanh",
+                    "content": "trồng cây hấp thụ CO2, cải thiện không khí và chống biến đổi khí hậu.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "5.1",
+                    "numbered_title": "5.1. Trồng cây xanh"
+                },
+                {
+                    "level": 2,
+                    "title": "Tái chế rác thải",
+                    "content": "tái chế giảm rác, bảo vệ tài nguyên thiên nhiên và môi trường.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "5.2",
+                    "numbered_title": "5.2. Tái chế rác thải"
+                },
+                {
+                    "level": 2,
+                    "title": "Giáo dục cộng đồng",
+                    "content": "nâng cao nhận thức về bảo vệ thiên nhiên qua trường học và truyền thông.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "5.3",
+                    "numbered_title": "5.3. Giáo dục cộng đồng"
+                },
+                {
+                    "level": 2,
+                    "title": "Hợp tác toàn cầu",
+                    "content": "các quốc gia cùng hành động để bảo vệ môi trường và hệ sinh thái toàn cầu.",
+                    "children": [],
+                    "is_transition": false,
+                    "index": "5.4",
+                    "numbered_title": "5.4. Hợp tác toàn cầu"
+                }
+            ],
+            "is_transition": false,
+            "index": "5",
+            "numbered_title": "5. Phần 4"
+        }
+    ],
+    "slide_chunks": [
+        "INTRO SLIDE\n\nTitle: Thiên nhiên và những điều kì thú",
+        "TRANSITION SLIDE\n\n1. Mở đầu",
+        "\n1. Mở đầu\nThiên nhiên kỳ diệu",
+        "1. Mở đầu\n\n\t- Vẻ đẹp thiên nhiên\n\t  thiên nhiên mang lại sự sống, cân bằng sinh thái và cảm hứng cho con người.\n\n\t- Trách nhiệm bảo vệ\n\t  mỗi người cần hành động để bảo tồn thiên nhiên cho thế hệ tương lai.",
+        "TRANSITION SLIDE\n\n2. Phần 1",
+        "\n2. Phần 1\nMôi tường xanh",
+        "2. Phần 1\n\n\t- Rừng nhiệt đới\n\t  rừng là lá phổi xanh, cung cấp oxy và là nhà của hàng triệu loài sinh vật.\n\n\t- Cây cổ thụ\n\t  những cây hàng trăm năm tuổi biểu tượng cho sức sống và sự bền vững.",
+        "TRANSITION SLIDE\n\n3. Phần 2",
+        "\n3. Phần 2\nMôi trường biển",
+        "3. Phần 2\n\n\t- Rạn san hô\n\t  San hô là ngôi nhà của nhiều loài biển, đang bị đe dọa bởi ô nhiễm.\n\n\t- Cá voi\n\t  loài động vật lớn nhất hành tinh đóng vai trò quan trọng trong hệ sinh thái biển.\n\n\t- Bảo vệ đại dương\n\t  giảm rác thải nhựa và khai thác bền vững để bảo vệ môi trường biển.",
+        "TRANSITION SLIDE\n\n4. Phần 3",
+        "\n4. Phần 3\nNúi đồi",
+        "4. Phần 3\n\n\t- Đỉnh núi cao\n\t  những ngọn núi như Fansipan là nguồn cảm hứng và thử thách cho con người.\n\n\t- Động vật núi\n\t  hệ sinh thái núi có nhiều loài đặc hữu thích nghi với điều kiện khắc nghiệt.\n\n\t- Du lịch sinh thái\n\t  du lịch bền vững giúp bảo tồn vẻ đẹp tự nhiên của núi non.",
+        "TRANSITION SLIDE\n\n5. Phần 4",
+        "\n5. Phần 4\nChung tay",
+        "5. Phần 4\n\n\t- Trồng cây xanh\n\t  trồng cây hấp thụ CO2, cải thiện không khí và chống biến đổi khí hậu.\n\n\t- Tái chế rác thải\n\t  tái chế giảm rác, bảo vệ tài nguyên thiên nhiên và môi trường.\n\n\t- Giáo dục cộng đồng\n\t  nâng cao nhận thức về bảo vệ thiên nhiên qua trường học và truyền thông.\n\n\t- Hợp tác toàn cầu\n\t  các quốc gia cùng hành động để bảo vệ môi trường và hệ sinh thái toàn cầu.",
+        "THANK YOU SLIDE\n\nThank You\n\nThank you for your attention"
+    ],
+    "slide_positions": [
+        [
+            "0"
+        ],
+        [
+            "1.T"
+        ],
+        [
+            "1"
+        ],
+        [
+            "1.1",
+            "1.2"
+        ],
+        [
+            "2.T"
+        ],
+        [
+            "2"
+        ],
+        [
+            "2.1",
+            "2.2"
+        ],
+        [
+            "3.T"
+        ],
+        [
+            "3"
+        ],
+        [
+            "3.1",
+            "3.2",
+            "3.3"
+        ],
+        [
+            "4.T"
+        ],
+        [
+            "4"
+        ],
+        [
+            "4.1",
+            "4.2",
+            "4.3"
+        ],
+        [
+            "5.T"
+        ],
+        [
+            "5"
+        ],
+        [
+            "5.1",
+            "5.2",
+            "5.3",
+            "5.4"
+        ],
+        [
+            "999"
+        ]
+    ],
+    "slide_context_maps": [
+        "INTRO SLIDE",
+        "1. Mở đầu <--- YOU ARE HERE\n1. Mở đầu <--- YOU ARE HERE\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu <--- YOU ARE HERE\n1. Mở đầu <--- YOU ARE HERE\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên <--- YOU ARE HERE\n  1.2. Trách nhiệm bảo vệ <--- YOU ARE HERE\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1 <--- YOU ARE HERE\n2. Phần 1 <--- YOU ARE HERE\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1 <--- YOU ARE HERE\n2. Phần 1 <--- YOU ARE HERE\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới <--- YOU ARE HERE\n  2.2. Cây cổ thụ <--- YOU ARE HERE\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2 <--- YOU ARE HERE\n3. Phần 2 <--- YOU ARE HERE\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2 <--- YOU ARE HERE\n3. Phần 2 <--- YOU ARE HERE\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô <--- YOU ARE HERE\n  3.2. Cá voi <--- YOU ARE HERE\n  3.3. Bảo vệ đại dương <--- YOU ARE HERE\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3 <--- YOU ARE HERE\n4. Phần 3 <--- YOU ARE HERE\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3 <--- YOU ARE HERE\n4. Phần 3 <--- YOU ARE HERE\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao <--- YOU ARE HERE\n  4.2. Động vật núi <--- YOU ARE HERE\n  4.3. Du lịch sinh thái <--- YOU ARE HERE\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4 <--- YOU ARE HERE\n5. Phần 4 <--- YOU ARE HERE\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4 <--- YOU ARE HERE\n5. Phần 4 <--- YOU ARE HERE\n  5.1. Trồng cây xanh\n  5.2. Tái chế rác thải\n  5.3. Giáo dục cộng đồng\n  5.4. Hợp tác toàn cầu",
+        "1. Mở đầu\n1. Mở đầu\n  1.1. Vẻ đẹp thiên nhiên\n  1.2. Trách nhiệm bảo vệ\n2. Phần 1\n2. Phần 1\n  2.1. Rừng nhiệt đới\n  2.2. Cây cổ thụ\n3. Phần 2\n3. Phần 2\n  3.1. Rạn san hô\n  3.2. Cá voi\n  3.3. Bảo vệ đại dương\n4. Phần 3\n4. Phần 3\n  4.1. Đỉnh núi cao\n  4.2. Động vật núi\n  4.3. Du lịch sinh thái\n5. Phần 4\n5. Phần 4\n  5.1. Trồng cây xanh <--- YOU ARE HERE\n  5.2. Tái chế rác thải <--- YOU ARE HERE\n  5.3. Giáo dục cộng đồng <--- YOU ARE HERE\n  5.4. Hợp tác toàn cầu <--- YOU ARE HERE",
+        "THANK YOU SLIDE"
+    ],
+    "slide_types": [
+        "intro",
+        "transition",
+        "content",
+        "content",
+        "transition",
+        "content",
+        "content",
+        "transition",
+        "content",
+        "content",
+        "transition",
+        "content",
+        "content",
+        "transition",
+        "content",
+        "content",
+        "thank_you"
+    ]
+}

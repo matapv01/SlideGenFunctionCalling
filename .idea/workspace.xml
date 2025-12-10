@@ -1,0 +1,107 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ChangeListManager">
+    <list default="true" id="365ee84c-1b06-4f6f-8651-326543b75723" name="Changes" comment="">
+      <change beforePath="$PROJECT_DIR$/web/edit.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/edit.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/main_web.py" beforeDir="false" afterPath="$PROJECT_DIR$/web/main_web.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_1.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_1.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_10.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_10.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_11.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_11.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_12.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_12.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_2.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_2.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_3.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_3.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_4.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_4.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_5.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_5.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_6.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_6.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_7.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_7.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_8.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_8.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_9.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/converted/converted_slide_9.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_1.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_1.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_10.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_10.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_11.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_11.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_12.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_12.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_2.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_2.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_3.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_3.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_4.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_4.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_5.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_5.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_6.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_6.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_7.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_7.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_8.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_8.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_9.html" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/html/slide_9.html" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_1.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_1.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_10.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_10.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_11.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_11.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_12.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_12.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_2.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_2.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_3.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_3.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_4.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_4.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_5.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_5.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_6.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_6.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_7.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_7.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_8.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_8.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_9.png" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/png/slide_9.png" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/web/static/output/project_ai/project_ai_slides.zip" beforeDir="false" afterPath="$PROJECT_DIR$/web/static/output/project_ai/project_ai_slides.zip" afterDir="false" />
+    </list>
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectColorInfo"><![CDATA[{
+  "associatedIndex": 5
+}]]></component>
+  <component name="ProjectId" id="36R9Z87oklrTGGoDIDpEuF6slkD" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent"><![CDATA[{
+  "keyToString": {
+    "RunOnceActivity.ShowReadmeOnStart": "true",
+    "RunOnceActivity.git.unshallow": "true",
+    "git-widget-placeholder": "feat/trung1",
+    "ignore.virus.scanning.warn.message": "true",
+    "last_opened_file_path": "C:/vscode/SlideGenFunctionCalling",
+    "nodejs_package_manager_path": "npm",
+    "settings.editor.selected.configurable": "preferences.lookFeel",
+    "vue.rearranger.settings.migration": "true"
+  }
+}]]></component>
+  <component name="SharedIndexes">
+    <attachedChunks>
+      <set>
+        <option value="bundled-js-predefined-d6986cc7102b-deb605915726-JavaScript-PY-243.22562.220" />
+        <option value="bundled-python-sdk-0fc6c617c4bd-9a18a617cbe4-com.jetbrains.pycharm.pro.sharedIndexes.bundled-PY-243.22562.220" />
+      </set>
+    </attachedChunks>
+  </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="365ee84c-1b06-4f6f-8651-326543b75723" name="Changes" comment="" />
+      <created>1764958569807</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1764958569807</updated>
+      <workItem from="1764958570932" duration="141000" />
+    </task>
+    <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+  </component>
+</project>
