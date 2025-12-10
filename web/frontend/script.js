@@ -125,6 +125,11 @@ async function handleDocxImport() {
 
     const file = docxInput.files[0];
     try {
+        // Clear previous session data to prevent loading old slides
+        console.log('🧹 Clearing previous streaming state...');
+        sessionStorage.removeItem('streamingState');
+        localStorage.removeItem('generatedSlides');
+        
         showLoading("Đang tải file lên...");
         const formData = new FormData();
         formData.append('file', file);
