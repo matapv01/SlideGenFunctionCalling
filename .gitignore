@@ -10,3 +10,6 @@ web/static/capures/
 web/static/output/
 web/static/temp/
 web/static/uploads/
+
+
+*.db

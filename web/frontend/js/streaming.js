@@ -110,6 +110,18 @@ function startStreaming(filename) {
 
     // Create EventSource for SSE with auth token
     const token = localStorage.getItem('access_token');
+    console.log('🔑 Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NULL OR MISSING');
+
+    // Check if token exists
+    if (!token || token === 'null') {
+        console.error('❌ No valid token found! Redirecting to login...');
+        showToast('⚠️ Please log in to generate slides', 'error');
+        setTimeout(() => {
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+        }, 2000);
+        return;
+    }
+
     const url = `${config.BACKEND_URL}/api/upload-docx-stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);
@@ -168,6 +180,18 @@ function startStreamingFromIdea(session_id) {
 
     // Create EventSource for idea-based SSE with auth token
     const token = localStorage.getItem('access_token');
+    console.log('🔑 Token from localStorage:', token ? `${token.substring(0, 20)}...` : 'NULL OR MISSING');
+
+    // Check if token exists
+    if (!token || token === 'null') {
+        console.error('❌ No valid token found! Redirecting to login...');
+        showToast('⚠️ Please log in to generate slides', 'error');
+        setTimeout(() => {
+            window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
+        }, 2000);
+        return;
+    }
+
     const url = `${config.BACKEND_URL}/api/generate-from-idea-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);

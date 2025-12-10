@@ -1,7 +1,7 @@
 """
 SlideGen Backend - Main FastAPI Application
 """
-from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Form, Depends
+from fastapi import FastAPI, File, UploadFile, HTTPException, Request, Form, Depends, Query
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -887,10 +887,53 @@ from .auth import get_current_user_from_token_param
 
 @app.get("/api/upload-docx-stream")
 async def upload_docx_stream(
-    filename: str,
-    current_user: UserResponse = Depends(get_current_user_from_token_param)
+    filename: str = Query(..., description="DOCX filename to process"),
+    token: str = Query(..., description="Authentication token (required)")
 ):
-    """Stream processing of DOCX file with Server-Sent Events"""
+    """Stream processing of DOCX file with Server-Sent Events - Requires Authentication"""
+    
+    # Required authentication - validate token
+    logger.info(f"🔐 Authenticating request with token: {token[:20] if token else 'None'}...")
+    
+    # Check if token is missing or is the string "null" (JavaScript encodes null as "null")
+    if not token or token == "null" or not token.strip():
+        logger.error("❌ Authentication failed: No valid token provided")
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please log in to generate slides."
+        )
+    
+    # Decode and validate token
+    try:
+        from .auth import decode_access_token
+        token_data = decode_access_token(token)
+        from .database import get_user_by_email
+        user = get_user_by_email(token_data.email)
+        
+        if not user or not user.get("is_active"):
+            logger.error(f"❌ Authentication failed: User not found or inactive")
+            raise HTTPException(
+                status_code=401,
+                detail="User not found or inactive"
+            )
+        
+        current_user = UserResponse(
+            id=user["id"],
+            email=user["email"],
+            username=user["username"],
+            created_at=user["created_at"],
+            is_active=bool(user["is_active"])
+        )
+        logger.info(f"✅ Authenticated user: {current_user.email}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Authentication failed: {e}")
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid or expired token. Please log in again."
+        )
     
     # Normalize filename for cross-platform compatibility
     safe_filename = os.path.basename(filename)
@@ -1018,7 +1061,7 @@ async def upload_docx_stream(
                     total_slides = len(html_files)
                     logger.info(f"📁 Found {total_slides} HTML files")
                     
-                    # Save to database
+                    # Save to database (user is always authenticated now)
                     project_id = save_workflow_to_database(
                         user_id=current_user.id,
                         project_name=project_name,
@@ -2432,10 +2475,53 @@ Now generate the slide structure as valid JSON only (no markdown code blocks):""
 
 @app.get("/api/generate-from-idea-stream")
 async def generate_from_idea_stream(
-    session_id: str,
-    current_user: UserResponse = Depends(get_current_user_from_token_param)
+    session_id: str = Query(..., description="Session ID for idea-based generation"),
+    token: str = Query(..., description="Authentication token (required)")
 ):
-    """Stream processing of idea-generated slides with Server-Sent Events"""
+    """Stream processing of idea-generated slides with Server-Sent Events - Requires Authentication"""
+    
+    # Required authentication - validate token
+    logger.info(f"🔐 Authenticating idea generation request with token: {token[:20] if token else 'None'}...")
+    
+    # Check if token is missing or is the string "null"
+    if not token or token == "null" or not token.strip():
+        logger.error("❌ Authentication failed: No valid token provided")
+        raise HTTPException(
+            status_code=401,
+            detail="Authentication required. Please log in to generate slides."
+        )
+    
+    # Decode and validate token
+    try:
+        from .auth import decode_access_token
+        token_data = decode_access_token(token)
+        from .database import get_user_by_email
+        user = get_user_by_email(token_data.email)
+        
+        if not user or not user.get("is_active"):
+            logger.error(f"❌ Authentication failed: User not found or inactive")
+            raise HTTPException(
+                status_code=401,
+                detail="User not found or inactive"
+            )
+        
+        current_user = UserResponse(
+            id=user["id"],
+            email=user["email"],
+            username=user["username"],
+            created_at=user["created_at"],
+            is_active=bool(user["is_active"])
+        )
+        logger.info(f"✅ Authenticated user: {current_user.email}")
+        
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"❌ Authentication failed: {e}")
+        raise HTTPException(
+            status_code=401,
+            detail=f"Invalid or expired token. Please log in again."
+        )
     
     # Validate session file
     temp_filename = f"idea_{session_id}.json"
