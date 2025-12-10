@@ -41,6 +41,21 @@
     <link rel="stylesheet" href="css/components/elements/resize.css">
     <link rel="stylesheet" href="css/components/elements/editing.css">
     <link rel="stylesheet" href="css/components/controls.css">
+    <style>
+        #saveIndicator {
+            display: inline-flex !important;
+            align-items: center;
+            vertical-align: middle !important;
+            margin-left: 12px;
+            font-size: 14px;
+            color: #10b981;
+            padding: 0 !important;
+        }
+        #saveIndicator svg, #saveIndicator i, #saveIndicator .icon {
+            vertical-align: middle !important;
+            margin-right: 4px;
+        }
+    </style>
 </head>
 
 <body>
@@ -121,7 +136,7 @@
             <div class="btn-group">
                 <button id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
                 <button id="redoBtn" title="Redo (Ctrl+Y)">↷ Redo</button>
-                <span id="saveIndicator" style="color: #10b981; font-size: 14px; margin-left: 12px; display: none;">✓ Saved</span>
+                <span id="saveIndicator" style="color: #10b981; font-size: 14px; margin-left: 12px; display: none;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#10b981" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px;"><path d="M13.485 1.929a1 1 0 0 1 0 1.414l-7.071 7.071a1 1 0 0 1-1.414 0L2.515 8.929a1 1 0 1 1 1.414-1.414l1.071 1.071 6.364-6.364a1 1 0 0 1 1.414 0z"/></svg>Saved</span>
             </div>
             <div class="btn-group-separator"></div>
 

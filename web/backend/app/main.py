@@ -832,7 +832,7 @@ async def upload_docx_stream(
         raise HTTPException(status_code=400, detail="Invalid file")
     
     # Load slide options
-    options_path = TEMP_DIR / f"{filename}.options.json"
+    options_path = TEMP_DIR / f"{safe_filename}.options.json"
     slide_options = {
         "enable_transition_slides": True,
         "enable_thank_you_slide": True
@@ -850,7 +850,7 @@ async def upload_docx_stream(
         logger.warning(f"⚠️ Options file not found: {options_path}")
     
     # Create project name from filename
-    project_name = os.path.splitext(filename)[0]
+    project_name = os.path.splitext(safe_filename)[0]
     output_folder = OUTPUT_DIR / project_name
     
     # Handle existing project folder
