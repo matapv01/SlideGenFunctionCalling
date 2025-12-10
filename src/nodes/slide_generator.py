@@ -22,7 +22,8 @@ INTRO_PROMPT = """
 1. CONTENT: Short title + brief subtitle. No fluff!
 2. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-3. IMAGE: https://picsum.photos/seed/TOPIC/1600/900
+3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
+   ⚠️ MUST use NUMERIC seed (e.g., seed/347/1600/900) NOT text! Text seeds cause 404s!
 4. MATCH previous slide's style
 
 Generate clean, HIGHLY READABLE function call.
@@ -40,7 +41,8 @@ TRANSITION_PROMPT = """
 1. CONTENT: 3-6 words ONLY
 2. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-3. IMAGE: https://picsum.photos/seed/SECTION_TOPIC/1600/900
+3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
+   ⚠️ MUST use NUMERIC seed (e.g., seed/523/1600/900) NOT text! Text seeds cause 404s!
 4. CONSISTENCY: {previous_transition_context}
 
 Generate BOLD, ULTRA-VISIBLE function call.
@@ -63,7 +65,8 @@ CONTENT_PROMPT = """
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
    ❌ NO style attributes except for key phrase highlights!
 3. CONTENT: Concise, no filler words
-4. IMAGE: https://picsum.photos/seed/KEY_CONCEPT/1600/900
+4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
+   ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
 
 Generate READABLE, professional function call.
 """
@@ -95,7 +98,8 @@ TEAM_PROMPT = """
 1. CONTENT: Name + role only
 2. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
-3. IMAGE: https://picsum.photos/seed/team/1600/900
+3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
+   ⚠️ MUST use NUMERIC seed (e.g., seed/456/1600/900) NOT text! Text seeds cause 404s!
 
 Generate professional, READABLE function call.
 """
