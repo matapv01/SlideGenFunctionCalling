@@ -88,9 +88,9 @@ def generate_title_slide(
         }}
 
         .content-frame {{
-            width: 80%;
-            max-width: 800px;
-            padding: 40px;
+            width: 90%;
+            max-width: 1200px;
+            padding: 80px;
             position: relative;
             display: flex;
             flex-direction: column;
@@ -100,11 +100,11 @@ def generate_title_slide(
         }}
         
         .content-frame:not(.no-border) {{
-            border: 1px dashed rgba(255, 255, 255, 0.3);
+            border: 2px dashed rgba(255, 255, 255, 0.3);
         }}
         
         .title {{
-            font-size: 5rem;
+            font-size: 6rem;
             font-weight: bold;
             text-align: center;
             margin-bottom: 20px;
@@ -113,7 +113,7 @@ def generate_title_slide(
         }}
         
         .subtitle {{
-            font-size: 2rem;
+            font-size: 4rem;
             text-align: center;
             z-index: 10;
         }}
@@ -222,7 +222,7 @@ def generate_title_slide(
 
 def generate_introduction_slide(
     main_title="INTRODUCTION",
-    content_text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. Nunc sed lorem aliquam, malesuada lectus eu, placerat lorem. Proin at aliquet sapien, vitae elementum mi.",
+    content_text="Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. ",
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
@@ -336,7 +336,7 @@ def generate_introduction_slide(
         
         
         .title {{
-            font-size: 4rem;
+            font-size: 6rem;
             font-weight: 700;
             margin-bottom: 40px;
             letter-spacing: {letter_spacing};
@@ -344,7 +344,7 @@ def generate_introduction_slide(
         }}
         
         .content {{
-            font-size: 1.5rem;
+            font-size: 2.25rem;
             line-height: {line_height};
             font-weight: 300;
             text-align: center;
@@ -603,43 +603,47 @@ def generate_intro_slide1(
         
         .content-box {{
             background-color: {text_box_bg_color};
-            padding: 5rem; /* 80px - much larger padding */
-            border-radius: 0.5rem;
+            padding: 6rem; /* Increased padding */
+            border-radius: 1.5rem; /* Rounded corners */
             z-index: 2;
             position: relative;
-            width: 90%; /* 90% of left-content width */
-            height: 85%; /* 85% of left-content height */
-            max-width: none; /* Remove max-width constraint */
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            width: 85%; 
+            height: 85%; 
+            max-width: none; 
+            box-shadow: 0 1.5rem 3rem rgba(0,0,0,0.15); /* Deeper shadow */
             display: flex;
             flex-direction: column;
             justify-content: center;
+            border: 1px solid rgba(255,255,255,0.2);
         }}
         
         .main-title {{
-            font-size: 4rem;
+            font-size: 5.5rem; /* Larger title */
             color: {title_color};
-            margin: 0 0 3rem 0; /* 48px - even larger margin */
-            font-weight: bold;
+            margin: 0 0 2.5rem 0; 
+            font-weight: 800;
             font-style: {main_title_font_style};
-            line-height: 1.2;
+            line-height: 1.1;
             text-align: center;
+            letter-spacing: -0.02em;
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2.2rem; /* Larger subtitle */
             color: {subtitle_color};
-            margin: 1rem 0; /* 16px - increased margin */
-            line-height: 1.4;
+            margin: 1.5rem 0; 
+            line-height: 1.5;
             text-align: center;
+            font-weight: 300;
         }}
         
         .divider {{
-            width: 80%; /* 80% width instead of 100% */
-            height: 0.25rem; /* 4px - thicker */
+            width: 60%; 
+            height: 0.4rem; 
             background-color: {line_color};
-            margin: 3rem auto 0 auto; /* 48px top margin, centered */
-            border-radius: 0.125rem;
+            margin: 3.5rem auto 0 auto; 
+            border-radius: 0.2rem;
+            opacity: 0.8;
         }}
         
         .decorative-element {{
@@ -679,7 +683,6 @@ def generate_intro_slide1(
                     <h1 class="main-title">{main_title}</h1>
                     <p class="subtitle">{subtitle1}</p>
                     <p class="subtitle">{subtitle2}</p>
-                    <div class="divider"></div>
                 </div>
             </div>
             
@@ -792,7 +795,7 @@ def generate_elegant_intro_slide(
         }}
 
         .main-title {{
-            font-size: 94px;
+            font-size: 112px;
             font-weight: 700;
             line-height: 1.1;
             margin-bottom: 40px;
@@ -800,7 +803,7 @@ def generate_elegant_intro_slide(
         }}
 
         .subtitle {{
-            font-size: 24px;
+            font-size: 36px;
             line-height: 1.6;
             opacity: 0.85;
             max-width: 600px;
@@ -996,26 +999,26 @@ def generate_inspirational_quote_slide(
         }}
 
         .slide-container {{
-            width: 90%;
-            max-width: 65rem;
+            width: 95%;
+            max-width: 85rem;
             text-align: center;
             position: relative;
             background-color: rgba(255, 255, 255, 0.5);
             backdrop-filter: blur(8px);
-            padding: 4rem;
-            border-radius: 1rem;
+            padding: 9rem;
+            border-radius: 1.5rem;
         }}
 
         .quote-text {{
-            font-size: clamp(2.75rem, 6vw, 4.5rem);
+            font-size: clamp(5.25rem, 10.5vw, 9rem);
             font-weight: 700;
             line-height: 1.4;
-            margin-bottom: 2.5rem;
+            margin-bottom: 4.5rem;
             /* Bỏ bóng đổ vì không cần thiết trên nền sáng */
         }}
 
         .attribution-text {{
-            font-size: 1.5rem;
+            font-size: 3rem;
             font-style: italic;
             font-weight: 400;
             opacity: 0.9;
@@ -1133,7 +1136,7 @@ def generate_title_slide_2(
         }}
 
         .main-title {{
-            font-size: clamp(2.5rem, 7vw, 3.5rem);
+            font-size: clamp(2.5rem, 7vw, 6rem);
             font-weight: 800;
             color: {text_color};
             line-height: 1.1;
@@ -1218,14 +1221,14 @@ def generate_dynamic_intro_slide(
         }}
 
         .text-column {{
-            flex: 1.5;
+            flex: 1.2;
             background-color: {primary_color};
             color: {text_color};
             clip-path: url(#angled-divider);
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 5rem 4rem; /* Tăng padding để có thêm không gian */
+            justify-content: center;
+            padding: 6rem 5rem;
         }}
 
         .image-column {{
@@ -1236,26 +1239,26 @@ def generate_dynamic_intro_slide(
         }}
 
         .title-group {{
-            transform: scale(1); /* Phóng to toàn bộ title group */
-            transform-origin: left top;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }}
 
         .main-title {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn rất nhiều */
-            font-size: clamp(2rem, 3vw, 7rem);
-            font-weight: 600;
-            line-height: 1.1;
-            /* ĐÃ SỬA ĐỔI: Tăng lề dưới */
-            margin-bottom: 10rem;
+            font-size: clamp(3.5rem, 6vw, 6rem);
+            font-weight: 700;
+            line-height: 1.15;
+            margin-bottom: 6rem;
+            letter-spacing: -0.02em;
         }}
 
         .subtitle {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn và giãn dòng tốt hơn */
-            font-size: 1.3rem;
+            font-size: 2rem;
             font-weight: 400;
-            line-height: 1.7;
-            opacity: 0.9;
-            max-width: 35rem; /* Tăng max-width một chút */
+            line-height: 1.6;
+            opacity: 0.95;
+            max-width: 42rem;
         }}
 
         .footer-decor {{
@@ -1414,24 +1417,27 @@ def generate_big_concept_slide(
         }}
 
         .text-column {{
-            padding-right: 2rem;
+            padding-right: 3rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }}
         
         .big-title {{
-            font-size: 3rem;
-            font-weight: 600;
-            line-height: 1;
+            font-size: 5.5rem;
+            font-weight: 800;
+            line-height: 1.05;
             text-transform: uppercase;
-            margin-bottom: 10rem;
-            max-width: 100rem;
+            margin-bottom: 3rem;
+            letter-spacing: -0.02em;
         }}
 
         .subtitle {{
-             font-size: 1.5rem;
+            font-size: 2rem;
             line-height: 1.6;
             font-weight: 400;
-            max-width: 50rem;
-            margin-bottom: 10rem;
+            max-width: 90%;
+            opacity: 0.95;
         }}
         
         .icon-column {{
@@ -1591,25 +1597,29 @@ def generate_elegant_agenda_slide(
         .text-section {{
             flex: 1;
             padding-left: 5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
         }}
         
         .main-title {{
             font-family: {font_family_title};
-            font-size: 3.5rem;
-            font-weight: 500;
+            font-size: 5rem;
+            font-weight: 600;
             font-style: italic;
             color: {title_color};
-            margin: 0 0 1.5rem 0;
-            line-height: 1.2;
+            margin: 0 0 2rem 0;
+            line-height: 1.15;
+            letter-spacing: -0.01em;
         }}
         
         .subtitle {{
-            font-size: 0.875rem;
+            font-size: 1.15rem;
             font-weight: 600;
             color: {subtitle_color};
             text-transform: uppercase;
-            letter-spacing: 0.2em;
-            margin-bottom: 2rem;
+            letter-spacing: 0.25em;
+            margin-bottom: 2.5rem;
         }}
 
         .agenda-list {{
@@ -1618,9 +1628,11 @@ def generate_elegant_agenda_slide(
             margin: 0;
         }}
         .agenda-item {{
-            font-size: 1.1rem;
+            font-size: 1.75rem;
             color: {text_color};
-            margin-bottom: 1rem;
+            margin-bottom: 1.5rem;
+            font-weight: 400;
+            line-height: 1.4;
         }}
 
         /* Responsive Design */
@@ -1692,11 +1704,11 @@ def generate_playful_title_slide(
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
-        .slide-container {{ width: 100%; height: 100%; background-color: {top_bg_color}; position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 2rem 4rem; }}
+        .slide-container {{ width: 100%; height: 100%; background-color: {top_bg_color}; position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 4rem 5rem; }}
         .slide-container::after {{ content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 15%; background-color: {bottom_bg_color}; z-index: 0; }}
-        .text-column {{ z-index: 10; }}
-        .main-title {{ font-family: 'Patrick Hand', cursive;  font-size: clamp(2rem, 7vw, 5rem); color: #2D2D2D; line-height: 1.1; margin-bottom: 8rem; }}
-        .subtitle {{ font-family: {font_family_body}; font-size: clamp(1.2rem, 2vw, 3rem); color: {text_color}; line-height: 1.6; max-width: 40ch;margin-bottom: 15rem; }}
+        .text-column {{ z-index: 10; display: flex; flex-direction: column; justify-content: center; }}
+        .main-title {{ font-family: 'Patrick Hand', cursive; font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 400; color: #2D2D2D; line-height: 1.15; margin-bottom: 2.5rem; }}
+        .subtitle {{ font-family: {font_family_body}; font-size: 2rem; color: {text_color}; line-height: 1.6; max-width: 45ch; font-weight: 400; }}
         .illustration-column {{ z-index: 5; display: flex; align-items: center; justify-content: center; }}
         .illustration-wrapper {{ position: relative; width: 90%; max-width: 450px; }}
         .penguin-svg {{ width: 100%; height: auto; filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.1)); }}
@@ -1772,14 +1784,14 @@ def generate_minimalist_title_slide(
         }}
 
         .main-title {{
-            font-size: clamp(3rem, 7vw, 5.5rem);
+            font-size: clamp(3.5rem, 8vw, 6.5rem);
             font-weight: 800;
             line-height: 1.15;
             margin-bottom: 2rem;
         }}
 
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 1.85rem;
             line-height: 1.6;
             color: {subtitle_color};
             opacity: 0.9;
@@ -1788,7 +1800,7 @@ def generate_minimalist_title_slide(
         }}
         
         .author-line {{
-            font-size: 1.1rem;
+            font-size: 1.3rem;
             text-transform: uppercase;
             letter-spacing: 0.1em;
             opacity: 0.7;
@@ -1919,15 +1931,16 @@ def generate_mission_slide(
         
         .top-text {{
             /* ĐÃ SỬA ĐỔI: Giảm kích thước chữ */
-            font-size: 1rem;
+            font-size: 1.3rem;
             color: {text_color_top};
             margin-bottom: 0.75rem;
             font-weight: 600;
+            letter-spacing: 0.05em;
         }}
         
         .main-title {{
             /* ĐÃ SỬA ĐỔI: Giảm kích thước chữ của tiêu đề chính */
-            font-size: clamp(2.2rem, 4vw, 3.5rem); 
+            font-size: clamp(3rem, 5vw, 5rem); 
             color: {text_color_title};
             font-weight: 700;
             line-height: 1.2;
@@ -1936,11 +1949,12 @@ def generate_mission_slide(
         
         .subtitle-text {{
             /* ĐÃ SỬA ĐỔI: Tăng kích thước chữ của description và padding */
-            font-size: 1.4rem; 
+            font-size: 1.85rem; 
             color: {text_color_subtitle};
-            line-height: 1.8;
+            line-height: 1.7;
             padding: 3rem 4rem; 
-            flex-grow: 1; 
+            flex-grow: 1;
+            font-weight: 400;
         }}
         
         .right-column {{
@@ -2011,6 +2025,7 @@ def generate_mission_slide(
 </body>
 </html>"""
     return html_code
+
 #----------------------SLIDE CHUYỂN SLIDE
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
@@ -2057,25 +2072,27 @@ def generate_geometric_transition_slide(
 
         .text-content {{
             z-index: 10;
-            transform: scale(1.3);
-            min-width: 40vw;
-            min-height: 30vh;
+            max-width: 90%;
+            width: 100%;
         }}
 
-
         .headline {{
-            font-size: clamp(4rem, 6vw, 4rem);
+            font-size: clamp(6rem, 10vw, 8rem) !important;
             font-weight: 700;
             text-transform: uppercase;
-            line-height: 1.1;
-            margin-bottom: 10rem;
+            line-height: 1.25;
+            margin-bottom: 3rem;
+            display: block;
+            width: 100%;
         }}
 
         .subtitle {{
-            font-size: 2rem;
+            font-size: 3.5rem !important;
             font-weight: 500;
-            margin-bottom: 15rem;
             color: {subtitle_color};
+            line-height: 1.5;
+            display: block;
+            width: 100%;
         }}
 
         /* --- Geometric Shapes --- */
@@ -2328,28 +2345,29 @@ def generate_dusk_transition_slide(
         }}
         
         /* --- ĐÃ XÓA: Toàn bộ phần CSS của tên lửa --- */
-        
-        .text-group {{
-            z-index: 10;
-            transform: scale(1.5); /* Tăng từ 1.2 lên 1.5 để to hơn */
-
-        }}
-
 
         .headline {{
-            font-size: 3rem; /* Tăng từ clamp(2.5rem, 7vw, 4rem) lên 3rem */
-            font-weight: 650;
+            font-size: 5rem !important;
+            font-weight: 700;
             color: {headline_color};
-            line-height: 1.2;
-            margin-bottom: 5rem;
+            line-height: 1.25;
+            margin: 0 auto 3rem auto;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+            padding: 0 100px;
         }}
 
         .subtitle {{
-            font-size: 2rem;
+            font-size: 3rem !important;
             font-weight: 400;
             color: {subtitle_color};
-            margin-bottom: 13rem;
-
+            line-height: 1.5;
+            margin: 0 auto 0 auto;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+            padding: 0 100px;
         }}
 
     </style>
@@ -2358,10 +2376,8 @@ def generate_dusk_transition_slide(
     <div class="slide-container">
         <!-- {rockets_html} bây giờ là chuỗi rỗng -->
         {rockets_html}
-        <div class="text-group">
-            <h1 class="headline">{headline}</h1>
-            <p class="subtitle">{subtitle}</p>
-        </div>
+        <h1 class="headline">{headline}</h1>
+        <p class="subtitle">{subtitle}</p>
     </div>
 </body>
 </html>"""
@@ -2516,39 +2532,43 @@ def generate_pushpin_section_header(
         .divider-line {{
             position: absolute;
             width: 100%;
-            height: 4px;
+            height: 6px;
             background-color: {accent_color};
             z-index: 1;
         }}
 
         .main-title {{
-            font-size: clamp(2.5rem, 8vw, 5rem);
+            font-size: 6rem !important;
             color: {text_color};
             font-weight: 800;
             line-height: 1.2;
-            text-align: center;
+            text-align: center !important;
             text-transform: uppercase;
             letter-spacing: 0.05em;
-            /* Tạo hiệu ứng "knockout" */
             background-color: {bg_color};
-            padding: 0 2rem;
-            z-index: 2; /* Đặt chữ lên trên đường kẻ */
+            padding: 0 3rem;
+            z-index: 2;
+            display: block;
+            width: auto;
+            margin: 0 auto;
+            position: relative;
         }}
 
         /* Các chấm trang trí */
         .dot {{
-            width: 1rem;
-            height: 1rem;
+            width: 1.5rem;
+            height: 1.5rem;
             background-color: {accent_color};
             border-radius: 50%;
+            z-index: 3;
         }}
 
         .left-dot {{
-            margin-right: 2rem;
+            margin-right: 3rem;
         }}
 
         .right-dot {{
-            margin-left: 2rem;
+            margin-left: 3rem;
         }}
 
     </style>
@@ -2788,21 +2808,25 @@ def generate_intro_slide(
         }}
         
         .main-title {{
-            font-size: 4rem;
+            font-size: 5.5rem !important;
             color: {title_color};
-            margin: 0 0 3rem 0; /* 48px - even larger margin */
+            margin: 0 0 3rem 0;
             font-weight: bold;
             font-style: {main_title_font_style};
             line-height: 1.2;
-            text-align: center;
+            text-align: center !important;
+            display: block;
+            width: 100%;
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2.5rem !important;
             color: {subtitle_color};
-            margin: 1rem 0; /* 16px - increased margin */
+            margin: 1rem 0;
             line-height: 1.4;
-            text-align: center;
+            text-align: center !important;
+            display: block;
+            width: 100%;
         }}
         
         .divider {{
@@ -2869,202 +2893,6 @@ def generate_intro_slide(
     
     return html_code
     
-def generate_credits_slide(
-    main_text="Main Text",
-    credits_text="Credits Text",
-    font_family="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-):
-    """
-    Generates a thank you slide with warm peach background and simple decorative elements.
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Credits Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
-        div[style*="background: white"], 
-        div[style*="background: #FFFFFF"],
-        div[style*="background-color: white"],
-        div[style*="background-color: #FFFFFF"],
-        #canvas,
-        [data-bg*="#FFFFFF"] {{
-            background: linear-gradient(135deg, #FFE5D4 0%, #FFD4C4 50%, #FFC4B4 100%) !important;
-            background-color: transparent !important;
-        }}
-        
-        html#html.html {{ 
-            height: 100vh !important;
-            width: 100vw !important;
-            font-family: {font_family} !important;
-            background: linear-gradient(135deg, #FFE5D4 0%, #FFD4C4 50%, #FFC4B4 100%) !important;
-            overflow: hidden !important;
-            position: relative !important;
-        }}
-        
-        body#body.body, html#html.html {{
-            height: 100vh !important;
-            width: 100vw !important;
-            font-family: {font_family} !important;
-            background: linear-gradient(135deg, #FFE5D4 0%, #FFD4C4 50%, #FFC4B4 100%) !important;
-            overflow: hidden !important;
-            position: relative !important;
-        }}
-        
-       .slide-container {{
-            height: 80vh;
-            width: 85vw;
-            padding: 4rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            text-align: center;
-            transform: scale(1.8);
-            background: rgba(255, 255, 255, 0.25);
-            backdrop-filter: blur(20px);
-            border-radius: 30px;
-            border: 3px solid rgba(255, 255, 255, 0.4);
-            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.15);
-            margin: auto;
-        }}
-        
-        .main-text {{
-            font-family: 'Dancing Script', cursive;
-            font-size: 4rem;
-            color: #E91E63;
-            line-height: 1.3;
-            margin-bottom: 2rem;
-            max-width: 1200px;
-            font-weight: 700;
-            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.25);
-        }}
-
-        .credits-text {{
-            font-size: 3rem;
-            color: #8B4513;
-            margin-bottom: 2rem;
-            font-weight: 600;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.15);
-        }}
-
-        .closing-text {{
-            font-family: 'Dancing Script', cursive;
-            font-size: 2.5rem;
-            color: #E91E63;
-            font-weight: 700;
-        }}
-        
-        .character-left {{
-            position: absolute;
-            left: 15%;
-            bottom: 20%;
-            font-size: 5rem;
-            transform: rotate(-10deg);
-            z-index: 10;
-        }}
-        
-        .character-right {{
-            position: absolute;
-            right: 15%;
-            bottom: 20%;
-            font-size: 5rem;
-            transform: rotate(10deg);
-            z-index: 10;
-        }}
-        
-        
-        .decorative-dots {{
-            position: absolute;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }}
-        
-        .dot {{
-            position: absolute;
-            width: 8px;
-            height: 8px;
-            background: rgba(255, 255, 255, 0.4);
-            border-radius: 50%;
-        }}
-        
-        .dot:nth-child(1) {{ top: 20%; left: 15%; }}
-        .dot:nth-child(2) {{ top: 30%; right: 20%; }}
-        .dot:nth-child(3) {{ bottom: 25%; left: 10%; }}
-        .dot:nth-child(4) {{ bottom: 35%; right: 15%; }}
-        .dot:nth-child(5) {{ top: 15%; left: 50%; }}
-        .dot:nth-child(6) {{ bottom: 20%; right: 45%; }}
-        
-        @media (max-width: 768px) {{
-            .slide-container {{
-                padding: 1rem;
-            }}
-            
-            .main-text {{
-                font-size: 2rem;
-                margin-bottom: 1.5rem;
-            }}
-            
-            .closing-text {{
-                font-size: 1.8rem;
-            }}
-            
-            .character-left,
-            .character-right {{
-                font-size: 2.5rem;
-                bottom: 10%;
-            }}
-            
-            .character-left {{
-                left: 5%;
-            }}
-            
-            .character-right {{
-                right: 5%;
-            }}
-        }}
-        
-        @media (max-width: 480px) {{
-            .character-left,
-            .character-right {{
-                display: none;
-            }}
-        }}
-    </style>
-</head>
-<body id="body" class="body">
-    <div class="decorative-dots">
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-        <div class="dot"></div>
-    </div>
-    
-    <div class="slide-container">
-        <div class="main-text">{main_text}</div>
-        <div class="credits-text">{credits_text}</div>
-        <div class="character-left">👩🏾‍💼</div>
-        <div class="character-right">👩🏻‍💻</div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
 #------------------------SLIDE CONTENT
 def generate_content_slide(
     main_title="CONTENT",
@@ -3172,13 +3000,15 @@ def generate_content_slide(
         }}
         
         .main-title {{
-            font-size: 3.5rem;
+            font-size: 5rem !important;
             font-weight: 700;
             color: {main_title_color};
-            text-align: center;
+            text-align: center !important;
             margin-bottom: 3rem;
             letter-spacing: 0.02em;
             position: relative;
+            display: block;
+            width: 100%;
         }}
 
         .main-title::after {{
@@ -3227,12 +3057,14 @@ def generate_content_slide(
         }}
         
         .item-number {{
-            font-size: 4rem;
+            font-size: 3rem !important;
             font-weight: 700;
             color: {number_color};
             margin-bottom: 1rem;
             line-height: 1;
             position: relative;
+            text-align: center !important;
+            display: block;
         }}
 
         .item-number::after {{
@@ -3248,10 +3080,13 @@ def generate_content_slide(
         }}
         
         .item-title {{
-            font-size: 1.25rem;
+            font-size: 2rem !important;
             font-weight: 500;
             color: {item_title_color};
             line-height: 1.4;
+            text-align: center !important;
+            display: block;
+            width: 100%;
         }}
 
         /* Responsive Design */
@@ -3300,459 +3135,6 @@ def generate_content_slide(
         
         <div class="grid-container">
             {grid_items_html}
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
-def generate_two_column_slide(
-    main_title="Your Title Here",
-    left_column_titles=["Your Title Here", "Your Title Here"],
-    left_column_texts=[
-        "Presentations are communication tools that can be used as demonstrations.",
-        "Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience."
-    ],
-    right_column_titles=["Your Title Here", "Your Title Here"],
-    right_column_texts=[
-        "Presentations are communication tools that can be used as speeches, reports, and more.",
-        "Presentations are communication tools that can be used as speeches, reports, and more."
-    ],
-    main_title_color="#555555",
-    left_bg_color="#a2c4c9",
-    left_text_color="#ffffff",
-    right_title_color="#555555",
-    right_text_color="#555555",
-    border_color="#a2c4c9",
-    icon_color="#a2c4c9",
-    font_family="Arial, sans-serif",
-):
-    """
-    Generates an HTML slide with two columns matching the exact layout in the image.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    - left_column_titles: List of titles for the left column sections
-    - left_column_texts: List of texts for the left column sections
-    - right_column_titles: List of titles for the right column sections
-    - right_column_texts: List of texts for the right column sections
-    - main_title_font_size: Font size for the main title
-    - column_title_font_size: Font size for the column titles
-    - column_text_font_size: Font size for the column texts
-    - main_title_color: Color of the main title
-    - left_bg_color: Background color of the left column
-    - left_text_color: Text color for the left column
-    - right_title_color: Title color for the right column
-    - right_text_color: Text color for the right column
-    - border_color: Color for the border around the slide
-    - icon_color: Color for the icons in the right column
-    - font_family: Font family for the slide
-    
-    Returns:
-    - HTML code for the two-column slide
-    """
-    
-    # Create left column sections HTML
-    left_sections_html = ""
-    for i, (title, text) in enumerate(zip(left_column_titles, left_column_texts)):
-        left_sections_html += f"""
-        <div class="left-section" style="margin-bottom: 50px;">
-            <h2 style="font-size:24xpx; color: {left_text_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
-            <p style="font-size: 16px; color: {left_text_color}; margin: 0; line-height: 1.6;">{text}</p>
-        </div>
-        """
-    
-    # Create right column sections HTML
-    right_sections_html = ""
-    icons = [
-        # Document with pencil icon
-        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-            <polyline points="14 2 14 8 20 8"></polyline>
-            <path d="M16 13l-4 4h-4v-4l8-8z"></path>
-        </svg>""",
-        # Magnifying glass icon
-        """<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="40" height="40" fill="none" stroke="ICON_COLOR" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>"""
-    ]
-    
-    for i, (title, text) in enumerate(zip(right_column_titles, right_column_texts)):
-        icon = icons[i % len(icons)].replace("ICON_COLOR", icon_color)
-        right_sections_html += f"""
-        <div class="right-section" style="display: flex; align-items: flex-start; margin-bottom: 50px;">
-            <div style="margin-right: 20px; flex-shrink: 0;">{icon}</div>
-            <div>
-                <h2 style="font-size: 24px; color: {right_title_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
-                <p style="font-size: 16px; color: {right_text_color}; margin: 0; line-height: 1.6;">{text}</p>
-            </div>
-        </div>
-        """
-    
-    # Create the HTML content with CSS - Flat structure without nested containers
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Column Slide</title>
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
-        body, html {{
-            height: 1080px;
-            width: 1920px;
-            font-family: {font_family};
-            background-color: {border_color};
-            color: {main_title_color};
-            overflow: hidden;
-        }}
-
-        .slide-background {{
-            position: absolute;
-            left: 120px;
-            top: 80px;
-            width: 1680px;
-            height: 920px;
-            background-color: #ffffff;
-            border-radius: 16px;
-            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
-        }}
-
-        .slide-content {{
-            position: absolute;
-            left: 200px;
-            top: 140px;
-            width: 1520px;
-            height: 800px;
-        }}
-        
-        .main-title {{
-            position: absolute;
-            left: 200px;
-            top: 140px;
-            width: 1520px;
-            font-size: 36px;
-            font-weight: 700;
-            color: {main_title_color};
-            text-align: center;
-            margin: 0 0 40px 0;
-            line-height: 1.2;
-        }}
-        
-        .left-column {{
-            position: absolute;
-            left: 200px;
-            top: 223px;
-            width: 730px;
-            height: 717px;
-            background-color: {left_bg_color};
-            padding: 40px;
-            border-radius: 12px;
-        }}
-        
-        .right-column {{
-            position: absolute;
-            left: 990px;
-            top: 223px;
-            width: 730px;
-            height: 717px;
-            background-color: #ffffff;
-            border: 2px solid {border_color};
-            padding: 40px;
-            border-radius: 12px;
-        }}
-    </style>
-</head>
-<body>
-    <!-- Background layer -->
-    <div class="slide-background"></div>
-    
-    <!-- Main title -->
-    <h1 class="main-title">{main_title}</h1>
-    
-    <!-- Left column -->
-    <div class="left-column">
-        {left_sections_html}
-    </div>
-    
-    <!-- Right column -->
-    <div class="right-column">
-        {right_sections_html}
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
-def generate_project_circles_slide(
-    main_title="Your Title Here",
-    left_title="Your Title Here",
-    right_title="Your Title Here",
-    left_text="Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. Most of the time, they're presented before an audience.",
-    right_text="Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. Most of the time, they're presented before an audience.",
-    footer_text="Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.",
-    project_names=["Project 1", "Project 2", "Project 3"],
-    circle_colors=["#e1eff2", "#8cbeca", "#e1eff2"],
-    title_color="#555555",
-    text_color="#555555",
-    circle_text_color="#ffffff",
-    background_color="#ffffff",
-    accent_color="#a2c4c9",
-    font_family="Arial, sans-serif",
-):
-    """
-    Generates an HTML slide with a main title, two text columns, and three project circles in the middle.
-    The slide has an alternating blue and white border as shown in the image.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    - left_title: Title for the left column
-    - right_title: Title for the right column
-    - left_text: Text content for the left column
-    - right_text: Text content for the right column
-    - footer_text: Text content for the footer
-    - project_names: List of three project names for the circles
-    - circle_colors: List of three colors for the circles
-    - main_title_font_size: Font size for the main title
-    - section_title_font_size: Font size for the section titles
-    - text_font_size: Font size for the main text
-    - footer_font_size: Font size for the footer text
-    - title_color: Color for all titles
-    - text_color: Color for all text content
-    - circle_text_color: Color for the text in the circles
-    - background_color: Background color of the slide
-    - accent_color: Color for the corner accents
-    - font_family: Font family for the slide
-    
-    Returns:
-    - HTML code for the project circles slide with alternating border
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Project Circles Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html, body {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            background-color: {background_color};
-            overflow: hidden;
-        }}
-        
-        .slide-container {{
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            background-color: {background_color};
-        }}
-        
-        /* Top-left corner */
-        .corner-tl {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 25vw;
-            height: 25vh;
-            background-color: {accent_color};
-            clip-path: polygon(0 0, 100% 0, 0 100%);
-            z-index: 0;
-        }}
-        
-        /* Top-right corner */
-        .corner-tr {{
-            position: absolute;
-            top: 0;
-            right: 0;
-            width: 25vw;
-            height: 25vh;
-            background-color: {accent_color};
-            clip-path: polygon(100% 0, 0 0, 100% 100%);
-            z-index: 0;
-        }}
-        
-        /* Bottom-left corner */
-        .corner-bl {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 25vw;
-            height: 25vh;
-            background-color: {accent_color};
-            clip-path: polygon(0 100%, 100% 100%, 0 0);
-            z-index: 0;
-        }}
-        
-        /* Bottom-right corner */
-        .corner-br {{
-            position: absolute;
-            bottom: 0;
-            right: 0;
-            width: 25vw;
-            height: 25vh;
-            background-color: {accent_color};
-            clip-path: polygon(100% 100%, 0 100%, 100% 0);
-            z-index: 0;
-        }}
-        
-        .content {{
-            position: absolute;
-            top: 3vh;
-            left: 3vw;
-            right: 3vw;
-            bottom: 3vh;
-            background-color: {background_color};
-            z-index: 1;
-            display: flex;
-            flex-direction: column;
-            padding: 5vh 4vw;
-            box-sizing: border-box;
-        }}
-        
-        .main-title {{
-            font-size: 36px;
-            color: {title_color};
-            text-align: center;
-            margin-top: 0;
-            margin-bottom: 4vh;
-        }}
-        
-        .content-container {{
-            display: flex;
-            flex: 1;
-            margin-bottom: 3vh;
-        }}
-        
-        .text-column {{
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-            padding: 0 2vw;
-        }}
-        
-        .left-column {{
-            text-align: right;
-        }}
-        
-        .right-column {{
-            text-align: left;
-        }}
-        
-        .circles-column {{
-            flex: 1;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }}
-        
-        .circle {{
-            width: 12vw;
-            height: 12vw;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            position: absolute;
-            color: {circle_text_color};
-            font-weight: bold;
-            font-size: 1.2vw;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-        }}
-        
-        .circle-1 {{
-            background-color: {circle_colors[0]};
-            left: 50%;
-            top: 0;
-            transform: translateX(-100%);
-            z-index: 1;
-        }}
-        
-        .circle-2 {{
-            background-color: {circle_colors[1]};
-            left: 50%;
-            top: 50%;
-            transform: translate(-50%, -30%);
-            width: 15vw;
-            height: 15vw;
-            z-index: 3;
-            font-size: 1.5vw;
-        }}
-        
-        .circle-3 {{
-            background-color: {circle_colors[2]};
-            left: 50%;
-            top: 0;
-            transform: translateX(0%);
-            z-index: 2;
-        }}
-        
-        .section-title {{
-            font-size: 24px;
-            color: {title_color};
-            margin-top: 0;
-            margin-bottom: 15px;
-        }}
-        
-        .section-text {{
-            font-size: 16px;
-            color: {text_color};
-            line-height: 1.5;
-            margin: 0;
-        }}
-        
-        .footer {{
-            font-size: 14px;
-            color: {text_color};
-            text-align: center;
-            line-height: 1.5;
-            margin: 0;
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <!-- Corner decorations for alternating border -->
-        <div class="corner-tl"></div>
-        <div class="corner-tr"></div>
-        <div class="corner-bl"></div>
-        <div class="corner-br"></div>
-        
-        <div class="content">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="content-container">
-                <div class="text-column left-column">
-                    <h2 class="section-title">{left_title}</h2>
-                    <p class="section-text">{left_text}</p>
-                </div>
-                
-                <div class="circles-column">
-                    <div class="circle circle-1">{project_names[0]}</div>
-                    <div class="circle circle-2">{project_names[1]}</div>
-                    <div class="circle circle-3">{project_names[2]}</div>
-                </div>
-                
-                <div class="text-column right-column">
-                    <h2 class="section-title">{right_title}</h2>
-                    <p class="section-text">{right_text}</p>
-                </div>
-            </div>
-            
-            <p class="footer">{footer_text}</p>
         </div>
     </div>
 </body>
@@ -3866,7 +3248,7 @@ def generate_comparison_slide(
             left: 200px;
             top: 140px;
             width: 1520px;
-            font-size: 48px;
+            font-size: 80px;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -3919,7 +3301,7 @@ def generate_comparison_slide(
         }}
         
         .left-title {{
-            font-size: 36px;
+            font-size: 45px;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -3928,7 +3310,7 @@ def generate_comparison_slide(
         }}
         
         .right-title {{
-            font-size: 36px;
+            font-size: 45px;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -3937,14 +3319,14 @@ def generate_comparison_slide(
         }}
         
         .left-text {{
-            font-size: 22px;
+            font-size: 30px;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
         }}
         
         .right-text {{
-            font-size: 22px;
+            font-size: 30px;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
@@ -4066,12 +3448,14 @@ def generate_process_slide(
         }}
         
         .main-title {{
-            font-size: 3.5rem;
+            font-size: 6rem !important;
             font-weight: 700;
             color: {title_color};
-            text-align: center;
+            text-align: center !important;
             margin-bottom: 4rem;
             line-height: 1.2;
+            display: block;
+            width: 100%;
         }}
         
         .boxes-container {{
@@ -4103,16 +3487,20 @@ def generate_process_slide(
         }}
         
         .box-title {{
-            font-size: 2.8rem;
+            font-size: 3.5rem !important;
             font-weight: 600;
             margin-bottom: 2.5rem;
-            text-align: center;
+            text-align: center !important;
+            display: block;
+            width: 100%;
         }}
         
         .box-content {{
-            font-size: 1.6rem;
+            font-size: 2rem !important;
             line-height: 1.8;
-            text-align: center;
+            text-align: center !important;
+            display: block;
+            width: 100%;
         }}
         
         .arrow-container {{
@@ -4124,8 +3512,8 @@ def generate_process_slide(
         }}
 
         .arrow {{
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             background: {left_box_color};
             border-radius: 50%;
             display: flex;
@@ -4136,7 +3524,7 @@ def generate_process_slide(
 
         .arrow::before {{
             content: '→';
-            font-size: 2.2rem;
+            font-size: 2.8rem !important;
             color: {text_color};
             font-weight: bold;
         }}
@@ -4293,7 +3681,7 @@ def generate_process_steps_slide(
         
         .main-title {{
             font-family: {font_family_title};
-            font-size: 3rem;
+            font-size: 6rem;
             font-weight: 500;
             font-style: italic;
             color: {title_color};
@@ -4338,13 +3726,13 @@ def generate_process_steps_slide(
             justify-content: center;
         }}
         .step-title {{
-            font-size: 1.25rem;
+            font-size: 2.4rem;
             font-weight: 500;
             color: {text_heading_color};
             margin: 0 0 0.5rem 0;
         }}
         .step-description {{
-            font-size: 0.9rem;
+            font-size: 1.5rem;
             color: {text_body_color};
             line-height: 1.6;
             margin: 0;
@@ -4396,6 +3784,7 @@ def generate_process_steps_slide(
 </body>
 </html>"""
     return html_code
+
 
 
 
@@ -4482,27 +3871,27 @@ def generate_icon_list_slide_2(
         
         .main-title {{
             font-family: {font_family_title};
-            font-size: 3rem;
+            font-size: 4.5rem;
             font-weight: 700;
             font-style: italic;
             color: {title_color};
-            margin-bottom: 4rem;
+            margin-bottom: 2rem;
             line-height: 1.1;
         }}
         
         .subtitle {{
             color: {subtitle_color};
-            font-size: 1.2rem;
+            font-size: 1.8rem;
             font-weight: 700;
             text-transform: uppercase;
-            letter-spacing: 0em;
+            letter-spacing: 0.05em;
         }}
 
         .list-section {{
             flex: 1;
             display: flex;
             flex-direction: column;
-            gap: 2rem;
+            gap: 3rem;
         }}
         
         .list-item {{
@@ -4513,24 +3902,25 @@ def generate_icon_list_slide_2(
 
         .icon-container {{
             flex-shrink: 0;
-            width: 6rem;
-            height: 6rem;
+            width: 7rem;
+            height: 7rem;
             background-color: {accent_color};
             display: flex;
             align-items: center;
             justify-content: center;
         }}
         .icon-container svg {{
-            width: 3rem;
-            height: 3rem;
+            width: 4rem;
+            height: 4rem;
             fill: {icon_color};
         }}
         
         .item-text {{
-            font-size: 1.2rem;
+            font-size: 1.8rem;
             font-weight: 600;
-            margin-bottom: 3rem;
+            margin: 0;
             color: {text_color};
+            line-height: 7rem;
         }}
 
         @media (max-width: 48em) {{ /* 768px */
@@ -4635,8 +4025,8 @@ def generate_image_cutout_list_slide(
             background-color: {content_bg_color};
             display: flex;
             align-items: center;
-            justify-content: center;
-            padding: 4rem;
+            justify-content: flex-start;
+            padding: 4rem 4rem 4rem 6rem;
             box-sizing: border-box;
         }}
         
@@ -4662,14 +4052,14 @@ def generate_image_cutout_list_slide(
             left: 0;
             top: 0.5rem;
             bottom: 0.5rem;
-            width: 1px;
+            width: 2px;
             background-color: {line_color};
         }}
         
         .list-item {{
             position: relative;
-            padding-left: 2.5rem;
-            margin-bottom: 2.5rem;
+            padding-left: 3rem;
+            margin-bottom: 3.5rem;
         }}
         .list-item:last-child {{ margin-bottom: 0; }}
 
@@ -4677,27 +4067,27 @@ def generate_image_cutout_list_slide(
         .list-item::before {{
             content: '';
             position: absolute;
-            left: -0.375rem; /* -(dot_width/2) */
-            top: 0.3rem;
-            width: 0.75rem;
-            height: 0.75rem;
+            left: -0.6rem; /* -(dot_width/2) */
+            top: 0.5rem;
+            width: 1.2rem;
+            height: 1.2rem;
             background-color: {accent_color};
             border-radius: 50%;
         }}
         
         .item-title {{
             font-family: {font_family_title};
-            font-size: 1.2rem;
+            font-size: 2.2rem;
             font-weight: 600;
             color: {text_heading_color};
-            margin: 0 0 0.25rem 0;
+            margin: 0 0 0.5rem 0;
         }}
         
         .item-description {{
             font-family: {font_family_body};
-            font-size: 0.9rem;
+            font-size: 1.6rem;
             color: {text_color};
-            line-height: 1.5;
+            line-height: 1.6;
             margin: 0;
             opacity: 0.9;
         }}
@@ -4842,7 +4232,7 @@ def generate_body_slide2(
         }}
         
         .main-title {{
-            font-size: 2.75rem; 
+            font-size: 3.5rem; 
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -5002,7 +4392,7 @@ def generate_body_slide2(
         }}
         
         .subtitle {{
-            font-size: 1.75rem;
+            font-size: 2.2rem;
             color: {subtitle_color};
             margin: 0 0 0.75rem 0; /* 12px */
             font-weight: 600;
@@ -5026,7 +4416,7 @@ def generate_body_slide2(
         }}
         
         .content {{
-            font-size: 1.125rem;
+            font-size: 1.5rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
@@ -5165,365 +4555,6 @@ def generate_body_slide2(
 
 
 
-def generate_body_slide3(
-    # Main parameters
-    main_title="MainTitle",
-    
-    # Content parameters
-    subtitle1="SUBTITLE1",
-    content1="Content1",
-    subtitle2="SUBTITLE2",
-    content2="Content2",
-    subtitle3="SUBTITLE3",
-    content3="Content3",
-    
-    # Style parameters
-    main_bg_color="#ffffff",  # White background
-    box_bg_color="#e6f2dd",   # Light green background for boxes
-    accent_color="#d8f3b4",   # Green accent color
-    title_color="#333333",
-    subtitle_color="#333333",
-    content_color="#555555",
-    font_family="'Segoe UI', Arial, sans-serif",
-    box_height="250px",       # Adjusted height for content boxes
-    
-    # Icon parameters - SVG paths for each icon
-    icon1="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-2-2-4 4"></path></svg>""",  # Line chart
-    icon2="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>""",  # Bar chart
-    icon3="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>""",  # Presentation chart
-):
-    """
-    Generates an HTML slide with a main title and three content boxes with icons - Full viewport design.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    
-    Content parameters:
-    - subtitle1, subtitle2, subtitle3: Subtitles for each content box
-    - content1, content2, content3: Content text for each box
-    
-    Style parameters:
-    - main_bg_color: Background color for the slide
-    - box_bg_color: Background color for the content boxes
-    - accent_color: Color for accents and icons
-    - title_color: Color for the main title
-    - subtitle_color: Color for subtitles
-    - content_color: Color for content text
-    - title_font_size: Font size for the main title
-    - subtitle_font_size: Font size for subtitles
-    - content_font_size: Font size for content text
-    - font_family: Font family for the slide
-    - box_height: Height of the content boxes
-    
-    Icon parameters:
-    - icon1, icon2, icon3: SVG code for each icon
-    
-    Returns:
-    - HTML code for the slide
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three Column Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Full viewport accent background */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            padding: 3rem 4rem; /* 48px 64px */
-            position: relative;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 3rem; /* 48px */
-        }}
-        
-        .title-accent {{
-            width: 2.5rem; /* 40px - increased size */
-            height: 2.5rem; /* 40px */
-            background: linear-gradient(135deg, {box_bg_color}, rgba(230, 242, 221, 0.8));
-            margin-right: 1.25rem; /* 20px */
-            border-radius: 0.5rem; /* 8px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-        }}
-        
-        .main-title {{
-            font-size: 2.75rem;
-            color: {title_color};
-            font-weight: 600;
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            justify-content: space-between;
-            align-items: stretch;
-            flex: 1;
-            gap: 2rem; /* 32px */
-        }}
-        
-        .content-box {{
-            flex: 1;
-            background: linear-gradient(135deg, {box_bg_color}, rgba(230, 242, 221, 0.9));
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding: 4.5rem 1.5rem 2rem; /* 72px 24px 32px */
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
-            text-align: center;
-            transition: all 0.3s ease;
-            border: 0.125rem solid transparent; /* 2px */
-            overflow: hidden;
-        }}
-        
-        .content-box:hover {{
-            transform: translateY(-0.75rem); /* -12px hover lift */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
-            border-color: {accent_color};
-        }}
-        
-        .content-box::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 0.25rem; /* 4px */
-            background: linear-gradient(90deg, {accent_color}, rgba(140, 198, 63, 0.6));
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-            transform-origin: left;
-        }}
-        
-        .content-box:hover::before {{
-            transform: scaleX(1);
-        }}
-        
-        .icon-circle {{
-            width: 5rem; /* 80px - increased size */
-            height: 5rem; /* 80px */
-            border-radius: 50%;
-            background: linear-gradient(135deg, #ffffff, #f8f9fa);
-            position: absolute;
-            top: -2.5rem; /* -40px */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
-            transition: all 0.3s ease;
-            border: 0.1875rem solid {accent_color}; /* 3px */
-        }}
-        
-        .content-box:hover .icon-circle {{
-            transform: scale(1.1) rotate(5deg); /* hover effect */
-            box-shadow: 0 1rem 2rem rgba(0,0,0,0.2);
-        }}
-        
-        .icon-circle svg {{
-            stroke: {accent_color};
-            width: 2rem; /* 32px - increased size */
-            height: 2rem; /* 32px */
-            transition: all 0.3s ease;
-        }}
-        
-        .content-box:hover .icon-circle svg {{
-            stroke: {box_bg_color};
-            transform: scale(1.1);
-        }}
-        
-        .subtitle {{
-            font-size: 1.5rem;
-            color: {subtitle_color};
-            margin: 0 0 1rem 0; /* 16px */
-            font-weight: 700;
-            position: relative;
-        }}
-        
-        .subtitle::after {{
-            content: '';
-            position: absolute;
-            bottom: -0.375rem; /* -6px */
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2.5rem; /* 40px */
-            height: 0.125rem; /* 2px */
-            background: {accent_color};
-            border-radius: 0.0625rem; /* 1px */
-            transition: width 0.3s ease;
-        }}
-        
-        .content-box:hover .subtitle::after {{
-            width: 5rem; /* 80px - expand underline on hover */
-        }}
-        
-        .content {{
-            font-size: 1.25rem;
-            color: {content_color};
-            margin: 0;
-            line-height: 1.6;
-            flex: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.25rem; /* 20px */
-            background: rgba(255,255,255,0.7);
-            border-radius: 0.75rem; /* 12px */
-            transition: all 0.3s ease;
-        }}
-        
-        .content-box:hover .content {{
-            background: rgba(255,255,255,0.9);
-            transform: translateY(-0.125rem); /* -2px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-        }}
-        
-        /* Responsive design */
-        @media screen and (max-width: 75rem) {{
-            body {{
-                padding: 3rem 5rem;
-            }}
-            
-            .content-layout {{
-                flex-direction: column;
-                gap: 1.5rem;
-            }}
-            
-            .content-box {{
-                padding: 3rem 2rem 2rem;
-            }}
-            
-            .icon-circle {{
-                top: -1.5rem;
-                width: 4rem;
-                height: 4rem;
-            }}
-            
-            .icon-circle svg {{
-                width: 1.5rem;
-                height: 1.5rem;
-            }}
-        }}
-        
-        @media screen and (max-width: 50rem) {{
-            body {{
-                padding: 2rem 3rem;
-            }}
-            
-            .slide-inner-container {{
-                padding: 2rem 3rem;
-            }}
-            
-            .content-box {{
-                padding: 2.5rem 1.5rem 1.5rem;
-            }}
-            
-            .main-title {{
-                font-size: 2rem;
-            }}
-            
-            .subtitle {{
-                font-size: 1.25rem;
-            }}
-            
-            .content {{
-                font-size: 1rem;
-            }}
-            
-            .icon-circle {{
-                top: -1rem;
-                width: 3rem;
-                height: 3rem;
-            }}
-            
-            .icon-circle svg {{
-                width: 1.25rem;
-                height: 1.25rem;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Content Box 1 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    {icon1}
-                </div>
-                <h3 class="subtitle">{subtitle1}</h3>
-                <p class="content">{content1}</p>
-            </div>
-            
-            <!-- Content Box 2 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    {icon2}
-                </div>
-                <h3 class="subtitle">{subtitle2}</h3>
-                <p class="content">{content2}</p>
-            </div>
-            
-            <!-- Content Box 3 -->
-            <div class="content-box">
-                <div class="icon-circle">
-                    {icon3}
-                </div>
-                <h3 class="subtitle">{subtitle3}</h3>
-                <p class="content">{content3}</p>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-# sửa biến trong tool
-
-
 
 def generate_body_slide4(
     # Main parameters
@@ -5637,7 +4668,7 @@ def generate_body_slide4(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 3.5rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -5646,12 +4677,12 @@ def generate_body_slide4(
         .content-bar {{
             width: 100%;
             background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.9));
-            padding: 1.25rem 2rem; /* 20px 32px */
+            padding: 1.5rem 2.5rem; /* 24px 40px */
             margin-bottom: 2.5rem; /* 40px */
             border-radius: 0.75rem; /* 12px */
             text-align: center;
             color: {content_color};
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             font-weight: 500;
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
             position: relative;
@@ -5682,8 +4713,8 @@ def generate_body_slide4(
             display: flex;
             flex-direction: column;
             background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            padding: 1.5rem; /* 24px */
+            border-radius: 1.25rem; /* 20px */
+            padding: 2rem; /* 32px */
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             border: 0.125rem solid transparent; /* 2px */
@@ -5737,9 +4768,9 @@ def generate_body_slide4(
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             color: {subtitle_color};
-            margin: 0 0 0.75rem 0; /* 12px */
+            margin: 0 0 1rem 0; /* 16px */
             font-weight: 600;
             text-align: center;
             position: relative;
@@ -5763,7 +4794,7 @@ def generate_body_slide4(
         }}
         
         .image-content {{
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             color: {content_color};
             margin: 0;
             text-align: center;
@@ -5772,7 +4803,7 @@ def generate_body_slide4(
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 1rem; /* 16px */
+            padding: 1.25rem; /* 20px */
             background: rgba(213, 232, 185, 0.1);
             border-radius: 0.5rem; /* 8px */
             transition: all 0.3s ease;
@@ -6019,7 +5050,7 @@ def generate_body_slide5(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 3.5rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -6106,13 +5137,13 @@ def generate_body_slide5(
             display: grid;
             grid-template-columns: 1fr 1fr;
             grid-template-rows: 1fr 1fr;
-            gap: 1.5rem; /* 24px */
+            gap: 2rem;
         }}
         
         .content-item {{
             background: rgba(255,255,255,0.9);
             border-radius: 1rem; /* 16px */
-            padding: 1.5rem; /* 24px */
+            padding: 2rem;
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             border-left: 0.25rem solid {subtitle_color}; /* subtitle color border */
@@ -6143,9 +5174,9 @@ def generate_body_slide5(
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             color: {subtitle_color};
-            margin: 0 0 0.75rem 0; /* 12px */
+            margin: 0 0 1rem 0;
             font-weight: 600;
             position: relative;
         }}
@@ -6162,11 +5193,11 @@ def generate_body_slide5(
         }}
         
         .content {{
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
-            padding: 0.75rem; /* 12px */
+            padding: 1rem;
             background: rgba(107, 157, 52, 0.05); /* subtitle color with low opacity */
             border-radius: 0.5rem; /* 8px */
             transition: all 0.3s ease;
@@ -6302,7 +5333,6 @@ def generate_body_slide5(
 
 
 
-
 def generate_body_slide7(
     # Main parameters
     main_title="MainTitle",
@@ -6413,7 +5443,7 @@ def generate_body_slide7(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 4.5rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -6483,15 +5513,15 @@ def generate_body_slide7(
             justify-content: center;
             background: rgba(255,255,255,0.9);
             border-radius: 1rem; /* 16px */
-            padding: 2.5rem; /* 40px */
+            padding: 3rem;
             box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
             border-left: 0.25rem solid {accent_color}; /* accent border */
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2.5rem;
             color: {subtitle_color};
-            margin: 0 0 1.5rem 0; /* 24px */
+            margin: 0 0 2rem 0;
             font-weight: 600;
             position: relative;
         }}
@@ -6508,11 +5538,11 @@ def generate_body_slide7(
         }}
         
         .content {{
-            font-size: 1.25rem;
+            font-size: 2rem;
             color: {content_color};
-            margin: 0 0 1.5rem 0; /* 24px */
+            margin: 0 0 2rem 0;
             line-height: 1.6;
-            padding: 1rem; /* 16px */
+            padding: 1.25rem;
             background: rgba(74, 144, 160, 0.05); /* content color with low opacity */
             border-radius: 0.5rem; /* 8px */
             border-left: 0.25rem solid {content_color}; /* content accent */
@@ -6625,7 +5655,6 @@ def generate_body_slide7(
 # sửa biến trong tool
 
 
-
 def generate_body_slide10(
     # Main parameters
     main_title="MainTitle",
@@ -6705,7 +5734,7 @@ def generate_body_slide10(
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
+            margin-bottom: 2rem;
         }}
         
         .title-accent {{
@@ -6717,7 +5746,7 @@ def generate_body_slide10(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 4.5rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -6788,7 +5817,7 @@ def generate_body_slide10(
             display: flex;
             flex-direction: column;
             justify-content: center;
-            gap: 2rem; /* 32px - gap giữa content items */
+            gap: 1.5rem;
         }}
         
         .content-item {{
@@ -6796,7 +5825,7 @@ def generate_body_slide10(
             align-items: flex-start;
             background: rgba(255,255,255,0.9);
             border-radius: 0.75rem; /* 12px */
-            padding: 1.5rem; /* 24px */
+            padding: 1.5rem;
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
             transition: all 0.3s ease;
             border-left: 0.25rem solid {accent_color}; /* accent border */
@@ -6808,8 +5837,8 @@ def generate_body_slide10(
         }}
         
         .icon-container {{
-            width: 4rem; /* 64px - tăng kích thước */
-            height: 4rem; /* 64px */
+            width: 5rem;
+            height: 5rem;
             background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
             display: flex;
             justify-content: center;
@@ -6827,8 +5856,8 @@ def generate_body_slide10(
         }}
         
         .icon-container svg {{
-            width: 2rem; /* 32px - tăng kích thước icon */
-            height: 2rem; /* 32px */
+            width: 2.5rem;
+            height: 2.5rem;
             stroke: #333333;
             filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1));
         }}
@@ -6838,17 +5867,17 @@ def generate_body_slide10(
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             color: {subtitle_color};
-            margin: 0 0 0.75rem 0; /* 12px */
+            margin: 0 0 0.5rem 0;
             font-weight: 600;
         }}
         
         .content {{
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             color: {content_color};
             margin: 0;
-            line-height: 1.6;
+            line-height: 1.5;
         }}
         
         /* Responsive design */
@@ -7052,7 +6081,7 @@ def generate_body_slide11(
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 3rem; /* 48px */
+            margin-bottom: 2.5rem;
         }}
         
         .title-accent {{
@@ -7064,7 +6093,7 @@ def generate_body_slide11(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 4.5rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -7085,8 +6114,8 @@ def generate_body_slide11(
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 4rem 1.5rem 2rem; /* 64px 24px 32px - tăng top padding */
-            border-radius: 1rem; /* 16px */
+            padding: 4.5rem 2rem 2rem;
+            border-radius: 1rem;
             text-align: center;
             box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
             transition: all 0.3s ease;
@@ -7099,12 +6128,12 @@ def generate_body_slide11(
         }}
         
         .icon-circle {{
-            width: 5rem; /* 80px - tăng kích thước */
-            height: 5rem; /* 80px */
+            width: 6rem;
+            height: 6rem;
             border-radius: 50%;
             background: linear-gradient(135deg, #ffffff, #f8f9fa);
             position: absolute;
-            top: -2.5rem; /* -40px */
+            top: -3rem;
             display: flex;
             justify-content: center;
             align-items: center;
@@ -7120,22 +6149,22 @@ def generate_body_slide11(
         
         .icon-circle svg {{
             stroke: {accent_color};
-            width: 2rem; /* 32px - tăng kích thước icon */
-            height: 2rem; /* 32px */
+            width: 2.5rem;
+            height: 2.5rem;
             filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1));
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             color: {subtitle_color};
-            margin: 0 0 1.25rem 0; /* 20px */
+            margin: 0 0 1.5rem 0;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.05rem;
         }}
         
         .content {{
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
@@ -7245,7 +6274,6 @@ def generate_body_slide11(
 
 
 
-
 def generate_body_slide12(
     # Main parameters
     main_title="MainTitle",
@@ -7336,7 +6364,7 @@ def generate_body_slide12(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 4.5rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -7345,15 +6373,15 @@ def generate_body_slide12(
         .content-bar {{
             width: 100%;
             background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            padding: 1.25rem 2rem; /* 20px 32px - tăng padding */
-            margin-bottom: 2.5rem; /* 40px */
-            border-radius: 0.75rem; /* 12px */
+            padding: 1.5rem 2.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0.75rem;
             text-align: center;
             color: {content_color};
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             font-weight: 500;
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-            border: 0.125rem solid rgba(255,255,255,0.3); /* subtle border */
+            border: 0.125rem solid rgba(255,255,255,0.3);
         }}
         
         .image-gallery {{
@@ -7369,8 +6397,8 @@ def generate_body_slide12(
             display: flex;
             flex-direction: column;
             background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            padding: 1.5rem; /* 24px */
+            border-radius: 1.25rem;
+            padding: 2rem;
             box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
             transition: all 0.3s ease;
         }}
@@ -7415,21 +6443,21 @@ def generate_body_slide12(
         }}
         
         .subtitle {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             color: {subtitle_color};
-            margin: 0 0 1rem 0; /* 16px */
+            margin: 0 0 1rem 0;
             font-weight: 600;
             text-align: center;
             color: {accent_color};
         }}
         
         .image-content {{
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             color: {content_color};
             margin: 0;
             text-align: center;
             line-height: 1.6;
-            flex: 1; /* fill remaining space */
+            flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
@@ -7612,7 +6640,7 @@ def generate_body_slide15(
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
+            margin-bottom: 2rem;
         }}
         
         .title-accent {{
@@ -7624,9 +6652,9 @@ def generate_body_slide15(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 4.5rem;
             color: {title_color};
-            font-weight: 600; /* tăng font weight */
+            font-weight: 600;
             margin: 0;
         }}
         
@@ -7678,10 +6706,10 @@ def generate_body_slide15(
         
         .subtitle-container {{
             background-color: {accent_color};
-            padding: 1rem 1.5rem; /* tăng từ 0.75rem 1.25rem để to hơn */
-            border-radius: 0.25rem; /* 4px - thêm border radius */
-            margin-bottom: 0.75rem; /* 12px */
-            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1); /* thêm shadow */
+            padding: 1.25rem 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 0.125rem 0.25rem rgba(0,0,0,0.1);
         }}
         
         /* CSS cho nội dung chèn vào */
@@ -7692,12 +6720,12 @@ def generate_body_slide15(
         }}
 
         .content-section ul li {{
-            font-size: 1.125rem;
+            font-size: 1.6rem;
             color: {content_color};
-            line-height: 1.6; /* tăng line height */
-            padding-left: 1rem; /* 16px */
+            line-height: 1.6;
+            padding-left: 1rem;
             position: relative;
-            margin-bottom: 0.25rem; /* 4px - thêm space giữa items */
+            margin-bottom: 0.5rem;
         }}
         
         .content-section ul li::before {{
@@ -7710,10 +6738,10 @@ def generate_body_slide15(
 
         /* Giả định dòng đầu tiên của <ul> là subtitle */
         .content-section ul {{
-            font-size: 2rem;
+            font-size: 2.5rem;
             color: {subtitle_color};
-            font-weight: 600; /* tăng font weight */
-            margin-bottom: 0.5rem; /* 8px */
+            font-weight: 600;
+            margin-bottom: 0.75rem;
         }}
 
     </style>
@@ -7815,11 +6843,11 @@ def generate_body_slide18(
     """
     
     # Define the SVG icons
-    gavel_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="70" height="70" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    gavel_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="90" height="90" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 13L3 2M14 13L9 18M14 13L16 11L20 15L18 17M14 6L17 9M9 1L3 7M20 21H4"/>
     </svg>"""
     
-    scales_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="70" height="70" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    scales_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="90" height="90" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3v18M8 21h8M7 8l-4 4M17 8l4 4M5 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0M15 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/>
         <path d="M5 12h14"/>
     </svg>"""
@@ -7884,11 +6912,11 @@ def generate_body_slide18(
         }}
         
         .main-title {{
-            font-size: 3rem;
+            font-size: 4.5rem;
             font-weight: 700;
             color: {title_color};
             text-align: center;
-            margin-bottom: 3rem; /* 48px */
+            margin-bottom: 3rem;
             line-height: 1.2;
         }}
         
@@ -7913,24 +6941,24 @@ def generate_body_slide18(
         }}
         
         .icon-container {{
-            margin-bottom: 1.5rem; /* 24px */
+            margin-bottom: 2rem;
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 5rem; /* 80px */
+            height: 6rem;
         }}
         
         .column-title {{
-            font-size: 2.25rem;
+            font-size: 2.8rem;
             font-weight: 600;
             color: {title_color};
             text-align: center;
-            margin: 0 0 1rem 0; /* 16px */
+            margin: 0 0 1.5rem 0;
             line-height: 1.3;
         }}
         
         .column-text {{
-            font-size: 1.375rem;
+            font-size: 1.8rem;
             color: {text_color};
             text-align: center;
             line-height: 1.5;
@@ -7979,6 +7007,7 @@ def generate_body_slide18(
     
     return html_code
 # sửa biến trong tool 
+
 
 
 def generate_body_slide19(
@@ -8079,7 +7108,7 @@ def generate_body_slide19(
             left: 200px;
             top: 140px;
             width: 1520px;
-            font-size: 2.75rem;
+            font-size: 4.5rem;
             font-weight: 700;
             color: {main_title_color};
             text-align: center;
@@ -8094,11 +7123,11 @@ def generate_body_slide19(
             height: 717px;
             background-color: {left_bg_color};
             border-radius: 8px;
-            padding: 32px;
+            padding: 40px;
         }}
         
         .left-section {{
-            margin-bottom: 24px;
+            margin-bottom: 32px;
         }}
         
         .left-section:last-child {{
@@ -8106,15 +7135,15 @@ def generate_body_slide19(
         }}
         
         .left-section h2 {{
-            font-size: 1.75rem;
+            font-size: 2.5rem;
             font-weight: 600;
             color: {left_text_color};
-            margin-bottom: 12px;
+            margin-bottom: 16px;
             line-height: 1.3;
         }}
         
         .left-section p {{
-            font-size: 1.25rem;
+            font-size: 1.6rem;
             color: {left_text_color};
             line-height: 1.5;
             opacity: 0.95;
@@ -8123,17 +7152,17 @@ def generate_body_slide19(
         .right-section-0 {{
             position: absolute;
             left: 990px;
-            top: 243px;
+            top: 280px;
             width: 730px;
-            height: 340px;
+            height: 320px;
         }}
         
         .icon-0 {{
             position: absolute;
             left: 0;
             top: 0;
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             background-color: rgba(162, 196, 201, 0.1);
             border-radius: 12px;
             display: flex;
@@ -8142,16 +7171,16 @@ def generate_body_slide19(
         }}
         
         .icon-0 svg {{
-            width: 48px;
-            height: 48px;
+            width: 60px;
+            height: 60px;
         }}
         
         .right-title-0 {{
             position: absolute;
-            left: 88px;
+            left: 100px;
             top: 0;
-            width: 642px;
-            font-size: 1.75rem;
+            width: 630px;
+            font-size: 2.5rem;
             font-weight: 600;
             color: {right_title_color};
             line-height: 1.3;
@@ -8159,10 +7188,10 @@ def generate_body_slide19(
         
         .right-text-0 {{
             position: absolute;
-            left: 88px;
-            top: 50px;
-            width: 642px;
-            font-size: 1.25rem;
+            left: 100px;
+            top: 65px;
+            width: 630px;
+            font-size: 1.6rem;
             color: {right_text_color};
             line-height: 1.5;
         }}
@@ -8170,17 +7199,17 @@ def generate_body_slide19(
         .right-section-1 {{
             position: absolute;
             left: 990px;
-            top: 620px;
+            top: 640px;
             width: 730px;
-            height: 340px;
+            height: 320px;
         }}
         
         .icon-1 {{
             position: absolute;
             left: 0;
             top: 0;
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
             background-color: rgba(162, 196, 201, 0.1);
             border-radius: 12px;
             display: flex;
@@ -8189,16 +7218,16 @@ def generate_body_slide19(
         }}
         
         .icon-1 svg {{
-            width: 48px;
-            height: 48px;
+            width: 60px;
+            height: 60px;
         }}
         
         .right-title-1 {{
             position: absolute;
-            left: 88px;
+            left: 100px;
             top: 0;
-            width: 642px;
-            font-size: 1.75rem;
+            width: 630px;
+            font-size: 2.5rem;
             font-weight: 600;
             color: {right_title_color};
             line-height: 1.3;
@@ -8206,10 +7235,10 @@ def generate_body_slide19(
         
         .right-text-1 {{
             position: absolute;
-            left: 88px;
-            top: 50px;
-            width: 642px;
-            font-size: 1.25rem;
+            left: 100px;
+            top: 65px;
+            width: 630px;
+            font-size: 1.6rem;
             color: {right_text_color};
             line-height: 1.5;
         }}
@@ -8234,7 +7263,6 @@ def generate_body_slide19(
     
     return html_code
 # sửa biến trong tool 
-
 
 
 def generate_body_slide20(
@@ -8263,11 +7291,11 @@ def generate_body_slide20(
     
     # Define the SVG icons
     # Kích thước icon cũng được chuyển đổi sang rem và tăng lên
-    gavel_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    gavel_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M14 13L3 2M14 13L9 18M14 13L16 11L20 15L18 17M14 6L17 9M9 1L3 7M20 21H4"/>
     </svg>"""
     
-    scales_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    scales_icon = f"""<svg xmlns="http://www.w3.org/2000/svg" width="80" height="80" viewBox="0 0 24 24" fill="none" stroke="{icon_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
         <path d="M12 3v18M8 21h8M7 8l-4 4M17 8l4 4M5 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0M15 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/>
         <path d="M5 12h14"/>
     </svg>"""
@@ -8321,7 +7349,7 @@ def generate_body_slide20(
             left: 200px;
             top: 140px;
             width: 1520px;
-            font-size: 3.25rem;
+            font-size: 4.5rem;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -8367,57 +7395,57 @@ def generate_body_slide20(
         }}
         
         .left-icon {{
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             background-color: rgba(162, 196, 201, 0.1);
             border-radius: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 28px;
         }}
         
         .left-icon svg {{
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
         }}
         
         .right-icon {{
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             background-color: rgba(162, 196, 201, 0.1);
             border-radius: 16px;
             display: flex;
             justify-content: center;
             align-items: center;
-            margin-bottom: 20px;
+            margin-bottom: 28px;
         }}
         
         .right-icon svg {{
-            width: 64px;
-            height: 64px;
+            width: 80px;
+            height: 80px;
         }}
         
         .left-title {{
-            font-size: 2rem;
+            font-size: 2.8rem;
             font-weight: 600;
             color: {title_color};
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
             line-height: 1.3;
         }}
         
         .right-title {{
-            font-size: 2rem;
+            font-size: 2.8rem;
             font-weight: 600;
             color: {title_color};
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 24px;
             line-height: 1.3;
         }}
         
         .left-text {{
-            font-size: 1.25rem;
+            font-size: 1.8rem;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
@@ -8425,7 +7453,7 @@ def generate_body_slide20(
         }}
         
         .right-text {{
-            font-size: 1.25rem;
+            font-size: 1.8rem;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
@@ -8519,7 +7547,7 @@ def generate_main_points_slide(
         }}
         
         .main-title {{
-            font-size: 3rem;
+            font-size: 4.5rem;
             font-weight: 700;
             color: #10d9c4;
             text-align: center;
@@ -8547,8 +7575,8 @@ def generate_main_points_slide(
         }}
         
         .icon-circle {{
-            width: 140px;
-            height: 140px;
+            width: 170px;
+            height: 170px;
             background: rgba(255, 255, 255, 0.1);
             border: 4px solid #10d9c4;
             border-radius: 50%;
@@ -8563,8 +7591,8 @@ def generate_main_points_slide(
         
         /* Plastic Bag Icon */
         .plastic-bag-icon {{
-            width: 70px;
-            height: 70px;
+            width: 90px;
+            height: 90px;
             position: relative;
         }}
 
@@ -8631,8 +7659,8 @@ def generate_main_points_slide(
         
         /* Faucet Icon */
         .faucet-icon {{
-            width: 70px;
-            height: 70px;
+            width: 90px;
+            height: 90px;
             position: relative;
         }}
 
@@ -8712,8 +7740,8 @@ def generate_main_points_slide(
         
         /* Factory Icon */
         .factory-icon {{
-            width: 70px;
-            height: 70px;
+            width: 90px;
+            height: 90px;
             position: relative;
         }}
 
@@ -8792,7 +7820,7 @@ def generate_main_points_slide(
         .smoke-puff:nth-child(5) {{ top: -12px; left: 0px; }}
         
         .point-title {{
-            font-size: 1.4rem;
+            font-size: 2rem;
             font-weight: 700;
             color: white;
             margin-bottom: 1.2rem;
@@ -8801,10 +7829,10 @@ def generate_main_points_slide(
         }}
         
         .point-description {{
-            font-size: 1.1rem;
+            font-size: 1.6rem;
             color: rgba(255, 255, 255, 0.9);
             line-height: 1.6;
-            max-width: 220px;
+            max-width: 280px;
             font-weight: 400;
         }}
         
@@ -8912,7 +7940,6 @@ def generate_main_points_slide(
 
 
 
-
 def generate_elegant_points_slide(
     main_title="Write Your Topic or Idea Here",
     points=[
@@ -8997,7 +8024,7 @@ def generate_elegant_points_slide(
         }}
 
         .main-title {{
-            font-size: 70px;
+            font-size: 90px;
             font-weight: 800;
             color: {title_color};
             margin-bottom: 80px;
@@ -9025,29 +8052,31 @@ def generate_elegant_points_slide(
         }}
         
         .point-icon {{
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             color: {accent_color};
         }}
         
         .icon-divider {{
-            width: 60px;
-            height: 4px;
+            width: 80px;
+            height: 5px;
             background-color: {accent_color};
             border-radius: 2px;
             margin: 30px 0;
         }}
 
         .point-title {{
-            font-size: 32px;
+            font-size: 42px;
             font-weight: 600;
             color: {title_color};
             margin-bottom: 25px;
+            margin-top: 10px;
+
             line-height: 1.3;
         }}
 
         .point-description {{
-            font-size: 20px;
+            font-size: 26px;
             line-height: 1.7;
             text-align: center;
         }}
@@ -9090,245 +8119,6 @@ def generate_elegant_points_slide(
     
     return html_code
 #xong
-
-
-def generate_horizontal_timeline_slide(
-    title="Add a Timeline Page",
-    timeline_items=[
-        {
-            "year": "2015",
-            "position": "bottom",
-            "main_point": "Add a main point",
-            "description": "Elaborate on what you want to discuss."
-        },
-        {
-            "year": "2016", 
-            "position": "top",
-            "main_point": "Add a main point",
-            "description": "Elaborate on what you want to discuss."
-        },
-        {
-            "year": "2017",
-            "position": "bottom",
-            "main_point": "Add a main point",
-            "description": "Elaborate on what you want to discuss."
-        },
-        {
-            "year": "2018",
-            "position": "top",
-            "main_point": "Add a main point", 
-            "description": "Elaborate on what you want to discuss."
-        },
-        {
-            "year": "2019",
-            "position": "bottom",
-            "main_point": "Add a main point",
-            "description": "Elaborate on what you want to discuss."
-        },
-    ],
-    font_family="'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-):
-    """
-    Generates a clean, bright, and modern horizontal timeline slide.
-    Features a light gray gradient background, vibrant blue accents, and floating content cards with soft shadows.
-    This version is static with no hover effects.
-    """
-    
-    # Generate timeline items HTML
-    timeline_html = ""
-    num_items = len(timeline_items)
-    spacing = 80 / (num_items - 1) if num_items > 1 else 0
-    start_offset = 10
-
-    for i, item in enumerate(timeline_items):
-        position_class = "timeline-item-top" if item['position'] == 'top' else "timeline-item-bottom"
-        left_position = start_offset + (i * spacing)
-        timeline_html += f"""
-        <div class="timeline-item {position_class}" style="left: {left_position}%;">
-            <div class="timeline-dot"></div>
-            <div class="timeline-content">
-                <div class="timeline-year">{item['year']}</div>
-                <div class="timeline-text">
-                    <div class="timeline-title">{item['main_point']}</div>
-                    <div class="timeline-desc">{item['description']}</div>
-                </div>
-            </div>
-        </div>
-        """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Horizontal Timeline Slide - Bright Theme</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            background: linear-gradient(135deg, #f8fafc 0%, #eef2f5 100%);
-            color: #4b5563; 
-            overflow: hidden;
-            position: relative;
-        }}
-        
-        .slide-container {{
-            height: 100vh;
-            width: 100vw;
-            padding: 4rem 2rem;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            z-index: 1;
-        }}
-        
-        .main-title {{
-            font-size: 4.5rem;
-            color: #1f2937; 
-            font-weight: 700;
-            text-align: center;
-            margin-bottom: 6rem;
-            letter-spacing: -1px;
-        }}
-        
-        .timeline-container {{
-            position: relative;
-            width: 90%;
-            max-width: 1400px;
-            height: 400px;
-        }}
-        
-        .timeline-line {{
-            position: absolute;
-            top: 50%;
-            left: 5%;
-            right: 5%;
-            height: 5px;
-            background: #3b82f6;
-            border-radius: 3px;
-            transform: translateY(-50%);
-        }}
-        
-        .timeline-arrow {{
-            position: absolute;
-            top: 50%;
-            right: 4.5%;
-            transform: translateY(-50%);
-            width: 0;
-            height: 0;
-            border-left: 25px solid #3b82f6;
-            border-top: 15px solid transparent;
-            border-bottom: 15px solid transparent;
-        }}
-        
-        .timeline-item {{
-            position: absolute;
-            width: 250px;
-            transform: translateX(-50%);
-            /* ĐÃ XÓA: transition: transform 0.3s ease; */
-        }}
-        
-        /* ĐÃ XÓA: Khối CSS .timeline-item:hover đã được loại bỏ hoàn toàn */
-        
-        .timeline-item-top {{ bottom: calc(50% + 50px); }}
-        .timeline-item-bottom {{ top: calc(50% + 50px); }}
-        
-        .timeline-dot {{
-            position: absolute;
-            width: 20px;
-            height: 20px;
-            background: #3b82f6;
-            border-radius: 50%;
-            left: 50%;
-            transform: translateX(-50%);
-            box-shadow: 0 0 0 5px rgba(59, 130, 246, 0.2);
-            z-index: 2;
-        }}
-        
-        .timeline-item-top .timeline-dot {{ bottom: -10px; }}
-        .timeline-item-bottom .timeline-dot {{ top: -10px; }}
-        
-        .timeline-content {{
-            text-align: center;
-            background: #ffffff;
-            border-radius: 12px;
-            padding: 1.5rem;
-            box-shadow: 0 8px 16px rgba(17, 24, 39, 0.05), 0 4px 8px rgba(17, 24, 39, 0.08);
-            border: 1px solid #e5e7eb;
-        }}
-        
-        .timeline-year {{
-            font-size: 3rem;
-            color: #3b82f6;
-            font-weight: 800;
-            line-height: 1;
-            margin-bottom: 1rem;
-        }}
-        
-        .timeline-title {{
-            font-size: 1.2rem;
-            color: #1f2937;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            line-height: 1.3;
-        }}
-        
-        .timeline-desc {{
-            font-size: 0.95rem;
-            color: #4b5563;
-            line-height: 1.6;
-        }}
-        
-        .timeline-item::after {{
-            content: '';
-            position: absolute;
-            left: 50%;
-            width: 3px;
-            height: 50px;
-            background: rgba(59, 130, 246, 0.5);
-            transform: translateX(-50%);
-        }}
-        
-        .timeline-item-top::after {{ bottom: 0; }}
-        .timeline-item-bottom::after {{ top: 0; }}
-        
-        @media (max-width: 1200px) {{ .timeline-container {{ transform: scale(0.9); }} }}
-        @media (max-width: 992px) {{
-            .main-title {{ font-size: 3.5rem; margin-bottom: 4rem;}}
-            .timeline-container {{ transform: scale(0.8); }}
-        }}
-        @media (max-width: 768px) {{
-            .main-title {{ font-size: 2.5rem; }}
-            .timeline-container {{ transform: scale(0.65); height: 350px; }}
-        }}
-
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <h1 class="main-title">{title}</h1>
-        
-        <div class="timeline-container">
-            <div class="timeline-line"></div>
-            <div class="timeline-arrow"></div>
-            {timeline_html}
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
 
 def generate_corporate_content_slide(
     main_title="THIS IS A <span class='highlight'>SLIDE</span> TITLE",
@@ -9404,7 +8194,7 @@ def generate_corporate_content_slide(
         }}
 
         .slide-title {{
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-size: clamp(3.5rem, 6vw, 6rem);
             font-weight: 800;
             color: {title_color};
             text-transform: uppercase;
@@ -9425,7 +8215,7 @@ def generate_corporate_content_slide(
         .list-item-card {{
             background: #FFFFFF;
             border-radius: 1rem;
-            padding: 2rem;
+            padding: 2.5rem;
             position: relative;
             overflow: hidden;
             border: 1px solid #E5E7EB;
@@ -9445,13 +8235,13 @@ def generate_corporate_content_slide(
         .item-content {{ position: relative; z-index: 2; }}
 
         .list-item-title {{
-            font-size: 1.5rem;
+            font-size: 2.2rem;
             font-weight: 700;
             color: {list_title_color};
-            margin-bottom: 0.75rem;
+            margin-bottom: 1rem;
         }}
         .list-item-description {{
-            font-size: 1.1rem;
+            font-size: 1.6rem;
             line-height: 1.6;
             color: {list_text_color};
         }}
@@ -9523,90 +8313,126 @@ def generate_split_content_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Split Content Slide - High-Tech Design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
-            height: 100vh;
-            width: 100vw;
+            height: 1080px;
+            width: 1920px;
             font-family: {font_family};
-            overflow: hidden;
             background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end});
+            color: {text_color};
+            overflow: hidden;
         }}
 
         .slide-container {{
-            width: 100%; height: 100%;
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            padding: 80px 120px;
             display: flex;
             flex-direction: column;
             justify-content: center;
-            align-items: center;
-            padding: 4rem;
+            text-align: center;
         }}
 
         .main-title {{
-            font-size: clamp(2.5rem, 6vw, 4.5rem);
+            font-size: 90px;
             font-weight: 800;
             color: {title_color};
             text-transform: uppercase;
             text-align: center;
-            margin-bottom: 4rem;
+            margin-bottom: 80px;
+            line-height: 1.2;
         }}
         .highlight {{ color: {accent_color}; }}
         
         .columns-grid {{
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 3rem;
-            width: 100%;
-            max-width: 75rem;
+            gap: 80px;
+            flex: 1;
+            align-items: center;
         }}
 
         .column-card {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
             background: rgba(255, 255, 255, 0.05);
             backdrop-filter: blur(10px);
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-top: 3px solid {accent_color};
             box-shadow: 0 0 30px rgba(34, 211, 238, 0.1);
-            padding: 2.5rem;
-            border-radius: 1rem;
-            /* ĐÃ XÓA: transition */
+            padding: 60px 50px;
+            border-radius: 20px;
+            height: 100%;
         }}
-        /* ĐÃ XÓA: khối :hover */
 
         .card-header {{
-            margin-bottom: 2rem;
+            margin-bottom: 40px;
             color: {accent_color};
         }}
         .column-icon {{
-            width: 3rem;
-            height: 3rem;
+            width: 80px;
+            height: 80px;
         }}
 
         .column-title {{
-            font-size: 1.75rem;
+            font-size: 48px;
             font-weight: 700;
             color: {title_color};
-            margin-bottom: 1rem;
+            margin-bottom: 25px;
+            line-height: 1.3;
         }}
         .column-description {{
-            font-size: 1.2rem;
+            font-size: 28px;
             line-height: 1.7;
             color: {text_color};
+            text-align: center;
         }}
+
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }}
+
     </style>
 </head>
 <body>
-    <div class="slide-container">
-        <h1 class="main-title">{main_title}</h1>
-        <div class="columns-grid">
-            {columns_html}
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <h1 class="main-title">{main_title}</h1>
+                <div class="columns-grid">
+                    {columns_html}
+                </div>
+            </div>
         </div>
     </div>
 </body>
 </html>"""
     
     return html_code
+
 
 
 
@@ -9645,21 +8471,21 @@ def generate_corporate_multicolumn_slide(
         .content-area {{ flex: 2; padding: 4rem 5rem; display: flex; flex-direction: column; justify-content: center; }}
         .color-panel {{ flex: 1; position: relative; background: linear-gradient(135deg, {accent_color} 0%, {shadow_color} 100%); clip-path: url(#angled-multi-divider); }}
         .color-panel::before {{ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, {shadow_color} 0%, #6D28D9 100%); clip-path: url(#angled-multi-divider); transform: translateX(-2rem); z-index: -1; }}
-        .title-group {{ display: flex; align-items: center; gap: 1.5rem; margin-bottom: 3.5rem; }}
-        .icon-svg {{ width: 3.5rem; height: 3.5rem; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }}
-        .slide-title {{ font-size: 2.5rem; font-weight: 800; color: {text_color}; text-transform: uppercase; line-height: 1.1; letter-spacing: 0.5px; }}
+        .title-group {{ display: flex; align-items: center; gap: 1.5rem; margin-bottom: 5rem; }}
+        .icon-svg {{ width: 4.5rem; height: 4.5rem; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }}
+        .slide-title {{ font-size: 3.5rem; font-weight: 800; color: {text_color}; text-transform: uppercase; line-height: 1.1; letter-spacing: 0.5px; }}
         .highlight {{ color: {accent_color}; text-shadow: 0 2px 4px rgba(139, 92, 246, 0.3); }}
         .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 3rem; padding-left: 5rem; }}
         .info-column {{
-            position: relative; padding: 2rem 1.5rem;
+            position: relative; padding: 2.5rem 2rem;
             background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
             border-radius: 16px; border: 1px solid #E2E8F0;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
         }}
         .info-column::before {{ content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, {accent_color}, {shadow_color}); border-radius: 16px 16px 0 0; }}
-        .column-title {{ font-size: 1.5rem; font-weight: 700; color: {text_color}; margin-bottom: 1rem; text-transform: uppercase; letter-spacing: 0.5px; }}
-        .column-description {{ color: {text_color}; font-size: 1.1rem; line-height: 1.7; font-weight: 400; }}
-        @media (max-width: 1400px) {{ .slide-title {{ font-size: 2.2rem; }} .column-title {{ font-size: 1.3rem; }} .column-description {{ font-size: 1rem; }} }}
+        .column-title {{ font-size: 2.2rem; font-weight: 700; color: {text_color}; margin-bottom: 1.2rem; text-transform: uppercase; letter-spacing: 0.5px; }}
+        .column-description {{ color: {text_color}; font-size: 1.6rem; line-height: 1.7; font-weight: 400; }}
+        @media (max-width: 1400px) {{ .slide-title {{ font-size: 3rem; }} .column-title {{ font-size: 1.9rem; }} .column-description {{ font-size: 1.4rem; }} }}
         @media (max-width: 1200px) {{ .content-area {{ padding: 3rem 4rem; }} .columns-grid {{ gap: 2rem; padding-left: 3rem; }} }}
     </style>
 </head>
@@ -9673,6 +8499,7 @@ def generate_corporate_multicolumn_slide(
 </html>"""
     
     return html_code
+
 
 
 
@@ -9726,7 +8553,7 @@ def generate_corporate_grid_slide(
     <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
+        html {{ font-size: 18px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
@@ -9743,7 +8570,7 @@ def generate_corporate_grid_slide(
 
         .content-area {{
             flex: 2.5;
-            padding: 4rem;
+            padding: 5.5rem;
             display: flex;
             flex-direction: column;
             justify-content: flex-start;
@@ -9768,12 +8595,13 @@ def generate_corporate_grid_slide(
         .title-group {{ 
             display: flex; 
             align-items: center; 
-            gap: 1.5rem; 
-            margin-bottom: 3.5rem; 
+            gap: 2rem; 
+            margin-bottom: 5.5rem; 
+            padding-bottom: 0.5rem;
         }}
-        .icon-svg {{ width: 3rem; height: 3rem; flex-shrink: 0; }}
+        .icon-svg {{ width: 4.5rem; height: 4.5rem; flex-shrink: 0; }}
         .slide-title {{
-            font-size: 2.5rem;
+            font-size: 3.5rem;
             font-weight: 800;
             color: {text_color};
             text-transform: uppercase;
@@ -9784,19 +8612,19 @@ def generate_corporate_grid_slide(
         .content-grid {{
             display: grid;
             grid-template-columns: repeat(3, 1fr);
-            gap: 2.5rem 3rem;
-            padding-left: 4.5rem;
+            gap: 3.5rem 4rem;
+            padding-left: 6rem;
         }}
 
         .item-title {{ 
-            font-size: 2rem; /* TO HƠN */
+            font-size: 2.75rem; /* TO HƠN */
             font-weight: 800; 
             color: {text_color}; 
-            margin-bottom: 1rem; 
+            margin-bottom: 1.25rem; 
         }}
         .item-description {{ 
             color: {text_color}; 
-            font-size: 1.5rem;  /* TO HƠN */
+            font-size: 2rem;  /* TO HƠN */
             line-height: 1.9; 
         }}
 
@@ -9834,6 +8662,7 @@ def generate_corporate_grid_slide(
     return html_code
 
 
+
 def generate_business_overview_slide(
     main_title="BUSINESS OVERVIEW",
     sections=[
@@ -9857,13 +8686,11 @@ def generate_business_overview_slide(
     icon_color="#FFFFFF",
     content_bg_color="#FFFFFF",
     content_text_color="#1a4b8c",
-    title_font_size="3.5rem",
-    content_font_size="0.95rem",
-    font_family="'Arial', sans-serif",
-    show_border=True,
-    border_opacity=0.3,
-    section_spacing="15px",
-    icon_size="80px",
+    font_family="'Segoe UI', 'Roboto', sans-serif",
+    show_border=False,
+    border_opacity=0.25,
+    section_spacing="30px",
+    icon_size="110px",
     custom_css=""
 ):
     """
@@ -9892,15 +8719,15 @@ def generate_business_overview_slide(
 
     # Icon SVG definitions
     icons = {
-        "chart-analysis": '''<svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40">
+        "chart-analysis": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
             <path d="M3 3v18h18v-2H5V3H3zm4 14h2V9H7v8zm4 0h2V7h-2v10zm4 0h2v-4h-2v4zm3-12l-3 3-3-3-4 4-1.5-1.5L9 10l3-3 3 3 4-4z"/>
         </svg>''',
-        "innovation": '''<svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40">
+        "innovation": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
             <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
             <circle cx="12" cy="9" r="1"/>
             <path d="M12 6v2m0 4v2m-3-3h2m4 0h2"/>
         </svg>''',
-        "growth": '''<svg viewBox="0 0 24 24" fill="currentColor" width="40" height="40">
+        "growth": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
             <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/>
             <path d="M5 19h2v2H5zm4 0h2v2H9zm4 0h2v2h-2z"/>
         </svg>'''
@@ -9922,7 +8749,7 @@ def generate_business_overview_slide(
             icon_svg = icons.get(icon_name, icons["chart-analysis"])
         
         sections_html += f'''
-        <div class="content-section" style="margin-bottom: {section_spacing};">
+        <div class="content-section">
             <div class="icon-container">
                 {icon_svg}
             </div>
@@ -9938,7 +8765,7 @@ def generate_business_overview_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
     <style>
         body, html {{
             margin: 0;
@@ -9954,46 +8781,51 @@ def generate_business_overview_slide(
             height: 100vh;
             display: flex;
             position: relative;
-            background-color: {right_bg_color};
+            background: linear-gradient(135deg, {right_bg_color} 0%, #e9ecef 100%);
         }}
         
         .slide-border {{
             position: absolute;
-            top: 30px;
-            left: 30px;
-            right: 30px;
-            bottom: 30px;
-            border: {("2px dashed rgba(26, 75, 140, " + str(border_opacity) + ")" if show_border else "none")};
+            top: 45px;
+            left: 45px;
+            right: 45px;
+            bottom: 45px;
+            border: {("3px dashed rgba(26, 75, 140, " + str(border_opacity) + ")" if show_border else "none")};
+            border-radius: 12px;
             pointer-events: none;
             z-index: 5;
         }}
         
         .left-section {{
-            width: 45%;
-            background-color: {left_bg_color};
+            width: 40%;
+            background: linear-gradient(135deg, {left_bg_color} 0%, #0d2d5e 100%);
             color: {title_color};
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 60px 40px;
+            padding: 100px 60px;
             position: relative;
             z-index: 10;
+            box-shadow: 8px 0 30px rgba(0, 0, 0, 0.2);
         }}
         
         .title {{
-            font-size: 3.5rem;
-            font-weight: 700;
+            font-size: 6rem;
+            font-weight: 900;
             line-height: 1.1;
             text-align: center;
-            letter-spacing: 0.05em;
+            letter-spacing: 0.1em;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            text-transform: uppercase;
         }}
         
         .right-section {{
-            width: 55%;
-            padding: 60px 40px;
+            width: 60%;
+            padding: 100px 80px;
             display: flex;
             flex-direction: column;
             justify-content: center;
+            gap: 45px;
             position: relative;
             z-index: 10;
         }}
@@ -10001,37 +8833,37 @@ def generate_business_overview_slide(
         .content-section {{
             display: flex;
             align-items: stretch;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-            border-radius: 8px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+            border-radius: 16px;
             overflow: hidden;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-        }}
-        
-        .content-section:hover {{
-            transform: translateY(-2px);
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+            min-height: 140px;
         }}
         
         .icon-container {{
             width: {icon_size};
             min-width: {icon_size};
-            background-color: {icon_bg_color};
+            background: linear-gradient(135deg, {icon_bg_color} 0%, #1a2942 100%);
             color: {icon_color};
             display: flex;
             align-items: center;
             justify-content: center;
-            padding: 20px;
+            padding: 30px;
+        }}
+        
+        .icon-container svg {{
+            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
         }}
         
         .text-container {{
             flex: 1;
-            background-color: {content_bg_color};
+            background: linear-gradient(135deg, {content_bg_color} 0%, #fafbfc 100%);
             color: {content_text_color};
-            padding: 20px 25px;
-            font-size: 2rem;
-            line-height: 1.5;
+            padding: 35px 45px;
+            font-size: 2.5rem;
+            line-height: 1.7;
             display: flex;
             align-items: center;
+            font-weight: 500;
         }}
         
         /* Decorative elements */
@@ -10039,11 +8871,24 @@ def generate_business_overview_slide(
             content: '';
             position: absolute;
             top: 0;
-            right: -20px;
-            width: 40px;
+            right: -35px;
+            width: 70px;
             height: 100%;
             background: linear-gradient(90deg, transparent 0%, {left_bg_color} 50%, transparent 100%);
             z-index: -1;
+            opacity: 0.6;
+        }}
+        
+        .left-section::after {{
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 130%;
+            height: 130%;
+            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+            pointer-events: none;
         }}
         
         @media (max-width: 768px) {{
@@ -10130,7 +8975,6 @@ def generate_business_overview_slide(
 </html>"""
 
     return html_code
-
 
 
 
@@ -10271,43 +9115,47 @@ def generate_vision_mission_slide(
         .vision-section {{
             background-color: {vision_bg_color};
             margin-right: 10px;
+            margin-bottom: 10px;
         }}
         
         .mission-section {{
             background-color: {mission_bg_color};
             margin-left: 10px;
+            margin-bottom: 10px;
         }}
         
         .section-title {{
-            font-size: 4rem;
+            font-size: 6rem;
             font-weight: 700;
-            margin-bottom: 40px;
+            margin-bottom: 80px;
             text-align: center;
-            letter-spacing: 0.1em;
+            letter-spacing: 0.08em;
             z-index: 10;
             position: relative;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }}
         
         .content-point {{
             display: flex;
             align-items: flex-start;
-            margin-bottom: 30px;
+            margin-bottom: 35px;
             position: relative;
             z-index: 10;
         }}
         
         .point-number {{
-            font-size: 1.5rem;
+            font-size: 2.4rem;
             font-weight: 700;
-            margin-right: 20px;
-            min-width: 40px;
-            opacity: 0.9;
+            margin-right: 25px;
+            min-width: 65px;
+            opacity: 0.95;
         }}
         
         .point-text {{
-            font-size: 1rem;
-            line-height: 1.6;
+            font-size: 1.8rem;
+            line-height: 1.7;
             flex: 1;
+            font-weight: 400;
         }}
         
         /* Background numbers */
@@ -10415,12 +9263,12 @@ def generate_vision_mission_slide(
             }}
             
             .section-title {{
-                font-size: 2.5rem;
-                margin-bottom: 20px;
+                font-size: 3.5rem;
+                margin-bottom: 30px;
             }}
             
             .point-text {{
-                font-size: 0.9rem;
+                font-size: 1.4rem;
             }}
             
             .bg-number {{
@@ -10428,23 +9276,23 @@ def generate_vision_mission_slide(
             }}
             
             .content-point {{
-                margin-bottom: 15px;
+                margin-bottom: 20px;
             }}
         }}
         
         @media (max-width: 480px) {{
             .section-title {{
-                font-size: 2rem;
+                font-size: 2.8rem;
             }}
             
             .point-text {{
-                font-size: 0.8rem;
+                font-size: 1.2rem;
             }}
             
             .point-number {{
-                font-size: 1.2rem;
-                margin-right: 15px;
-                min-width: 30px;
+                font-size: 1.8rem;
+                margin-right: 18px;
+                min-width: 40px;
             }}
         }}
         
@@ -10772,6 +9620,7 @@ def generate_strategic_goals_slide(
 
 
 
+
 def generate_service_roadmap_slide(
     main_title="SERVICE ROADMAP",
     roadmap_items=[
@@ -10957,7 +9806,7 @@ def generate_service_roadmap_slide(
         }}
         
         .main-title {{
-            font-size: 4rem;
+            font-size: 6rem;
             font-weight: 700;
             color: {title_color};
             letter-spacing: 0.1em;
@@ -11001,7 +9850,7 @@ def generate_service_roadmap_slide(
         }}
         
         .card-title {{
-            font-size: 1.2rem;
+            font-size: 3rem;
             font-weight: 700;
             color: {card_title_color};
             margin: 0 0 15px 0;
@@ -11010,7 +9859,7 @@ def generate_service_roadmap_slide(
         }}
         
         .card-content {{
-            font-size: 0.9rem;
+            font-size: 2.1rem;
             color: {card_text_color};
             line-height: 1.6;
             margin: 0;
@@ -11448,11 +10297,11 @@ def generate_minimalist_tech_list_slide(
 
     # Logic sinh font-size giữ nguyên
     if title_font_size: title_style = f"font-size: {title_font_size};"
-    else: title_style = f"font-size: clamp(calc(2.5rem * {font_size_multiplier}), calc((4vw + 1rem) * {font_size_multiplier}), calc(4rem * {font_size_multiplier}));"
+    else: title_style = f"font-size: clamp(calc(4rem * {font_size_multiplier}), calc((5vw + 1.5rem) * {font_size_multiplier}), calc(6.5rem * {font_size_multiplier}));"
     if list_item_font_size: list_item_style = f"font-size: {list_item_font_size};"
-    else: list_item_style = f"font-size: clamp(calc(1.2rem * {font_size_multiplier}), calc((1.5vw + 0.3rem) * {font_size_multiplier}), calc(1.5rem * {font_size_multiplier}));"
+    else: list_item_style = f"font-size: clamp(calc(1.8rem * {font_size_multiplier}), calc((2vw + 0.5rem) * {font_size_multiplier}), calc(2.4rem * {font_size_multiplier}));"
     if concluding_text_font_size: concluding_text_style = f"font-size: {concluding_text_font_size};"
-    else: concluding_text_style = f"font-size: clamp(calc(1.2rem * {font_size_multiplier}), calc((1.5vw + 0.3rem) * {font_size_multiplier}), calc(1.5rem * {font_size_multiplier}));"
+    else: concluding_text_style = f"font-size: clamp(calc(1.8rem * {font_size_multiplier}), calc((2vw + 0.5rem) * {font_size_multiplier}), calc(2.4rem * {font_size_multiplier}));"
 
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
@@ -11612,10 +10461,10 @@ def generate_centered_tech_columns_slide(
         
         /* ĐÃ XÓA: Toàn bộ CSS cho tên lửa và animation peek */
         
-        .content-wrapper {{ z-index: 10; color: {text_color}; text-align: center; width: 100%; max-width: 75rem; }}
+        .content-wrapper {{ z-index: 10; color: {text_color}; text-align: center; width: 100%; max-width: 100rem; }}
         
         .slide-title {{
-            font-size: clamp(3rem, 5vw, 3.5rem);
+            font-size: clamp(5rem, 7vw, 5.5rem);
             font-weight: 800;
             margin-bottom: 15rem;
         }}
@@ -11623,7 +10472,7 @@ def generate_centered_tech_columns_slide(
         .columns-grid {{
             display: grid;
             grid-template-columns: repeat({len(columns)}, 1fr);
-            gap: 3.5rem;
+            gap: 5rem;
         }}
 
         .column-card {{
@@ -11632,7 +10481,7 @@ def generate_centered_tech_columns_slide(
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-top: 4px solid {accent_color};
             box-shadow: 0 0 20px {accent_color}33;
-            padding: 3rem;
+            padding: 5rem;
             border-radius: 1rem;
             text-align: left;
         }}
@@ -11642,18 +10491,18 @@ def generate_centered_tech_columns_slide(
             margin-bottom: 2rem;
         }}
         .column-icon svg {{
-            width: 3.5rem;
-            height: 3.5rem;
+            width: 5rem;
+            height: 5rem;
         }}
 
         .column-title {{
-            font-size: 2.2rem;
+            font-size: 3.5rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
             color: {text_color};
         }}
         .column-description {{
-            font-size: 1.4rem;
+            font-size: 2.2rem;
             line-height: 1.7;
             opacity: 0.8;
             color: {text_color};
@@ -11712,7 +10561,6 @@ def generate_split_layout_list_slide(
     dark_text_color="#6F6254",
     divider_color="#D3CFC7",
     # Font control parameters
-    font_size_multiplier=1.0,
     main_title_font_size=None,
     point_title_font_size=None,
     point_description_font_size=None,
@@ -11736,19 +10584,19 @@ def generate_split_layout_list_slide(
     if main_title_font_size:
         main_title_style = f"font-size: {main_title_font_size};"
     else:
-        main_title_style = f"font-size: clamp(calc(2.5rem * {font_size_multiplier}), calc(6vw * {font_size_multiplier}), calc(4rem * {font_size_multiplier}));"
+        main_title_style = f"font-size: clamp(calc(2.5rem * 1.3), calc(6vw * 1.3), calc(4rem * 1.3));"
     
     # Point Title Style
     if point_title_font_size:
         point_title_style = f"font-size: {point_title_font_size};"
     else:
-        point_title_style = f"font-size: clamp(calc(1.1rem * {font_size_multiplier}), calc((1.5vw + 0.2rem) * {font_size_multiplier}), calc(1.35rem * {font_size_multiplier}));"
+        point_title_style = f"font-size: clamp(calc(1.1rem * 1.3), calc((1.5vw + 0.2rem) * 1.3), calc(1.35rem * 1.3));"
 
     # Point Description Style
     if point_description_font_size:
         point_desc_style = f"font-size: {point_description_font_size};"
     else:
-        point_desc_style = f"font-size: clamp(calc(1rem * {font_size_multiplier}), calc((1vw + 0.1rem) * {font_size_multiplier}), calc(1.1rem * {font_size_multiplier}));"
+        point_desc_style = f"font-size: clamp(calc(1rem * 1.3), calc((1vw + 0.1rem) * 1.3), calc(1.1rem * 1.3));"
 
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
@@ -11820,6 +10668,7 @@ def generate_split_layout_list_slide(
 </html>"""
     
     return html_code
+
 
 
 
@@ -11899,7 +10748,7 @@ def generate_reference_slide(
         }}
 
         .main-title {{
-            font-size: 3rem;
+            font-size: 5rem;
             font-weight: 900;
             text-transform: uppercase;
             margin-bottom: 1.5rem;
@@ -11921,14 +10770,14 @@ def generate_reference_slide(
         }}
 
         .reference-title {{
-            font-size: 1.4rem;
+            font-size: 2.4rem;
             font-weight: 700;
             text-transform: uppercase;
             margin-bottom: 1rem;
         }}
 
         .reference-description {{
-            font-size: 1.2rem;
+            font-size: 2rem;
             line-height: 1.7;
             font-weight: 400;
             max-width: 45rem;
@@ -12057,7 +10906,7 @@ def generate_icon_list_slide(
         }}
 
         .main-title {{
-            font-size: 80px;
+            font-size: 100px;
             font-weight: 800;
             line-height: 1.2;
             color: {main_title_color};
@@ -12085,8 +10934,8 @@ def generate_icon_list_slide(
         }}
 
         .icon-circle {{
-            width: 100px;
-            height: 100px;
+            width: 130px;
+            height: 130px;
             border-radius: 50%;
             flex-shrink: 0;
             display: flex;
@@ -12096,13 +10945,13 @@ def generate_icon_list_slide(
         }}
 
         .point-title {{
-            font-size: 36px;
+            font-size: 48px;
             font-weight: 700;
             margin-bottom: 15px;
         }}
 
         .point-description {{
-            font-size: 24px;
+            font-size: 32px;
             line-height: 1.8;
             font-weight: 400;
         }}
@@ -12147,8 +10996,6 @@ def generate_icon_list_slide(
 </html>"""
     
     return html_code
-
-#ngon
 
 
 def generate_flexible_columns_slide(
@@ -12248,7 +11095,7 @@ def generate_flexible_columns_slide(
 
         .main-title {{
             font-family: 'Patrick Hand', cursive;
-            font-size: clamp(2.75rem, 8vw, 3.5rem); 
+            font-size: clamp(4rem, 8vw, 5rem); 
             text-transform: uppercase;
             margin-bottom: 10rem; 
             font-weight: 400;
@@ -12264,12 +11111,12 @@ def generate_flexible_columns_slide(
 
         .column-title {{
             font-weight: 700;
-            font-size: 2rem;
+            font-size: 3.2rem;
             margin-bottom: 1.5rem;
         }}
 
         .column-description {{
-            font-size: 1.4rem;
+            font-size: 2.2rem;
             line-height: 2;
         }}
 
@@ -12305,7 +11152,7 @@ def generate_flexible_columns_slide(
 
 
 def generate_text_with_image_slide(
-    title="Tiltle",
+    title="Tiltle Tiltle TiltleTiltle Tiltle",
     text_content="Content.",
     image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80",
     font_family_heading="'Patrick Hand', cursive",
@@ -12367,14 +11214,14 @@ def generate_text_with_image_slide(
 
         .title {{
             font-family: {font_family_heading};
-            font-size: clamp(1.5rem, 4vw, 2rem);
+            font-size: clamp(3rem, 4vw, 4rem);
             font-weight: 400;
             text-transform: uppercase;
             margin-bottom: 1.5rem;
         }}
         
         .text-content {{
-            font-size: 1.1rem;
+            font-size: 2rem;
             line-height: 1.8;
             max-width: 35ch; /* Limit line length for readability */
         }}
@@ -12412,7 +11259,6 @@ def generate_text_with_image_slide(
 </html>"""
     
     return html_code
-
 
 
 
@@ -12485,7 +11331,7 @@ def generate_instructions_slide(
         
         .header-title {{
             /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: clamp(2rem, 4vw, 2.75rem);
+            font-size: clamp(3.5rem, 4vw, 4.5rem);
             font-weight: 700;
             padding: 2.5rem 3.5rem;
         }}
@@ -12520,7 +11366,7 @@ def generate_instructions_slide(
         
         .column-title {{
             /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: 1.7rem;
+            font-size: 3rem;
             font-weight: 800;
             color: {body_title_color};
             text-transform: uppercase;
@@ -12540,7 +11386,7 @@ def generate_instructions_slide(
             align-items: flex-start;
             gap: 0.75rem;
             /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: 1.2rem;
+            font-size: 2rem;
             color: {body_text_color};
             line-height: 1.7;
         }}
@@ -12550,7 +11396,7 @@ def generate_instructions_slide(
             color: {header_primary_color};
             font-weight: 800;
             /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: 1.3rem;
+            font-size: 2.2rem;
             margin-top: 0.15rem;
         }}
         
@@ -12664,7 +11510,7 @@ def generate_geometric_split_content_slide(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 3.5rem;
             font-weight: 800;
             margin-bottom: 4rem;
         }}
@@ -12676,13 +11522,13 @@ def generate_geometric_split_content_slide(
         }}
 
         .column-title {{
-            font-size: 1.75rem;
+            font-size: 2.5rem;
             font-weight: 800;
             margin-bottom: 1rem;
         }}
 
         .column-description {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 600;
             line-height: 1.6;
         }}
@@ -12727,6 +11573,7 @@ def generate_geometric_split_content_slide(
 </body>
 </html>"""
     return html_code
+
 
 
 
@@ -12805,7 +11652,7 @@ def generate_geometric_split_content_slide_2(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 3.5rem;
             font-weight: 800;
             margin-bottom: 4rem;
         }}
@@ -12817,13 +11664,13 @@ def generate_geometric_split_content_slide_2(
         }}
 
         .column-title {{
-            font-size: 1.75rem;
+            font-size: 2.5rem;
             font-weight: 800;
             margin-bottom: 1rem;
         }}
 
         .column-description {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 600;
             line-height: 1.6;
         }}
@@ -12869,7 +11716,6 @@ def generate_geometric_split_content_slide_2(
 </body>
 </html>"""
     return html_code
-
 
 
 def generate_geometric_image_content_slide(
@@ -12943,16 +11789,16 @@ def generate_geometric_image_content_slide(
         }}
 
         .main-title {{
-            font-size: 3.5rem;
+            font-size: 5rem;
             font-weight: 800;
             line-height: 1.2;
-            margin-bottom: 2rem;
+            margin-bottom: 4rem;
         }}
 
         
 
         .description {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 600;
             line-height: 1.6;
             max-width: 45ch;
@@ -13019,6 +11865,7 @@ def generate_geometric_image_content_slide(
 
 
 
+
 def generate_geometric_content_slide(
     main_title="Our Core Strategy",
     list_items=[
@@ -13078,22 +11925,22 @@ def generate_geometric_content_slide(
         }}
 
         .slide-title {{
-            font-size: 2.75rem;
+            font-size: 4rem;
             /* FIX: Title is now Extra-Bold */
             font-weight: 800;
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
         }}
         
         .content-list {{
             list-style: none;
-            margin-bottom: 3rem;
+            margin-bottom: 4rem;
         }}
 
         .content-list li {{
-            font-size: 1.75rem;
+            font-size: 2.5rem;
             line-height: 1.6;
-            margin-bottom: 1rem;
-            padding-left: 2.5rem;
+            margin-bottom: 1.5rem;
+            padding-left: 3rem;
             position: relative;
             /* FIX: Body text is now Semi-Bold */
             font-weight: 600;
@@ -13109,7 +11956,7 @@ def generate_geometric_content_slide(
         }}
         
         .concluding-text {{
-            font-size: 1.75rem;
+            font-size: 2.5rem;
             line-height: 1.6;
             /* FIX: Body text is now Semi-Bold */
             font-weight: 600;
@@ -13164,7 +12011,6 @@ def generate_geometric_content_slide(
 </body>
 </html>"""
     return html_code
-
 
 
 
@@ -13234,7 +12080,7 @@ def generate_geometric_grid_slide(
         }}
         
         .main-title {{
-            font-size: 2.75rem;
+            font-size: 3.5rem;
             font-weight: 800;
             margin-bottom: 4rem;
         }}
@@ -13246,19 +12092,19 @@ def generate_geometric_grid_slide(
         }}
 
         .item-title {{
-            font-size: 1.5rem;
+            font-size: 2rem;
             font-weight: 800;
             margin-bottom: 0.75rem;
         }}
 
         .item-description {{
-            font-size: 1.25rem;
+            font-size: 1.5rem;
             font-weight: 600;
             line-height: 1.6;
         }}
 
         /* FIX: Opacity values significantly reduced for a more subtle effect */
-        .shape-cluster {{ position: absolute; pointer-events: none; z-index: 1; transform: scale(0.85); }}
+        .shape-cluster {{ position: absolute; pointer-events: none; z-index: 1; transform: scale(0.5); }}
         .shape {{ position: absolute; border-radius: 8px; }}
         .top-right {{ top: 5rem; right: 5rem; width: 25rem; height: 20rem; }}
         .shape-tr-1 {{ width: 14rem; height: 14rem; background-color: #1E3A8A; opacity: 0.3; top: 0; right: 8rem; transform: rotate(15deg); }}
@@ -13302,6 +12148,7 @@ def generate_geometric_grid_slide(
 
 
 
+
 def generate_memphis_content_slide(
     main_title="This is a slide title",
     list_items=[
@@ -13335,11 +12182,11 @@ def generate_memphis_content_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 75rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 2.25rem; font-weight: 600; text-align: center; }}
+        .main-title {{ font-family: {font_family_title}; font-size: 3rem; font-weight: 600; text-align: center; }}
         .content-list {{ font-family: {font_family_body}; list-style: none; margin-bottom: 3rem; }}
-        .content-list li {{ font-size: 1.5rem; line-height: 1.7; padding-left: 2.5rem; position: relative; margin-bottom: 0.5rem; }}
+        .content-list li {{ font-size: 2rem; line-height: 1.7; padding-left: 2.5rem; position: relative; margin-bottom: 0.5rem; }}
         .content-list li::before {{ content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid {palette[1]}; }}
-        .concluding-text {{ font-family: {font_family_body}; font-size: 1.5rem; line-height: 1.7; max-width: 60ch; }}
+        .concluding-text {{ font-family: {font_family_body}; font-size: 2rem; line-height: 1.7; max-width: 60ch; }}
         .shape {{ position: absolute; }}
         .shape-tl-1 {{ width: 4rem; height: 4rem; border: 2px dashed {palette[0]}; top: 2rem; left: 2rem; transform: rotate(-25deg); }}
         .shape-tl-2 {{ width: 0; height: 0; border-left: 1.5rem solid transparent; border-right: 1.5rem solid transparent; border-bottom: 2.5rem solid {palette[0]}; top: 3.5rem; left: 7rem; transform: rotate(20deg); opacity: 0.8; }}
@@ -13367,7 +12214,6 @@ def generate_memphis_content_slide(
 </body>
 </html>"""
     return html_code
-
 
 
 def generate_memphis_multicolumn_slide(
@@ -13402,10 +12248,10 @@ def generate_memphis_multicolumn_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 80rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 2.25rem; font-weight: 600; text-align: center; }}
-        .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 2rem 4rem; }}
-        .column-title {{ font-family: {font_family_body}; font-size: 1.5rem; font-weight: 600; margin-bottom: 1rem; }}
-        .column-description {{ font-family: {font_family_body}; font-size: 1.25rem; line-height: 1.6; }}
+        .main-title {{ font-family: {font_family_title}; font-size: 3.5rem; font-weight: 600; text-align: center; }}
+        .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 3rem 5rem; }}
+        .column-title {{ font-family: {font_family_body}; font-size: 2.5rem; font-weight: 600; margin-bottom: 1.5rem; }}
+        .column-description {{ font-family: {font_family_body}; font-size: 1.75rem; line-height: 1.6; }}
         .shape {{ position: absolute; }} .pentagon {{ clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
         .shape-tl-1 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.4; top: 1rem; left: 8rem; }}
         .shape-tl-2 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: -1rem; left: 1rem; border-radius: 50%; opacity: 0.8; }}
@@ -13431,6 +12277,7 @@ def generate_memphis_multicolumn_slide(
 </html>"""
     
     return html_code
+
 
 
 
@@ -13980,7 +12827,7 @@ def generate_colorful_team_grid_slide(
         .text-column {{ padding-right: 40px; }}
 
         .main-title {{
-            font-size: 94px;
+            font-size: 110px;
             font-weight: 800;
             line-height: 1.2;
             color: {title_color};
@@ -14031,13 +12878,13 @@ def generate_colorful_team_grid_slide(
         }}
         
         .member-name {{
-            font-size: 28px;
+            font-size: 36px;
             font-weight: 700;
             margin-bottom: 10px;
         }}
 
         .member-role {{
-            font-size: 18px;
+            font-size: 24px;
             font-weight: 400;
             opacity: 0.8;
         }}
@@ -14083,7 +12930,6 @@ def generate_colorful_team_grid_slide(
     
     return html_code
 #ngon
-
 
 def generate_corporate_team_slide(
     main_title="Our Creative Team",
@@ -14178,7 +13024,6 @@ def generate_corporate_team_slide(
 
 
 #------------------------ SLIDE THANK YOU
-
 def generate_thank_you_slide_2(
     main_text="THANKS!",
     question_text="Any questions?",
@@ -14277,14 +13122,14 @@ def generate_thank_you_slide_2(
 
         .heart-icon {{
             /* ĐÃ SỬA ĐỔI: Icon to hơn để nổi bật */
-            width: 8rem;
+            width: 12rem;
             margin-bottom: 2rem;
         }}
         
         .main-text {{
             font-family: {font_family_heading};
             /* ĐÃ SỬA ĐỔI: Font to hơn để dễ nhìn trên web */
-            font-size: clamp(4rem, 12vw, 8rem);
+            font-size: clamp(5rem, 14vw, 10rem);
             color: {main_color};
             margin-bottom: 2rem;
             line-height: 1;
@@ -14295,7 +13140,7 @@ def generate_thank_you_slide_2(
 
         .question-text {{
             /* ĐÃ SỬA ĐỔI: Font to hơn */
-            font-size: 2rem;
+            font-size: 3rem;
             font-weight: 700;
             line-height: 1.3;
         }}
@@ -14337,7 +13182,6 @@ def generate_thank_you_slide_2(
 </html>"""
     
     return html_code
-
 
 
 
@@ -14618,7 +13462,7 @@ def generate_thank_you_slide_3(
         }}
         
         .main-title {{
-            font-size: 6rem;
+            font-size: 8rem;
             font-weight: {main_title_font_weight};
             color: {main_title_color};
             letter-spacing: {main_title_letter_spacing};
@@ -14639,7 +13483,7 @@ def generate_thank_you_slide_3(
             display: flex;
             align-items: center;
             color: {contact_text_color};
-            font-size: 2rem;
+            font-size: 3rem;
             font-weight: {contact_font_weight};
         }}
         
@@ -14719,111 +13563,6 @@ def generate_thank_you_slide_3(
     
     return html_code
 
-
-
-
-def generate_thank_you_slide(
-    title="Thank You!",
-    subtitle="We appreciate your time and attention. Please feel free to reach out with any questions.",
-    font_family="'Poppins', 'Segoe UI', sans-serif",
-    background_gradient="linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)",
-    accent_color="#FFD700", # Gold
-    card_color="#FFFFFF",
-    text_color="#333333"
-):
-    """
-    Generates a vibrant, static 'Thank You' slide with EXTRA-LARGE content.
-    This version is completely static with no animated sparkles.
-    """
-    
-    # ĐÃ XÓA: Phần tạo HTML cho các hạt lấp lánh đã được loại bỏ.
-    sparkles_html = ""
-
-    html = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <title>Thank You Slide - Extra Large</title>
-  <link rel="preconnect" href="https://fonts.googleapis.com">
-  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800&display=swap" rel="stylesheet">
-  <style>
-    body {{
-      margin: 0;
-      padding: 0;
-      background: {background_gradient};
-      font-family: {font_family};
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      height: 100vh;
-      overflow: hidden;
-    }}
-
-    .card {{
-      position: relative;
-      background-color: {card_color};
-      border-radius: 2rem;
-      padding: 4rem;
-      width: 90%;
-      max-width: 800px;
-      text-align: center;
-      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
-      z-index: 10;
-    }}
-
-    .icon-heart {{
-        position: relative;
-        width: 80px;
-        height: 80px;
-        transform: rotate(-45deg);
-        background-color: {accent_color};
-        margin: 0 auto 2.5rem;
-    }}
-    .icon-heart::before, .icon-heart::after {{
-        content: "";
-        position: absolute;
-        width: 80px;
-        height: 80px;
-        background-color: inherit;
-        border-radius: 50%;
-    }}
-    .icon-heart::before {{ top: -40px; left: 0; }}
-    .icon-heart::after {{ left: 40px; top: 0; }}
-
-    h1 {{
-      font-size: clamp(4.5rem, 12vw, 6.5rem);
-      font-weight: 800;
-      color: {accent_color};
-      text-shadow: 3px 3px 6px rgba(0,0,0,0.15);
-      margin: 0 0 1.5rem 0;
-    }}
-
-    p {{
-      margin-top: 1rem;
-      font-size: 1.75rem;
-      line-height: 1.6;
-      color: {text_color};
-      max-width: 600px;
-      margin-left: auto;
-      margin-right: auto;
-    }}
-
-    /* --- ĐÃ XÓA: Toàn bộ phần CSS cho Sparkles & Animation đã được loại bỏ --- */
-
-  </style>
-</head>
-<body>
-  <!-- {sparkles_html} sẽ là một chuỗi rỗng, không hiển thị gì cả -->
-  {sparkles_html}
-  <div class="card">
-    <div class="icon-heart"></div>
-    <h1>{title}</h1>
-    <p>{subtitle}</p>
-  </div>
-</body>
-</html>"""
-    return html
 
 
 
