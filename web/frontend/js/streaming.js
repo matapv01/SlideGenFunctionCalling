@@ -19,14 +19,20 @@ document.addEventListener('DOMContentLoaded', function () {
     const urlParams = new URLSearchParams(window.location.search);
     const filename = urlParams.get('filename');
     const session = urlParams.get('session');
+    const manualSession = urlParams.get('manual_session');
 
-    // Check if this is from idea generation or file upload
-    if (session) {
+    // Route to appropriate workflow
+    if (manualSession) {
+        // From manual structure editor
+        console.log('🎨 Starting manual structure workflow:', manualSession);
+        projectName = `manual_${manualSession}`;
+        startStreamingFromManualStructure(manualSession);
+    } else if (session) {
         // From "Create with Idea"
         projectName = `idea_${session}`;
         startStreamingFromIdea(session);
     } else if (filename) {
-        // From file upload
+        // From file upload (auto workflow)
         projectName = filename.replace(/\.docx$/i, '');
 
         // Try to restore previous state
@@ -217,6 +223,56 @@ function startStreamingFromIdea(session_id) {
         console.log('Generic message received:', event.data);
     };
 }
+
+function startStreamingFromManualStructure(session_id) {
+    console.log('Starting streaming from manual structure for session:', session_id);
+    showToast('🔗 Đang kết nối đến server...', 'info');
+
+    // Make sure slides preview is visible
+    const slidesPreview = document.getElementById('slidesPreview');
+    if (slidesPreview) {
+        slidesPreview.style.display = 'block';
+    }
+
+    // Close existing connection if any
+    if (eventSource) {
+        eventSource.close();
+    }
+
+    // Create EventSource for manual structure SSE with auth token
+    const token = localStorage.getItem('access_token');
+    const url = `${config.BACKEND_URL}/api/generate-from-manual-structure-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
+    console.log('Connecting to manual structure endpoint:', url);
+    eventSource = new EventSource(url);
+
+    eventSource.onopen = function () {
+        console.log('✅ Manual structure EventSource connected');
+        showToast('✅ Đã kết nối thành công!', 'success');
+    };
+
+    eventSource.onerror = function (error) {
+        console.error('❌ EventSource error:', error);
+        if (eventSource.readyState === EventSource.CLOSED) {
+            console.error('Connection was closed');
+            showToast('⚠️ Mất kết nối với server', 'error');
+        } else if (eventSource.readyState === EventSource.CONNECTING) {
+            console.log('🔄 Reconnecting...');
+        }
+    };
+
+    // Handle different event types (same handlers as other workflows)
+    eventSource.addEventListener('status', handleStatusEvent);
+    eventSource.addEventListener('progress', handleProgressEvent);
+    eventSource.addEventListener('slide_completed', handleSlideCompletedEvent);
+    eventSource.addEventListener('complete', handleCompleteEvent);
+    eventSource.addEventListener('error_event', handleErrorEvent);
+
+    // Also listen for generic message event (fallback)
+    eventSource.onmessage = function (event) {
+        console.log('Generic message received:', event.data);
+    };
+}
+
 
 function handleStatusEvent(event) {
     console.log('📢 Status event received:', event);

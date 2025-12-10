@@ -1145,6 +1145,186 @@ async def upload_docx_stream(
     )
 
 
+@app.get("/api/generate-from-manual-structure-stream")
+async def generate_from_manual_structure_stream(
+    session_id: str,
+    current_user: UserResponse = Depends(get_current_user_from_token_param)
+):
+    """Stream processing of manual structure from structure editor with SSE"""
+    
+    # Load approved structure
+    approved_file = TEMP_DIR / f"approved_structure_{session_id}.json"
+    if not approved_file.exists():
+        logger.error(f"Approved structure not found: {approved_file}")
+        raise HTTPException(status_code=404, detail="Approved structure not found")
+    
+    try:
+        with open(approved_file, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+    except Exception as e:
+        logger.error(f"Error loading approved structure: {e}")
+        raise HTTPException(status_code=500, detail=f"Error loading structure: {str(e)}")
+    
+    slide_chunks = data.get('slide_chunks', [])
+    document_title = data.get('document_title', 'Untitled')
+    
+    if not slide_chunks:
+        raise HTTPException(status_code=400, detail="No slide chunks found")
+    
+    logger.info(f"📋 Manual structure session: {session_id}")
+    logger.info(f"📄 Document title: {document_title}")
+    logger.info(f"📊 Total chunks: {len(slide_chunks)}")
+    
+    # Create project name
+    project_name = document_title.replace(' ', '_')
+    output_folder = OUTPUT_DIR / project_name
+    
+    # Handle existing folder
+    if output_folder.exists():
+        try:
+            shutil.rmtree(output_folder)
+        except PermissionError:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            project_name = f"{project_name}_{timestamp}"
+            output_folder = OUTPUT_DIR / project_name
+    
+    output_folder.mkdir(parents=True, exist_ok=True)
+    
+    temp_workflow_dir = None
+    
+    async def event_generator() -> AsyncGenerator[str, None]:
+        """Generate Server-Sent Events for workflow progress"""
+        nonlocal temp_workflow_dir
+        
+        event_queue = asyncio.Queue()
+        workflow_done = asyncio.Event()
+        workflow_error = None
+        
+        def stream_callback(event_type: str, data: dict):
+            """Callback to receive events from workflow"""
+            try:
+                logger.info(f"🔔 Stream callback: {event_type} - {data}")
+                
+                if event_type == 'slide_completed' and 'html_path' in data:
+                    temp_path = data['html_path']
+                    data['html_path'] = temp_path
+                    data['is_temp'] = True
+                    logger.info(f"🎯 Streaming temp file: {temp_path}")
+                
+                event_queue.put_nowait((event_type, data))
+            except Exception as e:
+                logger.error(f"Error in stream callback: {e}")
+        
+        async def run_workflow():
+            """Run workflow in background"""
+            nonlocal workflow_error, temp_workflow_dir
+            try:
+                if not workflow_service or not workflow_service.is_available():
+                    raise Exception("Workflow service not available")
+                
+                workflow_result = await workflow_service.process_manual_structure(
+                    slide_chunks=slide_chunks,
+                    document_title=document_title,
+                    output_folder=str(output_folder),
+                    callback=stream_callback
+                )
+                
+                if not workflow_result:
+                    raise Exception("Workflow did not produce valid output")
+                
+                result_zip, temp_workflow_dir = workflow_result
+                logger.info(f"📁 Temp directory: {temp_workflow_dir}")
+                logger.info(f"📦 Result ZIP: {result_zip}")
+                
+                if result_zip and os.path.exists(result_zip):
+                    html_folder = output_folder / "html"
+                    html_folder.mkdir(exist_ok=True)
+                    
+                    with zipfile.ZipFile(result_zip, 'r') as zip_ref:
+                        for file_info in zip_ref.infolist():
+                            if not file_info.filename.endswith('/') and 'temp_debug' not in file_info.filename:
+                                try:
+                                    zip_ref.extract(file_info, output_folder)
+                                except Exception as e:
+                                    logger.warning(f"Error extracting {file_info.filename}: {e}")
+                    
+                    if conversion_service and conversion_service.is_available():
+                        converted_folder = output_folder / "converted"
+                        converted_folder.mkdir(exist_ok=True)
+                        conversion_service.convert_slides_batch(html_folder, converted_folder)
+                    
+                    html_files = list(html_folder.glob("*.html"))
+                    total_slides = len(html_files)
+                    logger.info(f"📁 Found {total_slides} HTML files")
+                    
+                    project_id = save_workflow_to_database(
+                        user_id=current_user.id,
+                        project_name=project_name,
+                        source_type='manual_structure',
+                        source_data={
+                            'session_id': session_id,
+                            'document_title': document_title,
+                            'description': f'Slides from manual structure: {document_title}'
+                        },
+                        slide_options={'manual_mode': True},
+                        output_folder=output_folder
+                    )
+                    
+                    await event_queue.put(('complete', {
+                        'project_name': project_name,
+                        'total_slides': total_slides,
+                        'temp_dir': temp_workflow_dir,
+                        'project_id': project_id
+                    }))
+                else:
+                    raise Exception("Workflow did not produce valid output")
+                    
+            except Exception as e:
+                logger.error(f"Workflow error: {e}")
+                workflow_error = str(e)
+            finally:
+                workflow_done.set()
+        
+        workflow_task = asyncio.create_task(run_workflow())
+        
+        try:
+            while not workflow_done.is_set() or not event_queue.empty():
+                try:
+                    event_type, data = await asyncio.wait_for(event_queue.get(), timeout=0.5)
+                    
+                    logger.info(f"📤 Sending SSE: {event_type} - {data}")
+                    event_data = json.dumps(data)
+                    yield f"event: {event_type}\ndata: {event_data}\n\n"
+                    
+                except asyncio.TimeoutError:
+                    yield f": keepalive\n\n"
+                    continue
+            
+            if workflow_error:
+                error_data = json.dumps({"message": workflow_error})
+                yield f"event: error_event\ndata: {error_data}\n\n"
+            
+        except Exception as e:
+            logger.error(f"Error in event generator: {e}")
+            error_data = json.dumps({"message": str(e)})
+            yield f"event: error_event\ndata: {error_data}\n\n"
+        finally:
+            try:
+                await workflow_task
+            except:
+                pass
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no"
+        }
+    )
+
+
 # ========================== SLIDES API ==========================
 
 @app.get("/api/projects/by-name/{project_name}/slides")
@@ -1405,13 +1585,14 @@ async def serve_temp_file(path: str):
     """Serve file from temporary workflow directory via query parameter"""
     logger.info(f"📂 Serving temp file request: {path}")
     
-    # Security: only allow serving from slidegen_workflow_* or slidegen_idea_* directories
+    # Security: only allow serving from slidegen_workflow_*, slidegen_idea_*, or slidegen_manual_* directories
     normalized_path = path.replace('\\', '/')
     is_linux_workflow = normalized_path.startswith('/tmp/slidegen_workflow_')
     is_linux_idea = normalized_path.startswith('/tmp/slidegen_idea_')
-    is_windows_temp = ('slidegen_workflow_' in normalized_path or 'slidegen_idea_' in normalized_path) and ('Temp' in path or 'temp' in path)
+    is_linux_manual = normalized_path.startswith('/tmp/slidegen_manual_')
+    is_windows_temp = ('slidegen_workflow_' in normalized_path or 'slidegen_idea_' in normalized_path or 'slidegen_manual_' in normalized_path) and ('Temp' in path or 'temp' in path)
     
-    if not (is_linux_workflow or is_linux_idea or is_windows_temp):
+    if not (is_linux_workflow or is_linux_idea or is_linux_manual or is_windows_temp):
         logger.warning(f"⚠️ Access denied for path: {path}")
         raise HTTPException(status_code=403, detail="Access denied")
     
@@ -1602,9 +1783,11 @@ async def approve_structure(request: StructureApproveRequest):
         if intro_node:
             intro_slide = f"INTRO SLIDE\n\nTitle: {intro_node.get('content', '')}"
             logger.info(f"✅ Extracted intro slide from level 0: {intro_node.get('content')}")
-        else:
-            intro_slide = f"INTRO SLIDE\n\nTitle: {document_title}"
-            logger.info(f"✅ Extracted intro slide from level 0: {document_title}")
+        # Manual mode: Don't auto-add intro unless user explicitly creates level 0 node
+        # else:
+        #     intro_slide = f"INTRO SLIDE\n\nTitle: {document_title}"
+        #     logger.info(f"✅ Extracted intro slide from level 0: {document_title}")
+        
         
         # Extract thank you slide (hybrid approach)
         thank_you_slide = None
@@ -1620,10 +1803,11 @@ async def approve_structure(request: StructureApproveRequest):
                 thank_you_slide = f"THANK YOU SLIDE\n\n{thank_you_node.get('title', '')}\n\n{thank_you_node.get('content', '')}"
                 logger.info(f"✅ Extracted thank you slide from last node: {thank_you_node.get('title')}")
         
-        # Fallback to default thank you
-        if not thank_you_slide:
-            thank_you_slide = "THANK YOU SLIDE\n\nThank you for your attention!"
-            logger.info(f"📝 Using default thank you slide")
+        # Manual mode: Don't auto-add thank you unless user explicitly created one
+        # Fallback disabled - user has full control
+        # if not thank_you_slide:
+        #     thank_you_slide = "THANK YOU SLIDE\n\nThank you for your attention!"
+        #     logger.info(f"📝 Using default thank you slide")
         
         document_structure = filtered_structure
         
@@ -1718,7 +1902,12 @@ async def approve_structure(request: StructureApproveRequest):
             if not leaves:
                 return
             buffer = []
-            header = parent.get('numbered_title', '')
+            # Include parent's title AND content in header
+            header_parts = [parent.get('numbered_title', '')]
+            if parent.get('content'):
+                header_parts.append(parent['content'])
+            header = '\n'.join(header_parts)
+            
             for item in leaves:
                 tentative_buffer = buffer + [item]
                 if len(_render_slide_content(header, tentative_buffer)) > THRESHOLD_CHAR_LIMIT and buffer:
@@ -1756,8 +1945,14 @@ async def approve_structure(request: StructureApproveRequest):
                         final_slides_types.append('transition')
                         logger.info(f"✅ Created transition slide: {node.get('numbered_title', '')}")
                     
-                    # Process content ONLY for non-transition nodes (is_transition=False)
-                    if node.get("content") and node.get('is_transition') != True:
+                    
+                    # Check if node has children
+                    has_leaves = any(not child.get("children") for child in node.get("children", []))
+                    has_sub_trees = any(child.get("children") for child in node.get("children", []))
+                    
+                    # Process content ONLY for non-transition nodes WITHOUT children
+                    # If node has children, content will be merged via _create_slides_from_leaves
+                    if node.get("content") and node.get('is_transition') != True and not has_leaves and not has_sub_trees:
                         pos = [node.get('index', '')]
                         final_slides_content.append(_render_slide_content("", [node]))
                         final_slides_positions.append(pos)
@@ -1843,6 +2038,49 @@ async def approve_structure(request: StructureApproveRequest):
         
         # ======================== Save Results to File ========================
         
+        # CONVERT slide_chunks to workflow-compatible format
+        # slide_planner expects dicts with: position, heading, text_content
+        converted_chunks = []
+        for i, (chunk_text, chunk_type, positions) in enumerate(zip(sorted_chunks, sorted_types, sorted_positions)):
+            # Determine position value based on type
+            if chunk_type == 'intro':
+                position = 0
+            elif chunk_type == 'transition':
+                position = -1
+            elif chunk_type == 'thank_you':
+                position = -2
+            else:
+                position = i  # Content slides get sequential position
+            
+            # Extract heading from chunk text (first line usually)
+            lines = chunk_text.strip().split('\n')
+            if chunk_type == 'intro':
+                heading = 'INTRO'
+            elif chunk_type == 'transition':
+                heading = 'TRANSITION'
+            elif chunk_type == 'thank_you':
+                heading = 'THANK_YOU'
+            else:
+                # For content, extract heading from first line
+                heading = lines[0] if lines else ''
+                # Remove numbering if present (e.g. "1.2. Title" -> "Title")
+                import re
+                heading = re.sub(r'^\d+(\.\d+)*\.?\s*', '', heading)
+            
+            # Create workflow-compatible chunk dict
+            chunk_dict = {
+                'position': position,
+                'heading': heading,
+                'text_content': chunk_text
+            }
+            converted_chunks.append(chunk_dict)
+        
+        logger.info(f"✅ Converted {len(converted_chunks)} chunks to workflow format")
+        
+        # Log sample converted chunk
+        if converted_chunks:
+            logger.info(f"Sample converted chunk: {converted_chunks[0]}")
+        
         try:
             # Save approved result to file for debugging/monitoring
             approved_file = TEMP_DIR / f"approved_structure_{request.session_id}.json"
@@ -1853,7 +2091,7 @@ async def approve_structure(request: StructureApproveRequest):
                 "session_id": request.session_id,
                 "document_title": document_title,
                 "document_outline": renumbered_structure,
-                "slide_chunks": list(sorted_chunks),
+                "slide_chunks": converted_chunks,  # Use converted format
                 "slide_positions": list(sorted_positions),
                 "slide_context_maps": list(sorted_maps),
                 "slide_types": list(sorted_types)
@@ -1875,7 +2113,7 @@ async def approve_structure(request: StructureApproveRequest):
             "session_id": request.session_id,
             "document_title": document_title,
             "document_outline": renumbered_structure,
-            "slide_chunks": list(sorted_chunks),
+            "slide_chunks": converted_chunks,  # Return converted format
             "slide_positions": list(sorted_positions),
             "slide_context_maps": list(sorted_maps),
             "slide_types": list(sorted_types)

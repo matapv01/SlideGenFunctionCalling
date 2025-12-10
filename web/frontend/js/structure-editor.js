@@ -1074,8 +1074,8 @@ async function approveAndContinue() {
                 console.log('📊 Structure Length:', data.document_structure?.length);
                 console.log('🔍 First 3 nodes:', data.document_structure?.slice(0, 3));
 
-                // Redirect to streaming
-                window.location.href = `streaming.html?session=${sessionId}`;
+                // Redirect to streaming with manual session parameter
+                window.location.href = `streaming.html?manual_session=${sessionId}`;
             } else {
                 throw new Error('Failed to approve structure');
             }
