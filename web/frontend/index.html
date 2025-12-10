@@ -2039,9 +2039,11 @@
         #ideaModal.modal {
             z-index: 1060 !important;
         }
+
         #ideaModal .modal-dialog {
             margin: 1.75rem auto !important;
         }
+
         #ideaModal.modal.show {
             display: flex !important;
             align-items: center !important;
@@ -2063,9 +2065,11 @@
             display: flex;
             flex-direction: column;
         }
+
         .sidebar.hidden {
             transform: translateX(-100%);
         }
+
         .sidebar-header {
             display: flex;
             align-items: center;
@@ -2074,6 +2078,7 @@
             padding-bottom: 15px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.2);
         }
+
         .sidebar-logo {
             display: flex;
             align-items: center;
@@ -2082,6 +2087,7 @@
             font-size: 1.5rem;
             font-weight: bold;
         }
+
         .sidebar-user-info {
             display: flex;
             align-items: center;
@@ -2092,30 +2098,36 @@
             border-radius: 12px;
             margin-bottom: 20px;
         }
+
         .sidebar-user-info i {
             font-size: 2rem;
             color: white;
         }
+
         .sidebar-user-details {
             display: flex;
             flex-direction: column;
             gap: 2px;
         }
+
         .sidebar-user-name {
             color: white;
             font-weight: 600;
             font-size: 1rem;
         }
+
         .sidebar-user-email {
             color: rgba(255, 255, 255, 0.8);
             font-size: 0.85rem;
         }
+
         .sidebar-menu {
             display: flex;
             flex-direction: column;
             gap: 10px;
             flex: 1;
         }
+
         .sidebar-footer {
             display: flex;
             flex-direction: column;
@@ -2124,6 +2136,7 @@
             border-top: 1px solid rgba(255, 255, 255, 0.2);
             margin-top: auto;
         }
+
         .sidebar-footer-item {
             display: flex;
             align-items: center;
@@ -2139,21 +2152,26 @@
             font-weight: 500;
             font-size: 0.95rem;
         }
+
         .sidebar-footer-item:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: translateX(5px);
             color: white;
         }
+
         .sidebar-footer-item i {
             font-size: 1.2rem;
         }
+
         .sidebar-footer-item.logout {
             background: rgba(220, 53, 69, 0.3);
             border-color: rgba(220, 53, 69, 0.5);
         }
+
         .sidebar-footer-item.logout:hover {
             background: rgba(220, 53, 69, 0.5);
         }
+
         .sidebar-item {
             display: flex;
             align-items: center;
@@ -2168,16 +2186,19 @@
             text-decoration: none;
             font-weight: 500;
         }
+
         .sidebar-item:hover {
             background: rgba(255, 255, 255, 0.25);
             transform: translateX(5px);
             color: white;
         }
+
         .sidebar-item.active {
             background: rgba(255, 255, 255, 0.3);
             border-color: rgba(255, 255, 255, 0.4);
             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
         }
+
         .sidebar-item i {
             font-size: 1.3rem;
         }
@@ -2189,6 +2210,7 @@
             right: 20px;
             z-index: 1000;
         }
+
         .user-info {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -2200,22 +2222,27 @@
             align-items: center;
             gap: 12px;
         }
+
         .user-info i {
             font-size: 1.5rem;
         }
+
         .user-details {
             display: flex;
             flex-direction: column;
             align-items: flex-start;
         }
+
         .user-email {
             font-size: 0.75rem;
             opacity: 0.8;
         }
+
         .user-name {
             font-weight: 600;
             font-size: 0.95rem;
         }
+
         .user-menu-btn {
             background: rgba(255, 255, 255, 0.2);
             border: 1px solid rgba(255, 255, 255, 0.3);
@@ -2232,13 +2259,16 @@
             height: 40px;
             margin-left: 10px;
         }
+
         .user-menu-btn:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: translateY(-2px);
         }
+
         .user-menu-btn i {
             font-size: 1.2rem;
         }
+
         .user-dropdown {
             position: absolute;
             top: 100%;
@@ -2246,11 +2276,12 @@
             margin-top: 10px;
             background: rgba(255, 255, 255, 0.95);
             border-radius: 10px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
             backdrop-filter: blur(10px);
             overflow: hidden;
             min-width: 180px;
         }
+
         .user-dropdown button {
             width: 100%;
             padding: 12px 20px;
@@ -2265,10 +2296,11 @@
             font-weight: 500;
             text-align: left;
         }
+
         .user-dropdown button:hover {
             background: rgba(102, 126, 234, 0.1);
         }
-        
+
         /* Avatar Toggle Button (Left) */
         .avatar-toggle {
             position: fixed;
@@ -2289,21 +2321,23 @@
             color: white;
             font-size: 1.5rem;
         }
+
         .avatar-toggle:hover {
             background: rgba(255, 255, 255, 0.3);
             transform: scale(1.1);
         }
+
         .avatar-toggle.hidden {
             opacity: 0;
             pointer-events: none;
         }
-        
+
         /* Adjust main content when sidebar is visible */
         body:not(.sidebar-hidden) .container {
             margin-left: 280px;
             width: calc(100% - 280px);
         }
-        
+
         /* Profile & Change Password Modal */
         .modal-overlay {
             display: none;
@@ -2317,9 +2351,11 @@
             align-items: center;
             justify-content: center;
         }
+
         .modal-overlay.active {
             display: flex;
         }
+
         .modal-content {
             background: white;
             border-radius: 20px;
@@ -2330,17 +2366,20 @@
             overflow-y: auto;
             box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
         }
+
         .modal-header {
             display: flex;
             justify-content: space-between;
             align-items: center;
             margin-bottom: 25px;
         }
+
         .modal-title {
             font-size: 1.5rem;
             font-weight: bold;
             color: #333;
         }
+
         .modal-close {
             background: none;
             border: none;
@@ -2349,18 +2388,22 @@
             color: #999;
             transition: color 0.3s;
         }
+
         .modal-close:hover {
             color: #333;
         }
+
         .form-group {
             margin-bottom: 20px;
         }
+
         .form-label {
             display: block;
             margin-bottom: 8px;
             color: #555;
             font-weight: 500;
         }
+
         .form-input {
             width: 100%;
             padding: 12px 15px;
@@ -2369,10 +2412,12 @@
             font-size: 1rem;
             transition: border-color 0.3s;
         }
+
         .form-input:focus {
             outline: none;
             border-color: #667eea;
         }
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             color: white;
@@ -2385,9 +2430,11 @@
             transition: transform 0.3s;
             width: 100%;
         }
+
         .btn-primary:hover {
             transform: translateY(-2px);
         }
+
         .btn-secondary {
             background: #6c757d;
             color: white;
@@ -2401,6 +2448,7 @@
             width: 100%;
             margin-top: 10px;
         }
+
         .btn-secondary:hover {
             transform: translateY(-2px);
             background: #5a6268;
@@ -2422,7 +2470,7 @@
                 <span>SlideGen</span>
             </div>
         </div>
-        
+
         <!-- User Info in Sidebar -->
         <div class="sidebar-user-info">
             <i class="bi bi-person-circle"></i>
@@ -2431,7 +2479,7 @@
                 <div class="sidebar-user-email" id="sidebarUserEmail">email@example.com</div>
             </div>
         </div>
-        
+
         <div class="sidebar-menu">
             <a href="index.html" class="sidebar-item active">
                 <i class="bi bi-plus-circle"></i>
@@ -2486,11 +2534,13 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Avatar URL</label>
-                    <input type="url" class="form-input" id="profileAvatar" placeholder="https://example.com/avatar.jpg">
+                    <input type="url" class="form-input" id="profileAvatar"
+                        placeholder="https://example.com/avatar.jpg">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Bio</label>
-                    <textarea class="form-input" id="profileBio" rows="3" placeholder="Giới thiệu về bản thân"></textarea>
+                    <textarea class="form-input" id="profileBio" rows="3"
+                        placeholder="Giới thiệu về bản thân"></textarea>
                 </div>
                 <button type="submit" class="btn-primary">Lưu thông tin</button>
                 <button type="button" class="btn-secondary" onclick="closeProfileModal()">Hủy</button>
@@ -2508,15 +2558,18 @@
             <form onsubmit="changePassword(event)">
                 <div class="form-group">
                     <label class="form-label">Mật khẩu hiện tại</label>
-                    <input type="password" class="form-input" id="currentPassword" required placeholder="Nhập mật khẩu hiện tại">
+                    <input type="password" class="form-input" id="currentPassword" required
+                        placeholder="Nhập mật khẩu hiện tại">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Mật khẩu mới</label>
-                    <input type="password" class="form-input" id="newPassword" required minlength="6" placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)">
+                    <input type="password" class="form-input" id="newPassword" required minlength="6"
+                        placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)">
                 </div>
                 <div class="form-group">
                     <label class="form-label">Xác nhận mật khẩu mới</label>
-                    <input type="password" class="form-input" id="confirmPassword" required placeholder="Nhập lại mật khẩu mới">
+                    <input type="password" class="form-input" id="confirmPassword" required
+                        placeholder="Nhập lại mật khẩu mới">
                 </div>
                 <button type="submit" class="btn-primary">Đổi mật khẩu</button>
                 <button type="button" class="btn-secondary" onclick="closeChangePasswordModal()">Hủy</button>
@@ -2637,10 +2690,11 @@
                                     <small class="text-muted d-block ms-4">Review and edit structure manually</small>
                                 </div>
                             </li>
-                            <li>
+                            <li id="autoOptionsSection">
                                 <hr class="dropdown-divider">
                             </li>
-                            <li class="px-3 py-2" onclick="event.stopPropagation();">
+                            <li class="px-3 py-2 auto-mode-option" id="transitionSlideOption"
+                                onclick="event.stopPropagation();">
                                 <div class="form-check" onclick="toggleCheckbox('enableTransitionSlides', event)">
                                     <input class="form-check-input" type="checkbox" id="enableTransitionSlides"
                                         onclick="event.stopPropagation();">
@@ -2650,7 +2704,8 @@
                                 </div>
                                 <small class="text-muted d-block ms-4">Add slides between sections</small>
                             </li>
-                            <li class="px-3 py-2" onclick="event.stopPropagation();">
+                            <li class="px-3 py-2 auto-mode-option" id="thankYouSlideOption"
+                                onclick="event.stopPropagation();">
                                 <div class="form-check" onclick="toggleCheckbox('enableThankYouSlide', event)">
                                     <input class="form-check-input" type="checkbox" id="enableThankYouSlide"
                                         onclick="event.stopPropagation();">
@@ -2665,7 +2720,8 @@
                     <input type="file" id="docxFile" accept=".docx,.zip">
                 </div>
 
-                <button class="btn-glow btn-info-glow" onclick="showIdeaModal()" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                <button class="btn-glow btn-info-glow" onclick="showIdeaModal()"
+                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
                     <i class="bi bi-lightbulb"></i> Create with Idea
                 </button>
 
@@ -2879,54 +2935,54 @@
     <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;"></div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    
+
     <!-- Load config first -->
     <script type="module">
         import { config } from './config.js';
         window.SLIDEGEN_CONFIG = config;
         console.log('✅ Config loaded:', config);
     </script>
-    
+
     <!-- Inline script for global functions (before module script loads) -->
     <script>
         // Authentication helpers
         const API_BASE_URL = 'http://localhost:3000';
-        
+
         function getAuthToken() {
             return localStorage.getItem('access_token');
         }
-        
+
         function isAuthenticated() {
             return !!getAuthToken();
         }
-        
+
         async function checkAuth() {
             if (!isAuthenticated()) {
                 window.location.href = 'login.html';
                 return false;
             }
-            
+
             try {
                 const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
                     headers: {
                         'Authorization': `Bearer ${getAuthToken()}`
                     }
                 });
-                
+
                 if (!response.ok) {
                     localStorage.removeItem('access_token');
                     window.location.href = 'login.html';
                     return false;
                 }
-                
+
                 const user = await response.json();
                 // Store user data globally
                 window.currentUser = user;
-                
+
                 // Update sidebar user info
                 document.getElementById('sidebarUsername').textContent = user.username;
                 document.getElementById('sidebarUserEmail').textContent = user.email;
-                
+
                 // Show avatar toggle
                 document.getElementById('avatarToggle').style.display = 'flex';
                 return true;
@@ -2937,15 +2993,15 @@
                 return false;
             }
         }
-        
+
         function toggleSidebar() {
             const sidebar = document.getElementById('sidebar');
             const body = document.body;
             const avatarToggle = document.getElementById('avatarToggle');
-            
+
             sidebar.classList.toggle('hidden');
             body.classList.toggle('sidebar-hidden');
-            
+
             // Hide/show avatar when sidebar opens/closes
             if (sidebar.classList.contains('hidden')) {
                 avatarToggle.classList.remove('hidden');
@@ -2953,7 +3009,7 @@
                 avatarToggle.classList.add('hidden');
             }
         }
-        
+
         async function openProfile() {
             try {
                 // Load current profile data
@@ -2962,7 +3018,7 @@
                         'Authorization': `Bearer ${getAuthToken()}`
                     }
                 });
-                
+
                 if (response.ok) {
                     const profile = await response.json();
                     document.getElementById('profileUsername').value = window.currentUser.username;
@@ -2971,27 +3027,27 @@
                     document.getElementById('profileAvatar').value = profile.avatar_url || '';
                     document.getElementById('profileBio').value = profile.bio || '';
                 }
-                
+
                 document.getElementById('profileModal').classList.add('active');
             } catch (error) {
                 console.error('Error loading profile:', error);
                 alert('Không thể tải thông tin cá nhân');
             }
         }
-        
+
         function closeProfileModal() {
             document.getElementById('profileModal').classList.remove('active');
         }
-        
+
         async function saveProfile(event) {
             event.preventDefault();
-            
+
             const profileData = {
                 full_name: document.getElementById('profileFullName').value,
                 avatar_url: document.getElementById('profileAvatar').value,
                 bio: document.getElementById('profileBio').value
             };
-            
+
             try {
                 const response = await fetch(`${API_BASE_URL}/api/profile`, {
                     method: 'PUT',
@@ -3001,7 +3057,7 @@
                     },
                     body: JSON.stringify(profileData)
                 });
-                
+
                 if (response.ok) {
                     alert('Cập nhật thông tin thành công!');
                     closeProfileModal();
@@ -3013,7 +3069,7 @@
                 alert('Lỗi khi cập nhật thông tin: ' + error.message);
             }
         }
-        
+
         function openChangePassword() {
             document.getElementById('changePasswordModal').classList.add('active');
             // Clear form
@@ -3021,30 +3077,30 @@
             document.getElementById('newPassword').value = '';
             document.getElementById('confirmPassword').value = '';
         }
-        
+
         function closeChangePasswordModal() {
             document.getElementById('changePasswordModal').classList.remove('active');
         }
-        
+
         async function changePassword(event) {
             event.preventDefault();
-            
+
             const currentPassword = document.getElementById('currentPassword').value;
             const newPassword = document.getElementById('newPassword').value;
             const confirmPassword = document.getElementById('confirmPassword').value;
-            
+
             if (newPassword !== confirmPassword) {
                 alert('Mật khẩu mới và xác nhận mật khẩu không khớp!');
                 return;
             }
-            
+
             if (newPassword.length < 6) {
                 alert('Mật khẩu mới phải có ít nhất 6 ký tự!');
                 return;
             }
-            
+
             const token = localStorage.getItem('access_token');
-            
+
             try {
                 const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
                     method: 'PUT',
@@ -3057,7 +3113,7 @@
                         new_password: newPassword
                     })
                 });
-                
+
                 if (response.ok) {
                     alert('Đổi mật khẩu thành công!');
                     closeChangePasswordModal();
@@ -3071,29 +3127,29 @@
                 alert('Lỗi khi đổi mật khẩu: ' + error.message);
             }
         }
-        
+
         // Close sidebar when clicking outside
-        document.addEventListener('click', function(event) {
+        document.addEventListener('click', function (event) {
             const sidebar = document.getElementById('sidebar');
             const avatarToggle = document.getElementById('avatarToggle');
             const body = document.body;
-            
-            if (sidebar && avatarToggle && 
-                !sidebar.contains(event.target) && 
+
+            if (sidebar && avatarToggle &&
+                !sidebar.contains(event.target) &&
                 !avatarToggle.contains(event.target) &&
                 !body.classList.contains('sidebar-hidden')) {
                 toggleSidebar();
             }
         });
-        
+
         function logout() {
             localStorage.removeItem('access_token');
             window.location.href = 'login.html';
         }
-        
+
         // Check auth on page load
         checkAuth();
-        
+
         // Close dropdown when clicking outside
         document.addEventListener('click', (e) => {
             const userMenu = document.querySelector('.user-menu');
@@ -3101,22 +3157,22 @@
                 document.getElementById('userDropdown').style.display = 'none';
             }
         });
-        
+
         // Fallback functions in case module hasn't loaded yet
-        window.showIdeaModal = function() {
+        window.showIdeaModal = function () {
             console.log('🎯 showIdeaModal called');
             const modal = new bootstrap.Modal(document.getElementById('ideaModal'));
             modal.show();
         };
-        
-        window.generateFromIdea = async function() {
+
+        window.generateFromIdea = async function () {
             console.log('🚀 generateFromIdea called');
             const title = document.getElementById('ideaTitle').value.trim();
             const prompt = document.getElementById('ideaPrompt').value.trim();
             const contentLength = document.getElementById('ideaContentLength').value;
             const enableTransitions = document.getElementById('ideaEnableTransitions').checked;
             const enableThankYou = document.getElementById('ideaEnableThankYou').checked;
-            
+
             console.log('📝 Form data:', { title, prompt, contentLength, enableTransitions, enableThankYou });
 
             // Validation
@@ -3143,13 +3199,13 @@
                 }
 
                 // Call backend API
-                const apiUrl = window.SLIDEGEN_CONFIG?.API_BASE_URL 
+                const apiUrl = window.SLIDEGEN_CONFIG?.API_BASE_URL
                     ? `${window.SLIDEGEN_CONFIG.API_BASE_URL}/generate-from-idea`
                     : 'http://localhost:3000/api/generate-from-idea';
                 console.log('📡 Calling API:', apiUrl);
                 const response = await fetch(apiUrl, {
                     method: 'POST',
-                    headers: { 
+                    headers: {
                         'Content-Type': 'application/json',
                         'Authorization': `Bearer ${getAuthToken()}`
                     },
@@ -3163,7 +3219,7 @@
                 });
 
                 console.log('📥 Response status:', response.status);
-                
+
                 if (!response.ok) {
                     const errorData = await response.json();
                     console.error('❌ API error:', errorData);
@@ -3172,7 +3228,7 @@
 
                 const result = await response.json();
                 console.log('✅ API result:', result);
-                
+
                 // Redirect to streaming page with session_id
                 if (result.session_id) {
                     window.location.href = `streaming.html?session=${result.session_id}`;
@@ -3183,7 +3239,7 @@
             } catch (error) {
                 console.error('Error generating from idea:', error);
                 alert(`Lỗi: ${error.message}`);
-                
+
                 // Hide loading overlay
                 const loadingOverlay = document.getElementById('loadingOverlay');
                 if (loadingOverlay) {
@@ -3192,7 +3248,7 @@
             }
         };
     </script>
-    
+
     <script type="module" src="script.js?v=2"></script>
     <script>
         // Cursor trail effect
@@ -3336,17 +3392,48 @@
 
         // Khôi phục trạng thái dark mode khi tải trang
         document.addEventListener('DOMContentLoaded', function () {
+            console.log('🎨 SlideGen initialized');
             const savedDarkMode = localStorage.getItem('darkMode');
             if (savedDarkMode === 'true') {
                 document.body.classList.add('dark-mode');
             }
+
+            // ========== TOGGLE SLIDE OPTIONS BASED ON WORKFLOW MODE ==========
+            const autoModeRadio = document.getElementById('autoMode');
+            const manualModeRadio = document.getElementById('manualMode');
+            const autoOptionsSection = document.getElementById('autoOptionsSection');
+            const transitionOption = document.getElementById('transitionSlideOption');
+            const thankYouOption = document.getElementById('thankYouSlideOption');
+
+            function updateSlideOptionsVisibility() {
+                const isAutoMode = autoModeRadio.checked;
+                const displayValue = isAutoMode ? 'block' : 'none';
+
+                if (autoOptionsSection) autoOptionsSection.style.display = displayValue;
+                if (transitionOption) transitionOption.style.display = displayValue;
+                if (thankYouOption) thankYouOption.style.display = displayValue;
+
+                console.log('📋 Workflow mode changed:', isAutoMode ? 'AUTO' : 'MANUAL');
+                console.log('   Slide options visibility:', displayValue);
+            }
+
+            // Add listeners to radio buttons
+            if (autoModeRadio) {
+                autoModeRadio.addEventListener('change', updateSlideOptionsVisibility);
+            }
+            if (manualModeRadio) {
+                manualModeRadio.addEventListener('change', updateSlideOptionsVisibility);
+            }
+
+            // Set initial visibility (Auto mode is default)
+            updateSlideOptionsVisibility();
         });
 
         // Function to create new slide - creates project in database immediately
         async function createNewSlide() {
             console.log('Creating new slide from index.html...');
             const token = localStorage.getItem('access_token');
-            
+
             if (!token) {
                 alert('Please login first');
                 window.location.href = 'login.html';
@@ -3355,7 +3442,7 @@
 
             try {
                 const apiUrl = window.SLIDEGEN_CONFIG?.BACKEND_URL || 'http://localhost:3000';
-                
+
                 // Create new project in database
                 const response = await fetch(`${apiUrl}/api/projects`, {
                     method: 'POST',
@@ -3369,12 +3456,12 @@
                         source_type: 'manual'
                     })
                 });
-                
+
                 if (response.ok) {
                     const data = await response.json();
                     const projectId = data.project_id || data.id; // Handle both response formats
                     console.log('✅ Project created with ID:', projectId);
-                    
+
                     // Create first slide in database
                     const slideResponse = await fetch(`${apiUrl}/api/projects/${projectId}/slides`, {
                         method: 'POST',
@@ -3389,7 +3476,7 @@
                             html_content: '<div class="slide-container"><div class="content-wrapper" style="background: white;"></div></div>'
                         })
                     });
-                    
+
                     if (slideResponse.ok) {
                         console.log('✅ First slide created');
                         // Redirect to editor with project ID
@@ -3410,32 +3497,44 @@
     <!-- Idea Modal -->
     <div class="modal fade" id="ideaModal" tabindex="-1" aria-labelledby="ideaModalLabel" aria-hidden="true">
         <div class="modal-dialog modal-dialog-centered modal-lg">
-            <div class="modal-content" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+            <div class="modal-content"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
                 <div class="modal-header border-0">
                     <h5 class="modal-title" id="ideaModalLabel">
                         <i class="bi bi-lightbulb-fill"></i> Create Slides from Your Idea
                     </h5>
-                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
-                    <p class="mb-3">Describe your presentation idea and let AI create the structure and slides for you.</p>
+                    <p class="mb-3">Describe your presentation idea and let AI create the structure and slides for you.
+                    </p>
                     <div class="mb-3">
                         <label for="ideaTitle" class="form-label">Presentation Title</label>
-                        <input type="text" class="form-control" id="ideaTitle" placeholder="e.g., AI in Modern Business" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+                        <input type="text" class="form-control" id="ideaTitle" placeholder="e.g., AI in Modern Business"
+                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
                     </div>
                     <div class="mb-3">
                         <label for="ideaContentLength" class="form-label">Content Depth</label>
-                        <select class="form-select" id="ideaContentLength" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
-                            <option value="brief" style="background: #667eea; color: white;">Brief (5-8 slides) - Quick overview</option>
-                            <option value="standard" selected style="background: #667eea; color: white;">Standard (8-12 slides) - Balanced coverage</option>
-                            <option value="detailed" style="background: #667eea; color: white;">Detailed (12-18 slides) - Comprehensive</option>
-                            <option value="extensive" style="background: #667eea; color: white;">Extensive (18-25 slides) - In-depth analysis</option>
+                        <select class="form-select" id="ideaContentLength"
+                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+                            <option value="brief" style="background: #667eea; color: white;">Brief (5-8 slides) - Quick
+                                overview</option>
+                            <option value="standard" selected style="background: #667eea; color: white;">Standard (8-12
+                                slides) - Balanced coverage</option>
+                            <option value="detailed" style="background: #667eea; color: white;">Detailed (12-18 slides)
+                                - Comprehensive</option>
+                            <option value="extensive" style="background: #667eea; color: white;">Extensive (18-25
+                                slides) - In-depth analysis</option>
                         </select>
-                        <small class="text-white-50 d-block mt-1">AI will determine optimal slide count based on content complexity</small>
+                        <small class="text-white-50 d-block mt-1">AI will determine optimal slide count based on content
+                            complexity</small>
                     </div>
                     <div class="mb-3">
                         <label for="ideaPrompt" class="form-label">Your Idea / Prompt</label>
-                        <textarea class="form-control" id="ideaPrompt" rows="6" placeholder="Describe your presentation idea here...&#10;&#10;Example:&#10;Create a presentation about the impact of AI on modern business. Include:&#10;- Introduction to AI&#10;- Current applications&#10;- Benefits and challenges&#10;- Future trends&#10;- Conclusion" style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;"></textarea>
+                        <textarea class="form-control" id="ideaPrompt" rows="6"
+                            placeholder="Describe your presentation idea here...&#10;&#10;Example:&#10;Create a presentation about the impact of AI on modern business. Include:&#10;- Introduction to AI&#10;- Current applications&#10;- Benefits and challenges&#10;- Future trends&#10;- Conclusion"
+                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;"></textarea>
                     </div>
                     <div class="form-check mb-3">
                         <input class="form-check-input" type="checkbox" id="ideaEnableTransitions" checked>
