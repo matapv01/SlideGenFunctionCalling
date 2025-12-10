@@ -5,6 +5,7 @@ from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from src.graph.stage import State
 from langchain_core.runnables import RunnableConfig
+from src.utils.config import PLANNING_BATCH_SIZE
 import time
 
 # --- Pydantic Model for Structured LLM Output ---
@@ -29,17 +30,22 @@ You are an expert presentation designer and slide planner. Your task is to analy
 
 **INSTRUCTIONS:**
 
-1.  **Analyze the Inputs:** You will be given the slide's content and its context within the overall presentation outline.
+1.  **Check Slide Number FIRST:** Before anything else, check the SLIDE NUMBER provided.
 2.  **Develop a Creative Vision (`thought`):** Based on the content, describe your vision for the slide.
     *   What is the key message?
     *   What layout would be best (e.g., two-column, grid, single image with text)?
     *   What is the appropriate mood or tone (e.g., professional, playful, minimalist, high-tech)?
     *   Suggest color themes, font styles, and whether an image or icon would enhance the message.
-3.  **Select the Right Tool Category (`action`):** Based on your vision and the content's purpose (e.g., introduction, main point, transition), you MUST choose exactly one tool category from the provided list. This choice determines which set of slide templates will be available in the next step.
+3.  **Select the Right Tool Category (`action`):** Based on the slide number and content type, choose the appropriate tool category.
 
-**SPECIAL RULE FOR FIRST SLIDE:**
-- If this is the FIRST slide of the presentation (slide number 1), you MUST use 'INTRO_TOOLS' regardless of content.
-- The first slide should always be an introduction/title slide.
+**CRITICAL RULES FOR TOOL SELECTION:**
+- **SLIDE NUMBER 1 ONLY**: MUST use 'INTRO_TOOLS' - This is the title/introduction slide
+- **SLIDE NUMBER 2+**: Choose based on content:
+  * If content starts with "TRANSITION SLIDE" → use 'TRANSITION_TOOLS'
+  * If content starts with "THANK YOU SLIDE" → use 'THANK_YOU_TOOLS'
+  * If content is about team members → use 'TEAM_TOOLS'
+  * For all other content (main points, details, lists) → use 'CONTENT_TOOLS'
+- **NEVER use INTRO_TOOLS for slides after slide 1**
 
 **CRITICAL OUTPUT REQUIREMENT:**
 - You MUST return ONLY a single, valid JSON object that strictly follows the required schema.
@@ -48,8 +54,13 @@ You are an expert presentation designer and slide planner. Your task is to analy
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """
----
-**SLIDE NUMBER:** {slide_number}
+===============================================
+🔢 SLIDE NUMBER: {slide_number}
+===============================================
+
+IMPORTANT: 
+- If slide number is 1 → MUST use INTRO_TOOLS
+- If slide number is 2 or higher → NEVER use INTRO_TOOLS
 
 ---
 **PRESENTATION CONTEXT (OUTLINE):**
@@ -63,10 +74,6 @@ This is the raw text content for the slide you need to create a plan for.
 
 {slide_content}
 """
-
-
-# Define a manageable batch size to avoid overwhelming the API.
-PLANNING_BATCH_SIZE = 5 # You can adjust this value
 
 def planning_slide(state: State, config: RunnableConfig) -> State:
     """
@@ -94,11 +101,71 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
     slide_chunks = state.get('slide_chunks', [])
     slide_context_maps = state.get('slide_context_maps', [])
+    document_structure = state.get('document_structure', {})
     
-    if not slide_chunks or not slide_context_maps:
-        print("WARNING: No slide chunks or context maps found. Skipping planning.")
+    if not slide_chunks:
+        print("WARNING: No slide chunks found. Skipping planning.")
         state['slide_plans'] = []
         return state
+    
+    # --- AUTO-CREATE INTRO SLIDE IF MISSING ---
+    first_chunk = slide_chunks[0] if slide_chunks else {}
+    if first_chunk.get('position', 0) != 0:
+        print("⚠️  First chunk is not an intro slide. Creating intro slide...")
+        
+        # Get title from document structure (handle both dict and list)
+        if isinstance(document_structure, dict):
+            title = document_structure.get('title', 'Presentation Title')
+        elif isinstance(document_structure, list) and len(document_structure) > 0:
+            title = document_structure[0].get('title', 'Presentation Title') if isinstance(document_structure[0], dict) else 'Presentation Title'
+        else:
+            title = 'Presentation Title'
+        
+        # Create intro chunk
+        intro_chunk = {
+            'position': 0,
+            'heading': '',
+            'text_content': f"Title: {title}\nSubtitle: Overview"
+        }
+        
+        # Insert at beginning
+        slide_chunks.insert(0, intro_chunk)
+        print(f"✅ Created intro slide with title: {title}")
+    
+    # --- REMOVE DUPLICATE THANK YOU SLIDES ---
+    thank_you_positions = []
+    for i, chunk in enumerate(slide_chunks):
+        if chunk.get('position') == -2 or chunk.get('heading') == 'THANK_YOU':
+            thank_you_positions.append(i)
+    
+    if len(thank_you_positions) > 1:
+        print(f"⚠️  Found {len(thank_you_positions)} thank you slides at positions: {thank_you_positions}")
+        # Keep only the last one (remove duplicates from end to start to preserve indices)
+        for pos in reversed(thank_you_positions[:-1]):
+            print(f"   Removing duplicate thank you slide at index {pos}")
+            slide_chunks.pop(pos)
+        print(f"✅ Kept only the last thank you slide")
+    
+    # Update state with cleaned chunks
+    state['slide_chunks'] = slide_chunks
+    
+    # Recreate or update context maps to match current chunks
+    if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
+        print(f"⚠️  Context maps mismatch (maps: {len(slide_context_maps)}, chunks: {len(slide_chunks)}). Regenerating...")
+        slide_context_maps = []
+        for i, chunk in enumerate(slide_chunks):
+            heading = chunk.get('heading', '')
+            position = chunk.get('position', i)
+            
+            if position == 0 or i == 0:
+                context = f"[Slide {i+1}] INTRO SLIDE"
+            elif heading == 'TRANSITION' or position == -1:
+                context = f"[Slide {i+1}] TRANSITION SLIDE"
+            elif heading == 'THANK_YOU' or position == -2:
+                context = f"[Slide {i+1}] THANK YOU SLIDE"
+            else:
+                context = f"[Slide {i+1}] {heading}"
+            slide_context_maps.append(context)
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
@@ -143,12 +210,15 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
         print(f"\n  -> Successfully generated plans for all {len(all_slide_plans)} slides.")
         state['slide_plans'] = all_slide_plans
+        # Save context maps to state (important for idea workflow)
+        state['slide_context_maps'] = slide_context_maps
 
     except Exception as e:
         print(f"  -> FAILED during batch planning. Error: {e}")
         # As a fallback, create default plans for all slides.
         default_plan = {"thought": "Default plan due to a batch error.", "action": "CONTENT_TOOLS"}
         state['slide_plans'] = [default_plan for _ in slide_chunks]
+        state['slide_context_maps'] = slide_context_maps  # Still save context maps
         print(f"  -> Created {len(state['slide_plans'])} default plans as a fallback.")
 
     end_time = time.time()

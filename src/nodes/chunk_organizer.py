@@ -11,10 +11,18 @@ def organize_chunks(state: State) -> State:
     Node 3: A consolidated function that handles renumbering the document structure,
     grouping content into slides, and sorting them into the correct final order.
     Creates intro slide, transition slides for level 1 headings, and content slides.
+    SKIP numbering if slide_chunks already exists (from idea generation).
     """
     print("\n---------------- Executing Node: organize_chunks ----------------")
 
     start_time = time.time()
+    
+    # Check if slide_chunks already exists (idea-based workflow)
+    if state.get('slide_chunks'):
+        print("⏭️  Skipping organize_chunks: slide_chunks already exists")
+        print(f"   Using {len(state['slide_chunks'])} pre-generated chunks")
+        return state
+    
     document_structure = state.get('document_structure', [])
     document_title = state.get('document_title', '')
     slide_options = state.get('slide_options', {})
@@ -53,15 +61,17 @@ def organize_chunks(state: State) -> State:
 
     # --- Part 2: Group into Slides (Structure Grouper) ---
     final_slides_content, final_slides_positions, final_slides_context_maps = [], [], []
-    final_slides_types = []  # Track slide types: 'intro', 'transition', 'content'
 
     # Create intro slide first (if enabled)
     if enable_intro_slide and document_title:
-        intro_content = f"INTRO SLIDE\n\nTitle: {document_title}"
-        final_slides_content.append(intro_content)
+        intro_chunk = {
+            'position': 0,
+            'heading': 'INTRO',
+            'text_content': f"Title: {document_title}"
+        }
+        final_slides_content.append(intro_chunk)
         final_slides_positions.append(['0'])  # Special position for intro
         final_slides_context_maps.append("INTRO SLIDE")
-        final_slides_types.append('intro')
         print("Created intro slide with document title.")
 
     def _create_context_map(outline_nodes, active_indices):
@@ -95,41 +105,57 @@ def organize_chunks(state: State) -> State:
         for item in leaves:
             tentative_buffer = buffer + [item]
             if len(_render_slide_content(header, tentative_buffer)) > THRESHOLD_CHAR_LIMIT and buffer:
-                content = _render_slide_content(header, buffer)
+                content_text = _render_slide_content(header, buffer)
                 pos = [i.get('index', '') for i in buffer]
-                final_slides_content.append(content)
+                content_chunk = {
+                    'position': len(final_slides_content) + 1,
+                    'heading': header or buffer[0].get('title', ''),
+                    'text_content': content_text
+                }
+                final_slides_content.append(content_chunk)
                 final_slides_positions.append(pos)
                 final_slides_context_maps.append(_create_context_map(renumbered_structure, pos))
-                final_slides_types.append('content')
                 buffer = [item]
             else:
                 buffer.append(item)
         if buffer:
-            content = _render_slide_content(header, buffer)
+            content_text = _render_slide_content(header, buffer)
             pos = [i.get('index', '') for i in buffer]
-            final_slides_content.append(content)
+            content_chunk = {
+                'position': len(final_slides_content) + 1,  # Sequential position
+                'heading': header or buffer[0].get('title', ''),
+                'text_content': content_text
+            }
+            final_slides_content.append(content_chunk)
             final_slides_positions.append(pos)
             final_slides_context_maps.append(_create_context_map(renumbered_structure, pos))
-            final_slides_types.append('content')
 
     def _traverse_dfs(nodes, is_root_level=False):
         for node in nodes:
             # Create transition slide for level 1 headings (root level) - if enabled
             if enable_transition_slides and is_root_level and node.get('level') == 1:
-                transition_content = f"TRANSITION SLIDE\n\n{node.get('numbered_title', node.get('title', ''))}"
+                transition_chunk = {
+                    'position': -1,  # Special position for transitions
+                    'heading': node.get('numbered_title', node.get('title', '')),
+                    'text_content': node.get('numbered_title', node.get('title', ''))
+                }
                 pos = [f"{node.get('index', '')}.T"]  # Special marker for transition
-                final_slides_content.append(transition_content)
+                final_slides_content.append(transition_chunk)
                 final_slides_positions.append(pos)
                 final_slides_context_maps.append(_create_context_map(renumbered_structure, [node.get('index', '')]))
-                final_slides_types.append('transition')
                 print(f"Created transition slide for: {node.get('numbered_title', '')}")
             
             if node.get("content"):
                 pos = [node.get('index', '')]
-                final_slides_content.append(_render_slide_content("", [node]))
+                content_text = _render_slide_content("", [node])
+                content_chunk = {
+                    'position': len(final_slides_content) + 1,
+                    'heading': node.get('numbered_title', node.get('title', '')),
+                    'text_content': content_text
+                }
+                final_slides_content.append(content_chunk)
                 final_slides_positions.append(pos)
                 final_slides_context_maps.append(_create_context_map(renumbered_structure, pos))
-                final_slides_types.append('content')
             leaves = [child for child in node.get("children", []) if not child.get("children")]
             if leaves: _create_slides_from_leaves(node, leaves)
             sub_trees = [child for child in node.get("children", []) if child.get("children")]
@@ -139,18 +165,17 @@ def organize_chunks(state: State) -> State:
     
     # Add thank you slide at the end (if enabled)
     if enable_thank_you_slide:
-        thank_you_content = "THANK YOU SLIDE\n\nThank you for your attention!"
-        final_slides_content.append(thank_you_content)
+        thank_you_chunk = {
+            'position': -2,  # Special position for thank you
+            'heading': 'THANK_YOU',
+            'text_content': 'Thank you for your attention!'
+        }
+        final_slides_content.append(thank_you_chunk)
         final_slides_positions.append(['999'])  # Special position for thank you (always last)
         final_slides_context_maps.append("THANK YOU SLIDE")
-        final_slides_types.append('thank_you')
         print("Created thank you slide.")
     
     print(f"Grouping complete. Generated {len(final_slides_content)} slides (pre-sort).")
-    print(f"  - Intro: {final_slides_types.count('intro')}")
-    print(f"  - Transitions: {final_slides_types.count('transition')}")
-    print(f"  - Content: {final_slides_types.count('content')}")
-    print(f"  - Thank You: {final_slides_types.count('thank_you')}")
 
     # --- Part 3: Sort Slides ---
     def _get_version_key(pos_str):
@@ -173,31 +198,30 @@ def organize_chunks(state: State) -> State:
         except:
             return ()
 
-    combined = list(zip(final_slides_content, final_slides_positions, final_slides_context_maps, final_slides_types))
+    combined = list(zip(final_slides_content, final_slides_positions, final_slides_context_maps))
     def sort_key(slide_data):
         return _get_version_key(slide_data[1][0]) if slide_data[1] else ()
 
     sorted_combined = sorted(combined, key=sort_key)
 
     if sorted_combined:
-        sorted_chunks, sorted_positions, sorted_maps, sorted_types = zip(*sorted_combined)
+        sorted_chunks, sorted_positions, sorted_maps = zip(*sorted_combined)
     else:
-        sorted_chunks, sorted_positions, sorted_maps, sorted_types = [], [], [], []
+        sorted_chunks, sorted_positions, sorted_maps = [], [], []
 
     end_time = time.time()
     print(f"Slide organization took {end_time - start_time:.2f} seconds.")
     print(f"Successfully sorted {len(sorted_chunks)} slides by their outline position.")
     print(f"Final slide chunks prepared for output.")
     
-    # Show samples of each type
-    for i, (chunk, slide_type) in enumerate(zip(sorted_chunks[:5], sorted_types[:5])):
-        print(f"\n--- Sample Slide Chunk {i+1} ({slide_type}) ---\n{chunk}\n")
+    # Show samples
+    for i, chunk in enumerate(sorted_chunks[:5]):
+        print(f"\n--- Sample Slide Chunk {i+1} ---\n{chunk}\n")
     
     # --- Final State Update ---
     state['document_outline'] = renumbered_structure
     state['slide_chunks'] = list(sorted_chunks)
     state['slide_positions'] = list(sorted_positions)
     state['slide_context_maps'] = list(sorted_maps)
-    state['slide_types'] = list(sorted_types)  # Store slide types for later use
 
     return state

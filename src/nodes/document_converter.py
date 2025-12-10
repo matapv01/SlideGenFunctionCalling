@@ -63,8 +63,15 @@ def convert_document(state: State, config: Optional[RunnableConfig] = None) -> S
     """
     Node 1: Reads DOCX, converts to Markdown, parses it into a clean hierarchical
     JSON structure, and initializes the state.
+    SKIP if slide_chunks already exists (from idea generation)
     """
     print("\n---------------- Executing Node: convert_document ----------------")
+    
+    # Skip if slide_chunks already provided (idea-based workflow)
+    if state.get('slide_chunks'):
+        print("⏭️  Skipping convert_document: slide_chunks already exists")
+        return state
+    
     start_time = time.time()
     docx_file = state['docx_file']
     

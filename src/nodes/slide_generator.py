@@ -5,74 +5,137 @@ from langchain_core.prompts import ChatPromptTemplate
 from src.tools.tool_des import execute_tool
 import json
 from langchain_core.runnables import RunnableConfig # <-- 1. IMPORT
+from src.utils.config import TOOL_RETRIEVER_TOP_K, SLIDE_GENERATION_MAX_RETRIES
 import time
 
-SLIDEGEN_SYSTEM_PROMPT = """
-# YOUR MISSION: Generate a single function call to create an excellent slide based on the provided content AND the creative plan.
-# Your primary goal is to accurately translate the creative plan and content into a specific, well-parameterized function call.
-# If you receive evaluation feedback, your #1 priority is to fix the mistakes from your last attempt by adjusting the function call parameters.
+# === SLIDE TYPE SPECIFIC PROMPTS ===
 
-**INSTRUCTIONS FOR FUNCTION CALL GENERATION:**
+INTRO_PROMPT = """
+🎯 INTRO SLIDE - Title slide, first impression!
 
-1.  **Consult the Outline:** You will receive a `PRESENTATION OUTLINE` showing where the current slide fits. Use this to ensure your slide's tone and content logically connect with the rest of the presentation.  
-    – **The current slide MUST be consistent with the slide immediately before it**, including tone, structure, and narrative flow.
+**CRITICAL: TEXT COLOR MUST BE EASY TO READ!**
+⚠️ Dark background (#000, #1a1a1a, #2c3e50) → Use #FFFFFF or very light text
+⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → Use #000000 or very dark text
+❌ NEVER: Gray on gray, #555 on #333, #ddd on #fff, colored text on colored bg
 
-2.  **Understand the Plan:** You will be given a `creative_plan` containing a `thought` (design direction) and an `action` (the required tool category). The tools available to you are limited to the category specified in the `action`.
+**RULES:**
+1. CONTENT: Short title + brief subtitle. No fluff!
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
+3. IMAGE: https://picsum.photos/seed/TOPIC/1600/900
+4. MATCH previous slide's style
 
-3.  **Analyze the Content:** You are given the raw `slide_content`. All information from this content must be preserved and represented in the slide.
-
-4.  **Select the Best Function:** From the available tools (defined by the plan's `action`), choose the single best function that matches the `thought` and the structure of the `slide_content`.
-
-5.  **Populate Parameters Thoughtfully:**
-    * Synthesize the `slide_content` into concise bullet points, titles, and descriptions suitable for a presentation slide. Do not copy raw text directly.
-    * Use the `thought` from the creative plan to guide your choices for colors, titles, and other visual parameters.
-    * Ensure all text arguments are in the correct language of the presentation.
-
-6.  **Handle Retries:**
-    * If `previous_evaluation` feedback exists, you MUST address the critique.
-    * Prioritize adjusting the parameters of your `previous_function_call` to fix the noted issues. Do not change the function/tool unless the feedback explicitly states the chosen tool was fundamentally wrong.
-
-7.  **HTML Formatting:** Use HTML tags like `<b>`, `<i>`, and `<span style='color:...'>` within text parameters to add emphasis and visual interest, as guided by the content's importance.
-
-**Output Requirement:**
-- Return exactly one syntactically correct function call and nothing else.
+Generate clean, HIGHLY READABLE function call.
 """
+
+TRANSITION_PROMPT = """
+🎯 TRANSITION SLIDE - Section divider!
+
+**CRITICAL: TEXT COLOR MUST BE INSTANTLY READABLE!**
+⚠️ Dark background → #FFFFFF (white) text preferred
+⚠️ Light background → #000000 (black) text preferred
+❌ NEVER: Medium colors, gray tones, similar shades
+
+**RULES:**
+1. CONTENT: 3-6 words ONLY
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
+3. IMAGE: https://picsum.photos/seed/SECTION_TOPIC/1600/900
+4. CONSISTENCY: {previous_transition_context}
+
+Generate BOLD, ULTRA-VISIBLE function call.
+"""
+
+CONTENT_PROMPT = """
+🎯 CONTENT SLIDE - Main information!
+
+**CRITICAL: TEXT COLOR MUST BE EASY TO READ VS BACKGROUND!**
+⚠️ Dark background (#000, #1a1a1a, #2c3e50) → #FFFFFF or very light text
+⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → #000000 or very dark text
+❌ FORBIDDEN: Gray on gray, #555 on #333, #ccc on #fff, colored text on colored bg
+
+**RULES:**
+1. HIGHLIGHT 2-3 key phrases ONLY:
+   {highlight_instruction}
+   Example: "AI improves <span style="color: #e74c3c; font-weight: bold;">efficiency</span> by 80%"
+   ⚠️ ONLY use <span style="color:... font-weight:bold"> for KEY PHRASES!
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
+   ❌ NO style attributes except for key phrase highlights!
+3. CONTENT: Concise, no filler words
+4. IMAGE: https://picsum.photos/seed/KEY_CONCEPT/1600/900
+
+Generate READABLE, professional function call.
+"""
+
+THANK_YOU_PROMPT = """
+🎯 THANK YOU SLIDE - Final closing!
+
+**CRITICAL: TEXT MUST BE CRYSTAL CLEAR!**
+⚠️ Dark background → #FFFFFF (white) text
+⚠️ Light background → #000000 (black) text
+❌ NO colored text, NO gray tones, NO low contrast
+
+**RULES:**
+1. CONTENT: "Thank You" ONLY
+2. IMAGE: seed/success/1600/900 or gradient
+
+Generate simple, HIGHLY VISIBLE function call.
+"""
+
+TEAM_PROMPT = """
+🎯 TEAM SLIDE - Team intro!
+
+**CRITICAL: NAMES MUST BE EASY TO READ!**
+⚠️ Dark background → #FFFFFF (white) text for names
+⚠️ Light background → #000000 (black) text for names
+❌ NEVER: Gray tones, colored text, low contrast
+
+**RULES:**
+1. CONTENT: Name + role only
+2. HTML: Use <br> or <p> for line breaks ONLY
+   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
+3. IMAGE: https://picsum.photos/seed/team/1600/900
+
+Generate professional, READABLE function call.
+"""
+
+# Map slide types to their specific prompts
+SLIDE_TYPE_PROMPTS = {
+    'INTRO_TOOLS': INTRO_PROMPT,
+    'TRANSITION_TOOLS': TRANSITION_PROMPT,
+    'CONTENT_TOOLS': CONTENT_PROMPT,
+    'THANK_YOU_TOOLS': THANK_YOU_PROMPT,
+    'TEAM_TOOLS': TEAM_PROMPT,
+}
 
 HUMAN_PROMPT_TEMPLATE = """
----
-**CONTEXT & PLAN**
+CONTEXT: {slide_context_map}
 
-*   **PRESENTATION OUTLINE (YOU ARE HERE):**
-    {slide_context_map}
+PREVIOUS SLIDE (match this style!): {previous_slide_function_call}
 
-*   **Previous Accepted Slide (for style reference):**
-    {previous_slide_function_call}
+DESIGN PLAN: {slide_plan}
 
-*   **Creative Plan for THIS Slide (Follow this!):**
-    {slide_plan}
+SLIDE {slide_index}/{length_slide_chunks} CONTENT:
+{slide_content}
 
-*   **Slide Content (Raw text to be used):**
-    (Slide {slide_index}/{length_slide_chunks})
-    {slide_content}
-
----
-**RETRY INFORMATION (if applicable)**
-
-*   **Your Last Attempt (The function call you must fix):**
-    {previous_function_call}
-
-*   **Feedback on Last Attempt (You MUST address these points):**
-    {previous_evaluation}
----
+{previous_function_call}
+{previous_evaluation}
 """
 
-def create_default_html(content_text: str) -> str:
+def create_default_html(content_data) -> str:
     """Create default HTML when unable to get from LLM"""
-    if not content_text:
-        content_text = "Default slide content"
+    # Handle both dict and string formats
+    if isinstance(content_data, dict):
+        title = content_data.get('heading', 'Slide')
+        content_text = content_data.get('text_content', 'Default slide content')
+    else:
+        content_text = content_data if content_data else "Default slide content"
+        title = "Slide"
     
     lines = content_text.split('\n')
-    title = lines[0] if lines else "Slide"
+    if not title:
+        title = lines[0] if lines else "Slide"
     content = '<br>'.join(lines[1:]) if len(lines) > 1 else content_text
     
     html = f"""<!DOCTYPE html>
@@ -142,19 +205,48 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
     print(f"  -> Using plan with action: '{tool_category}'")
     print(f"  -> Creative thought (query): '{creative_thought[:200]}...'")
 
-    # Use the retriever to find the top k tools that match the 'thought'.
-    retrieved_tools = tool_retriever.get_relevant_tools(
-        category=tool_category,
-        query=creative_thought,
-        top_k=3 # Retrieve the k most relevant tools
-    )
-    
-    if not retrieved_tools:
-        print(f"  -> WARNING: Could not retrieve any tools. Falling back to all tools in category '{tool_category}'.")
-        my_tools = all_tools_dict.get(tool_category, [])
+    # SPECIAL HANDLING FOR TRANSITION SLIDES: Reuse the same tool for consistency
+    if tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
+        # Get the tool that was used for the previous transition
+        prev_transition_tool_name = state['previous_transition_tool_call'].get('name')
+        if prev_transition_tool_name:
+            # Find the exact same tool from the dict
+            all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
+            matching_tool = next((t for t in all_transition_tools if t.name == prev_transition_tool_name), None)
+            
+            if matching_tool:
+                my_tools = [matching_tool]  # Use ONLY this tool
+                print(f"  -> 🔄 REUSING previous transition tool for consistency: {prev_transition_tool_name}")
+            else:
+                print(f"  -> ⚠️ Previous transition tool '{prev_transition_tool_name}' not found. Falling back to retrieval.")
+                retrieved_tools = tool_retriever.get_relevant_tools(
+                    category=tool_category,
+                    query=creative_thought,
+                    top_k=TOOL_RETRIEVER_TOP_K
+                )
+                my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
+        else:
+            # No tool name found, use retrieval
+            retrieved_tools = tool_retriever.get_relevant_tools(
+                category=tool_category,
+                query=creative_thought,
+                top_k=TOOL_RETRIEVER_TOP_K
+            )
+            my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
     else:
-        my_tools = retrieved_tools
-        print(f"  -> Retrieved {len(my_tools)} relevant tools: {[tool.name for tool in my_tools]}")
+        # Normal retrieval for non-transition slides or first transition
+        retrieved_tools = tool_retriever.get_relevant_tools(
+            category=tool_category,
+            query=creative_thought,
+            top_k=TOOL_RETRIEVER_TOP_K
+        )
+        
+        if not retrieved_tools:
+            print(f"  -> WARNING: Could not retrieve any tools. Falling back to all tools in category '{tool_category}'.")
+            my_tools = all_tools_dict.get(tool_category, [])
+        else:
+            my_tools = retrieved_tools
+            print(f"  -> Retrieved {len(my_tools)} relevant tools: {[tool.name for tool in my_tools]}")
 
     if not my_tools:
          # Final fallback if category is empty
@@ -163,15 +255,61 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 
     llm_with_tools = llm.bind_tools(my_tools)
 
+    # Get slide type and corresponding prompt
+    slide_type = current_plan.get('action', 'CONTENT_TOOLS')
+    
+    # Prepare system prompt based on slide type
+    if slide_type == 'CONTENT_TOOLS':
+        # Handle highlight color for content slides
+        if 'highlight_color' in state:
+            # Already have a color - instruct to use it
+            highlight_instruction = f"- MUST use this color: {state['highlight_color']} (maintain consistency!)"
+        else:
+            # First content slide - let LLM choose
+            highlight_instruction = "- This is the FIRST content slide - choose ONE color from the list and use it consistently"
+        
+        system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
+    
+    elif slide_type == 'TRANSITION_TOOLS':
+        # Handle previous transition context
+        previous_transition = state.get('previous_transition_tool_call', {})
+        if previous_transition:
+            prev_tool_name = previous_transition.get('name', 'unknown')
+            prev_args = previous_transition.get('arguments', {})
+            
+            # Format arguments as readable text (avoiding JSON braces that confuse LangChain)
+            args_text = "\n".join([f"    - {key}: {value}" for key, value in prev_args.items()])
+            
+            # Extract key styling info from previous transition
+            transition_context = f"""* PREVIOUS TRANSITION details:
+  - Tool used: {prev_tool_name}
+  - Parameters used:
+{args_text}
+
+* YOU MUST match these parameters EXACTLY:
+  - Same font sizes, colors, background
+  - Same text formatting style (numbered/unnumbered)
+  - Same visual elements and layout
+  - If previous had "1." then use "2.", "3." etc. in sequence
+  - If previous had no numbers, don't add numbers
+* ONLY change the text content to match the new section heading"""
+        else:
+            transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
+        
+        system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
+    
+    else:
+        system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, CONTENT_PROMPT)
+    
     slidegen_prompt = ChatPromptTemplate.from_messages([
-        ("system", SLIDEGEN_SYSTEM_PROMPT),
+        ("system", system_prompt),
         ("human", HUMAN_PROMPT_TEMPLATE)
     ])
 
     slide_generator_runnable = slidegen_prompt | llm_with_tools
     
-    for attempt in range(1, 3): # Try up to 2 times
-        print(f"  -> Attempt {attempt}/2 to generate tool call...")
+    for attempt in range(1, SLIDE_GENERATION_MAX_RETRIES + 1):
+        print(f"  -> Attempt {attempt}/{SLIDE_GENERATION_MAX_RETRIES} to generate tool call...")
         
         response = slide_generator_runnable.invoke({
             "slide_context_map": current_context_map,
@@ -192,6 +330,24 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             if html_content:
                 state['current_tool_call'] = tool_call_dict
                 state['current_html_content'] = html_content
+                
+                # Extract and save highlight color if this is the first CONTENT slide
+                if slide_type == 'CONTENT_TOOLS' and 'highlight_color' not in state:
+                    # Try to extract color from generated HTML
+                    import re
+                    color_match = re.search(r'color:\s*(#[0-9a-fA-F]{6})', html_content)
+                    if color_match:
+                        extracted_color = color_match.group(1)
+                        state['highlight_color'] = extracted_color
+                        print(f"  -> ✅ Extracted and saved highlight color: {extracted_color}")
+                    else:
+                        print(f"  -> ⚠️ No color found in HTML, will let next slide choose")
+                
+                # Save transition tool call for future transitions
+                if slide_type == 'TRANSITION_TOOLS':
+                    state['previous_transition_tool_call'] = tool_call_dict
+                    print(f"  -> 🔄 Saved transition tool for consistency: {tool_call_dict['name']}")
+                
                 print(f"  -> Successfully generated HTML with tool: {tool_call_dict['name']}")
                 end_time = time.time()
                 print(f"  -> Slide generation took {end_time - start_time:.2f} seconds.")

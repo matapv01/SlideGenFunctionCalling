@@ -267,9 +267,25 @@
         /* Canvas drop feedback */
         .element {
             position: absolute;
-            cursor: move;
+            cursor: default;
             transition: box-shadow 0.2s ease;
             border: 1px dashed transparent;
+        }
+
+        /* Selected element mặc định cursor (JS sẽ thay đổi khi hover gần cạnh) */
+        .element.selected {
+            cursor: default;
+        }
+
+        /* Text elements: text cursor trong content area */
+        .element.selected[contenteditable="true"],
+        .element.selected [contenteditable="true"] {
+            cursor: text !important;
+        }
+
+        /* Drag handle always has move cursor */
+        .drag-handle {
+            cursor: move !important;
         }
 
         .element:hover {

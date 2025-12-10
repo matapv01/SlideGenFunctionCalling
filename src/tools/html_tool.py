@@ -9,8 +9,6 @@ def generate_title_slide(
     show_skyline=True,
     skyline_opacity=0.3,
     triangle_opacity=0.2,
-    title_font_size="5rem",
-    subtitle_font_size="2rem",
     show_border=True,
     custom_css=""
 ):
@@ -106,7 +104,7 @@ def generate_title_slide(
         }}
         
         .title {{
-            font-size: {title_font_size};
+            font-size: 5rem;
             font-weight: bold;
             text-align: center;
             margin-bottom: 20px;
@@ -115,7 +113,7 @@ def generate_title_slide(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 2rem;
             text-align: center;
             z-index: 10;
         }}
@@ -228,8 +226,6 @@ def generate_introduction_slide(
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
-    title_font_size="4rem",
-    content_font_size="1.4rem",
     font_family="'Arial', sans-serif",
     show_decorative_triangles=True,
     triangle_opacity=0.15,
@@ -340,7 +336,7 @@ def generate_introduction_slide(
         
         
         .title {{
-            font-size: {title_font_size};
+            font-size: 4rem;
             font-weight: 700;
             margin-bottom: 40px;
             letter-spacing: {letter_spacing};
@@ -348,7 +344,7 @@ def generate_introduction_slide(
         }}
         
         .content {{
-            font-size: {content_font_size};
+            font-size: 1.5rem;
             line-height: {line_height};
             font-weight: 300;
             text-align: center;
@@ -498,8 +494,6 @@ def generate_intro_slide1(
     subtitle_color="#555555",
     line_color="#e6c35c",
     font_family="'Segoe UI', Arial, sans-serif",
-    main_title_font_size="4rem",  # THAY ĐỔI: 2.25rem -> 4rem (tăng gần gấp đôi)
-    subtitle_font_size="1.5rem",      # THAY ĐỔI: 1rem -> 1.5rem (tăng 50%)
     main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"        # Thêm tham số cho URL ảnh
 ):
@@ -623,7 +617,7 @@ def generate_intro_slide1(
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 4rem;
             color: {title_color};
             margin: 0 0 3rem 0; /* 48px - even larger margin */
             font-weight: bold;
@@ -633,7 +627,7 @@ def generate_intro_slide1(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 1rem 0; /* 16px - increased margin */
             line-height: 1.4;
@@ -2660,145 +2654,6 @@ def generate_section_header_slide(
     return html_code
 
 
-def generate_corporate_transition_slide(
-    headline="TRANSITION<br>HEADLINE",
-    subtitle="Let's start with the first set of slides",
-    font_family="'Montserrat', sans-serif",
-    primary_color="#FBBF24",
-    shadow_color="#EAB308",
-    headline_color="#6B7280",
-    subtitle_color="#FFFFFF"
-):
-    """
-    Generates a modern, corporate transition slide with a dynamic diagonal split.
-    Features a two-tone color panel for a sense of depth.
-    """
-
-    # SVG clip-path definition for the diagonal shape
-    clip_path_svg = """
-    <svg width="0" height="0">
-      <defs>
-        <clipPath id="angled-divider" clipPathUnits="objectBoundingBox">
-          <polygon points="0.25 0, 1 0, 1 1, 0 1" />
-        </clipPath>
-      </defs>
-    </svg>
-    """
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Corporate Transition Slide</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800&display=swap" rel="stylesheet">
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            overflow: hidden;
-            background-color: #FFFFFF;
-        }}
-
-        .slide-container {{
-            width: 100%;
-            height: 100%;
-            display: flex;
-            position: relative;
-        }}
-
-        .text-column {{
-            flex: 1.2;
-            padding: 4rem;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-        }}
-        
-        .color-column {{
-            flex: 1;
-            position: relative;
-            background-color: {primary_color};
-            clip-path: url(#angled-divider);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 2rem;
-        }}
-
-        /* Shadow/Accent Panel */
-        .color-column::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: {shadow_color};
-            clip-path: url(#angled-divider);
-            transform: translateX(-2.5rem);
-            z-index: -1;
-        }}
-
-
-        .main-headline {{
-            font-size: clamp(2.5rem, 8vw, 4rem);
-            font-weight: 800;
-            color: {headline_color};
-            line-height: 1.1;
-            text-transform: uppercase;
-        }}
-        
-        .subtitle {{
-            color: {subtitle_color};
-            font-weight: 400;
-            font-size: 1rem;
-            line-height: 1.6;
-            max-width: 15ch;
-            text-align: center;
-        }}
-        
-        @media (max-width: 48rem) {{
-            .text-column {{
-                position: absolute;
-                z-index: 10;
-                background: transparent;
-                width: 100%; height: 100%;
-                justify-content: center;
-                align-items: center;
-                text-align: center;
-                padding: 2rem;
-            }}
-            .color-column, .color-column::before {{
-                flex: none;
-                width: 100%; height: 100%;
-                clip-path: none;
-            }}
-            .subtitle {{ display: none; }}
-        }}
-
-    </style>
-</head>
-<body>
-    {clip_path_svg}
-    <div class="slide-container">
-        <div class="text-column">
-            <h1 class="main-headline">{headline}</h1>
-        </div>
-        <div class="color-column">
-            <p class="subtitle">{subtitle}</p>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
 def generate_intro_slide(
     main_title="Main Title",
     subtitle1="Subtitle1",
@@ -2810,8 +2665,6 @@ def generate_intro_slide(
     subtitle_color="#555555",
     line_color="#e6c35c",
     font_family="'Segoe UI', Arial, sans-serif",
-    main_title_font_size="4rem",
-    subtitle_font_size="1.5rem",
     main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"
 ):
@@ -2935,7 +2788,7 @@ def generate_intro_slide(
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 4rem;
             color: {title_color};
             margin: 0 0 3rem 0; /* 48px - even larger margin */
             font-weight: bold;
@@ -2945,7 +2798,7 @@ def generate_intro_slide(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 1rem 0; /* 16px - increased margin */
             line-height: 1.4;
@@ -3216,9 +3069,6 @@ def generate_credits_slide(
 def generate_content_slide(
     main_title="CONTENT",
     items=None,
-    main_title_font_size="60px",
-    number_font_size="70px",
-    item_title_font_size="28px",
     main_title_color="#555555",
     number_color="#a2c4c9",
     item_title_color="#555555",
@@ -3469,9 +3319,6 @@ def generate_two_column_slide(
         "Presentations are communication tools that can be used as speeches, reports, and more.",
         "Presentations are communication tools that can be used as speeches, reports, and more."
     ],
-    main_title_font_size="36px",
-    column_title_font_size="24px",
-    column_text_font_size="16px",
     main_title_color="#555555",
     left_bg_color="#a2c4c9",
     left_text_color="#ffffff",
@@ -3511,8 +3358,8 @@ def generate_two_column_slide(
     for i, (title, text) in enumerate(zip(left_column_titles, left_column_texts)):
         left_sections_html += f"""
         <div class="left-section" style="margin-bottom: 50px;">
-            <h2 style="font-size: {column_title_font_size}; color: {left_text_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
-            <p style="font-size: {column_text_font_size}; color: {left_text_color}; margin: 0; line-height: 1.6;">{text}</p>
+            <h2 style="font-size:24xpx; color: {left_text_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
+            <p style="font-size: 16px; color: {left_text_color}; margin: 0; line-height: 1.6;">{text}</p>
         </div>
         """
     
@@ -3538,8 +3385,8 @@ def generate_two_column_slide(
         <div class="right-section" style="display: flex; align-items: flex-start; margin-bottom: 50px;">
             <div style="margin-right: 20px; flex-shrink: 0;">{icon}</div>
             <div>
-                <h2 style="font-size: {column_title_font_size}; color: {right_title_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
-                <p style="font-size: {column_text_font_size}; color: {right_text_color}; margin: 0; line-height: 1.6;">{text}</p>
+                <h2 style="font-size: 24px; color: {right_title_color}; margin-top: 0; margin-bottom: 20px; font-weight: bold;">{title}</h2>
+                <p style="font-size: 16px; color: {right_text_color}; margin: 0; line-height: 1.6;">{text}</p>
             </div>
         </div>
         """
@@ -3587,7 +3434,7 @@ def generate_two_column_slide(
             left: 200px;
             top: 140px;
             width: 1520px;
-            font-size: {main_title_font_size};
+            font-size: 36px;
             font-weight: 700;
             color: {main_title_color};
             text-align: center;
@@ -3649,10 +3496,6 @@ def generate_project_circles_slide(
     footer_text="Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.",
     project_names=["Project 1", "Project 2", "Project 3"],
     circle_colors=["#e1eff2", "#8cbeca", "#e1eff2"],
-    main_title_font_size="36px",
-    section_title_font_size="24px",
-    text_font_size="16px",
-    footer_font_size="14px",
     title_color="#555555",
     text_color="#555555",
     circle_text_color="#ffffff",
@@ -3779,7 +3622,7 @@ def generate_project_circles_slide(
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 36px;
             color: {title_color};
             text-align: center;
             margin-top: 0;
@@ -3858,21 +3701,21 @@ def generate_project_circles_slide(
         }}
         
         .section-title {{
-            font-size: {section_title_font_size};
+            font-size: 24px;
             color: {title_color};
             margin-top: 0;
             margin-bottom: 15px;
         }}
         
         .section-text {{
-            font-size: {text_font_size};
+            font-size: 16px;
             color: {text_color};
             line-height: 1.5;
             margin: 0;
         }}
         
         .footer {{
-            font-size: {footer_font_size};
+            font-size: 14px;
             color: {text_color};
             text-align: center;
             line-height: 1.5;
@@ -3927,9 +3770,6 @@ def generate_comparison_slide(
     right_icon="scales",  # Options: "scales", "custom"
     custom_left_icon="",  # Custom SVG code if left_icon is "custom"
     custom_right_icon="",  # Custom SVG code if right_icon is "custom"
-    main_title_font_size="48px",
-    column_title_font_size="36px",
-    text_font_size="22px",
     title_color="#555555",
     text_color="#555555",
     icon_color="#a2c4c9",
@@ -4026,7 +3866,7 @@ def generate_comparison_slide(
             left: 200px;
             top: 140px;
             width: 1520px;
-            font-size: {main_title_font_size};
+            font-size: 48px;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -4079,7 +3919,7 @@ def generate_comparison_slide(
         }}
         
         .left-title {{
-            font-size: {column_title_font_size};
+            font-size: 36px;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -4088,7 +3928,7 @@ def generate_comparison_slide(
         }}
         
         .right-title {{
-            font-size: {column_title_font_size};
+            font-size: 36px;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -4097,14 +3937,14 @@ def generate_comparison_slide(
         }}
         
         .left-text {{
-            font-size: {text_font_size};
+            font-size: 22px;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
         }}
         
         .right-text {{
-            font-size: {text_font_size};
+            font-size: 22px;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
@@ -4149,9 +3989,6 @@ def generate_process_slide(
     right_title="Your Title Here",
     left_content="Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.",
     right_content="Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.",
-    main_title_font_size="36px",
-    box_title_font_size="28px",
-    content_font_size="16px",
     title_color="#555555",
     left_box_color="#8cbeca",
     right_box_color="#70c5da",
@@ -4907,9 +4744,6 @@ def generate_body_slide2(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2.75rem",    # Increased from 32px
-    subtitle_font_size="1.5rem",  # Increased from 20px
-    content_font_size="1.125rem", # Increased from 16px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide2/Default_1.png",
 
@@ -5008,7 +4842,7 @@ def generate_body_slide2(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem; 
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -5168,7 +5002,7 @@ def generate_body_slide2(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.75rem;
             color: {subtitle_color};
             margin: 0 0 0.75rem 0; /* 12px */
             font-weight: 600;
@@ -5192,7 +5026,7 @@ def generate_body_slide2(
         }}
         
         .content {{
-            font-size: {content_font_size};
+            font-size: 1.125rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
@@ -5350,9 +5184,6 @@ def generate_body_slide3(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2.75rem",    # Increased from 32px
-    subtitle_font_size="1.5rem",  # Increased from 20px
-    content_font_size="1.125rem", # Increased from 16px
     font_family="'Segoe UI', Arial, sans-serif",
     box_height="250px",       # Adjusted height for content boxes
     
@@ -5452,7 +5283,7 @@ def generate_body_slide3(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -5538,7 +5369,7 @@ def generate_body_slide3(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 0 0 1rem 0; /* 16px */
             font-weight: 700;
@@ -5563,7 +5394,7 @@ def generate_body_slide3(
         }}
         
         .content {{
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
@@ -5713,9 +5544,6 @@ def generate_body_slide4(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    title_font_size="2.75rem",    # Increased from 32px
-    content_font_size="1.25rem",  # Increased from 16px
-    subtitle_font_size="1.5rem",  # Increased from 18px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide4/Default_1.png",
     image_url_2="Image/generate_body_slide4/Default_2.png",
@@ -5809,7 +5637,7 @@ def generate_body_slide4(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -5823,7 +5651,7 @@ def generate_body_slide4(
             border-radius: 0.75rem; /* 12px */
             text-align: center;
             color: {content_color};
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             font-weight: 500;
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
             position: relative;
@@ -5909,7 +5737,7 @@ def generate_body_slide4(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 0 0 0.75rem 0; /* 12px */
             font-weight: 600;
@@ -5935,7 +5763,7 @@ def generate_body_slide4(
         }}
         
         .image-content {{
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             color: {content_color};
             margin: 0;
             text-align: center;
@@ -6098,9 +5926,6 @@ def generate_body_slide5(
     title_color="#333333",
     subtitle_color="#6b9d34", # Green color for subtitles
     content_color="#555555",
-    title_font_size="2.75rem",    # Increased from 32px
-    subtitle_font_size="1.5rem",  # Increased from 18px
-    content_font_size="1.125rem", # Increased from 14px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide5/Default_1.png",
     image_url_2="Image/generate_body_slide5/Default_2.png",
@@ -6194,7 +6019,7 @@ def generate_body_slide5(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -6318,7 +6143,7 @@ def generate_body_slide5(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 0 0 0.75rem 0; /* 12px */
             font-weight: 600;
@@ -6337,7 +6162,7 @@ def generate_body_slide5(
         }}
         
         .content {{
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
@@ -6475,376 +6300,6 @@ def generate_body_slide5(
 
 
 
-def generate_body_slide6(
-    # Main parameters
-    main_title="MainTitle",
-    
-    # Content parameters
-    subtitle1="SUBTITLE1",
-    content1="Content1",
-    subtitle2="SUBTITLE2",
-    content2="Content2",
-    
-    # Style parameters
-    main_bg_color="#ffffff",  # White background
-    accent_color="#d5e8b9",   # Light green accent
-    title_color="#333333",
-    subtitle_color="#333333",
-    content_color="#555555",
-    title_font_size="2.75rem",    # Increased from 32px
-    subtitle_font_size="1.5rem",  # Increased from 18px
-    content_font_size="1.25rem",  # Increased from 16px
-    font_family="'Segoe UI', Arial, sans-serif",
-    image_url="Image/generate_body_slide6/Default_1.png",
-
-):
-    """
-    Generates an HTML slide with a main title, image on the right,
-    and two content sections on the left - Full viewport design.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    
-    Content parameters:
-    - subtitle1, subtitle2: Subtitles for each content section
-    - content1, content2: Content text for each section
-    
-    Style parameters:
-    - main_bg_color: Background color for the slide
-    - accent_color: Color for accents and subtitle backgrounds
-    - title_color: Color for the main title
-    - subtitle_color: Color for subtitles
-    - content_color: Color for content text
-    - title_font_size: Font size for the main title
-    - subtitle_font_size: Font size for subtitles
-    - content_font_size: Font size for content text
-    - font_family: Font family for the slide
-    
-    Returns:
-    - HTML code for the slide
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Right Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Full viewport accent background */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            padding: 3rem 4rem; /* 48px 64px */
-            position: relative;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
-        }}
-        
-        .title-accent {{
-            width: 2.5rem; /* 40px - increased size */
-            height: 2.5rem; /* 40px */
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            margin-right: 1.25rem; /* 20px */
-            border-radius: 0.5rem; /* 8px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-        }}
-        
-        .main-title {{
-            font-size: {title_font_size};
-            color: {title_color};
-            font-weight: 600;
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1;
-            gap: 2.5rem; /* 40px */
-        }}
-        
-        .content-section {{
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 2rem; /* 32px */
-        }}
-        
-        .content-item {{
-            background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            padding: 2rem; /* 32px */
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border-left: 0.25rem solid {accent_color}; /* accent border */
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .content-item:hover {{
-            transform: translateY(-0.5rem); /* -8px hover lift */
-            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
-        }}
-        
-        .content-item::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 0.25rem; /* 4px */
-            background: linear-gradient(90deg, {accent_color}, rgba(213, 232, 185, 0.6));
-            transform: scaleX(0);
-            transition: transform 0.3s ease;
-            transform-origin: left;
-        }}
-        
-        .content-item:hover::before {{
-            transform: scaleX(1);
-        }}
-        
-        .subtitle-container {{
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            padding: 0.75rem 1.5rem; /* 12px 24px */
-            display: inline-block;
-            margin-bottom: 1rem; /* 16px */
-            border-radius: 2rem; /* 32px - pill shape */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .subtitle-container {{
-            transform: scale(1.05);
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-        }}
-        
-        .subtitle {{
-            font-size: {subtitle_font_size};
-            color: {subtitle_color};
-            margin: 0;
-            font-weight: 600;
-        }}
-        
-        .content {{
-            font-size: {content_font_size};
-            color: {content_color};
-            margin: 0;
-            line-height: 1.6;
-            padding: 1rem; /* 16px */
-            background: rgba(85, 85, 85, 0.03); /* subtle content background */
-            border-radius: 0.5rem; /* 8px */
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .content {{
-            background: rgba(85, 85, 85, 0.06);
-            transform: translateX(0.25rem); /* 4px */
-        }}
-        
-        .image-section {{
-            flex: 3;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            padding: 2rem; /* 32px */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
-            border-left: 0.25rem solid {accent_color}; /* accent border */
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .image-frame {{
-            width: 100%;
-            height: 100%;
-            position: relative;
-            border-radius: 0.75rem; /* 12px */
-            overflow: hidden;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        }}
-        
-        .image-accent {{
-            position: absolute;
-            top: -0.5rem; /* -8px */
-            left: -0.5rem; /* -8px */
-            width: calc(100% + 1rem);
-            height: calc(100% + 1rem);
-            border: 0.25rem solid {accent_color}; /* 4px */
-            border-radius: 1rem; /* 16px */
-            box-sizing: border-box;
-            z-index: 1;
-            opacity: 0.7;
-        }}
-        
-        .image-container {{
-            position: relative;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            border-radius: 0.75rem; /* 12px */
-            overflow: hidden;
-        }}
-        
-        .image-container img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }}
-        
-        .image-section:hover .image-container img {{
-            transform: scale(1.05); /* zoom effect on hover */
-        }}
-        
-        .image-overlay {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 25%;
-            background: linear-gradient(to top, rgba(213, 232, 185, 0.8), transparent);
-            z-index: 3;
-            opacity: 0;
-            transition: opacity 0.3s ease;
-        }}
-        
-        .image-section:hover .image-overlay {{
-            opacity: 1;
-        }}
-        
-        /* Responsive design */
-        @media screen and (max-width: 75rem) {{
-            body {{
-                padding: 3rem 5rem;
-            }}
-            
-            .content-layout {{
-                flex-direction: column;
-                gap: 2rem;
-            }}
-            
-            .content-section {{
-                flex: none;
-                gap: 1.5rem;
-            }}
-            
-            .image-section {{
-                flex: none;
-                height: 25rem;
-            }}
-        }}
-        
-        @media screen and (max-width: 50rem) {{
-            body {{
-                padding: 2rem 3rem;
-            }}
-            
-            .slide-inner-container {{
-                padding: 2rem 3rem;
-            }}
-            
-            .content-item {{
-                padding: 1.5rem;
-            }}
-            
-            .main-title {{
-                font-size: 2rem;
-            }}
-            
-            .subtitle {{
-                font-size: 1.25rem;
-            }}
-            
-            .content {{
-                font-size: 1rem;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Content Section -->
-            <div class="content-section">
-                <!-- Content Item 1 -->
-                <div class="content-item">
-                    <div class="subtitle-container">
-                        <h3 class="subtitle">{subtitle1}</h3>
-                    </div>
-                    <p class="content">{content1}</p>
-                </div>
-                
-                <!-- Content Item 2 -->
-                <div class="content-item">
-                    <div class="subtitle-container">
-                        <h3 class="subtitle">{subtitle2}</h3>
-                    </div>
-                    <p class="content">{content2}</p>
-                </div>
-            </div>
-            
-            <!-- Image Section -->
-            <div class="image-section">
-                <div class="image-frame">
-                    <div class="image-accent"></div>
-                    <div class="image-container">
-                        <img src="{image_url}" alt="Slide image">
-                        <div class="image-overlay"></div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-# sửa biến trong tool
-
 
 
 
@@ -6864,9 +6319,6 @@ def generate_body_slide7(
     subtitle_color="#333333",
     content_color="#4a90a0",  # Teal/blue color for content
     divider_color="#d5e8b9",  # Light green divider
-    title_font_size="2.75rem",    # Increased from 32px
-    subtitle_font_size="2rem",    # Increased from 28px  
-    content_font_size="1.25rem", # Increased from 16px
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide7/Default_1.png",
     image_url_2="Image/generate_body_slide7/Default_2.png",
@@ -6961,7 +6413,7 @@ def generate_body_slide7(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -7037,7 +6489,7 @@ def generate_body_slide7(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 0 0 1.5rem 0; /* 24px */
             font-weight: 600;
@@ -7056,7 +6508,7 @@ def generate_body_slide7(
         }}
         
         .content {{
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             color: {content_color};
             margin: 0 0 1.5rem 0; /* 24px */
             line-height: 1.6;
@@ -7192,9 +6644,6 @@ def generate_body_slide10(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2.75rem",       # Tăng từ 2rem
-    subtitle_font_size="1.5rem",     # Tăng từ 1.25rem
-    content_font_size="1.25rem",     # Tăng từ 1rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide10/Default_1.png",
 
@@ -7268,7 +6717,7 @@ def generate_body_slide10(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -7389,14 +6838,14 @@ def generate_body_slide10(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 0 0 0.75rem 0; /* 12px */
             font-weight: 600;
         }}
         
         .content {{
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
@@ -7542,9 +6991,6 @@ def generate_body_slide11(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2.75rem",      # Tăng từ 2rem
-    subtitle_font_size="1.5rem",    # Tăng từ 1.25rem
-    content_font_size="1.25rem",    # Tăng từ 1rem
     font_family="'Segoe UI', Arial, sans-serif",
     box_height="15.625rem",
     
@@ -7618,7 +7064,7 @@ def generate_body_slide11(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -7680,7 +7126,7 @@ def generate_body_slide11(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 0 0 1.25rem 0; /* 20px */
             font-weight: 700;
@@ -7689,7 +7135,7 @@ def generate_body_slide11(
         }}
         
         .content {{
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             color: {content_color};
             margin: 0;
             line-height: 1.6;
@@ -7819,9 +7265,6 @@ def generate_body_slide12(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    title_font_size="2.75rem",    # Tăng từ 2rem
-    content_font_size="1.375rem", # Tăng từ 1rem
-    subtitle_font_size="1.5rem",  # Tăng từ 1.125rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url_1="Image/generate_body_slide12/Default_1.png",
     image_url_2="Image/generate_body_slide12/Default_2.png",
@@ -7893,7 +7336,7 @@ def generate_body_slide12(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600;
             margin: 0;
@@ -7907,7 +7350,7 @@ def generate_body_slide12(
             border-radius: 0.75rem; /* 12px */
             text-align: center;
             color: {content_color};
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             font-weight: 500;
             box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
             border: 0.125rem solid rgba(255,255,255,0.3); /* subtle border */
@@ -7972,7 +7415,7 @@ def generate_body_slide12(
         }}
         
         .subtitle {{
-            font-size: {subtitle_font_size};
+            font-size: 1.5rem;
             color: {subtitle_color};
             margin: 0 0 1rem 0; /* 16px */
             font-weight: 600;
@@ -7981,7 +7424,7 @@ def generate_body_slide12(
         }}
         
         .image-content {{
-            font-size: {content_font_size};
+            font-size: 1.25rem;
             color: {content_color};
             margin: 0;
             text-align: center;
@@ -8084,629 +7527,6 @@ def generate_body_slide12(
 # sửa biến trong tool
 
 
-
-
-def generate_body_slide13(
-    # Main parameters
-    main_title="MainTitle",
-    
-    # Content parameters
-    section1_content="""
-        <ul>Subtitle 1
-            <li>Point 1</li>
-            <li>Point 2</li>
-            <li>Point 3</li>
-        </ul>
-    """,
-    section2_content="""
-        <ul>Subtitle 2
-            <li>Point 1</li>
-            <li>Point 2</li>
-            <li>Point 3</li>
-        </ul>
-    """,
-    section3_content="""
-        <ul>Subtitle 3
-            <li>Point 1</li>
-            <li>Point 2</li>
-            <li>Point 3</li>
-        </ul>
-    """,
-    # Style parameters (đã chuyển sang rem)
-    main_bg_color="#ffffff",
-    left_bg_color="#d5e8b9",
-    accent_color="#d5e8b9",
-    title_color="#333333",
-    section_title_color="#ffffff",
-    content_color="#333333",
-    main_title_font_size="2.25rem",    # TĂNG: 1.625rem -> 2.25rem
-    section_title_font_size="1.125rem", # TĂNG: 0.9375rem -> 1.125rem
-    content_font_size="1rem",           # TĂNG: 0.8125rem -> 1rem
-    font_family="'Segoe UI', Arial, sans-serif",
-    image_url="Image/generate_body_slide13/Default_1.png",  # Default image path
-    # Layout parameters (đã chuyển sang rem)
-    container_padding="2.1875rem",      # THAY ĐỔI: 35px -> 2.1875rem
-    left_column_width="58%",
-    right_column_width="42%",
-    left_column_padding="1.5625rem",    # THAY ĐỔI: 25px -> 1.5625rem
-    title_margin_bottom="1.5625rem",    # THAY ĐỔI: 25px -> 1.5625rem
-    icon_size="2.8125rem",              # THAY ĐỔI: 45px -> 2.8125rem
-    icon_margin_right="0.75rem",        # THAY ĐỔI: 12px -> 0.75rem
-    section_margin="0.5rem",            # THAY ĐỔI: 8px -> 0.5rem
-    divider_margin="0.75rem",           # THAY ĐỔI: 12px -> 0.75rem
-    
-    # Icon parameters
-    icon1="""<svg ...></svg>""",
-    icon2="""<svg ...></svg>""",
-    icon3="""<svg ...></svg>""",
-    
-    # Image parameters
-):
-    """
-    Generates an HTML slide with a two-column layout.
-    All size parameters are now in REM.
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Two Column Icon Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Accent color cho toàn màn hình */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
-            display: flex;
-            flex-direction: column;
-            padding: 2.5rem 5rem; /* 40px 80px */
-            position: relative;
-            justify-content: space-between;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
-        }}
-        
-        .title-accent {{
-            width: 1.875rem; /* 30px */
-            height: 1.875rem; /* 30px */
-            background-color: {accent_color};
-            margin-right: 0.9375rem; /* 15px */
-            border-radius: 0.25rem; /* 4px - thêm border radius */
-        }}
-        
-        .main-title {{
-            font-size: {main_title_font_size};
-            color: {title_color};
-            font-weight: 600; /* tăng font weight */
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1; /* chiếm toàn bộ space còn lại */
-            gap: 2rem; /* 32px - tạo gap giữa columns */
-        }}
-        
-        .left-column {{
-            flex: 3; /* tỷ lệ 3:2 */
-            background-color: {left_bg_color};
-            padding: 2rem; /* 32px */
-            border-radius: 0.5rem; /* 8px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
-            display: flex;
-            flex-direction: column;
-            justify-content: space-evenly;
-        }}
-        
-        .right-column {{
-            flex: 2; /* tỷ lệ 3:2 */
-            position: relative;
-            overflow: hidden;
-            background-color: rgba(255,255,255,0.7); /* light background */
-            border-radius: 0.5rem; /* 8px */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
-        }}
-        
-        .right-column img {{
-            max-width: 90%;
-            max-height: 90%;
-            object-fit: contain;
-            border-radius: 0.5rem; /* 8px */
-            transition: transform 0.3s ease; /* thêm hover effect */
-        }}
-        
-        .right-column:hover img {{
-            transform: scale(1.05); /* zoom khi hover */
-        }}
-        
-        .content-section {{
-            display: flex;
-            align-items: flex-start;
-            margin: 0.75rem 0; /* 12px */
-        }}
-        
-        .icon-circle {{
-            width: 3.5rem; /* 56px - tăng kích thước */
-            height: 3.5rem; /* 56px */
-            border-radius: 50%;
-            background: linear-gradient(135deg, white, #f8f9fa); /* gradient background */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 1.25rem; /* 20px - tăng margin */
-            flex-shrink: 0;
-            box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.2); /* tăng shadow */
-            border: 0.125rem solid rgba(255,255,255,0.8); /* subtle border */
-            transition: all 0.3s ease; /* smooth transition */
-        }}
-        
-        .icon-circle:hover {{
-            transform: translateY(-0.125rem) scale(1.05); /* hover effect */
-            box-shadow: 0 0.75rem 1.5rem rgba(0, 0, 0, 0.25); /* tăng shadow khi hover */
-        }}
-        
-        .icon-circle svg {{
-            stroke: {accent_color};
-            width: 1.75rem; /* 28px - tăng kích thước icon */
-            height: 1.75rem; /* 28px */
-            filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1)); /* shadow cho icon */
-        }}
-        
-        .section-content {{
-            flex: 1;
-            padding-top: 0.25rem; /* 4px */
-        }}
-        
-        .section-content ul {{
-            margin: 0;
-            padding: 0;
-            list-style: none;
-        }}
-        
-        .section-content ul:first-child {{
-            font-size: {section_title_font_size};
-            color: {section_title_color};
-            font-weight: bold;
-            text-transform: uppercase;
-            letter-spacing: 0.05rem; /* 0.8px - tăng letter spacing */
-            margin-bottom: 0.75rem; /* 12px - tăng margin */
-           
-        }}
-        
-        .section-content li {{
-            font-size: {content_font_size};
-            color: {content_color};
-            margin: 0.375rem 0; /* 6px - tăng margin */
-            padding: 0.375rem 0 0.375rem 1.25rem; /* 6px 0 6px 20px - thêm padding */
-            position: relative;
-            line-height: 1.6; /* tăng line height */
-            
-        }}
-        
-        .section-content li:hover {{
-            background: rgba(255,255,255,0.2); /* hover effect */
-            transform: translateX(0.25rem); /* 4px - nhẹ nhàng shift khi hover */
-        }}
-        
-        .section-content li:before {{
-            content: "▶"; /* đổi từ bullet thành arrow */
-            position: absolute;
-            left: 0.5rem; /* 8px */
-            color: white;
-            font-weight: bold;
-            font-size: 0.75rem; /* 12px - nhỏ hơn text */
-        }}
-        
-        .divider {{
-            width: 100%;
-            height: 0.125rem; /* 2px */
-            background: linear-gradient(90deg, 
-                transparent 0%, 
-                rgba(255,255,255,0.3) 10%, 
-                rgba(255,255,255,0.8) 50%, 
-                rgba(255,255,255,0.3) 90%, 
-                transparent 100%); /* gradient divider */
-            margin: 1.5rem 0; /* 24px - tăng margin */
-            border-radius: 0.0625rem; /* 1px */
-            position: relative;
-        }}
-        
-        .divider::before {{
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 0.5rem; /* 8px */
-            height: 0.5rem; /* 8px */
-            background: white;
-            border-radius: 50%;
-            box-shadow: 0 0 0 0.125rem rgba(255,255,255,0.3); /* ring effect */
-        }}
-        
-        .image-placeholder {{
-            width: 12.5rem; /* 200px */
-            height: 12.5rem; /* 200px */
-            background: linear-gradient(135deg, #e8f5e8 0%, {accent_color} 100%);
-            border-radius: 0.625rem; /* 10px */
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: #666;
-            font-size: 0.875rem; /* 14px */
-            text-align: center;
-            border: 0.125rem dashed {accent_color}; /* 2px */
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Left Column with Icons and Content -->
-            <div class="left-column">
-                <!-- Section 1 -->
-                <div class="content-section">
-                    <div class="icon-circle">
-                        {icon1}
-                    </div>
-                    <div class="section-content">
-                        {section1_content}
-                    </div>
-                </div>
-                
-                <div class="divider"></div>
-                
-                <!-- Section 2 -->
-                <div class="content-section">
-                    <div class="icon-circle">
-                        {icon2}
-                    </div>
-                    <div class="section-content">
-                        {section2_content}
-                    </div>
-                </div>
-                
-                <div class="divider"></div>
-                
-                <!-- Section 3 -->
-                <div class="content-section">
-                    <div class="icon-circle">
-                        {icon3}
-                    </div>
-                    <div class="section-content">
-                        {section3_content}
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Right Column with Image -->
-            <div class="right-column">
-                <img src="{image_url}" alt="Decorative image" onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
-                <div class="image-placeholder" style="display: none;">
-                    Image Placeholder<br>
-                    ({image_url})
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-# sửa biến trong tool
-# lỗi màu chữ li
-
-def generate_body_slide14(
-    # Main parameters
-    main_title="MainTitle",
-    
-    # Content parameters
-    content1="""
-        <ul>Sublist 1
-            <li>Item 1</li>
-            <li>Item 2</li>
-            <li>Item 3</li>
-        </ul>
-    """,
-    content2="""
-        <ul>Sublist 2
-            <li>Item 1</li>
-            <li>Item 2</li>
-            <li>Item 3</li>
-        </ul>
-    """,
-    content3="""
-        <ul>Sublist 3
-            <li>Item 1</li>
-            <li>Item 2</li>
-            <li>Item 3</li>
-        </ul>
-    """,
-    content4="""
-        <ul>Sublist 4
-            <li>Item 1</li>
-            <li>Item 2</li>
-            <li>Item 3</li>
-        </ul>
-    """,
-    # Style parameters (đã chuyển sang rem)
-    main_bg_color="#ffffff",
-    accent_color="#d5e8b9",
-    title_color="#333333",
-    subtitle_color="#6b9d34",
-    content_color="#555555",
-    title_font_size="2.5rem",         # TĂNG: 2rem -> 2.5rem
-    subtitle_font_size="1.375rem",   # TĂNG: 1.125rem -> 1.375rem
-    content_font_size="1.125rem",    # TĂNG: 0.875rem -> 1.125rem
-    font_family="'Segoe UI', Arial, sans-serif",
-    image_url_1="Image/generate_body_slide14/Default_1.png",
-    image_url_2="Image/generate_body_slide14/Default_2.png",
-    image_url_3="Image/generate_body_slide14/Default_3.png",
-    image_url_4="Image/generate_body_slide14/Default_4.png",
-
-):
-    """
-    Generates an HTML slide with a 2x2 image grid and four content sections.
-    All size parameters are now in REM.
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image Grid Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Accent color cho toàn màn hình */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
-            display: flex;
-            flex-direction: column;
-            padding: 2.5rem 5rem; /* 40px 80px */
-            position: relative;
-            justify-content: space-between;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
-        }}
-        
-        .title-accent {{
-            width: 1.875rem; /* 30px */
-            height: 1.875rem; /* 30px */
-            background-color: {accent_color};
-            margin-right: 0.9375rem; /* 15px */
-            border-radius: 0.25rem; /* 4px - thêm border radius */
-        }}
-        
-        .main-title {{
-            font-size: {title_font_size};
-            color: {title_color};
-            font-weight: 600; /* tăng font weight */
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1; /* chiếm toàn bộ space còn lại */
-            gap: 2.5rem; /* 40px - tạo gap giữa columns */
-        }}
-        
-        .image-grid {{
-            flex: 2; /* tỷ lệ 2:3 */
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 0.75rem; /* 12px - tăng gap */
-        }}
-        
-        .grid-image {{
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-            border-radius: 0.5rem; /* 8px - thêm border radius */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
-        }}
-        
-        .grid-image img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease; /* thêm hover effect */
-        }}
-        
-        .grid-image:hover img {{
-            transform: scale(1.05); /* zoom khi hover */
-        }}
-        
-        .image-overlay {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0.5rem; /* 8px - tăng thickness */
-            background-color: {accent_color};
-        }}
-        
-        .content-sections {{
-            flex: 3; /* tỷ lệ 2:3 */
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
-            gap: 1.5rem; /* 24px - tăng gap */
-        }}
-        
-        .content-section {{
-            display: flex;
-            flex-direction: column;
-            padding: 1rem; /* 16px - thêm padding */
-            background-color: rgba(255,255,255,0.5); /* light background */
-            border-radius: 0.5rem; /* 8px */
-            /* bỏ border-left accent */
-        }}
-        
-        /* CSS cho nội dung được chèn vào */
-        .content-section ul {{
-            list-style: none;
-            padding: 0;
-            margin: 0;
-        }}
-
-        .content-section ul li {{
-            font-size: {content_font_size};
-            color: {content_color};
-            line-height: 1.5; /* tăng line height */
-            padding-left: 1rem; /* 16px */
-            position: relative;
-            margin-bottom: 0.25rem; /* 4px - thêm space giữa items */
-        }}
-        
-        .content-section ul li::before {{
-            content: '•';
-            color: {accent_color}; /* đổi màu bullet */
-            position: absolute;
-            left: 0;
-            font-weight: bold;
-        }}
-
-        /* Giả định dòng đầu tiên của <ul> là subtitle */
-        .content-section ul {{
-            font-size: {subtitle_font_size};
-            color: {subtitle_color};
-            font-weight: 600; /* tăng font weight */
-            margin-bottom: 0.75rem; /* 12px */
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Image Grid -->
-            <div class="image-grid">
-                <div class="grid-image">
-                    <img src="{image_url_1}" alt="Image 1">
-                    <div class="image-overlay"></div>
-                </div>
-                <div class="grid-image">
-                    <img src="{image_url_2}" alt="Image 2">
-                    <div class="image-overlay"></div>
-                </div>
-                <div class="grid-image">
-                    <img src="{image_url_3}" alt="Image 3">
-                    <div class="image-overlay"></div>
-                </div>
-                <div class="grid-image">
-                    <img src="{image_url_4}" alt="Image 4">
-                    <div class="image-overlay"></div>
-                </div>
-            </div>
-            
-            <!-- Content Sections -->
-            <div class="content-sections">
-                <div class="content-section">
-                    {content1}
-                </div>
-                <div class="content-section">
-                    {content2}
-                </div>
-                <div class="content-section">
-                    {content3}
-                </div>
-                <div class="content-section">
-                    {content4}
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
 # sửa biến trong tool 
 
 def generate_body_slide15(
@@ -8735,9 +7555,6 @@ def generate_body_slide15(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    title_font_size="2.75rem",        # TĂNG: 2.5rem -> 2.75rem
-    subtitle_font_size="1.5rem",     # TĂNG: 1.375rem -> 1.5rem  
-    content_font_size="1.25rem",     # TĂNG: 1.125rem -> 1.25rem
     font_family="'Segoe UI', Arial, sans-serif",
     image_url="Image/generate_body_slide15/Default_1.png",  # Default image path
 ):
@@ -8807,7 +7624,7 @@ def generate_body_slide15(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 2.75rem;
             color: {title_color};
             font-weight: 600; /* tăng font weight */
             margin: 0;
@@ -8875,7 +7692,7 @@ def generate_body_slide15(
         }}
 
         .content-section ul li {{
-            font-size: {content_font_size};
+            font-size: 1.125rem;
             color: {content_color};
             line-height: 1.6; /* tăng line height */
             padding-left: 1rem; /* 16px */
@@ -8893,7 +7710,7 @@ def generate_body_slide15(
 
         /* Giả định dòng đầu tiên của <ul> là subtitle */
         .content-section ul {{
-            font-size: {subtitle_font_size};
+            font-size: 2rem;
             color: {subtitle_color};
             font-weight: 600; /* tăng font weight */
             margin-bottom: 0.5rem; /* 8px */
@@ -8942,209 +7759,6 @@ def generate_body_slide15(
     return html_code
 # sửa biến trong tool 
 
-
-
-
-def generate_body_slide16(
-    # Main parameters
-    main_title="MainTitle",
-    subtitle="SubTitle",
-  
-    # Content parameters
-    content1="Content1",
-    content2="Content2",
-    
-    # Style parameters (đã chuyển sang rem)
-    main_bg_color="#ffffff",
-    accent_color="#d5e8b9",
-    title_color="#333333",
-    subtitle_color="#333333",
-    content_color="#4a90a0",
-    divider_color="#d5e8b9",
-    title_font_size="2.5rem",         # TĂNG: 2rem -> 2.5rem
-    subtitle_font_size="2rem",        # TĂNG: 1.75rem -> 2rem
-    content_font_size="1.125rem",     # TĂNG: 1rem -> 1.125rem
-    font_family="'Segoe UI', Arial, sans-serif",
-    image_url_1="Image/generate_body_slide16/Default_1.png",
-    image_url_2="Image/generate_body_slide16/Default_2.png",
-    image_url_3="Image/generate_body_slide16/Default_3.png",
-
-):
-    """
-    Generates an HTML slide with three vertical images on the left,
-    and content with subtitle on the right. Full viewport design with tran viền styling.
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertical Images Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Accent color cho toàn màn hình */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
-            display: flex;
-            flex-direction: column;
-            padding: 2.5rem 5rem; /* 40px 80px */
-            position: relative;
-            justify-content: space-between;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 1.5rem; /* 24px - giảm để tiết kiệm space */
-        }}
-        
-        .title-accent {{
-            width: 1.875rem; /* 30px */
-            height: 1.875rem; /* 30px */
-            background-color: {accent_color};
-            margin-right: 0.9375rem; /* 15px */
-            border-radius: 0.25rem; /* 4px - thêm border radius */
-        }}
-        
-        .main-title {{
-            font-size: {title_font_size};
-            color: {title_color};
-            font-weight: 600; /* tăng font weight */
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1; /* chiếm toàn bộ space còn lại */
-            gap: 2.5rem; /* 40px - tạo gap giữa columns */
-        }}
-        
-        .left-column {{
-            flex: 2; /* tỷ lệ 2:3 thay vì 40% */
-            display: flex;
-            flex-direction: column;
-            gap: 0.75rem; /* 12px - tăng gap giữa images */
-        }}
-        
-        .image-container {{
-            flex: 1; /* chia đều cho 3 images */
-            overflow: hidden;
-            border-radius: 0.5rem; /* 8px - thêm border radius */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1); /* thêm shadow */
-        }}
-        
-        .image-container img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease; /* thêm hover effect */
-        }}
-        
-        .image-container:hover img {{
-            transform: scale(1.05); /* zoom khi hover */
-        }}
-        
-        .right-column {{
-            flex: 3; /* tỷ lệ 2:3 */
-            display: flex;
-            flex-direction: column;
-            justify-content: flex-start;
-        }}
-        
-        .subtitle {{
-            font-size: {subtitle_font_size};
-            color: {subtitle_color};
-            margin: 0 0 1rem 0; /* 16px */
-            font-weight: 600; /* tăng font weight */
-        }}
-        
-        .divider {{
-            width: 100%;
-            height: 0.25rem; /* 4px - tăng thickness */
-            background-color: {divider_color};
-            margin-bottom: 2rem; /* 32px */
-            border-radius: 0.125rem; /* 2px */
-        }}
-        
-        .content {{
-            font-size: {content_font_size};
-            color: {content_color};
-            margin: 0 0 1.5rem 0; /* 24px */
-            line-height: 1.6;
-        }}
-        
-        .content:last-child {{
-            margin-bottom: 0; /* bỏ margin cho content cuối */
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Left Column with Images -->
-            <div class="left-column">
-                <div class="image-container">
-                    <img src="{image_url_1}" alt="Image 1">
-                </div>
-                <div class="image-container">
-                    <img src="{image_url_2}" alt="Image 2">
-                </div>
-                <div class="image-container">
-                    <img src="{image_url_3}" alt="Image 3">
-                </div>
-            </div>
-            
-            <!-- Right Column with Content -->
-            <div class="right-column">
-                <h2 class="subtitle">{subtitle}</h2>
-                <div class="divider"></div>
-                <p class="content">{content1}</p>
-                <p class="content">{content2}</p>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-# sửa biến trong tool 
 
 
 
@@ -9270,7 +7884,7 @@ def generate_body_slide18(
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 3rem;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -9307,7 +7921,7 @@ def generate_body_slide18(
         }}
         
         .column-title {{
-            font-size: {column_title_font_size};
+            font-size: 2.25rem;
             font-weight: 600;
             color: {title_color};
             text-align: center;
@@ -9316,7 +7930,7 @@ def generate_body_slide18(
         }}
         
         .column-text {{
-            font-size: {text_font_size};
+            font-size: 1.375rem;
             color: {text_color};
             text-align: center;
             line-height: 1.5;
@@ -9380,9 +7994,6 @@ def generate_body_slide19(
         "Presentations are communication tools that can be used as speeches, reports, and more."
     ],
     # Style parameters (đã chuyển sang rem)
-    main_title_font_size="2.75rem",     # THAY ĐỔI: 2.25rem -> 2.75rem (tăng từ 36px lên 44px)
-    column_title_font_size="1.75rem",     # THAY ĐỔI: 1.5rem -> 1.75rem (tăng từ 24px lên 28px)
-    column_text_font_size="1.125rem",        # THAY ĐỔI: 1rem -> 1.125rem (tăng từ 16px lên 18px)
     
     main_title_color="#555555",
     left_bg_color="#a2c4c9",
@@ -9468,7 +8079,7 @@ def generate_body_slide19(
             left: 200px;
             top: 140px;
             width: 1520px;
-            font-size: {main_title_font_size};
+            font-size: 2.75rem;
             font-weight: 700;
             color: {main_title_color};
             text-align: center;
@@ -9495,7 +8106,7 @@ def generate_body_slide19(
         }}
         
         .left-section h2 {{
-            font-size: {column_title_font_size};
+            font-size: 1.75rem;
             font-weight: 600;
             color: {left_text_color};
             margin-bottom: 12px;
@@ -9503,7 +8114,7 @@ def generate_body_slide19(
         }}
         
         .left-section p {{
-            font-size: {column_text_font_size};
+            font-size: 1.25rem;
             color: {left_text_color};
             line-height: 1.5;
             opacity: 0.95;
@@ -9540,7 +8151,7 @@ def generate_body_slide19(
             left: 88px;
             top: 0;
             width: 642px;
-            font-size: {column_title_font_size};
+            font-size: 1.75rem;
             font-weight: 600;
             color: {right_title_color};
             line-height: 1.3;
@@ -9551,7 +8162,7 @@ def generate_body_slide19(
             left: 88px;
             top: 50px;
             width: 642px;
-            font-size: {column_text_font_size};
+            font-size: 1.25rem;
             color: {right_text_color};
             line-height: 1.5;
         }}
@@ -9587,7 +8198,7 @@ def generate_body_slide19(
             left: 88px;
             top: 0;
             width: 642px;
-            font-size: {column_title_font_size};
+            font-size: 1.75rem;
             font-weight: 600;
             color: {right_title_color};
             line-height: 1.3;
@@ -9598,7 +8209,7 @@ def generate_body_slide19(
             left: 88px;
             top: 50px;
             width: 642px;
-            font-size: {column_text_font_size};
+            font-size: 1.25rem;
             color: {right_text_color};
             line-height: 1.5;
         }}
@@ -9637,9 +8248,6 @@ def generate_body_slide20(
     custom_left_icon="",
     custom_right_icon="",
     # Style parameters (đã chuyển sang rem)
-    main_title_font_size="3.25rem",    # THAY ĐỔI: 2.75rem -> 3.25rem (tăng từ 44px lên 52px)
-    column_title_font_size="2rem",   # THAY ĐỔI: 1.75rem -> 2rem (tăng từ 28px lên 32px)
-    text_font_size="1.25rem",        # THAY ĐỔI: 1.125rem -> 1.25rem (tăng từ 18px lên 20px)
     
     title_color="#555555",
     text_color="#555555",
@@ -9713,7 +8321,7 @@ def generate_body_slide20(
             left: 200px;
             top: 140px;
             width: 1520px;
-            font-size: {main_title_font_size};
+            font-size: 3.25rem;
             font-weight: 700;
             color: {title_color};
             text-align: center;
@@ -9791,7 +8399,7 @@ def generate_body_slide20(
         }}
         
         .left-title {{
-            font-size: {column_title_font_size};
+            font-size: 2rem;
             font-weight: 600;
             color: {title_color};
             text-align: center;
@@ -9800,7 +8408,7 @@ def generate_body_slide20(
         }}
         
         .right-title {{
-            font-size: {column_title_font_size};
+            font-size: 2rem;
             font-weight: 600;
             color: {title_color};
             text-align: center;
@@ -9809,7 +8417,7 @@ def generate_body_slide20(
         }}
         
         .left-text {{
-            font-size: {text_font_size};
+            font-size: 1.25rem;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
@@ -9817,7 +8425,7 @@ def generate_body_slide20(
         }}
         
         .right-text {{
-            font-size: {text_font_size};
+            font-size: 1.25rem;
             color: {text_color};
             text-align: center;
             line-height: 1.6;
@@ -11373,7 +9981,7 @@ def generate_business_overview_slide(
         }}
         
         .title {{
-            font-size: {title_font_size};
+            font-size: 3.5rem;
             font-weight: 700;
             line-height: 1.1;
             text-align: center;
@@ -11420,7 +10028,7 @@ def generate_business_overview_slide(
             background-color: {content_bg_color};
             color: {content_text_color};
             padding: 20px 25px;
-            font-size: {content_font_size};
+            font-size: 2rem;
             line-height: 1.5;
             display: flex;
             align-items: center;
@@ -11540,9 +10148,6 @@ def generate_vision_mission_slide(
     vision_bg_color="#1a4b8c",
     mission_bg_color="#4a7bc8",
     text_color="#FFFFFF",
-    title_font_size="4rem",
-    content_font_size="1rem",
-    number_font_size="8rem",
     vision_number_color="rgba(74, 123, 200, 0.3)",
     mission_number_color="rgba(26, 75, 140, 0.3)",
     font_family="'Arial', sans-serif",
@@ -11674,7 +10279,7 @@ def generate_vision_mission_slide(
         }}
         
         .section-title {{
-            font-size: {title_font_size};
+            font-size: 4rem;
             font-weight: 700;
             margin-bottom: 40px;
             text-align: center;
@@ -11700,7 +10305,7 @@ def generate_vision_mission_slide(
         }}
         
         .point-text {{
-            font-size: {content_font_size};
+            font-size: 1rem;
             line-height: 1.6;
             flex: 1;
         }}
@@ -11708,7 +10313,7 @@ def generate_vision_mission_slide(
         /* Background numbers */
         .bg-number {{
             position: absolute;
-            font-size: {number_font_size};
+            font-size: 8rem;
             font-weight: 900;
             z-index: 1;
             pointer-events: none;
@@ -11903,9 +10508,6 @@ def generate_strategic_goals_slide(
     number_text_color="#FFFFFF",
     content_bg_color="#FFFFFF",
     content_text_color="#1a4b8c",
-    title_font_size="4.5rem",
-    number_font_size="2.5rem",
-    content_font_size="0.9rem",
     font_family="'Arial', sans-serif",
     show_border=True,
     border_opacity=0.4,
@@ -12035,7 +10637,7 @@ def generate_strategic_goals_slide(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 4.5rem;
             font-weight: 700;
             color: {title_color};
             line-height: 1.1;
@@ -12074,7 +10676,7 @@ def generate_strategic_goals_slide(
         
         .number-circle span {{
             color: {number_text_color};
-            font-size: {number_font_size};
+            font-size: 2.5rem;
             font-weight: 700;
         }}
         
@@ -12091,7 +10693,7 @@ def generate_strategic_goals_slide(
         
         .content-text {{
             color: {content_text_color};
-            font-size: {content_font_size};
+            font-size: 0.9rem;
             line-height: 1.5;
         }}
         
@@ -12196,9 +10798,6 @@ def generate_service_roadmap_slide(
     card_bg_color="#FFFFFF",
     card_text_color="#2E5BBA",
     card_title_color="#1A4480",
-    title_font_size="4rem",
-    card_title_font_size="1.2rem",
-    card_content_font_size="0.9rem",
     font_family="'Arial', sans-serif",
     show_border=True,
     border_color="rgba(255, 255, 255, 0.3)",
@@ -12358,7 +10957,7 @@ def generate_service_roadmap_slide(
         }}
         
         .main-title {{
-            font-size: {title_font_size};
+            font-size: 4rem;
             font-weight: 700;
             color: {title_color};
             letter-spacing: 0.1em;
@@ -12402,7 +11001,7 @@ def generate_service_roadmap_slide(
         }}
         
         .card-title {{
-            font-size: {card_title_font_size};
+            font-size: 1.2rem;
             font-weight: 700;
             color: {card_title_color};
             margin: 0 0 15px 0;
@@ -12411,7 +11010,7 @@ def generate_service_roadmap_slide(
         }}
         
         .card-content {{
-            font-size: {card_content_font_size};
+            font-size: 0.9rem;
             color: {card_text_color};
             line-height: 1.6;
             margin: 0;
@@ -12520,13 +11119,10 @@ def generate_financial_projections_slide_dark(
     
     # Typography
     font_family="'Segoe UI', 'Arial', sans-serif",
-    main_title_font_size="4.5rem",
     main_title_font_weight="700",
     main_title_letter_spacing="0.05em",
-    card_title_font_size="1.8rem",
     card_title_font_weight="700",
     card_title_letter_spacing="0.02em",
-    card_content_font_size="1rem",
     card_content_line_height="1.6",
     card_content_font_weight="400",
     
@@ -12673,7 +11269,7 @@ def generate_financial_projections_slide_dark(
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 4.5rem;
             font-weight: {main_title_font_weight};
             color: {main_title_color};
             margin-bottom: {main_title_margin_bottom};
@@ -12704,7 +11300,7 @@ def generate_financial_projections_slide_dark(
         }}
         
         .card-title {{
-            font-size: {card_title_font_size};
+            font-size: 2.3rem;
             font-weight: {card_title_font_weight};
             color: {card_title_color};
             margin-bottom: {card_title_margin_bottom};
@@ -12713,7 +11309,7 @@ def generate_financial_projections_slide_dark(
         }}
         
         .card-content {{
-            font-size: {card_content_font_size};
+            font-size: 1.5rem;
             line-height: {card_content_line_height};
             color: {card_content_color};
             font-weight: {card_content_font_weight};
@@ -16022,7 +14618,7 @@ def generate_thank_you_slide_3(
         }}
         
         .main-title {{
-            font-size: {main_title_font_size};
+            font-size: 6rem;
             font-weight: {main_title_font_weight};
             color: {main_title_color};
             letter-spacing: {main_title_letter_spacing};
@@ -16043,7 +14639,7 @@ def generate_thank_you_slide_3(
             display: flex;
             align-items: center;
             color: {contact_text_color};
-            font-size: {contact_font_size};
+            font-size: 2rem;
             font-weight: {contact_font_weight};
         }}
         

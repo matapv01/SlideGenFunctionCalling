@@ -1,15 +1,134 @@
 // Helper Functions
 
-// Function to load slides generated from DOCX
-export function loadGeneratedSlidesIfAvailable() {
-const storedSlides = localStorage.getItem('generatedSlides');
-if (!storedSlides) return;
+// Function to load slides generated from DOCX or streaming workflow
+export async function loadGeneratedSlidesIfAvailable() {
+// Check URL parameters for project name
+const urlParams = new URLSearchParams(window.location.search);
+const projectName = urlParams.get('project');
+const source = urlParams.get('source');
+
+// If we have project name from URL, load from API (converted HTML from database)
+if (projectName && source === 'generated') {
+    console.log('📥 Loading converted slides from database API for project:', projectName);
+    try {
+        const response = await fetch(`${window.config?.BACKEND_URL || 'http://localhost:3000'}/api/projects/by-name/${projectName}/slides`);
+        if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+        }
+        const data = await response.json();
+        const slides = data.slides;
+        
+        console.log(`✅ Loaded ${slides.length} converted slides from API`);
+        
+        // Parse converted HTML - extract ONLY absolute positioned elements (not wrappers)
+        const editorSlides = slides.map((slide, index) => {
+            const parser = new DOMParser();
+            const doc = parser.parseFromString(slide.content, 'text/html');
+            
+            // Get all styles from head (exclude script tags)
+            const headStyles = Array.from(doc.head.querySelectorAll('style, link[rel="stylesheet"]'))
+                .map(el => el.outerHTML)
+                .join('\n');
+            
+            // Extract background color from body inline style or CSS
+            let bgColor = 'white';
+            if (doc.body?.style?.backgroundColor) {
+                bgColor = doc.body.style.backgroundColor;
+            } else {
+                // Try to extract from style tags
+                const styleText = Array.from(doc.querySelectorAll('style')).map(s => s.textContent).join(' ');
+                const bgMatch = styleText.match(/body[^{]*\{[^}]*background(?:-color)?\s*:\s*([^;]+)/i);
+                if (bgMatch && bgMatch[1].trim() !== 'transparent') {
+                    bgColor = bgMatch[1].trim();
+                }
+            }
+            
+            // Extract ONLY children inside content-wrapper (the absolute positioned elements)
+            const contentWrapper = doc.querySelector('.content-wrapper');
+            const elementsHTML = contentWrapper ? contentWrapper.innerHTML : '';
+            
+            // Remove script tags from elementsHTML
+            const cleanHTML = elementsHTML.replace(/<script[^>]*>.*?<\/script>/gs, '');
+            
+            console.log(`📄 Slide ${index + 1}: bg=${bgColor}, ${headStyles.length} chars styles, ${cleanHTML.length} chars elements`);
+            
+            return {
+                id: `slide_${index + 1}`,
+                name: slide.title || `Slide ${index + 1}`,
+                content: headStyles + cleanHTML, // Styles + absolute positioned elements only
+                backgroundColor: bgColor,
+                zIndexCounter: 200
+            };
+        });
+
+        if (!window.slideEditor) {
+            console.error('❌ slideEditor not initialized!');
+            showNotification('Editor not ready', 'error');
+            return;
+        }
+
+        window.slideEditor.slides = editorSlides;
+        window.slideEditor.currentSlideIndex = 0;
+
+        window.slideEditor.renderSlidesList();
+        if (editorSlides.length > 0) {
+            window.slideEditor.loadSlide(0);
+        }
+
+        showNotification(`Successfully loaded ${editorSlides.length} slides!`, 'success');
+        
+        // Clear sessionStorage after successful API load
+        sessionStorage.removeItem('streamingState');
+        return;
+    } catch (error) {
+        console.error('❌ Error loading slides from API:', error);
+        console.log('⚠️ Falling back to sessionStorage...');
+    }
+}
+
+// Try sessionStorage first (from streaming workflow)
+let storedData = sessionStorage.getItem('streamingState');
+let apiSlides = null;
+
+if (storedData) {
+    try {
+        const state = JSON.parse(storedData);
+        apiSlides = state.slides;
+        console.log('📥 Loading slides from sessionStorage (streaming):', apiSlides?.length, 'slides');
+        // Clear after loading
+        sessionStorage.removeItem('streamingState');
+    } catch (e) {
+        console.error('Error parsing streamingState:', e);
+    }
+}
+
+// Fallback to localStorage (legacy)
+if (!apiSlides) {
+    storedData = localStorage.getItem('generatedSlides');
+    if (storedData) {
+        try {
+            apiSlides = JSON.parse(storedData);
+            console.log('📥 Loading slides from localStorage (legacy):', apiSlides?.length, 'slides');
+            localStorage.removeItem('generatedSlides');
+        } catch (e) {
+            console.error('Error parsing generatedSlides:', e);
+        }
+    }
+}
+
+if (!apiSlides || apiSlides.length === 0) {
+    console.log('ℹ️ No slides found in storage');
+    return;
+}
 
 try {
-    const apiSlides = JSON.parse(storedSlides);
-    console.log('Loading generated slides:', apiSlides);
-
     const editorSlides = apiSlides.map((slide, index) => convertApiSlideToEditorFormat(slide, index));
+    
+    if (!window.slideEditor) {
+        console.error('❌ slideEditor not initialized!');
+        showNotification('Editor not ready', 'error');
+        return;
+    }
 
     window.slideEditor.slides = editorSlides;
     window.slideEditor.currentSlideIndex = 0;
@@ -19,7 +138,6 @@ try {
         window.slideEditor.loadSlide(0);
     }
 
-    localStorage.removeItem('generatedSlides');
     showNotification(`Successfully loaded ${editorSlides.length} generated slides!`, 'success');
 
 } catch (error) {
@@ -61,23 +179,17 @@ if (apiSlide.content && apiSlide.content.trim()) {
     const doc = parser.parseFromString(completeHtml, 'text/html');
     const container = doc.body || doc.documentElement;
 
-    // Preserve inline <style> from head but scope it to #canvas
+    // Preserve inline <style> from head (converted HTML already has proper styles)
     const headStyles = Array.from(doc.head ? doc.head.querySelectorAll('style') : [])
-        .map(s => {
-            const scoped = this.scopeCssToCanvas(s.textContent || '');
-            return `<style>${scoped}</style>`;
-        })
+        .map(s => `<style>${s.textContent || ''}</style>`)
         .join('');
 
     // Convert to draggable editor elements
     const elementsHtml = convertHtmlToEditorElements(container, index) || '';
+    console.log(`Slide ${index + 1}: Converted ${elementsHtml ? 'success' : 'EMPTY'}, length: ${elementsHtml.length}`);
 
-    // Add base background element to mimic slide canvas
-    const detectedBg = this.extractBackgroundColor(completeHtml);
-    const baseBg = apiSlide.backgroundColor || detectedBg || 'white';
-    const bgElement = `<div class="element" data-type="background" style="position: absolute; left: 0px; top: 0px; width: 100%; height: 100%; background: ${baseBg}; z-index: 0;"></div>`;
-
-    editorContent = `${headStyles}${bgElement}${elementsHtml}`;
+    // No need for background element - converted HTML already has it
+    editorContent = `${headStyles}${elementsHtml}`;
 } else {
     console.log('Creating text-based slide for slide', index + 1);
 
@@ -93,7 +205,7 @@ if (apiSlide.content && apiSlide.content.trim()) {
     `;
 }
 
-return {
+const result = {
     id: slideId,
     name: slideName,
     content: editorContent,
@@ -101,6 +213,14 @@ return {
     zIndexCounter: 10,
     originalData: apiSlide // Keep original data for reference
 };
+
+console.log(`✅ Slide ${index + 1} converted:`, {
+    id: result.id,
+    contentLength: result.content?.length || 0,
+    hasContent: !!result.content
+});
+
+return result;
         }
 
         // Function to convert HTML to editor elements

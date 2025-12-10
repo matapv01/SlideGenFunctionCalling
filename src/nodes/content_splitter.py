@@ -6,10 +6,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from src.graph.stage import State
 from langchain_core.runnables import RunnableConfig # <-- 1. IMPORT
+from src.utils.config import CONTENT_CHAR_LIMIT_FOR_SPLIT
 import time
-
-# Define a character limit. Content longer than this will be split by the LLM.
-CONTENT_CHAR_LIMIT_FOR_SPLIT = 1000 # You can adjust this value
 
 # --- REVISED PROMPTS FOR HIERARCHICAL SPLITTING ---
 
@@ -108,8 +106,15 @@ def split_content(state: State, config: RunnableConfig) -> State: # <-- 2. ADD C
     """
     Traverses the document structure and uses an LLM to hierarchically split
     any nodes with content exceeding a defined character limit.
+    SKIP if slide_chunks already exists (from idea generation)
     """
     print("\n---------------- Executing Node: split_content ----------------")
+    
+    # Skip if slide_chunks already provided (idea-based workflow)
+    if state.get('slide_chunks'):
+        print("⏭️  Skipping split_content: slide_chunks already exists")
+        return state
+    
     start_time = time.time()
     # --- 3. GET RESOURCES FROM CONFIG ---
     configurable = config["configurable"]

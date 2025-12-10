@@ -29,7 +29,6 @@ from src.tools.html_tool import (
     generate_memphis_transition_slide, # slide chuyển slide
     generate_pushpin_section_header,    # slide chuyển slide
     generate_section_header_slide,  # slide chuyển slide
-    generate_corporate_transition_slide,    # slide chuyển slide
     generate_intro_slide, # slide chuyển slide
     generate_credits_slide,     # slide chuyen slide
 
@@ -45,15 +44,11 @@ from src.tools.html_tool import (
     generate_body_slide3,  # slide content
     generate_body_slide4,  # slide content
     generate_body_slide5,  # slide content
-    generate_body_slide6,  # slide content
     generate_body_slide7,  # slide content
     generate_body_slide10,  # slide content
     generate_body_slide11,  # slide content
     generate_body_slide12,  # slide content
-    generate_body_slide13,  # slide content
-    generate_body_slide14,  # slide content
     generate_body_slide15,  # slide content
-    generate_body_slide16,  # slide content
     generate_body_slide18,  # slide content
     generate_body_slide19,  # slide content
     generate_body_slide20,  # slide content
@@ -117,13 +112,12 @@ class GenerateTitleSlideInput(BaseModel):
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of the title and subtitle text (hex code).")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
+    font_family: str = Field(default="'Arial', sans-serif", description="Font family for all text elements.")
     show_skyline: Optional[bool] = Field(default=True, description="Whether to show the city skyline silhouette at the bottom. Default: True.")
-    skyline_opacity: Optional[float] = Field(default=0, description="Opacity of the skyline silhouette (0.0 to 1.0). Default: 0.3.")
-    triangle_opacity: Optional[float] = Field(default=0, description="Opacity of the triangle decorative elements (0.0 to 1.0). Default: 0.2.")
-    title_font_size: str = Field(default="5rem", description="Font size for the main title.")
-    subtitle_font_size: str = Field(default="2rem", description="Font size for the subtitle.")
-    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
+    skyline_opacity: Optional[float] = Field(default=0.3, description="Opacity of the skyline silhouette (0.0 to 1.0). Default: 0.3.")
+    triangle_opacity: Optional[float] = Field(default=0.2, description="Opacity of the triangle decorative elements (0.0 to 1.0). Default: 0.2.")
+    show_border: Optional[bool] = Field(default=True, description="Whether to show the border frame. Default: True.")
+    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
 
 
 class GenerateIntroductionSlideInput(BaseModel):
@@ -133,17 +127,15 @@ class GenerateIntroductionSlideInput(BaseModel):
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
-    title_font_size: str = Field(default="4rem", description="Font size for the main title.")
-    content_font_size: str = Field(default="1.4rem", description="Font size for the content text.")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
+    font_family: str = Field(default="'Arial', sans-serif", description="Font family for all text elements.")
     show_decorative_triangles: Optional[bool] = Field(default=True, description="Whether to show decorative triangle elements. Default: True.")
-    triangle_opacity: Optional[float] = Field(default=0, description="Opacity of the decorative triangles (0.0 to 1.0). Default: 0.15.")
+    triangle_opacity: Optional[float] = Field(default=0.15, description="Opacity of the decorative triangles (0.0 to 1.0). Default: 0.15.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
-    border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
+    border_opacity: Optional[float] = Field(default=0.4, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
     content_max_width: str = Field(default="800px", description="Maximum width of the content area.")
     line_height: str = Field(default="1.6", description="Line height for the content text.")
     letter_spacing: str = Field(default="0.1em", description="Letter spacing for the title.")
-    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
+    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
 
 class GenerateIntroSlide1Input(BaseModel):
     """Input schema for generate_intro_slide1."""
@@ -157,8 +149,6 @@ class GenerateIntroSlide1Input(BaseModel):
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="16px", description="CSS font size for the subtitles.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="Path to the image file for the left side.")
 
@@ -274,7 +264,6 @@ class GenerateMissionSlideInput(BaseModel):
 
 class GenerateGeometricTransitionSlideInput(BaseModel):
     """Input schema for generate_geometric_transition_slide."""
-    section_number: str = Field(default="1.", description="The number for the new section (e.g., '1.', '02', 'B.').")
     headline: str = Field(..., description="The main, uppercase headline for the transition. Default: 'TRANSITION HEADLINE'.")
     subtitle: str = Field(..., description="The smaller subtitle text displayed below the headline. Default: 'Let's start with the first set of slides'.")
     font_family: str = Field(default="'Poppins', sans-serif", description="The font family for all text elements.")
@@ -284,7 +273,6 @@ class GenerateGeometricTransitionSlideInput(BaseModel):
 
 class GenerateTransitionSlide2Input(BaseModel):
     """Input schema for generate_transition_slide_2."""
-    section_number: str = Field(default=None, description="The number or letter for the section (e.g., '1.', '2.', 'A.').")
     main_headline: str = Field(..., description="The large, uppercase headline for the transition. Default: 'HEADLINE'.")
     subtitle: str = Field(..., description="The smaller text below the headline. Default: 'Content'.")
     font_family_heading: str = Field(default="'Patrick Hand', cursive", description="The handwritten-style font for the headline and section number.")
@@ -335,16 +323,6 @@ class GenerateSectionHeaderSlideInput(BaseModel):
     gradient_color_2: str = Field(default="#F472B6", description="The second color for the soft aurora gradient background (e.g., pink).")
     gradient_color_3: str = Field(default="#7DD3FC", description="The third color for the soft aurora gradient background (e.g., light blue).")
 
-class GenerateCorporateTransitionSlideInput(BaseModel):
-    """Input schema for generate_corporate_transition_slide."""
-    headline: str = Field(default="TRANSITION<br>HEADLINE", description="The main headline text. Use <br> for a new line to control line breaks.")
-    subtitle: str = Field(default="Let's start with the first set of slides", description="The smaller subtitle text displayed below the main headline.")
-    font_family: str = Field(default="'Montserrat', sans-serif", description="The font family for all text elements.")
-    primary_color: str = Field(default="#FBBF24", description="The primary color for the angled panel.")
-    shadow_color: str = Field(default="#EAB308", description="The shadow color for the panel behind.")
-    headline_color: str = Field(default="#6B7280", description="The color for the main headline text.")
-    subtitle_color: str = Field(default="#FFFFFF", description="The color for the subtitle text.")
-
 class GenerateIntroSlideInput(BaseModel):
     """Input schema for generate_intro_slide."""
     main_title: str = Field(..., description="Main title text. Default: 'Main Title'.")
@@ -357,9 +335,8 @@ class GenerateIntroSlideInput(BaseModel):
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="16px", description="CSS font size for the subtitles.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
+    image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide.")
 
 class GenerateCreditsSlideInput(BaseModel):
     """Input schema for generate_credits_slide."""
@@ -373,9 +350,6 @@ class GenerateContentSlideInput(BaseModel):
     """Input schema for generate_content_slide."""
     main_title: str = Field(..., description="Main title of the slide. Default: 'CONTENT'.")
     items: List[str] = Field(..., description="List of item titles for the grid. Default: ['Your Title Here', ...] (6 items).")
-    main_title_font_size: str = Field(default="60px", description="CSS font size for the main title.")
-    number_font_size: str = Field(default="70px", description="CSS font size for item numbers.")
-    item_title_font_size: str = Field(default="28px", description="CSS font size for item titles.")
     main_title_color: str = Field(default="#555555", description="CSS color for the main title.")
     number_color: str = Field(default="#a2c4c9", description="CSS color for item numbers.")
     item_title_color: str = Field(default="#555555", description="CSS color for item titles.")
@@ -393,9 +367,6 @@ class GenerateTwoColumnSlideInput(BaseModel):
     left_column_texts: List[str] = Field(..., description="List of texts for the left column. Default: two placeholder texts.")
     right_column_titles: List[str] = Field(..., description="List of titles for the right column. Default: ['Your Title Here', 'Your Title Here'].")
     right_column_texts: List[str] = Field(..., description="List of texts for the right column. Default: two placeholder texts.")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    column_title_font_size: str = Field(default="24px", description="CSS font size for column titles.")
-    column_text_font_size: str = Field(default="16px", description="CSS font size for column texts.")
     main_title_color: str = Field(default="#555555", description="CSS color for the main title.")
     left_bg_color: str = Field(default="#a2c4c9", description="CSS background color for the left column.")
     left_text_color: str = Field(default="#ffffff", description="CSS text color for the left column.")
@@ -415,10 +386,6 @@ class GenerateProjectCirclesSlideInput(BaseModel):
     footer_text: str = Field(default="placeholder text", description="Text content for the footer. Default: placeholder text.")
     project_names: List[str] = Field(..., description="List of three project names for the circles. Default: ['Project 1', 'Project 2', 'Project 3'].")
     circle_colors: List[str] = Field(default=['#e1eff2', '#8cbeca', '#e1eff2'], description="List of three CSS colors for the circles. Default: ['#e1eff2', '#8cbeca', '#e1eff2'].")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    section_title_font_size: str = Field(default="24px", description="CSS font size for section titles.")
-    text_font_size: str = Field(default="16px", description="CSS font size for main text.")
-    footer_font_size: str = Field(default="14px", description="CSS font size for footer text.")
     title_color: str = Field(default="#555555", description="CSS color for all titles.")
     text_color: str = Field(default="#555555", description="CSS color for all text content.")
     circle_text_color: str = Field(default="#ffffff", description="CSS color for text in the circles.")
@@ -437,9 +404,6 @@ class GenerateComparisonSlideInput(BaseModel):
     right_icon: str = Field(default="scales", description="Icon for the right column ('scales' or 'custom').")
     custom_left_icon: str = Field(default="''", description="Custom SVG code for left icon if 'custom'.")
     custom_right_icon: str = Field(default="''", description="Custom SVG code for right icon if 'custom'.")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    column_title_font_size: str = Field(default="28px", description="CSS font size for column titles.")
-    text_font_size: str = Field(default="16px", description="CSS font size for text content.")
     title_color: str = Field(default="#555555", description="CSS color for all titles.")
     text_color: str = Field(default="#555555", description="CSS color for text content.")
     icon_color: str = Field(default="#a2c4c9", description="CSS color for icons.")
@@ -455,9 +419,6 @@ class GenerateProcessSlideInput(BaseModel):
     right_title: str = Field(..., description="Title for the right box. Default: 'Your Title Here'.")
     left_content: str = Field(..., description="Content text for the left box. Default: placeholder text.")
     right_content: str = Field(..., description="Content text for the right box. Default: placeholder text.")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    box_title_font_size: str = Field(default="28px", description="CSS font size for box titles.")
-    content_font_size: str = Field(default="16px", description="CSS font size for content text.")
     title_color: str = Field(default="#555555", description="CSS color for the main title.")
     left_box_color: str = Field(default="#8cbeca", description="CSS background color for the left box.")
     right_box_color: str = Field(default="#c5e1e8", description="CSS background color for the right box.")
@@ -542,9 +503,6 @@ class GenerateBodySlide2Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="20px", description="CSS font size for subtitles.")
-    content_font_size: str = Field(default="16px", description="CSS font size for content text.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
     image_url: str = Field(default="Image/generate_body_slide2/Default_1.png", description="Path to the image file for the left side.")
     icon1: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M12 2v6M12 18v4M14.5 8a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM16.5 13a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0z"></path></svg>', description="SVG code for the first section's icon.")
@@ -566,9 +524,6 @@ class GenerateBodySlide3Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="20px", description="CSS font size for subtitles.")
-    content_font_size: str = Field(default="16px", description="CSS font size for content text.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
     box_height: str = Field(default="250px", description="CSS height of the content boxes.")
     icon1: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-2-2-4 4"></path></svg>', description="SVG code for the first content box's icon.")
@@ -590,9 +545,6 @@ class GenerateBodySlide4Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
     subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title.")
-    content_font_size: str = Field(default="16px", description="CSS font size for content text.")
-    subtitle_font_size: str = Field(default="18px", description="CSS font size for subtitles.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide4/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide4/Default_2.png", description="Path to the second image file.")
@@ -614,32 +566,12 @@ class GenerateBodySlide5Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#6b9d34", description="CSS color for subtitles.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="18px", description="CSS font size for subtitles.")
-    content_font_size: str = Field(default="14px", description="CSS font size for content text.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide5/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide5/Default_2.png", description="Path to the second image file.")
     image_url_3: str = Field(default="Image/generate_body_slide5/Default_3.png", description="Path to the third image file.")
     image_url_4: str = Field(default="Image/generate_body_slide5/Default_4.png", description="Path to the fourth image file.")
 
-class GenerateBodySlide6Input(BaseModel):
-    """Input schema for generate_body_slide6."""
-    main_title: str = Field(..., description="Main title of the slide. Default: 'MainTitle'.")
-    subtitle1: str = Field(..., description="Subtitle for the first content section. Default: 'SUBTITLE1'.")
-    content1: str = Field(..., description="Content text for the first content section. Default: 'Content1'.")
-    subtitle2: str = Field(..., description="Subtitle for the second content section. Default: 'SUBTITLE2'.")
-    content2: str = Field(..., description="Content text for the second content section. Default: 'Content2'.")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    accent_color: str = Field(default="#d5e8b9", description="CSS color for accents and subtitle backgrounds.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title.")
-    subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
-    content_color: str = Field(default="#555555", description="CSS color for content text.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="18px", description="CSS font size for subtitles.")
-    content_font_size: str = Field(default="16px", description="CSS font size for content text.")
-    font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    image_url: str = Field(default="Image/generate_body_slide6/Default_1.png", description="Path to the image file for the right side.")
 
 class GenerateBodySlide7Input(BaseModel):
     """Input schema for generate_body_slide7."""
@@ -653,9 +585,6 @@ class GenerateBodySlide7Input(BaseModel):
     subtitle_color: str = Field(default="#333333", description="CSS color for the subtitle.")
     content_color: str = Field(default="#4a90a0", description="CSS color for content text.")
     divider_color: str = Field(default="#d5e8b9", description="CSS color for the horizontal divider.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="28px", description="CSS font size for the subtitle.")
-    content_font_size: str = Field(default="16px", description="CSS font size for content text.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide7/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide7/Default_2.png", description="Path to the second image file.")
@@ -675,9 +604,6 @@ class GenerateBodySlide10Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
     subtitle_color: str = Field(default="#333333", description="CSS color for all subtitle text in the three content sections.")
     content_color: str = Field(default="#555555", description="CSS color for all content/body text in the three sections.")
-    title_font_size: str = Field(default="2rem", description="CSS font size for the main title, should be in REM units for responsive design.")
-    subtitle_font_size: str = Field(default="1.25rem", description="CSS font size for all subtitles, should be in REM units for responsive design.")
-    content_font_size: str = Field(default="1rem", description="CSS font size for all content text, should be in REM units for responsive design.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="The CSS font family for all text on the slide.")
     image_url: str = Field(default="Image/generate_body_slide10/Default_1.png", description="Path to the image file for the left side.")
     icon1: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the first section's icon. Should be a valid SVG element with proper xmlns attribute.")
@@ -702,9 +628,6 @@ class GenerateBodySlide11Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#333333", description="CSS color for subtitles in the boxes.")
     content_color: str = Field(default="#555555", description="CSS color for content text in the boxes.")
-    title_font_size: str = Field(default="2rem", description="CSS font size for the main title, should be in REM units.")
-    subtitle_font_size: str = Field(default="1.25rem", description="CSS font size for subtitles, should be in REM units.")
-    content_font_size: str = Field(default="1rem", description="CSS font size for content text, should be in REM units.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="The CSS font family for all text on the slide.")
     box_height: str = Field(default="15.625rem", description="The CSS height of the content boxes, should be in REM units.")
 
@@ -723,54 +646,11 @@ class GenerateBodySlide12Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
     content_color: str = Field(default="#555555", description="CSS color for all content/body text including main content and image section content.")
     subtitle_color: str = Field(default="#333333", description="CSS color for all subtitle text in the three image sections.")
-    title_font_size: str = Field(default="2rem", description="CSS font size for the main title, should be in REM units for responsive design.")
-    content_font_size: str = Field(default="1rem", description="CSS font size for all content text, should be in REM units for responsive design.")
-    subtitle_font_size: str = Field(default="1.125rem", description="CSS font size for all subtitles, should be in REM units for responsive design.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="The CSS font family for all text on the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide12/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide12/Default_2.png", description="Path to the second image file.")
     image_url_3: str = Field(default="Image/generate_body_slide12/Default_3.png", description="Path to the third image file.")
 
-class GenerateBodySlide13Input(BaseModel):
-    """Input schema for generate_body_slide13."""
-    main_title: str = Field(..., description="Main title of the slide displayed prominently at the top (e.g., 'Our Four Pillars of Success').")
-    subtitle1: str = Field(..., description="Subtitle for the first content section (top-left). Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., '<b>Innovation</b> & Research').")
-    content1: str = Field(..., description="Content text for the first content section (top-left). Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Leading <b>innovation</b> through <i>cutting-edge research</i>: <ul><li>Advanced <u>technology</u></li><li>Creative <span style=\"color: #e74c3c;\">solutions</span></li><li>Future-ready products</li></ul>'")
-    subtitle2: str = Field(..., description="Subtitle for the second content section (top-right). Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Customer <u>Excellence</u>').")
-    content2: str = Field(..., description="Content text for the second content section (top-right). Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Delivering <b>exceptional service</b> and <i>customer satisfaction</i>: <ul><li>24/7 <u>support</u></li><li>Personalized <span style=\"color: #27ae60;\">experiences</span></li><li>Continuous improvement</li></ul>'")
-    subtitle3: str = Field(..., description="Subtitle for the third content section (bottom-left). Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Sustainable <b>Growth</b>').")
-    content3: str = Field(..., description="Content text for the third content section (bottom-left). Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Building <b>sustainable business</b> practices for <i>long-term success</i>: <ul><li>Environmental <u>responsibility</u></li><li>Social <span style=\"color: #3498db;\">impact</span></li><li>Economic viability</li></ul>'")
-    subtitle4: str = Field(..., description="Subtitle for the fourth content section (bottom-right). Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Team <b>Excellence</b>').")
-    content4: str = Field(..., description="Content text for the fourth content section (bottom-right).  Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the entire slide.")
-    accent_color: str = Field(default="#d5e8b9", description="CSS color for accent elements including borders, decorative elements, and highlights.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title text.")
-    subtitle_color: str = Field(default="#6b9d34", description="CSS color for all subtitle text in the four content sections.")
-    content_color: str = Field(default="#555555", description="CSS color for all content/body text in the four sections.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title, should be in REM units for responsive design.")
-    subtitle_font_size: str = Field(default="18px", description="CSS font size for all subtitles, should be in REM units for responsive design.")
-    content_font_size: str = Field(default="14px", description="CSS font size for all content text, should be in REM units for responsive design.")
-    font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="The CSS font family for all text on the slide.")
-    image_url: str = Field(default="Image/generate_body_slide13/Default_1.png", description="Path to the image file for the left side.")
-
-class GenerateBodySlide14Input(BaseModel):
-    """Input schema for generate_body_slide14."""
-    main_title: str = Field(..., description="Main title of the slide displayed at the top (e.g., 'Main Title').")
-    subtitle1: str = Field(..., description="Subtitle for the first content section, appears as a section header (e.g., 'Subtitle1').")
-    content1: str = Field(..., description="Content text for the first content section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
-    subtitle2: str = Field(..., description="Subtitle for the second content section, appears as a section header (e.g., 'Subtitle2').")
-    content2: str = Field(..., description="Content text for the second content section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    accent_color: str = Field(default="#d5e8b9", description="CSS color for accents and subtitle backgrounds.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title.")
-    subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
-    content_color: str = Field(default="#555555", description="CSS color for content text.")
-    title_font_size: str = Field(default="32px", description="CSS font size for the main title, should be in REM units.")
-    subtitle_font_size: str = Field(default="18px", description="CSS font size for subtitles, should be in REM units.")
-    content_font_size: str = Field(default="16px", description="CSS font size for content text, should be in REM units.")
-    font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    image_url_1: str = Field(default="Image/generate_body_slide14/Default_1.png", description="Path to the first image file.")
-    image_url_2: str = Field(default="Image/generate_body_slide14/Default_2.png", description="Path to the second image file.")
 
 class GenerateBodySlide15Input(BaseModel):
     """Input schema for generate_body_slide15."""
@@ -784,40 +664,7 @@ class GenerateBodySlide15Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#333333", description="CSS color for the subtitle.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
-    title_font_size: str = Field(default="2rem", description="CSS font size for the main title, should be in REM units.")
-    subtitle_font_size: str = Field(default="1.125rem", description="CSS font size for the subtitle, should be in REM units.")
-    content_font_size: str = Field(default="1rem", description="CSS font size for content text, should be in REM units.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-
-class GenerateBodySlide16Input(BaseModel):
-    """Input schema for generate_body_slide16."""
-    main_title: str = Field(..., description="Main title of the slide displayed at the top with an accent block (e.g., 'MainTitle').")
-    section1_content: str = Field(..., description="HTML content for the first section with icon. Structure: '<ul>Section Title<li>Point 1</li><li>Point 2</li></ul>'. The first text node in <ul> becomes the section title. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. Example: '<ul>Core <b>Values</b><li>Innovation and <i>creativity</i></li><li>Customer <u>satisfaction</u></li><li>Team <span style=\"color: #9b59b6;\">collaboration</span></li></ul>'")
-    section2_content: str = Field(..., description="HTML content for the second section with icon. Structure: '<ul>Section Title<li>Point 1</li><li>Point 2</li></ul>'. The first text node in <ul> becomes the section title. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. Example: '<ul>Core <b>Values</b><li>Innovation and <i>creativity</i></li><li>Customer <u>satisfaction</u></li><li>Team <span style=\"color: #9b59b6;\">collaboration</span></li></ul>'")
-    section3_content: str = Field(..., description="HTML content for the third section with icon. Structure: '<ul>Section Title<li>Point 1</li><li>Point 2</li></ul>'. The first text node in <ul> becomes the section title. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. Example: '<ul>Core <b>Values</b><li>Innovation and <i>creativity</i></li><li>Customer <u>satisfaction</u></li><li>Team <span style=\"color: #9b59b6;\">collaboration</span></li></ul>'")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    left_bg_color: str = Field(default="#d5e8b9", description="CSS background color for the left column containing the content sections.")
-    accent_color: str = Field(default="#d5e8b9", description="CSS color for accent elements like the title accent block and icons.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title.")
-    section_title_color: str = Field(default="#ffffff", description="CSS color for section titles.")
-    content_color: str = Field(default="#333333", description="CSS color for content text and bullet points.")
-    main_title_font_size: str = Field(default="1.625rem", description="CSS font size for the main title, should be in REM units.")
-    section_title_font_size: str = Field(default="0.9375rem", description="CSS font size for section titles, should be in REM units.")
-    content_font_size: str = Field(default="0.8125rem", description="CSS font size for content text, should be in REM units.")
-    font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    container_padding: str = Field(default="2.1875rem", description="CSS padding for the slide container, should be in REM units.")
-    left_column_width: str = Field(default="58%", description="CSS width for the left column as a percentage.")
-    right_column_width: str = Field(default="42%", description="CSS width for the right column as a percentage.")
-    left_column_padding: str = Field(default="1.5625rem", description="CSS padding for the left column, should be in REM units.")
-    title_margin_bottom: str = Field(default="1.5625rem", description="CSS bottom margin for the title section, should be in REM units.")
-    icon_size: str = Field(default="2.8125rem", description="CSS size for the circular icon containers, should be in REM units.")
-    icon_margin_right: str = Field(default="0.75rem", description="CSS right margin for icons, should be in REM units.")
-    section_margin: str = Field(default="0.5rem", description="CSS margin for content sections, should be in REM units.")
-    divider_margin: str = Field(default="0.75rem", description="CSS margin for section dividers, should be in REM units.")
-    icon1: str = Field(default="<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>", description="SVG code for the first section icon.")
-    icon2: str = Field(default="<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>", description="SVG code for the second section icon.")
-    icon3: str = Field(default="<svg width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\"><circle cx=\"12\" cy=\"12\" r=\"10\"/></svg>", description="SVG code for the third section icon.")
-    image_path: str = Field(default="Picture2.png", description="Path to the image file for the right column.")
 
 class GenerateBodySlide18Input(BaseModel):
     """Input schema for generate_body_slide18."""
@@ -830,9 +677,6 @@ class GenerateBodySlide18Input(BaseModel):
     right_icon: str = Field(default="scales", description="Icon to display in the right column. Options: 'scales' (predefined scales icon) or 'custom' (use custom SVG code).")
     custom_left_icon: str = Field(default="", description="Custom SVG code for the left icon. Only used when left_icon is set to 'custom'. Should be a complete SVG element with proper dimensions (recommended: 70x70px).")
     custom_right_icon: str = Field(default="", description="Custom SVG code for the right icon. Only used when right_icon is set to 'custom'. Should be a complete SVG element with proper dimensions (recommended: 70x70px).")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    column_title_font_size: str = Field(default="28px", description="CSS font size for the column titles.")
-    text_font_size: str = Field(default="16px", description="CSS font size for the text content.")
     title_color: str = Field(default="#555555", description="CSS color for all titles (main title and column titles).")
     text_color: str = Field(default="#555555", description="CSS color for all text content.")
     icon_color: str = Field(default="#a2c4c9", description="CSS color for the icons.")
@@ -848,9 +692,6 @@ class GenerateBodySlide19Input(BaseModel):
     left_column_texts: List[str] = Field(..., description="Array of text content for the left column sections. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Presentations are <b>communication tools</b> that can be used as <i>demonstrations</i>: <ul><li>Interactive <u>engagement</u></li><li>Visual <span style=\"color: #e74c3c;\">storytelling</span></li><li>Audience participation</li></ul>'")
     right_column_titles: List[str] = Field(..., description="Array of titles for the right column sections. Each title will be displayed as a section header in the right column with an accompanying icon.")
     right_column_texts: List[str] = Field(..., description="Array of text content for the right column sections. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Presentations are <b>communication tools</b> for <i>speeches and reports</i>: <ul><li>Professional <u>delivery</u></li><li>Clear <span style=\"color: #27ae60;\">messaging</span></li><li>Structured format</li></ul>'")
-    main_title_font_size: str = Field(default="2.25rem", description="CSS font size for the main title, should be in REM units.")
-    column_title_font_size: str = Field(default="1.5rem", description="CSS font size for the column section titles, should be in REM units.")
-    column_text_font_size: str = Field(default="1rem", description="CSS font size for the column text content, should be in REM units.")
     main_title_color: str = Field(default="#555555", description="CSS color for the main title.")
     left_bg_color: str = Field(default="#a2c4c9", description="CSS background color for the left column.")
     left_text_color: str = Field(default="#ffffff", description="CSS color for all text in the left column (titles and content).")
@@ -871,9 +712,6 @@ class GenerateBodySlide20Input(BaseModel):
     right_icon: str = Field(default="scales", description="Icon to display in the right column. Options: 'gavel' (predefined gavel icon), 'scales' (predefined scales icon), or 'custom' (use custom SVG code).")
     custom_left_icon: str = Field(default="", description="Custom SVG code for the left icon. Only used when left_icon is set to 'custom'. Should be a complete SVG element with proper dimensions (recommended: 70x70px).")
     custom_right_icon: str = Field(default="", description="Custom SVG code for the right icon. Only used when right_icon is set to 'custom'. Should be a complete SVG element with proper dimensions (recommended: 70x70px).")
-    main_title_font_size: str = Field(default="2.25rem", description="CSS font size for the main title.")
-    column_title_font_size: str = Field(default="1.75rem", description="CSS font size for the column titles.")
-    text_font_size: str = Field(default="1rem", description="CSS font size for the text content.")
     title_color: str = Field(default="#555555", description="CSS color for all titles (main title and column titles).")
     text_color: str = Field(default="#555555", description="CSS color for all text content.")
     icon_color: str = Field(default="#a2c4c9", description="CSS color for the icons.")
@@ -964,8 +802,6 @@ class GenerateBusinessOverviewSlideInput(BaseModel):
     icon_color: str = Field(default="#FFFFFF", description="Color of the icons (hex code).")
     content_bg_color: str = Field(default="#FFFFFF", description="Background color for content text areas (hex code).")
     content_text_color: str = Field(default="#1a4b8c", description="Text color for content sections (hex code).")
-    title_font_size: str = Field(default="3.5rem", description="Font size for the main title.")
-    content_font_size: str = Field(default="0.95rem", description="Font size for section content text.")
     font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
     border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.3.")
@@ -982,9 +818,6 @@ class GenerateVisionMissionSlideInput(BaseModel):
     vision_bg_color: str = Field(default="#1a4b8c", description="Background color for the vision section (hex code).")
     mission_bg_color: str = Field(default="#4a7bc8", description="Background color for the mission section (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
-    title_font_size: str = Field(default="4rem", description="Font size for section titles.")
-    content_font_size: str = Field(default="1rem", description="Font size for content text.")
-    number_font_size: str = Field(default="8rem", description="Font size for large background numbers.")
     vision_number_color: str = Field(default="rgba(74, 123, 200, 0.3)", description="Color of background numbers in vision section (rgba).")
     mission_number_color: str = Field(default="rgba(26, 75, 140, 0.3)", description="Color of background numbers in mission section (rgba).")
     font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
@@ -1006,9 +839,6 @@ class GenerateStrategicGoalsSlideInput(BaseModel):
     number_text_color: str = Field(default="#FFFFFF", description="Text color for the numbers (hex code).")
     content_bg_color: str = Field(default="#FFFFFF", description="Background color for content text boxes (hex code).")
     content_text_color: str = Field(default="#1a4b8c", description="Text color for content (hex code).")
-    title_font_size: str = Field(default="4.5rem", description="Font size for the main title.")
-    number_font_size: str = Field(default="2.5rem", description="Font size for the numbers.")
-    content_font_size: str = Field(default="0.9rem", description="Font size for content text.")
     font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
     border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
@@ -1026,9 +856,6 @@ class GenerateServiceRoadmapSlideInput(BaseModel):
     card_bg_color: str = Field(default="#FFFFFF", description="Background color for content cards (hex code).")
     card_text_color: str = Field(default="#2E5BBA", description="Text color for card content (hex code).")
     card_title_color: str = Field(default="#1A4480", description="Text color for card titles (hex code).")
-    title_font_size: str = Field(default="4rem", description="Font size for the main title.")
-    card_title_font_size: str = Field(default="1.2rem", description="Font size for card titles.")
-    card_content_font_size: str = Field(default="0.9rem", description="Font size for card content text.")
     font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
     border_color: str = Field(default="rgba(255, 255, 255, 0.3)", description="Color of the border frame (rgba with transparency).")
@@ -1050,13 +877,10 @@ class GenerateFinancialProjectionsSlideDarkInput(BaseModel):
     card_content_color: str = Field(default="#374151", description="Color of the card content text.")
     border_color: str = Field(default="rgba(255, 255, 255, 0.3)", description="Color of the border elements.")
     font_family: str = Field(default="Segoe UI, Arial, sans-serif", description="Font family for all text elements.")
-    main_title_font_size: str = Field(default="4.5rem", description="Font size of the main title.")
     main_title_font_weight: str = Field(default="700", description="Font weight of the main title.")
     main_title_letter_spacing: str = Field(default="0.05em", description="Letter spacing of the main title.")
-    card_title_font_size: str = Field(default="1.8rem", description="Font size of the card titles.")
     card_title_font_weight: str = Field(default="700", description="Font weight of the card titles.")
     card_title_letter_spacing: str = Field(default="0.02em", description="Letter spacing of the card titles.")
-    card_content_font_size: str = Field(default="1rem", description="Font size of the card content.")
     card_content_line_height: str = Field(default="1.6", description="Line height of the card content.")
     card_content_font_weight: str = Field(default="400", description="Font weight of the card content.")
     slide_padding: str = Field(default="60px", description="Padding around the entire slide.")
@@ -1346,10 +1170,8 @@ class GenerateThankYouSlide3Input(BaseModel):
     border_color: str = Field(default="rgba(255, 255, 255, 0.4)", description="Color of the border frame.")
     geometric_shape_colors: List[str] = Field(default=[], description="List of colors for geometric shapes. Default: 4 rgba colors with transparency.")
     font_family: str = Field(default="Segoe UI, Arial, sans-serif", description="Font family for all text elements.")
-    main_title_font_size: str = Field(default="6rem", description="Font size of the main title.")
     main_title_font_weight: str = Field(default="700", description="Font weight of the main title.")
     main_title_letter_spacing: str = Field(default="0.1em", description="Letter spacing of the main title.")
-    contact_font_size: str = Field(default="1.2rem", description="Font size of contact information.")
     contact_font_weight: str = Field(default="400", description="Font weight of contact information.")
     contact_margin_top: str = Field(default="60px", description="Top margin for contact section.")
     contact_gap: str = Field(default="40px", description="Gap between contact items.")
@@ -1497,12 +1319,6 @@ TRANSITION_TOOLS = [
         args_schema=GenerateSectionHeaderSlideInput
     ),
     StructuredTool.from_function(
-        func=generate_corporate_transition_slide,
-        name="generate_corporate_transition_slide",
-        description="Generates a modern and architectural **Section Header or Transition Slide**. It features a striking design with multiple overlapping, angled color panels on the right, creating a strong sense of depth and structure. The left side is a clean text area with large, impactful typography (including a section number), making this slide perfect for introducing new chapters in a professional, high-tech, or corporate presentation.",
-        args_schema=GenerateCorporateTransitionSlideInput
-    ),
-    StructuredTool.from_function(
         func=generate_intro_slide,
         name="generate_intro_slide",
         description="Generates an HTML introduction slide with a  main title section on the left and an image on the right.",
@@ -1591,12 +1407,6 @@ CONTENT_TOOLS = [
         args_schema=GenerateBodySlide5Input
     ),
     StructuredTool.from_function(
-        func=generate_body_slide6,
-        name="generate_body_slide6",
-        description="Generates an HTML slide with a main title, an image on the right, and two content sections on the left.",
-        args_schema=GenerateBodySlide6Input
-    ),
-    StructuredTool.from_function(
         func=generate_body_slide7,
         name="generate_body_slide7",
         description="Generates an HTML slide with a main title, three vertical images on the left, and a subtitle with two content sections on the right, separated by a divider.",
@@ -1621,28 +1431,10 @@ CONTENT_TOOLS = [
         args_schema=GenerateBodySlide12Input
     ),
     StructuredTool.from_function(
-        func=generate_body_slide13,
-        name="generate_body_slide13",
-        description="Generates an HTML slide with a main title, a 2x2 image grid on the left, and four content sections on the right.",
-        args_schema=GenerateBodySlide13Input
-    ),
-    StructuredTool.from_function(
-        func=generate_body_slide14,
-        name="generate_body_slide14",
-        description="Generates an HTML slide with a main title, an image on the right, and two content sections on the left.",
-        args_schema=GenerateBodySlide14Input
-    ),
-    StructuredTool.from_function(
         func=generate_body_slide15,
         name="generate_body_slide15",
         description="Generates an HTML slide with a main title, three vertical images on the left, and a subtitle with two content sections on the right, separated by a divider.",
         args_schema=GenerateBodySlide15Input
-    ),
-    StructuredTool.from_function(
-        func=generate_body_slide16,
-        name="generate_body_slide16",
-        description="Generates an HTML slide with a two-column layout: left column contains a main title and three icon-based content sections with bullet points, right column displays an image.",
-        args_schema=GenerateBodySlide16Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide18,

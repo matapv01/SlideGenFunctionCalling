@@ -19,20 +19,23 @@
             background: rgba(255, 255, 255, 0.15);
             color: white;
             border: 1px solid rgba(255, 255, 255, 0.25);
-            padding: 10px 16px;
+            padding: 8px 14px;
             border-radius: 10px;
             cursor: pointer;
-            font-size: 14px;
+            font-size: 13px;
             font-weight: 600;
             transition: all 0.3s ease;
             backdrop-filter: blur(10px);
             box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1), inset 0 1px 0 rgba(255, 255, 255, 0.1);
             position: relative;
             overflow: hidden;
-            min-height: 42px;
+            min-height: 36px;
             display: flex;
+            flex-direction: row;
             align-items: center;
+            justify-content: center;
             gap: 6px;
+            white-space: nowrap;
         }
 
         .toolbar button::before {

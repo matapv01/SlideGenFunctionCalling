@@ -35,7 +35,22 @@ class SlideService:
         
         logger.info(f"Building slides from {'converted' if use_converted else 'original'} HTML directory")
         
-        html_files = sorted([f for f in source_html_dir.iterdir() if f.suffix == '.html'])
+        # Sort files by slide number (extract "slide_X" pattern)
+        def extract_slide_number(filepath):
+            """Extract slide number from filename like 'slide_1_0.html' or 'converted_slide_1_0.html'"""
+            filename = filepath.stem  # Get filename without extension
+            # Match patterns: slide_1, slide_1_0, converted_slide_1, converted_slide_1_0
+            match = re.search(r'slide_(\d+)(?:_(\d+))?', filename)
+            if match:
+                slide_num = int(match.group(1))  # First number (slide index)
+                retry_num = int(match.group(2)) if match.group(2) else 0  # Second number (retry attempt)
+                return (slide_num, retry_num)
+            return (float('inf'), 0)  # Put unmatched files at the end
+        
+        html_files = sorted(
+            [f for f in source_html_dir.iterdir() if f.suffix == '.html'],
+            key=extract_slide_number
+        )
         
         for index, html_file in enumerate(html_files):
             with open(html_file, 'r', encoding='utf-8') as f:
