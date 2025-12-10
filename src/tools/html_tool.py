@@ -11265,9 +11265,9 @@ def generate_text_with_image_slide(
 def generate_instructions_slide(
     main_title="TOPIC",
     columns=[
-        { "title": "TOPIC ONE", "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] },
-        { "title": "TOPIC TWO", "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] },
-        { "title": "TOPIC THREE", "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] }
+        { "title": ["TOPIC ONE"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] },
+        { "title": ["TOPIC TWO"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] },
+        { "title": ["TOPIC THREE"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] }
     ],
     font_family="'Poppins', sans-serif",
     header_primary_color="#4F46E5",
@@ -11284,9 +11284,11 @@ def generate_instructions_slide(
     columns_html = ""
     for column in columns:
         list_items_html = "".join([f"<li>{item}</li>" for item in column['list_items']])
+        title_items_html = "".join([f"<li>{item}</li>" for item in column['title']])
+
         columns_html += f"""
         <div class="column">
-            <h2 class="column-title">{column['title']}</h2>
+            <h2 class="column-title">{title_items_html}</h2>
             <ul class="instruction-list">
                 {list_items_html}
             </ul>
