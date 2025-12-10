@@ -30,18 +30,14 @@ from src.tools.html_tool import (
     generate_pushpin_section_header,    # slide chuyển slide
     generate_section_header_slide,  # slide chuyển slide
     generate_intro_slide, # slide chuyển slide
-    generate_credits_slide,     # slide chuyen slide
 
     generate_content_slide, # slide content
-    generate_two_column_slide,  # slide content
-    generate_project_circles_slide, # slide content
     generate_comparison_slide,  # slide content
     generate_process_slide,  # slide content
     generate_process_steps_slide, # slide content
     generate_icon_list_slide_2, # slide content
     generate_image_cutout_list_slide, # slide content
     generate_body_slide2,  # slide content
-    generate_body_slide3,  # slide content
     generate_body_slide4,  # slide content
     generate_body_slide5,  # slide content
     generate_body_slide7,  # slide content
@@ -54,7 +50,6 @@ from src.tools.html_tool import (
     generate_body_slide20,  # slide content
     generate_main_points_slide, # slide content
     generate_elegant_points_slide,  # slide content
-    generate_horizontal_timeline_slide, # slide content
     generate_corporate_content_slide,   # slide content
     generate_split_content_slide,   # slide content
     generate_corporate_multicolumn_slide,   # slide content
@@ -93,7 +88,6 @@ from src.tools.html_tool import (
     
     generate_thank_you_slide_2, # slide cảm ơn
     generate_thank_you_slide_3, # slide cảm ơn
-    generate_thank_you_slide,   # slide cảm ơn
     generate_corporate_thank_you_slide, # slide cảm ơn
 
 
@@ -338,12 +332,6 @@ class GenerateIntroSlideInput(BaseModel):
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide.")
 
-class GenerateCreditsSlideInput(BaseModel):
-    """Input schema for generate_credits_slide."""
-    main_text: str = Field(..., description="Main message text displayed in script font. .")
-    credits_text: str = Field(..., description="Credits and acknowledgments text. .")
-    font_family: str = Field(default=None, description="Font family for regular text")
-
 # === SLIDE CONTENT CLASSES ===
 
 class GenerateContentSlideInput(BaseModel):
@@ -359,39 +347,6 @@ class GenerateContentSlideInput(BaseModel):
     font_family: str = Field(default="Arial, sans-serif", description="CSS font family for the slide.")
     num_columns: int  = Field(default=3, description="Number of columns in the grid. Default: 3.")
     num_rows: int  = Field(default=2, description="Number of rows in the grid. Default: 2.")
-
-class GenerateTwoColumnSlideInput(BaseModel):
-    """Input schema for generate_two_column_slide."""
-    main_title: str = Field(..., description="Main title of the slide. Default: 'Your Title Here'.")
-    left_column_titles: List[str] = Field(..., description="List of titles for the left column. Default: ['Your Title Here', 'Your Title Here'].")
-    left_column_texts: List[str] = Field(..., description="List of texts for the left column. Default: two placeholder texts.")
-    right_column_titles: List[str] = Field(..., description="List of titles for the right column. Default: ['Your Title Here', 'Your Title Here'].")
-    right_column_texts: List[str] = Field(..., description="List of texts for the right column. Default: two placeholder texts.")
-    main_title_color: str = Field(default="#555555", description="CSS color for the main title.")
-    left_bg_color: str = Field(default="#a2c4c9", description="CSS background color for the left column.")
-    left_text_color: str = Field(default="#ffffff", description="CSS text color for the left column.")
-    right_title_color: str = Field(default="#555555", description="CSS color for right column titles.")
-    right_text_color: str = Field(default="#555555", description="CSS color for right column texts.")
-    border_color: str = Field(default="#a2c4c9", description="CSS color for the slide border.")
-    icon_color: str = Field(default="#a2c4c9", description="CSS color for right column icons.")
-    font_family: str = Field(default="Arial, sans-serif", description="CSS font family for the slide.")
-
-class GenerateProjectCirclesSlideInput(BaseModel):
-    """Input schema for generate_project_circles_slide."""
-    main_title: str = Field(..., description="Main title of the slide. Default: 'Your Title Here'.")
-    left_title: str = Field(default="Your Title Here", description="Title for the left column.")
-    right_title: str = Field(default="Your Title Here", description="Title for the right column.")
-    left_text: str = Field(default="placeholder text", description="Text content for the left column. Default: placeholder text.")
-    right_text: str = Field(default="placeholder text", description="Text content for the right column. Default: placeholder text.")
-    footer_text: str = Field(default="placeholder text", description="Text content for the footer. Default: placeholder text.")
-    project_names: List[str] = Field(..., description="List of three project names for the circles. Default: ['Project 1', 'Project 2', 'Project 3'].")
-    circle_colors: List[str] = Field(default=['#e1eff2', '#8cbeca', '#e1eff2'], description="List of three CSS colors for the circles. Default: ['#e1eff2', '#8cbeca', '#e1eff2'].")
-    title_color: str = Field(default="#555555", description="CSS color for all titles.")
-    text_color: str = Field(default="#555555", description="CSS color for all text content.")
-    circle_text_color: str = Field(default="#ffffff", description="CSS color for text in the circles.")
-    background_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    accent_color: str = Field(default="#a2c4c9", description="CSS color for corner accents.")
-    font_family: str = Field(default="Arial, sans-serif", description="CSS font family for the slide.")
 
 class GenerateComparisonSlideInput(BaseModel):
     """Input schema for generate_comparison_slide."""
@@ -509,26 +464,6 @@ class GenerateBodySlide2Input(BaseModel):
     icon2: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>', description="SVG code for the second section's icon.")
     icon3: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>', description="SVG code for the third section's icon.")
 
-class GenerateBodySlide3Input(BaseModel):
-    """Input schema for generate_body_slide3."""
-    main_title: str = Field(..., description="Main title of the slide. Default: 'MainTitle'.")
-    subtitle1: str = Field(..., description="Subtitle for the first content box. Default: 'SUBTITLE1'.")
-    content1: str = Field(..., description="Content text for the first content box. Default: 'Content1'.")
-    subtitle2: str = Field(..., description="Subtitle for the second content box. Default: 'SUBTITLE2'.")
-    content2: str = Field(..., description="Content text for the second content box. Default: 'Content2'.")
-    subtitle3: str = Field(..., description="Subtitle for the third content box. Default: 'SUBTITLE3'.")
-    content3: str = Field(..., description="Content text for the third content box. Default: 'Content3'.")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    box_bg_color: str = Field(default="#e6f2dd", description="CSS background color for the content boxes.")
-    accent_color: str = Field(default="#8cc63f", description="CSS color for accents and icons.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title.")
-    subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
-    content_color: str = Field(default="#555555", description="CSS color for content text.")
-    font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    box_height: str = Field(default="250px", description="CSS height of the content boxes.")
-    icon1: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-2-2-4 4"></path></svg>', description="SVG code for the first content box's icon.")
-    icon2: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>', description="SVG code for the second content box's icon.")
-    icon3: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>', description="SVG code for the third content box's icon.")
 
 class GenerateBodySlide4Input(BaseModel):
     """Input schema for generate_body_slide4."""
@@ -742,11 +677,6 @@ class GenerateElegantPointsSlideInput(BaseModel):
     text_color: str = Field(default="#5D534D", description="Text color for the card descriptions (lighter brown-gray).")
     accent_color: str = Field(default="#B99C6B", description="The accent color for the icons and their dividers (bronze/old gold).")
 
-class GenerateHorizontalTimelineSlideInput(BaseModel):
-    """Input schema for generate_horizontal_timeline_slide."""
-    title: str = Field(..., description="Main title displayed at the top of the slide. Default: 'Add a Timeline Page'.")
-    timeline_items: List[Dict[str, str]] = Field(..., description="Array of timeline milestones. Each item should have 'year', 'position', 'main_point', and 'description' keys. A maximum of 5 items is strongly recommended for optimal visual clarity on the clean, bright layout. Default: [{'year': '2015', 'position': 'bottom', 'main_point': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}, {'year': '2016', 'position': 'top', 'main_point': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}, {'year': '2017', 'position': 'bottom', 'main_point': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}, {'year': '2018', 'position': 'top', 'main_point': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}, {'year': '2019', 'position': 'bottom', 'main_point': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}].")
-    font_family: str = Field(default="'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", description="Font family for all text elements. 'Inter' is recommended for this modern design.")
 
 class GenerateCorporateContentSlideInput(BaseModel):
     """Input schema for generate_corporate_content_slide."""
@@ -902,7 +832,6 @@ class GenerateMinimalistTechListSlideInput(BaseModel):
     title: str = Field(..., description="The main title of the slide. Default: 'This is a slide title'.")
     list_items: List[str] = Field(..., description="A list of strings for the bullet points. Default: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'].")
     concluding_text: str = Field(..., description="A final sentence or phrase at the bottom, styled to stand out. Default: 'Your audience will listen to you or read the content, but won't do both.'.")
-    font_size_multiplier: Optional[float] = Field(default=1.0, description="Adjusts the default responsive font size. 1.0 is standard. Ignored if a fixed font size is set.")
     title_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '3rem') for the main title.")
     list_item_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.5rem') for list items.")
     concluding_text_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.1rem') for the concluding text.")
@@ -1186,16 +1115,6 @@ class GenerateThankYouSlide3Input(BaseModel):
     icon_margin_right: str = Field(default="12px", description="Right margin for icons.")
     additional_css: str = Field(default="''", description="Additional CSS to include.")
 
-class GenerateThankYouSlideInput(BaseModel):
-    """Input schema for generate_thank_you_slide."""
-    title: str = Field(..., description="The main, extra-large thank-you message. Default: 'Thank You!'.")
-    subtitle: str = Field(..., description="The subtext displayed below the main title. Default: 'We appreciate your time and attention. Please feel free to reach out with any questions.'.")
-    font_family: str = Field(default="'Poppins', 'Segoe UI', sans-serif", description="The font family for all text. 'Poppins' is highly recommended for this modern design.")
-    background_gradient: str = Field(default="linear-gradient(135deg, #6a11cb 0%, #2575fc 100%)", description="A CSS linear-gradient string for the slide's animated background.")
-    accent_color: str = Field(default="#FFD700", description="The main accent color used for the title, heart icon, and animated sparkles. Gold is the default.")
-    card_color: str = Field(default="#FFFFFF", description="The background color of the central content card.")
-    text_color: str = Field(default="#333333", description="The color of the subtitle text.")
-
 class GenerateCorporateThankYouSlideInput(BaseModel):
     """Input schema for generate_corporate_thank_you_slide."""
     thanks_text: str = Field(default="THANK YOU FOR WACTCHING!", description="The main closing message, e.g., 'THANKS!'. .")
@@ -1323,12 +1242,6 @@ TRANSITION_TOOLS = [
         name="generate_intro_slide",
         description="Generates an HTML introduction slide with a  main title section on the left and an image on the right.",
         args_schema=GenerateIntroSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_credits_slide,
-        name="generate_credits_slide",
-        description="Generate a credits/thank you slide with warm peach gradient background, emoji characters, and decorative dots. Features script typography for main content and branded header badge. Perfect for presentation endings, acknowledgments, template credits, or closing slides in creative, educational, and business presentations.",
-        args_schema=GenerateCreditsSlideInput
     )
 ]
 
@@ -1339,18 +1252,6 @@ CONTENT_TOOLS = [
         name="generate_content_slide",
         description="Generates an HTML slide with a main title and a grid of numbered items, ideal for listing topics or points.",
         args_schema=GenerateContentSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_two_column_slide,
-        name="generate_two_column_slide",
-        description="Generates an HTML slide with two columns of titles and texts, with customizable styling.",
-        args_schema=GenerateTwoColumnSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_project_circles_slide,
-        name="generate_project_circles_slide",
-        description="Generates an HTML slide with a main title, two text columns, three project circles, and an alternating border design.",
-        args_schema=GenerateProjectCirclesSlideInput
     ),
     StructuredTool.from_function(
         func=generate_comparison_slide,
@@ -1387,12 +1288,6 @@ CONTENT_TOOLS = [
         name="generate_body_slide2",
         description="Generates an HTML slide with a main title, a large image on the left, and three content sections with icons on the right.",
         args_schema=GenerateBodySlide2Input
-    ),
-    StructuredTool.from_function(
-        func=generate_body_slide3,
-        name="generate_body_slide3",
-        description="Generates an HTML slide with a main title and three content boxes, each with an icon, subtitle, and content text in a three-column layout.",
-        args_schema=GenerateBodySlide3Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide4,
@@ -1465,12 +1360,6 @@ CONTENT_TOOLS = [
         name="generate_elegant_points_slide",
         description="Generates a Content Slide designed to present four key points. This slide features an adjusted layout that intentionally de-emphasizes the main title to make the four content cards below the central focus. The visual style is bright, warm, and elegant, using an off-white background, floating cards with soft shadows, and decorative icons to introduce each point. It is ideal for presenting core values, key features, or strategic pillars where the details of the four points are most important.",
         args_schema=GenerateElegantPointsSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_horizontal_timeline_slide,
-        name="generate_horizontal_timeline_slide",
-        description="Generates a clean, bright, and professional horizontal timeline slide. Features a light gray gradient background, vibrant blue accents, and clean white content cards with soft shadows. The layout alternates milestones above and below a central timeline. Optimized for up to 5 key events, ideal for corporate presentations, project roadmaps, or company histories that require a clear and elegant look.",
-        args_schema=GenerateHorizontalTimelineSlideInput
     ),
     StructuredTool.from_function(
         func=generate_corporate_content_slide,
@@ -1665,12 +1554,6 @@ THANK_YOU_TOOLS = [
         name="generate_thank_you_slide_3",
         description="Generates an HTML slide for thank you page with contact information and geometric background.",
         args_schema=GenerateThankYouSlide3Input
-    ),
-    StructuredTool.from_function(
-        func=generate_thank_you_slide,
-        name="generate_thank_you_slide",
-        description="Generates a vibrant and celebratory 'Thank You' slide with extra-large text and animated, floating sparkles. Features a dynamic purple-to-blue gradient background, a clean white card, and gold accents for a prominent, eye-catching effect. Perfect for making a memorable and high-impact final impression.",
-        args_schema=GenerateThankYouSlideInput
     ),
     StructuredTool.from_function(
         func=generate_corporate_thank_you_slide,
