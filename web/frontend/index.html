@@ -1669,6 +1669,18 @@
             font-size: 0.95rem;
         }
 
+        /* Fix Bootstrap Modal to be centered properly */
+        #ideaModal.modal {
+            z-index: 1060 !important;
+        }
+        #ideaModal .modal-dialog {
+            margin: 1.75rem auto !important;
+        }
+        #ideaModal.modal.show {
+            display: flex !important;
+            align-items: center !important;
+        }
+
         /* Sidebar Navigation */
         .sidebar {
             position: fixed;

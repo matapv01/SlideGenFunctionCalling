@@ -818,9 +818,17 @@ async def upload_docx_stream(
 ):
     """Stream processing of DOCX file with Server-Sent Events"""
     
-    # Validate file
-    temp_path = TEMP_DIR / filename
-    if not temp_path.exists() or not filename.endswith('.docx'):
+    # Normalize filename for cross-platform compatibility
+    safe_filename = os.path.basename(filename)
+    safe_filename = Path(safe_filename).name  # Remove any path traversal
+    # Replace backslashes with forward slashes (Windows compatibility)
+    safe_filename = safe_filename.replace('\\', '/').replace('/', '')
+    # Optionally, remove any remaining illegal characters
+    safe_filename = re.sub(r'[^\w\-. ]', '', safe_filename)
+
+    temp_path = TEMP_DIR / safe_filename
+    if not temp_path.exists() or not safe_filename.lower().endswith('.docx'):
+        logger.error(f"DOCX file not found or invalid: {temp_path}")
         raise HTTPException(status_code=400, detail="Invalid file")
     
     # Load slide options
