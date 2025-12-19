@@ -4,16 +4,19 @@
  */
 
 // Detect if running in development or production
-const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'|| window.location.hostname === '0.0.0.0';
+// const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'|| window.location.hostname === '0.0.0.0';
+const isDevelopment = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.origin.includes('0.0.0.0');
+console.log(`🛠️ Frontend running in ${isDevelopment ? 'development' : 'production'} mode.`);
+
 // Backend API URL
 const API_BASE_URL = isDevelopment 
-    ? 'http://localhost:3000/api'  // Development: backend on port 3000
-    : '/api';                       // Production: same origin
+    ? 'http://localhost:12008/api'  // Development: backend on port 12008
+    : window.location.origin;                       // Production: same origin
 
 // Backend download URL
 const BACKEND_URL = isDevelopment
-    ? 'http://localhost:3000'       // Development
-    : '';                           // Production: same origin
+    ? 'http://localhost:12008'       // Development
+    : window.location.origin;                           // Production: same origin
 
 const config = {
     // API endpoints
@@ -32,7 +35,7 @@ const config = {
     // Other settings
     settings: {
         isDevelopment,
-        defaultTimeout: 30000, // 30 seconds
+        defaultTimeout: 120080, // 30 seconds
     }
 };
 

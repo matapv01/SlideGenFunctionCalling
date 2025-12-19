@@ -4,7 +4,7 @@ from src.graph.stage import State
 from langchain_core.prompts import ChatPromptTemplate
 from src.tools.tool_des import execute_tool
 import json
-from langchain_core.runnables import RunnableConfig # <-- 1. IMPORT
+from langchain_core.runnables import RunnableConfig
 from src.utils.config import TOOL_RETRIEVER_TOP_K, SLIDE_GENERATION_MAX_RETRIES
 import time
 
@@ -59,17 +59,20 @@ CONTENT_PROMPT = """
 **RULES:**
 1. HIGHLIGHT 2-3 key phrases ONLY:
    {highlight_instruction}
-   Example: "AI improves <span style="color: #e74c3c; font-weight: bold;">efficiency</span> by 80%"
-   ⚠️ ONLY use <span style="color:... font-weight:bold"> for KEY PHRASES!
+   Example: "AI improves <span style="font-weight: bold;">efficiency</span> by 80%"
+   ⚠️ ONLY use <span style="font-weight:bold"> for KEY PHRASES!
 2. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
    ❌ NO style attributes except for key phrase highlights!
 3. CONTENT: Concise, no filler words
-4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
+4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
 
 Generate READABLE, professional function call.
 """
+
+#    Example: "AI improves <span style="color: #e74c3c; font-weight: bold;">efficiency</span> by 80%"
+#    ⚠️ ONLY use <span style="color:... font-weight:bold"> for KEY PHRASES!
 
 THANK_YOU_PROMPT = """
 🎯 THANK YOU SLIDE - Final closing!
@@ -123,7 +126,10 @@ DESIGN PLAN: {slide_plan}
 SLIDE {slide_index}/{length_slide_chunks} CONTENT:
 {slide_content}
 
+YOUR PREVIOUS ATTEMPT:
 {previous_function_call}
+
+EVALUATION OF PREVIOUS ATTEMPT:
 {previous_evaluation}
 """
 
@@ -312,55 +318,77 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 
     slide_generator_runnable = slidegen_prompt | llm_with_tools
     
-    for attempt in range(1, SLIDE_GENERATION_MAX_RETRIES + 1):
-        print(f"  -> Attempt {attempt}/{SLIDE_GENERATION_MAX_RETRIES} to generate tool call...")
-        
+    retry_feedback = ""
+
+    MAX_REMAKE = 3
+
+    for attempt in range(1, MAX_REMAKE + 1):
+        print(f"🔁 Function-call generation attempt {attempt}/{MAX_REMAKE}")
+
+        print("-" * 100)
+        print("Current slide content:")
+        print(current_text)
+        print("-" * 100)
+
         response = slide_generator_runnable.invoke({
             "slide_context_map": current_context_map,
             "previous_slide_function_call": json.dumps(previous_slide_function_call, indent=2),
             "slide_plan": json.dumps(current_plan, indent=2),
             "slide_content": current_text,
             "previous_function_call": json.dumps(previous_function_call, indent=2),
-            "previous_evaluation": previous_evaluation,
+            "previous_evaluation": previous_evaluation + retry_feedback,
             "slide_index": idx + 1,
-            "length_slide_chunks": length_slide_chunks
+            "length_slide_chunks": length_slide_chunks,
         })
-        
-        if hasattr(response, 'tool_calls') and response.tool_calls:
-            tool_call = response.tool_calls[0]
-            tool_call_dict = {"name": tool_call["name"], "arguments": tool_call["args"]}
-            
+
+        # ❌ 1. No tool call
+        if not hasattr(response, "tool_calls") or not response.tool_calls:
+            error_msg = "You did NOT generate any function call."
+            print(f"❌ {error_msg}")
+            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
+            continue
+
+        tool_call = response.tool_calls[0]
+        tool_name = tool_call.get("name")
+        tool_args = tool_call.get("args", {})
+
+        tool_lookup = {t.name: t for t in my_tools}
+
+        # ❌ 2. Tool not callable
+        if tool_name not in tool_lookup:
+            error_msg = f"Tool '{tool_name}' is NOT AVAILABLE. Valid tools are: {list(tool_lookup.keys())}"
+            print(f"❌ {error_msg}")
+            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
+            continue
+
+        tool_call_dict = {
+            "name": tool_name,
+            "arguments": tool_args
+        }
+
+        # ❌ 3. Execution failure
+        try:
             html_content = execute_tool(tool_call_dict)
-            if html_content:
-                state['current_tool_call'] = tool_call_dict
-                state['current_html_content'] = html_content
-                
-                # Extract and save highlight color if this is the first CONTENT slide
-                if slide_type == 'CONTENT_TOOLS' and 'highlight_color' not in state:
-                    # Try to extract color from generated HTML
-                    import re
-                    color_match = re.search(r'color:\s*(#[0-9a-fA-F]{6})', html_content)
-                    if color_match:
-                        extracted_color = color_match.group(1)
-                        state['highlight_color'] = extracted_color
-                        print(f"  -> ✅ Extracted and saved highlight color: {extracted_color}")
-                    else:
-                        print(f"  -> ⚠️ No color found in HTML, will let next slide choose")
-                
-                # Save transition tool call for future transitions
-                if slide_type == 'TRANSITION_TOOLS':
-                    state['previous_transition_tool_call'] = tool_call_dict
-                    print(f"  -> 🔄 Saved transition tool for consistency: {tool_call_dict['name']}")
-                
-                print(f"  -> Successfully generated HTML with tool: {tool_call_dict['name']}")
-                end_time = time.time()
-                print(f"  -> Slide generation took {end_time - start_time:.2f} seconds.")
-                return state
-            
+        except Exception as e:
+            error_msg = f"Tool '{tool_name}' CRASHED during execution: {e}"
+            print(f"❌ {error_msg}")
+            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
+            continue
 
-        print("  -> Failed to get a valid tool call or execute it. Retrying...")
+        # ❌ 4. Empty output
+        if not html_content:
+            error_msg = f"Tool '{tool_name}' returned EMPTY output."
+            print(f"❌ {error_msg}")
+            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
+            continue
 
-    print("ERROR: All attempts to generate slide failed. Creating a default HTML slide.")
-    state['current_tool_call'] = {"name": "default_html", "arguments": {"content": current_text}}
-    state['current_html_content'] = create_default_html(current_text)
-    return state
+        # ✅ SUCCESS
+        print(f"✅ Tool '{tool_name}' executed successfully")
+
+        state["current_tool_call"] = tool_call_dict
+        state["current_html_content"] = html_content
+
+        if slide_type == "TRANSITION_TOOLS":
+            state["previous_transition_tool_call"] = tool_call_dict
+
+        return state

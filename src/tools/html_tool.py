@@ -11283,8 +11283,11 @@ def generate_instructions_slide(
     
     columns_html = ""
     for column in columns:
+        title = column["title"]
+        if isinstance(title, str):
+            title = [title]
         list_items_html = "".join([f"<li>{item}</li>" for item in column['list_items']])
-        title_items_html = "".join([f"<li>{item}</li>" for item in column['title']])
+        title_items_html = "".join([f"<li>{item}</li>" for item in title])
 
         columns_html += f"""
         <div class="column">

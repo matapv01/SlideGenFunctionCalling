@@ -210,6 +210,7 @@ def split_content(state: State, config: RunnableConfig) -> State: # <-- 2. ADD C
         _process_node(root_node, [])
 
     state['document_structure'] = document_structure
+    print(json.dumps(document_structure, indent=2, ensure_ascii=False))
     end_time = time.time()
     print(f"Content splitting took {end_time - start_time:.2f} seconds.")
     print("Hierarchical content splitting process complete.")

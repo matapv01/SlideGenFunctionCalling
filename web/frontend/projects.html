@@ -726,16 +726,19 @@
             </button>
         </div>
     </div>
-
-    <script>
+    <script type="module">
+        import { config } from './config.js';
+        window.SLIDEGEN_CONFIG = config;
+        console.log('✅ Config loaded:', config);
+    </script>
+    <script type="module">
         // Inline config to avoid loading issues
-        const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.hostname === '0.0.0.0';
-        const config = {
-            BACKEND_URL: isDevelopment ? 'http://localhost:3000' : '',
-            API_BASE_URL: isDevelopment ? 'http://localhost:3000/api' : '/api'
+        import { config } from './config.js';
+
+        const API_CONFIG = {
+            BACKEND_URL: config.BACKEND_URL || 'http://localhost:12008',
+            API_BASE_URL: config.API_BASE_URL || 'http://localhost:12008'
         };
-        console.log('=== Projects.html script loaded ===');
-        console.log('config object:', config);
         
         // Check authentication
         async function checkAuth() {
@@ -749,8 +752,8 @@
             }
             
             try {
-                console.log('checkAuth: Fetching from', `${config.BACKEND_URL}/api/auth/me`);
-                const response = await fetch(`${config.BACKEND_URL}/api/auth/me`, {
+                console.log('checkAuth: Fetching from', `${API_CONFIG.BACKEND_URL}/api/auth/me`);
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/auth/me`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -805,7 +808,7 @@
         async function openProfile() {
             const token = localStorage.getItem('access_token');
             try {
-                const response = await fetch(`${config.BACKEND_URL}/api/profile`, {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/profile`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -842,7 +845,7 @@
             };
             
             try {
-                const response = await fetch(`${config.BACKEND_URL}/api/profile`, {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/profile`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -892,7 +895,7 @@
             const token = localStorage.getItem('access_token');
             
             try {
-                const response = await fetch(`${config.BACKEND_URL}/api/auth/change-password`, {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/auth/change-password`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,
@@ -944,7 +947,7 @@
             const token = localStorage.getItem('access_token');
             
             try {
-                const response = await fetch(`${config.BACKEND_URL}/api/projects`, {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/projects`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -1174,7 +1177,7 @@
                 if (newTitle !== currentTitle) {
                     try {
                         const token = localStorage.getItem('access_token');
-                        const response = await fetch(`${config.BACKEND_URL}/api/projects/${projectId}`, {
+                        const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/projects/${projectId}`, {
                             method: 'PUT',
                             headers: {
                                 'Authorization': `Bearer ${token}`,
@@ -1212,7 +1215,7 @@
 
             try {
                 console.log('🗑️ Deleting project:', projectId);
-                const response = await fetch(`${config.BACKEND_URL}/api/projects/${projectId}`, {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/projects/${projectId}`, {
                     method: 'DELETE',
                     headers: {
                         'Authorization': `Bearer ${token}`
@@ -1262,6 +1265,19 @@
             div.textContent = text;
             return div.innerHTML;
         }
+
+        // Expose functions to global scope for inline onclick events
+        window.toggleSidebar = toggleSidebar;
+        window.openProfile = openProfile;
+        window.closeProfileModal = closeProfileModal;
+        window.saveProfile = saveProfile;
+        window.openChangePassword = openChangePassword;
+        window.closeChangePasswordModal = closeChangePasswordModal;
+        window.changePassword = changePassword;
+        window.logout = logout;
+        window.editProject = editProject;
+        window.deleteProject = deleteProject;
+        window.editProjectTitle = editProjectTitle;
 
         // Initialize
         (async () => {

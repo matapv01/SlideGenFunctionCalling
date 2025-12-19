@@ -1,7 +1,7 @@
 # Auto-generated from tools.py preserving all original parameter schemas
 # This conversion maintains the exact parameter definitions from the source
 
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 
@@ -912,7 +912,7 @@ class GenerateTextWithImageSlideInput(BaseModel):
 class GenerateInstructionsSlideInput(BaseModel):
     """Input schema for generate_instructions_slide."""
     main_title: str = Field(..., description="The main title displayed in the header bar. Default: 'TOPIC'.")
-    columns: List[Dict[str,List[str]]] = Field(..., description="An array of exactly 3 objects, each representing a column. Each object should have 'title' and 'list_items' keys. The content is styled with large fonts for easy reading. Default: [{'title': 'TOPIC ONE', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}, {'title': 'TOPIC TWO', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}, {'title': 'TOPIC THREE', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}].")
+    columns: List[Dict[str, Union[str, List[str]]]] = Field(..., description="An array of exactly 3 objects, each representing a column. Each object should have 'title' and 'list_items' keys. The content is styled with large fonts for easy reading. Default: [{'title': 'TOPIC ONE', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}, {'title': 'TOPIC TWO', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}, {'title': 'TOPIC THREE', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}].")
     font_family: str = Field(default="'Poppins', sans-serif", description="Font family for all text elements.")
     header_primary_color: str = Field(default="#4F46E5", description="The primary (brighter) color for the header.")
     header_secondary_color: str = Field(default="#1E293B", description="The secondary (darker) color for the header accent.")
