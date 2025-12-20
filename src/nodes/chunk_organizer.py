@@ -88,20 +88,23 @@ def organize_chunks(state: State) -> State:
         parts = [group_header] if group_header else []
         if len(items) > 1:
             for item in items:
+                # Use plain title without numbering for bullet points
                 parts.append(f"\n\t- {item.get('title', '')}")
                 if item.get('content'):
                     indented = "\n\t  ".join(item['content'].splitlines())
                     parts.append(f"\t  {indented}")
         else:
             item = items[0]
-            parts.append(f"\n{item.get('numbered_title', item.get('title', ''))}")
+            # Use plain title without numbering for main section headers
+            parts.append(f"\n{item.get('title', '')}")
             if item.get('content'): parts.append(f"{item['content']}")
         return "\n".join(parts)
 
     def _create_slides_from_leaves(parent, leaves):
         if not leaves: return
         buffer = []
-        header = parent.get('numbered_title', '')
+        # Use plain title for potential group headers
+        header = parent.get('title', '')
         for item in leaves:
             tentative_buffer = buffer + [item]
             if len(_render_slide_content(header, tentative_buffer)) > THRESHOLD_CHAR_LIMIT and buffer:
@@ -109,6 +112,7 @@ def organize_chunks(state: State) -> State:
                 pos = [i.get('index', '') for i in buffer]
                 content_chunk = {
                     'position': len(final_slides_content) + 1,
+                    # Fallback to buffer title if header is empty
                     'heading': header or buffer[0].get('title', ''),
                     'text_content': content_text
                 }
@@ -136,21 +140,21 @@ def organize_chunks(state: State) -> State:
             if enable_transition_slides and is_root_level and node.get('level') == 1:
                 transition_chunk = {
                     'position': -1,  # Special position for transitions
-                    'heading': node.get('numbered_title', node.get('title', '')),
-                    'text_content': node.get('numbered_title', node.get('title', ''))
+                    'heading': node.get('title', ''),  # No numbered_title
+                    'text_content': node.get('title', '')
                 }
                 pos = [f"{node.get('index', '')}.T"]  # Special marker for transition
                 final_slides_content.append(transition_chunk)
                 final_slides_positions.append(pos)
                 final_slides_context_maps.append(_create_context_map(renumbered_structure, [node.get('index', '')]))
-                print(f"Created transition slide for: {node.get('numbered_title', '')}")
+                print(f"Created transition slide for: {node.get('title', '')}")
             
             if node.get("content"):
                 pos = [node.get('index', '')]
                 content_text = _render_slide_content("", [node])
                 content_chunk = {
                     'position': len(final_slides_content) + 1,
-                    'heading': node.get('numbered_title', node.get('title', '')),
+                    'heading': node.get('title', ''), # No numbered_title
                     'text_content': content_text
                 }
                 final_slides_content.append(content_chunk)

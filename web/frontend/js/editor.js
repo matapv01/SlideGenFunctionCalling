@@ -3124,6 +3124,18 @@ ${this.slides.map((slide, index) => {
         const file = e.target.files[0];
         if (!file) return;
 
+        // Validation
+        if (!file.type.startsWith('image/')) {
+            alert('Please select a valid image file');
+            return;
+        }
+
+        const maxSize = 5 * 1024 * 1024; // 5MB
+        if (file.size > maxSize) {
+            alert('Image is too large. Please select an image under 5MB.');
+            return;
+        }
+
         const reader = new FileReader();
         reader.onload = (event) => {
             const img = new Image();
@@ -3176,6 +3188,18 @@ ${this.slides.map((slide, index) => {
     handleVideoUpload(e) {
         const file = e.target.files[0];
         if (!file) return;
+
+        // Validation
+        if (!file.type.startsWith('video/')) {
+            alert('Please select a valid video file');
+            return;
+        }
+
+        const maxSize = 20 * 1024 * 1024; // 20MB
+        if (file.size > maxSize) {
+            alert('Video is too large. Please select a video under 20MB.');
+            return;
+        }
 
         const reader = new FileReader();
         reader.onload = (event) => {

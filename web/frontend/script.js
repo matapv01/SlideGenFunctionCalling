@@ -191,7 +191,7 @@ async function handleDocxImport() {
             });
 
             if (!response.ok) {
-                throw new Error(`Upload failed with status ${response.status}`);
+                throw new Error(`Tải lên thất bại với trạng thái ${response.status}`);
             }
 
             const data = await response.json();
@@ -205,7 +205,7 @@ async function handleDocxImport() {
                 }, 500);
                 return;
             } else {
-                throw new Error('No session ID returned');
+                throw new Error('Không tìm thấy session ID');
             }
         }
 
@@ -262,7 +262,7 @@ async function handleDocxImport() {
         console.log('Response status:', response.status);
         if (!response.ok) {
             const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
-            throw new Error(errorData.detail || `Upload DOCX failed with status ${response.status}`);
+            throw new Error(errorData.detail || `Upload DOCX thất bại với mã lỗi ${response.status}`);
         }
 
         const data = await response.json();
@@ -304,7 +304,7 @@ async function handleZipImport() {
 
         console.log('Response status:', response.status);
         if (!response.ok) {
-            throw new Error(`Upload ZIP failed with status ${response.status}`);
+            throw new Error(`Upload ZIP thất bại với mã lỗi ${response.status}`);
         }
 
         const data = await response.json();
@@ -603,7 +603,7 @@ async function exportToPDF() {
         });
 
         if (!response.ok) {
-            throw new Error('Export PDF failed');
+            throw new Error('Xuất PDF thất bại');
         }
 
         const blob = await response.blob();
@@ -636,7 +636,7 @@ async function exportToZip() {
         });
 
         if (!response.ok) {
-            throw new Error('Export ZIP failed');
+            throw new Error('Xuất ZIP thất bại');
         }
 
         const blob = await response.blob();
@@ -707,7 +707,7 @@ window.generateFromIdea = async function () {
 
         if (!response.ok) {
             const errorData = await response.json();
-            throw new Error(errorData.detail || 'Failed to generate slides from idea');
+            throw new Error(errorData.detail || 'Không thể tạo slide từ ý tưởng này');
         }
 
         const result = await response.json();
@@ -716,7 +716,7 @@ window.generateFromIdea = async function () {
         if (result.session_id) {
             window.location.href = `streaming.html?session=${result.session_id}`;
         } else {
-            throw new Error('No session ID returned from server');
+            throw new Error('Không nhận được session ID từ server');
         }
 
     } catch (error) {
@@ -950,7 +950,7 @@ async function handleUpgradeVIP() {
     const token = localStorage.getItem('access_token');
 
     if (!token) {
-        showToast('Please login first!', 'error');
+        showToast('Vui lòng đăng nhập trước!', 'error');
         return;
     }
 
@@ -964,12 +964,12 @@ async function handleUpgradeVIP() {
             const result = await response.json();
             isVIP = true;
             updateVIPUI(true);
-            showToast('\u2728 Congratulations! You are now a VIP member!', 'success');
+            showToast('\u2728 Chúc mừng! Bạn đã trở thành thành viên VIP!', 'success');
         } else {
-            throw new Error('Failed to upgrade to VIP');
+            throw new Error('Nâng cấp lên VIP thất bại');
         }
     } catch (error) {
         console.error('Error upgrading to VIP:', error);
-        showToast('Failed to upgrade to VIP. Please try again.', 'error');
+        showToast('Nâng cấp lên VIP thất bại. Vui lòng thử lại.', 'error');
     }
 }

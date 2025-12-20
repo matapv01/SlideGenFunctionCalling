@@ -64,7 +64,10 @@ CONTENT_PROMPT = """
 2. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
    ❌ NO style attributes except for key phrase highlights!
-3. CONTENT: Concise, no filler words
+3. CONTENT: 
+   - **MAXIMUM CONCISENESS**: Use telegraphic style (drop "the", "a", "is"). Shortest possible wording.
+   - **SLIDE FORMAT**: Use brief bullet points or keywords. NO long sentences.
+   - **KEY INFO**: Keep only the core message, numbers, and technical terms.
 4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
 

@@ -16,7 +16,7 @@ document.addEventListener('DOMContentLoaded', function () {
     sessionId = urlParams.get('session');
 
     if (!sessionId) {
-        alert('No session ID provided');
+        alert('Không tìm thấy ID phiên làm việc');
         goBack();
         return;
     }
@@ -71,16 +71,16 @@ async function loadDocumentData() {
 
             documentStructure = convertFromBackendFormat(data.document_structure || []);
 
-            document.getElementById('documentTitle').textContent = data.document_title || 'Untitled Document';
+            document.getElementById('documentTitle').textContent = data.document_title || 'Tài liệu không tên';
             document.getElementById('documentTextContainer').textContent = documentText;
 
             updateUI();  // Render both tree and slides
         } else {
-            throw new Error('No document data received');
+            throw new Error('Không nhận được dữ liệu tài liệu');
         }
     } catch (error) {
         console.error('Error loading document:', error);
-        alert('Failed to load document. Please try again.');
+        alert('Không thể tải tài liệu. Vui lòng thử lại.');
         goBack();
     }
 }
@@ -166,14 +166,14 @@ function addSelectedToStructure() {
         if (previewEl && previewEl.innerText) {
             const manualText = previewEl.innerText.trim();
             // Filter out placeholders
-            if (manualText !== 'No text selected' && manualText !== 'Type or paste node text here...') {
+            if (manualText !== 'Chưa chọn văn bản nào' && manualText !== 'Nhập hoặc dán văn bản vào đây...') {
                 textToAdd = manualText;
             }
         }
     }
 
     if (!textToAdd) {
-        showAlert('Please select some text first or type in the box');
+        showAlert('Vui lòng chọn văn bản trước hoặc nhập vào ô');
         return;
     }
 
@@ -201,7 +201,7 @@ function addSelectedToStructure() {
         window.getSelection().removeAllRanges();
         const previewEl = document.getElementById('selectedTextPreview');
         if (previewEl) {
-            previewEl.textContent = 'No text selected';
+            previewEl.textContent = 'Chưa chọn văn bản nào';
             previewEl.contentEditable = 'false';
             previewEl.style.border = 'none';
         }
@@ -238,7 +238,7 @@ function addSelectedToStructure() {
     window.getSelection().removeAllRanges();
     const previewEl = document.getElementById('selectedTextPreview');
     if (previewEl) {
-        previewEl.textContent = 'No text selected';
+        previewEl.textContent = 'Chưa chọn văn bản nào';
         previewEl.contentEditable = 'false';
         previewEl.style.border = 'none';
     }
@@ -290,7 +290,7 @@ function updateNodeCount() {
     const count = countNodes(documentStructure);
     const element = document.getElementById('nodeCount');
     if (element) {
-        element.textContent = count + ' node' + (count !== 1 ? 's' : '');
+        element.textContent = count + ' mục';
     }
 }
 
@@ -302,7 +302,7 @@ function renderTree() {
         container.innerHTML = `
             <div class="text-center text-muted p-4">
                 <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-                <p class="mt-2">No structure yet. Select text to begin.</p>
+                <p class="mt-2">Chưa có cấu trúc. Chọn văn bản để bắt đầu.</p>
             </div>
         `;
         return;
@@ -372,19 +372,19 @@ function renderNode(node, isChild = false, attachedContentNode = null) {
                 <span class="node-title">${escapeHtml(node.text).substring(0, 40)}${node.text.length > 40 ? '...' : ''}</span>
                 <span class="badge ${typeBadge}">${node.type}</span>
                 <span class="node-level">L${node.level}</span>
-                ${node.is_transition ? '<span class="badge bg-info ms-1" title="Transition Slide"><i class="bi bi-play-circle"></i> Transition</span>' : ''}
+                ${node.is_transition ? '<span class="badge bg-info ms-1" title="Transition Slide"><i class="bi bi-play-circle"></i> Chuyển tiếp</span>' : ''}
                 <i class="bi bi-arrows-move drag-handle ms-2" style="cursor: grab; opacity: 0.5;" ondragstart="event.stopPropagation()"></i>
             </div>
             <div class="node-actions">
                 ${node.level === 1 && !node.is_transition ? `
-                    <button class="btn btn-sm btn-info" onclick="createTransitionSlide('${node.node_id}', event)" title="Create Transition Slide">
+                    <button class="btn btn-sm btn-info" onclick="createTransitionSlide('${node.node_id}', event)" title="Tạo Slide Chuyển tiếp">
                         <i class="bi bi-play-circle"></i>
                     </button>
                 ` : ''}
-                <button class="btn btn-sm btn-warning" onclick="editNode('${node.node_id}', event)" title="Edit Title">
+                <button class="btn btn-sm btn-warning" onclick="editNode('${node.node_id}', event)" title="Sửa Tiêu đề">
                     <i class="bi bi-pencil"></i>
                 </button>
-                <button class="btn btn-sm btn-danger" onclick="deleteNode('${node.node_id}', event)" title="Delete Title">
+                <button class="btn btn-sm btn-danger" onclick="deleteNode('${node.node_id}', event)" title="Xóa Tiêu đề">
                     <i class="bi bi-trash"></i>
                 </button>
             </div>
@@ -394,10 +394,10 @@ function renderNode(node, isChild = false, attachedContentNode = null) {
                     <div class="d-flex justify-content-between align-items-start">
                         <div style="flex: 1;">${escapeHtml(attachedContentNode.text)}</div>
                         <div class="ms-2">
-                             <button class="btn btn-sm btn-outline-warning p-0 px-1" onclick="editNode('${attachedContentNode.node_id}', event)" title="Edit Content">
+                             <button class="btn btn-sm btn-outline-warning p-0 px-1" onclick="editNode('${attachedContentNode.node_id}', event)" title="Sửa Nội dung">
                                 <i class="bi bi-pencil" style="font-size: 0.8rem;"></i>
                             </button>
-                            <button class="btn btn-sm btn-outline-danger p-0 px-1 ms-1" onclick="deleteNode('${attachedContentNode.node_id}', event)" title="Delete Content">
+                            <button class="btn btn-sm btn-outline-danger p-0 px-1 ms-1" onclick="deleteNode('${attachedContentNode.node_id}', event)" title="Xóa Nội dung">
                                 <i class="bi bi-trash" style="font-size: 0.8rem;"></i>
                             </button>
                         </div>
@@ -451,7 +451,7 @@ function renderSlides() {
         container.innerHTML = `
             <div class="text-center text-muted p-4">
                 <i class="bi bi-file-slides" style="font-size: 3rem;"></i>
-                <p class="mt-2">No slides yet. Add Level 1 nodes to create slides.</p>
+                <p class="mt-2">Chưa có slides. Thêm node Level 1 để tạo slides.</p>
             </div>
         `;
         updateSlideCount(0);
@@ -603,7 +603,7 @@ function renderSlide(slide, slideNumber) {
     // Transition badge (if applicable)
     let transitionBadge = '';
     if (slide.is_transition) {
-        transitionBadge = '<span class="badge bg-info ms-2" style="font-size: 0.7rem;"><i class="bi bi-play-circle"></i> Transition</span>';
+        transitionBadge = '<span class="badge bg-info ms-2" style="font-size: 0.7rem;"><i class="bi bi-play-circle"></i> Chuyển tiếp</span>';
     }
 
     return '<div class="slide-thumbnail' + (slide.is_transition ? ' slide-transition' : '') + '" data-slide-id="' + slide.slide_id + '" onclick="selectSlide(\'' + slide.slide_id + '\', event)">' +
@@ -656,7 +656,7 @@ function deleteSlide(slideId, event) {
 function updateSlideCount(count) {
     const element = document.getElementById('slideCount');
     if (element) {
-        element.textContent = count + ' slide' + (count !== 1 ? 's' : '');
+        element.textContent = count + ' slide';
     }
 }
 
@@ -702,7 +702,7 @@ function updateEditParentOptions(currentNodeId) {
     const targetLevel = editLevelSelect ? parseInt(editLevelSelect.value) : 1;
 
     // Reset options
-    select.innerHTML = '<option value="">Root (No parent)</option>';
+    select.innerHTML = '<option value="">Gốc (Không có cha)</option>';
 
     // If target level is 1, no parents allowed
     if (targetLevel === 1) {
@@ -773,7 +773,7 @@ function saveNodeEdit() {
     // VALIDATION: Prevent "drifting" (Orphan nodes)
     // If Level > 1, a Parent MUST be selected.
     if (newLevel > 1 && !newParentId) {
-        alert('Level ' + newLevel + ' nodes must have a Parent Node.\nPlease select a parent or change Level to 1.');
+        alert('Node cấp độ ' + newLevel + ' phải có Node Cha.\nVui lòng chọn cha hoặc đổi Cấp độ thành 1.');
         return;
     }
 
@@ -821,7 +821,7 @@ function saveNodeEdit() {
 function deleteNode(nodeId, event) {
     if (event) event.stopPropagation();
 
-    showConfirm('Delete this node and all its children?', () => {
+    showConfirm('Xóa node này và tất cả con của nó?', () => {
 
         // Special handling: If deleting transition TITLE, check for paired content
         const node = findNodeById(documentStructure, nodeId);
@@ -1008,7 +1008,7 @@ async function saveStructure() {
 
 // Reset structure
 function resetStructure() {
-    showConfirm('Reset structure? All changes will be lost and the structure will return to empty state.', () => {
+    showConfirm('Đặt lại cấu trúc? Mọi thay đổi sẽ mất và quay về trạng thái rỗng.', () => {
         // Clear document structure
         documentStructure = [];
 
@@ -1036,7 +1036,7 @@ function resetStructure() {
 
 // Cancel edit
 function cancelEdit() {
-    showConfirm('Cancel editing? All changes will be lost.', () => {
+    showConfirm('Hủy chỉnh sửa? Mọi thay đổi sẽ bị mất.', () => {
         goBack();
     });
 }
@@ -1044,18 +1044,18 @@ function cancelEdit() {
 // Approve and continue
 async function approveAndContinue() {
     if (documentStructure.length === 0) {
-        showAlert('Please create at least one structure node before continuing.');
+        showAlert('Vui lòng tạo ít nhất một node cấu trúc trước khi tiếp tục.');
         return;
     }
 
     // Confirm before approving
     const slideCount = buildSlides(documentStructure).length;
-    showConfirm(`Approve structure with ${slideCount} slide(s)? This will start the slide generation process.`, async () => {
+    showConfirm(`Duyệt cấu trúc với ${slideCount} slide? Quá trình tạo slide sẽ bắt đầu.`, async () => {
         try {
             // Show loading state
             const btn = event?.target;
             const originalText = btn?.innerHTML;
-            if (btn) btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Processing...';
+            if (btn) btn.innerHTML = '<i class="bi bi-hourglass-split"></i> Đang xử lý...';
             if (btn) btn.disabled = true;
 
             await saveStructure();
@@ -1077,16 +1077,16 @@ async function approveAndContinue() {
                 // Redirect to streaming with manual session parameter
                 window.location.href = `streaming.html?manual_session=${sessionId}`;
             } else {
-                throw new Error('Failed to approve structure');
+                throw new Error('Duyệt cấu trúc thất bại');
             }
         } catch (error) {
             console.error('Error approving structure:', error);
-            showAlert('Failed to continue workflow. Please try again.');
+            showAlert('Không thể tiếp tục quy trình. Vui lòng thử lại.');
 
             // Restore button
             const btn = event?.target;
             if (btn) {
-                btn.innerHTML = '<i class="bi bi-check-circle"></i> Approve & Continue';
+                btn.innerHTML = '<i class="bi bi-check-circle"></i> Duyệt & Tiếp tục';
                 btn.disabled = false;
             }
         }
@@ -1127,7 +1127,7 @@ function saveIntroSlide() {
     const content = document.getElementById('introSlideInput').value.trim();
 
     if (!content) {
-        alert('Please enter intro slide content');
+        alert('Vui lòng nhập nội dung slide giới thiệu');
         return;
     }
 
@@ -1157,7 +1157,7 @@ function editIntroSlide() {
 
 // Remove intro slide
 function removeIntroSlide() {
-    if (confirm('Remove intro slide?')) {
+    if (confirm('Xóa slide giới thiệu?')) {
         introSlide = null;
         updateIntroSlidePreview();
         updateUI();
@@ -1189,13 +1189,13 @@ function createTransitionSlide(nodeId, event) {
 
     const node = findNodeById(documentStructure, nodeId);
     if (!node) {
-        alert('Node not found');
+        alert('Không tìm thấy node');
         return;
     }
 
     // Only allow for Level 1 nodes
     if (node.level !== 1) {
-        alert('Transition slides can only be created for Level 1 nodes');
+        alert('Slide chuyển tiếp chỉ có thể tạo cho node Level 1');
         return;
     }
 
@@ -1207,7 +1207,7 @@ function createTransitionSlide(nodeId, event) {
     if (nodeIndex > 0) {
         const previousNode = siblings[nodeIndex - 1];
         if (previousNode.is_transition && previousNode.text === node.text) {
-            alert('Transition slide already exists for this node');
+            alert('Slide chuyển tiếp đã tồn tại cho node này');
             return;
         }
     }
@@ -1346,7 +1346,7 @@ function handleDrop(targetNodeId, event) {
     // Only swap if same level
     if (draggedNode.level !== targetNode.level) {
         console.log('LEVEL MISMATCH - Dragged:', draggedNode.level, 'Target:', targetNode.level);
-        alert('Can only reorder nodes with the same level');
+        alert('Chỉ có thể sắp xếp lại các node cùng cấp độ');
         draggedNodeId = null;
         handleDragEnd(event);
         return;
@@ -1362,7 +1362,7 @@ function handleDrop(targetNodeId, event) {
     // Note: Both can be null if they're root level nodes
     if (draggedParentId !== targetParentId) {
         console.log('PARENT MISMATCH');
-        alert('Nodes must have the same parent to reorder');
+        alert('Các node phải cùng cha mới có thể sắp xếp lại');
         draggedNodeId = null;
         handleDragEnd(event);
         return;
@@ -1482,7 +1482,7 @@ function showAddNodeForm() {
     const preview = document.getElementById('selectedTextPreview');
     preview.contentEditable = 'true';
     preview.textContent = '';
-    preview.placeholder = 'Type or paste node text here...';
+    preview.placeholder = 'Nhập hoặc dán văn bản node vào đây...';
     preview.style.minHeight = '80px';
     preview.style.border = '2px dashed #0dcaf0';
 

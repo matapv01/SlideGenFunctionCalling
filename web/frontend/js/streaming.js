@@ -116,7 +116,7 @@ function startStreaming(filename) {
     // Check if token exists
     if (!token || token === 'null') {
         console.error('❌ No valid token found! Redirecting to login...');
-        showToast('⚠️ Please log in to generate slides', 'error');
+        showToast('⚠️ Vui lòng đăng nhập để tạo slide', 'error');
         setTimeout(() => {
             window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
         }, 2000);
@@ -184,7 +184,7 @@ function startStreamingFromIdea(session_id) {
     // Check if token exists
     if (!token || token === 'null') {
         console.error('❌ No valid token found! Redirecting to login...');
-        showToast('⚠️ Please log in to generate slides', 'error');
+        showToast('⚠️ Vui lòng đăng nhập để tạo slide', 'error');
         setTimeout(() => {
             window.location.href = 'login.html?redirect=' + encodeURIComponent(window.location.href);
         }, 2000);

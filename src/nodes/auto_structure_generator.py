@@ -24,9 +24,9 @@ INSTRUCTIONS:
 
 ## CRITICAL RULES:
 
-- **PRESERVE ALL CONTENT**: Every sentence from the original must appear in the output.
-- **NO SUMMARIZATION**: Re-organize, don't summarize or omit anything.
-- **LOGICAL GROUPING**: Group related paragraphs together.
+- **SUMMARIZE CONCISELY**: Do not copy full text verbatim. Summarize the main points efficiently to reduce word count while keeping the core message.
+- **PRESERVE KEY PHRASES**: You MUST retain specific terminology, technical terms, key marketing phrases, and important names/data from the original text.
+- **LOGICAL GROUPING**: Group related concepts together.
 - **CLEAR HEADINGS**: Create descriptive headings that reflect the content.
 
 ## OUTPUT FORMAT:
@@ -56,7 +56,7 @@ Return a JSON array of objects with this structure:
 - Level 1: Main topics/chapters (3-7 sections typically)
 - Level 2: Subtopics within each main section
 - Level 3+: Further breakdowns if needed
-- Content: Direct text from original document (no modifications)
+- Content: Concise summary of the section, retaining key terminology
 - Children: Array of nested sections (can be empty)
 
 Return ONLY the JSON array, no additional text or markdown.
