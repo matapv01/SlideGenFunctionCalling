@@ -8,7 +8,7 @@ let sessionId = null;
 let currentSelection = null;
 let introSlide = null;  // Intro slide (Level 0)
 let draggedNodeId = null;  // Drag & drop state
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = (window.config && window.config.BACKEND_URL) || 'http://localhost:12008';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function () {
@@ -1516,3 +1516,31 @@ function showConfirm(message, onConfirm) {
 
     modal.show();
 }
+
+// ================== DARK MODE ==================
+
+function toggleDarkMode() {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+
+    // Save state to localStorage
+    const isDarkMode = body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+
+    // Add ripple effect on click
+    const toggle = document.querySelector('.theme-toggle');
+    if (toggle) {
+        toggle.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            toggle.style.transform = '';
+        }, 150);
+    }
+}
+
+// Restore dark mode state on page load
+(function () {
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+})();

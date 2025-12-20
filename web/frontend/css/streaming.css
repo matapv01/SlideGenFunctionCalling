@@ -1510,3 +1510,262 @@ html {
         padding: 14px 16px;
     }
 }
+
+/* Dark Mode Toggle Button */
+.theme-toggle {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 9999;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    border: 2px solid rgba(255, 255, 255, 0.3);
+    background: rgba(255, 255, 255, 0.15);
+    backdrop-filter: blur(10px);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+    overflow: hidden;
+}
+
+.theme-toggle:hover {
+    transform: scale(1.1) rotate(15deg);
+    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+    border-color: rgba(255, 255, 255, 0.5);
+}
+
+.theme-toggle::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    background: conic-gradient(#ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #ff6b6b);
+    border-radius: 50%;
+    z-index: -1;
+    animation: toggleGlow 3s linear infinite;
+    opacity: 0;
+    transition: opacity 0.3s;
+}
+
+.theme-toggle:hover::before {
+    opacity: 1;
+}
+
+@keyframes toggleGlow {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+.theme-toggle .icon {
+    font-size: 1.6rem;
+    color: #ffffff;
+    transition: all 0.4s;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+
+.theme-toggle .sun-icon {
+    position: absolute;
+    opacity: 0;
+    transform: rotate(-90deg) scale(0);
+}
+
+.theme-toggle .moon-icon {
+    position: absolute;
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+/* Dark Mode Styles */
+body.dark-mode {
+    background: linear-gradient(-45deg, #0f0f23, #1a1a3e, #0d1b2a, #1b263b, #0f0f23, #252547);
+    background-size: 400% 400%;
+}
+
+body.dark-mode .theme-toggle .sun-icon {
+    opacity: 1;
+    transform: rotate(0deg) scale(1);
+}
+
+body.dark-mode .theme-toggle .moon-icon {
+    opacity: 0;
+    transform: rotate(90deg) scale(0);
+}
+
+body.dark-mode .theme-toggle {
+    background: rgba(0, 0, 0, 0.4);
+    border-color: rgba(255, 255, 255, 0.2);
+}
+
+body.dark-mode .particle {
+    background: rgba(100, 150, 255, 0.1);
+    box-shadow: 0 0 20px rgba(100, 150, 255, 0.2);
+}
+
+body.dark-mode .particle:nth-child(even) {
+    background: linear-gradient(135deg, rgba(100, 150, 255, 0.2), rgba(138, 92, 246, 0.2));
+}
+
+body.dark-mode .particle:nth-child(3n) {
+    background: rgba(165, 180, 252, 0.15);
+}
+
+body.dark-mode .aurora-overlay::before,
+body.dark-mode .aurora-overlay::after {
+    background: radial-gradient(ellipse at center, rgba(100, 150, 255, 0.1) 0%, transparent 70%);
+}
+
+body.dark-mode .streaming-container {
+    background: rgba(30, 30, 60, 0.85);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5), 0 0 100px rgba(100, 150, 255, 0.1);
+}
+
+body.dark-mode .streaming-container::before {
+    background: radial-gradient(circle, rgba(100, 150, 255, 0.08) 0%, transparent 70%);
+}
+
+body.dark-mode .title {
+    background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 30%, #a5b4fc 50%, #818cf8 70%, #e0e7ff 100%);
+    background-size: 300% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+body.dark-mode .subtitle {
+    color: #a5b4fc;
+}
+
+body.dark-mode .step-label {
+    color: #e0e7ff;
+}
+
+body.dark-mode .step-icon {
+    background: linear-gradient(135deg, #2d2d5a 0%, #1e1e3f 100%);
+    color: #a5b4fc;
+}
+
+body.dark-mode .step.active .step-icon {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 50%, #667eea 100%);
+    color: white;
+}
+
+body.dark-mode .step.completed .step-icon {
+    background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+    color: white;
+}
+
+body.dark-mode .step-connector {
+    background: rgba(100, 150, 255, 0.2);
+}
+
+body.dark-mode .step.completed + .step-connector {
+    background: linear-gradient(90deg, #059669 0%, #10b981 100%);
+}
+
+body.dark-mode .progress-bar {
+    background: rgba(100, 150, 255, 0.15);
+}
+
+body.dark-mode .progress-text {
+    color: #a5b4fc;
+}
+
+body.dark-mode .current-activity {
+    background: linear-gradient(135deg, #2d2d5a 0%, #1e1e3f 100%);
+}
+
+body.dark-mode .activity-title {
+    color: #e0e7ff;
+}
+
+body.dark-mode .activity-description {
+    color: #a5b4fc;
+}
+
+body.dark-mode .preview-title {
+    color: #e0e7ff;
+}
+
+body.dark-mode .preview-title i {
+    color: #a5b4fc;
+}
+
+body.dark-mode .slide-card {
+    background: rgba(40, 40, 80, 0.6);
+    border: 1px solid rgba(100, 150, 255, 0.2);
+}
+
+body.dark-mode .slide-card:hover {
+    box-shadow: 0 12px 25px rgba(0, 0, 0, 0.5), 0 0 30px rgba(100, 150, 255, 0.15);
+}
+
+body.dark-mode .slide-number {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+}
+
+body.dark-mode .slide-preview {
+    background: linear-gradient(135deg, #2d2d5a 0%, #1e1e3f 100%);
+    border-color: rgba(100, 150, 255, 0.2);
+}
+
+body.dark-mode .slide-info {
+    background: linear-gradient(to bottom, transparent 0%, rgba(30, 30, 60, 0.9) 100%);
+}
+
+body.dark-mode .btn-primary {
+    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+    border: none;
+    box-shadow: 0 10px 40px rgba(79, 70, 229, 0.4);
+}
+
+body.dark-mode .btn-primary:hover {
+    box-shadow: 0 15px 50px rgba(79, 70, 229, 0.6);
+}
+
+body.dark-mode .btn-secondary {
+    background: linear-gradient(135deg, #374151 0%, #1f2937 100%);
+    border: 1px solid rgba(100, 150, 255, 0.2);
+    color: #e0e7ff;
+}
+
+body.dark-mode .btn-secondary:hover {
+    background: linear-gradient(135deg, #4b5563 0%, #374151 100%);
+    box-shadow: 0 10px 30px rgba(100, 150, 255, 0.2);
+}
+
+body.dark-mode .error-container {
+    background: linear-gradient(135deg, #3d1f1f 0%, #2d1414 100%);
+}
+
+body.dark-mode .error-icon {
+    color: #fca5a5;
+}
+
+body.dark-mode .error-message {
+    color: #fecaca;
+}
+
+body.dark-mode .custom-toast {
+    background: rgba(30, 30, 60, 0.95);
+    border-color: rgba(100, 150, 255, 0.3);
+    color: #e0e7ff;
+}
+
+body.dark-mode .custom-toast.success {
+    border-left-color: #10b981;
+}
+
+body.dark-mode .custom-toast.error {
+    border-left-color: #f87171;
+}
+
+body.dark-mode .custom-toast.info {
+    border-left-color: #60a5fa;
+}

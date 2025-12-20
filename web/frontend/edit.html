@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>SlideGenius Pro with Distance Guides</title>
+    <script src="./config.js?v=2"></script> <!-- Load config -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
@@ -15,7 +16,7 @@
     <!-- Editor Styles - Modular CSS -->
     <!-- Base -->
     <link rel="stylesheet" href="css/base/variables.css">
-    
+
     <!-- Layout -->
     <link rel="stylesheet" href="css/layout/toolbar/base.css">
     <link rel="stylesheet" href="css/layout/toolbar/buttons.css">
@@ -24,7 +25,7 @@
     <link rel="stylesheet" href="css/layout/canvas/grid.css">
     <link rel="stylesheet" href="css/layout/properties.css">
     <link rel="stylesheet" href="css/layout/slides.css">
-    
+
     <!-- Features -->
     <link rel="stylesheet" href="css/features/presentation/base.css?v=2">
     <link rel="stylesheet" href="css/features/presentation/controls.css?v=2">
@@ -34,7 +35,7 @@
     <link rel="stylesheet" href="css/features/connector/styles.css">
     <link rel="stylesheet" href="css/features/connector/controls.css">
     <link rel="stylesheet" href="css/features/guides.css">
-    
+
     <!-- Components -->
     <link rel="stylesheet" href="css/components/elements/base.css">
     <link rel="stylesheet" href="css/components/elements/selection.css">
@@ -51,7 +52,10 @@
             color: #10b981;
             padding: 0 !important;
         }
-        #saveIndicator svg, #saveIndicator i, #saveIndicator .icon {
+
+        #saveIndicator svg,
+        #saveIndicator i,
+        #saveIndicator .icon {
             vertical-align: middle !important;
             margin-right: 4px;
         }
@@ -82,11 +86,11 @@
             </div>
         </div>
     </div>
-    
+
     <div class="toolbar">
         <div class="toolbar-left">
             <button class="back-btn" onclick="window.location.href='projects.html'" title="Back to projects">
-                ← 
+                ←
             </button>
             <div class="project-name-display" id="projectNameDisplay" title="Double-click to edit project name">
                 <span id="projectNameText">Untitled Project</span>
@@ -100,21 +104,21 @@
                 </button>
             </div>
         </div>
-        
+
         <div class="toolbar-center">
             <div class="btn-group">
                 <button id="selectBtn" class="active" style="display: none;">🎯 Select</button>
                 <button id="textBtn">📝 Text</button>
             </div>
-            
+
             <div class="btn-group-separator"></div>
-            
+
             <div class="btn-group">
                 <button id="exportAllPdfBtn" class="capture-btn" title="Xuất tất cả slides thành PDF">📄 Export</button>
             </div>
-            
+
             <div class="btn-group-separator"></div>
-            
+
             <div class="btn-group">
                 <div class="present-btn-wrapper">
                     <button id="presentBtn" title="Start presentation">▶️ Present</button>
@@ -131,12 +135,17 @@
                 </div>
             </div>
         </div>
-        
+
         <div class="toolbar-right">
             <div class="btn-group">
                 <button id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
                 <button id="redoBtn" title="Redo (Ctrl+Y)">↷ Redo</button>
-                <span id="saveIndicator" style="color: #10b981; font-size: 14px; margin-left: 12px; display: none;"><svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#10b981" viewBox="0 0 16 16" style="vertical-align: middle; margin-right: 4px;"><path d="M13.485 1.929a1 1 0 0 1 0 1.414l-7.071 7.071a1 1 0 0 1-1.414 0L2.515 8.929a1 1 0 1 1 1.414-1.414l1.071 1.071 6.364-6.364a1 1 0 0 1 1.414 0z"/></svg>Saved</span>
+                <span id="saveIndicator" style="color: #10b981; font-size: 14px; margin-left: 12px; display: none;"><svg
+                        xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#10b981" viewBox="0 0 16 16"
+                        style="vertical-align: middle; margin-right: 4px;">
+                        <path
+                            d="M13.485 1.929a1 1 0 0 1 0 1.414l-7.071 7.071a1 1 0 0 1-1.414 0L2.515 8.929a1 1 0 1 1 1.414-1.414l1.071 1.071 6.364-6.364a1 1 0 0 1 1.414 0z" />
+                    </svg>Saved</span>
             </div>
             <div class="btn-group-separator"></div>
 
@@ -997,7 +1006,7 @@
         editorScript.src = `js/editor-new-1765301429.js`;
         editorScript.noModule = true;
         document.body.appendChild(editorScript);
-        
+
         console.log('⚡ Starting dynamic import of init.js...');
         // Force reload init.js with timestamp + random to bypass aggressive cache
         const bust = Date.now() + Math.random();
@@ -1006,4 +1015,5 @@
             .catch(err => console.error('❌ Failed to import init.js:', err));
     </script>
 </body>
+
 </html>

@@ -47,7 +47,16 @@ app.add_middleware(
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
+    expose_headers=["*"]
 )
+
+# Add middleware for Private Network Access (Chrome security policy)
+@app.middleware("http")
+async def add_private_network_header(request: Request, call_next):
+    response = await call_next(request)
+    # Allow requests from public networks to private networks (localhost)
+    response.headers["Access-Control-Allow-Private-Network"] = "true"
+    return response
 
 # Initialize database
 from .database import init_db
@@ -281,7 +290,8 @@ async def register(user_data: UserCreate):
         email=user["email"],
         username=user["username"],
         created_at=user["created_at"],
-        is_active=bool(user["is_active"])
+        is_active=bool(user["is_active"]),
+        is_vip=bool(user.get("is_vip", False))
     )
 
 @app.post("/api/auth/login", response_model=Token)
@@ -317,7 +327,7 @@ async def logout():
 @app.put("/api/auth/change-password")
 async def change_password(
     password_data: dict,
-    current_user: User = Depends(get_current_active_user)
+    current_user: UserResponse = Depends(get_current_active_user)
 ):
     """Change user password"""
     current_password = password_data.get('current_password')
@@ -326,17 +336,24 @@ async def change_password(
     if not current_password or not new_password:
         raise HTTPException(status_code=400, detail="Missing required fields")
     
-    # Verify current password
-    if not verify_password(current_password, current_user.hashed_password):
-        raise HTTPException(status_code=400, detail="Current password is incorrect")
-    
-    # Validate new password
-    if len(new_password) < 6:
-        raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
-    
-    # Update password in database
+    # Get full user data from database (including hashed_password)
     with get_db() as conn:
         cursor = conn.cursor()
+        cursor.execute('SELECT * FROM users WHERE id = ?', (current_user.id,))
+        user_row = cursor.fetchone()
+        
+        if not user_row:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        # Verify current password
+        if not verify_password(current_password, user_row['hashed_password']):
+            raise HTTPException(status_code=400, detail="Current password is incorrect")
+        
+        # Validate new password
+        if len(new_password) < 6:
+            raise HTTPException(status_code=400, detail="New password must be at least 6 characters")
+        
+        # Update password in database
         try:
             new_hashed_password = get_password_hash(new_password)
             cursor.execute(
@@ -348,6 +365,31 @@ async def change_password(
         except Exception as e:
             conn.rollback()
             raise HTTPException(status_code=500, detail=f"Failed to change password: {str(e)}")
+
+
+# ========================== USER VIP ENDPOINTS ==========================
+
+from .database import update_user_vip_status
+
+@app.get("/api/user/me", response_model=UserResponse)
+async def get_current_user_info(current_user: UserResponse = Depends(get_current_active_user)):
+    """Get current user information including VIP status"""
+    return current_user
+
+@app.post("/api/user/upgrade-vip")
+async def upgrade_to_vip(current_user: UserResponse = Depends(get_current_active_user)):
+    """Upgrade current user to VIP status"""
+    try:
+        update_user_vip_status(current_user.id, True)
+        logger.info(f"✅ User {current_user.email} upgraded to VIP")
+        return {
+            "message": "Successfully upgraded to VIP!",
+            "is_vip": True
+        }
+    except Exception as e:
+        logger.error(f"Failed to upgrade user to VIP: {e}")
+        raise HTTPException(status_code=500, detail="Failed to upgrade to VIP")
+
 
 
 # ========================== USER PROFILE & SETTINGS ==========================
@@ -744,7 +786,8 @@ async def upload_docx(
 async def upload_docx_for_stream(
     file: UploadFile = File(...),
     enable_transition_slides: str = Form("true"),
-    enable_thank_you_slide: str = Form("true")
+    enable_thank_you_slide: str = Form("true"),
+    workflow_mode: str = Form("auto")
 ):
     """Upload DOCX file and return filename for streaming"""
     if not file.filename.endswith('.docx'):
@@ -803,7 +846,8 @@ async def upload_docx_for_stream(
     # Write new options
     options_data = {
         "enable_transition_slides": enable_transition,
-        "enable_thank_you_slide": enable_thank_you
+        "enable_thank_you_slide": enable_thank_you,
+        "workflow_mode": workflow_mode
     }
     
     try:
@@ -933,7 +977,8 @@ async def upload_docx_stream(
             email=user["email"],
             username=user["username"],
             created_at=user["created_at"],
-            is_active=bool(user["is_active"])
+            is_active=bool(user["is_active"]),
+            is_vip=bool(user.get("is_vip", False))
         )
         logger.info(f"✅ Authenticated user: {current_user.email}")
         
@@ -948,11 +993,10 @@ async def upload_docx_stream(
     
     # Normalize filename for cross-platform compatibility
     safe_filename = os.path.basename(filename)
-    safe_filename = Path(safe_filename).name  # Remove any path traversal
-    # Replace backslashes with forward slashes (Windows compatibility)
-    safe_filename = safe_filename.replace('\\', '/').replace('/', '')
-    # Optionally, remove any remaining illegal characters
-    safe_filename = re.sub(r'[^\w\-. ]', '', safe_filename)
+    # Preserve Unicode characters (Vietnamese, etc.) but remove dangerous characters
+    safe_filename = re.sub(r'[\\/:*?"<>|]', '', safe_filename)
+    # Ensure no leading/trailing dots/spaces
+    safe_filename = safe_filename.strip('. ')
 
     temp_path = TEMP_DIR / safe_filename
     if not temp_path.exists() or not safe_filename.lower().endswith('.docx'):
@@ -965,11 +1009,19 @@ async def upload_docx_stream(
         "enable_transition_slides": True,
         "enable_thank_you_slide": True
     }
+    workflow_mode = "auto"
+    
     if options_path.exists():
         try:
             with open(options_path, "r") as f:
-                slide_options = json.load(f)
-            logger.info(f"📋 Loaded slide options from file: {slide_options}")
+                data = json.load(f)
+                # Keep compatibility with slide_options format
+                slide_options = {
+                    "enable_transition_slides": data.get("enable_transition_slides", True),
+                    "enable_thank_you_slide": data.get("enable_thank_you_slide", True)
+                }
+                workflow_mode = data.get("workflow_mode", "auto")
+            logger.info(f"📋 Loaded options from file: {slide_options} | mode: {workflow_mode}")
             logger.info(f"   - Transition slides: {slide_options.get('enable_transition_slides')}")
             logger.info(f"   - Thank you slide: {slide_options.get('enable_thank_you_slide')}")
         except Exception as e:
@@ -1035,65 +1087,78 @@ async def upload_docx_stream(
                 workflow_result = await workflow_service.process_docx_with_workflow(
                     docx_path=str(temp_path),
                     output_folder=str(output_folder),
-                    router_flags=False,
+                    router_flags=False,  # Disable VLM evaluation for all modes
                     callback=stream_callback,
-                    slide_options=slide_options
+                    slide_options=slide_options,
+                    workflow_mode=workflow_mode
                 )
                 
                 if not workflow_result:
-                    raise Exception("Workflow did not produce valid output")
-                
-                # Unpack result
-                result_zip, temp_workflow_dir = workflow_result
-                logger.info(f"📁 Temp workflow directory: {temp_workflow_dir}")
-                logger.info(f"📦 Result ZIP: {result_zip}")
-                
-                if result_zip and os.path.exists(result_zip):
-                    # Extract ZIP to output folder
-                    html_folder = output_folder / "html"
-                    html_folder.mkdir(exist_ok=True)
-                    
-                    with zipfile.ZipFile(result_zip, 'r') as zip_ref:
-                        for file_info in zip_ref.infolist():
-                            if not file_info.filename.endswith('/') and 'temp_debug' not in file_info.filename:
-                                try:
-                                    zip_ref.extract(file_info, output_folder)
-                                except Exception as e:
-                                    logger.warning(f"Error extracting {file_info.filename}: {e}")
-                    
-                    # Convert slides if converter available
-                    if conversion_service and conversion_service.is_available():
-                        converted_folder = output_folder / "converted"
-                        converted_folder.mkdir(exist_ok=True)
-                        conversion_service.convert_slides_batch(html_folder, converted_folder)
-                    
-                    # Count total slides
-                    html_files = list(html_folder.glob("*.html"))
-                    total_slides = len(html_files)
-                    logger.info(f"📁 Found {total_slides} HTML files")
-                    
-                    # Save to database (user is always authenticated now)
-                    project_id = save_workflow_to_database(
-                        user_id=current_user.id,
-                        project_name=project_name,
-                        source_type='docx',
-                        source_data={
-                            'filename': filename,
-                            'description': f'Slides generated from {filename}'
-                        },
-                        slide_options=slide_options,
-                        output_folder=output_folder
-                    )
-                    
-                    # Emit complete event with temp directory path for cleanup
-                    await event_queue.put(('complete', {
-                        'project_name': project_name,
-                        'total_slides': total_slides,
-                        'temp_dir': temp_workflow_dir,
-                        'project_id': project_id
-                    }))
+                    # Workflow already sent error message via callback
+                    logger.error("Workflow returned None (error already sent to frontend)")
+                    # Don't return here - let finally block set workflow_done
                 else:
-                    raise Exception("Workflow did not produce valid output")
+                    # Unpack result
+                    result_zip, temp_workflow_dir = workflow_result
+                    logger.info(f"📁 Temp workflow directory: {temp_workflow_dir}")
+                    logger.info(f"📦 Result ZIP: {result_zip}")
+                    
+                    if result_zip and os.path.exists(result_zip):
+                        # Extract ZIP to output folder
+                        html_folder = output_folder / "html"
+                        html_folder.mkdir(exist_ok=True)
+                        
+                        with zipfile.ZipFile(result_zip, 'r') as zip_ref:
+                            for file_info in zip_ref.infolist():
+                                if file_info.filename.endswith('.html'):
+                                    zip_ref.extract(file_info, output_folder)
+                        
+                    if result_zip and os.path.exists(result_zip):
+                        # Extract ZIP to output folder
+                        html_folder = output_folder / "html"
+                        html_folder.mkdir(exist_ok=True)
+                        
+                        with zipfile.ZipFile(result_zip, 'r') as zip_ref:
+                            for file_info in zip_ref.infolist():
+                                if not file_info.filename.endswith('/') and 'temp_debug' not in file_info.filename:
+                                    try:
+                                        zip_ref.extract(file_info, output_folder)
+                                    except Exception as e:
+                                        logger.warning(f"Error extracting {file_info.filename}: {e}")
+                        
+                        # Convert slides if converter available
+                        if conversion_service and conversion_service.is_available():
+                            converted_folder = output_folder / "converted"
+                            converted_folder.mkdir(exist_ok=True)
+                            conversion_service.convert_slides_batch(html_folder, converted_folder)
+                        
+                        # Count total slides
+                        html_files = list(html_folder.glob("*.html"))
+                        total_slides = len(html_files)
+                        logger.info(f"📁 Found {total_slides} HTML files")
+                        
+                        # Save to database
+                        project_id = save_workflow_to_database(
+                            user_id=current_user.id,
+                            project_name=project_name,
+                            source_type='docx',
+                            source_data={
+                                'filename': filename,
+                                'description': f'Slides generated from {filename}'
+                            },
+                            slide_options=slide_options,
+                            output_folder=output_folder
+                        )
+                        
+                        # Emit complete event with temp directory path for cleanup
+                        await event_queue.put(('complete', {
+                            'project_name': project_name,
+                            'total_slides': total_slides,
+                            'temp_dir': temp_workflow_dir,
+                            'project_id': project_id
+                        }))
+                    else:
+                        logger.error("Result ZIP file not found")
                     
             except Exception as e:
                 logger.error(f"Workflow error: {e}")

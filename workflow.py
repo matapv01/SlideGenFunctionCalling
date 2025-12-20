@@ -29,7 +29,8 @@ async def main_workflow(
     output_folder: str, 
     max_retries_per_slide: int = 1,
     callback: Optional[Callable[[str, Dict[Any, Any]], None]] = None,
-    slide_options: Optional[Dict[str, bool]] = None
+    slide_options: Optional[Dict[str, bool]] = None,
+    workflow_mode: str = 'auto'
 ):
     """
     Asynchronous main function to build and run the LangGraph workflow
@@ -43,6 +44,7 @@ async def main_workflow(
         callback: Optional callback function for streaming updates
                   Signature: callback(event_type: str, data: Dict[Any, Any])
         slide_options: Options for slide generation (enable_transition_slides, enable_thank_you_slide)
+        workflow_mode: Workflow mode (auto, no_structure, manual)
     """
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
@@ -140,7 +142,8 @@ async def main_workflow(
             "all_debug_info": [],
             "llm": llm,
             "vlm_decision": "accept",
-            "slide_options": slide_options
+            "slide_options": slide_options,
+            "workflow_mode": workflow_mode
         }
 
         graph_config = {
@@ -175,9 +178,17 @@ async def main_workflow(
         print(f"LangGraph workflow completed in {end_time - start_time:.2f} seconds.")
 
     except Exception as e:
-        print(f"\nAn error occurred during the workflow: {e}")
+        error_msg = str(e)
+        print(f"\nAn error occurred during the workflow: {error_msg}")
         import traceback
         traceback.print_exc() # Print full traceback for debugging
+        
+        # Propagate error to callback
+        emit_event('error_event', {
+            'message': error_msg
+        })
+        # Re-raise so final_state remains None
+        raise e
     finally:
         # ===== CLEAN UP RESOURCES =====
         if playwright_instance:
@@ -190,7 +201,7 @@ async def main_workflow(
     # ===== 5. PROCESS FINAL OUTPUT =====
     if not final_state or not final_state.get('final_slides'):
         print("Processing finished, but no final slides were generated.")
-        emit_event('error', {
+        emit_event('error_event', {
             'message': 'Không có slide nào được tạo'
         })
         return
@@ -374,9 +385,16 @@ async def main_workflow_from_chunks(
         print(f"Idea workflow completed in {end_time - start_time:.2f} seconds.")
         
     except Exception as e:
-        print(f"\nError in idea workflow: {e}")
+        error_msg = str(e)
+        print(f"\nError in idea workflow: {error_msg}")
         import traceback
         traceback.print_exc()
+        
+        # Propagate error to callback
+        emit_event('error_event', {
+            'message': error_msg
+        })
+        raise e
     finally:
         # Clean up Playwright
         if playwright_instance:
@@ -387,7 +405,7 @@ async def main_workflow_from_chunks(
     # Process final output
     if not final_state or not final_state.get('final_slides'):
         print("No final slides generated")
-        emit_event('error', {'message': 'Không có slide nào được tạo'})
+        emit_event('error_event', {'message': 'Không có slide nào được tạo'})
         return None
     
     emit_event('status', {

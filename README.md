@@ -31,3 +31,8 @@ python -m http.server 8000 --directory web/frontend
 
 
 → Frontend: http://localhost:8000/index.html
+
+
+
+# 3. reset vip member
+cd /home/iec/QuangNM/SlideGenFunctionCalling/web/backend && python3 -c "from app.database import get_db; conn = get_db().__enter__(); conn.execute('UPDATE users SET is_vip = 0'); conn.commit(); conn.close(); print('✅ Đã reset TOÀN BỘ database về trạng thái non-VIP!')"

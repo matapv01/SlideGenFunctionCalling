@@ -9,7 +9,7 @@ import tempfile
 import shutil
 import zipfile
 from pathlib import Path
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, Callable
 from datetime import datetime
 
 logger = logging.getLogger(__name__)
@@ -56,13 +56,15 @@ class WorkflowService:
     async def process_docx_with_workflow(
         self, 
         docx_path: str, 
-        output_folder: str,
-        router_flags: bool = False,
-        callback: Optional[Any] = None,
-        slide_options: Optional[Dict[str, bool]] = None
-    ) -> Optional[str]:
+        output_folder: str, 
+        router_flags: bool = False, 
+        callback: Optional[Callable] = None,
+        slide_options: Optional[Dict] = None,
+        workflow_mode: str = 'auto'
+    ) -> Optional[tuple]:
         """
-        Process DOCX file using LangGraph AI workflow - EXACT COPY from main_web.py
+        Process DOCX using LangGraph workflow
+        Returns: tuple(zip_path, temp_workflow_dir) or None
         
         Args:
             docx_path: Path to DOCX file
@@ -127,7 +129,8 @@ class WorkflowService:
                     docx_file=docx_path,
                     output_folder=temp_workflow_dir,
                     callback=callback,
-                    slide_options=slide_options or {}
+                    slide_options=slide_options or {},
+                    workflow_mode=workflow_mode
                 )
                 
                 # Find result ZIP file
@@ -147,6 +150,18 @@ class WorkflowService:
                 logger.error(f"Error during workflow: {e}")
                 import traceback
                 logger.error(traceback.format_exc())
+                
+                # Send error message to frontend if callback available
+                if callback:
+                    error_message = str(e)
+                    # Extract clean error message for user-facing display
+                    if "Document không có cấu trúc heading" in error_message:
+                        # This is our validation error - send it to frontend
+                        callback('error_event', {'message': error_message})
+                    else:
+                        # Generic error
+                        callback('error_event', {'message': f'Lỗi xử lý tài liệu: {error_message}'})
+                
                 try:
                     if os.path.exists(temp_workflow_dir):
                         shutil.rmtree(temp_workflow_dir, ignore_errors=True)

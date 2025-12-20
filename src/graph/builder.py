@@ -1,5 +1,6 @@
 # builder.py
 from src.nodes.document_converter import convert_document
+from src.nodes.auto_structure_generator import generate_structure_from_plaintext
 from src.nodes.content_splitter import split_content
 from src.nodes.chunk_organizer import organize_chunks
 from src.nodes.slide_planner import planning_slide
@@ -25,6 +26,34 @@ def route_to_task(state: State) -> str:
         # Nếu hết, kết thúc
         print("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
         return END
+
+def route_after_convert(state: State) -> str:
+    """
+    Router: Determines whether to use auto-structure generation or proceed normally.
+    Routes based on presence of document structure.
+    """
+    print("--- Router: route_after_convert ---")
+    
+    # Check if document structure exists and is not empty
+    doc_structure = state.get('document_structure', [])
+    plain_text = state.get('plain_text', None)
+    
+    print(f"🔍 DEBUG Router state:")
+    print(f"   - document_structure length: {len(doc_structure)}")
+    print(f"   - plain_text exists: {plain_text is not None}")
+    if plain_text:
+        print(f"   - plain_text length: {len(plain_text)} chars")
+    
+    if doc_structure and len(doc_structure) > 0:
+        # Has structure from hierarchical headings, skip auto-structure
+        print("✅ Document has hierarchical structure. Proceeding to split_content.")
+        return "split_content"
+    else:
+        # No structure, need to generate it
+        print("🤖 Document has no structure. Routing to auto_structure generation.")
+        return "auto_structure"
+
+
 
 def evaluate_vlm_decision(state: State) -> str:
     """
@@ -63,6 +92,7 @@ def build_workflow(router_flags: bool) -> StateGraph:
     if router_flags:
         # Thêm các node
         workflow.add_node("convert_document", convert_document)
+        workflow.add_node("auto_structure", generate_structure_from_plaintext)
         workflow.add_node("split_content", split_content)
         workflow.add_node("organize_chunks", organize_chunks)
         workflow.add_node("planning_slide", planning_slide)
@@ -76,7 +106,13 @@ def build_workflow(router_flags: bool) -> StateGraph:
         workflow.set_entry_point("convert_document")
 
         # Thêm các cạnh (edges)
-        workflow.add_edge("convert_document", "split_content")
+        # Conditional routing: check if structure exists
+        workflow.add_conditional_edges(
+            "convert_document",
+            route_after_convert,
+            {"split_content": "split_content", "auto_structure": "auto_structure"}
+        )
+        workflow.add_edge("auto_structure", "split_content")
         workflow.add_edge("split_content", "organize_chunks")
         workflow.add_edge("organize_chunks", "planning_slide")
         workflow.add_edge("planning_slide", "provide_next_slide")
@@ -88,6 +124,7 @@ def build_workflow(router_flags: bool) -> StateGraph:
     else:
         # Thêm các node
         workflow.add_node("convert_document", convert_document)
+        workflow.add_node("auto_structure", generate_structure_from_plaintext)
         workflow.add_node("split_content", split_content)
         workflow.add_node("organize_chunks", organize_chunks)
         workflow.add_node("planning_slide", planning_slide)
@@ -100,7 +137,13 @@ def build_workflow(router_flags: bool) -> StateGraph:
         workflow.set_entry_point("convert_document")
 
         # Thêm các cạnh (edges)
-        workflow.add_edge("convert_document", "split_content")
+        # Conditional routing: check if structure exists
+        workflow.add_conditional_edges(
+            "convert_document",
+            route_after_convert,
+            {"split_content": "split_content", "auto_structure": "auto_structure"}
+        )
+        workflow.add_edge("auto_structure", "split_content")
         workflow.add_edge("split_content", "organize_chunks")
         workflow.add_edge("organize_chunks", "planning_slide")
         workflow.add_edge("planning_slide", "provide_next_slide")

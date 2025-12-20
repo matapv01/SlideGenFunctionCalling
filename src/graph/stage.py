@@ -10,10 +10,12 @@ class State(TypedDict, total=False):
     # Input
     docx_file: str
     slide_options: Dict  # Options for slide generation
+    workflow_mode: str  # Workflow mode (auto, no_structure, manual)
 
     # Document processing state
     document_title: str
     document_structure: List[Dict]
+    plain_text: str  # Plain text content for auto-structure generation
     document_outline: List[Dict]
     slide_chunks: List[str]
     slide_positions: List[Any]

@@ -1,10 +1,12 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Register - SlideGen</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="./config.js?v=2"></script> <!-- v=2 forces cache reload -->
     <style>
         body {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -14,41 +16,49 @@
             justify-content: center;
             padding: 20px;
         }
+
         .register-container {
             background: white;
             border-radius: 15px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
             padding: 40px;
             max-width: 400px;
             width: 100%;
         }
+
         .logo {
             text-align: center;
             margin-bottom: 30px;
         }
+
         .logo h1 {
             color: #667eea;
             font-weight: bold;
             margin: 0;
         }
+
         .logo p {
             color: #6c757d;
             font-size: 14px;
         }
+
         .btn-primary {
             background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             border: none;
             padding: 12px;
             font-weight: 600;
         }
+
         .btn-primary:hover {
             opacity: 0.9;
         }
+
         .divider {
             text-align: center;
             margin: 20px 0;
             color: #6c757d;
         }
+
         .password-requirements {
             font-size: 12px;
             color: #6c757d;
@@ -56,6 +66,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="register-container">
         <div class="logo">
@@ -92,7 +103,8 @@
         </div>
 
         <div class="text-center">
-            <p class="mb-0">Already have an account? <a href="login.html" class="text-decoration-none">Login here</a></p>
+            <p class="mb-0">Already have an account? <a href="login.html" class="text-decoration-none">Login here</a>
+            </p>
         </div>
 
         <div class="alert alert-danger mt-3 d-none" id="errorAlert"></div>
@@ -100,10 +112,10 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <script type="module">
+    <script>
         // const API_BASE_URL = 'http://localhost:12008';
-        import { config } from './config.js';
-        const API_BASE_URL = config.API_BASE_URL || 'http://localhost:12008';
+        // Use global config loaded from config.js in head
+        const API_BASE_URL = (window.config && window.config.API_BASE_URL) || 'http://localhost:12008';
 
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -141,16 +153,16 @@
                 }
 
                 const data = await response.json();
-                
+
                 // Show success message
                 successAlert.textContent = 'Account created successfully! Redirecting to login...';
                 successAlert.classList.remove('d-none');
-                
+
                 // Redirect to login after 2 seconds
                 setTimeout(() => {
                     window.location.href = 'login.html';
                 }, 2000);
-                
+
             } catch (error) {
                 errorAlert.textContent = error.message;
                 errorAlert.classList.remove('d-none');
@@ -158,4 +170,5 @@
         });
     </script>
 </body>
+
 </html>

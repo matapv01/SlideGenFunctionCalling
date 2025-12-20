@@ -1,5 +1,6 @@
 // streaming.js - Handle streaming workflow updates
-import { config } from '../config.js';
+// Config is already loaded globally from config.js in HTML head
+
 
 let eventSource = null;
 let projectName = null;
@@ -131,22 +132,13 @@ function startStreaming(filename) {
         showToast('✅ Đã kết nối thành công!', 'success');
     };
 
-    eventSource.onerror = function (error) {
-        console.error('❌ EventSource error:', error);
-        if (eventSource.readyState === EventSource.CLOSED) {
-            console.error('Connection was closed');
-            showToast('⚠️ Mất kết nối với server', 'error');
-        } else if (eventSource.readyState === EventSource.CONNECTING) {
-            console.log('🔄 Reconnecting...');
-        }
-    };
-
     // Handle different event types
     eventSource.addEventListener('status', handleStatusEvent);
     eventSource.addEventListener('progress', handleProgressEvent);
     eventSource.addEventListener('slide_completed', handleSlideCompletedEvent);
     eventSource.addEventListener('complete', handleCompleteEvent);
     eventSource.addEventListener('error_event', handleErrorEvent);
+    eventSource.addEventListener('error', handleErrorEvent); // Also listen for 'error' event type
 
     // Also listen for generic message event (fallback)
     eventSource.onmessage = function (event) {
@@ -156,9 +148,16 @@ function startStreaming(filename) {
     eventSource.onerror = function (error) {
         console.error('EventSource error:', error);
         console.error('EventSource readyState:', eventSource.readyState);
-        if (eventSource.readyState === EventSource.CLOSED) {
+
+        // If the error container is already showing a specific error, don't overwrite it
+        const errorContainer = document.getElementById('errorContainer');
+        const isShowingSpecificError = errorContainer && errorContainer.style.display === 'flex';
+
+        if (eventSource.readyState === EventSource.CLOSED && !isShowingSpecificError) {
             showToast('❌ Kết nối bị đóng', 'error');
             showError('Mất kết nối với server. Vui lòng thử lại.');
+        } else if (eventSource.readyState === EventSource.CONNECTING) {
+            console.log('🔄 Reconnecting...');
         }
     };
 }
@@ -201,26 +200,32 @@ function startStreamingFromIdea(session_id) {
         showToast('✅ Đã kết nối thành công!', 'success');
     };
 
-    eventSource.onerror = function (error) {
-        console.error('❌ EventSource error:', error);
-        if (eventSource.readyState === EventSource.CLOSED) {
-            console.error('Connection was closed');
-            showToast('⚠️ Mất kết nối với server', 'error');
-        } else if (eventSource.readyState === EventSource.CONNECTING) {
-            console.log('🔄 Reconnecting...');
-        }
-    };
-
     // Handle different event types (same as file upload)
     eventSource.addEventListener('status', handleStatusEvent);
     eventSource.addEventListener('progress', handleProgressEvent);
     eventSource.addEventListener('slide_completed', handleSlideCompletedEvent);
     eventSource.addEventListener('complete', handleCompleteEvent);
     eventSource.addEventListener('error_event', handleErrorEvent);
+    eventSource.addEventListener('error', handleErrorEvent);
 
     // Also listen for generic message event (fallback)
     eventSource.onmessage = function (event) {
         console.log('Generic message received:', event.data);
+    };
+
+    eventSource.onerror = function (error) {
+        console.error('EventSource error:', error);
+
+        const errorContainer = document.getElementById('errorContainer');
+        const isShowingSpecificError = errorContainer && errorContainer.style.display === 'flex';
+
+        if (eventSource.readyState === EventSource.CLOSED && !isShowingSpecificError) {
+            console.error('Connection was closed');
+            showToast('⚠️ Mất kết nối với server', 'error');
+            showError('Mất kết nối với server. Vui lòng thử lại.');
+        } else if (eventSource.readyState === EventSource.CONNECTING) {
+            console.log('🔄 Reconnecting...');
+        }
     };
 }
 
@@ -250,26 +255,32 @@ function startStreamingFromManualStructure(session_id) {
         showToast('✅ Đã kết nối thành công!', 'success');
     };
 
-    eventSource.onerror = function (error) {
-        console.error('❌ EventSource error:', error);
-        if (eventSource.readyState === EventSource.CLOSED) {
-            console.error('Connection was closed');
-            showToast('⚠️ Mất kết nối với server', 'error');
-        } else if (eventSource.readyState === EventSource.CONNECTING) {
-            console.log('🔄 Reconnecting...');
-        }
-    };
-
     // Handle different event types (same handlers as other workflows)
     eventSource.addEventListener('status', handleStatusEvent);
     eventSource.addEventListener('progress', handleProgressEvent);
     eventSource.addEventListener('slide_completed', handleSlideCompletedEvent);
     eventSource.addEventListener('complete', handleCompleteEvent);
     eventSource.addEventListener('error_event', handleErrorEvent);
+    eventSource.addEventListener('error', handleErrorEvent);
 
     // Also listen for generic message event (fallback)
     eventSource.onmessage = function (event) {
         console.log('Generic message received:', event.data);
+    };
+
+    eventSource.onerror = function (error) {
+        console.error('EventSource error:', error);
+
+        const errorContainer = document.getElementById('errorContainer');
+        const isShowingSpecificError = errorContainer && errorContainer.style.display === 'flex';
+
+        if (eventSource.readyState === EventSource.CLOSED && !isShowingSpecificError) {
+            console.error('Connection was closed');
+            showToast('⚠️ Mất kết nối với server', 'error');
+            showError('Mất kết nối với server. Vui lòng thử lại.');
+        } else if (eventSource.readyState === EventSource.CONNECTING) {
+            console.log('🔄 Reconnecting...');
+        }
     };
 }
 
@@ -1196,3 +1207,31 @@ function clearStreamingState() {
     sessionStorage.removeItem('streamingState');
     console.log('🗑️ Cleared streaming state');
 }
+
+// ================== DARK MODE ==================
+
+function toggleDarkMode() {
+    const body = document.body;
+    body.classList.toggle('dark-mode');
+
+    // Save state to localStorage
+    const isDarkMode = body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDarkMode);
+
+    // Add ripple effect on click
+    const toggle = document.querySelector('.theme-toggle');
+    if (toggle) {
+        toggle.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+            toggle.style.transform = '';
+        }, 150);
+    }
+}
+
+// Restore dark mode state on page load
+(function () {
+    const savedDarkMode = localStorage.getItem('darkMode');
+    if (savedDarkMode === 'true') {
+        document.body.classList.add('dark-mode');
+    }
+})();

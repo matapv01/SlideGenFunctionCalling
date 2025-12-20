@@ -11,6 +11,7 @@ class User(BaseModel):
     hashed_password: str
     created_at: datetime = Field(default_factory=datetime.utcnow)
     is_active: bool = True
+    is_vip: bool = False
 
 class UserCreate(BaseModel):
     """Schema for user registration"""
@@ -30,6 +31,7 @@ class UserResponse(BaseModel):
     username: str
     created_at: datetime
     is_active: bool
+    is_vip: bool
 
 class Token(BaseModel):
     """Schema for JWT token response"""

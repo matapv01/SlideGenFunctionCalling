@@ -4,48 +4,62 @@
  */
 
 // Detect if running in development or production
-// const isDevelopment = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'|| window.location.hostname === '0.0.0.0';
-const isDevelopment = window.location.origin.includes('localhost') || window.location.origin.includes('127.0.0.1') || window.location.origin.includes('0.0.0.0');
-console.log(`🛠️ Frontend running in ${isDevelopment ? 'development' : 'production'} mode.`);
+// Determine environment and backend URL
+function getBackendURL() {
+    const currentOrigin = window.location.origin;
+    const currentHost = window.location.hostname;
 
-// Backend API URL
-const API_BASE_URL = isDevelopment 
-    ? 'http://localhost:12008/api'  // Development: backend on port 12008
-    : window.location.origin;                       // Production: same origin
+    console.log('🔍 Detecting environment:', {
+        origin: currentOrigin,
+        hostname: currentHost,
+        port: window.location.port
+    });
 
-// Backend download URL
-const BACKEND_URL = isDevelopment
-    ? 'http://localhost:12008'       // Development
-    : window.location.origin;                           // Production: same origin
-
-const config = {
-    // API endpoints
-    API_BASE_URL,
-    BACKEND_URL,
-    
-    // Specific endpoints
-    endpoints: {
-        captureSlide: `${API_BASE_URL}/capture-slide`,
-        captureSlidesBatch: `${API_BASE_URL}/capture-slides-batch`,
-        exportSlidePdf: `${API_BASE_URL}/export-slide-pdf`,
-        exportSlidesPdf: `${API_BASE_URL}/export-slides-pdf`,
-        downloadCapture: (filename) => `${BACKEND_URL}/api/download-capture/${filename}`,
-    },
-    
-    // Other settings
-    settings: {
-        isDevelopment,
-        defaultTimeout: 120080, // 30 seconds
+    // If accessing via production domain (not localhost)
+    if (currentHost !== 'localhost' && currentHost !== '127.0.0.1') {
+        // Use current origin (same domain:port) for production
+        const backendURL = currentOrigin;
+        console.log('🌐 Production mode - Using same origin:', backendURL);
+        return backendURL;
     }
-};
 
-// Log configuration in development
-if (isDevelopment) {
-    console.log('🔧 Frontend Config:', config);
+    // Development mode - use localhost with specific port
+    const backendURL = 'http://localhost:12008';
+    console.log('🛠️ Development mode - Using localhost:', backendURL);
+    return backendURL;
 }
 
-// Export for ES6 modules
-export { config };
+const BACKEND_URL = getBackendURL();
 
-// Also make available as global for non-module scripts
+const config = {
+    /**
+     * Backend API URL
+     * Auto-detected based on current environment:
+     * - Production: Uses same origin as frontend
+     * - Development: Uses http://localhost:12008
+     */
+    BACKEND_URL: BACKEND_URL,
+    API_BASE_URL: BACKEND_URL,
+
+    /**
+     * API Endpoints
+     */
+    endpoints: {
+        captureSlide: `${BACKEND_URL}/api/capture-slide`,
+        captureSlidesBatch: `${BACKEND_URL}/api/capture-slides-batch`,
+        exportSlidesPdf: `${BACKEND_URL}/api/export-slides-pdf`
+    },
+
+    /**
+     * Frontend mode indicator
+     */
+    MODE: window.location.hostname === 'localhost' ? 'development' : 'production'
+};
+
+// Log configuration on load
+console.log('✅ SlideGen Config loaded:', config);
+console.log(`🛠️ Frontend running in ${config.MODE} mode.`);
+
+// Make available as global for non-module scripts
 window.config = config;
+window.API_CONFIG = config; // Legacy compatibility

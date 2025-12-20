@@ -1,5 +1,6 @@
 // Backend API base URL
-import { config } from './config.js';
+// Use global config loaded from config.js in head
+const config = window.config || { BACKEND_URL: 'http://localhost:12008' };
 
 // Authentication helper
 function getAuthHeaders() {
@@ -18,12 +19,13 @@ window.toggleCheckbox = function (checkboxId, event) {
 };
 
 document.addEventListener('DOMContentLoaded', function () {
-    // Set default checkbox values
+    // Check VIP status and update UI
+    checkVIPStatus();
+
+    // Get checkbox values (no default setting)
     const transitionCheckbox = document.getElementById('enableTransitionSlides');
     const thankYouCheckbox = document.getElementById('enableThankYouSlide');
-    if (transitionCheckbox) transitionCheckbox.checked = true;
-    if (thankYouCheckbox) thankYouCheckbox.checked = true;
-    console.log('✅ Initialized checkboxes:', {
+    console.log('✅ Checkbox states:', {
         transition: transitionCheckbox?.checked,
         thankYou: thankYouCheckbox?.checked
     });
@@ -74,7 +76,41 @@ document.addEventListener('DOMContentLoaded', function () {
         btn.removeAttribute('onclick');
         btn.addEventListener('click', exportToZip);
     });
+
+    // Attach VIP upgrade button handler
+    const upgradeVipBtn = document.getElementById('upgradeVipBtn');
+    if (upgradeVipBtn) {
+        upgradeVipBtn.addEventListener('click', handleUpgradeVIP);
+    }
+
+    // Attach workflow mode change handlers for UI toggle
+    document.querySelectorAll('input[name="workflowMode"]').forEach(radio => {
+        radio.addEventListener('change', updateAddSlideVisibility);
+    });
+
+    // Initial check for visibility
+    updateAddSlideVisibility();
 });
+
+// Update visibility of "Add Slide" options based on selected workflow mode
+function updateAddSlideVisibility() {
+    const manualModeRadio = document.getElementById('manualMode');
+    const addSlideDivider = document.getElementById('addSlideDivider');
+    const addSlideOptionsContainer = document.getElementById('addSlideOptionsContainer');
+
+    if (manualModeRadio && addSlideDivider && addSlideOptionsContainer) {
+        if (manualModeRadio.checked) {
+            console.log('🙈 Manual mode selected: Hiding Add Slide options');
+            addSlideDivider.style.display = 'none';
+            addSlideOptionsContainer.style.display = 'none';
+        } else {
+            console.log('👁️ Auto mode selected: Showing Add Slide options');
+            addSlideDivider.style.display = 'block';
+            addSlideOptionsContainer.style.display = 'block';
+        }
+    }
+}
+
 
 function showEditor() {
     document.getElementById('homePage').style.display = 'none';
@@ -129,14 +165,16 @@ async function handleDocxImport() {
         console.log('🧹 Clearing previous streaming state...');
         sessionStorage.removeItem('streamingState');
         localStorage.removeItem('generatedSlides');
-        
+
         showLoading("Đang tải file lên...");
 
         // ========== READ WORKFLOW MODE ==========
-        const workflowMode = document.querySelector('input[name="workflowMode"]:checked');
-        const isManualMode = workflowMode && workflowMode.value === 'manual';
+        const workflowModeRadio = document.querySelector('input[name="workflowMode"]:checked');
+        const workflowModeValue = workflowModeRadio ? workflowModeRadio.value : 'auto';
+        const isManualMode = workflowModeValue === 'manual';
 
-        console.log('📋 Workflow mode:', isManualMode ? 'MANUAL' : 'AUTO');
+        console.log('📋 Workflow mode value:', workflowModeValue);
+        console.log('📋 Is manual mode:', isManualMode);
 
         // ========== MANUAL MODE: Upload + Create Session → Structure Editor ==========
         if (isManualMode) {
@@ -188,15 +226,29 @@ async function handleDocxImport() {
             thankYouChecked: thankYouCheckbox?.checked
         });
 
-        const enableTransitionSlides = transitionCheckbox ? transitionCheckbox.checked : true;
-        const enableThankYouSlide = thankYouCheckbox ? thankYouCheckbox.checked : true;
+        const enableTransitionSlides = transitionCheckbox ? transitionCheckbox.checked : false;
+        const enableThankYouSlide = thankYouCheckbox ? thankYouCheckbox.checked : false;
+
+        // Map workflow mode values to backend expected values
+        // autoNoStruct (auto_no_struct) -> needs AI to create structure
+        // autoWithHeading (auto) -> document has headings
+        // manual -> manual review
+        let backendWorkflowMode = workflowModeValue;
+
+        // Map auto_no_struct to no_structure for backend
+        if (workflowModeValue === 'auto_no_struct') {
+            backendWorkflowMode = 'no_structure';
+        }
 
         // Convert boolean to string explicitly
         formData.append('enable_transition_slides', enableTransitionSlides.toString());
         formData.append('enable_thank_you_slide', enableThankYouSlide.toString());
+        formData.append('workflow_mode', backendWorkflowMode);
 
         console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/upload-docx-for-stream');
         console.log('Options (boolean):', { enableTransitionSlides, enableThankYouSlide });
+        console.log('Workflow Mode (frontend):', workflowModeValue);
+        console.log('Workflow Mode (backend):', backendWorkflowMode);
         console.log('Options (string):', {
             enable_transition_slides: enableTransitionSlides.toString(),
             enable_thank_you_slide: enableThankYouSlide.toString()
@@ -209,7 +261,8 @@ async function handleDocxImport() {
 
         console.log('Response status:', response.status);
         if (!response.ok) {
-            throw new Error(`Upload DOCX failed with status ${response.status}`);
+            const errorData = await response.json().catch(() => ({ detail: 'Unknown error' }));
+            throw new Error(errorData.detail || `Upload DOCX failed with status ${response.status}`);
         }
 
         const data = await response.json();
@@ -603,13 +656,13 @@ async function exportToZip() {
 }
 
 // Show idea modal
-window.showIdeaModal = function() {
+window.showIdeaModal = function () {
     const modal = new bootstrap.Modal(document.getElementById('ideaModal'));
     modal.show();
 };
 
 // Generate slides from idea
-window.generateFromIdea = async function() {
+window.generateFromIdea = async function () {
     const title = document.getElementById('ideaTitle').value.trim();
     const prompt = document.getElementById('ideaPrompt').value.trim();
     const contentLength = document.getElementById('ideaContentLength').value;
@@ -635,11 +688,14 @@ window.generateFromIdea = async function() {
         showLoading("Đang tạo slide từ ý tưởng của bạn...");
 
         // Call backend API
-        const apiUrl = `${config.API_BASE_URL}/generate-from-idea`;
+        const apiUrl = `${config.BACKEND_URL}/api/generate-from-idea`;
         console.log('📡 Calling API:', apiUrl);
         const response = await fetch(apiUrl, {
             method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
+            headers: {
+                'Content-Type': 'application/json',
+                ...getAuthHeaders()  // Add authentication token
+            },
             body: JSON.stringify({
                 title: title,
                 prompt: prompt,
@@ -655,7 +711,7 @@ window.generateFromIdea = async function() {
         }
 
         const result = await response.json();
-        
+
         // Redirect to streaming page with session_id
         if (result.session_id) {
             window.location.href = `streaming.html?session=${result.session_id}`;
@@ -673,9 +729,9 @@ window.generateFromIdea = async function() {
 
 // Delete slide confirmation modal
 function showDeleteSlideConfirmation(slideDiv, slideIndex) {
-    const slideNumber = slideIndex !== undefined ? slideIndex + 1 : 
-                       Array.from(slideDiv.parentElement.children).indexOf(slideDiv) + 1;
-    
+    const slideNumber = slideIndex !== undefined ? slideIndex + 1 :
+        Array.from(slideDiv.parentElement.children).indexOf(slideDiv) + 1;
+
     // Create modal overlay
     const overlay = document.createElement('div');
     overlay.className = 'delete-slide-modal-overlay';
@@ -693,7 +749,7 @@ function showDeleteSlideConfirmation(slideDiv, slideIndex) {
         justify-content: center !important;
         animation: fadeIn 0.2s ease !important;
     `;
-    
+
     // Create modal
     const modal = document.createElement('div');
     modal.className = 'delete-slide-modal';
@@ -708,7 +764,7 @@ function showDeleteSlideConfirmation(slideDiv, slideIndex) {
         position: relative !important;
         z-index: 100000 !important;
     `;
-    
+
     modal.innerHTML = `
         <style>
             @keyframes fadeIn {
@@ -757,32 +813,32 @@ function showDeleteSlideConfirmation(slideDiv, slideIndex) {
             </div>
         </div>
     `;
-    
+
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
-    
+
     // Add hover effects
     const cancelBtn = modal.querySelector('#cancelDeleteSlide');
     const confirmBtn = modal.querySelector('#confirmDeleteSlide');
-    
+
     cancelBtn.onmouseover = () => cancelBtn.style.background = '#f9fafb';
     cancelBtn.onmouseout = () => cancelBtn.style.background = 'white';
-    
+
     confirmBtn.onmouseover = () => confirmBtn.style.background = '#dc2626';
     confirmBtn.onmouseout = () => confirmBtn.style.background = '#ef4444';
-    
+
     // Handle buttons
     cancelBtn.onclick = () => {
         overlay.style.animation = 'fadeOut 0.2s ease';
         setTimeout(() => overlay.remove(), 200);
     };
-    
+
     confirmBtn.onclick = () => {
         overlay.remove();
         slideDiv.remove();
         showToast('✓ Đã xóa slide thành công', 'success');
     };
-    
+
     // Close on overlay click
     overlay.onclick = (e) => {
         if (e.target === overlay) {
@@ -790,4 +846,107 @@ function showDeleteSlideConfirmation(slideDiv, slideIndex) {
             setTimeout(() => overlay.remove(), 200);
         }
     };
+}
+
+// ========================== VIP FUNCTIONS ==========================
+
+// Global VIP status
+let isVIP = false;
+
+async function checkVIPStatus() {
+    console.log('🔍 Checking VIP status...');
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+        console.log('\u26a0\ufe0f  No token found, user not logged in');
+        // Not logged in - show VIP restrictions for non-VIP
+        updateVIPUI(false);
+        return;
+    }
+
+    try {
+        const response = await fetch(config.BACKEND_URL + '/api/user/me', {
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            const userData = await response.json();
+            isVIP = userData.is_vip || false;
+            console.log(`\u2705 User VIP status: ${isVIP}`);
+            updateVIPUI(isVIP);
+        } else {
+            console.log('\u26a0\ufe0f  Failed to get user info, treating as non-VIP');
+            updateVIPUI(false);
+        }
+    } catch (error) {
+        console.error('Error checking VIP status:', error);
+        updateVIPUI(false);
+    }
+}
+
+function updateVIPUI(isVIP) {
+    const autoNoStructRadio = document.getElementById('autoNoStruct'); // Auto workflow mode (VIP)
+    const autoWithHeadingRadio = document.getElementById('autoWithHeading'); // Auto With Doc Heading
+
+    const autoNoStructVipBadge = document.getElementById('autoNoStructVipBadge');
+
+    const vipUpgradeSection = document.getElementById('vipUpgradeSection');
+    const vipUpgradeOption = document.getElementById('vipUpgradeOption');
+
+    if (isVIP) {
+        // VIP user - enable Auto workflow mode
+        if (autoNoStructRadio) autoNoStructRadio.disabled = false;
+
+        // Hide VIP badge
+        if (autoNoStructVipBadge) autoNoStructVipBadge.style.display = 'none';
+
+        // Hide upgrade button
+        if (vipUpgradeSection) vipUpgradeSection.style.display = 'none';
+        if (vipUpgradeOption) vipUpgradeOption.style.display = 'none';
+    } else {
+        // Non-VIP user - restrict Auto workflow mode only
+        if (autoNoStructRadio) {
+            autoNoStructRadio.disabled = true;
+            // Switch to Auto With Doc Heading if Auto was selected
+            if (autoNoStructRadio.checked && autoWithHeadingRadio) {
+                autoWithHeadingRadio.checked = true;
+            }
+        }
+
+        // Show VIP badge on Auto workflow mode
+        if (autoNoStructVipBadge) autoNoStructVipBadge.style.display = 'inline';
+
+        // Show upgrade button
+        if (vipUpgradeSection) vipUpgradeSection.style.display = 'block';
+        if (vipUpgradeOption) vipUpgradeOption.style.display = 'block';
+    }
+}
+
+async function handleUpgradeVIP() {
+    console.log('⭐ Upgrading to VIP...');
+    const token = localStorage.getItem('access_token');
+
+    if (!token) {
+        showToast('Please login first!', 'error');
+        return;
+    }
+
+    try {
+        const response = await fetch(config.BACKEND_URL + '/api/user/upgrade-vip', {
+            method: 'POST',
+            headers: getAuthHeaders()
+        });
+
+        if (response.ok) {
+            const result = await response.json();
+            isVIP = true;
+            updateVIPUI(true);
+            showToast('\u2728 Congratulations! You are now a VIP member!', 'success');
+        } else {
+            throw new Error('Failed to upgrade to VIP');
+        }
+    } catch (error) {
+        console.error('Error upgrading to VIP:', error);
+        showToast('Failed to upgrade to VIP. Please try again.', 'error');
+    }
 }

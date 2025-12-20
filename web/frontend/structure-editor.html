@@ -5,6 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Manual Structure Editor - SlideGen</title>
+    <script src="./config.js?v=2"></script> <!-- Load config -->
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -71,6 +72,12 @@
         <div class="particle"></div>
         <div class="particle"></div>
     </div>
+
+    <!-- Dark Mode Toggle Button -->
+    <button class="theme-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+        <i class="bi bi-moon-stars-fill icon moon-icon"></i>
+        <i class="bi bi-sun-fill icon sun-icon"></i>
+    </button>
 
     <div class="container-fluid px-4 py-3">
         <!-- Header -->
@@ -336,7 +343,7 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
-    <script src="js/structure-editor.js"></script>
+    <script src="js/structure-editor.js?v=2"></script> <!-- v2: Fixed config usage -->
 </body>
 
 </html>

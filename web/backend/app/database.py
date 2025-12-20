@@ -31,7 +31,8 @@ def init_db():
                 username TEXT NOT NULL,
                 hashed_password TEXT NOT NULL,
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                is_active BOOLEAN DEFAULT 1
+                is_active BOOLEAN DEFAULT 1,
+                is_vip BOOLEAN DEFAULT 0
             )
         """)
         
@@ -136,13 +137,13 @@ def get_user_by_id(user_id: int) -> Optional[dict]:
         row = cursor.fetchone()
         return dict(row) if row else None
 
-def create_user(email: str, username: str, hashed_password: str) -> int:
+def create_user(email: str, username: str, hashed_password: str, is_vip: bool = False) -> int:
     """Create new user and return user ID"""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute(
-            "INSERT INTO users (email, username, hashed_password) VALUES (?, ?, ?)",
-            (email, username, hashed_password)
+            "INSERT INTO users (email, username, hashed_password, is_vip) VALUES (?, ?, ?, ?)",
+            (email, username, hashed_password, is_vip)
         )
         conn.commit()
         return cursor.lastrowid
@@ -151,8 +152,35 @@ def get_all_users() -> List[dict]:
     """Get all users (for admin purposes)"""
     with get_db() as conn:
         cursor = conn.cursor()
-        cursor.execute("SELECT id, email, username, created_at, is_active FROM users")
+        cursor.execute("SELECT id, email, username, created_at, is_active, is_vip FROM users")
         return [dict(row) for row in cursor.fetchall()]
+
+def update_user_vip_status(user_id: int, is_vip: bool) -> None:
+    """Update user VIP status"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "UPDATE users SET is_vip = ? WHERE id = ?",
+            (is_vip, user_id)
+        )
+        conn.commit()
+
+def migrate_add_vip_column():
+    """Migration: Add is_vip column to existing users table"""
+    with get_db() as conn:
+        cursor = conn.cursor()
+        try:
+            # Check if column already exists
+            cursor.execute("PRAGMA table_info(users)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if 'is_vip' not in columns:
+                cursor.execute("ALTER TABLE users ADD COLUMN is_vip BOOLEAN DEFAULT 0")
+                conn.commit()
+                print("✅ Added is_vip column to users table")
+            else:
+                print("ℹ️  is_vip column already exists")
+        except Exception as e:
+            print(f"❌ Migration failed: {e}")
 
 # ==================== User Profile Functions ====================
 

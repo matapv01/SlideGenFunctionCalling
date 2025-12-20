@@ -83,7 +83,8 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
         email=user["email"],
         username=user["username"],
         created_at=user["created_at"],
-        is_active=bool(user["is_active"])
+        is_active=bool(user["is_active"]),
+        is_vip=bool(user.get("is_vip", False))
     )
 
 async def get_current_active_user(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
@@ -108,7 +109,8 @@ async def get_current_user_from_token_param(token: str = Query(...)) -> UserResp
         email=user["email"],
         username=user["username"],
         created_at=user["created_at"],
-        is_active=bool(user["is_active"])
+        is_active=bool(user["is_active"]),
+        is_vip=bool(user.get("is_vip", False))
     )
     
     if not user_response.is_active:
