@@ -10276,7 +10276,8 @@ def generate_minimalist_tech_list_slide(
     title_font_size=None,
     list_item_font_size=None,
     concluding_text_font_size=None,
-    custom_css=""
+    custom_css="",
+    **kwargs
 ):
     """
     Generates a bright, clean, and STATIC tech-themed list slide.
@@ -10409,7 +10410,8 @@ def generate_centered_tech_columns_slide(
     sky_bottom_color="#1E293B",
     grid_dot_color="rgba(255, 255, 255, 0.1)",
     accent_color="#22D3EE",
-    card_bg_color="rgba(30, 41, 59, 0.5)"
+    card_bg_color="rgba(30, 41, 59, 0.5)",
+    **kwargs
 ):
     """
     Generates a high-tech, STATIC slide with a top-aligned layout. 

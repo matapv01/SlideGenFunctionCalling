@@ -846,11 +846,14 @@ class GenerateMinimalistTechListSlideInput(BaseModel):
 class GenerateCenteredTechColumnsSlideInput(BaseModel):
     """Input schema for generate_centered_tech_columns_slide."""
     title: str = Field(..., description="The main title for the slide's content. Default: 'You can also split your content'.")
-    columns: List[Dict[str, str]] = Field(..., description="An array of objects, where each object represents a column. Default: [{'icon_name': 'bulb', 'title': 'Column One', 'description': 'Description for column one.'}, {'icon_name': 'target', 'title': 'Column Two', 'description': 'Description for column two.'}].")
+    columns: List[Dict[str, str]] = Field(..., description="An array of objects, where each object represents a column with keys 'icon_name' (bulb, target, rocket), 'title', and 'description'. Default: [{'icon_name': 'bulb', 'title': 'Column One', 'description': 'Description for column one.'}, {'icon_name': 'target', 'title': 'Column Two', 'description': 'Description for column two.'}].")
     font_family: str = Field(default="'Nunito', sans-serif", description="The font family for all text elements.")
     text_color: str = Field(default="#F8FAFC", description="The color for all text elements.")
-    sky_color: str = Field(default="#0F172A", description="The solid background color for the slide. Note: This parameter is not used in the current function implementation.")
+    sky_top_color: str = Field(default="#0F172A", description="Background color for the top of the slide.")
+    sky_bottom_color: str = Field(default="#1E293B", description="Background color for the bottom of the slide.")
     grid_dot_color: str = Field(default="rgba(255, 255, 255, 0.1)", description="The color and opacity for the dots in the background grid.")
+    accent_color: str = Field(default="#22D3EE", description="The accent color for borders and icons.")
+    card_bg_color: str = Field(default="rgba(30, 41, 59, 0.5)", description="Background color for the content cards.")
 
 class GenerateSplitLayoutListSlideInput(BaseModel):
     """Input schema for generate_split_layout_list_slide."""

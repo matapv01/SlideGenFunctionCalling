@@ -920,6 +920,29 @@ function updateVIPUI(isVIP) {
         if (vipUpgradeSection) vipUpgradeSection.style.display = 'block';
         if (vipUpgradeOption) vipUpgradeOption.style.display = 'block';
     }
+
+    // Toggle badges in Sidebar and Avatar
+    const sidebarBadge = document.getElementById('sidebarVipBadge');
+    const floatingBadge = document.getElementById('floatingVipBadge');
+
+    // Function to update a badge element
+    const updateBadge = (badge) => {
+        if (!badge) return;
+        badge.style.display = 'flex'; // Always show
+
+        if (isVIP) {
+            // VIP Style
+            badge.classList.remove('free-tier');
+            badge.innerHTML = '<i class="bi bi-patch-check-fill"></i> VIP';
+        } else {
+            // Free Style
+            badge.classList.add('free-tier');
+            badge.innerHTML = '<i class="bi bi-person"></i> FREE';
+        }
+    };
+
+    updateBadge(sidebarBadge);
+    updateBadge(floatingBadge);
 }
 
 async function handleUpgradeVIP() {

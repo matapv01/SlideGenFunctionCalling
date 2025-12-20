@@ -2181,6 +2181,10 @@
             display: flex;
             flex-direction: column;
             gap: 2px;
+            flex: 1;
+            /* Take available rounded space */
+            min-width: 0;
+            /* Enable ellipsis in flex child */
         }
 
         .sidebar-user-name {
@@ -2192,6 +2196,10 @@
         .sidebar-user-email {
             color: rgba(255, 255, 255, 0.8);
             font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 155px;
         }
 
         .sidebar-menu {
@@ -2400,6 +2408,70 @@
             transform: scale(1.1);
         }
 
+        /* VIP Badge Styling */
+        .vip-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+            display: none;
+            /* Hidden by default */
+            align-items: center;
+            gap: 2px;
+            animation: vip-pulse 2s infinite;
+            pointer-events: none;
+        }
+
+        .vip-badge.free-tier {
+            background: linear-gradient(135deg, #6c757d, #adb5bd);
+            animation: none;
+            /* No pulse for free tier, or define a subtle one */
+        }
+
+        .vip-badge.free-tier i {
+            color: #fff;
+        }
+
+        @keyframes vip-pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .sidebar-user-info {
+            position: relative;
+        }
+
+        .sidebar-user-info .vip-badge {
+            position: static;
+            /* No longer absolute */
+            margin-left: auto;
+            /* Push to right just in case */
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            white-space: nowrap;
+            /* Prevent wrapping */
+        }
+
         .avatar-toggle.hidden {
             opacity: 0;
             pointer-events: none;
@@ -2533,6 +2605,9 @@
     <!-- Avatar Toggle Button (Left) -->
     <button class="avatar-toggle" id="avatarToggle" onclick="toggleSidebar()">
         <i class="bi bi-person-circle"></i>
+        <div class="vip-badge" id="floatingVipBadge">
+            <i class="bi bi-patch-check-fill"></i> VIP
+        </div>
     </button>
 
     <!-- Sidebar Navigation -->
@@ -2550,6 +2625,9 @@
             <div class="sidebar-user-details">
                 <div class="sidebar-user-name" id="sidebarUsername">User</div>
                 <div class="sidebar-user-email" id="sidebarUserEmail">email@example.com</div>
+            </div>
+            <div class="vip-badge" id="sidebarVipBadge">
+                <i class="bi bi-patch-check-fill"></i> VIP
             </div>
         </div>
 
@@ -2746,7 +2824,10 @@
                             </li>
                             <!-- Workflow Mode Section -->
                             <li class="px-3 py-2" onclick="event.stopPropagation();">
-                                <strong><i class="bi bi-diagram-3"></i> Workflow Mode</strong>
+                                <strong class="text-white"><i class="bi bi-diagram-3"></i> Workflow Mode</strong>
+                                <i class="bi bi-question-circle ms-2" style="cursor: pointer; color: #0dcaf0;"
+                                    onclick="window.open('guide.html', '_blank'); event.stopPropagation();"
+                                    title="Xem hướng dẫn chi tiết"></i>
                                 <!-- Auto (VIP) - No structure document -->
                                 <div class="form-check mt-2" onclick="event.stopPropagation();">
                                     <input class="form-check-input" type="radio" name="workflowMode" id="autoNoStruct"
@@ -3075,6 +3156,17 @@
                 // Update sidebar user info
                 document.getElementById('sidebarUsername').textContent = user.username;
                 document.getElementById('sidebarUserEmail').textContent = user.email;
+
+                // Handle VIP Badge
+                const floatingVip = document.getElementById('floatingVipBadge');
+                const sidebarVip = document.getElementById('sidebarVipBadge');
+                if (user.is_vip) {
+                    floatingVip.style.display = 'flex';
+                    sidebarVip.style.display = 'flex';
+                } else {
+                    floatingVip.style.display = 'none';
+                    sidebarVip.style.display = 'none';
+                }
 
                 // Show avatar toggle
                 document.getElementById('avatarToggle').style.display = 'flex';

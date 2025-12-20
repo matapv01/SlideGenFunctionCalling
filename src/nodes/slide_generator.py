@@ -392,3 +392,11 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             state["previous_transition_tool_call"] = tool_call_dict
 
         return state
+
+    # ❌ ALL ATTEMPTS FAILED - Return default HTML to avoid crashing the graph
+    print(f"❌ ALL {MAX_REMAKE} attempts failed for slide {idx + 1}. Generating default slide.")
+    default_html = create_default_html(current_text)
+    state["current_html_content"] = default_html
+    state["current_tool_call"] = {"name": "default_fallback", "arguments": {}}
+    
+    return state

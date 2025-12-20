@@ -51,7 +51,7 @@ class ConversionService:
                         cwd=self.project_dir, 
                         capture_output=True, 
                         text=True, 
-                        timeout=30,
+                        timeout=120,
                         encoding='utf-8',
                         errors='ignore'
                     )
@@ -63,7 +63,7 @@ class ConversionService:
                             cwd=self.project_dir, 
                             capture_output=True, 
                             text=True, 
-                            timeout=30,
+                            timeout=120,
                             encoding='cp1252',
                             errors='ignore'
                         )
@@ -73,7 +73,7 @@ class ConversionService:
                             cmd, 
                             cwd=self.project_dir, 
                             capture_output=True, 
-                            timeout=30
+                            timeout=120
                         )
                         # Convert bytes to string nếu cần
                         if hasattr(process, 'stdout') and isinstance(process.stdout, bytes):
