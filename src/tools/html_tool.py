@@ -10457,24 +10457,29 @@ def generate_centered_tech_columns_slide(
             align-items: center;
             flex-direction: column;
             position: relative; 
-            padding: 6rem 4rem;
+            padding: 6rem 5rem;
             background-color: {sky_top_color};
         }}
         
         /* ĐÃ XÓA: Toàn bộ CSS cho tên lửa và animation peek */
         
-        .content-wrapper {{ z-index: 10; color: {text_color}; text-align: center; width: 100%; max-width: 100rem; }}
+        .content-wrapper {{
+            z-index: 10;
+            color: {text_color};
+            text-align: center;
+            width: 100%;
+        }}
         
         .slide-title {{
             font-size: clamp(5rem, 7vw, 5.5rem);
             font-weight: 800;
-            margin-bottom: 15rem;
+            margin-bottom: 5rem;
         }}
         
         .columns-grid {{
-            display: grid;
-            grid-template-columns: repeat({len(columns)}, 1fr);
-            gap: 5rem;
+            display: flex;
+            justify-content: center;
+            gap: 4rem;
         }}
 
         .column-card {{
@@ -10483,9 +10488,11 @@ def generate_centered_tech_columns_slide(
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-top: 4px solid {accent_color};
             box-shadow: 0 0 20px {accent_color}33;
-            padding: 5rem;
+            padding: 4rem;
             border-radius: 1rem;
             text-align: left;
+            min-width: 20%;
+            max-width: 25%;
         }}
 
         .column-icon {{
@@ -10498,13 +10505,13 @@ def generate_centered_tech_columns_slide(
         }}
 
         .column-title {{
-            font-size: 3.5rem;
+            font-size: 3rem;
             font-weight: 700;
             margin-bottom: 1.5rem;
             color: {text_color};
         }}
         .column-description {{
-            font-size: 2.2rem;
+            font-size: 2rem;
             line-height: 1.7;
             opacity: 0.8;
             color: {text_color};
