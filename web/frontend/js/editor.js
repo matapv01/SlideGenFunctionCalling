@@ -8071,10 +8071,10 @@ function convertApiSlideToEditorFormat(apiSlide, index) {
         // Create editable text content from title or create new slide
         const slideText = apiSlide.title || `Slide ${index + 1}`;
         editorContent = `
-        <div class="element" style="position: absolute; left: 100px; top: 100px; width: 600px; height: 80px; font-size: 32px; font-weight: bold; color: #333; text-align: center; z-index: 1; cursor: move; padding: 20px; border: 2px dashed #ddd; background: #f9f9f9;" data-type="heading" contenteditable="true">
+        <div class="element" style="position: absolute; left: 100px; top: 100px; width: 600px; height: 80px; font-size: 32px; font-weight: bold; color: #333; text-align: center; z-index: 1; cursor: move; padding: 0; border: 2px dashed #ddd; background: #f9f9f9;" data-type="heading" contenteditable="true">
             ${slideText}
         </div>
-        <div class="element" style="position: absolute; left: 100px; top: 220px; width: 600px; height: 200px; font-size: 16px; color: #666; line-height: 1.6; z-index: 2; cursor: move; padding: 20px; border: 2px dashed #ddd; background: #f9f9f9;" data-type="text" contenteditable="true">
+        <div class="element" style="position: absolute; left: 100px; top: 220px; width: 600px; height: 200px; font-size: 16px; color: #666; line-height: 1.6; z-index: 2; cursor: move; padding: 0; border: 2px dashed #ddd; background: #f9f9f9;" data-type="text" contenteditable="true">
             Click here to add content...
         </div>
     `;
@@ -8173,7 +8173,7 @@ function convertHtmlToEditorElements(htmlContainer, slideIndex) {
         const textContent = htmlContainer.textContent.trim();
         if (textContent) {
             elements = `
-            <div class="element" style="position: absolute; left: 100px; top: 100px; width: 700px; height: auto; min-height: 200px; font-size: 16px; color: #333; line-height: 1.6; z-index: 1; cursor: move; padding: 30px; border: 2px solid #e2e8f0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" data-type="text" contenteditable="true">
+            <div class="element" style="position: absolute; left: 100px; top: 100px; width: 700px; height: auto; min-height: 200px; font-size: 16px; color: #333; line-height: 1.6; z-index: 1; cursor: move; padding: 0; border: 2px solid #e2e8f0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" data-type="text" contenteditable="true">
                 ${textContent}
             </div>
         `;
@@ -8230,7 +8230,7 @@ function convertHtmlToEditorElements(htmlContainer, slideIndex) {
                 const textLength = element.textContent.length;
                 height = Math.max(60, Math.ceil(textLength / 100) * 25 + 40);
                 elementHtml = `
-                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.6; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="text" contenteditable="true">
+                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.6; z-index: ${zIndex}; cursor: move; padding: 0; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="text" contenteditable="true">
                     ${element.innerHTML}
                 </div>
             `;
@@ -8242,7 +8242,7 @@ function convertHtmlToEditorElements(htmlContainer, slideIndex) {
                 const listItems = element.children.length;
                 height = Math.max(100, listItems * 30 + 60);
                 elementHtml = `
-                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.8; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="list" contenteditable="true">
+                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.8; z-index: ${zIndex}; cursor: move; padding: 0; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="list" contenteditable="true">
                     ${element.outerHTML}
                 </div>
             `;
