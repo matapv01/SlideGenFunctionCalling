@@ -37,7 +37,7 @@ IDEA_STRUCTURE_LLM_MAX_TOKENS = 4096
 SLIDE_CHAR_LIMIT = 600
 # Giới hạn ký tự để quyết định có cần split content hay không
 # Nếu content > giá trị này, LLM sẽ chia nhỏ thành sub-sections
-CONTENT_CHAR_LIMIT_FOR_SPLIT = 1000
+CONTENT_CHAR_LIMIT_FOR_SPLIT = 800
 
 # --- Slide Planning ---
 # Số lượng slides được plan cùng lúc trong 1 batch (tăng = nhanh hơn nhưng tốn RAM)
@@ -50,7 +50,7 @@ SLIDE_GENERATION_MAX_RETRIES = 2
 # --- Tool Retrieval ---
 # Số lượng tools relevant được retrieve từ FAISS index cho mỗi slide
 # Tăng số này nếu muốn LLM có nhiều lựa chọn tool hơn (nhưng làm chậm)
-TOOL_RETRIEVER_TOP_K = 3
+TOOL_RETRIEVER_TOP_K = 5
 
 # --- VLM Evaluation (Visual Language Model) ---
 # Số lần retry tối đa khi VLM đánh giá slide (vòng lặp: generate → evaluate → regenerate)
