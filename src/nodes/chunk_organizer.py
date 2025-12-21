@@ -4,7 +4,7 @@ from typing import Dict, Any, List
 from src.graph.stage import State
 import time
 
-THRESHOLD_CHAR_LIMIT = 1000
+THRESHOLD_CHAR_LIMIT = 800
 
 def organize_chunks(state: State) -> State:
     """
