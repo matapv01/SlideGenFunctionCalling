@@ -31,6 +31,21 @@
             animation: gradientShift 12s ease infinite;
         }
 
+        /* Chrome, Edge, Safari */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Firefox */
+        html {
+            scrollbar-width: none;
+        }
+
+        /* IE, old Edge */
+        body {
+            -ms-overflow-style: none;
+        }
+
         @keyframes gradientShift {
             0% {
                 background-position: 0% 50%;
@@ -2898,10 +2913,20 @@
                     <input type="file" id="docxFile" accept=".docx,.zip">
                 </div>
 
-                <button class="btn-glow btn-info-glow" onclick="showIdeaModal()"
-                    style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
-                    <i class="bi bi-lightbulb"></i> Tạo từ Ý tưởng
-                </button>
+                <!-- Tạo từ Ý tưởng button with VIP badge -->
+                <div id="ideaButtonWrapper" style="position: relative; display: inline-block;">
+                    <button id="ideaButton" class="btn-glow btn-info-glow" onclick="showIdeaModal()"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <i class="bi bi-lightbulb"></i> Tạo từ Ý tưởng
+                    </button>
+                    <!-- VIP badge positioned at top-right corner -->
+                    <span id="ideaButtonVipBadge" class="badge bg-warning text-dark" style="position: absolute; top: -8px; right: -8px; font-size: 0.65rem; font-weight: 800; 
+                               padding: 3px 8px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                               display: none; z-index: 10;">
+                        <i class="bi bi-patch-check-fill"></i> VIP
+                    </span>
+                </div>
+
 
                 <button class="btn-glow btn-success-glow" onclick="createNewSlide()">
                     <i class="bi bi-plus-circle"></i> Tạo Slide Mới
@@ -3161,12 +3186,33 @@
                 // Handle VIP Badge
                 const floatingVip = document.getElementById('floatingVipBadge');
                 const sidebarVip = document.getElementById('sidebarVipBadge');
+                const ideaButtonVip = document.getElementById('ideaButtonVipBadge');
+                const ideaButton = document.getElementById('ideaButton');
+
                 if (user.is_vip) {
                     floatingVip.style.display = 'flex';
                     sidebarVip.style.display = 'flex';
+                    // Hide VIP badge on idea button if user is VIP (they can use it)
+                    if (ideaButtonVip) ideaButtonVip.style.display = 'none';
+                    // Enable idea button for VIP users
+                    if (ideaButton) {
+                        ideaButton.disabled = false;
+                        ideaButton.style.opacity = '1';
+                        ideaButton.style.cursor = 'pointer';
+                        ideaButton.style.pointerEvents = 'auto';
+                    }
                 } else {
                     floatingVip.style.display = 'none';
                     sidebarVip.style.display = 'none';
+                    // Show VIP badge on idea button if user is not VIP (feature locked)
+                    if (ideaButtonVip) ideaButtonVip.style.display = 'inline-block';
+                    // Disable and dim idea button for non-VIP users
+                    if (ideaButton) {
+                        ideaButton.disabled = true;
+                        ideaButton.style.opacity = '0.5';
+                        ideaButton.style.cursor = 'not-allowed';
+                        ideaButton.style.pointerEvents = 'none';
+                    }
                 }
 
                 // Show avatar toggle

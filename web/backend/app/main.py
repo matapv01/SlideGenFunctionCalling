@@ -2302,7 +2302,14 @@ async def generate_from_idea(
     request: Request,
     current_user: UserResponse = Depends(get_current_active_user)
 ):
-    """Generate slides from natural language idea using LLM (Protected route)"""
+    """Generate slides from natural language idea using LLM (VIP Required)"""
+    # Check VIP status
+    if not current_user.is_vip:
+        raise HTTPException(
+            status_code=403,
+            detail="VIP membership required to use the 'Generate from Idea' feature. Please upgrade to VIP."
+        )
+    
     try:
         data = await request.json()
         title = data.get('title', '').strip()
@@ -2408,7 +2415,14 @@ INSTRUCTIONS:
 2. First slide MUST be intro/title slide (position 0)
 3. Generate EXACTLY {content_min} to {content_max} content slides (position 1, 2, 3...)
 4. Each section should have a clear heading (use markdown ## for major sections)
-5. Provide brief bullet points for each slide's content (3-5 points per slide)
+5. **CRITICAL**: For each slide's text_content, provide COMPLETE and DETAILED information:
+   - DO NOT just list bullet point headings like "- Introduction" or "- Benefits" 
+   - INSTEAD, write out FULL information with specific details, data, and explanations
+   - Example GOOD: "- Machine learning improves efficiency by 80% through automated data processing and pattern recognition"
+   - Example BAD: "- Benefits" or "- Machine Learning"
+   - Include numbers, statistics, concrete examples, and technical details
+   - Each point should be a complete informative statement (10-30 words per point)
+   - Provide 3-5 detailed points per slide
 6. If transitions enabled: Add transition slide (position -1) BETWEEN each major section
 7. If thank you enabled: End with thank you slide (position -2)
 
@@ -2416,9 +2430,9 @@ OUTPUT FORMAT (JSON):
 {{
   "slide_chunks": [
     {{"position": 0, "heading": "", "text_content": "Title: [title]\\nSubtitle: [subtitle]"}},
-    {{"position": 1, "heading": "Section 1 Title", "text_content": "- Point 1\\n- Point 2\\n- Point 3"}},
+    {{"position": 1, "heading": "Section 1 Title", "text_content": "- Detailed point 1 with specific information and data\\n- Complete explanation of point 2 with concrete examples\\n- Full description of point 3 with technical details and numbers"}},
     {{"position": -1, "heading": "TRANSITION", "text_content": "Moving to: Next Section"}},
-    {{"position": 2, "heading": "Section 2 Title", "text_content": "- Point A\\n- Point B"}},
+    {{"position": 2, "heading": "Section 2 Title", "text_content": "- Comprehensive information about topic A with statistics\\n- Detailed explanation of topic B with real-world applications"}},
     ...
     {{"position": -2, "heading": "THANK_YOU", "text_content": "Thank you for your attention!"}}
   ]
@@ -2427,7 +2441,11 @@ OUTPUT FORMAT (JSON):
 IMPORTANT RULES - FOLLOW EXACTLY:
 - position: 0 for intro, -1 for transitions, -2 for thank you, regular numbers (1,2,3...) for content slides
 - heading: Empty string for intro, "TRANSITION" for transitions, "THANK_YOU" for thank you, actual section titles for content
-- text_content: For intro use "Title: X\\nSubtitle: Y" format, for content use bullet points with "-", keep concise
+- text_content: For intro use "Title: X\\nSubtitle: Y" format
+  * For CONTENT slides: Use detailed bullet points with "-" that contain COMPLETE information
+  * Based on the user's idea, EXPAND and COMPLETE each point with specific details, examples, data, and explanations
+  * DO NOT write vague headings - write full informative statements
+  * Each bullet point should be self-explanatory and contain concrete information (10-30 words)
 
 CRITICAL REQUIREMENTS:
 1. Generate EXACTLY {content_min} to {content_max} CONTENT slides (position 1, 2, 3...)
@@ -2554,9 +2572,17 @@ async def generate_from_idea_stream(
     session_id: str = Query(..., description="Session ID for idea-based generation"),
     current_user: UserResponse = Depends(get_current_user_from_token_param)
 ):
-    """Stream processing of idea-generated slides with Server-Sent Events - Requires Authentication"""
+    """Stream processing of idea-generated slides with Server-Sent Events - VIP Required"""
     
     logger.info(f"🔐 generate_from_idea_stream: Authenticated user: {current_user.email}")
+    
+    # Check VIP status
+    if not current_user.is_vip:
+        raise HTTPException(
+            status_code=403,
+            detail="VIP membership required to use the 'Generate from Idea' feature. Please upgrade to VIP."
+        )
+    
     
     # Validate session file
     temp_filename = f"idea_{session_id}.json"
