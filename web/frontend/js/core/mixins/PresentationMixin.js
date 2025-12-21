@@ -113,12 +113,25 @@ export const PresentationMixin = {
         const tempDiv = document.createElement('div');
         tempDiv.innerHTML = slide.content;
 
-        // Remove editor-specific elements
+        // Remove ALL editor-specific elements and UI controls
         tempDiv.querySelectorAll('.resize-handle').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.drag-handle').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.rotate-handle').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.connection-point').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.selection-box').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.guide-line').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.distance-line').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.distance-label').forEach(el => el.remove());
+        
+        // Clean up element attributes
         tempDiv.querySelectorAll('.element').forEach(el => {
             el.removeAttribute('contenteditable');
             el.classList.remove('selected');
+            el.classList.remove('hover');
             el.style.cursor = 'default';
+            // Remove any outline or selection styles
+            el.style.outline = 'none';
+            el.style.border = el.dataset.originalBorder || el.style.border;
         });
 
         const cleanContent = tempDiv.innerHTML;

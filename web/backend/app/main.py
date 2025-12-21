@@ -106,6 +106,14 @@ except Exception as e:
 
 # ========================== UTILITY FUNCTIONS ==========================
 
+def extract_slide_index(path):
+    """
+    Extract slide index from filename like:
+    slide_10_0.html → 10
+    """
+    match = re.search(r"slide_(\d+)", path.stem)
+    return int(match.group(1)) if match else float("inf")
+
 def save_workflow_to_database(
     user_id: int,
     project_name: str,
@@ -148,7 +156,10 @@ def save_workflow_to_database(
                 logger.warning(f"⚠️ Failed to convert {len(conversion_result['failed'])} slides")
             
             # Read and save converted slides (prioritize converted, fallback to original)
-            html_files = sorted(html_folder.glob("*.html"))
+            html_files = sorted(
+                html_folder.glob("*.html"),
+                key=extract_slide_index
+            )
             
             for idx, html_file in enumerate(html_files):
                 # Try to read converted HTML first

@@ -31,4 +31,4 @@ LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
 
 # API Settings
 API_HOST = "0.0.0.0"
-API_PORT = 3000
+API_PORT = 12008
