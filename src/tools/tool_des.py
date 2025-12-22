@@ -29,7 +29,6 @@ from src.tools.html_tool import (
   
     
     generate_geometric_transition_slide, # slide chuyển slide 
-    generate_transition_slide_2, # slide chuyển slide
     generate_dusk_transition_slide, # slide chuyển slide
     generate_memphis_transition_slide, # slide chuyển slide
     generate_pushpin_section_header,    # slide chuyển slide
@@ -294,16 +293,6 @@ class GenerateGeometricTransitionSlideInput(BaseModel):
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     primary_text_color: str = Field(default="#FFFFFF", description="The color for the section number and the main headline.")
     subtitle_color: str = Field(default="#67E8F9", description="The accent color for the subtitle text.")
-
-class GenerateTransitionSlide2Input(BaseModel):
-    """Input schema for generate_transition_slide_2."""
-    main_headline: str = Field(..., description="The large, uppercase headline for the transition. Default: 'HEADLINE'.")
-    subtitle: str = Field(..., description="The smaller text below the headline. Default: 'Content'.")
-    font_family_heading: str = Field(default="'Patrick Hand', 'Inter', cursive", description="The handwritten-style font for the headline and section number.")
-    font_family_body: str = Field(default="'Lato', 'Inter', sans-serif", description="The standard font for the subtitle.")
-    number_color: str = Field(default="#F37A59", description="The accent color for the section number.")
-    text_color: str = Field(default="#2C3E50", description="The color for the headline and subtitle text.")
-    bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the background texture. Defaults to a paper texture.")
 
 class GenerateDuskTransitionSlideInput(BaseModel):
     """Input schema for generate_dusk_transition_slide."""
@@ -781,8 +770,8 @@ class GenerateCorporateContentSlideInput(BaseModel):
     bg_color: str = Field(default="#F8FAFC", description="The background color for the main content area (typically off-white).")
     accent_panel_color: str = Field(default="#6366F1", description="The background color for the diagonal title panel.")
     title_color: str = Field(default="#FFFFFF", description="Text color for the main title on the colored panel.")
-    list_title_color: str = Field(default="#1F2937", description="Text color for the titles inside the content cards.")
-    list_text_color: str = Field(default="#4B5563", description="Text color for the description text inside the content cards.")
+    list_title_color: str = Field(default="#000000", description="Text color for the titles inside the content cards. Use dark colors for visibility on white backgrounds.")
+    list_text_color: str = Field(default="#333333", description="Text color for the description text inside the content cards. Use dark colors for visibility on white backgrounds.")
 
 class GenerateSplitContentSlideInput(BaseModel):
     """Input schema for generate_split_content_slide."""
@@ -1367,12 +1356,6 @@ TRANSITION_TOOLS = [
         name="generate_geometric_transition_slide",
         description="Generates a dynamic and modern **Transition or Section Header Slide**. Its most distinct characteristic is the use of vibrant, multi-colored geometric shapes (parallelograms) clustered in the corners. With a dark background and high-impact, centered text, this slide is perfect for introducing new sections in technology, creative, or modern corporate presentations.",
         args_schema=GenerateGeometricTransitionSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_transition_slide_2,
-        name="generate_transition_slide_2",
-        description="Generates a Transition or Section Break Slide with a charming, hand-drawn aesthetic. This slide is characterized by its notebook paper background and friendly, handwritten-style fonts. It has been enhanced with **extra-large, high-impact typography** for the section number, headline, and subtitle, making it an unmissable and bold divider between topics. Perfect for educational presentations, creative workshops, or any talk wanting a fun and clear structural break.",
-        args_schema=GenerateTransitionSlide2Input
     ),
     StructuredTool.from_function(
         func=generate_dusk_transition_slide,

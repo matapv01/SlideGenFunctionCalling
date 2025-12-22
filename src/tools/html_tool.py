@@ -9413,8 +9413,8 @@ def generate_corporate_content_slide(
     bg_color="#F8FAFC",
     accent_panel_color="#6366F1",
     title_color="#FFFFFF",
-    list_title_color="#1F2937",
-    list_text_color="#4B5563"
+    list_title_color="#000000",
+    list_text_color="#333333"
 ):
     """
     Generates a bright, professional, and STATIC content slide.
