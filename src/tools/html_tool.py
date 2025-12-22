@@ -2026,6 +2026,849 @@ def generate_mission_slide(
 </html>"""
     return html_code
 
+# moi by Nam
+def generate_training_intro_slide(
+    main_title="Introduction",
+    description_text="Briefly introduce yourself and explain the purpose of your training presentation. Discuss its objectives, and give the audience an idea of what to expect in the coming slides.",
+    bg_color="#3a3a3a",
+    title_color="#b8d89f",
+    text_color="#e8d7a8",
+    image_url="https://images.pexels.com/photos/3587620/pexels-photo-3587620.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    font_family="'Segoe UI', 'Arial', sans-serif",
+):
+    """
+    Generate a training introduction slide with dark background and bottom image.
+    
+    This slide features a two-section layout:
+    - Top section: Dark background with title and description text
+    - Bottom section: Full-width training/professional image
+    
+    :param main_title: Main title text (e.g., "Introduction")
+    :param description_text: Description or explanation text below title
+    :param bg_color: Background color for the top section (hex code)
+    :param title_color: Color for the main title (hex code, light green by default)
+    :param text_color: Color for the description text (hex code, light yellow by default)
+    :param image_url: URL of the image to display in bottom section
+    :param font_family: Font family for all text elements
+    :param title_font_size: Font size for the main title
+    :param text_font_size: Font size for the description text
+    :param image_height: Height of the image section (percentage or px)
+    :param custom_css: Additional custom CSS to be included
+    :return: A string containing the HTML code for the slide
+    """
+    
+    # Extract values if they're lists
+    if isinstance(main_title, list) and len(main_title) > 0:
+        main_title = main_title[0]
+    
+    if isinstance(description_text, list) and len(description_text) > 0:
+        description_text = description_text[0]
+    
+    if isinstance(image_url, list) and len(image_url) > 0:
+        image_url = image_url[0]
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ 
+            font-size: 16px; 
+            width: 100%;
+            height: 100%;
+        }}
+        
+        body, html {{
+            height: 100vh;
+            width: 100vw;
+            font-family: {font_family};
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: {bg_color};
+            position: relative;
+        }}
+        
+        /* Content wrapper for scaling */
+        .content-wrapper {{
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: inherit;
+        }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }}
+        
+        /* Top text section */
+        .text-section {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5% 7%;
+            background: {bg_color};
+        }}
+        
+        .title {{
+            font-size: clamp(2rem, 8vw, 7rem);
+            font-weight: 300;
+            color: {title_color};
+            margin-bottom: 2rem;
+            letter-spacing: 0.02em;
+            line-height: 1.1;
+        }}
+        
+        .description {{
+            font-size: clamp(1rem, 2.5vw, 2.4rem);
+            color: {text_color};
+            line-height: 1.5;
+            max-width: 90%;
+            font-weight: 300;
+        }}
+        
+        /* Bottom image section */
+        .image-section {{
+            height: 55%;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .image-section img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }}
+        
+
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <!-- Top text section -->
+                <div class="text-section">
+                    <h1 class="title">{main_title}</h1>
+                    <p class="description">{description_text}</p>
+                </div>
+                
+                <!-- Bottom image section -->
+                <div class="image-section">
+                    <img src="{image_url}" alt="Training introduction image">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_employee_intro_slide(
+    main_title="Employee Transition Plan",
+    subtitle="Use the following infographics to outline how your team or company will manage responsibilities and workflow during employee movement.",
+    bg_color="#0d4d3d",
+    title_color="#FFFFFF",
+    subtitle_color="#FFFFFF",
+    circle_color_1="#0a3d2f",
+    circle_color_2="#10855b",
+    circle_color_3="#2dd4bf",
+    circle_color_4="#FFFFFF",
+    font_family="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+):
+    """
+    Generate an Employee Introduction slide with decorative geometric circles.
+    
+    This function creates a modern presentation slide featuring:
+    - Company name in top left
+    - Large main title
+    - Descriptive subtitle
+    - Decorative overlapping circles on the right side
+    - Professional green color scheme
+    
+    Args:
+        company_name (str): Company name displayed at top left
+        main_title (str): Main slide title
+        subtitle (str): Descriptive text below title
+        bg_color (str): Background color (default: dark green)
+        company_text_color (str): Color for company name (default: cyan)
+        title_color (str): Color for main title (default: white)
+        subtitle_color (str): Color for subtitle (default: white)
+        circle_color_1 (str): First circle color (darkest green)
+        circle_color_2 (str): Second circle color (medium green)
+        circle_color_3 (str): Third circle color (light cyan)
+        circle_color_4 (str): Fourth circle color (white)
+        font_family (str): Font family for all text
+        
+    Returns:
+        str: Complete HTML code for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Transition Plan</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: {font_family};
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            background: {bg_color};
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .content-wrapper {{
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 80px 150px;
+            z-index: 2;
+        }}
+
+        .main-content {{
+            max-width: 900px;
+        }}
+        
+        .main-title {{
+            color: {title_color};
+            font-size: 96px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 40px;
+        }}
+        
+        .subtitle {{
+            color: {subtitle_color};
+            font-size: 24px;
+            line-height: 1.6;
+            font-weight: 400;
+            max-width: 700px;
+        }}
+        
+        .decorative-circles {{
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 900px;
+            height: 900px;
+            z-index: 1;
+        }}
+        
+        .circle {{
+            position: absolute;
+            border-radius: 50%;
+        }}
+        
+        .circle-1 {{
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle at 25% 25%, {circle_color_1}, #051f18, #000000);
+            top: -80px;
+            right: 180px;
+            opacity: 0.95;
+            box-shadow: 
+                0 40px 100px rgba(0, 0, 0, 0.5),
+                inset 0 0 80px rgba(45, 212, 191, 0.1);
+        }}
+        
+        .circle-2 {{
+            width: 520px;
+            height: 520px;
+            background: radial-gradient(circle at 35% 35%, {circle_color_2}, #0a5a3e, #042820);
+            top: 40px;
+            right: 120px;
+            opacity: 0.9;
+            box-shadow: 
+                0 35px 80px rgba(16, 133, 91, 0.4),
+                inset 0 0 60px rgba(45, 212, 191, 0.15);
+        }}
+        
+        .circle-3 {{
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle at 30% 30%, {circle_color_3}, #16a174, #0e7557);
+            top: 140px;
+            right: 60px;
+            opacity: 0.95;
+            box-shadow: 
+                0 30px 70px rgba(45, 212, 191, 0.3),
+                inset 0 0 50px rgba(255, 255, 255, 0.1);
+        }}
+        
+        .circle-4 {{
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle at 25% 25%, {circle_color_4}, #d1fae5, #a7f3d0);
+            top: 250px;
+            right: 10px;
+            opacity: 1;
+            box-shadow: 
+                0 25px 60px rgba(255, 255, 255, 0.2),
+                inset 0 0 40px rgba(45, 212, 191, 0.2);
+        }}
+        
+        .circle-accent-1 {{
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle at 50% 50%, rgba(45, 212, 191, 0.4), rgba(45, 212, 191, 0.1), transparent);
+            top: -120px;
+            right: 450px;
+            opacity: 0.7;
+            filter: blur(30px);
+        }}
+        
+        .circle-accent-2 {{
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1), transparent);
+            bottom: -80px;
+            right: 300px;
+            opacity: 0.6;
+            filter: blur(35px);
+        }}
+        
+        .circle-accent-3 {{
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle at 50% 50%, rgba(16, 133, 91, 0.5), rgba(16, 133, 91, 0.2), transparent);
+            top: 50%;
+            right: 650px;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            filter: blur(40px);
+        }}
+        
+        .circle-ring {{
+            width: 700px;
+            height: 700px;
+            border: 3px solid rgba(45, 212, 191, 0.2);
+            top: -100px;
+            right: 150px;
+            opacity: 0.4;
+        }}
+        
+        .circle-ring-2 {{
+            width: 500px;
+            height: 500px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            top: 100px;
+            right: 200px;
+            opacity: 0.3;
+        }}
+        
+        /* Responsive wrapper for preview */
+        .wrapper {{
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1a1a1a;
+        }}
+        
+        .scale-container {{
+            transform-origin: center center;
+        }}
+        
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="scale-container" id="scaleContainer">
+            <div class="slide-container">
+                <div class="decorative-circles">
+                    <div class="circle circle-ring"></div>
+                    <div class="circle circle-ring-2"></div>
+                    <div class="circle circle-accent-1"></div>
+                    <div class="circle circle-accent-2"></div>
+                    <div class="circle circle-accent-3"></div>
+                    <div class="circle circle-1"></div>
+                    <div class="circle circle-2"></div>
+                    <div class="circle circle-3"></div>
+                    <div class="circle circle-4"></div>
+                </div>
+                
+                <div class="content-wrapper">
+                    <div class="main-content">
+                        <h1 class="main-title">{main_title}</h1>
+                        <p class="subtitle">{subtitle}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+
+def generate_research_proposal_slide(
+    title="Research Proposal Presentation",
+    subtitle="PRODUCT RESEARCH PROPOSAL FOR INGOUDE COMPANY",
+    bg_color="#FFFFFF",
+    accent_color="#C4A57B",
+    title_color="#000000",
+    subtitle_color="#9B8B6F",
+    left_bar_width="60"
+):
+    """
+    Generate a minimalist research proposal title slide with geometric decorations.
+    
+    This function creates a clean, professional slide featuring:
+    - Large bold title text
+    - Subtitle in accent color
+    - Geometric decorative elements (circles, arches, dots, bar)
+    - Modern minimalist aesthetic
+    
+    Args:
+        title (str): Main title text for the slide
+        subtitle (str): Subtitle/description text
+        bg_color (str): Background color (default: white)
+        accent_color (str): Color for decorative elements (default: tan/brown)
+        title_color (str): Color for main title (default: black)
+        subtitle_color (str): Color for subtitle (default: darker tan)
+        left_bar_width (str): Width of left decorative bar in pixels
+    
+    Returns:
+        str: Complete HTML code for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Research Proposal Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Inter', sans-serif;
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        
+        /* Left decorative bar */
+        .left-bar {{
+            position: absolute;
+            left: 0;
+            top: 180px;
+            width: {left_bar_width}px;
+            height: 180px;
+            background-color: {accent_color};
+            opacity: 0.9;
+        }}
+        
+        /* Content area */
+        .content {{
+            position: absolute;
+            left: 120px;
+            top: 50%;
+            transform: translateY(-50%);
+            max-width: 1200px;
+            z-index: 10;
+        }}
+        
+        .title {{
+            font-family: 'Montserrat', sans-serif;
+            font-size: 110px;
+            font-weight: 900;
+            color: {title_color};
+            line-height: 1.1;
+            margin-bottom: 40px;
+            letter-spacing: -2px;
+        }}
+        
+        .subtitle {{
+            font-family: 'Inter', sans-serif;
+            font-size: 28px;
+            font-weight: 500;
+            color: {subtitle_color};
+            letter-spacing: 4px;
+            text-transform: uppercase;
+        }}
+        
+        /* Decorative elements container */
+        .decorations {{
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            background-image: 
+                linear-gradient({accent_color} 1px, transparent 1px),
+                linear-gradient(90deg, {accent_color} 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.1;
+        }}
+        
+        /* Central crosshair */
+        .crosshair {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 400px;
+            height: 400px;
+        }}
+        
+        .crosshair-line {{
+            position: absolute;
+            background-color: {accent_color};
+            opacity: 0.6;
+        }}
+        
+        .crosshair-line.horizontal {{
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }}
+        
+        .crosshair-line.vertical {{
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }}
+        
+        /* Geometric shapes */
+        .geometric-shape {{
+            position: absolute;
+            border: 2px solid {accent_color};
+            opacity: 0.5;
+        }}
+        
+        .triangle {{
+            top: 200px;
+            right: 300px;
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 86px solid {accent_color};
+            opacity: 0.4;
+        }}
+        
+        .square {{
+            bottom: 300px;
+            right: 200px;
+            width: 80px;
+            height: 80px;
+            background-color: transparent;
+        }}
+        
+        .hexagon {{
+            top: 400px;
+            left: 600px;
+            width: 100px;
+            height: 57px;
+            background-color: {accent_color};
+            position: relative;
+            opacity: 0.3;
+        }}
+        
+        .hexagon:before,
+        .hexagon:after {{
+            content: "";
+            position: absolute;
+            width: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            left: 0;
+        }}
+        
+        .hexagon:before {{
+            bottom: 100%;
+            border-bottom: 29px solid {accent_color};
+        }}
+        
+        .hexagon:after {{
+            top: 100%;
+            border-top: 29px solid {accent_color};
+        }}
+        
+        /* Data points */
+        .data-point {{
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            background-color: {accent_color};
+            border-radius: 50%;
+            opacity: 0.7;
+        }}
+        
+        .data-point:nth-child(1) {{
+            top: 250px;
+            right: 350px;
+        }}
+        
+        .data-point:nth-child(2) {{
+            bottom: 350px;
+            right: 250px;
+        }}
+        
+        .data-point:nth-child(3) {{
+            top: 450px;
+            left: 650px;
+        }}
+        
+        /* Responsive wrapper for preview */
+        .wrapper {{
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1a1a1a;
+        }}
+        
+        .wrapper .slide-container {{
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }}
+        
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="slide-container">
+            <!-- Left decorative bar -->
+            <div class="left-bar"></div>
+            
+            <!-- Main content -->
+            <div class="content">
+                <h1 class="title">{title}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+            
+            <!-- Decorative elements -->
+            <div class="decorations">
+                <!-- Central crosshair -->
+                <div class="crosshair">
+                    <div class="crosshair-line horizontal"></div>
+                    <div class="crosshair-line vertical"></div>
+                </div>
+                
+                <!-- Geometric shapes -->
+                <div class="triangle"></div>
+                <div class="square geometric-shape"></div>
+                <div class="hexagon"></div>
+                
+                <!-- Data points -->
+                <div class="data-point"></div>
+                <div class="data-point"></div>
+                <div class="data-point"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_business_intro_slide(
+    main_title="PRESENTATION",
+    subtitle="Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
+    main_title_color="#0056d2",
+    subtitle_color="#666666",
+    accent_color="#0056d2",
+    main_font="Arial, sans-serif",
+    subtitle_font="Arial, sans-serif"
+):
+    """
+    Generate a clean business presentation intro slide with centered text and decorative side circles.
+    
+    Args:
+        main_title (str): Large main title text (e.g., "PRESENTATION")
+        subtitle (str): Description text below main title
+        bg_color (str): Background color (default: light gray)
+        main_title_color (str): Color for main title (default: blue)
+        subtitle_color (str): Color for subtitle text
+        accent_color (str): Color for decorative circles
+        main_font (str): Font family for main title
+        subtitle_font (str): Font family for subtitle
+    
+    Returns:
+        str: Complete HTML code for the business intro slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Presentation Intro</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(0, 86, 210, 0.03) 50px,
+                    rgba(0, 86, 210, 0.03) 100px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(0, 86, 210, 0.03) 50px,
+                    rgba(0, 86, 210, 0.03) 100px
+                ),
+                linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }}
+        
+        .content {{
+            text-align: center;
+            z-index: 10;
+            max-width: 1400px;
+            padding: 0 100px;
+        }}
+        
+        .main-title {{
+            font-family: {main_font};
+            font-size: 120px;
+            font-weight: 900;
+            color: {main_title_color};
+            letter-spacing: 4px;
+            margin-bottom: 30px;
+            line-height: 1.1;
+        }}
+        
+        .subtitle {{
+            font-family: {subtitle_font};
+            font-size: 28px;
+            font-weight: 400;
+            color: {subtitle_color};
+            line-height: 1.6;
+            max-width: 900px;
+            margin: 0 auto;
+        }}
+        
+        /* Decorative D-shapes on left and right */
+        .circle-left {{
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            height: 400px;
+            background: {accent_color};
+            border-radius: 0 200px 200px 0;
+            z-index: 1;
+        }}
+        
+        .circle-right {{
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            height: 400px;
+            background: {accent_color};
+            border-radius: 200px 0 0 200px;
+            z-index: 1;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Side circles -->
+        <div class="circle-left"></div>
+        <div class="circle-right"></div>
+        
+        <!-- Main content -->
+        <div class="content">
+            <div class="main-title">{main_title}</div>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
 #----------------------SLIDE CHUYỂN SLIDE
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
@@ -2892,7 +3735,446 @@ def generate_intro_slide(
 </html>"""
     
     return html_code
+
+
+# moi    
+def generate_research_proposal_transition_slide(
+    headline="TRANSITION HEADLINE",
+    subtitle="Let's start with the first set of slides",
+    bg_color="#FFFFFF",
+    accent_color="#C4A57B",
+    number_color="#C4A57B",
+    headline_color="#000000",
+    subtitle_color="#9B8B6F",
+    left_bar_width="60",
+):
+    """
+    Generate a minimalist transition slide with geometric decorations.
     
+    This function creates a clean, professional transition slide featuring:
+    - Bold headline text
+    - Descriptive subtitle
+    - Geometric decorative elements (crosshair, shapes, grid, bar)
+    - Modern minimalist aesthetic
+    
+    Args:
+        headline (str): Main headline text for the transition
+        subtitle (str): Subtitle/description text
+        bg_color (str): Background color (default: white)
+        accent_color (str): Color for decorative elements (default: tan/brown)
+        number_color (str): Color for section number (default: tan/brown)
+        headline_color (str): Color for headline (default: black)
+        subtitle_color (str): Color for subtitle (default: darker tan)
+        left_bar_width (str): Width of left decorative bar in pixels
+    
+    Returns:
+        str: Complete HTML code for the transition slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Transition Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Inter', sans-serif;
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        
+        /* Left decorative bar */
+        .left-bar {{
+            position: absolute;
+            left: 0;
+            top: 180px;
+            width: {left_bar_width}px;
+            height: 180px;
+            background-color: {accent_color};
+            opacity: 0.9;
+        }}
+        
+        /* Content area */
+        .content {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            max-width: 1400px;
+        }}
+        
+        .headline {{
+            font-family: 'Montserrat', sans-serif;
+            font-size: 90px;
+            font-weight: 900;
+            color: {headline_color};
+            line-height: 1.1;
+            margin-bottom: 30px;
+            letter-spacing: -2px;
+            text-transform: uppercase;
+        }}
+        
+        .subtitle {{
+            font-family: 'Inter', sans-serif;
+            font-size: 32px;
+            font-weight: 500;
+            color: {subtitle_color};
+            letter-spacing: 1px;
+        }}
+        
+        /* Decorative elements container */
+        .decorations {{
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            overflow: hidden;
+            background-image: 
+                linear-gradient({accent_color} 1px, transparent 1px),
+                linear-gradient(90deg, {accent_color} 1px, transparent 1px);
+            background-size: 40px 40px;
+            opacity: 0.08;
+        }}
+        
+        /* Central crosshair */
+        .crosshair {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 500px;
+            height: 500px;
+        }}
+        
+        .crosshair-line {{
+            position: absolute;
+            background-color: {accent_color};
+            opacity: 0.4;
+        }}
+        
+        .crosshair-line.horizontal {{
+            top: 50%;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            transform: translateY(-50%);
+        }}
+        
+        .crosshair-line.vertical {{
+            top: 0;
+            left: 50%;
+            width: 2px;
+            height: 100%;
+            transform: translateX(-50%);
+        }}
+        
+        /* Geometric shapes */
+        .geometric-shape {{
+            position: absolute;
+            border: 2px solid {accent_color};
+            opacity: 0.4;
+        }}
+        
+        .triangle {{
+            top: 150px;
+            right: 250px;
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-bottom: 86px solid {accent_color};
+            opacity: 0.3;
+        }}
+        
+        .square {{
+            bottom: 200px;
+            right: 300px;
+            width: 80px;
+            height: 80px;
+            background-color: transparent;
+        }}
+        
+        .hexagon {{
+            top: 200px;
+            left: 200px;
+            width: 100px;
+            height: 57px;
+            background-color: {accent_color};
+            position: relative;
+            opacity: 0.25;
+        }}
+        
+        .hexagon:before,
+        .hexagon:after {{
+            content: "";
+            position: absolute;
+            width: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            left: 0;
+        }}
+        
+        .hexagon:before {{
+            bottom: 100%;
+            border-bottom: 29px solid {accent_color};
+        }}
+        
+        .hexagon:after {{
+            top: 100%;
+            border-top: 29px solid {accent_color};
+        }}
+        
+        /* Data points */
+        .data-point {{
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background-color: {accent_color};
+            border-radius: 50%;
+            opacity: 0.5;
+        }}
+        
+        .data-point:nth-child(1) {{
+            top: 180px;
+            right: 400px;
+        }}
+        
+        .data-point:nth-child(2) {{
+            bottom: 250px;
+            right: 350px;
+        }}
+        
+        .data-point:nth-child(3) {{
+            top: 250px;
+            left: 300px;
+        }}
+        
+        .data-point:nth-child(4) {{
+            bottom: 180px;
+            left: 250px;
+        }}
+        
+        /* Responsive wrapper for preview */
+        .wrapper {{
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background-color: #1a1a1a;
+        }}
+        
+        .wrapper .slide-container {{
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }}
+        
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="slide-container">
+            <!-- Left decorative bar -->
+            <div class="left-bar"></div>
+            
+            <!-- Main content -->
+            <div class="content">
+                <h1 class="headline">{headline}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+            
+            <!-- Decorative elements -->
+            <div class="decorations">
+                <!-- Central crosshair -->
+                <div class="crosshair">
+                    <div class="crosshair-line horizontal"></div>
+                    <div class="crosshair-line vertical"></div>
+                </div>
+                
+                <!-- Geometric shapes -->
+                <div class="triangle"></div>
+                <div class="square geometric-shape"></div>
+                <div class="hexagon"></div>
+                
+                <!-- Data points -->
+                <div class="data-point"></div>
+                <div class="data-point"></div>
+                <div class="data-point"></div>
+                <div class="data-point"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_business_transition_slide(
+    headline="TRANSITION",
+    subtitle="Let's start with the next section",
+    headline_color="#0056d2",
+    subtitle_color="#666666",
+    accent_color="#0056d2",
+    headline_font="Arial, sans-serif",
+    subtitle_font="Arial, sans-serif"
+):
+    """
+    Generate a clean business transition slide with centered text and decorative side D-shapes.
+    
+    Args:
+        headline (str): Main transition headline (e.g., "TRANSITION")
+        subtitle (str): Subtitle text below headline
+        headline_color (str): Color for headline (default: blue)
+        subtitle_color (str): Color for subtitle text
+        accent_color (str): Color for decorative D-shapes
+        headline_font (str): Font family for headline
+        subtitle_font (str): Font family for subtitle
+    
+    Returns:
+        str: Complete HTML code for the business transition slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Transition</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(0, 86, 210, 0.03) 50px,
+                    rgba(0, 86, 210, 0.03) 100px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(0, 86, 210, 0.03) 50px,
+                    rgba(0, 86, 210, 0.03) 100px
+                ),
+                linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }}
+        
+        .content {{
+            text-align: center;
+            z-index: 10;
+            max-width: 1400px;
+            padding: 0 100px;
+        }}
+        
+        .headline {{
+            font-family: {headline_font};
+            font-size: 140px;
+            font-weight: 900;
+            color: {headline_color};
+            letter-spacing: 8px;
+            margin-bottom: 40px;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }}
+        
+        .subtitle {{
+            font-family: {subtitle_font};
+            font-size: 36px;
+            font-weight: 400;
+            color: {subtitle_color};
+            line-height: 1.6;
+            max-width: 1000px;
+            margin: 0 auto;
+        }}
+        
+        /* Decorative D-shapes on left and right */
+        .circle-left {{
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            height: 400px;
+            background: {accent_color};
+            border-radius: 0 200px 200px 0;
+            z-index: 1;
+        }}
+        
+        .circle-right {{
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            height: 400px;
+            background: {accent_color};
+            border-radius: 200px 0 0 200px;
+            z-index: 1;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Side D-shapes -->
+        <div class="circle-left"></div>
+        <div class="circle-right"></div>
+        
+        <!-- Main content -->
+        <div class="content">
+            <div class="headline">{headline}</div>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+
 #------------------------SLIDE CONTENT
 def generate_content_slide(
     main_title="CONTENT",
@@ -12603,6 +13885,846 @@ def generate_premium_abstract_slide(
 </html>"""
     return html_code
 
+
+def generate_company_mission_slide(
+    main_title="OUR COMPANY OUR COMPANY OUR COMPANY OUR COMPANY",
+    mission_items=[
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
+        "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore"
+    ],
+    title_color="#000000",
+    panel_bg_color="#0052CC",
+    panel_text_color="#FFFFFF",
+    number_bg_color="#E8E8E8",
+    number_text_color="#000000",
+    accent_bar_color="#0052CC",
+    bg_color="#F5F5F5",
+):
+    """
+    Generate a company mission slide with customizable numbered items.
+    
+    Parameters:
+    - main_title: Main title text (default: "OUR COMPANY")
+    - mission_items: List of mission item texts (default: 6 items with Lorem ipsum)
+    - title_color: Color for main title
+    - subtitle_color: Color for subtitle
+    - panel_bg_color: Background color for right panel
+    - panel_text_color: Text color inside panel
+    - number_bg_color: Background color for number circles
+    - number_text_color: Text color for numbers
+    - accent_bar_color: Color for bottom accent bar
+    - bg_color: Background color for slide
+    - custom_css: Additional custom CSS
+    
+    Returns:
+    - HTML code for the company mission slide
+    """
+    
+    # Generate mission items HTML
+    mission_items_html = ""
+    for idx, item in enumerate(mission_items, 1):
+        mission_items_html += f"""
+        <div class="mission-item">
+            <div class="number-circle">{idx}</div>
+            <div class="mission-text">{item}</div>
+        </div>
+        """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Mission Slide</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+
+        body {{
+            font-family: 'Arial', sans-serif;
+            background-color: {bg_color};
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }}
+
+        .slide-wrapper {{
+            width: 1920px;
+            height: 1080px;
+            background-color: {bg_color};
+            position: relative;
+            transform-origin: top left;
+        }}
+
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            gap: 60px;
+            padding: 100px 0px 100px 80px;
+        }}
+
+        .left-section {{
+            flex: 0 0 35%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 60px;
+        }}
+
+        .title-section {{
+            margin-bottom: 20px;
+        }}
+
+        .main-title {{
+            font-size: 64px;
+            font-weight: 700;
+            color: {title_color};
+            letter-spacing: 3px;
+            margin-bottom: 8px;
+            line-height: 1.2;
+        }}
+
+        .left-text {{
+            font-size: 24px;
+            line-height: 1.7;
+            color: {title_color};
+            max-width: 600px;
+            opacity: 0.9;
+        }}
+
+        .accent-bar {{
+            width: 180px;
+            height: 14px;
+            background-color: {accent_bar_color};
+            margin-top: 20px;
+            border-radius: 2px;
+        }}
+
+        .right-section {{
+            flex: 1;
+            position: relative;
+            display: flex;
+            align-items: center;
+        }}
+
+        .mission-panel {{
+            background-color: {panel_bg_color};
+            border-radius: 50px 0 0 50px;
+            padding: 70px 80px 70px 120px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 48px;
+            position: relative;
+            overflow: visible;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.1);
+        }}
+
+        .mission-item {{
+            display: flex;
+            align-items: center;
+            gap: 35px;
+            position: relative;
+        }}
+
+        .number-circle {{
+            position: absolute;
+            left: -100px;
+            width: 90px;
+            height: 90px;
+            background-color: {number_bg_color};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 52px;
+            font-weight: 900;
+            color: {number_text_color};
+            flex-shrink: 0;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15);
+        }}
+
+        .mission-text {{
+            font-size: 28px;
+            line-height: 1.65;
+            color: {panel_text_color};
+        }}
+
+
+        @media (max-width: 1920px) {{
+            .slide-wrapper {{
+                transform: scale(calc(100vw / 1920));
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <div class="left-section">
+                <div class="title-section">
+                    <div class="main-title">{main_title}</div>
+                </div>
+                <div class="accent-bar"></div>
+            </div>
+            
+            <div class="right-section">
+                <div class="mission-panel">
+                    {mission_items_html}
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+
+def generate_methodology_slide(
+    title="Methodology Methodology ",
+    title_color="#000000",
+    accent_color="#C9A86A",
+    qualitative_title="Qualitative Methods",
+    qualitative_text="Qualitative research methods involve collecting and analyzing non-numerical data to explore the underlying motivations, perceptions, and behaviors of individuals. In our research proposal, qualitative methods will be utilized to gain in-depth insights into consumer preferences, attitudes, and experiences related to the new product.",
+    quantitative_title="Quantitative Methods",
+    quantitative_text="Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.",
+    image_url="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2340&auto=format&fit=crop",
+    bg_color="#F5F5F5",
+    font_family="'Arial', sans-serif",
+    custom_css=""
+):
+    """
+    Generate a Methodology slide with two method boxes and professional image.
+    
+    Args:
+        title: Main title text
+        title_color: Color for the main title
+        accent_color: Color for accent elements (bar, circles, boxes)
+        qualitative_title: Title for qualitative methods box
+        qualitative_text: Description text for qualitative methods
+        quantitative_title: Title for quantitative methods box
+        quantitative_text: Description text for quantitative methods
+        image_url: URL for the right side professional image
+        bg_color: Background color
+        font_family: Font family for the text
+        custom_css: Additional custom CSS
+    
+    Returns:
+        str: Complete HTML code for the methodology slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Methodology Slide</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: {font_family};
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        
+        .slide-wrapper {{
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background-color: {bg_color};
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            background-color: {bg_color};
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        /* Decorative circles in top right */
+        .decorative-circles {{
+            position: absolute;
+            top: 0;
+            right: 40%;
+            width: 250px;
+            height: 250px;
+            z-index: 1;
+        }}
+        
+        .circle {{
+            position: absolute;
+            border: 3px solid {accent_color};
+            border-radius: 50%;
+            opacity: 0.6;
+        }}
+        
+        .circle-1 {{
+            width: 100px;
+            height: 100px;
+            top: 30px;
+            right: 80px;
+        }}
+        
+        .circle-2 {{
+            width: 130px;
+            height: 130px;
+            top: 15px;
+            right: 65px;
+        }}
+        
+        .circle-3 {{
+            width: 160px;
+            height: 160px;
+            top: 0;
+            right: 50px;
+        }}
+        
+        .circle-4 {{
+            width: 190px;
+            height: 190px;
+            top: -15px;
+            right: 35px;
+        }}
+        
+        .circle-5 {{
+            width: 220px;
+            height: 220px;
+            top: -30px;
+            right: 20px;
+        }}
+        
+        /* Title Section */
+        .title-section {{
+            position: absolute;
+            top: 30px;
+            left: 0;
+            display: flex;
+            align-items: center;
+            z-index: 2;
+        }}
+        
+        .title-accent {{
+            width: 100px;
+            height: 100px;
+            background-color: {accent_color};
+            margin-right: 20px;
+        }}
+        
+        .title {{
+            font-size: 75px;
+            font-weight: 900;
+            color: {title_color};
+            
+        }}
+        
+        /* Content Section */
+        .content-section {{
+            position: absolute;
+            top: 240px;
+            left: 50px;
+            right: 50px;
+            display: flex;
+            gap: 30px;
+            height: 780px;
+        }}
+        
+        /* Left side - Method boxes */
+        .methods-container {{
+            flex: 0 0 620px;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+        }}
+        
+        .method-box {{
+            padding: 40px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            flex: 1;
+        }}
+        
+        .method-box.qualitative {{
+            background-color: rgba(201, 168, 106, 0.3);
+        }}
+        
+        .method-box.quantitative {{
+            background-color: rgba(201, 168, 106, 0.5);
+        }}
+        
+        .method-title {{
+            font-size: 45px;
+            font-weight: 700;
+            color: {title_color};
+            margin-bottom: 15px;
+        }}
+        
+        .method-text {{
+            font-size: 21px;
+            line-height: 1.7;
+            color: #1a1a1a;
+        }}
+        
+        /* Right side - Image */
+        .image-container {{
+            flex: 1;
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+        }}
+        
+        .image-container img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <!-- Decorative Circles -->
+            <div class="decorative-circles">
+                <div class="circle circle-1"></div>
+                <div class="circle circle-2"></div>
+                <div class="circle circle-3"></div>
+                <div class="circle circle-4"></div>
+                <div class="circle circle-5"></div>
+            </div>
+            
+            <!-- Title Section -->
+            <div class="title-section">
+                <div class="title-accent"></div>
+                <h1 class="title">{title}</h1>
+            </div>
+            
+            <!-- Content Section -->
+            <div class="content-section">
+                <!-- Methods Container -->
+                <div class="methods-container">
+                    <!-- Qualitative Methods Box -->
+                    <div class="method-box qualitative">
+                        <h2 class="method-title">{qualitative_title}</h2>
+                        <p class="method-text">{qualitative_text}</p>
+                    </div>
+                    
+                    <!-- Quantitative Methods Box -->
+                    <div class="method-box quantitative">
+                        <h2 class="method-title">{quantitative_title}</h2>
+                        <p class="method-text">{quantitative_text}</p>
+                    </div>
+                </div>
+                
+                <!-- Image Container -->
+                <div class="image-container">
+                    <img src="{image_url}" alt="Professional working with technology">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_planning_phase_slide(
+    title="Planning Phase",
+    title_color="#C5E898",
+    bg_color="#1A4D4D",
+    marker_light_color="#C5E898",
+    marker_dark_color="#4ECDC4",
+    phases=None,
+    timeline_color="#FFFFFF",
+    custom_css=""
+):
+    """
+    Generate a Planning Phase slide with timeline and icon markers.
+    
+    This function creates an HTML slide showing a planning phase timeline with
+    4 stages represented by pin markers containing line art icons, connected by
+    a horizontal timeline. Each stage has a title and description below.
+    
+    Args:
+        title (str): Main title text (default: "Planning Phase")
+        title_color (str): Color for the title (default: "#C5E898" - light yellow-green)
+        bg_color (str): Background color (default: "#1A4D4D" - dark teal)
+        marker_light_color (str): Color for light markers (default: "#C5E898")
+        marker_dark_color (str): Color for dark markers (default: "#4ECDC4")
+        phases (list): List of phase dictionaries with keys: 'name', 'description', 'icon_type', 'marker_color'
+                       Options for icon_type: 'brain', 'checklist', 'design', 'puzzle'
+                       Options for marker_color: 'light' or 'dark'
+        timeline_color (str): Color for the timeline line and dots (default: "#FFFFFF")
+        custom_css (str): Additional custom CSS to inject
+    
+    Returns:
+        str: Complete HTML code for the planning phase slide
+    """
+    
+    # Default phases if none provided
+    if phases is None:
+        phases = [
+            {
+                'name': 'Planning',
+                'description': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.',
+                'icon_type': 'brain',
+                'marker_color': 'light'
+            },
+            {
+                'name': 'Analysis',
+                'description': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.',
+                'icon_type': 'checklist',
+                'marker_color': 'dark'
+            },
+            {
+                'name': 'Design',
+                'description': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.',
+                'icon_type': 'design',
+                'marker_color': 'light'
+            },
+            {
+                'name': 'Implementation',
+                'description': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.',
+                'icon_type': 'puzzle',
+                'marker_color': 'dark'
+            }
+        ]
+    
+    # Generate icon SVGs based on type
+    def get_icon_svg(icon_type):
+        icons = {
+            'brain': '''
+                <path d="M30,25 Q30,15 40,15 Q45,15 45,20 Q50,15 55,20 Q60,15 60,25 Q60,30 55,35 Q60,40 55,45 Q55,50 50,50 Q45,55 40,50 Q35,55 30,50 Q25,50 25,45 Q20,40 25,35 Q20,30 30,25 Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <circle cx="42" cy="30" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="48" cy="35" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M35,30 Q35,35 40,35" fill="none" stroke="currentColor" stroke-width="2"/>
+            ''',
+            'checklist': '''
+                <rect x="28" y="20" width="30" height="35" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <circle cx="43" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <path d="M40,32 L42,34 L46,30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="32" y1="45" x2="38" y2="45" stroke="currentColor" stroke-width="2"/>
+                <line x1="32" y1="50" x2="36" y2="50" stroke="currentColor" stroke-width="2"/>
+                <path d="M48,30 L52,26 L54,28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            ''',
+            'design': '''
+                <rect x="30" y="23" width="28" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <line x1="33" y1="27" x2="55" y2="27" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="33" y1="31" x2="55" y2="31" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="33" y1="35" x2="55" y2="35" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="33" y1="39" x2="50" y2="39" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M52,45 L55,52 L58,45 L55,48 Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            ''',
+            'puzzle': '''
+                <path d="M32,25 L32,35 Q32,38 35,38 Q38,38 38,35 L38,25 L48,25 L48,35 L58,35 L58,45 L48,45 L48,55 L38,55 L38,45 Q38,42 35,42 Q32,42 32,45 L32,55 L22,55 L22,45 L22,35 L32,35 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                <circle cx="35" cy="30" r="2" fill="currentColor"/>
+                <circle cx="43" cy="40" r="2" fill="currentColor"/>
+            '''
+        }
+        return icons.get(icon_type, icons['brain'])
+    
+    # Generate markers HTML - each marker created individually
+    marker_1_bg = marker_light_color  # Planning - light
+    marker_1_icon = '''
+                <path d="M30,25 Q30,15 40,15 Q45,15 45,20 Q50,15 55,20 Q60,15 60,25 Q60,30 55,35 Q60,40 55,45 Q55,50 50,50 Q45,55 40,50 Q35,55 30,50 Q25,50 25,45 Q20,40 25,35 Q20,30 30,25 Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <circle cx="42" cy="30" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                <circle cx="48" cy="35" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                <path d="M35,30 Q35,35 40,35" fill="none" stroke="currentColor" stroke-width="2"/>
+            '''
+    
+    marker_2_bg = marker_dark_color  # Analysis - dark
+    marker_2_icon = '''
+                <rect x="28" y="20" width="30" height="35" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <circle cx="43" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <path d="M40,32 L42,34 L46,30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                <line x1="32" y1="45" x2="38" y2="45" stroke="currentColor" stroke-width="2"/>
+                <line x1="32" y1="50" x2="36" y2="50" stroke="currentColor" stroke-width="2"/>
+                <path d="M48,30 L52,26 L54,28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+            '''
+    
+    marker_3_bg = marker_light_color  # Design - light
+    marker_3_icon = '''
+                <rect x="30" y="23" width="28" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                <line x1="33" y1="27" x2="55" y2="27" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="33" y1="31" x2="55" y2="31" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="33" y1="35" x2="55" y2="35" stroke="currentColor" stroke-width="1.5"/>
+                <line x1="33" y1="39" x2="50" y2="39" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M52,45 L55,52 L58,45 L55,48 Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+            '''
+    
+    marker_4_bg = marker_dark_color  # Implementation - dark
+    marker_4_icon = '''
+                <path d="M32,25 L32,35 Q32,38 35,38 Q38,38 38,35 L38,25 L48,25 L48,35 L58,35 L58,45 L48,45 L48,55 L38,55 L38,45 Q38,42 35,42 Q32,42 32,45 L32,55 L22,55 L22,45 L22,35 L32,35 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                <circle cx="35" cy="30" r="2" fill="currentColor"/>
+                <circle cx="43" cy="40" r="2" fill="currentColor"/>
+            '''
+    
+    markers_html = f'''
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_1_bg};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    {marker_1_icon}
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_2_bg};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    {marker_2_icon}
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_3_bg};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    {marker_3_icon}
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_4_bg};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    {marker_4_icon}
+                </svg>
+            </div>
+        </div>
+        '''
+    
+    # Generate timeline items HTML - each item created individually
+    timeline_html = f'''
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Planning</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Analysis</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Design</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Implementation</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        '''
+    
+    html_code = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            font-family: 'Arial', 'Segoe UI', Tahoma, sans-serif;
+            background: {bg_color};
+            color: white;
+            overflow: hidden;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+        }}
+        
+        .title {{
+            font-size: 90px;
+            font-weight: 300;
+            color: {title_color};
+            margin-bottom: 100px;
+            letter-spacing: 2px;
+        }}
+        
+        .markers-container {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 60px;
+            padding: 0 60px;
+        }}
+        
+        .phase-marker {{
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }}
+        
+        .marker-pin {{
+            width: 180px;
+            height: 180px;
+            background-color: var(--marker-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }}
+        
+        .marker-icon {{
+            width: 90px;
+            height: 90px;
+        }}
+        
+        .timeline-container {{
+            padding: 0 60px;
+        }}
+        
+        .timeline-items {{
+            display: flex;
+            justify-content: space-between;
+            background: linear-gradient(to right, {timeline_color} 0%, {timeline_color} 100%);
+            background-size: 100% 3px;
+            background-position: center 15px;
+            background-repeat: no-repeat;
+        }}
+        
+        .timeline-item {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }}
+        
+        .timeline-track-segment {{
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }}
+        
+        .timeline-dot {{
+            width: 30px;
+            height: 30px;
+            background: {timeline_color};
+            border-radius: 50%;
+            border: 5px solid {bg_color};
+        }}
+        
+        .phase-name {{
+            font-size: 38px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }}
+        
+        .phase-description {{
+            font-size: 22px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0 20px;
+            text-align: center;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <h1 class="title">{title}</h1>
+    
+    <div class="markers-container">
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_light_color};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    <path d="M30,25 Q30,15 40,15 Q45,15 45,20 Q50,15 55,20 Q60,15 60,25 Q60,30 55,35 Q60,40 55,45 Q55,50 50,50 Q45,55 40,50 Q35,55 30,50 Q25,50 25,45 Q20,40 25,35 Q20,30 30,25 Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="42" cy="30" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="48" cy="35" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M35,30 Q35,35 40,35" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_dark_color};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    <rect x="28" y="20" width="30" height="35" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="43" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <path d="M40,32 L42,34 L46,30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="32" y1="45" x2="38" y2="45" stroke="currentColor" stroke-width="2"/>
+                    <line x1="32" y1="50" x2="36" y2="50" stroke="currentColor" stroke-width="2"/>
+                    <path d="M48,30 L52,26 L54,28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_light_color};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    <rect x="30" y="23" width="28" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <line x1="33" y1="27" x2="55" y2="27" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="33" y1="31" x2="55" y2="31" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="33" y1="35" x2="55" y2="35" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="33" y1="39" x2="50" y2="39" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M52,45 L55,52 L58,45 L55,48 Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: {marker_dark_color};">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: {bg_color};">
+                    <path d="M32,25 L32,35 Q32,38 35,38 Q38,38 38,35 L38,25 L48,25 L48,35 L58,35 L58,45 L48,45 L48,55 L38,55 L38,45 Q38,42 35,42 Q32,42 32,45 L32,55 L22,55 L22,45 L22,35 L32,35 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                    <circle cx="35" cy="30" r="2" fill="currentColor"/>
+                    <circle cx="43" cy="40" r="2" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="timeline-container">
+        <div class="timeline-items">
+            {timeline_html}
+        </div>
+    </div>
+</body>
+</html>'''
+    
+    return html_code
+
+
 #-------------------  # slide giới thiệu team
 
 def generate_team_slide(
@@ -13038,165 +15160,6 @@ def generate_corporate_team_slide(
 
 
 #------------------------ SLIDE THANK YOU
-def generate_thank_you_slide_2(
-    main_text="THANKS!",
-    question_text="Any questions?",
-    
-    font_family_heading="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
-    main_color="#56B2E8",
-    text_color="#34495E",
-    bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png"
-):
-    """
-    Generates a doodle-themed thank you slide with larger, more impactful fonts.
-    """
-    
-    heart_svg = f"""
-    <svg class="heart-icon" viewBox="0 0 100 95" xmlns="http://www.w3.org/2000/svg">
-        <path d="M50 15.7C35.2-12.2 0 4.6 0 32.5 0 52.2 21.9 66.9 50 90c28.1-23.1 50-37.8 50-57.5C100 4.6 64.8-12.2 50 15.7z"
-              fill="none" stroke="{main_color}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
-        <g stroke="{main_color}" stroke-width="1.5" stroke-linecap="round">
-            <line x1="60" y1="45" x2="75" y2="40" />
-            <line x1="62" y1="50" x2="80" y2="45" />
-            <line x1="64" y1="55" x2="84" y2="50" />
-            <line x1="66" y1="60" x2="86" y2="55" />
-            <line x1="68" y1="65" x2="85" y2="60" />
-        </g>
-    </svg>
-    """
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Thank You Slide - Large Font</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        
-        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
-        div[style*="background: white"], 
-        div[style*="background: #FFFFFF"],
-        div[style*="background-color: white"],
-        div[style*="background-color: #FFFFFF"],
-        #canvas,
-        [data-bg*="#FFFFFF"] {{
-            background: linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%), url('{bg_url}') !important;
-            background-size: 3.5rem 3.5rem, auto !important;
-            background-color: #FFFFFF !important;
-        }}
-        
-        html#html.html {{ 
-            font-size: 16px !important;
-            height: 100vh !important;
-            width: 100vw !important;
-            font-family: {font_family_body} !important;
-            color: {text_color} !important;
-            overflow: hidden !important;
-            background-color: #FFFFFF !important;
-            background-image: linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%), url('{bg_url}') !important;
-            background-size: 3.5rem 3.5rem, auto !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }}
-        
-        body#body.body, html#html.html {{
-            height: 100vh !important;
-            width: 100vw !important;
-            font-family: {font_family_body} !important;
-            color: {text_color} !important;
-            overflow: hidden !important;
-            background-color: #FFFFFF !important;
-            background-image: linear-gradient(to bottom, transparent 98.5%, #E0E0E0 98.5%), url('{bg_url}') !important;
-            background-size: 3.5rem 3.5rem, auto !important;
-            display: flex !important;
-            align-items: center !important;
-            justify-content: center !important;
-        }}
-
-        .slide-container {{
-            width: 100vw;
-            height: 100vh;
-            min-height: 100vh;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            padding: 3rem;
-            position: relative;
-            box-sizing: border-box;
-            margin: 0;
-        }}
-
-        .heart-icon {{
-            /* ĐÃ SỬA ĐỔI: Icon to hơn để nổi bật */
-            width: 12rem;
-            margin-bottom: 2rem;
-        }}
-        
-        .main-text {{
-            font-family: {font_family_heading};
-            /* ĐÃ SỬA ĐỔI: Font to hơn để dễ nhìn trên web */
-            font-size: clamp(5rem, 14vw, 10rem);
-            color: {main_color};
-            margin-bottom: 2rem;
-            line-height: 1;
-            white-space: nowrap;
-            overflow: visible;
-            transform: scale(1.1);
-        }}
-
-        .question-text {{
-            /* ĐÃ SỬA ĐỔI: Font to hơn */
-            font-size: 3rem;
-            font-weight: 700;
-            line-height: 1.3;
-        }}
-        
-        @media (max-width: 48rem) {{
-            .heart-icon {{ width: 6rem; }}
-            .main-text {{ 
-                font-size: clamp(3rem, 10vw, 6rem);
-                transform: scale(1);
-            }}
-            .question-text {{ font-size: 1.5rem; }}
-            .slide-container {{ padding: 2rem; }}
-        }}
-        
-        @media (max-width: 30rem) {{
-            .main-text {{ 
-                font-size: 2.5rem;
-                letter-spacing: -1px;
-            }}
-            .question-text {{ font-size: 1.2rem; }}
-        }}
-        
-        /* Web container override */
-        @media (min-width: 769px) {{
-            .slide-container {{
-                transform: scale(1.2);
-                transform-origin: center center;
-            }}
-        }}
-    </style>
-</head>
-<body id="body" class="body">
-    <div class="slide-container">
-        {heart_svg}
-        <h1 class="main-text">{main_text}</h1>
-        <p class="question-text">{question_text}</p>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
 
 
 
@@ -13670,7 +15633,7 @@ def generate_corporate_thank_you_slide(
         }}
 
         .main-thanks-text {{
-            font-size: clamp(2.5rem, 8vw, 4rem);
+            font-size: clamp(2.5rem, 8vw, 7rem);
             font-weight: 800;
             color: {accent_color};
             text-transform: uppercase;
@@ -13696,4 +15659,150 @@ def generate_corporate_thank_you_slide(
 </html>"""
     
     return html_code
+
+
+def generate_business_thank_you_slide(
+    main_text="THANK YOU",
+    subtitle="For your attention and time",
+    main_text_color="#0056d2",
+    subtitle_color="#666666",
+    accent_color="#0056d2",
+    main_font="Arial, sans-serif",
+    subtitle_font="Arial, sans-serif"
+):
+    """
+    Generate a clean business thank you slide with centered text and decorative side D-shapes.
+    
+    Args:
+        main_text (str): Main thank you text (e.g., "THANK YOU")
+        subtitle (str): Subtitle text below main text
+        main_text_color (str): Color for main text (default: blue)
+        subtitle_color (str): Color for subtitle text
+        contact_color (str): Color for contact information
+        accent_color (str): Color for decorative D-shapes
+        main_font (str): Font family for main text
+        subtitle_font (str): Font family for subtitle and contact
+    
+    Returns:
+        str: Complete HTML code for the business thank you slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Business Thank You</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            background: 
+                repeating-linear-gradient(
+                    0deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(0, 86, 210, 0.03) 50px,
+                    rgba(0, 86, 210, 0.03) 100px
+                ),
+                repeating-linear-gradient(
+                    90deg,
+                    transparent,
+                    transparent 50px,
+                    rgba(0, 86, 210, 0.03) 50px,
+                    rgba(0, 86, 210, 0.03) 100px
+                ),
+                linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }}
+        
+        .content {{
+            text-align: center;
+            z-index: 10;
+            max-width: 1400px;
+            padding: 0 100px;
+        }}
+        
+        .main-text {{
+            font-family: {main_font};
+            font-size: 160px;
+            font-weight: 900;
+            color: {main_text_color};
+            letter-spacing: 12px;
+            margin-bottom: 40px;
+            line-height: 1.1;
+        }}
+        
+        .subtitle {{
+            font-family: {subtitle_font};
+            font-size: 36px;
+            font-weight: 400;
+            color: {subtitle_color};
+            line-height: 1.6;
+            margin-bottom: 60px;
+        }}
+        
+       
+        /* Decorative D-shapes on left and right */
+        .circle-left {{
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            height: 400px;
+            background: {accent_color};
+            border-radius: 0 200px 200px 0;
+            z-index: 1;
+        }}
+        
+        .circle-right {{
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 200px;
+            height: 400px;
+            background: {accent_color};
+            border-radius: 200px 0 0 200px;
+            z-index: 1;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Side D-shapes -->
+        <div class="circle-left"></div>
+        <div class="circle-right"></div>
+        
+        <!-- Main content -->
+        <div class="content">
+            <div class="main-text">{main_text}</div>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
 
