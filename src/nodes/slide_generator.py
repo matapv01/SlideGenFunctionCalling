@@ -13,6 +13,11 @@ import time
 INTRO_PROMPT = """
 🎯 INTRO SLIDE - Title slide, first impression!
 
+**🚨 CRITICAL: YOU MUST ONLY USE TOOLS FROM THE PROVIDED LIST! 🚨**
+❌ DO NOT call tools that are not in the available tools list
+❌ If a tool seems unavailable, choose a different one from the list
+✅ ONLY use tools that are explicitly provided to you
+
 **CRITICAL: TEXT COLOR MUST BE EASY TO READ!**
 ⚠️ Dark background (#000, #1a1a1a, #2c3e50) → Use #FFFFFF or very light text
 ⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → Use #000000 or very dark text
@@ -32,6 +37,10 @@ Generate clean, HIGHLY READABLE function call.
 TRANSITION_PROMPT = """
 🎯 TRANSITION SLIDE - Section divider!
 
+**🚨 CRITICAL: YOU MUST ONLY USE TOOLS FROM THE PROVIDED LIST! 🚨**
+❌ DO NOT call tools that are not in the available tools list
+✅ ONLY use tools that are explicitly provided to you
+
 **CRITICAL: TEXT COLOR MUST BE INSTANTLY READABLE!**
 ⚠️ Dark background → #FFFFFF (white) text preferred
 ⚠️ Light background → #000000 (black) text preferred
@@ -50,6 +59,11 @@ Generate BOLD, ULTRA-VISIBLE function call.
 
 CONTENT_PROMPT = """
 🎯 CONTENT SLIDE - Main information!
+
+**🚨 CRITICAL: YOU MUST ONLY USE TOOLS FROM THE PROVIDED LIST! 🚨**
+❌ DO NOT call tools that are not in the available tools list
+❌ If you try to call an unavailable tool, the generation will FAIL
+✅ CHECK the available tools and ONLY use those
 
 **CRITICAL: TEXT COLOR MUST BE EASY TO READ VS BACKGROUND!**
 ⚠️ Dark background (#000, #1a1a1a, #2c3e50) → #FFFFFF or very light text
@@ -80,6 +94,10 @@ Generate READABLE, professional function call.
 THANK_YOU_PROMPT = """
 🎯 THANK YOU SLIDE - Final closing!
 
+**🚨 CRITICAL: YOU MUST ONLY USE TOOLS FROM THE PROVIDED LIST! 🚨**
+❌ DO NOT call tools that are not available
+✅ ONLY use tools from the available list
+
 **CRITICAL: TEXT MUST BE CRYSTAL CLEAR!**
 ⚠️ Dark background → #FFFFFF (white) text
 ⚠️ Light background → #000000 (black) text
@@ -94,6 +112,10 @@ Generate simple, HIGHLY VISIBLE function call.
 
 TEAM_PROMPT = """
 🎯 TEAM SLIDE - Team intro!
+
+**🚨 CRITICAL: YOU MUST ONLY USE TOOLS FROM THE PROVIDED LIST! 🚨**
+❌ DO NOT call unavailable tools
+✅ ONLY use provided tools
 
 **CRITICAL: NAMES MUST BE EASY TO READ!**
 ⚠️ Dark background → #FFFFFF (white) text for names

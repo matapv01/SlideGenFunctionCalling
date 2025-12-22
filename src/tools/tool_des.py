@@ -803,7 +803,6 @@ class GenerateCorporateGridSlideInput(BaseModel):
     shadow_color: str = Field(default="#16A34A", description="The secondary (darker) accent color for the panel behind and gradient effects.")
     text_color: str = Field(default="#6B7280", description="The primary color for the body text.")
     icon_color: str = Field(default="#D1D5DB", description="The color for the small pencil icon. Icon size increased to 3.5rem with drop-shadow effect.")
-    bg_color: str = Field(default="#FFFFFF", description="The background color of the entire slide. Default is white.")
 
 class GenerateBusinessOverviewSlideInput(BaseModel):
     """Input schema for generate_business_overview_slide."""
