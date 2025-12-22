@@ -104,8 +104,12 @@ from src.tools.html_tool import (
     generate_thank_you_slide_3, # slide cảm ơn
     generate_thank_you_slide,   # slide cảm ơn
     generate_corporate_thank_you_slide, # slide cảm ơn
-    generate_thank_you_slide_4 # slide cảm ơn(hien)
-
+    generate_thank_you_slide_4, # slide cảm ơn(hien)
+    generate_thank_you_decorative_slide, # slide cảm ơn(hien)
+    generate_watercolor_thank_you_slide, # slide cảm ơn(hien)
+    generate_thank_you_slide_5, # slide cảm ơn(hien)
+    generate_thank_you_slide_6, # slide cảm ơn(hien)
+    generate_thank_you_slide_7, # slide cảm ơn(hien)
 
 )
 
@@ -126,8 +130,6 @@ class GenerateTitleSlideInput(BaseModel):
     show_skyline: Optional[bool] = Field(default=True, description="Whether to show the city skyline silhouette at the bottom. Default: True.")
     skyline_opacity: Optional[float] = Field(default=0.3, description="Opacity of the skyline silhouette (0.0 to 1.0). Default: 0.3.")
     triangle_opacity: Optional[float] = Field(default=0.2, description="Opacity of the triangle decorative elements (0.0 to 1.0). Default: 0.2.")
-    title_font_size: str = Field(default="5rem", description="Font size for the main title.")
-    subtitle_font_size: str = Field(default="2rem", description="Font size for the subtitle.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the border frame. Default: True.")
     custom_css: str = Field(default="", description="Additional custom CSS to be included.")
 
@@ -139,8 +141,6 @@ class GenerateIntroductionSlideInput(BaseModel):
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
-    title_font_size: str = Field(default="4rem", description="Font size for the main title.")
-    content_font_size: str = Field(default="1.4rem", description="Font size for the content text.")
     font_family: str = Field(default="'Arial', sans-serif", description="Font family for all text elements.")
     show_decorative_triangles: Optional[bool] = Field(default=True, description="Whether to show decorative triangle elements. Default: True.")
     triangle_opacity: Optional[float] = Field(default=0.15, description="Opacity of the decorative triangles (0.0 to 1.0). Default: 0.15.")
@@ -163,8 +163,6 @@ class GenerateIntroSlide1Input(BaseModel):
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    main_title_font_size: str = Field(default="36px", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="16px", description="CSS font size for the subtitles.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="Path to the image file for the left side.")
 
@@ -284,8 +282,6 @@ class GenerateTitleSlide3Input(BaseModel):
     text_color: str = Field(default="#C41E3A", description="The color for the main title text.")
     subtitle_color: str = Field(default="#3D3D3D", description="The color for the subtitle text.")
     font_family: str = Field(default="'Lobster Two', 'Georgia', serif", description="The font family for all text elements.")
-    title_font_size: str = Field(default="6rem", description="Font size for the main title.")
-    subtitle_font_size: str = Field(default="2rem", description="Font size for the subtitle.")
     show_top_lights: Optional[bool] = Field(default=True, description="Whether to show the Christmas lights at the top. Default: True.")
     show_bottom_lights: Optional[bool] = Field(default=False, description="Whether to show the Christmas lights at the bottom. Default: False.")
     show_sparkles: Optional[bool] = Field(default=True, description="Whether to show decorative sparkles on the slide. Default: True.")
@@ -417,8 +413,6 @@ class GenerateIntroSlideInput(BaseModel):
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
     font_family: str = Field(default="'Segoe UI', Arial, sans-serif", description="CSS font family for the slide.")
-    main_title_font_size: str = Field(default="4rem", description="CSS font size for the main title.")
-    subtitle_font_size: str = Field(default="1.5rem", description="CSS font size for the subtitles.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide.")
 
@@ -1407,10 +1401,8 @@ class GenerateThankYouSlide3Input(BaseModel):
     border_color: str = Field(default="rgba(255, 255, 255, 0.4)", description="Color of the border frame.")
     geometric_shape_colors: List[str] = Field(default=[], description="List of colors for geometric shapes. Default: 4 rgba colors with transparency.")
     font_family: str = Field(default="Segoe UI, Arial, sans-serif", description="Font family for all text elements.")
-    main_title_font_size: str = Field(default="6rem", description="Font size of the main title.")
     main_title_font_weight: str = Field(default="700", description="Font weight of the main title.")
     main_title_letter_spacing: str = Field(default="0.1em", description="Letter spacing of the main title.")
-    contact_font_size: str = Field(default="1.2rem", description="Font size of contact information.")
     contact_font_weight: str = Field(default="400", description="Font weight of contact information.")
     contact_margin_top: str = Field(default="60px", description="Top margin for contact section.")
     contact_gap: str = Field(default="40px", description="Gap between contact items.")
@@ -1452,7 +1444,61 @@ class GenerateThankYouSlide4Input(BaseModel):
     bubble_bg_color: str = Field(default="#FFFFFF", description="Background color of the speech bubble. Default: white.")
     font_family: str = Field(default="Arial, sans-serif", description="Font family for the thank you text.")
     show_speech_tail: bool = Field(default=True, description="Whether to show the speech bubble tail pointing downward.")
-    text_font_size: str = Field(default="5rem", description="Font size of the main thank you text.")
+    custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
+
+class GenerateThankYouDecorativeSlideInput(BaseModel):
+    """Input schema for generate_thank_you_decorative_slide (decorative thank you slide with swirls and dots)."""
+    main_text: str = Field(default="THANK YOU!", description="Main thank you text displayed in large, bold letters.")
+    bg_color: str = Field(default="#2B5FA6", description="Background gradient start color. Default: deep blue.")
+    bg_gradient_to: str = Field(default="#4A90E2", description="Background gradient end color. Default: lighter blue.")
+    text_color: str = Field(default="#FFFFFF", description="Color of the main text. Default: white.")
+    show_swirls: Optional[bool] = Field(default=True, description="Whether to show decorative swirls. Default: True.")
+    show_dots: Optional[bool] = Field(default=True, description="Whether to show decorative dots. Default: True.")
+    num_dots: int = Field(default=15, description="Number of decorative dots to display. Default: 15.")
+    custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
+
+class GenerateWatercolorThankYouSlideInput(BaseModel):
+    """Input schema for generate_watercolor_thank_you_slide (watercolor style thank you slide)."""
+    title: str = Field(default="Thank You", description="Main thank you text displayed in elegant script font.")
+    bg_color: str = Field(default="#f5f5f5", description="Background color of the slide. Default: light gray.")
+    text_color: str = Field(default="#1e3a5f", description="Color of the main title text. Default: dark blue.")
+    watercolor_color: str = Field(default="#4dd0e1", description="Color of the watercolor splash effect. Default: cyan.")
+    watercolor_opacity: float = Field(default=0.6, description="Opacity of the watercolor effect (0.0 to 1.0). Default: 0.6.")
+    font_family: str = Field(default="'Brush Script MT', cursive, serif", description="Font family for the title. Default: cursive/script style.")
+    show_watercolor: Optional[bool] = Field(default=True, description="Whether to show watercolor background effects. Default: True.")
+    custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
+    
+class GenerateThankYouSlide5Input(BaseModel):
+    """Input schema for generate_thank_you_slide_5 (geometric thank you slide with circles and corner shapes)."""
+    main_text: str = Field(default="Thank you!", description="Main text content displayed in the center.")
+    bg_color: str = Field(default="#f5f5f5", description="Background color of the slide. Default: off-white.")
+    text_color: str = Field(default="#2d3748", description="Color of the main text. Default: dark gray.")
+    circle_color: str = Field(default="#fbbf24", description="Color of decorative circles. Default: yellow.")
+    corner_shape_color: str = Field(default="#2c5f6f", description="Color of corner quarter-circle shapes. Default: dark teal.")
+    show_border: Optional[bool] = Field(default=True, description="Whether to show the border frame. Default: True.")
+    border_color: str = Field(default="#1a1a1a", description="Color of the border frame. Default: black.")
+    show_corner_circles: Optional[bool] = Field(default=True, description="Whether to show decorative circles. Default: True.")
+    show_corner_shapes: Optional[bool] = Field(default=True, description="Whether to show corner quarter-circle shapes. Default: True.")
+    custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
+
+class GenerateThankYouSlide6Input(BaseModel):
+    """Input schema for generate_thank_you_slide_6 (elegant thank you slide with decorative sunburst patterns and olive branches)."""
+    main_text: str = Field(default="Thank you", description="Main text to display. Default: 'Thank you'.")
+    bg_color: str = Field(default="#F5E6D3", description="Background color of the slide. Default: beige (#F5E6D3).")
+    text_color: str = Field(default="#1a3a52", description="Color of the main text. Default: navy blue (#1a3a52).")
+    show_decorative_elements: Optional[bool] = Field(default=True, description="Whether to show sunburst patterns and decorative dots. Default: True.")
+    show_olive_branches: Optional[bool] = Field(default=True, description="Whether to show olive branch decorations. Default: True.")
+    font_family: str = Field(default="'Dancing Script', 'Brush Script MT', cursive", description="Font family for the main text. Default: Dancing Script.")
+    custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
+
+class GenerateThankYouSlide7Input(BaseModel):
+    """Input schema for generate_thank_you_slide_7 (elegant thank you slide with brush stroke background)."""
+    main_text: str = Field(default="THANK YOU!", description="Main text to display. Default: 'THANK YOU!'.")
+    bg_color: str = Field(default="#F5F3F0", description="Background color of the slide. Default: light warm gray (#F5F3F0).")
+    text_color: str = Field(default="#7A6350", description="Color of the main text. Default: brown/taupe (#7A6350).")
+    brush_color: str = Field(default="#E8D4CC", description="Brush stroke color. Default: nude pink (#E8D4CC).")
+    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
+    show_brush_stroke: Optional[bool] = Field(default=True, description="Whether to show brush stroke behind text. Default: True.")
     custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
 
 INTRO_TOOLS = [
@@ -1932,7 +1978,7 @@ CONTENT_TOOLS = [
         name="generate_premium_abstract_slide",
         description="Generates a versatile content, introduction, or section divider slide. It features a premium, highly modern design with an 'aurora' gradient background and an abstract 'glassmorphism' graphic. Perfect for presenting key concepts, introducing a topic, or opening a new presentation section with a sophisticated, high-tech, and elegant first impression.",
         args_schema=GeneratePremiumAbstractSlideInput
-    )
+    ),
 ]
 
 TEAM_TOOLS = [
@@ -1988,6 +2034,36 @@ THANK_YOU_TOOLS = [
         name="generate_thank_you_slide_4",
         description="Generates a creative 'Thank You' slide featuring a speech bubble design. This slide includes a customizable thank you message inside a speech bubble with a gradient background, offering a friendly and engaging way to conclude presentations.",
         args_schema=GenerateThankYouSlide4Input
+    ),
+    StructuredTool.from_function(
+        func = generate_thank_you_decorative_slide,
+        name="generate_thank_you_decorative_slide",
+        description="Generates a decorative Thank You slide with swirls and dots. Features a gradient background, large thank you text, and optional decorative swirls and animated dots for a playful and elegant closing slide.",
+        args_schema=GenerateThankYouDecorativeSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_watercolor_thank_you_slide,
+        name="generate_watercolor_thank_you_slide",
+        description="Generates a beautiful 'Thank You' slide with a watercolor theme. Features a soft pastel gradient background, elegant script typography for the main thank you message, and decorative watercolor floral elements. Perfect for creative, educational, or personal presentations seeking a warm and artistic closing.",
+        args_schema=GenerateWatercolorThankYouSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_slide_5,
+        name="generate_thank_you_slide_5",
+        description="Generates a modern geometric 'Thank You' slide with a clean, minimalist design. Features a centered handwritten-style 'Thank you!' message on a light background with an inner border frame. The slide is decorated with two quarter-circle shapes in teal (top-left and bottom-right corners) and yellow circles (three circles arranged in a triangle at top-right, plus one half-circle cut off at bottom-left). This asymmetric geometric design creates visual balance while keeping the text prominent and readable. Perfect for professional presentations wanting a modern, geometric aesthetic for their closing slide.",
+        args_schema=GenerateThankYouSlide5Input
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_slide_6,
+        name="generate_thank_you_slide_6",
+        description="Generates an elegant 'Thank You' slide with decorative elements including sunburst patterns, olive branches, and scattered colorful dots on a warm beige background. Features a large, flowing script font for the main text. The slide includes circular sunburst patterns placed at various positions around the slide, two olive branch decorations (one at top, one at bottom) flanking the text, and multicolored decorative dots scattered throughout. Perfect for presentations needing a sophisticated, vintage-inspired closing with natural, organic decorative elements.",
+        args_schema=GenerateThankYouSlide6Input
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_slide_7,
+        name="generate_thank_you_slide_7",
+        description="Generates an elegant 'Thank You' slide with a soft brush stroke background. Features a warm, minimalist design with a serif font (Playfair Display) for the main text centered on the slide. The slide has a light warm gray background with an optional artistic brush stroke element in nude pink placed behind the text, creating a sophisticated watercolor effect. Perfect for presentations needing a refined, artistic closing with minimal decoration and emphasis on elegant typography.",
+        args_schema=GenerateThankYouSlide7Input
     )
 ]
 
