@@ -5,7 +5,7 @@ def generate_title_slide(
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
-    font_family="'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     show_skyline=True,
     skyline_opacity=0.3,
     triangle_opacity=0.2,
@@ -226,7 +226,7 @@ def generate_introduction_slide(
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
-    font_family="'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     show_decorative_triangles=True,
     triangle_opacity=0.15,
     show_border=True,
@@ -493,7 +493,7 @@ def generate_intro_slide1(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"        # Thêm tham số cho URL ảnh
 ):
@@ -935,7 +935,7 @@ def generate_elegant_intro_slide(
 def generate_inspirational_quote_slide(
     quote_text="The best way to predict the future is to create it.",
     attribution_text="Peter Drucker",
-    font_family="'Playfair Display', serif",
+    font_family="'Playfair Display', 'Inter', serif",
     background_image_url="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop",
     text_color="#3A3A3A"
 ):
@@ -1043,7 +1043,7 @@ def generate_inspirational_quote_slide(
 
 def generate_title_slide_2(
     main_title="THIS IS YOUR<br><span class='highlight'>PRESENTATION</span><br>TITLE",
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#06B6D4",
     shadow_color="#0E7490",
     text_color="#6B7280",
@@ -1174,7 +1174,7 @@ def generate_dynamic_intro_slide(
     subtitle="This is where we outline our core mission and the driving force behind our vision.",
     # ĐÃ THAY ĐỔI: Ảnh nền mới, hiện đại hơn
     image_url="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop",
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     primary_color="#4F46E5",
     secondary_color="#3730A3",
     text_color="#FFFFFF"
@@ -1344,7 +1344,7 @@ def generate_big_concept_slide(
     main_title="BIG<br>CONCEPT",
     subtitle="Bring the attention of your audience over a key concept using icons or illustrations",
     icon_name="space",
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -1864,7 +1864,7 @@ def generate_mission_slide(
     subtitle="Elaborate on your key message or provide a call to action. This text can be a bit longer.",
     image_url="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", 
     image_alt_text="A team collaborating in a modern office, representing mission and goals",
-    font_family="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    font_family="'Inter', sans-serif",
     background_color_left="#F5EBE0",
     text_color_title="#4E443F",
     text_color_top="#4E443F",
@@ -2034,7 +2034,7 @@ def generate_training_intro_slide(
     title_color="#b8d89f",
     text_color="#e8d7a8",
     image_url="https://images.pexels.com/photos/3587620/pexels-photo-3587620.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    font_family="'Segoe UI', 'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
 ):
     """
     Generate a training introduction slide with dark background and bottom image.
@@ -2199,7 +2199,7 @@ def generate_employee_intro_slide(
     circle_color_2="#10855b",
     circle_color_3="#2dd4bf",
     circle_color_4="#FFFFFF",
-    font_family="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+    font_family="'Inter', sans-serif",
 ):
     """
     Generate an Employee Introduction slide with decorative geometric circles.
@@ -2873,7 +2873,7 @@ def generate_business_intro_slide(
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
     subtitle="Let's start with the first set of slides",
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     primary_text_color="#FFFFFF",
     subtitle_color="#67E8F9"
@@ -3137,7 +3137,7 @@ def generate_transition_slide_2(
 def generate_dusk_transition_slide(
     headline="Transition Headline",
     subtitle="Let's start with the first set of slides",
-    font_family="'Nunito', sans-serif",
+    font_family="'Nunito', 'Inter', sans-serif",
     headline_color="#2C3E50",
     subtitle_color="#4A5568",
     number_color="#FDE68A",
@@ -3289,7 +3289,7 @@ def generate_memphis_transition_slide(
 
 def generate_pushpin_section_header(
     main_title="Add a Section Header",
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     # ĐÃ THAY ĐỔI: Bảng màu mới tối giản và chuyên nghiệp
     bg_color="#FDFCFB",
     text_color="#1F2937",    # Xám đen
@@ -3432,7 +3432,7 @@ def generate_pushpin_section_header(
 
 def generate_section_header_slide(
     header_text="Add a Section Header",
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     text_color="#1E293B",
     gradient_color_1="#A78BFA",
@@ -3527,7 +3527,7 @@ def generate_intro_slide(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"
 ):
@@ -5416,7 +5416,7 @@ def generate_body_slide2(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     image_url="Image/generate_body_slide2/Default_1.png",
 
     # Icon parameters - SVG paths for each icon
@@ -5857,7 +5857,7 @@ def generate_body_slide4(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide4/Default_1.png",
     image_url_2="Image/generate_body_slide4/Default_2.png",
     image_url_3="Image/generate_body_slide4/Default_3.png"
@@ -6239,7 +6239,7 @@ def generate_body_slide5(
     title_color="#333333",
     subtitle_color="#6b9d34", # Green color for subtitles
     content_color="#555555",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide5/Default_1.png",
     image_url_2="Image/generate_body_slide5/Default_2.png",
     image_url_3="Image/generate_body_slide5/Default_3.png",
@@ -6631,7 +6631,7 @@ def generate_body_slide7(
     subtitle_color="#333333",
     content_color="#4a90a0",  # Teal/blue color for content
     divider_color="#d5e8b9",  # Light green divider
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide7/Default_1.png",
     image_url_2="Image/generate_body_slide7/Default_2.png",
     image_url_3="Image/generate_body_slide7/Default_3.png",
@@ -6955,7 +6955,7 @@ def generate_body_slide10(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     image_url="Image/generate_body_slide10/Default_1.png",
 
     # Icon parameters - SVG paths for each icon
@@ -7302,7 +7302,7 @@ def generate_body_slide11(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     box_height="15.625rem",
     
     # Icon parameters - SVG paths for each icon
@@ -7575,7 +7575,7 @@ def generate_body_slide12(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide12/Default_1.png",
     image_url_2="Image/generate_body_slide12/Default_2.png",
     image_url_3="Image/generate_body_slide12/Default_3.png",
@@ -7865,7 +7865,7 @@ def generate_body_slide15(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Segoe UI', Arial, sans-serif",
+    font_family="'Inter', sans-serif",
     image_url="Image/generate_body_slide15/Default_1.png",  # Default image path
 ):
     """
@@ -8787,7 +8787,7 @@ def generate_main_points_slide(
     point2_description="Briefly elaborate on what you want to discuss.",
     point3_title="ADD A MAIN POINT",
     point3_description="Briefly elaborate on what you want to discuss.",
-    font_family="'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
+    font_family="'Inter', sans-serif"
 ):
     """
     Generates a completely static main points slide with three columns featuring environmental icons.
@@ -9409,7 +9409,7 @@ def generate_corporate_content_slide(
         { "title": "Second Key Point", "description": "And some text to elaborate on the second main idea of your slide." },
         { "title": "Third Key Point", "description": "But remember not to overload your slides with too much content." }
     ],
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     accent_panel_color="#6366F1",
     title_color="#FFFFFF",
@@ -9559,7 +9559,7 @@ def generate_split_content_slide(
         { "icon_name": "bulb", "title": "Title One", "description": "Description for the first column goes here. Elaborate on your point with clear and concise text." },
         { "icon_name": "target", "title": "Title Two", "description": "Description for the second column. This layout is perfect for comparing two ideas side-by-side." }
     ],
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     bg_gradient_start="#0F172A",
     bg_gradient_end="#1E293B",
     title_color="#FFFFFF",
@@ -9726,7 +9726,7 @@ def generate_corporate_multicolumn_slide(
         { "title": "Blue", "description": "Is the colour of the clear sky and the deep sea." },
         { "title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage." }
     ],
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#8B5CF6",
     shadow_color="#7C3AED",
     text_color="#4B5563",
@@ -9795,7 +9795,7 @@ def generate_corporate_grid_slide(
         { "title": "title", "description": "description." },
         { "title": "title", "description": "description." }
     ],
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#22C55E",
     shadow_color="#16A34A",
     text_color="#6B7280",
@@ -9968,7 +9968,7 @@ def generate_business_overview_slide(
     icon_color="#FFFFFF",
     content_bg_color="#FFFFFF",
     content_text_color="#1a4b8c",
-    font_family="'Segoe UI', 'Roboto', sans-serif",
+    font_family="'Inter', sans-serif",
     show_border=False,
     border_opacity=0.25,
     section_spacing="30px",
@@ -10276,7 +10276,7 @@ def generate_vision_mission_slide(
     text_color="#FFFFFF",
     vision_number_color="rgba(74, 123, 200, 0.3)",
     mission_number_color="rgba(26, 75, 140, 0.3)",
-    font_family="'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     show_border=True,
     border_color="#1a4b8c",
     border_opacity=0.4,
@@ -10638,7 +10638,7 @@ def generate_strategic_goals_slide(
     number_text_color="#FFFFFF",
     content_bg_color="#FFFFFF",
     content_text_color="#1a4b8c",
-    font_family="'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     show_border=True,
     border_opacity=0.4,
     number_circle_size="80px",
@@ -10929,7 +10929,7 @@ def generate_service_roadmap_slide(
     card_bg_color="#FFFFFF",
     card_text_color="#2E5BBA",
     card_title_color="#1A4480",
-    font_family="'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     show_border=True,
     border_color="rgba(255, 255, 255, 0.3)",
     show_decorative_triangles=True,
@@ -11249,7 +11249,7 @@ def generate_financial_projections_slide_dark(
     border_color="rgba(255, 255, 255, 0.3)",
     
     # Typography
-    font_family="'Segoe UI', 'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     main_title_font_weight="700",
     main_title_letter_spacing="0.05em",
     card_title_font_weight="700",
@@ -11548,7 +11548,7 @@ def generate_minimalist_tech_list_slide(
         "But remember not to overload your slides with content"
     ],
     concluding_text="Your audience will listen to you or read the content, but won’t do both.",
-    font_family="'Nunito', sans-serif",
+    font_family="'Nunito', 'Inter', sans-serif",
     sky_top_color="#ABB0EA",
     sky_bottom_color="#A2CFED",
     grid_dot_color="rgba(0, 0, 0, 0.05)",
@@ -11685,7 +11685,7 @@ def generate_centered_tech_columns_slide(
         { "icon_name": "target", "title": "Column Two", "description": "Description for column two." }
     ],
     page_number=None,
-    font_family="'Nunito', sans-serif",
+    font_family="'Nunito', 'Inter', sans-serif",
     text_color="#F8FAFC",
     page_number_color="#94A3B8",
     sky_top_color="#0F172A",
@@ -12126,7 +12126,7 @@ def generate_icon_list_slide(
         { "icon_name": "star", "title": "Add a main point", "description": "Briefly elaborate on what you want to discuss." },
         { "icon_name": "thumbs-up", "title": "Add a main point", "description": "Briefly elaborate on what you want to discuss." }
     ],
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#FFFFFF",
     main_title_color="#111827",
     point_title_color="#1F2937",
@@ -12560,7 +12560,7 @@ def generate_instructions_slide(
         { "title": ["TOPIC TWO"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] },
         { "title": ["TOPIC THREE"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] }
     ],
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     header_primary_color="#4F46E5",
     header_secondary_color="#1E293B",
     header_text_color="#FFFFFF",
@@ -12747,7 +12747,7 @@ def generate_geometric_split_content_slide(
             "description": "Is the color of ebony and of outer space. It has been the symbolic color of elegance, solemnity and authority."
         }
     ],
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -12890,7 +12890,7 @@ def generate_geometric_split_content_slide_2(
             "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."
         }
     ],
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -13018,7 +13018,7 @@ def generate_geometric_image_content_slide(
     image_url="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2574&auto=format&fit=crop",
     main_title="A picture is worth a <span class='highlight'>thousand</span> words",
     description="A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.",
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -13170,7 +13170,7 @@ def generate_geometric_content_slide(
         "Build for <b><i><u><span style='color:#A3E635;'>scalability and performance</span></u></i></b>."
     ],
     concluding_text="These principles guide our every move forward.",
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#2B233D",
     text_color="#E5E7EB",
     bullet_color="#FBBF24"
@@ -13320,7 +13320,7 @@ def generate_geometric_grid_slide(
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ],
-    font_family="'Poppins', sans-serif",
+    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -14103,7 +14103,7 @@ def generate_methodology_slide(
     quantitative_text="Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.",
     image_url="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2340&auto=format&fit=crop",
     bg_color="#F5F5F5",
-    font_family="'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     custom_css=""
 ):
     """
@@ -14906,7 +14906,7 @@ def generate_colorful_team_grid_slide(
         { "name": "Aisha Khan", "role": "Project Manager", "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop", "color": "#D93B58" },
         { "name": "Leo Martinez", "role": "Marketing Head", "image_url": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop", "color": "#F3C314" }
     ],
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     title_color="#111827",
     card_text_color="#1F2937"
@@ -15188,7 +15188,7 @@ def generate_thank_you_slide_3(
     ],
     
     # Typography
-    font_family="'Segoe UI', 'Arial', sans-serif",
+    font_family="'Inter', sans-serif",
     main_title_font_size="6rem",
     main_title_font_weight="700",
     main_title_letter_spacing="0.1em",
@@ -15546,7 +15546,7 @@ def generate_thank_you_slide_3(
 def generate_corporate_thank_you_slide(
         
     thanks_text="THANK YOU FOR WACTCHING!",
-    font_family="'Montserrat', sans-serif",
+    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#F97316",
     shadow_color="#EA580C",
     icon_color="#D1D5DB"
