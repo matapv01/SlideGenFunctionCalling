@@ -14,7 +14,8 @@ import io
 
 # --- LLM Configuration ---
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
-LLM_MODEL = "gemini-2.5-flash"
+# LLM_MODEL = "gemini-2.5-flash"
+LLM_MODEL = "gemini-3-flash-preview"
 # Base URL cho API endpoint
 LLM_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
@@ -26,7 +27,8 @@ LLM_TOP_P = 1.0
 
 # --- Idea Structure LLM Configuration ---
 # Model cho việc tạo cấu trúc slide từ idea (create with idea feature)
-IDEA_STRUCTURE_LLM_MODEL = "gemini-2.0-flash-exp"
+# IDEA_STRUCTURE_LLM_MODEL = "gemini-2.0-flash-exp"
+IDEA_STRUCTURE_LLM_MODEL = "gemini-2.5-flash"
 # Temperature cao hơn để sáng tạo structure (0.7 = khá creative nhưng vẫn có logic)
 IDEA_STRUCTURE_LLM_TEMPERATURE = 0.7
 # Max tokens cho structure generation (cần ít hơn vì chỉ gen JSON structure)
