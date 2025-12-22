@@ -96,10 +96,8 @@ from src.tools.html_tool import (
 
     
     
-    generate_thank_you_slide_2, # slide cảm ơn
     generate_thank_you_slide_3, # slide cảm ơn
     generate_corporate_thank_you_slide, # slide cảm ơn
-    generate_geometric_thank_you_slide, # slide cảm ơn
     generate_business_thank_you_slide, # slide cảm ơn
 
 
@@ -1207,16 +1205,6 @@ class GenerateCorporateTeamSlideInput(BaseModel):
 
 # === SLIDE CẢM ƠN CLASSES ===
 
-class GenerateThankYouSlide2Input(BaseModel):
-    """Input schema for generate_thank_you_slide_2."""
-    main_text: str = Field(default="THANKS!", description="The main 'Thanks!' message, displayed in a large, handwritten font.")
-    question_text: str = Field(default="Any questions?", description="The secondary text, typically for Q&A.")
-    font_family_heading: str = Field(default="'Patrick Hand', cursive", description="The handwritten-style font for the main text.")
-    font_family_body: str = Field(default="'Lato', sans-serif", description="The standard font for the secondary text.")
-    main_color: str = Field(default="#56B2E8", description="The main accent color for the heart icon and the main text.")
-    text_color: str = Field(default="#34495E", description="The color for the secondary text.")
-    bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the background texture.")
-
 class GenerateThankYouSlide3Input(BaseModel):
     """Input schema for generate_thank_you_slide_3."""
     main_title: str = Field(..., description="Main title text displayed prominently. Default: 'THANK YOU'.")
@@ -1255,17 +1243,6 @@ class GenerateCorporateThankYouSlideInput(BaseModel):
     accent_color: str = Field(default="#F97316", description="The primary accent color for the right panel and the 'Thanks' text.")
     shadow_color: str = Field(default="#EA580C", description="The secondary (darker) accent color for the panel behind.")
     icon_color: str = Field(default="#D1D5DB", description="The color for the small smiley icon.")
-
-class GenerateGeometricThankYouSlideInput(BaseModel):
-    """Input schema for generate_geometric_thank_you_slide."""
-    main_text: str = Field(default="THANK YOU", description="Main thank you text displayed prominently.")
-    subtitle: str = Field(default="We appreciate your time and attention", description="Subtitle/appreciation message below the main text.")
-    bg_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
-    accent_color: str = Field(default="#C4A57B", description="Color for decorative elements (geometric shapes, grid, bar).")
-    text_color: str = Field(default="#000000", description="Color for the main thank you text.")
-    subtitle_color: str = Field(default="#9B8B6F", description="Color for the subtitle text.")
-    contact_color: str = Field(default="#9B8B6F", description="Color for contact information text.")
-    left_bar_width: str = Field(default="60", description="Width of left decorative bar in pixels.")
 
 class GenerateBusinessThankYouSlideInput(BaseModel):
     """Input schema for generate_business_thank_you_slide."""
@@ -1752,12 +1729,6 @@ TEAM_TOOLS = [
 THANK_YOU_TOOLS = [
     # === SLIDE CẢM ƠN ===
     StructuredTool.from_function(
-        func=generate_thank_you_slide_2,
-        name="generate_thank_you_slide_2",
-        description="Generates a charming 'Thank You' or Closing slide. This is an ideal slide for ending a presentation. Its unique characteristics include a notebook paper background with faint, hand-drawn school-themed doodles, a large sketchy heart icon, and a friendly, handwritten 'Thanks!' title. This tool is perfect for educational presentations, workshops, student projects, or any setting wanting a creative and approachable closing.",
-        args_schema=GenerateThankYouSlide2Input
-    ),
-    StructuredTool.from_function(
         func=generate_thank_you_slide_3,
         name="generate_thank_you_slide_3",
         description="Generates an HTML slide for thank you page with contact information and geometric background.",
@@ -1768,12 +1739,6 @@ THANK_YOU_TOOLS = [
         name="generate_corporate_thank_you_slide",
         description="Generates a minimalist, corporate 'Thank You' or Closing Slide. It provides a clean and professional way to end a presentation. Its unique characteristics include a simple smiley icon, a bold 'Thanks!' message, and the signature dynamic diagonal color panel with a layered shadow effect. This slide is designed for a clean, impactful, and friendly conclusion.",
         args_schema=GenerateCorporateThankYouSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_geometric_thank_you_slide,
-        name="generate_geometric_thank_you_slide",
-        description="Generates a minimalist geometric thank you slide with clean, professional aesthetic. Features centered bold 'Thank You' text and subtitle with decorative geometric elements including crosshair, shapes (triangle, square, hexagon), grid background overlay, data points, and left accent bar. Perfect for modern, technical, or research presentations requiring a sophisticated closing slide.",
-        args_schema=GenerateGeometricThankYouSlideInput
     ),
     StructuredTool.from_function(
         func=generate_business_thank_you_slide,
