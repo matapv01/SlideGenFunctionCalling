@@ -283,7 +283,6 @@ class GenerateTitleSlide3Input(BaseModel):
     subtitle_color: str = Field(default="#3D3D3D", description="The color for the subtitle text.")
     font_family: str = Field(default="'Lobster Two', 'Georgia', serif", description="The font family for all text elements.")
     show_top_lights: Optional[bool] = Field(default=True, description="Whether to show the Christmas lights at the top. Default: True.")
-    show_bottom_lights: Optional[bool] = Field(default=False, description="Whether to show the Christmas lights at the bottom. Default: False.")
     show_sparkles: Optional[bool] = Field(default=True, description="Whether to show decorative sparkles on the slide. Default: True.")
     custom_css: str = Field(default="", description="Additional custom CSS to be included.")
     
@@ -308,7 +307,6 @@ class GenerateTitleSlide4Input(BaseModel):
     text_color: str = Field(default="#1A1A1A", description="The color for all text elements.")
     accent_color_1: str = Field(default="#E85D75", description="First accent color for decorative shapes (coral red).")
     accent_color_2: str = Field(default="#D8B4E2", description="Second accent color for decorative shapes (lavender).")
-    accent_color_3: str = Field(default="#1A1A1A", description="Third accent color for decorative shapes (black).")
     
 class GenerateTitleSlide5Input(BaseModel):
     """Input schema for generate_title_slide_5."""
@@ -1447,14 +1445,13 @@ class GenerateThankYouSlide4Input(BaseModel):
     custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
 
 class GenerateThankYouDecorativeSlideInput(BaseModel):
-    """Input schema for generate_thank_you_decorative_slide (decorative thank you slide with swirls and dots)."""
+    """Input schema for generate_thank_you_decorative_slide (decorative thank you slide with dots)."""
     main_text: str = Field(default="THANK YOU!", description="Main thank you text displayed in large, bold letters.")
     bg_color: str = Field(default="#2B5FA6", description="Background gradient start color. Default: deep blue.")
     bg_gradient_to: str = Field(default="#4A90E2", description="Background gradient end color. Default: lighter blue.")
     text_color: str = Field(default="#FFFFFF", description="Color of the main text. Default: white.")
-    show_swirls: Optional[bool] = Field(default=True, description="Whether to show decorative swirls. Default: True.")
     show_dots: Optional[bool] = Field(default=True, description="Whether to show decorative dots. Default: True.")
-    num_dots: int = Field(default=15, description="Number of decorative dots to display. Default: 15.")
+    num_dots: int = Field(default=25, description="Number of decorative dots to display. Default: 25.")
     custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
 
 class GenerateWatercolorThankYouSlideInput(BaseModel):
@@ -1492,14 +1489,11 @@ class GenerateThankYouSlide6Input(BaseModel):
     custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
 
 class GenerateThankYouSlide7Input(BaseModel):
-    """Input schema for generate_thank_you_slide_7 (elegant thank you slide with brush stroke background)."""
+    """Input schema for generate_thank_you_slide_7 (elegant minimalist thank you slide)."""
     main_text: str = Field(default="THANK YOU!", description="Main text to display. Default: 'THANK YOU!'.")
     bg_color: str = Field(default="#F5F3F0", description="Background color of the slide. Default: light warm gray (#F5F3F0).")
     text_color: str = Field(default="#7A6350", description="Color of the main text. Default: brown/taupe (#7A6350).")
-    brush_color: str = Field(default="#E8D4CC", description="Brush stroke color. Default: nude pink (#E8D4CC).")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
-    show_brush_stroke: Optional[bool] = Field(default=True, description="Whether to show brush stroke behind text. Default: True.")
-    custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
 
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
@@ -1584,7 +1578,7 @@ INTRO_TOOLS = [
     StructuredTool.from_function(
         func=generate_minimalist_slide,
         name="generate_minimalist_slide",
-        description="Generates an elegant and sophisticated **Title or Introduction Slide** with a minimalist design aesthetic. Features smooth decorative curves in the top-left and bottom-right corners, horizontal line accents at top and bottom, and refined serif typography for the title paired with clean sans-serif for the subtitle. The warm beige/cream background creates a timeless, professional look perfect for business presentations, corporate meetings, consulting proposals, or any presentation requiring a clean, upscale, and distraction-free opening.",
+        description="Generates an elegant and sophisticated **Title or Introduction Slide** with a minimalist design aesthetic using converter-compatible fixed positioning (1920x1080px). Features smooth decorative SVG curves in the top-left and bottom-right corners, horizontal line accents at top and bottom, and refined serif typography for the title (112px font) paired with clean sans-serif for the subtitle (26px font). Uses absolute positioning with pixel values instead of flexbox/responsive units for reliable HTML-to-absolute conversion. The warm beige/cream background creates a timeless, professional look perfect for business presentations, corporate meetings, consulting proposals, or any presentation requiring a clean, upscale, and distraction-free opening.",
         args_schema=GenerateMinimalistSlideInput
     ),
     StructuredTool.from_function(
@@ -1602,7 +1596,7 @@ INTRO_TOOLS = [
     StructuredTool.from_function(
         func=generate_title_slide_6,
         name="generate_title_slide_6",
-        description="Generates a playful and whimsical **Title or Introduction Slide** with a cartoon-style design. Features a rounded content box with thick borders, soft pastel gradient background, fluffy white clouds floating at the top, and a cheerful flower character at the bottom-left corner. The design uses bold, friendly typography perfect for educational content, children's presentations, fun workshops, creative projects, or any presentation wanting a lighthearted, approachable, and joyful atmosphere that captures attention with its charming and inviting visual style.",
+        description="Generates a playful and whimsical **Title or Introduction Slide** with a cartoon-style design using converter-compatible fixed positioning (1920x1080px). Features a rounded content box (1300x500px) with thick borders, soft pastel gradient background, fluffy white clouds floating at the top, and a cheerful flower character at the bottom-left corner. The design uses bold, friendly typography (68px title, 30px subtitle) with absolute positioning perfect for educational content, children's presentations, fun workshops, creative projects, or any presentation wanting a lighthearted, approachable, and joyful atmosphere that captures attention with its charming and inviting visual style.",
         args_schema=GenerateTitleSlide6Input,
     )
 ]
@@ -2038,7 +2032,7 @@ THANK_YOU_TOOLS = [
     StructuredTool.from_function(
         func = generate_thank_you_decorative_slide,
         name="generate_thank_you_decorative_slide",
-        description="Generates a decorative Thank You slide with swirls and dots. Features a gradient background, large thank you text, and optional decorative swirls and animated dots for a playful and elegant closing slide.",
+        description="Generates a decorative Thank You slide with dots. Features a blue gradient background, large bold thank you text with shadow effects, and optional animated dots distributed evenly across the top and bottom areas for a clean and elegant closing slide.",
         args_schema=GenerateThankYouDecorativeSlideInput
     ),
     StructuredTool.from_function(
@@ -2062,7 +2056,7 @@ THANK_YOU_TOOLS = [
     StructuredTool.from_function(
         func=generate_thank_you_slide_7,
         name="generate_thank_you_slide_7",
-        description="Generates an elegant 'Thank You' slide with a soft brush stroke background. Features a warm, minimalist design with a serif font (Playfair Display) for the main text centered on the slide. The slide has a light warm gray background with an optional artistic brush stroke element in nude pink placed behind the text, creating a sophisticated watercolor effect. Perfect for presentations needing a refined, artistic closing with minimal decoration and emphasis on elegant typography.",
+        description="Generates an elegant minimalist 'Thank You' slide. Features a clean, sophisticated design with a large serif font (Playfair Display) for the main text centered on the slide. The slide has a light warm gray background with generous white space, creating a refined and professional look. Perfect for presentations needing a simple, elegant closing that emphasizes beautiful typography without any decorative elements.",
         args_schema=GenerateThankYouSlide7Input
     )
 ]
