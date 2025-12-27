@@ -2869,7 +2869,1031 @@ def generate_business_intro_slide(
     
     return html_code
 
+# moi by Hien
+def generate_title_slide_3(
+    main_title="Your main presentation title",
+    subtitle="Here is where your presentation begins",
+    bg_color="#F5EBE0",
+    text_color="#C41E3A",
+    subtitle_color="#3D3D3D",
+    font_family="'Lobster Two', 'Georgia', serif",
+    show_top_lights=True,
+    show_sparkles=True,
+    custom_css=""
+):
+    """
+    Generate a Christmas Lights themed presentation slide with string lights decoration.
+    
+    Parameters:
+    - main_title: Main title text (default: "Your main presentation title")
+    - subtitle: Subtitle text (default: "Here is where your presentation begins")
+    - bg_color: Background color (default: "#F5EBE0")
+    - text_color: Main title color (default: "#C41E3A")
+    - subtitle_color: Subtitle color (default: "#3D3D3D")
+    - font_family: Font family (default: "'Lobster Two', 'Georgia', serif")
+    - show_top_lights: Show Christmas lights at top (default: True)
+    - show_sparkles: Show decorative sparkles (default: True)
+    - custom_css: Additional custom CSS (default: "")
+    
+    Returns:
+    - HTML string for the slide
+    """
+    
+    # Generate light bulbs with improved colors matching the image
+    bulbs_html = ""
+    bulb_colors = [
+        ("#C85353", "#E87676", "#8B1A1A"),  # Red
+        ("#D9B857", "#F0D67E", "#A88B2F"),  # Yellow
+        ("#5BA9BD", "#7DC4D4", "#3A6B7A"),  # Blue
+    ]
+    
+    # Positions for wire 1 - bulbs attached to upper wave points
+    wire1_positions = [
+        (55, 38), (180, 75), (380, 65), (580, 80), (780, 65), 
+        (980, 80), (1180, 65), (1380, 80), (1580, 65), (1780, 80)
+    ]
+    
+    # Positions for wire 2 - bulbs attached to lower wave points  
+    wire2_positions = [
+        (130, 62), (280, 88), (480, 42), (680, 82), (880, 42),
+        (1080, 82), (1280, 42), (1480, 82), (1680, 42), (1850, 72)
+    ]
+    
+    # Generate bulbs for wire 1
+    for i, (x, y) in enumerate(wire1_positions):
+        color_set = bulb_colors[i % 3]
+        bulb_id = f"grad1-{i}"
+        bulbs_html += f'''
+                <g transform="translate({x}, {y})">
+                    <defs>
+                        <radialGradient id="{bulb_id}" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:{color_set[1]};stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:{color_set[2]};stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#{bulb_id})"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>'''
+    
+    # Generate bulbs for wire 2
+    for i, (x, y) in enumerate(wire2_positions):
+        color_set = bulb_colors[i % 3]
+        bulb_id = f"grad2-{i}"
+        bulbs_html += f'''
+                <g transform="translate({x}, {y})">
+                    <defs>
+                        <radialGradient id="{bulb_id}" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:{color_set[1]};stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:{color_set[2]};stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#{bulb_id})"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>'''
+    
+    html_code = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title.replace('<br>', ' ')}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lobster+Two:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            background: {bg_color};
+            position: relative;
+            overflow: hidden;
+            font-family: {font_family};
+        }}
+        
+        /* String Lights Top */
+        .lights-top {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 150px;
+            display: {("block" if show_top_lights else "none")};
+            z-index: 10;
+        }}
+        
+        .lights-top svg {{
+            width: 1920px;
+            height: 150px;
+        }}
+        
+        /* Content Container */
+        .content {{
+            position: absolute;
+            top: 400px;
+            left: 200px;
+            width: 1520px;
+            text-align: center;
+            z-index: 5;
+        }}
+        
+        .title {{
+            font-size: 96px;
+            color: {text_color};
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0 0 40px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }}
+        
+        .subtitle {{
+            font-size: 32px;
+            color: {subtitle_color};
+            font-family: 'Georgia', serif;
+            font-weight: 400;
+            font-style: italic;
+            margin: 0;
+        }}
+        
+        /* Sparkles */
+        .sparkle {{
+            position: absolute;
+            color: {text_color};
+            font-size: 32px;
+            opacity: {("0.6" if show_sparkles else "0")};
+            z-index: 8;
+        }}
+        
+        .sparkle-1 {{ top: 240px; left: 130px; transform: rotate(15deg); }}
+        .sparkle-2 {{ top: 680px; left: 100px; transform: rotate(-20deg); font-size: 21px; }}
+        .sparkle-3 {{ top: 240px; left: 1770px; transform: rotate(25deg); }}
+        .sparkle-4 {{ top: 700px; left: 1780px; transform: rotate(-15deg); }}
+        .sparkle-5 {{ top: 140px; left: 720px; transform: rotate(0deg); font-size: 21px; }}
+        .sparkle-6 {{ top: 700px; left: 640px; transform: rotate(20deg); }}
+        .sparkle-7 {{ top: 450px; left: 280px; transform: rotate(10deg); font-size: 24px; }}
+        .sparkle-8 {{ top: 350px; left: 1600px; transform: rotate(-25deg); }}
+        .sparkle-9 {{ top: 560px; left: 520px; transform: rotate(30deg); font-size: 19px; }}
+        .sparkle-10 {{ top: 580px; left: 1340px; transform: rotate(-10deg); }}
+        .sparkle-11 {{ top: 200px; left: 1100px; transform: rotate(20deg); font-size: 22px; }}
+        .sparkle-12 {{ top: 630px; left: 1170px; transform: rotate(-30deg); font-size: 21px; }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <!-- String Lights Top -->
+    <div class="lights-top">
+        <svg viewBox="0 0 1920 150" xmlns="http://www.w3.org/2000/svg">
+            <!-- Two intertwined wire paths with smooth crossover pattern -->
+            <path d="M -20 55 Q 80 30, 180 75 Q 280 110, 380 65 Q 480 30, 580 80 Q 680 115, 780 65 Q 880 30, 980 80 Q 1080 115, 1180 65 Q 1280 30, 1380 80 Q 1480 115, 1580 65 Q 1680 30, 1780 80 Q 1880 115, 1940 70" 
+                  stroke="#2a2a2a" 
+                  stroke-width="2.5" 
+                  fill="none"
+                  stroke-linecap="round"/>
+            <path d="M -20 105 Q 80 80, 180 35 Q 280 65, 380 100 Q 480 80, 580 35 Q 680 65, 780 110 Q 880 80, 980 35 Q 1080 65, 1180 100 Q 1280 80, 1380 35 Q 1480 65, 1580 100 Q 1680 80, 1780 35 Q 1880 65, 1940 90" 
+                  stroke="#2a2a2a" 
+                  stroke-width="2.5" 
+                  fill="none"
+                  stroke-linecap="round"/>
+            
+            {bulbs_html}
+        </svg>
+    </div>
+
+    
+    <!-- Sparkles -->
+    <div class="sparkle sparkle-1">✦</div>
+    <div class="sparkle sparkle-2">✦</div>
+    <div class="sparkle sparkle-3">✦</div>
+    <div class="sparkle sparkle-4">✦</div>
+    <div class="sparkle sparkle-5">✦</div>
+    <div class="sparkle sparkle-6">✦</div>
+    <div class="sparkle sparkle-7">✦</div>
+    <div class="sparkle sparkle-8">✦</div>
+    <div class="sparkle sparkle-9">✦</div>
+    <div class="sparkle sparkle-10">✦</div>
+    <div class="sparkle sparkle-11">✦</div>
+    <div class="sparkle sparkle-12">✦</div>
+    
+    <!-- Main Content -->
+    <div class="content">
+        <h1 class="title">{main_title}</h1>
+        <p class="subtitle">{subtitle}</p>
+    </div>
+</body>
+</html>
+    """
+    
+    return html_code
+
+def generate_minimalist_slide(
+    title="Your presentation title",
+    subtitle="Here is where your presentation begins",
+    font_family_title="Playfair Display, Georgia, serif",
+    font_family_subtitle="Inter, sans-serif",
+    background_color="#E8E3DC",
+    text_color_title="#1A1A1A",
+    text_color_subtitle="#4A4A4A",
+    line_color="#2C2C2C",
+    curve_color="#4A4A4A"
+):
+    """
+    Generate a minimalist title slide with centered text and decorative curves.
+    Uses fixed positioning (1920x1080px) compatible with HTML-to-absolute converter.
+    Removes all responsive elements (flexbox, vw/vh units, @media queries) for reliable conversion.
+    
+    Args:
+        title (str): The main title for the slide (112px serif font, centered at 1600px width)
+        subtitle (str): Descriptive text below the title (26px sans-serif font)
+        font_family_title (str): Font family for the title (default: Playfair Display, Georgia, serif)
+        font_family_subtitle (str): Font family for the subtitle (default: Inter, sans-serif)
+        background_color (str): The background color of the slide (default: #E8E3DC warm beige)
+        text_color_title (str): Color for the title text (default: #1A1A1A dark gray)
+        text_color_subtitle (str): Color for the subtitle text (default: #4A4A4A medium gray)
+        line_color (str): Color for the horizontal decorative lines (default: #2C2C2C)
+        curve_color (str): Color for the decorative SVG curves (default: #4A4A4A)
+    
+    Returns:
+        str: Complete HTML code for the slide with fixed 1920x1080px dimensions and absolute positioning
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: {font_family_subtitle};
+            background-color: {background_color};
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .title {{
+            position: absolute;
+            top: 450px;
+            left: 160px;
+            width: 1600px;
+            font-family: {font_family_title};
+            font-size: 112px;
+            font-weight: 400;
+            color: {text_color_title};
+            text-align: center;
+            line-height: 1.15;
+            letter-spacing: -0.015em;
+        }}
+        
+        .subtitle {{
+            position: absolute;
+            top: 620px;
+            left: 160px;
+            width: 1600px;
+            font-family: {font_family_subtitle};
+            font-size: 26px;
+            font-weight: 300;
+            color: {text_color_subtitle};
+            text-align: center;
+            letter-spacing: 0.015em;
+        }}
+        
+        .top-line {{
+            position: absolute;
+            top: 40px;
+            left: 0;
+            width: 1920px;
+            height: 2px;
+            background-color: {line_color};
+        }}
+        
+        .bottom-line {{
+            position: absolute;
+            top: 1040px;
+            left: 0;
+            width: 1920px;
+            height: 2px;
+            background-color: {line_color};
+        }}
+    </style>
+</head>
+<body>
+    <!-- Top horizontal line -->
+    <div class="top-line"></div>
+    
+    <!-- Top-left decorative curve -->
+    <svg width="400" height="220" viewBox="0 0 400 220" style="position: absolute; top: 0; left: 0;">
+        <path d="M 0 180 Q 80 80, 200 40 Q 280 20, 400 0" 
+              stroke="{curve_color}" 
+              stroke-width="2.5" 
+              fill="none"
+              stroke-linecap="round"/>
+    </svg>
+    
+    <!-- Content -->
+    <h1 class="title">{title}</h1>
+    <p class="subtitle">{subtitle}</p>
+    
+    <!-- Bottom-right decorative curve -->
+    <svg width="400" height="220" viewBox="0 0 400 220" style="position: absolute; bottom: 0; right: 0;">
+        <path d="M 400 20 Q 300 170, 20 220" 
+              stroke="{curve_color}" 
+              stroke-width="3" 
+              fill="none"
+              stroke-linecap="round"/>
+    </svg>
+    
+    <!-- Bottom horizontal line -->
+    <div class="bottom-line"></div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_4(
+    title: str = "Your Presentation Title",
+    subtitle: str = "Your subtitle goes here",
+    font_family: str = "Inter, system-ui, -apple-system, sans-serif",
+    background_color: str = "#E8E3DC",
+    text_color: str = "#1A1A1A",
+    accent_color_1: str = "#E85D75",  # Coral red
+    accent_color_2: str = "#D8B4E2",  # Lavender
+):
+    """
+    Generate a centered slide with decorative geometric border elements.
+    
+    Parameters:
+    - title: Main title text (default: "Your Presentation Title")
+    - subtitle: Subtitle text (default: "Your subtitle goes here")
+    - font_family: Font family (default: "Inter, system-ui, -apple-system, sans-serif")
+    - background_color: Background color (default: "#E8E3DC" - warm beige)
+    - text_color: Text color (default: "#1A1A1A" - black)
+    - accent_color_1: First accent color for shapes (default: "#E85D75" - coral red)
+    - accent_color_2: Second accent color for shapes (default: "#D8B4E2" - lavender)
+    
+    Returns:
+    - HTML string for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: {font_family};
+            background-color: {background_color};
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .slide-container {{
+            position: relative;
+            width: 1920px;
+            height: 1080px;
+        }}
+        
+        .content {{
+            position: absolute;
+            top: 440px;
+            left: 240px;
+            width: 1440px;
+            text-align: center;
+            z-index: 10;
+        }}
+        
+        .title {{
+            font-size: 96px;
+            font-weight: 700;
+            color: {text_color};
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            margin: 0;
+        }}
+        
+        .subtitle {{
+            font-size: 40px;
+            font-weight: 400;
+            color: {text_color};
+            margin: 30px 0 0 0;
+            opacity: 0.8;
+        }}
+        
+        /* Decorative border frame */
+        .border-frame {{
+            position: absolute;
+            top: 40px;
+            left: 40px;
+            width: 1840px;
+            height: 1000px;
+            border: 2px solid {text_color};
+            border-radius: 20px;
+            pointer-events: none;
+        }}
+        
+        /* Corner curves */
+        .corner-curve {{
+            position: absolute;
+            width: 120px;
+            height: 120px;
+            border: 2px solid {text_color};
+            border-radius: 50%;
+        }}
+        
+        .corner-curve.top-left {{
+            top: -60px;
+            left: -60px;
+            border-right: none;
+            border-bottom: none;
+        }}
+        
+        .corner-curve.top-right {{
+            top: -60px;
+            right: -60px;
+            border-left: none;
+            border-bottom: none;
+        }}
+        
+        .corner-curve.bottom-left {{
+            bottom: -60px;
+            left: -60px;
+            border-right: none;
+            border-top: none;
+        }}
+        
+        .corner-curve.bottom-right {{
+            bottom: -60px;
+            right: -60px;
+            border-left: none;
+            border-top: none;
+        }}
+        
+        /* Decorative shapes */
+        .shape {{
+            position: absolute;
+            z-index: 5;
+        }}
+        
+        .circle {{
+            border-radius: 50%;
+        }}
+        
+        .diamond {{
+            transform: rotate(45deg);
+        }}
+        
+        /* Left side shapes */
+        .shape-1 {{
+            width: 20px;
+            height: 20px;
+            background-color: {accent_color_1};
+            top: 165px;
+            left: 52px;
+        }}
+        
+        .shape-2 {{
+            width: 14px;
+            height: 14px;
+            background-color: {accent_color_1};
+            top: 395px;
+            left: 47px;
+            opacity: 0.7;
+        }}
+        
+        .shape-3 {{
+            width: 18px;
+            height: 18px;
+            background-color: {accent_color_2};
+            top: 432px;
+            left: 49px;
+        }}
+        
+        .shape-4 {{
+            width: 15px;
+            height: 15px;
+            background-color: {text_color};
+            top: 467px;
+            left: 48px;
+        }}
+        
+        /* Top right shapes */
+        .shape-5 {{
+            width: 20px;
+            height: 20px;
+            background-color: {text_color};
+            top: 45px;
+            right: 50px;
+        }}
+        
+        /* Bottom center/right shapes */
+        .shape-6 {{
+            width: 18px;
+            height: 18px;
+            background-color: {accent_color_2};
+            bottom: 105px;
+            left: 951px;
+        }}
+        
+        .shape-7 {{
+            width: 14px;
+            height: 14px;
+            background-color: {accent_color_2};
+            bottom: 57px;
+            right: 135px;
+            opacity: 0.7;
+        }}
+        
+        .shape-8 {{
+            width: 22px;
+            height: 22px;
+            background-color: {accent_color_1};
+            bottom: 52px;
+            right: 97px;
+        }}
+        
+        .shape-9 {{
+            width: 16px;
+            height: 16px;
+            background-color: {text_color};
+            bottom: 50px;
+            right: 60px;
+        }}
+        
+        /* Bottom center curves */
+        .decorative-curve {{
+            position: absolute;
+            width: 110px;
+            height: 110px;
+            border: 2px solid {text_color};
+            border-radius: 50%;
+        }}
+        
+        .curve-1 {{
+            bottom: 115px;
+            left: 740px;
+            border-right: none;
+            border-top: none;
+        }}
+        
+        .curve-2 {{
+            bottom: 115px;
+            left: 1070px;
+            border-left: none;
+            border-top: none;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Border frame with corner curves -->
+        <div class="border-frame">
+            <div class="corner-curve top-left"></div>
+            <div class="corner-curve top-right"></div>
+            <div class="corner-curve bottom-left"></div>
+            <div class="corner-curve bottom-right"></div>
+        </div>
+        
+        <!-- Decorative shapes -->
+        <!-- Left side -->
+        <div class="shape shape-1 circle"></div>
+        <div class="shape shape-2 diamond"></div>
+        <div class="shape shape-3 circle"></div>
+        <div class="shape shape-4 diamond"></div>
+        
+        <!-- Top right -->
+        <div class="shape shape-5 circle"></div>
+        
+        <!-- Bottom -->
+        <div class="shape shape-6 circle"></div>
+        <div class="shape shape-7 diamond"></div>
+        <div class="shape shape-8 circle"></div>
+        <div class="shape shape-9 diamond"></div>
+        
+        <!-- Bottom curves -->
+        <div class="decorative-curve curve-1"></div>
+        <div class="decorative-curve curve-2"></div>
+        
+        <!-- Main content -->
+        <div class="content">
+            <h1 class="title">{title}</h1>
+            {f'<p class="subtitle">{subtitle}</p>' if subtitle else ''}
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_5(
+    top_left_text="Our shared moments",
+    year="20XX",
+    main_title="Your Title Here",
+    bottom_text="Here is where your presentation begins",
+    image_path="Image/generate_title_slide_5/Default_1.jpg",
+    font_family="'Arial'",
+    font_family_secondary="'Arial'",
+    bg_color="#b8c8d4",
+    text_color="#2c3e50",
+    show_clover=True,
+    show_decorative_lines=True,
+    custom_css=""
+):
+    """
+    Generate a notebook cover design slide with polaroid-style image and decorative elements.
+    
+    Parameters:
+    - top_left_text: Text in top-left corner (default: "Our shared moments")
+    - year: Year text in top-right corner (default: "20XX")
+    - main_title: Main title text (default: "Your Title Here")
+    - bottom_text: Text in bottom-right corner (default: "Here is where your presentation begins")
+    - image_path: Path to polaroid image (default: "Image/generate_title_slide_5/Default_1.jpg")
+    - font_family: Font for main title (default: "'Arial'")
+    - font_family_secondary: Font for secondary text (default: "'Arial'")
+    - bg_color: Background color (default: "#b8c8d4" - soft blue-gray)
+    - text_color: Text color (default: "#2c3e50" - dark blue)
+    - show_clover: Show four-leaf clover decoration (default: True)
+    - show_decorative_lines: Show top/bottom decorative lines (default: True)
+    - custom_css: Additional custom CSS (default: "")
+    
+    Returns:
+    - HTML string for the slide
+    """
+    
+    # SVG cho clover (cỏ bốn lá) - to hơn
+    clover_svg = """
+    <svg viewBox="0 0 100 100" style="width: 180px; height: 180px;">
+        <g fill="#2d5f3f">
+            <circle cx="35" cy="35" r="15"/>
+            <circle cx="65" cy="35" r="15"/>
+            <circle cx="35" cy="65" r="15"/>
+            <circle cx="65" cy="65" r="15"/>
+            <circle cx="50" cy="50" r="8"/>
+            <rect x="48" y="65" width="4" height="25" fill="#2d5f3f"/>
+        </g>
+    </svg>
+    """ if show_clover else ""
+    
+    html_code = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook Cover Design</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Courier New', monospace;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: {bg_color};
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px);
+            position: relative;
+        }}
+        
+        .top-left {{
+            position: absolute;
+            top: 60px;
+            left: 120px;
+            font-size: 30px;
+            color: {text_color};
+            font-family: {font_family_secondary};
+        }}
+        
+        .top-right {{
+            position: absolute;
+            top: 60px;
+            right: 120px;
+            font-size: 24px;
+            color: {text_color};
+            font-weight: bold;
+            font-family: {font_family_secondary};
+        }}
+        
+        .text-content {{
+            position: absolute;
+            top: 330px;
+            left: 120px;
+            max-width: 1000px;
+            z-index: 1;
+        }}
+        
+        .main-title {{
+            font-size: 120px;
+            color: {text_color};
+            line-height: 1.2;
+            font-weight: 400;
+            font-family: {font_family};
+            margin: 0;
+        }}
+
+        .image-container {{
+            position: absolute;
+            right: 200px;
+            top: 240px;
+            z-index: 2;
+        }}
+
+        .polaroid {{
+            position: relative;
+            width: 480px;
+            height: 530px;
+            background: white;
+            padding: 18px;
+            padding-bottom: 55px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.35);
+            transform: rotate(6deg);
+        }}
+
+        .polaroid img {{
+            width: 444px;
+            height: 457px;
+            object-fit: cover;
+        }}
+        
+        .clover {{
+            position: absolute;
+            bottom: 30px;
+            left: 120px;
+            z-index: 10;
+        }}
+        
+        .bottom-text {{
+            position: absolute;
+            bottom: 60px;
+            right: 120px;
+            font-size: 30px;
+            color: {text_color};
+            font-family: {font_family_secondary};
+        }}
+        
+        .top-line {{
+            position: absolute;
+            top: 120px;
+            left: 120px;
+            width: 1680px;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #8b4513 20%, #8b4513 80%, transparent);
+        }}
+        
+        .horizontal-line {{
+            position: absolute;
+            bottom: 120px;
+            left: 120px;
+            width: 1680px;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #8b4513 20%, #8b4513 80%, transparent);
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="top-left">{top_left_text}</div>
+    <div class="top-right">{year}</div>
+    
+    <div class="text-content">
+        <div class="main-title">{main_title}</div>
+    </div>
+
+    <div class="image-container">
+        <div class="polaroid">
+            <img src="{image_path}" alt="Notebook Cover Image">
+        </div>
+    </div>
+    
+    <div class="clover">{clover_svg}</div>
+    {('<div class="top-line"></div>' if show_decorative_lines else '')}
+    {('<div class="horizontal-line"></div>' if show_decorative_lines else '')}
+    <div class="bottom-text">{bottom_text}</div>
+</body>
+</html>
+    """
+    
+    return html_code
+
+
+def generate_title_slide_6(
+    main_title="Your main title here",
+    subtitle="- Your subtitle here -",
+    bg_color="#E8D4F0",
+    bg_gradient_to="#F0E4F8",
+    box_color="#D4E8B4",
+    title_color="#2D3436",
+    font_family="Arial, monospace",
+    show_clouds=True,
+    show_flower=True,
+    custom_css=""
+):
+    """
+    Generate a playful cartoon-style slide with simple decorations.
+    Uses fixed positioning (1920x1080px) compatible with HTML-to-absolute converter.
+    Title and subtitle are positioned outside the content box for proper rendering.
+    
+    Args:
+        main_title (str): Main title text displayed in the center (68px font, centered at 1100px width)
+        subtitle (str): Subtitle text displayed below title (30px font)
+        bg_color (str): Background gradient start color (default: #E8D4F0 light purple)
+        bg_gradient_to (str): Background gradient end color (default: #F0E4F8 lighter purple)
+        box_color (str): Color of the rounded content box (default: #D4E8B4 light green)
+        title_color (str): Color of the title and subtitle text (default: #2D3436 dark gray)
+        font_family (str): Font family for title and subtitle (default: Arial, monospace)
+        show_clouds (bool): Show fluffy cloud SVG decorations at the top (default: True)
+        show_flower (bool): Show cute flower character SVG at bottom-left (default: True)
+        custom_css (str): Additional custom CSS to be included in the slide (default: empty string)
+    
+    Returns:
+        str: Complete HTML code for the slide with fixed 1920x1080px dimensions and absolute positioning
+    """
+    
+    # SVG for clouds at top
+    clouds_svg = """
+    <svg class="cloud-1" width="200" height="90" viewBox="0 0 200 90" style="position: absolute; top: 30px; left: 280px; z-index: 5;">
+        <circle cx="50" cy="55" r="32" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="85" cy="50" r="38" fill="#FFFFFF" opacity="0.95"/>
+        <circle cx="120" cy="55" r="30" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="150" cy="60" r="28" fill="#FFFFFF" opacity="0.85"/>
+        <circle cx="68" cy="65" r="28" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="100" cy="63" r="32" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="135" cy="68" r="26" fill="#FFFFFF" opacity="0.88"/>
+    </svg>
+    
+    <svg class="cloud-2" width="180" height="85" viewBox="0 0 180 85" style="position: absolute; top: 50px; left: 860px; z-index: 5;">
+        <circle cx="45" cy="52" r="30" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="78" cy="48" r="36" fill="#FFFFFF" opacity="0.95"/>
+        <circle cx="110" cy="52" r="28" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="138" cy="58" r="26" fill="#FFFFFF" opacity="0.85"/>
+        <circle cx="62" cy="62" r="26" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="92" cy="60" r="30" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="122" cy="64" r="24" fill="#FFFFFF" opacity="0.88"/>
+    </svg>
+    
+    <svg class="cloud-3" width="170" height="80" viewBox="0 0 170 80" style="position: absolute; top: 25px; left: 1480px; z-index: 5;">
+        <circle cx="42" cy="50" r="28" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="72" cy="45" r="34" fill="#FFFFFF" opacity="0.95"/>
+        <circle cx="102" cy="50" r="26" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="130" cy="55" r="24" fill="#FFFFFF" opacity="0.85"/>
+        <circle cx="58" cy="60" r="24" fill="#FFFFFF" opacity="0.9"/>
+        <circle cx="86" cy="58" r="28" fill="#FFFFFF" opacity="0.92"/>
+        <circle cx="114" cy="62" r="22" fill="#FFFFFF" opacity="0.88"/>
+    </svg>
+    """ if show_clouds else ""
+    
+    # SVG for cute flower character
+    flower_svg = """
+    <svg class="flower" width="200" height="240" viewBox="0 0 200 240" style="position: absolute; bottom: 50px; left: 60px;">
+        <!-- Stem -->
+        <rect x="95" y="160" width="10" height="80" rx="5" fill="#5CAC3A" stroke="#2D3436" stroke-width="2"/>
+        
+        <!-- Leaves -->
+        <ellipse cx="70" cy="185" rx="25" ry="12" fill="#5CAC3A" stroke="#2D3436" stroke-width="2" transform="rotate(-30 70 185)"/>
+        <ellipse cx="130" cy="200" rx="25" ry="12" fill="#5CAC3A" stroke="#2D3436" stroke-width="2" transform="rotate(30 130 200)"/>
+        
+        <!-- Petals - arranged in a circle -->
+        <ellipse cx="100" cy="60" rx="28" ry="38" fill="#FF6B9D" stroke="#2D3436" stroke-width="3"/>
+        <ellipse cx="138" cy="80" rx="28" ry="38" fill="#FF85B3" stroke="#2D3436" stroke-width="3" transform="rotate(72 100 100)"/>
+        <ellipse cx="128" cy="128" rx="28" ry="38" fill="#FFA0C9" stroke="#2D3436" stroke-width="3" transform="rotate(144 100 100)"/>
+        <ellipse cx="72" cy="128" rx="28" ry="38" fill="#FF85B3" stroke="#2D3436" stroke-width="3" transform="rotate(-144 100 100)"/>
+        <ellipse cx="62" cy="80" rx="28" ry="38" fill="#FFA0C9" stroke="#2D3436" stroke-width="3" transform="rotate(-72 100 100)"/>
+        
+        <!-- Center/Face -->
+        <circle cx="100" cy="100" r="32" fill="#FFD93D" stroke="#2D3436" stroke-width="3"/>
+        
+        <!-- Eyes -->
+        <circle cx="90" cy="95" r="5" fill="#2D3436"/>
+        <circle cx="110" cy="95" r="5" fill="#2D3436"/>
+        <circle cx="92" cy="93" r="2" fill="#FFFFFF"/>
+        <circle cx="112" cy="93" r="2" fill="#FFFFFF"/>
+        
+        <!-- Rosy cheeks -->
+        <circle cx="78" cy="105" r="6" fill="#FFB3D9" opacity="0.6"/>
+        <circle cx="122" cy="105" r="6" fill="#FFB3D9" opacity="0.6"/>
+        
+        <!-- Smile -->
+        <path d="M 88 108 Q 100 118 112 108" stroke="#2D3436" stroke-width="2.5" fill="none" stroke-linecap="round"/>
+    </svg>
+    """ if show_flower else ""
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
+            background: linear-gradient(135deg, {bg_color} 0%, {bg_gradient_to} 100%);
+            position: relative;
+        }}
+        
+        .content-box {{
+            background-color: {box_color};
+            border: 5px solid #2D3436;
+            border-radius: 80px;
+            width: 1300px;
+            height: 500px;
+            position: absolute;
+            top: 290px;
+            left: 310px;
+            z-index: 10;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }}
+        
+        .main-title {{
+            position: absolute;
+            top: 450px;
+            left: 410px;
+            width: 1100px;
+            font-size: 68px;
+            font-weight: 900;
+            color: {title_color};
+            font-family: {font_family};
+            letter-spacing: 0;
+            text-transform: uppercase;
+            text-align: center;
+            line-height: 1;
+            z-index: 11;
+        }}
+        
+        .subtitle {{
+            position: absolute;
+            top: 550px;
+            left: 410px;
+            width: 1100px;
+            font-size: 30px;
+            font-weight: 600;
+            color: {title_color};
+            font-family: {font_family};
+            letter-spacing: 0.04em;
+            text-align: center;
+            text-transform: uppercase;
+            z-index: 11;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    {clouds_svg}
+    {flower_svg}
+    
+    <div class="content-box"></div>
+    <div class="main-title">{main_title}</div>
+    <div class="subtitle">{subtitle}</div>
+</body>
+</html>"""
+    
+    return html_code
 #----------------------SLIDE CHUYỂN SLIDE
+
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
     subtitle="Let's start with the first set of slides",
@@ -3601,7 +4625,6 @@ def generate_intro_slide(
 </html>"""
     
     return html_code
-
 
 # moi    
 def generate_research_proposal_transition_slide(
@@ -15671,4 +16694,763 @@ def generate_business_thank_you_slide(
     
     return html_code
 
+def generate_thank_you_slide_4(
+    main_text="THANK YOU!",
+    bg_color="#5B9BD5",
+    bg_gradient_to="#A8D8F0",
+    text_color="#2C5F8D",
+    bubble_bg_color="#FFFFFF",
+    font_family="Arial, sans-serif",
+    show_speech_tail=True,
+    custom_css=""
+):
+    """
+    Generate a 'Thank You' slide with a speech bubble design.
+    
+    Parameters:
+    - main_text: The thank you message text
+    - bg_color: Background gradient start color (default: blue)
+    - bg_gradient_to: Background gradient end color (default: light blue)
+    - text_color: Color of the thank you text
+    - bubble_bg_color: Background color of the speech bubble
+    - font_family: Font family for the text (default: Arial, sans-serif)
+    - show_speech_tail: Whether to show the speech bubble tail
+    - custom_css: Additional custom CSS
+    
+    Returns:
+    - HTML string for the thank you slide
+    """
+    
+    # Handle list inputs (take first element)
+    if isinstance(main_text, list):
+        main_text = main_text[0] if main_text else "THANK YOU!"
+    
+    speech_tail_html = f'''
+        <div class="speech-tail"></div>
+    ''' if show_speech_tail else ''
+    
+    html_code = f'''
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You Slide</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Arial', 'Helvetica', sans-serif;
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background: linear-gradient(135deg, {bg_color} 0%, {bg_gradient_to} 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .speech-bubble {{
+            position: relative;
+            background-color: {bubble_bg_color};
+            padding: 60px 120px;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 10px 30px rgba(0, 0, 0, 0.2);
+        }}
+        
+        .speech-tail {{
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-top: 50px solid {bubble_bg_color};
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+        }}
+        
+        .thank-you-text {{
+            font-size: 5rem;
+            font-weight: 900;
+            color: {text_color};
+            font-family: {font_family};
+            text-align: center;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-shadow: 
+                3px 3px 0px rgba(0, 0, 0, 0.1),
+                -1px -1px 0px rgba(255, 255, 255, 0.5);
+        }}
+        
+        /* Responsive scaling for smaller screens */
+        @media screen and (max-width: 1920px) {{
+            .slide-container {{
+                width: 100vw;
+                height: 100vh;
+                transform-origin: center;
+            }}
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="speech-bubble">
+            <div class="thank-you-text">{main_text}</div>
+            {speech_tail_html}
+        </div>
+    </div>
+</body>
+</html>
+'''
+    
+    return html_code
+
+def generate_thank_you_decorative_slide(
+    main_text="THANK YOU!",
+    bg_color="#2B5FA6",
+    bg_gradient_to="#4A90E2",
+    text_color="#FFFFFF",
+    show_dots=True,
+    num_dots=25,
+    custom_css="",
+):
+    """
+    Generate a decorative Thank You slide with dots.
+    
+    Parameters:
+    - main_text: Main thank you text (default: "THANK YOU!")
+    - bg_color: Background gradient start color (default: "#2B5FA6")
+    - bg_gradient_to: Background gradient end color (default: "#4A90E2")
+    - text_color: Text color (default: "#FFFFFF")
+    - show_dots: Show decorative dots (default: True)
+    - num_dots: Number of dots to display (default: 15)
+    - custom_css: Additional custom CSS (default: "")
+    
+    Returns:
+    - HTML string for the slide
+    """
+    
+    # Handle list inputs
+    if isinstance(main_text, list):
+        main_text = main_text[0] if main_text else "THANK YOU!"
+    
+    # Generate random dots positions
+    import random
+    random.seed(42)  # Seed for consistent placement
+    dots_html = ""
+    if show_dots:
+        for i in range(num_dots):
+            size = random.choice([10, 14, 18])  # More uniform sizes
+            # Distribute dots more evenly across screen
+            top = random.randint(3, 25) if i < num_dots//2 else random.randint(75, 97)
+            left = random.randint(5, 95)
+            opacity = random.uniform(0.5, 0.85)
+            delay = random.uniform(0, 2)
+            dots_html += f"""
+            <div class="dot" style="
+                width: {size}px;
+                height: {size}px;
+                top: {top}%;
+                left: {left}%;
+                opacity: {opacity};
+                animation-delay: {delay}s;
+            "></div>
+            """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You Slide</title>
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            background: linear-gradient(135deg, {bg_color} 0%, {bg_gradient_to} 100%);
+            overflow: hidden;
+            position: relative;
+            font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+        }}
+        
+        .main-text {{
+            position: absolute;
+            top: 475px;
+            left: 0;
+            width: 100%;
+            font-size: 96px;
+            font-weight: 900;
+            color: {text_color};
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-align: center;
+            text-shadow: 
+                0 4px 0 rgba(0, 0, 0, 0.2),
+                0 8px 0 rgba(0, 0, 0, 0.15),
+                0 12px 0 rgba(0, 0, 0, 0.1),
+                0 16px 20px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+        }}
+        
+        .dot {{
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.8);
+            border-radius: 50%;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    {dots_html}
+    <h1 class="main-text">{main_text}</h1>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_watercolor_thank_you_slide(
+    title="Thank You",
+    bg_color="#f5f5f5",
+    text_color="#1e3a5f",
+    watercolor_color="#4dd0e1",
+    watercolor_opacity=0.6,
+    font_family="'Brush Script MT', cursive, serif",
+    show_watercolor=True,
+    custom_css=""
+):
+    """
+    Generate a watercolor style 'Thank You' slide HTML.
+    
+    Parameters:
+    - title: Main text (default: "Thank You")
+    - bg_color: Background color (default: "#f5f5f5" - light gray)
+    - text_color: Text color (default: "#1e3a5f" - dark blue)
+    - watercolor_color: Watercolor splash color (default: "#4dd0e1" - cyan)
+    - watercolor_opacity: Opacity of watercolor effect (default: 0.6)
+    - font_family: Font for title (default: cursive/script style)
+    - show_watercolor: Show watercolor background effect (default: True)
+    - custom_css: Additional custom CSS
+    
+    Returns:
+    - Complete HTML string for the slide
+    """
+    
+    # Handle list inputs
+    if isinstance(title, list):
+        title = title[0] if title else "Thank You"
+    
+    watercolor_html = ""
+    if show_watercolor:
+        watercolor_html = f"""
+        <div class="watercolor-splash" style="
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 90%;
+            height: 70%;
+            background: radial-gradient(ellipse at center, 
+                {watercolor_color} 0%, 
+                rgba(77, 208, 225, 0.9) 15%,
+                rgba(77, 208, 225, 0.7) 35%,
+                rgba(77, 208, 225, 0.4) 60%,
+                transparent 100%);
+            filter: blur(50px);
+            opacity: {watercolor_opacity};
+            z-index: 1;
+        "></div>
+        
+        <div class="watercolor-blob watercolor-blob-1" style="
+            position: absolute;
+            top: 20%;
+            left: 20%;
+            width: 300px;
+            height: 300px;
+            background: {watercolor_color};
+            border-radius: 40% 60% 70% 30% / 40% 50% 60% 50%;
+            filter: blur(60px);
+            opacity: 0.5;
+            z-index: 1;
+        "></div>
+        
+        <div class="watercolor-blob watercolor-blob-2" style="
+            position: absolute;
+            top: 25%;
+            right: 15%;
+            width: 350px;
+            height: 350px;
+            background: rgba(77, 208, 225, 0.8);
+            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
+            filter: blur(55px);
+            opacity: 0.45;
+            z-index: 1;
+        "></div>
+        
+        <div class="watercolor-blob watercolor-blob-3" style="
+            position: absolute;
+            bottom: 20%;
+            left: 30%;
+            width: 280px;
+            height: 280px;
+            background: rgba(77, 208, 225, 0.7);
+            border-radius: 50% 60% 40% 70% / 50% 40% 60% 50%;
+            filter: blur(65px);
+            opacity: 0.4;
+            z-index: 1;
+        "></div>
+        """
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Thank You Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: Arial, sans-serif;
+                overflow: hidden;
+                margin: 0;
+                padding: 0;
+                width: 100vw;
+                height: 100vh;
+            }}
+            
+            .slide-container {{
+                width: 100vw;
+                height: 100vh;
+                position: relative;
+                background: {bg_color};
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }}
+            
+            .content {{
+                position: relative;
+                z-index: 2;
+                text-align: center;
+            }}
+            
+            .title {{
+                font-family: {font_family};
+                font-size: 8rem;
+                color: {text_color};
+                font-weight: 700;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+            }}
+            
+
+            
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            {watercolor_html}
+            
+            <div class="content">
+                <h1 class="title">{title}</h1>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_code
+
+def generate_thank_you_slide_5(
+    main_text="Thank you!",
+    bg_color="#f5f5f5",
+    text_color="#2d3748",
+    circle_color="#fbbf24",
+    corner_shape_color="#2c5f6f",
+    show_border=True,
+    border_color="#1a1a1a",
+    show_corner_circles=True,
+    show_corner_shapes=True,
+    custom_css=""
+):
+    """
+    Generate a geometric Thank You slide with yellow circles and teal corner shapes.
+    
+    Parameters:
+    - main_text: Main text content (default: "Thank you!")
+    - bg_color: Background color (default: off-white)
+    - text_color: Text color (default: dark gray)
+    - circle_color: Color of decorative circles (default: yellow)
+    - corner_shape_color: Color of corner shapes (default: dark teal)
+    - show_border: Whether to show the border frame (default: True)
+    - border_color: Color of the border (default: black)
+    - show_corner_circles: Whether to show corner circles (default: True)
+    - show_corner_shapes: Whether to show corner shapes (default: True)
+    - custom_css: Additional custom CSS
+    """
+    
+    # Handle list inputs
+    if isinstance(main_text, list):
+        main_text = main_text[0] if main_text else "Thank you!"
+    
+    border_style = f"border: 3px solid {border_color};" if show_border else ""
+    
+    circles_html = ""
+    if show_corner_circles:
+        circles_html = """
+        <!-- Top Right Circles -->
+        <div class="circle" style="top: 50px; right: 120px; width: 150px; height: 150px;"></div>
+        <div class="circle" style="top: 50px; right: 290px; width: 150px; height: 150px;"></div>
+        <div class="circle" style="top: 220px; right: 205px; width: 150px; height: 150px;"></div>
+        
+        <!-- Bottom Left Half Circle -->
+        <div class="circle" style="bottom: -75px; left: 50px; width: 150px; height: 150px;"></div>
+        """
+    
+    corner_shapes_html = ""
+    if show_corner_shapes:
+        corner_shapes_html = """
+        <!-- Top Left Quarter Circle -->
+        <div class="quarter-circle top-left"></div>
+        
+        <!-- Bottom Right Quarter Circle -->
+        <div class="quarter-circle bottom-right"></div>
+        """
+    
+    html_code = f"""
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometric Thank You Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Kalam:wght@700&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Caveat', cursive;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #e5e5e5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }}
+        
+        .slide-container {{
+            width: 100vw;
+            height: 100vh;
+            max-width: 100%;
+            max-height: 100%;
+            background: {bg_color};
+            position: relative;
+            overflow: hidden;
+            padding: 3vw;
+            {border_style}
+        }}
+        
+        .content {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }}
+        
+        .main-text {{
+            font-size: 8rem;
+            font-weight: 700;
+            color: {text_color};
+            line-height: 1.2;
+        }}
+        
+        .circle {{
+            position: absolute;
+            background: {circle_color};
+            border-radius: 50%;
+        }}
+        
+        .quarter-circle {{
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            background: {corner_shape_color};
+        }}
+        
+        .quarter-circle.top-left {{
+            top: 0;
+            left: 0;
+            border-radius: 0 0 100% 0;
+        }}
+        
+        .quarter-circle.bottom-right {{
+            bottom: 0;
+            right: 0;
+            border-radius: 100% 0 0 0;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        {corner_shapes_html}
+        
+        {circles_html}
+        
+        <div class="content">
+            <div class="main-text">{main_text}</div>
+        </div>
+    </div>
+</body>
+</html>
+"""
+    
+    return html_code
+
+def generate_thank_you_slide_6(
+    main_text="Thank you",
+    bg_color="#F5E6D3",
+    text_color="#1a3a52",
+    show_decorative_elements=True,
+    show_olive_branches=True,
+    font_family="'Dancing Script', 'Brush Script MT', cursive",
+    custom_css=""
+):
+    """
+    Generate a 'Thank you' slide with elegant decorative elements.
+    
+    Args:
+        main_text (str): Main text to display (default: "Thank you")
+        bg_color (str): Background color (default: beige #F5E6D3)
+        text_color (str): Text color (default: navy #1a3a52)
+        show_decorative_elements (bool): Show sunburst patterns and dots
+        show_olive_branches (bool): Show olive branch decorations
+        font_family (str): Font family for the main text
+        custom_css (str): Additional custom CSS
+    
+    Returns:
+        str: Complete HTML code for the thank you slide
+    """
+    
+    # Sunburst pattern SVG (decorative circular patterns)
+    sunburst_pattern = '''
+    <g class="sunburst">
+        <circle cx="0" cy="0" r="25" fill="none" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="0" y1="-35" x2="0" y2="-30" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="24.7" y1="-17.5" x2="21.2" y2="-15" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="24.7" y1="17.5" x2="21.2" y2="15" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="0" y1="35" x2="0" y2="30" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="-24.7" y1="17.5" x2="-21.2" y2="15" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="-24.7" y1="-17.5" x2="-21.2" y2="-15" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="17.5" y1="-24.7" x2="15" y2="-21.2" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="17.5" y1="24.7" x2="15" y2="21.2" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="-17.5" y1="24.7" x2="-15" y2="21.2" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="-17.5" y1="-24.7" x2="-15" y2="-21.2" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="35" y1="0" x2="30" y2="0" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+        <line x1="-35" y1="0" x2="-30" y2="0" stroke="#d4c5b0" stroke-width="1.5" opacity="0.6"/>
+    </g>
+    '''
+    
+    # Olive branch SVG paths
+    olive_branch_top = '''
+    <g transform="translate(960, 220)">
+        <path d="M 0,0 Q -5,-15 -10,-25" stroke="#7a8b7e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="-8" cy="-10" rx="8" ry="12" fill="#7a8b7e" opacity="0.8"/>
+        <ellipse cx="-12" cy="-20" rx="7" ry="11" fill="#8a9b8e" opacity="0.8"/>
+        <ellipse cx="-4" cy="-22" rx="6" ry="10" fill="#6a7b6e" opacity="0.8"/>
+    </g>
+    '''
+    
+    olive_branch_bottom = '''
+    <g transform="translate(960, 580)">
+        <path d="M 0,0 Q -8,12 -15,25" stroke="#7a8b7e" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <ellipse cx="-5" cy="8" rx="6" ry="10" fill="#8a9b8e" opacity="0.8"/>
+        <ellipse cx="-10" cy="15" rx="7" ry="11" fill="#7a8b7e" opacity="0.8"/>
+        <ellipse cx="-13" cy="22" rx="6" ry="10" fill="#6a7b6e" opacity="0.8"/>
+    </g>
+    '''
+    generate_mission_slide
+    # Decorative elements HTML
+    decorative_elements_html = ""
+    if show_decorative_elements:
+        # Sunburst patterns at various positions
+        sunburst_positions = [
+            (250, 180), (450, 320), (250, 650), (320, 880),
+            (1470, 120), (1670, 280), (1520, 650), (1700, 850),
+            (750, 850), (1150, 820)
+        ]
+        
+        for x, y in sunburst_positions:
+            decorative_elements_html += f'<g transform="translate({x}, {y})">{sunburst_pattern}</g>'
+        
+        # Colored dots scattered around
+        dots = [
+            (356, 168, "#4a7c59"), (820, 165, "#d4a574"), (528, 190, "#e8b4a8"),
+            (600, 110, "#f0f0f0"), (910, 110, "#f0f0f0"), (910, 460, "#e8b4a8"),
+            (808, 470, "#d4a574"), (660, 250, "#d4a574"), (560, 560, "#4a7c59"),
+            (1180, 250, "#f0f0f0"), (1000, 250, "#e8b4a8"), (1180, 450, "#4a7c59"),
+            (445, 450, "#f0f0f0"), (810, 620, "#d4a574"), (865, 755, "#e8b4a8"),
+            (710, 750, "#d4a574"), (340, 750, "#e8b4a8")
+        ]
+        
+        for x, y, color in dots:
+            decorative_elements_html += f'<circle cx="{x}" cy="{y}" r="4" fill="{color}" opacity="0.7"/>'
+    
+    # Olive branches HTML
+    olive_branches_html = ""
+    if show_olive_branches:
+        olive_branches_html = olive_branch_top + olive_branch_bottom
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            background: {bg_color};
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .decorative-svg {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 1080px;
+            z-index: 1;
+        }}
+        
+        .thank-you-text {{
+            position: absolute;
+            top: 460px;
+            left: 0;
+            width: 100%;
+            font-family: {font_family};
+            font-size: 160px;
+            color: {text_color};
+            font-weight: 400;
+            line-height: 1;
+            margin: 0;
+            font-style: italic;
+            text-align: center;
+            z-index: 10;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <svg class="decorative-svg" viewBox="0 0 1920 1080" preserveAspectRatio="xMidYMid slice">
+        {decorative_elements_html}
+        {olive_branches_html}
+    </svg>
+    
+    <h1 class="thank-you-text">{main_text}</h1>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_thank_you_slide_7(
+    main_text="THANK YOU!",
+    bg_color="#F5F3F0",
+    text_color="#7A6350",
+    font_family="'Playfair Display', 'Georgia', serif"
+):
+    """
+    Generate a thank you slide.
+    
+    Args:
+        main_text (str): Main text to display (default: "THANK YOU!")
+        bg_color (str): Background color (default: "#F5F3F0" - light warm gray)
+        text_color (str): Text color (default: "#7A6350" - brown/taupe)
+        font_family (str): Font family for main text
+    
+    Returns:
+        str: Complete HTML code for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {{
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            font-family: {font_family};
+            background: {bg_color};
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .main-text {{
+            position: absolute;
+            top: 390px;
+            left: 0;
+            width: 100%;
+            font-family: {font_family};
+            font-size: 130px;
+            font-weight: 400;
+            color: {text_color};
+            letter-spacing: 8px;
+            text-align: center;
+            z-index: 2;
+            white-space: nowrap;
+        }}
+    </style>
+</head>
+<body>
+    <div class="main-text">{main_text}</div>
+</body>
+</html>"""
+    
+    return html_code
 
