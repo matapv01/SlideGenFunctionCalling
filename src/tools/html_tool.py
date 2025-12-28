@@ -4089,6 +4089,2528 @@ def generate_credits_slide(
     
     return html_code
 
+def generate_section_header_slide_1(
+    main_title="Section Header",
+    subtitle_text="This is a sample text. Insert your desired text here. This is a sample text. Insert your desired text here.",
+    bg_color="#2d1b4e",
+    text_color="#ffffff",
+    accent_color_1="#5bc0de",
+    accent_color_2="#ffc857",
+    custom_css="",
+):
+    """
+    Generate a section header slide with decorative geometric shapes.
+    
+    Parameters:
+    - main_title: Main heading text (default: "Section Header")
+    - subtitle_text: Description text below the title
+    - bg_color: Background color (default: dark purple)
+    - text_color: Text color (default: white)
+    - accent_color_1: First accent color for decorations (default: cyan)
+    - accent_color_2: Second accent color for decorations (default: yellow)
+    - custom_css: Additional CSS to inject
+    
+    Returns:
+    - Complete HTML string for the slide
+    """
+    
+    # Handle list inputs
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "Section Header"
+    if isinstance(subtitle_text, list):
+        subtitle_text = subtitle_text[0] if subtitle_text else ""
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Header Slide</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            margin: 0;
+            padding: 0;
+            background-color: {bg_color};
+            width: 1920px;
+            height: 1080px;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .element {{
+            position: absolute;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <!-- Circle Blue -->
+    <div class="element" style="position: absolute; left: 1590px; top: 80px; width: 150px; height: 150px; background-color: {accent_color_1}; border-radius: 50%;"></div>
+    
+    <!-- Circle Yellow -->
+    <div class="element" style="position: absolute; left: 1620px; top: 20px; width: 220px; height: 220px; background-color: {accent_color_2}; border-radius: 50%;"></div>
+    
+    <!-- Triangle -->
+    <svg class="element" style="position: absolute; left: 80px; top: 790px;" width="200" height="250" viewBox="0 0 200 250">
+        <path d="M 100 20 L 180 220 L 20 220 Z" fill="{accent_color_1}" opacity="0.9"/>
+    </svg>
+    
+    <!-- Shape Yellow Bottom Right -->
+    <div class="element" style="position: absolute; left: 1590px; top: 930px; width: 280px; height: 200px; background-color: {accent_color_2}; border-radius: 50% 50% 0 0; transform: rotate(-20deg);"></div>
+    
+    <!-- Main Title -->
+    <div class="element" style="position: absolute; left: 260px; top: 340px; width: 1000px; font-family: Arial, Helvetica, sans-serif; font-size: 80px; font-weight: 900; line-height: 1.1; letter-spacing: -0.02em; color: {text_color};">{main_title}</div>
+    
+    <!-- Subtitle -->
+    <div class="element" style="position: absolute; left: 260px; top: 480px; width: 800px; font-family: Arial, Helvetica, sans-serif; font-size: 26px; line-height: 1.6; font-weight: 300; color: {text_color}; opacity: 0.95;">{subtitle_text}</div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_section_header_slide_2(
+    section_title="Name of the section",
+    subtitle="You can enter a subtitle here if you need it",
+    bg_color="#FFF9F0",
+    title_color="#2D1B4E",
+    subtitle_color="#333333",
+    show_balloons=True,
+    show_bunting=True,
+    show_flowers=True,
+    custom_css=""
+):
+    """
+    Generate a watercolor birthday/celebration section slide HTML.
+    
+    Parameters:
+    - section_title: Main title text
+    - subtitle: Subtitle text below the title
+    - bg_color: Background color
+    - title_color: Color of main title
+    - subtitle_color: Color of subtitle
+    - show_balloons: Show watercolor balloons decoration
+    - show_bunting: Show bunting flags decoration
+    - show_flowers: Show watercolor flowers
+    - custom_css: Additional CSS to inject
+    
+    Returns:
+    - Complete HTML string
+    """
+    
+    # Handle list inputs
+    if isinstance(section_title, list):
+        section_title = section_title[0] if section_title else "Name of the section"
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else "You can enter a subtitle here if you need it"
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{
+            width: 1920px;
+            height: 1080px;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            background-color: {bg_color};
+            font-family: 'Montserrat', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            background-color: {bg_color};
+            font-family: 'Montserrat', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        /* Content */
+        .content {{
+            position: absolute;
+            top: 390px;
+            left: 192px;
+            text-align: center;
+            z-index: 10;
+            width: 1536px;
+        }}
+        
+        .section-title {{
+            font-family: 'Playfair Display', serif;
+            font-size: 6rem;
+            font-weight: 700;
+            color: {title_color};
+            margin-bottom: 20px;
+            line-height: 1.2;
+        }}
+        
+        .subtitle {{
+            font-family: 'Montserrat', sans-serif;
+            font-size: 3rem;
+            font-weight: 400;
+            color: {subtitle_color};
+        }}
+        
+        /* Balloons */
+        .balloons {{
+            position: absolute;
+            top: 40px;
+            left: 80px;
+            display: {'block' if show_balloons else 'none'};
+        }}
+        
+        .balloon {{
+            position: absolute;
+            width: 120px;
+            height: 140px;
+            border-radius: 50%;
+            opacity: 0.85;
+            filter: blur(1.5px);
+        }}
+        
+        .balloon:nth-child(1) {{
+            background: radial-gradient(circle at 30% 30%, #FFE66D, #F4D03F);
+            top: 0;
+            left: 0;
+        }}
+        
+        .balloon:nth-child(2) {{
+            background: radial-gradient(circle at 30% 30%, #FFD89B, #FFA94D);
+            top: 20px;
+            left: 100px;
+            width: 100px;
+            height: 120px;
+        }}
+        
+        .balloon:nth-child(3) {{
+            background: radial-gradient(circle at 30% 30%, #FFB6D9, #FF8FB1);
+            top: 120px;
+            left: 30px;
+        }}
+        
+        .balloon::after {{
+            content: '';
+            position: absolute;
+            bottom: -30px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2px;
+            height: 30px;
+            background: rgba(200, 180, 150, 0.6);
+        }}
+        
+        /* Bunting */
+        .bunting {{
+            position: absolute;
+            top: 20px;
+            right: 80px;
+            display: {'flex' if show_bunting else 'none'};
+            gap: -10px;
+        }}
+        
+        .flag {{
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-top: 80px solid;
+            opacity: 0.85;
+            filter: blur(1px);
+        }}
+        
+        .flag:nth-child(1) {{
+            border-top-color: #FFE66D;
+        }}
+        
+        .flag:nth-child(2) {{
+            border-top-color: #FFB6D9;
+        }}
+        
+        .flag:nth-child(3) {{
+            border-top-color: #FFE66D;
+        }}
+        
+        .flag:nth-child(4) {{
+            border-top-color: #FFB6D9;
+        }}
+        
+        /* Hearts */
+        .heart {{
+            position: absolute;
+            width: 40px;
+            height: 40px;
+            opacity: 0.7;
+            filter: blur(1px);
+        }}
+        
+        .heart:nth-child(1) {{
+            top: 80px;
+            left: 380px;
+        }}
+        
+        .heart:nth-child(2) {{
+            top: 240px;
+            right: 280px;
+        }}
+        
+        .heart:nth-child(3) {{
+            bottom: 320px;
+            left: 280px;
+        }}
+        
+        /* Flowers */
+        .flowers-left {{
+            position: absolute;
+            bottom: 120px;
+            left: 60px;
+            display: {'block' if show_flowers else 'none'};
+        }}
+        
+        .flowers-right {{
+            position: absolute;
+            bottom: 140px;
+            right: 80px;
+            display: {'block' if show_flowers else 'none'};
+        }}
+        
+        .flower-right-top {{
+            position: absolute;
+            top: 240px;
+            right: 200px;
+            display: {'block' if show_flowers else 'none'};
+        }}
+        
+        /* Leaves */
+        .leaves {{
+            position: absolute;
+            bottom: 220px;
+            left: 40px;
+            display: {'block' if show_flowers else 'none'};
+        }}
+        
+        /* Feathers */
+        .feathers {{
+            position: absolute;
+            right: 120px;
+            top: 440px;
+            display: {'block' if show_flowers else 'none'};
+        }}
+        
+
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+        <!-- Balloons -->
+        <div class="balloons">
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+            <div class="balloon"></div>
+        </div>
+        
+        <!-- Bunting -->
+        <div class="bunting">
+            <div class="flag"></div>
+            <div class="flag"></div>
+            <div class="flag"></div>
+            <div class="flag"></div>
+        </div>
+        
+        <!-- Hearts -->
+        <svg class="heart" viewBox="0 0 32 29.6">
+            <path fill="#FFB6D9" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+                c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+        </svg>
+        <svg class="heart" viewBox="0 0 32 29.6">
+            <path fill="#FFB6D9" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+                c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+        </svg>
+        <svg class="heart" viewBox="0 0 32 29.6">
+            <path fill="#FFB6D9" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
+                c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
+        </svg>
+        
+        <!-- Flowers Left -->
+        <svg class="flowers-left" width="200" height="200" viewBox="0 0 200 200">
+            <!-- Pink Flower -->
+            <circle cx="100" cy="120" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="80" cy="100" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="120" cy="100" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="90" cy="135" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="110" cy="135" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="100" cy="115" r="15" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
+        </svg>
+        
+        <!-- Leaves -->
+        <svg class="leaves" width="150" height="250" viewBox="0 0 150 250">
+            <ellipse cx="30" cy="200" rx="12" ry="40" fill="#C3B1E1" opacity="0.7" filter="blur(1.5px)" transform="rotate(-30 30 200)"/>
+            <ellipse cx="50" cy="180" rx="12" ry="40" fill="#C3B1E1" opacity="0.7" filter="blur(1.5px)" transform="rotate(-45 50 180)"/>
+            <ellipse cx="70" cy="200" rx="12" ry="40" fill="#C3B1E1" opacity="0.7" filter="blur(1.5px)" transform="rotate(-20 70 200)"/>
+            <ellipse cx="40" cy="150" rx="12" ry="40" fill="#D4A5C9" opacity="0.7" filter="blur(1.5px)" transform="rotate(30 40 150)"/>
+            <ellipse cx="60" cy="130" rx="12" ry="40" fill="#D4A5C9" opacity="0.7" filter="blur(1.5px)" transform="rotate(20 60 130)"/>
+        </svg>
+        
+        <!-- Flower Right Top -->
+        <svg class="flower-right-top" width="120" height="120" viewBox="0 0 120 120">
+            <circle cx="60" cy="60" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="40" cy="50" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="80" cy="50" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="50" cy="75" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="70" cy="75" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="60" cy="60" r="12" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
+        </svg>
+        
+        <!-- Flowers Right -->
+        <svg class="flowers-right" width="200" height="200" viewBox="0 0 200 200">
+            <!-- Purple Flower -->
+            <circle cx="80" cy="100" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="55" cy="80" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="105" cy="80" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="60" cy="120" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="100" cy="120" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="80" cy="100" r="18" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
+            
+            <!-- Yellow Flower -->
+            <circle cx="140" cy="130" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="120" cy="115" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="160" cy="115" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="125" cy="145" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="155" cy="145" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
+            <circle cx="140" cy="130" r="15" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
+            
+            <!-- White Flower -->
+            <circle cx="170" cy="80" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
+            <circle cx="155" cy="70" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
+            <circle cx="185" cy="70" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
+            <circle cx="160" cy="90" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
+            <circle cx="180" cy="90" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
+            <circle cx="170" cy="80" r="12" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
+        </svg>
+        
+        <!-- Feathers -->
+        <svg class="feathers" width="150" height="200" viewBox="0 0 150 200">
+            <ellipse cx="60" cy="100" rx="20" ry="80" fill="#87CEEB" opacity="0.7" filter="blur(1.5px)" transform="rotate(30 60 100)"/>
+            <ellipse cx="80" cy="90" rx="20" ry="80" fill="#87CEEB" opacity="0.7" filter="blur(1.5px)" transform="rotate(20 80 90)"/>
+            <path d="M 60 60 Q 65 100 60 140" stroke="#D4A574" stroke-width="3" fill="none" opacity="0.6"/>
+            <path d="M 80 50 Q 85 90 80 130" stroke="#D4A574" stroke-width="3" fill="none" opacity="0.6"/>
+        </svg>
+        
+        <!-- Main Content -->
+        <div class="content">
+            <h1 class="section-title">{section_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_section_header_slide_3(
+    section_number="01",
+    main_title="Introduction",
+    subtitle="Insert a subtitle here if you need it",
+    bg_color="#f5f3f0",
+    text_color="#2c2c2c",
+    line_color="#2c2c2c",
+    show_decorative_curves=True,
+    show_lines=True,
+    custom_css=""
+):
+    """
+    Generate a minimal, elegant introduction slide with decorative corner curves.
+    
+    Parameters:
+    - section_number: Section number (e.g., "01", "02")
+    - main_title: Main title text
+    - subtitle: Subtitle text
+    - bg_color: Background color
+    - text_color: Text color
+    - line_color: Color of decorative lines and curves
+    - show_decorative_curves: Show decorative corner curves
+    - show_lines: Show horizontal lines
+    - custom_css: Additional custom CSS
+    
+    Returns:
+    - HTML string for the slide
+    """
+    
+    # Handle list inputs
+    if isinstance(section_number, list):
+        section_number = section_number[0] if section_number else "01"
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "Introduction"
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else ""
+    
+    curves_html = ""
+    if show_decorative_curves:
+        curves_html = f"""<svg class="corner-curve top-left" width="200" height="200" viewBox="0 0 200 200">
+    <path d="M 0 150 Q 0 0 150 0" stroke="{line_color}" stroke-width="2" fill="none"/>
+</svg>
+<svg class="corner-curve bottom-right" width="200" height="200" viewBox="0 0 200 200">
+    <path d="M 50 200 Q 200 200 200 50" stroke="{line_color}" stroke-width="2" fill="none"/>
+</svg>"""
+    
+    lines_html = ""
+    if show_lines:
+        lines_html = f"""<div class="line top-line"></div>
+<div class="line bottom-line"></div>"""
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{
+            width: 1920px;
+            height: 1080px;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            background-color: {bg_color};
+            color: {text_color};
+            font-family: 'Inter', sans-serif;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .content {{
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            margin-left: -768px;
+            margin-top: -200px;
+            text-align: center;
+            z-index: 10;
+            width: 1536px;
+        }}
+        
+        .section-number {{
+            font-family: 'Playfair Display', serif;
+            font-size: 8rem;
+            font-weight: 400;
+            margin-bottom: 20px;
+            line-height: 1;
+        }}
+        
+        .main-title {{
+            font-family: 'Playfair Display', serif;
+            font-size: 5rem;
+            font-weight: 400;
+            margin-bottom: 30px;
+            line-height: 1.2;
+        }}
+        
+        .subtitle {{
+            font-family: 'Inter', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: {text_color};
+            opacity: 0.8;
+        }}
+        
+        .corner-curve {{
+            position: absolute;
+            opacity: 0.9;
+            z-index: 20;
+        }}
+        
+        .corner-curve.top-left {{
+            top: 0;
+            left: 0;
+        }}
+        
+        .corner-curve.bottom-right {{
+            bottom: 0;
+            right: 0;
+        }}
+        
+        .line {{
+            position: absolute;
+            left: 0;
+            width: 100%;
+            height: 2px;
+            background-color: {line_color};
+            z-index: 20;
+        }}
+        
+        .top-line {{
+            top: 40px;
+        }}
+        
+        .bottom-line {{
+            bottom: 40px;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+{lines_html}
+{curves_html}
+<div class="content">
+    <div class="section-number">{section_number}</div>
+    <h1 class="main-title">{main_title}</h1>
+    <p class="subtitle">{subtitle}</p>
+</div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_section_header_slide_4(
+    section_number="01",
+    section_title="SECTION HEADER",
+    bg_color="#f8f8f8",
+    text_color="#1a1a1a",
+    line_color="#999999",
+    gradient_colors=None,
+    show_number_badge=True,
+    show_divider_line=True,
+    custom_css=""
+):
+    """
+    Generate a modern section header slide with blurred gradient blobs
+    
+    Parameters:
+    - section_number: Section number to display (default: "01")
+    - section_title: Main section title (default: "SECTION HEADER")
+    - bg_color: Background color (default: "#f8f8f8")
+    - text_color: Text color (default: "#1a1a1a")
+    - line_color: Divider line color (default: "#999999")
+    - gradient_colors: List of gradient colors for blobs (default: ["#a855f7", "#3b82f6", "#8b5cf6"])
+    - show_number_badge: Show the number badge (default: True)
+    - show_divider_line: Show the horizontal divider (default: True)
+    - custom_css: Additional CSS to inject
+    """
+    
+    if gradient_colors is None:
+        gradient_colors = ["#a855f7", "#3b82f6", "#8b5cf6"]
+    
+    # Ensure we have at least 3 colors
+    while len(gradient_colors) < 3:
+        gradient_colors.append(gradient_colors[-1])
+    
+    number_badge_html = f'''
+        <div class="number-badge">
+            {section_number}
+        </div>
+    ''' if show_number_badge else ''
+    
+    divider_html = f'<div class="divider-line"></div>' if show_divider_line else ''
+    
+    html_code = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{section_title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{
+            width: 1920px;
+            height: 1080px;
+        }}
+        
+        body {{
+            width: 1920px;
+            height: 1080px;
+            font-family: 'Montserrat', sans-serif;
+            background-color: {bg_color};
+            color: {text_color};
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }}
+        
+        /* Gradient blobs */
+        .gradient-blob {{
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(150px);
+            opacity: 0.6;
+        }}
+        
+        .blob-1 {{
+            width: 500px;
+            height: 500px;
+            background: {gradient_colors[0]};
+            top: -100px;
+            right: 100px;
+        }}
+        
+        .blob-2 {{
+            width: 400px;
+            height: 400px;
+            background: {gradient_colors[1]};
+            bottom: 50px;
+            left: -50px;
+        }}
+        
+        .blob-3 {{
+            width: 450px;
+            height: 450px;
+            background: {gradient_colors[2]};
+            bottom: -50px;
+            right: -100px;
+        }}
+        
+        .content-wrapper {{
+            position: absolute;
+            top: 35%;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            width: 90%;
+            max-width: 1400px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 40px;
+        }}
+        
+        .number-badge {{
+            position: absolute;
+            top: 150px;
+            left: 100px;
+            background: white;
+            border: 3px solid {text_color};
+            border-radius: 50px;
+            padding: 20px 45px;
+            font-size: 3rem;
+            font-weight: 900;
+            color: {text_color};
+        }}
+        
+        .divider-line {{
+            width: 100%;
+            height: 2px;
+            background-color: {line_color};
+            margin: 20px 0 30px 0;
+        }}
+        
+        .section-title {{
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-align: center;
+            letter-spacing: 0.05em;
+            color: {text_color};
+            text-transform: uppercase;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+<div class="slide-container">
+        <!-- Gradient blobs -->
+        <div class="gradient-blob blob-1"></div>
+        <div class="gradient-blob blob-2"></div>
+        <div class="gradient-blob blob-3"></div>
+        
+        <!-- Number badge -->
+        {number_badge_html}
+        
+        <!-- Main content -->
+        <div class="content-wrapper">
+            {divider_html}
+            <h1 class="section-title">{section_title}</h1>
+        </div>
+    </div>
+</body>
+</html>'''
+    
+    return html_code
+
+def generate_section_header_slide_5(
+    section_title="THIS IS THE TITLE OF THIS SECTION",
+    bg_color="#1a3d4a",
+    text_color="#ffffff",
+    stripe_color="#2a5566",
+    show_curved_line=True,
+    show_stripes=True,
+    custom_css=""
+):
+    """
+    Generate an HTML slide with a split design: title on left, stripes on right.
+    """
+    
+    # Handle list inputs
+    if isinstance(section_title, list):
+        section_title = section_title[0] if section_title else "THIS IS THE TITLE OF THIS SECTION"
+    
+    # Create vertical stripes pattern
+    stripes_html = ""
+    if show_stripes:
+        stripes_html = """
+        <div class="stripes">
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+        </div>
+        """
+    
+    # Create curved line SVG
+    curved_line_html = ""
+    if show_curved_line:
+        curved_line_html = f"""
+        <svg class="curved-line" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 0 100 Q 150 50, 300 100 T 600 100" 
+                  stroke="{stripe_color}" 
+                  stroke-width="2" 
+                  fill="none"
+                  opacity="0.4"/>
+        </svg>
+        """
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Section Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            html {{
+                width: 1920px;
+                height: 1080px;
+            }}
+            
+            body {{
+                width: 1920px;
+                height: 1080px;
+                font-family: 'Playfair Display', serif;
+                background: {bg_color};
+                color: {text_color};
+                position: relative;
+                overflow: hidden;
+            }}
+            
+            /* Title on left */
+            .section-title {{
+                position: absolute;
+                top: 280px;
+                left: 80px;
+                width: 800px;
+                font-size: 5rem;
+                font-weight: 900;
+                line-height: 1.1;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                z-index: 2;
+            }}
+            
+            /* Stripes on right */
+            .stripes {{
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 960px;
+                height: 1080px;
+                display: flex;
+                gap: 30px;
+                opacity: 0.3;
+            }}
+            
+            .stripe {{
+                flex: 1;
+                background: {stripe_color};
+            }}
+            
+            /* Curved line */
+            .curved-line {{
+                position: absolute;
+                bottom: 80px;
+                left: 660px;
+                width: 600px;
+                height: 200px;
+            }}
+            
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <h1 class="section-title">{section_title}</h1>
+        {stripes_html}
+        {curved_line_html}
+    </body>
+    </html>
+    """
+    
+    return html_code
+
+def generate_section_header_slide_6(
+    title="INTRODUCTION",
+    description="Here you can add a brief description of the topic you want to talk aboout.",
+    bg_color="#ffffff",
+    bg_gradient_to="#e3f2fd",
+    title_color="#1a1a1a",
+    text_color="#4a4a4a",
+    underline_color="#1a1a1a",
+    show_underline=True,
+    custom_css=""
+):
+    """
+    Generates a clean and elegant section header slide with centered content.
+    
+    This function creates a simple introduction slide with a title, optional underline,
+    and description text. The slide uses a gradient background and centers all content
+    vertically and horizontally.
+    
+    Args:
+        title: Main heading text for the slide
+        description: Supporting text displayed below the title and underline
+        bg_color: Starting color of the background gradient (top)
+        bg_gradient_to: Ending color of the background gradient (bottom)
+        title_color: Color of the main title text
+        text_color: Color of the description text
+        underline_color: Color of the decorative underline
+        show_underline: Whether to display the underline beneath the title
+        custom_css: Additional CSS rules to inject into the style block
+    
+    """
+    
+    # Handle list inputs
+    if isinstance(title, list):
+        title = title[0] if title else "INTRODUCTION"
+    if isinstance(description, list):
+        description = description[0] if description else ""
+    
+    underline_html = f'''
+        <div class="underline"></div>
+    ''' if show_underline else ''
+    
+    html_code = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(to bottom, {bg_color} 0%, {bg_gradient_to} 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 100px;
+            position: relative;
+        }}
+        
+        .content {{
+            max-width: 1400px;
+            text-align: center;
+        }}
+        
+        .title {{
+            font-size: 5rem;
+            font-weight: 700;
+            color: {title_color};
+            letter-spacing: 0.05em;
+            margin-bottom: 30px;
+        }}
+        
+        .underline {{
+            width: 100%;
+            height: 3px;
+            background-color: {underline_color};
+            margin-bottom: 50px;
+        }}
+        
+        .description {{
+            font-size: 2rem;
+            color: {text_color};
+            line-height: 1.8;
+            max-width: 1200px;
+            margin: 0 auto;
+        }}
+        
+        /* Responsive adjustments */
+        @media (max-width: 1920px) {{
+            .slide-container {{
+                width: 100vw;
+                height: 100vh;
+                transform: scale(calc(100vw / 1920));
+                transform-origin: top left;
+            }}
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="content">
+            <h1 class="title">{title}</h1>
+            {underline_html}
+            <p class="description">{description}</p>
+        </div>
+    </div>
+</body>
+</html>'''
+    
+    return html_code
+
+def generate_section_header_slide_7(
+    section_number="01",
+    main_title="This is the title of this section",
+    bg_gradient_from="#ffffff",
+    bg_gradient_to="#ff9999",
+    text_color="#2d2d2d",
+    number_color="#2d2d2d",
+    show_side_bar=True,
+    side_bar_color="#e8e8e8",
+    custom_css=""
+):
+    """
+    Generate a modern gradient section title slide with minimalist design.
+    
+    Parameters:
+    - section_number: Section number (default: "01")
+    - main_title: Main title text (default: "This is the title of this section")
+    - bg_gradient_from: Starting gradient color (default: "#ffffff")
+    - bg_gradient_to: Ending gradient color (default: "#ff9999")
+    - text_color: Main text color (default: "#2d2d2d")
+    - number_color: Section number color (default: "#2d2d2d")
+    - show_side_bar: Show left sidebar (default: True)
+    - side_bar_color: Left sidebar color (default: "#e8e8e8")
+    - custom_css: Additional CSS to inject (default: "")
+    
+    Returns:
+    - Complete HTML string for the slide
+    """
+    
+    # Handle list inputs
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "This is the title of this section"
+    if isinstance(section_number, list):
+        section_number = section_number[0] if section_number else "01"
+    
+    # Sidebar HTML
+    sidebar_html = f'''
+        <div class="sidebar"></div>
+    ''' if show_side_bar else ''
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Section Title Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&family=Space+Mono&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body, html {{
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                font-family: 'Inter', sans-serif;
+                margin: 0;
+                padding: 0;
+            }}
+            
+            .slide-container {{
+                width: 100vw;
+                height: 100vh;
+                background: linear-gradient(to right, {bg_gradient_from}, {bg_gradient_to});
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                overflow: hidden;
+            }}
+            
+            .sidebar {{
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 210px;
+                height: 100%;
+                background: {side_bar_color};
+                z-index: 1;
+            }}
+            
+            .section-number {{
+                position: absolute;
+                left: 50px;
+                top: 60px;
+                font-size: 6rem;
+                font-weight: 900;
+                color: {number_color};
+                z-index: 2;
+                letter-spacing: -0.02em;
+            }}
+            
+            .main-content {{
+                text-align: center;
+                padding: 0 200px;
+                z-index: 2;
+                max-width: 1200px;
+            }}
+            
+            .main-title {{
+                font-size: 3rem;
+                font-weight: 400;
+                color: {text_color};
+                line-height: 1.3;
+                letter-spacing: -0.02em;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+            }}
+            
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            {sidebar_html}
+            
+            <div class="section-number">{section_number}</div>
+            
+            <div class="main-content">
+                <h1 class="main-title">{main_title}</h1>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_code
+
+def generate_section_header_slide_8(
+    section_number="01",
+    main_title="Name of the section",
+    subtitle="You can enter a subtitle here if you need it",
+    bg_color="#5FEDD8",
+    text_color="#2C2C2C",
+    number_color="#2C2C2C",
+    subtitle_color="#3C3C3C",
+    custom_css="",
+):
+    """
+    Generate a party-themed section slide with decorative elements.
+    
+    Args:
+        section_number: Section number to display (empty string to hide)
+        main_title: Main title text
+        subtitle: Subtitle text below the title
+        bg_color: Background color
+        text_color: Main title text color
+        number_color: Section number color
+        subtitle_color: Subtitle text color
+        custom_css: Additional custom CSS
+    
+    Returns:
+        Complete HTML string for the slide
+    """
+    
+    # Section number HTML (only if not empty)
+    section_number_html = f'<div class="section-number">{section_number}</div>' if section_number and section_number.strip() else ''
+    
+    # Party hat SVG
+    party_hat_svg = """
+        <svg class="party-hat" width="180" height="220" viewBox="0 0 180 220">
+            <!-- Hat cone -->
+            <path d="M 20 200 Q 90 20 160 200" fill="#FF8C5A" stroke="#2C2C2C" stroke-width="2"/>
+            <!-- Stripes -->
+            <path d="M 40 180 Q 90 60 140 180" fill="none" stroke="white" stroke-width="8" opacity="0.8"/>
+            <path d="M 50 160 Q 90 80 130 160" fill="none" stroke="white" stroke-width="8" opacity="0.8"/>
+            <path d="M 60 140 Q 90 100 120 140" fill="none" stroke="white" stroke-width="8" opacity="0.8"/>
+            <!-- Outline -->
+            <path d="M 20 200 Q 90 20 160 200" fill="none" stroke="#2C2C2C" stroke-width="3"/>
+            <!-- Bottom rim -->
+            <ellipse cx="90" cy="200" rx="70" ry="12" fill="#FFB088" stroke="#2C2C2C" stroke-width="2"/>
+            <!-- Pom pom -->
+            <circle cx="90" cy="25" r="18" fill="#2C2C2C"/>
+        </svg>
+    """
+    
+    # Gift box SVG
+    gift_box_svg = """
+        <svg class="gift-box" width="200" height="220" viewBox="0 0 200 220">
+            <!-- Shadow -->
+            <ellipse cx="100" cy="210" rx="80" ry="10" fill="#4DD4C4" opacity="0.4"/>
+            <!-- Box body -->
+            <rect x="30" y="90" width="140" height="120" fill="#FF4F8B" stroke="#2C2C2C" stroke-width="3" rx="5"/>
+            <!-- Stripes on box -->
+            <line x1="50" y1="100" x2="40" y2="200" stroke="white" stroke-width="6" opacity="0.6"/>
+            <line x1="80" y1="95" x2="70" y2="205" stroke="white" stroke-width="6" opacity="0.6"/>
+            <line x1="120" y1="95" x2="130" y2="205" stroke="white" stroke-width="6" opacity="0.6"/>
+            <line x1="150" y1="100" x2="160" y2="200" stroke="white" stroke-width="6" opacity="0.6"/>
+            <!-- Ribbon vertical -->
+            <rect x="85" y="90" width="30" height="120" fill="#FF4F8B" stroke="#2C2C2C" stroke-width="3"/>
+            <!-- Box lid -->
+            <rect x="25" y="70" width="150" height="25" fill="#FF6BA0" stroke="#2C2C2C" stroke-width="3" rx="3"/>
+            <!-- Ribbon horizontal -->
+            <rect x="25" y="77" width="150" height="12" fill="#FF4F8B" stroke="#2C2C2C" stroke-width="2"/>
+            <!-- Bow -->
+            <path d="M 70 70 Q 60 50 80 45 Q 90 40 100 50 Q 110 40 120 45 Q 140 50 130 70" 
+                  fill="#2C2C2C" stroke="#2C2C2C" stroke-width="2"/>
+            <ellipse cx="80" cy="60" rx="15" ry="20" fill="#2C2C2C"/>
+            <ellipse cx="120" cy="60" rx="15" ry="20" fill="#2C2C2C"/>
+            <circle cx="100" cy="65" r="8" fill="#2C2C2C"/>
+        </svg>
+    """
+    
+    # Candle SVG
+    candle_svg = """
+        <svg class="candle" width="60" height="120" viewBox="0 0 60 120">
+            <!-- Candle body -->
+            <rect x="15" y="40" width="30" height="70" fill="#FF8C5A" stroke="#2C2C2C" stroke-width="2" rx="3"/>
+            <!-- Stripes -->
+            <line x1="15" y1="55" x2="45" y2="55" stroke="white" stroke-width="3" opacity="0.6"/>
+            <line x1="15" y1="75" x2="45" y2="75" stroke="white" stroke-width="3" opacity="0.6"/>
+            <line x1="15" y1="95" x2="45" y2="95" stroke="white" stroke-width="3" opacity="0.6"/>
+            <!-- Wick -->
+            <line x1="30" y1="40" x2="30" y2="25" stroke="#2C2C2C" stroke-width="2"/>
+            <!-- Flame -->
+            <ellipse cx="30" cy="20" rx="8" ry="12" fill="#FFD93D" opacity="0.8"/>
+            <ellipse cx="30" cy="18" rx="5" ry="8" fill="#FFF5BA"/>
+        </svg>
+    """
+    
+    # Confetti dots
+    confetti_html = """
+        <div class="confetti-dot" style="top: 8%; left: 25%; background: #FF8C5A; width: 15px; height: 15px;"></div>
+        <div class="confetti-dot" style="top: 15%; left: 28%; background: #FF4F8B; width: 12px; height: 12px;"></div>
+        <div class="confetti-dot" style="top: 6%; left: 52%; background: #FFD93D; width: 18px; height: 18px;"></div>
+        <div class="confetti-dot" style="top: 12%; left: 72%; background: #FF4F8B; width: 14px; height: 14px;"></div>
+        <div class="confetti-dot" style="top: 65%; left: 35%; background: #FF4F8B; width: 13px; height: 13px;"></div>
+        <div class="confetti-dot" style="top: 72%; left: 52%; background: #FFD93D; width: 15px; height: 15px;"></div>
+        <div class="confetti-dot" style="top: 75%; left: 62%; background: #FF8C5A; width: 16px; height: 16px;"></div>
+    """
+    
+    # Sparkles
+    sparkles_html = """
+        <div class="sparkle" style="top: 10%; right: 35%;">
+            <svg width="40" height="40" viewBox="0 0 40 40">
+                <path d="M 20 2 L 22 18 L 38 20 L 22 22 L 20 38 L 18 22 L 2 20 L 18 18 Z" 
+                      fill="none" stroke="#2C2C2C" stroke-width="2"/>
+            </svg>
+        </div>
+        <div class="sparkle" style="top: 25%; right: 25%;">
+            <svg width="35" height="35" viewBox="0 0 40 40">
+                <path d="M 20 2 L 22 18 L 38 20 L 22 22 L 20 38 L 18 22 L 2 20 L 18 18 Z" 
+                      fill="none" stroke="#2C2C2C" stroke-width="2"/>
+            </svg>
+        </div>
+    """
+    
+    # Decorative wavy shapes
+    decorative_shapes_html = """
+        <div class="wavy-shape" style="top: 12%; right: 15%; width: 450px; height: 180px; opacity: 0.3;">
+            <svg width="100%" height="100%" viewBox="0 0 450 180">
+                <path d="M 0 90 Q 100 30 200 90 T 450 90 L 450 180 L 0 180 Z" 
+                      fill="#A0F5E8" opacity="0.5"/>
+            </svg>
+        </div>
+        <div class="wavy-shape" style="top: 35%; right: 8%; width: 500px; height: 200px; opacity: 0.25;">
+            <svg width="100%" height="100%" viewBox="0 0 500 200">
+                <path d="M 0 100 Q 120 40 240 100 T 500 100 L 500 200 L 0 200 Z" 
+                      fill="#A0F5E8" opacity="0.4"/>
+            </svg>
+        </div>
+        <div class="wavy-shape" style="top: 60%; right: 5%; width: 550px; height: 220px; opacity: 0.2;">
+            <svg width="100%" height="100%" viewBox="0 0 550 220">
+                <path d="M 0 110 Q 130 50 260 110 T 550 110 L 550 220 L 0 220 Z" 
+                      fill="#A0F5E8" opacity="0.35"/>
+            </svg>
+        </div>
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Party Section Slide</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Arial', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            width: 1920px;
+            height: 1080px;
+            background: {bg_color};
+            position: relative;
+        }}
+        
+        .content {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 10;
+            text-align: left;
+            max-width: 900px;
+        }}
+        
+        .section-number {{
+            font-size: 5rem;
+            font-weight: 900;
+            color: {number_color};
+            margin-bottom: 0;
+            line-height: 1;
+        }}
+        
+        .main-title {{
+            font-size: 4rem;
+            font-weight: 900;
+            color: {text_color};
+            margin: 10px 0 20px 0;
+            line-height: 1.2;
+        }}
+        
+        .subtitle {{
+            font-size: 2rem;
+            color: {subtitle_color};
+            font-weight: 400;
+            line-height: 1.6;
+            max-width: 900px;
+        }}
+        
+        .party-hat {{
+            position: absolute;
+            top: 5%;
+            left: 5%;
+            z-index: 5;
+        }}
+        
+        .gift-box {{
+            position: absolute;
+            bottom: 8%;
+            left: 8%;
+            z-index: 5;
+        }}
+        
+        .candle {{
+            position: absolute;
+            top: 15%;
+            left: 18%;
+            z-index: 4;
+        }}
+        
+        .confetti-dot {{
+            position: absolute;
+            border-radius: 50%;
+            z-index: 3;
+        }}
+        
+        .sparkle {{
+            position: absolute;
+            z-index: 4;
+        }}
+        
+        .wavy-shape {{
+            position: absolute;
+            z-index: 2;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    {decorative_shapes_html}
+    {party_hat_svg}
+    {gift_box_svg}
+    {candle_svg}
+    {confetti_html}
+    {sparkles_html}
+    
+    <div class="content">
+            {section_number_html}
+            <h1 class="main-title">{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_section_header_slide_9(
+    section_number="01",
+    main_title="Main Title Here",
+    subtitle="Here you could describe the topic of the section",
+    bg_gradient_from="#4ecdc4",
+    bg_gradient_to="#3d5a80",
+    text_color="#ffffff",
+    custom_css=""
+):
+    """
+    Generate a modern tech-style slide with hexagonal pattern decoration.
+    
+    Parameters:
+    - section_number: Section number to display (empty string to hide)
+    - main_title: Main title text (default: "PROBLEM VS. SOLUTION")
+    - subtitle: Subtitle text below the main title
+    - bg_gradient_from: Starting gradient color (default: teal)
+    - bg_gradient_to: Ending gradient color (default: dark blue)
+    - text_color: Color of all text elements (default: white)
+    - custom_css: Additional CSS to inject
+    
+    Returns:
+    - HTML string containing the complete slide
+    """
+    
+    # Handle list inputs
+    if isinstance(section_number, list):
+        section_number = section_number[0]
+    if isinstance(main_title, list):
+        main_title = main_title[0]
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0]
+    
+    # Section number HTML (only if not empty)
+    section_number_html = f'<div class="section-number">{section_number}</div>' if section_number and section_number.strip() else ''
+    
+    # Generate hexagon SVG pattern (always show)
+    hexagon_positions = [
+        {"top": "5%", "left": "8%", "size": "80", "opacity": "0.6", "filled": False},
+        {"top": "8%", "left": "15%", "size": "60", "opacity": "0.4", "filled": True},
+        {"top": "2%", "left": "22%", "size": "70", "opacity": "0.5", "filled": False},
+        {"top": "15%", "left": "5%", "size": "65", "opacity": "0.5", "filled": True},
+        {"top": "18%", "left": "13%", "size": "75", "opacity": "0.6", "filled": False},
+        {"top": "12%", "left": "20%", "size": "55", "opacity": "0.4", "filled": False},
+        {"top": "25%", "left": "8%", "size": "70", "opacity": "0.5", "filled": False},
+        {"top": "28%", "left": "16%", "size": "68", "opacity": "0.5", "filled": False},
+        {"top": "22%", "left": "23%", "size": "60", "opacity": "0.4", "filled": True},
+        {"top": "35%", "left": "6%", "size": "65", "opacity": "0.5", "filled": True},
+        {"top": "38%", "left": "14%", "size": "72", "opacity": "0.6", "filled": False},
+        {"top": "32%", "left": "21%", "size": "58", "opacity": "0.4", "filled": False},
+        {"top": "45%", "left": "9%", "size": "68", "opacity": "0.5", "filled": False},
+        {"top": "48%", "left": "17%", "size": "70", "opacity": "0.5", "filled": True},
+        {"top": "42%", "left": "24%", "size": "62", "opacity": "0.4", "filled": False},
+    ]
+    
+    hexagons_html = ""
+    for i, pos in enumerate(hexagon_positions):
+        fill_style = f'fill="rgba(255, 255, 255, {float(pos["opacity"]) * 0.3})"' if pos["filled"] else 'fill="none"'
+        hexagons_html += f'''
+        <svg class="hexagon hex-{i}" style="position: absolute; top: {pos["top"]}; left: {pos["left"]}; width: {pos["size"]}px; height: {pos["size"]}px; opacity: {pos["opacity"]};">
+            <polygon points="50,0 93.3,25 93.3,75 50,100 6.7,75 6.7,25" 
+                     stroke="rgba(255, 255, 255, 0.6)" 
+                     stroke-width="2" 
+                     {fill_style} />
+        </svg>
+        '''
+    
+    # Add connecting dots
+    hexagons_html += '''
+    <div class="dot" style="position: absolute; top: 15%; left: 18%; width: 8px; height: 8px; background: rgba(255, 255, 255, 0.8); border-radius: 50%;"></div>
+    <div class="dot" style="position: absolute; top: 40%; left: 12%; width: 6px; height: 6px; background: rgba(255, 255, 255, 0.7); border-radius: 50%;"></div>
+    <div class="dot" style="position: absolute; top: 50%; left: 20%; width: 7px; height: 7px; background: rgba(255, 255, 255, 0.6); border-radius: 50%;"></div>
+    '''
+    
+    html_code = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            margin: 0;
+            padding: 0 120px;
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
+            background: linear-gradient(135deg, {bg_gradient_from} 0%, {bg_gradient_to} 100%);
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+        }}
+        
+        /* Content area */
+        .content {{
+            position: relative;
+            z-index: 10;
+            text-align: right;
+            max-width: 65%;
+        }}
+        
+        .section-number {{
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 6rem;
+            font-weight: 900;
+            color: {text_color};
+            margin-bottom: 20px;
+            opacity: 0.95;
+        }}
+        
+        .main-title {{
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            color: {text_color};
+            margin-bottom: 30px;
+            line-height: 1.1;
+            letter-spacing: 2px;
+        }}
+        
+        .subtitle {{
+            font-family: 'Roboto', sans-serif;
+            font-size: 2rem;
+            font-weight: 300;
+            color: {text_color};
+            opacity: 0.9;
+            line-height: 1.6;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <!-- Hexagonal pattern -->
+    {hexagons_html}
+    
+    <!-- Content -->
+    <div class="content">
+        {section_number_html}
+        <h1 class="main-title">{main_title}</h1>
+        <p class="subtitle">{subtitle}</p>
+    </div>
+</body>
+</html>'''
+    
+    return html_code
+
+def generate_section_header_slide_10(
+    section_number="01",
+    main_title="Main Title Here",
+    subtitle="You can enter a subtitle here if you need it",
+    bg_color="#9BD89B",
+    notebook_bg="#FFFFFF",
+    notebook_border="#E89A8F",
+    title_color="#A84A3A",
+    subtitle_color="#5A5A5A",
+    speech_bubble_color="#C8E6C9",
+    sticky_note_colors=["#FFD966", "#FFB3B3"],
+    custom_css=""
+):
+    """
+    Generate a notebook-style overview slide with spiral binding and sticky notes.
+    
+    Parameters:
+    - section_number: Section number to display (empty string to hide)
+    - main_title: Main title text (default: "OVERVIEW")
+    - subtitle: Subtitle text below the main title
+    - bg_color: Background color (default: light green)
+    - notebook_bg: Notebook paper background color (default: white)
+    - notebook_border: Color of the notebook border edges (default: coral)
+    - title_color: Color of the main title (default: brown/red)
+    - subtitle_color: Color of the subtitle (default: gray)
+    - speech_bubble_color: Color of the speech bubble outline (default: light green)
+    - sticky_note_colors: List of colors for sticky notes (default: yellow and pink)
+    - custom_css: Additional custom CSS to inject
+    
+    Returns:
+    - HTML string for the slide
+    """
+    
+    # Handle list inputs
+    if isinstance(section_number, list):
+        section_number = section_number[0]
+    if isinstance(main_title, list):
+        main_title = main_title[0]
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0]
+    
+    # Section number HTML (only if not empty)
+    section_number_html = f'<div class="section-number">{section_number}</div>' if section_number and section_number.strip() else ''
+    
+    # Generate sticky notes (always show)
+    sticky_notes_html = ""
+    if len(sticky_note_colors) >= 2:
+        sticky_notes_html = f"""
+        <div class="sticky-notes">
+            <div class="sticky-note" style="background: {sticky_note_colors[0]};"></div>
+            <div class="sticky-note" style="background: {sticky_note_colors[1]};"></div>
+        </div>
+        """
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{main_title} - Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                margin: 0;
+                padding: 0;
+                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                overflow: hidden;
+            }}
+            
+            .slide-container {{
+                width: 1920px;
+                height: 1080px;
+                background: {bg_color};
+                position: relative;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }}
+            
+            .notebook {{
+                width: 900px;
+                height: 600px;
+                background: {notebook_bg};
+                border-radius: 10px;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 60px 80px;
+            }}
+            
+            .notebook::before {{
+                content: '';
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 30px;
+                background: {notebook_border};
+                border-radius: 10px 0 0 10px;
+            }}
+            
+            .notebook::after {{
+                content: '';
+                position: absolute;
+                right: 0;
+                top: 0;
+                bottom: 0;
+                width: 30px;
+                background: {notebook_border};
+                border-radius: 0 10px 10px 0;
+            }}
+            
+            .sticky-notes {{
+                position: absolute;
+                top: -40px;
+                left: 50%;
+                transform: translateX(-50%);
+                display: flex;
+                gap: 20px;
+            }}
+            
+            .sticky-note {{
+                width: 100px;
+                height: 60px;
+                border-radius: 3px;
+                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+                position: relative;
+            }}
+            
+            .speech-bubble {{
+                width: 180px;
+                height: 120px;
+                background: transparent;
+                border: 4px solid {speech_bubble_color};
+                border-radius: 50%;
+                position: relative;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+                margin-bottom: 30px;
+            }}
+            
+            .speech-bubble::after {{
+                content: '';
+                position: absolute;
+                bottom: -20px;
+                right: 40px;
+                width: 30px;
+                height: 30px;
+                background: transparent;
+                border: 4px solid {speech_bubble_color};
+                border-radius: 50%;
+                border-top-color: transparent;
+                border-left-color: transparent;
+                transform: rotate(-30deg);
+            }}
+            
+            .section-number {{
+                font-size: 4rem;
+                font-weight: 900;
+                color: #4A4A4A;
+                font-family: 'Roboto', 'Noto Sans', sans-serif;
+            }}
+            
+            .main-title {{
+                font-size: 4rem;
+                font-weight: 900;
+                color: {title_color};
+                text-align: center;
+                margin-bottom: 20px;
+                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                letter-spacing: 1px;
+            }}
+            
+            .subtitle {{
+                font-size: 2rem;
+                font-weight: 400;
+                color: {subtitle_color};
+                text-align: center;
+                line-height: 1.6;
+                font-family: 'Noto Sans', 'Roboto', sans-serif;
+            }}
+            
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="notebook">
+                {sticky_notes_html}
+                
+                <div class="speech-bubble">
+                    {section_number_html}
+                </div>
+                
+                <div class="main-title">{main_title}</div>
+                <div class="subtitle">{subtitle}</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_code
+
+def generate_section_header_slide_11(
+    section_number="01",
+    headline="MAIN TITLE HERE",
+    bg_color="#0a3d3d",
+    circuit_color="#4dd9d9",
+    box_color="#7fffd4",
+    text_color="#ffffff",
+    custom_css="",
+):
+    """
+    Generate a tech-themed headline news slide with circuit board patterns.
+    
+    Args:
+        section_number: Section number displayed in glowing box (empty string to hide)
+        headline: Main headline text (default: "HEADLINE NEWS")
+        bg_color: Background color (default: dark teal "#0a3d3d")
+        circuit_color: Color of circuit lines (default: cyan "#4dd9d9")
+        box_color: Color of the number box (default: aqua "#7fffd4")
+        text_color: Color of headline text (default: white)
+        custom_css: Additional CSS styles
+    
+    Returns:
+        Complete HTML string ready to save as .html file
+    """
+    
+    # Handle list inputs
+    if isinstance(section_number, list):
+        section_number = section_number[0]
+    if isinstance(headline, list):
+        headline = headline[0]
+    
+    # Section number HTML (only if not empty)
+    section_number_html = f'<div class="section-box">{section_number}</div>' if section_number and section_number.strip() else ''
+    
+    # Generate circuit decorations as div elements (always show)
+    circuit_decorations = ""
+    
+    # Top circuit dots (aligned horizontally at same y position)
+    y_top = 100
+    for i in range(8):
+        x_pos = 400 + (i * 140)
+        circuit_decorations += f'<div class="circuit-dot" style="left: {x_pos}px; top: {y_top}px; background: {circuit_color};"></div>\n'
+    
+    # Bottom circuit dots (aligned horizontally at same y position, same x as top)
+    y_bottom = 950
+    for i in range(8):
+        x_pos = 400 + (i * 140)
+        circuit_decorations += f'<div class="circuit-dot" style="left: {x_pos}px; top: {y_bottom}px; background: {circuit_color};"></div>\n'
+    
+    html_code = f'''<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech News Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@700;900&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            margin: 0;
+            padding: 0;
+            font-family: 'Roboto', 'Noto Sans', sans-serif;
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            background: {bg_color};
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }}
+        
+        .circuit-dot {{
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            opacity: 0.7;
+        }}
+        
+        .section-box {{
+            background: {box_color};
+            width: 180px;
+            height: 180px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 5rem;
+            font-weight: 900;
+            color: #000;
+            font-family: 'Roboto', 'Noto Sans', sans-serif;
+            border-radius: 8px;
+            box-shadow: 0 0 40px {box_color}, 0 0 80px {box_color}80;
+            position: absolute;
+            top: 300px;
+            left: 870px;
+            z-index: 10;
+        }}
+        
+        .headline {{
+            font-size: 5.5rem;
+            font-weight: 900;
+            color: {text_color};
+            text-align: center;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            font-family: 'Roboto', 'Noto Sans', sans-serif;
+            position: absolute;
+            top: 520px;
+            left: 360px;
+            width: 1200px;
+            z-index: 10;
+        }}
+        
+        .underline {{
+            width: 600px;
+            height: 4px;
+            background: {circuit_color};
+            position: absolute;
+            top: 660px;
+            left: 660px;
+            z-index: 10;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Circuit decorations -->
+        {circuit_decorations}
+        
+        <!-- Content elements -->
+        {section_number_html}
+        <h1 class="headline">{headline}</h1>
+        <div class="underline"></div>
+    </div>
+</body>
+</html>'''
+    
+    return html_code
+
+def generate_section_header_slide_12(
+    section_number="01",
+    main_title="What is artificial intelligence?",
+    bg_color="#f5f5f5",
+    section_number_color="#e91e63",
+    question_color="#2d3748",
+    show_arrow=True,
+    custom_css=""
+):
+    """
+    Generate a minimal question slide with geometric background icons.
+    
+    Parameters:
+    - section_number: Section number (default: "01"). Use empty string to hide.
+    - main_title: Main title text
+    - bg_color: Background color
+    - section_number_color: Color of section number
+    - question_color: Color of question text
+    - show_arrow: Show arrow next to section number
+    - show_background_icons: Show decorative background icons
+    - custom_css: Additional custom CSS
+    
+    Returns:
+    - HTML string
+    """
+    
+    # Conditional rendering: only show section number if not empty
+    section_number_html = f"""
+            <div class="section-header">
+                <div class="section-number">{section_number}</div>
+                {'<svg class="arrow" viewBox="0 0 100 50"><path d="M10 25 L80 25 M60 10 L80 25 L60 40" fill="none"/></svg>' if show_arrow else ''}
+            </div>
+    """ if section_number and section_number.strip() else ""
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Question Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Roboto', 'Noto Sans', sans-serif;
+            width: 1920px;
+            height: 1080px;
+            background: {bg_color};
+            padding: 300px 120px;
+        }}
+        
+        .section-number {{
+            font-size: 5rem;
+            font-weight: 800;
+            color: {section_number_color};
+            margin-bottom: 60px;
+            background: rgba(255, 255, 255, 0.01);
+            display: inline-block;
+            padding: 10px 20px;
+        }}
+        
+        .question {{
+            font-size: 4rem;
+            font-weight: 700;
+            color: {question_color};
+            line-height: 1.3;
+            background: rgba(255, 255, 255, 0.01);
+            padding: 20px;
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="section-number">{section_number}</div>
+    <div class="question">{main_title}</div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_section_header_slide_13(
+    section_number="01",
+    main_title="Name of the section",
+    subtitle="You can enter a subtitle here if you need it",
+    bg_start_color="#FFFFFF",
+    bg_end_color="#C8F4F0",
+    accent_gradient_color="#FFB366",
+    text_color="#1A1A1A",
+    custom_css=""
+):
+    """
+    Generate an HTML slide (static, no DNA/circuit decoration).
+    
+    Parameters:
+    - section_number: Section number (default: "01")
+    - main_title: Main title text
+    - subtitle: Subtitle text below main title
+    - bg_start_color: Background gradient start color (left side)
+    - bg_end_color: Background gradient end color (right side)
+    - accent_gradient_color: Accent gradient color (bottom left)
+    - text_color: Color of text
+    - custom_css: Additional CSS to inject
+    
+    Returns:
+    - Complete HTML string
+    """
+    
+    # Conditional rendering for section number: hide if empty
+    section_number_html = f"<div class=\"section-number\">{section_number}</div>" if section_number and str(section_number).strip() else ""
+
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>DNA Tech Section Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono:wght@400;700&family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: 'Roboto Mono', monospace;
+                overflow: hidden;
+                width: 100vw;
+                height: 100vh;
+            }}
+            
+            .slide-container {{
+                width: 1920px;
+                height: 1080px;
+                position: relative;
+                background: linear-gradient(135deg, {bg_start_color} 0%, {bg_end_color} 100%);
+                overflow: hidden;
+            }}
+            
+            /* Accent gradient at bottom left */
+            .accent-gradient {{
+                position: absolute;
+                bottom: -10%;
+                left: -10%;
+                width: 40%;
+                height: 60%;
+                background: radial-gradient(circle, {accent_gradient_color}33 0%, transparent 70%);
+                filter: blur(80px);
+            }}
+            
+            /* DNA/circuit removed (static slide) */
+            
+            /* Content */
+            .content {{
+                position: relative;
+                z-index: 10;
+                padding: 120px 150px;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                height: 100%;
+            }}
+            
+            /* Fixed font sizes (static slide) */
+            .section-number {{
+                font-size: 8rem;
+                font-weight: 700;
+                color: {text_color};
+                line-height: 1;
+                margin-bottom: 60px;
+                opacity: 1;
+            }}
+
+            .main-title {{
+                font-size: 4.5rem;
+                font-weight: 700;
+                color: {text_color};
+                margin-bottom: 30px;
+                line-height: 1.2;
+                max-width: 900px;
+                opacity: 1;
+            }}
+
+            .subtitle {{
+                font-size: 1.6rem;
+                font-weight: 400;
+                color: {text_color};
+                line-height: 1.6;
+                max-width: 850px;
+                opacity: 1;
+            }}
+            
+            /* Animations removed for static slide */
+            
+            /* Responsive */
+            @media (max-width: 1920px) {{
+                .slide-container {{
+                    width: 100vw;
+                    height: 100vh;
+                    transform-origin: top left;
+                }}
+            }}
+            
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="accent-gradient"></div>
+            
+            <!-- DNA pattern removed -->
+            
+            <div class="content">
+                {section_number_html}
+                <div class="main-title">{main_title}</div>
+                <div class="subtitle">{subtitle}</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_code
+
+def generate_section_header_slide_14(
+    section_number="01",
+    main_title="Name of the section",
+    subtitle="You can enter a subtitle here if you need it",
+    bg_color="#e8f5e9",
+    text_color="#4a5d3f",
+    sun_color="#f4d03f",
+    cloud_color="#ffffff",
+    leaf_color_dark="#2d4a2b",
+    leaf_color_light="#5a7c4f",
+    custom_css=""
+):
+    """
+    Generate a nature-themed section slide with clouds and botanical decorations.
+
+    Notes:
+    - The generator always renders clouds and plants (no show_* flags).
+    - The main text block is centered in the slide; the `section_number` is
+      vertically centered together with the title and subtitle.
+
+    Parameters:
+    - section_number: Section number to display (default: "01")
+    - main_title: Main title text (default: "Name of the section")
+    - subtitle: Subtitle text (default: "You can enter a subtitle here if you need it")
+    - bg_color: Background color (default: light mint green)
+    - text_color: Text color (default: olive green)
+    - cloud_color: Cloud color (default: white)
+    - leaf_color_dark: Dark leaf color (default: dark green)
+    - leaf_color_light: Light leaf color (default: medium green)
+    - custom_css: Additional custom CSS appended to the slide
+
+    Returns:
+    - HTML string for the nature section slide
+    """
+
+    # Handle list inputs
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "Name of the section"
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else "You can enter a subtitle here if you need it"
+    
+    # Build visible blocks for clouds and plants so converter captures them individually
+    # Always render clouds (show_clouds removed)
+    sun_clouds_html = """
+        <div class="block clouds-left-block" style="position:absolute; top:120px; left:80px; width:320px; height:220px;">
+            <div class="cloud cloud-left-1"></div>
+            <div class="cloud cloud-left-2"></div>
+        </div>
+        <div class="block clouds-right-block" style="position:absolute; top:80px; right:50px; width:260px; height:140px;">
+            <div class="cloud cloud-right-1"></div>
+            <div class="cloud cloud-right-2"></div>
+        </div>
+        """
+
+    # Always render plants (show_plants removed)
+    plants_html = ""
+    left_svg = """
+            <svg viewBox="0 0 200 150" xmlns="http://www.w3.org/2000/svg">
+                <line x1="30" y1="150" x2="30" y2="80" stroke="{leaf_dark}" stroke-width="2"/>
+                <circle cx="30" cy="70" r="4" fill="{sun_color}"/>
+                <circle cx="30" cy="90" r="3" fill="{leaf_dark}"/>
+                <line x1="45" y1="150" x2="45" y2="60" stroke="{leaf_dark}" stroke-width="2"/>
+                <circle cx="45" cy="55" r="3" fill="{leaf_dark}"/>
+                <ellipse cx="80" cy="120" rx="25" ry="45" fill="{leaf_dark}" transform="rotate(-25 80 120)"/>
+                <ellipse cx="70" cy="125" rx="20" ry="38" fill="{leaf_light}" transform="rotate(-30 70 125)"/>
+                <ellipse cx="130" cy="100" rx="30" ry="50" fill="{leaf_dark}" transform="rotate(-15 130 100)"/>
+                <ellipse cx="140" cy="110" rx="22" ry="42" fill="{leaf_light}" transform="rotate(-10 140 110)"/>
+                <ellipse cx="100" cy="130" rx="28" ry="48" fill="{leaf_dark}" transform="rotate(-35 100 130)"/>
+            </svg>
+        """.format(leaf_dark=leaf_color_dark, leaf_light=leaf_color_light, sun_color=sun_color)
+
+    right_svg = """
+            <svg viewBox="0 0 250 150" xmlns="http://www.w3.org/2000/svg">
+                <ellipse cx="70" cy="110" rx="30" ry="48" fill="{leaf_dark}" transform="rotate(20 70 110)"/>
+                <ellipse cx="60" cy="115" rx="22" ry="38" fill="{leaf_light}" transform="rotate(25 60 115)"/>
+                <ellipse cx="120" cy="100" rx="28" ry="50" fill="{leaf_dark}" transform="rotate(15 120 100)"/>
+                <ellipse cx="110" cy="108" rx="20" ry="40" fill="{leaf_light}" transform="rotate(18 110 108)"/>
+                <line x1="170" y1="150" x2="170" y2="80" stroke="{leaf_dark}" stroke-width="2.5"/>
+                <ellipse cx="165" cy="95" rx="8" ry="20" fill="{leaf_dark}" transform="rotate(-40 165 95)"/>
+                <ellipse cx="175" cy="100" rx="8" ry="20" fill="{leaf_light}" transform="rotate(35 175 100)"/>
+                <ellipse cx="163" cy="110" rx="7" ry="18" fill="{leaf_dark}" transform="rotate(-45 163 110)"/>
+                <ellipse cx="177" cy="115" rx="7" ry="18" fill="{leaf_light}" transform="rotate(40 177 115)"/>
+                <ellipse cx="210" cy="120" rx="32" ry="52" fill="{leaf_dark}" transform="rotate(25 210 120)"/>
+                <ellipse cx="220" cy="125" rx="24" ry="42" fill="{leaf_light}" transform="rotate(30 220 125)"/>
+            </svg>
+        """.format(leaf_dark=leaf_color_dark, leaf_light=leaf_color_light)
+
+    plants_html = f"""
+        <div class="block plants-left-block" style="position:absolute; bottom:0; left:0; width:350px; height:250px;">{left_svg}</div>
+        <div class="block plants-right-block" style="position:absolute; bottom:0; right:0; width:450px; height:250px;">{right_svg}</div>
+        """
+    
+    # Conditional rendering for section number: hide if empty
+    section_number_html = f"<div class=\"section-number\">{section_number}</div>" if section_number and str(section_number).strip() else ""
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nature Section Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Inter', sans-serif;
+            background-color: {bg_color};
+            color: {text_color};
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: {bg_color};
+        }}
+
+        /* Generic block wrapper (visual frames removed) */
+        .block {{
+            box-sizing: border-box;
+        }}
+        
+        /* Sun removed intentionally */
+        
+        /* Clouds */
+        .cloud {{
+            position: absolute;
+            background-color: {cloud_color};
+            border-radius: 100px;
+            opacity: 0.95;
+        }}
+
+        .cloud::before,
+        .cloud::after {{
+            content: '';
+            position: absolute;
+            background-color: {cloud_color};
+            border-radius: 100px;
+        }}
+        
+        .cloud-left-1 {{
+            width: 100px;
+            height: 40px;
+            top: 140px;
+            left: 80px;
+            animation-delay: 0.5s;
+        }}
+        
+        .cloud-left-1::before {{
+            width: 50px;
+            height: 50px;
+            top: -25px;
+            left: 10px;
+        }}
+        
+        .cloud-left-1::after {{
+            width: 60px;
+            height: 40px;
+            top: -15px;
+            right: 10px;
+        }}
+        
+        .cloud-left-2 {{
+            width: 80px;
+            height: 35px;
+            top: 180px;
+            left: 200px;
+            animation-delay: 1s;
+        }}
+        
+        .cloud-left-2::before {{
+            width: 40px;
+            height: 40px;
+            top: -18px;
+            left: 15px;
+        }}
+        
+        .cloud-right-1 {{
+            width: 140px;
+            height: 50px;
+            top: 80px;
+            right: 200px;
+            animation-delay: 0.3s;
+        }}
+        
+        .cloud-right-1::before {{
+            width: 60px;
+            height: 60px;
+            top: -30px;
+            left: 20px;
+        }}
+        
+        .cloud-right-1::after {{
+            width: 70px;
+            height: 50px;
+            top: -20px;
+            right: 20px;
+        }}
+        
+        .cloud-right-2 {{
+            width: 180px;
+            height: 60px;
+            top: 120px;
+            right: 50px;
+            animation-delay: 1.5s;
+        }}
+        
+        .cloud-right-2::before {{
+            width: 80px;
+            height: 70px;
+            top: -35px;
+            left: 30px;
+        }}
+        
+        .cloud-right-2::after {{
+            width: 90px;
+            height: 60px;
+            top: -25px;
+            right: 30px;
+        }}
+        
+        /* Content */
+        .content {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            width: 1000px;
+            padding: 24px 20px;
+            box-sizing: border-box;
+        }}
+        
+        .section-number {{
+            font-family: 'Lora', serif;
+            font-size: 5rem;
+            font-weight: 400;
+            color: {text_color};
+            margin-bottom: 20px;
+        }}
+        
+        .main-title {{
+            font-family: 'Lora', serif;
+            font-size: 4.5rem;
+            font-weight: 400;
+            color: {text_color};
+            margin-bottom: 30px;
+            line-height: 1.3;
+        }}
+        
+        .subtitle {{
+            font-family: 'Inter', sans-serif;
+            font-size: 1.8rem;
+            font-weight: 400;
+            color: {text_color};
+            opacity: 0.85;
+        }}
+        
+        /* Botanical elements */
+        .plants {{
+            position: absolute;
+            bottom: 0;
+            z-index: 5;
+        }}
+        
+        .plants-left {{
+            left: 0;
+            width: 350px;
+            height: 250px;
+        }}
+
+        .plants-right {{
+            right: 0;
+            width: 450px;
+            height: 250px;
+        }}
+        
+        .plants svg {{
+            width: 100%;
+            height: 100%;
+        }}
+        
+        /* Animations removed for static slide */
+        
+        /* Responsive scaling */
+        @media screen and (max-width: 1920px) {{
+            .slide-container {{
+                transform: scale(0.8);
+                transform-origin: center center;
+            }}
+        }}
+        
+        @media screen and (max-width: 1366px) {{
+            .slide-container {{
+                transform: scale(0.6);
+                transform-origin: center center;
+            }}
+        }}
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+            {sun_clouds_html}
+
+            <div class="content">
+                {section_number_html}
+                <h1 class="main-title">{main_title}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+
+            {plants_html}
+</body>
+</html>"""
+    
+    return html_code
 #------------------------SLIDE CONTENT
 def generate_content_slide(
     main_title="CONTENT",
