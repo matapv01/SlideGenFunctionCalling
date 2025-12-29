@@ -3035,6 +3035,491 @@ def generate_title_slide_6(
     
     return html_code
 
+def generate_title_slide_7(
+    main_title="Main Title Here",
+    subtitle="Here is where your presentation begins",
+    bg_color="#d4e8d4",
+    card_bg_color="#faf8f0",
+    border_color="#2d3e50",
+    accent_color="#e17b6a",
+    title_color="#2d3e50",
+    subtitle_color="#6b7280",
+    custom_css="",
+):
+    """
+    Generate an HTML title slide with a single centered text frame and one bandage decoration above it.
+    """
+
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{main_title}</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin:0; padding:0; box-sizing:border-box; }}
+            body {{ font-family: 'Poppins', sans-serif; background-color:{bg_color}; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }}
+            .text-frame {{ width:1100px; padding:60px 80px; border-radius:24px; background:{card_bg_color}; border:5px solid {border_color}; box-shadow:0 12px 36px rgba(0,0,0,0.12); text-align:center; position:relative; }}
+            .main-title {{ font-size:56px; font-weight:900; color:{title_color}; margin:0; }}
+            .subtitle {{ font-size:34px; color:{subtitle_color}; margin-top:12px; line-height:1.2; }}
+            .bandage-core {{ width:220px; height:70px; border-radius:24px; background:{accent_color}; box-shadow:0 8px 24px rgba(0,0,0,0.12); }}
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <!-- Bandage (single element) positioned above the frame -->
+        <div style="position:absolute; left:50%; top:32%; transform:translate(-50%,-50%); z-index:40;">
+            <div class="bandage-core"></div>
+        </div>
+
+        <!-- Centered text frame with title above subtitle -->
+        <div class="text-frame">
+            <h1 class="main-title">{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+    </body>
+    </html>
+    """
+
+    return html_code
+
+def generate_title_slide_8(
+    main_title="Main Title",
+    subtitle="Here is where your presentation begins",
+    bg_color="#e8e5e1",
+    title_color="#2d2d2d",
+    subtitle_color="#666666",
+    blob_colors=None,
+    custom_css="",
+):
+    """
+    Generate an HTML slide with soft gradient blobs and Mind Maps title.
+    
+    Parameters:
+    - main_title: Main title text (default: "Mind Maps")
+    - subtitle: Subtitle text below title
+    - bg_color: Background color
+    - title_color: Main title text color
+    - subtitle_color: Subtitle text color
+    - blob_colors: List of gradient blob colors (default: soft pastels)
+    - custom_css: Additional CSS styles
+    
+    Returns:
+    - Complete HTML string for the slide
+    """
+    
+    if blob_colors is None:
+        # Pastel palette: richer, more opaque for stronger color presence
+        blob_colors = [
+            "rgba(186,147,255,0.98)",  # richer pastel purple
+            "rgba(115,195,255,0.98)",  # richer pastel blue (slightly deeper)
+            "rgba(255,142,190,0.98)",  # richer pastel pink
+        ]
+    
+    # Generate gradient blob elements (always included, static)
+    gradient_blobs_html = ""
+    # Positions tuned to place a large colorful blob on the left/center
+    blob_positions = [
+        {"left": "6%", "top": "30%", "size": "700px"},
+        {"left": "42%", "top": "18%", "size": "520px"},
+        {"left": "68%", "top": "50%", "size": "520px"},
+    ]
+    for i, (color, pos) in enumerate(zip(blob_colors, blob_positions)):
+        gradient_blobs_html += f"""
+        <div class="gradient-blob blob-{i+1}" style="
+            background: radial-gradient(circle, {color} 0%, transparent 70%);
+            left: {pos['left']};
+            top: {pos['top']};
+            width: {pos['size']};
+            height: {pos['size']};
+        "></div>
+        """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mind Maps Boost Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Inter', sans-serif;
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }}
+        
+        /* Top header section */
+        /* top header removed; no tagline or project name in static slide */
+        
+        /* Gradient blobs */
+        .gradient-blob {{
+            position: absolute;
+            border-radius: 50%;
+            /* reduce blur so color appears denser while keeping soft edges */
+            filter: blur(60px);
+            opacity: 1; /* fully visible for richer color */
+            z-index: 1;
+            mix-blend-mode: multiply; /* deepen overlapping colors */
+            transform: translateZ(0);
+        }}
+        
+        /* individual blob animation delays removed (static blobs) */
+        
+        /* Content section */
+        .content {{
+            position: relative;
+            z-index: 5;
+            text-align: center;
+            max-width: 90%;
+        }}
+        .main-title {{
+            font-size: 64px; /* fixed pixel size */
+            font-weight: 800;
+            color: {title_color};
+            line-height: 1.1;
+            margin-bottom: 30px;
+        }}
+        
+        /* title suffix removed */
+        
+        .subtitle {{
+            font-size: 34px; /* fixed pixel size */
+            color: {subtitle_color};
+            font-weight: 400;
+            line-height: 1.6;
+        }}
+        
+        /* Animations removed - slide is fully static */
+        
+        /* Responsive scaling removed to avoid transform conflicts with converter */
+        
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Top header removed -->
+        <!-- Gradient blobs -->
+        {gradient_blobs_html}
+        
+        <!-- Main content -->
+        <div class="content">
+            <h1 class="main-title">{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_9(
+    main_title="Main Title of the Presentation",
+    subtitle="Here is where your presentation begins",
+    bg_color="#e8e8e8",
+    footer_color="#8ba8c4",
+    title_color="#2d3748",
+    decoration_color="#6b2e2e",
+):
+    """
+    Generate an HTML slide for title presentations with geometric decorations
+    
+    Args:
+        main_title: Main title text
+        subtitle: Subtitle text in footer
+        bg_color: Background color
+        footer_color: Footer section background color
+        title_color: Title text color
+        decoration_color: Color for geometric decorations
+        show_decorations: Whether to show decorative elements
+    
+    Returns:
+        str: Complete HTML code for the slide
+    """
+    
+    # Decorations always included as separate, absolutely-positioned block elements
+    decorations_html = f"""
+        <!-- Top left: connecting line -->
+        <div class="decor-line" data-el="decor-line" style="position:absolute; left:0px; top:50px; width:80px; height:4px; z-index:3; display:block;">
+            <svg width="80" height="4" viewBox="0 0 80 4" preserveAspectRatio="none"><line x1="0" y1="2" x2="80" y2="2" stroke="{decoration_color}" stroke-width="2"/></svg>
+        </div>
+
+        <!-- Top left: circle -->
+        <div class="decor-circle" data-el="decor-circle" style="position:absolute; left:110px; top:30px; width:30px; height:30px; z-index:3; display:block;">
+            <svg width="30" height="30" viewBox="0 0 30 30"><circle cx="15" cy="15" r="15" fill="{decoration_color}"/></svg>
+        </div>
+
+        <!-- Top left: starburst -->
+        <div class="decor-starburst" data-el="decor-starburst" style="position:absolute; left:190px; top:15px; width:50px; height:50px; z-index:3; display:block;">
+            <svg width="50" height="50" viewBox="0 0 50 50"><g fill="#6b9fb5"><rect x="0" y="23.5" width="50" height="3" /><rect x="23.5" y="0" width="3" height="50" /></g></svg>
+        </div>
+
+        <!-- Top left: 4-point star -->
+        <div class="decor-star4" data-el="decor-star4" style="position:absolute; left:260px; top:10px; width:40px; height:40px; z-index:3; display:block;">
+            <svg width="40" height="40" viewBox="0 0 40 40"><g><polygon points="20,2 24,15 20,20 16,15" fill="{decoration_color}" /><polygon points="32,20 24,24 20,20 24,16" fill="{decoration_color}" /><polygon points="20,38 16,25 20,20 24,25" fill="{decoration_color}" /><polygon points="8,20 16,16 20,20 16,24" fill="{decoration_color}"/></g></svg>
+        </div>
+
+        <!-- Bottom right hourglass (separate block) -->
+        <div class="decor-hourglass" data-el="decor-hourglass" style="position:absolute; right:80px; bottom:100px; width:120px; height:150px; z-index:3; display:block;">
+            <svg width="120" height="150" viewBox="0 0 120 150">
+                <path d="M 30 30 Q 30 10 60 10 Q 90 10 90 30" stroke="{decoration_color}" stroke-width="2" fill="none"/>
+                <line x1="30" y1="30" x2="90" y2="30" stroke="{decoration_color}" stroke-width="2"/>
+                <line x1="60" y1="30" x2="60" y2="80" stroke="{decoration_color}" stroke-width="2"/>
+                <path d="M 30 80 Q 30 110 60 110 Q 90 110 90 80" stroke="{decoration_color}" stroke-width="2" fill="none"/>
+                <line x1="30" y1="80" x2="90" y2="80" stroke="{decoration_color}" stroke-width="2"/>
+                <circle cx="60" cy="10" r="8" fill="{decoration_color}"/>
+            </svg>
+        </div>
+    """
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>World Day Presentation Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: 'Inter', sans-serif;
+                background: {bg_color};
+                overflow: hidden;
+                width: 100vw;
+                height: 100vh;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }}
+            
+            .slide-container {{
+                width: 1600px;
+                height: 900px;
+                position: relative;
+                display: block; /* static container holding all elements */
+            }}
+            
+            .content-area {{
+                width: 100%;
+                height: 640px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                padding: 100px 150px;
+                position: relative;
+                z-index: 1;
+            }}
+            
+            .title-wrapper {{
+                text-align: center;
+            }}
+            
+            .main-title {{
+                font-size: 110px; /* fixed size */
+                font-weight: 800;
+                color: {title_color};
+                letter-spacing: -2px;
+                line-height: 1.05;
+                text-align: center;
+                max-width: 1200px;
+                margin: 0 auto 10px auto;
+            }}
+            
+            .footer-section {{
+                background: {footer_color};
+                padding: 60px 150px;
+                text-align: right;
+                position: relative;
+                z-index: 2;
+            }}
+            
+            .subtitle {{
+                font-size: 40px;
+                font-weight: 400;
+                color: {title_color};
+                opacity: 1;
+            }}
+            
+            .decorations-top,
+            .decorations-bottom {{
+                position: absolute;
+                z-index: 0;
+                opacity: 1;
+            }}
+            
+            /* No animations - static slide */
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <!-- Main title and subtitle positioned absolutely for reliable detection -->
+            <div class="main-title" data-el="title" style="position:absolute; left:200px; top:160px; display:block; width:1200px; height:260px;">{main_title}</div>
+            <p class="subtitle" data-el="subtitle" style="position:absolute; left:200px; top:440px; display:block; width:1000px; height:72px; font-size:40px; margin:0;">{subtitle}</p>
+        </div>
+        {decorations_html}
+    </body>
+    </html>
+    """
+    
+    return html_code
+
+def generate_title_slide_10(
+    title="Main Title Here",
+    bg_gradient_start="#0a0a2e",
+    bg_gradient_middle="#1a1a5e",
+    bg_gradient_end="#4a0e4e",
+    accent_glow_color="#1e90ff",
+    text_color="#ffffff"
+):
+    """
+    Generate a static HTML title slide for presentations.
+
+    Args:
+        title: Main title text
+        bg_gradient_start: Start color of gradient (hex string)
+        bg_gradient_middle: Middle color of gradient (hex string)
+        bg_gradient_end: End color of gradient (hex string)
+        accent_glow_color: Color for accent glow effects (hex string)
+        text_color: Color for text (hex string)
+    
+
+    Returns:
+        str: Complete HTML document as a string
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Inter', sans-serif;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, {bg_gradient_start} 0%, {bg_gradient_middle} 50%, {bg_gradient_end} 100%);
+            position: relative;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            background: transparent;
+        }}
+        
+        /* Accent glow effects (static) */
+        .glow-accent {{
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(120px);
+            opacity: 0.28;
+        }}
+
+        /* second glow removed to reduce extra detected elements */
+
+        .glow-2 {{
+            width: 500px;
+            height: 500px;
+            background: {accent_glow_color};
+            bottom: -150px;
+            right: -150px;
+        }}
+        
+        /* Main title */
+        .title {{
+            position: absolute;
+            top: 120px;
+            left: 130px;
+            font-size: 100px;
+            font-weight: 800;
+            color: {text_color};
+            line-height: 1.1;
+            letter-spacing: -2px;
+            z-index: 2;
+        }}
+        
+        /* No animations - slide is static */
+        /* Removed tagline and company section - slide is simplified and static */
+        
+        /* Responsive scaling */
+        @media (max-width: 1920px) {{
+            .slide-container {{
+                transform: scale(0.9);
+                transform-origin: center;
+            }}
+        }}
+        
+        @media (max-width: 1440px) {{
+            .slide-container {{
+                transform: scale(0.7);
+                transform-origin: center;
+            }}
+        }}
+        
+        @media (max-width: 1024px) {{
+            .slide-container {{
+                transform: scale(0.5);
+                transform-origin: center;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Accent glow effects -->
+        <div class="glow-accent glow-1"></div>
+        
+        <!-- Main title -->
+        <div class="title" data-el="title">{title}</div>
+        
+        <!-- (Tagline and company section removed - static title-only slide) -->
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+
 #----------------------SLIDE CHUYỂN SLIDE
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
@@ -4534,7 +5019,6 @@ def generate_section_header_slide_2(
     return html_code
 
 def generate_section_header_slide_3(
-    section_number="01",
     main_title="Introduction",
     subtitle="Insert a subtitle here if you need it",
     bg_color="#f5f3f0",
@@ -4548,7 +5032,6 @@ def generate_section_header_slide_3(
     Generate a minimal, elegant introduction slide with decorative corner curves.
     
     Parameters:
-    - section_number: Section number (e.g., "01", "02")
     - main_title: Main title text
     - subtitle: Subtitle text
     - bg_color: Background color
@@ -4563,8 +5046,6 @@ def generate_section_header_slide_3(
     """
     
     # Handle list inputs
-    if isinstance(section_number, list):
-        section_number = section_number[0] if section_number else "01"
     if isinstance(main_title, list):
         main_title = main_title[0] if main_title else "Introduction"
     if isinstance(subtitle, list):
@@ -4624,13 +5105,7 @@ def generate_section_header_slide_3(
             width: 1536px;
         }}
         
-        .section-number {{
-            font-family: 'Playfair Display', serif;
-            font-size: 8rem;
-            font-weight: 400;
-            margin-bottom: 20px;
-            line-height: 1;
-        }}
+        
         
         .main-title {{
             font-family: 'Playfair Display', serif;
@@ -4688,7 +5163,6 @@ def generate_section_header_slide_3(
 {lines_html}
 {curves_html}
 <div class="content">
-    <div class="section-number">{section_number}</div>
     <h1 class="main-title">{main_title}</h1>
     <p class="subtitle">{subtitle}</p>
 </div>
@@ -4697,29 +5171,24 @@ def generate_section_header_slide_3(
     
     return html_code
 
+
 def generate_section_header_slide_4(
-    section_number="01",
     section_title="SECTION HEADER",
     bg_color="#f8f8f8",
     text_color="#1a1a1a",
     line_color="#999999",
     gradient_colors=None,
-    show_number_badge=True,
-    show_divider_line=True,
     custom_css=""
 ):
     """
     Generate a modern section header slide with blurred gradient blobs
     
     Parameters:
-    - section_number: Section number to display (default: "01")
     - section_title: Main section title (default: "SECTION HEADER")
     - bg_color: Background color (default: "#f8f8f8")
     - text_color: Text color (default: "#1a1a1a")
     - line_color: Divider line color (default: "#999999")
     - gradient_colors: List of gradient colors for blobs (default: ["#a855f7", "#3b82f6", "#8b5cf6"])
-    - show_number_badge: Show the number badge (default: True)
-    - show_divider_line: Show the horizontal divider (default: True)
     - custom_css: Additional CSS to inject
     """
     
@@ -4730,13 +5199,10 @@ def generate_section_header_slide_4(
     while len(gradient_colors) < 3:
         gradient_colors.append(gradient_colors[-1])
     
-    number_badge_html = f'''
-        <div class="number-badge">
-            {section_number}
-        </div>
-    ''' if show_number_badge else ''
+    # number badge removed (section number not used)
+    number_badge_html = ''
     
-    divider_html = f'<div class="divider-line"></div>' if show_divider_line else ''
+    divider_html = '<div class="divider-line"></div>'
     
     html_code = f'''<!DOCTYPE html>
 <html lang="en">
@@ -4823,18 +5289,7 @@ def generate_section_header_slide_4(
             gap: 40px;
         }}
         
-        .number-badge {{
-            position: absolute;
-            top: 150px;
-            left: 100px;
-            background: white;
-            border: 3px solid {text_color};
-            border-radius: 50px;
-            padding: 20px 45px;
-            font-size: 3rem;
-            font-weight: 900;
-            color: {text_color};
-        }}
+        
         
         .divider-line {{
             width: 100%;
@@ -4863,7 +5318,7 @@ def generate_section_header_slide_4(
         <div class="gradient-blob blob-3"></div>
         
         <!-- Number badge -->
-        {number_badge_html}
+        
         
         <!-- Main content -->
         <div class="content-wrapper">
@@ -4881,9 +5336,7 @@ def generate_section_header_slide_5(
     bg_color="#1a3d4a",
     text_color="#ffffff",
     stripe_color="#2a5566",
-    show_curved_line=True,
-    show_stripes=True,
-    custom_css=""
+    custom_css="",
 ):
     """
     Generate an HTML slide with a split design: title on left, stripes on right.
@@ -4893,10 +5346,8 @@ def generate_section_header_slide_5(
     if isinstance(section_title, list):
         section_title = section_title[0] if section_title else "THIS IS THE TITLE OF THIS SECTION"
     
-    # Create vertical stripes pattern
-    stripes_html = ""
-    if show_stripes:
-        stripes_html = """
+    # Create vertical stripes pattern (always shown)
+    stripes_html = """
         <div class="stripes">
             <div class="stripe"></div>
             <div class="stripe"></div>
@@ -4916,10 +5367,8 @@ def generate_section_header_slide_5(
         </div>
         """
     
-    # Create curved line SVG
-    curved_line_html = ""
-    if show_curved_line:
-        curved_line_html = f"""
+    # Create curved line SVG (always shown)
+    curved_line_html = f"""
         <svg class="curved-line" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
             <path d="M 0 100 Q 150 50, 300 100 T 600 100" 
                   stroke="{stripe_color}" 
@@ -5012,6 +5461,7 @@ def generate_section_header_slide_5(
     
     return html_code
 
+
 def generate_section_header_slide_6(
     title="INTRODUCTION",
     description="Here you can add a brief description of the topic you want to talk aboout.",
@@ -5020,7 +5470,6 @@ def generate_section_header_slide_6(
     title_color="#1a1a1a",
     text_color="#4a4a4a",
     underline_color="#1a1a1a",
-    show_underline=True,
     custom_css=""
 ):
     """
@@ -5038,7 +5487,7 @@ def generate_section_header_slide_6(
         title_color: Color of the main title text
         text_color: Color of the description text
         underline_color: Color of the decorative underline
-        show_underline: Whether to display the underline beneath the title
+        (Underline is always displayed in this variant.)
         custom_css: Additional CSS rules to inject into the style block
     
     """
@@ -5049,9 +5498,9 @@ def generate_section_header_slide_6(
     if isinstance(description, list):
         description = description[0] if description else ""
     
-    underline_html = f'''
+    underline_html = '''
         <div class="underline"></div>
-    ''' if show_underline else ''
+    '''
     
     html_code = f'''<!DOCTYPE html>
 <html lang="en">
@@ -5142,13 +5591,10 @@ def generate_section_header_slide_6(
     return html_code
 
 def generate_section_header_slide_7(
-    section_number="01",
     main_title="This is the title of this section",
     bg_gradient_from="#ffffff",
     bg_gradient_to="#ff9999",
     text_color="#2d2d2d",
-    number_color="#2d2d2d",
-    show_side_bar=True,
     side_bar_color="#e8e8e8",
     custom_css=""
 ):
@@ -5156,13 +5602,11 @@ def generate_section_header_slide_7(
     Generate a modern gradient section title slide with minimalist design.
     
     Parameters:
-    - section_number: Section number (default: "01")
     - main_title: Main title text (default: "This is the title of this section")
     - bg_gradient_from: Starting gradient color (default: "#ffffff")
     - bg_gradient_to: Ending gradient color (default: "#ff9999")
     - text_color: Main text color (default: "#2d2d2d")
     - number_color: Section number color (default: "#2d2d2d")
-    - show_side_bar: Show left sidebar (default: True)
     - side_bar_color: Left sidebar color (default: "#e8e8e8")
     - custom_css: Additional CSS to inject (default: "")
     
@@ -5173,13 +5617,12 @@ def generate_section_header_slide_7(
     # Handle list inputs
     if isinstance(main_title, list):
         main_title = main_title[0] if main_title else "This is the title of this section"
-    if isinstance(section_number, list):
-        section_number = section_number[0] if section_number else "01"
     
-    # Sidebar HTML
-    sidebar_html = f'''
+    
+    # Sidebar HTML (always shown)
+    sidebar_html = '''
         <div class="sidebar"></div>
-    ''' if show_side_bar else ''
+    '''
     
     html_code = f"""
     <!DOCTYPE html>
@@ -5226,16 +5669,7 @@ def generate_section_header_slide_7(
                 z-index: 1;
             }}
             
-            .section-number {{
-                position: absolute;
-                left: 50px;
-                top: 60px;
-                font-size: 6rem;
-                font-weight: 900;
-                color: {number_color};
-                z-index: 2;
-                letter-spacing: -0.02em;
-            }}
+            
             
             .main-content {{
                 text-align: center;
@@ -5261,8 +5695,6 @@ def generate_section_header_slide_7(
         <div class="slide-container">
             {sidebar_html}
             
-            <div class="section-number">{section_number}</div>
-            
             <div class="main-content">
                 <h1 class="main-title">{main_title}</h1>
             </div>
@@ -5273,13 +5705,12 @@ def generate_section_header_slide_7(
     
     return html_code
 
+
 def generate_section_header_slide_8(
-    section_number="01",
     main_title="Name of the section",
     subtitle="You can enter a subtitle here if you need it",
     bg_color="#5FEDD8",
     text_color="#2C2C2C",
-    number_color="#2C2C2C",
     subtitle_color="#3C3C3C",
     custom_css="",
 ):
@@ -5287,12 +5718,10 @@ def generate_section_header_slide_8(
     Generate a party-themed section slide with decorative elements.
     
     Args:
-        section_number: Section number to display (empty string to hide)
         main_title: Main title text
         subtitle: Subtitle text below the title
         bg_color: Background color
         text_color: Main title text color
-        number_color: Section number color
         subtitle_color: Subtitle text color
         custom_css: Additional custom CSS
     
@@ -5300,11 +5729,12 @@ def generate_section_header_slide_8(
         Complete HTML string for the slide
     """
     
-    # Section number HTML (only if not empty)
-    section_number_html = f'<div class="section-number">{section_number}</div>' if section_number and section_number.strip() else ''
+    # Section number removed; no HTML placeholder
+    section_number_html = ''
     
-    # Party hat SVG
+    # Party hat SVG (wrapped in a div to avoid standalone <svg> issues)
     party_hat_svg = """
+        <div class="party-hat-wrapper">
         <svg class="party-hat" width="180" height="220" viewBox="0 0 180 220">
             <!-- Hat cone -->
             <path d="M 20 200 Q 90 20 160 200" fill="#FF8C5A" stroke="#2C2C2C" stroke-width="2"/>
@@ -5319,10 +5749,12 @@ def generate_section_header_slide_8(
             <!-- Pom pom -->
             <circle cx="90" cy="25" r="18" fill="#2C2C2C"/>
         </svg>
+        </div>
     """
     
-    # Gift box SVG
+    # Gift box SVG (wrapped in a div)
     gift_box_svg = """
+        <div class="gift-box-wrapper">
         <svg class="gift-box" width="200" height="220" viewBox="0 0 200 220">
             <!-- Shadow -->
             <ellipse cx="100" cy="210" rx="80" ry="10" fill="#4DD4C4" opacity="0.4"/>
@@ -5346,10 +5778,12 @@ def generate_section_header_slide_8(
             <ellipse cx="120" cy="60" rx="15" ry="20" fill="#2C2C2C"/>
             <circle cx="100" cy="65" r="8" fill="#2C2C2C"/>
         </svg>
+        </div>
     """
     
-    # Candle SVG
+    # Candle SVG (wrapped in a div)
     candle_svg = """
+        <div class="candle-wrapper">
         <svg class="candle" width="60" height="120" viewBox="0 0 60 120">
             <!-- Candle body -->
             <rect x="15" y="40" width="30" height="70" fill="#FF8C5A" stroke="#2C2C2C" stroke-width="2" rx="3"/>
@@ -5363,6 +5797,7 @@ def generate_section_header_slide_8(
             <ellipse cx="30" cy="20" rx="8" ry="12" fill="#FFD93D" opacity="0.8"/>
             <ellipse cx="30" cy="18" rx="5" ry="8" fill="#FFF5BA"/>
         </svg>
+        </div>
     """
     
     # Confetti dots
@@ -5447,14 +5882,7 @@ def generate_section_header_slide_8(
             text-align: left;
             max-width: 900px;
         }}
-        
-        .section-number {{
-            font-size: 5rem;
-            font-weight: 900;
-            color: {number_color};
-            margin-bottom: 0;
-            line-height: 1;
-        }}
+            
         
         .main-title {{
             font-size: 4rem;
@@ -5521,7 +5949,6 @@ def generate_section_header_slide_8(
     {sparkles_html}
     
     <div class="content">
-            {section_number_html}
             <h1 class="main-title">{main_title}</h1>
             <p class="subtitle">{subtitle}</p>
         </div>
@@ -5531,7 +5958,6 @@ def generate_section_header_slide_8(
     return html_code
 
 def generate_section_header_slide_9(
-    section_number="01",
     main_title="Main Title Here",
     subtitle="Here you could describe the topic of the section",
     bg_gradient_from="#4ecdc4",
@@ -5543,7 +5969,6 @@ def generate_section_header_slide_9(
     Generate a modern tech-style slide with hexagonal pattern decoration.
     
     Parameters:
-    - section_number: Section number to display (empty string to hide)
     - main_title: Main title text (default: "PROBLEM VS. SOLUTION")
     - subtitle: Subtitle text below the main title
     - bg_gradient_from: Starting gradient color (default: teal)
@@ -5555,16 +5980,13 @@ def generate_section_header_slide_9(
     - HTML string containing the complete slide
     """
     
-    # Handle list inputs
-    if isinstance(section_number, list):
-        section_number = section_number[0]
     if isinstance(main_title, list):
         main_title = main_title[0]
     if isinstance(subtitle, list):
         subtitle = subtitle[0]
     
-    # Section number HTML (only if not empty)
-    section_number_html = f'<div class="section-number">{section_number}</div>' if section_number and section_number.strip() else ''
+    # Section number removed for this variant
+    section_number_html = ''
     
     # Generate hexagon SVG pattern (always show)
     hexagon_positions = [
@@ -5603,6 +6025,9 @@ def generate_section_header_slide_9(
     <div class="dot" style="position: absolute; top: 40%; left: 12%; width: 6px; height: 6px; background: rgba(255, 255, 255, 0.7); border-radius: 50%;"></div>
     <div class="dot" style="position: absolute; top: 50%; left: 20%; width: 7px; height: 7px; background: rgba(255, 255, 255, 0.6); border-radius: 50%;"></div>
     '''
+
+    # Wrap generated SVGs in a container div to avoid standalone-SVG rendering issues
+    hexagons_html = f'<div class="hexagon-pattern">{hexagons_html}</div>'
     
     html_code = f'''<!DOCTYPE html>
 <html lang="en">
@@ -5687,7 +6112,6 @@ def generate_section_header_slide_9(
     return html_code
 
 def generate_section_header_slide_10(
-    section_number="01",
     main_title="Main Title Here",
     subtitle="You can enter a subtitle here if you need it",
     bg_color="#9BD89B",
@@ -5703,7 +6127,6 @@ def generate_section_header_slide_10(
     Generate a notebook-style overview slide with spiral binding and sticky notes.
     
     Parameters:
-    - section_number: Section number to display (empty string to hide)
     - main_title: Main title text (default: "OVERVIEW")
     - subtitle: Subtitle text below the main title
     - bg_color: Background color (default: light green)
@@ -5719,16 +6142,13 @@ def generate_section_header_slide_10(
     - HTML string for the slide
     """
     
-    # Handle list inputs
-    if isinstance(section_number, list):
-        section_number = section_number[0]
     if isinstance(main_title, list):
         main_title = main_title[0]
     if isinstance(subtitle, list):
         subtitle = subtitle[0]
     
-    # Section number HTML (only if not empty)
-    section_number_html = f'<div class="section-number">{section_number}</div>' if section_number and section_number.strip() else ''
+    # Section number removed for this variant
+    section_number_html = ''
     
     # Generate sticky notes (always show)
     sticky_notes_html = ""
@@ -5902,7 +6322,6 @@ def generate_section_header_slide_10(
     return html_code
 
 def generate_section_header_slide_11(
-    section_number="01",
     headline="MAIN TITLE HERE",
     bg_color="#0a3d3d",
     circuit_color="#4dd9d9",
@@ -5914,26 +6333,25 @@ def generate_section_header_slide_11(
     Generate a tech-themed headline news slide with circuit board patterns.
     
     Args:
-        section_number: Section number displayed in glowing box (empty string to hide)
         headline: Main headline text (default: "HEADLINE NEWS")
         bg_color: Background color (default: dark teal "#0a3d3d")
         circuit_color: Color of circuit lines (default: cyan "#4dd9d9")
         box_color: Color of the number box (default: aqua "#7fffd4")
         text_color: Color of headline text (default: white)
         custom_css: Additional CSS styles
+
+    Note:
+        The `section_number` parameter has been removed; this slide no longer accepts or displays a section number.
     
     Returns:
         Complete HTML string ready to save as .html file
     """
     
-    # Handle list inputs
-    if isinstance(section_number, list):
-        section_number = section_number[0]
     if isinstance(headline, list):
         headline = headline[0]
     
-    # Section number HTML (only if not empty)
-    section_number_html = f'<div class="section-box">{section_number}</div>' if section_number and section_number.strip() else ''
+    # Section number removed for this variant
+    section_number_html = ''
     
     # Generate circuit decorations as div elements (always show)
     circuit_decorations = ""
@@ -6052,40 +6470,34 @@ def generate_section_header_slide_11(
 </html>'''
     
     return html_code
-
 def generate_section_header_slide_12(
-    section_number="01",
     main_title="What is artificial intelligence?",
     bg_color="#f5f5f5",
     section_number_color="#e91e63",
-    question_color="#2d3748",
-    show_arrow=True,
+    title_color="#2d3748",
     custom_css=""
 ):
     """
     Generate a minimal question slide with geometric background icons.
     
     Parameters:
-    - section_number: Section number (default: "01"). Use empty string to hide.
     - main_title: Main title text
     - bg_color: Background color
-    - section_number_color: Color of section number
-    - question_color: Color of question text
-    - show_arrow: Show arrow next to section number
-    - show_background_icons: Show decorative background icons
+    - section_number_color: Color of section number (applies to decorative arrow label)
+    - title_color: Color of the main question/title text
     - custom_css: Additional custom CSS
     
     Returns:
     - HTML string
     """
     
-    # Conditional rendering: only show section number if not empty
-    section_number_html = f"""
-            <div class="section-header">
-                <div class="section-number">{section_number}</div>
-                {'<svg class="arrow" viewBox="0 0 100 50"><path d="M10 25 L80 25 M60 10 L80 25 L60 40" fill="none"/></svg>' if show_arrow else ''}
-            </div>
-    """ if section_number and section_number.strip() else ""
+    # Section number removed; always render the decorative arrow SVG
+    section_arrow_html = f'<svg class="arrow" viewBox="0 0 100 50"><path d="M10 25 L80 25 M60 10 L80 25 L60 40" fill="none" stroke="{section_number_color}" stroke-width="3"/></svg>'
+
+    # Wrap arrow and question in visible, positioned block containers so the
+    # converter can detect them as separate elements.
+    arrow_block_html = f'<div class="block section-arrow-block" style="position:absolute; top:220px; left:120px; width:120px; height:60px;">{section_arrow_html}</div>'
+    question_block_html = f'<div class="block question-block" style="position:absolute; top:320px; left:120px; width:1680px;"><div class="question">{main_title}</div></div>'
     
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
@@ -6122,7 +6534,7 @@ def generate_section_header_slide_12(
         .question {{
             font-size: 4rem;
             font-weight: 700;
-            color: {question_color};
+            color: {title_color};
             line-height: 1.3;
             background: rgba(255, 255, 255, 0.01);
             padding: 20px;
@@ -6132,15 +6544,14 @@ def generate_section_header_slide_12(
     </style>
 </head>
 <body>
-    <div class="section-number">{section_number}</div>
-    <div class="question">{main_title}</div>
+    {arrow_block_html}
+    {question_block_html}
 </body>
 </html>"""
     
     return html_code
 
 def generate_section_header_slide_13(
-    section_number="01",
     main_title="Name of the section",
     subtitle="You can enter a subtitle here if you need it",
     bg_start_color="#FFFFFF",
@@ -6153,7 +6564,6 @@ def generate_section_header_slide_13(
     Generate an HTML slide (static, no DNA/circuit decoration).
     
     Parameters:
-    - section_number: Section number (default: "01")
     - main_title: Main title text
     - subtitle: Subtitle text below main title
     - bg_start_color: Background gradient start color (left side)
@@ -6166,8 +6576,8 @@ def generate_section_header_slide_13(
     - Complete HTML string
     """
     
-    # Conditional rendering for section number: hide if empty
-    section_number_html = f"<div class=\"section-number\">{section_number}</div>" if section_number and str(section_number).strip() else ""
+    # Section number removed for this variant
+    section_number_html = ''
 
     html_code = f"""
     <!DOCTYPE html>
@@ -6285,7 +6695,6 @@ def generate_section_header_slide_13(
     return html_code
 
 def generate_section_header_slide_14(
-    section_number="01",
     main_title="Name of the section",
     subtitle="You can enter a subtitle here if you need it",
     bg_color="#e8f5e9",
@@ -6301,11 +6710,9 @@ def generate_section_header_slide_14(
 
     Notes:
     - The generator always renders clouds and plants (no show_* flags).
-    - The main text block is centered in the slide; the `section_number` is
-      vertically centered together with the title and subtitle.
+    - The main text block is centered in the slide; section numbers are not used by this generator.
 
     Parameters:
-    - section_number: Section number to display (default: "01")
     - main_title: Main title text (default: "Name of the section")
     - subtitle: Subtitle text (default: "You can enter a subtitle here if you need it")
     - bg_color: Background color (default: light mint green)
@@ -6376,8 +6783,8 @@ def generate_section_header_slide_14(
         <div class="block plants-right-block" style="position:absolute; bottom:0; right:0; width:450px; height:250px;">{right_svg}</div>
         """
     
-    # Conditional rendering for section number: hide if empty
-    section_number_html = f"<div class=\"section-number\">{section_number}</div>" if section_number and str(section_number).strip() else ""
+    # Section number removed for this variant
+    section_number_html = ''
 
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
@@ -6611,6 +7018,421 @@ def generate_section_header_slide_14(
 </html>"""
     
     return html_code
+
+def generate_section_header_slide_15(
+    main_title="This is the title of this section",
+    bg_color="#e8e8e8",
+    text_color="#2d2d2d",
+    blob1_color="rgba(255, 180, 120, 0.6)",
+    blob2_color="rgba(200, 120, 255, 0.6)",
+    blob3_color="rgba(120, 180, 255, 0.6)",
+    custom_css=""
+):
+    """
+    Generate a modern gradient colorful title slide with blurred color blobs.
+    
+    Parameters:
+    - main_title: Main title text (italic, bold)
+    - bg_color: Background color
+    - text_color: Text color
+    - blob1_color: First gradient blob color (orange/peach)
+    - blob2_color: Second gradient blob color (purple/pink)
+    - blob3_color: Third gradient blob color (blue)
+    - custom_css: Additional custom CSS
+    
+    Returns:
+    - Complete HTML string for the slide
+    """
+    
+    # Always include blobs (static)
+    blobs_html = f"""
+        <div class="gradient-blob blob1"></div>
+        <div class="gradient-blob blob2"></div>
+        <div class="gradient-blob blob3"></div>
+        """
+    
+    # project_name removed
+    
+    # section number removed (not used)
+    
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Gradient Colorful Title Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            body {{
+                font-family: 'Inter', sans-serif;
+                background: {bg_color};
+                color: {text_color};
+                overflow: hidden;
+            }}
+            
+            .slide-container {{
+                width: 1920px;
+                height: 1080px;
+                position: relative;
+                overflow: hidden;
+            }}
+            
+            /* Gradient Blobs */
+            .gradient-blob {{
+                position: absolute;
+                border-radius: 50%;
+                filter: blur(100px);
+                opacity: 1; /* static visible blobs */
+            }}
+            
+            .blob1 {{
+                width: 500px;
+                height: 500px;
+                background: {blob1_color};
+                top: 5%;
+                right: 10%;
+            }}
+            
+            .blob2 {{
+                width: 600px;
+                height: 600px;
+                background: {blob2_color};
+                bottom: 5%;
+                right: 15%;
+            }}
+            
+            .blob3 {{
+                width: 450px;
+                height: 450px;
+                background: {blob3_color};
+                bottom: 0%;
+                right: 0%;
+            }}
+            
+            /* Tagline removed */
+            
+            /* Project Name removed */
+            
+            /* Main Title */
+            .main-title {{
+                position: absolute;
+                top: 420px; /* fixed vertical placement */
+                left: 100px; /* fixed horizontal placement */
+                font-size: 80px; /* fixed pixel size */
+                font-weight: 900;
+                font-style: italic;
+                text-align: left;
+                max-width: 1400px;
+                line-height: 1.1;
+                z-index: 10;
+                opacity: 1;
+            }}
+            
+            /* Section Number */
+            /* section-number removed */
+            
+            /* Animations */
+            /* Animations removed - slide is static and converter-friendly */
+            
+            /* Responsive Design */
+            @media (max-width: 1920px) {{
+                .slide-container {{
+                    width: 100vw;
+                    height: 100vh;
+                    transform-origin: top left;
+                }}
+            }}
+            
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            {blobs_html}
+            <div class="main-title">{main_title}</div>
+        </div>
+    </body>
+    </html>
+    """
+    
+    return html_code
+
+def generate_section_header_slide_16(
+    main_title="Introduction",
+    subtitle="You can enter a subtitle here if you need it",
+    bg_top_color="#e8e6e3",
+    bg_bottom_color="#a8c5d9",
+    title_color="#1a1d2e",
+    subtitle_color="#2c3e50",
+    decorative_color1="#6b2c3e",  # burgundy for star and circle
+    decorative_color2="#7ba3c0",  # light blue for starburst
+    decorative_color3="#3d4f6b",  # navy for circle and hourglass
+    custom_css="",
+):
+    """
+    Generate a geometric introduction slide with split background and decorative shapes.
+    
+    Parameters:
+    - main_title: Main title text (default: "Introduction")
+    - subtitle: Subtitle text shown on bottom section (default: "You can enter a subtitle here if you need it")
+    - bg_top_color: Top background color (default: "#e8e6e3")
+    - bg_bottom_color: Bottom background color (default: "#a8c5d9")
+    - title_color: Color for main title (default: "#1a1d2e")
+    - subtitle_color: Color for subtitle (default: "#2c3e50")
+    - decorative_color1: Color for star and small circle (default: "#6b2c3e")
+    - decorative_color2: Color for starburst (default: "#7ba3c0")
+    - decorative_color3: Color for large circle and hourglass (default: "#3d4f6b")
+    - custom_css: Additional custom CSS (default: "")
+    
+    Returns:
+    - HTML string with complete slide
+    """
+    
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "Introduction"
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else ""
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title} - Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+
+        body, html {{
+            width: 100%;
+            height: 100%;
+            overflow: auto; /* allow body to size to content for Puppeteer */
+            min-width: 1920px;
+            min-height: 1080px;
+            font-family: 'Poppins', sans-serif;
+        }}
+
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative; /* keep container in normal flow so body has visible size */
+            margin: 0 auto; /* center horizontally */
+            background: {bg_top_color};
+            z-index: 1;
+        }}
+
+        /* Split background */
+        .background-bottom {{
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 45%;
+            background: {bg_bottom_color};
+            z-index: 1;
+        }}
+
+        /* Main title (fixed font size) */
+        .main-title {{
+            position: absolute;
+            top: 310px;
+            left: 130px;
+            font-size: 96px; /* fixed size */
+            font-weight: 900;
+            color: {title_color};
+            z-index: 10;
+            max-width: 1200px;
+            line-height: 1.05;
+            display: block; /* ensure block-level for converter */
+            margin: 0;
+        }}
+
+        /* Subtitle (fixed font size) */
+        .subtitle {{
+            position: absolute;
+            bottom: 280px;
+            left: 130px;
+            font-size: 24px; /* fixed size */
+            font-weight: 400;
+            color: {subtitle_color};
+            z-index: 10;
+            max-width: 900px;
+            display: block; /* ensure block-level for converter */
+            margin: 0;
+        }}
+
+        /* Top right decorations */
+        .top-decorations {{
+            position: absolute;
+            top: 30px;
+            right: 100px;
+            z-index: 10;
+        }}
+
+        .decoration-line {{
+            position: relative;
+            width: 300px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }}
+
+        /* 4-point star */
+        .star-4point {{
+            width: 40px;
+            height: 40px;
+            display: block; /* ensure block-level so converter captures bounding box reliably */
+        }}
+
+        /* Starburst/sparkle */
+        .starburst {{
+            width: 50px;
+            height: 50px;
+            display: block; /* ensure block-level so converter captures bounding box reliably */
+        }}
+
+        /* Navy circle */
+        .circle-large {{
+            width: 35px;
+            height: 35px;
+            border-radius: 50%;
+            background: {decorative_color3};
+            display: block; /* ensure block-level for consistent bounding box */
+        }}
+
+        /* Connecting line */
+        .connect-line {{
+            position: absolute;
+            top: 30px; /* center inside 60px decoration-line */
+            left: 20px;
+            right: 20px;
+            height: 2px;
+            background: linear-gradient(to right, {decorative_color1}, {decorative_color2}, {decorative_color3});
+        }}
+
+        /* Bottom right hourglass decoration */
+        .bottom-decoration {{
+            position: absolute;
+            bottom: 80px;
+            right: 200px;
+            z-index: 10;
+        }}
+
+        .hourglass {{
+            width: 120px;
+            height: 140px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: space-between;
+        }}
+
+        /* Top circle */
+        .hourglass-top-circle {{
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: {decorative_color1};
+            margin-top: 0;
+        }}
+
+        /* Top half circle (arc down) */
+        .hourglass-top {{
+            width: 100px;
+            height: 50px;
+            border: 3px solid {decorative_color3};
+            border-top: none;
+            border-radius: 0 0 100px 100px;
+            background: transparent;
+        }}
+
+        /* Bottom half circle (arc up) */
+        .hourglass-bottom {{
+            width: 100px;
+            height: 50px;
+            border: 3px solid {decorative_color3};
+            border-bottom: none;
+            border-radius: 100px 100px 0 0;
+            background: transparent;
+            margin-bottom: 0;
+        }}
+
+        /* Connecting vertical line */
+        .hourglass-line {{
+            width: 3px;
+            height: 60px;
+            background: {decorative_color3};
+            margin: 0 auto;
+        }}
+
+        /* No animations - static slide */
+
+        /* Removed responsive transform scaling to avoid converter detection issues */
+
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-container" data-el="slide-root">
+        <!-- Background bottom section -->
+        <div class="background-bottom"></div>
+    </div>
+
+    <!-- Main title (moved outside container for clearer detection) -->
+    <h1 class="main-title" data-el="title" style="position:absolute;left:130px;top:310px;display:block;width:1200px;height:220px;background:transparent;">{main_title}</h1>
+
+    <!-- Subtitle (smaller box placed directly under title) -->
+    <p class="subtitle" data-el="subtitle" style="position:absolute;left:130px;top:540px;display:block;width:600px;height:60px;background:transparent;font-size:28px;line-height:1.1;">{subtitle}</p>
+
+    <!-- Top right decorations (moved outside container). SVGs must be placed inside divs to avoid errors. -->
+    <div class="top-decorations" data-el="top-decorations" style="position:absolute;top:30px;right:100px;">
+        <div class="decoration-line" data-el="decoration-line">
+            <div class="connect-line"></div>
+            <div class="star-4point" data-el="star-4point">
+                <svg width="40" height="40" viewBox="0 0 40 40" xmlns="http://www.w3.org/2000/svg">
+                    <rect x="0" y="18" width="40" height="4" fill="{decorative_color1}" />
+                    <rect x="18" y="0" width="4" height="40" fill="{decorative_color1}" />
+                </svg>
+            </div>
+            <div class="starburst" data-el="starburst">
+                <svg width="50" height="50" viewBox="0 0 50 50" xmlns="http://www.w3.org/2000/svg">
+                    <g fill="{decorative_color2}">
+                        <rect x="0" y="23.5" width="50" height="3" />
+                        <rect x="23.5" y="0" width="3" height="50" />
+                    </g>
+                </svg>
+            </div>
+            <div class="circle-large" data-el="circle-large"></div>
+        </div>
+    </div>
+
+    <!-- Bottom right hourglass decoration (moved outside container) -->
+    <div class="bottom-decoration" data-el="bottom-decoration" style="position:absolute;bottom:80px;right:200px;">
+        <div class="hourglass" data-el="hourglass">
+            <div class="hourglass-top-circle" data-el="hourglass-top-circle"></div>
+            <div class="hourglass-line" data-el="hourglass-line"></div>
+            <div class="hourglass-top" data-el="hourglass-top"></div>
+            <div class="hourglass-bottom" data-el="hourglass-bottom"></div>
+        </div>
+    </div>
+        
+</body>
+</html>"""
+    
+    return html_code
+
 #------------------------SLIDE CONTENT
 def generate_content_slide(
     main_title="CONTENT",
