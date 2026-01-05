@@ -58,12 +58,84 @@ async def add_private_network_header(request: Request, call_next):
     response.headers["Access-Control-Allow-Private-Network"] = "true"
     return response
 
+# Middleware to handle clean URLs and block /frontend/*.html direct access
+@app.middleware("http")
+async def clean_url_middleware(request: Request, call_next):
+    path = request.url.path
+    query_string = request.url.query
+    
+    # Map for blocking /frontend/*.html and redirecting to clean URLs
+    frontend_html_redirects = {
+        "/frontend/index.html": "/",
+        "/frontend/login.html": "/login",
+        "/frontend/register.html": "/register",
+        "/frontend/projects.html": "/projects",
+        "/frontend/edit.html": "/edit",
+        "/frontend/guide.html": "/guide",
+        "/frontend/streaming.html": "/streaming",
+        "/frontend/structure-editor.html": "/structure-editor",
+        "/frontend/view_project.html": "/view-project",
+    }
+    
+    # Redirect /frontend/*.html to clean URL (preserve query string)
+    if path in frontend_html_redirects:
+        from fastapi.responses import RedirectResponse
+        new_url = frontend_html_redirects[path]
+        if query_string:
+            new_url = f"{new_url}?{query_string}"
+        return RedirectResponse(url=new_url, status_code=301)
+    
+    # Handle root-level *.html requests (from relative links in HTML)
+    # e.g., /login.html -> /login, /projects.html -> /projects
+    root_html_files = {
+        "/index.html": "/",
+        "/login.html": "/login",
+        "/register.html": "/register",
+        "/projects.html": "/projects",
+        "/edit.html": "/edit",
+        "/guide.html": "/guide",
+        "/streaming.html": "/streaming",
+        "/structure-editor.html": "/structure-editor",
+        "/view_project.html": "/view-project",
+    }
+    
+    # Redirect /*.html to clean URL (preserve query string)
+    if path in root_html_files:
+        from fastapi.responses import RedirectResponse
+        new_url = root_html_files[path]
+        if query_string:
+            new_url = f"{new_url}?{query_string}"
+        return RedirectResponse(url=new_url, status_code=302)
+    
+    # Serve frontend assets from root level (config.js, css/, js/)
+    # This allows relative paths like ./config.js to work from clean URLs
+    if path in ["/config.js", "/script.js"]:
+        file_path = FRONTEND_DIR / path.lstrip("/")
+        if file_path.exists():
+            return FileResponse(str(file_path), media_type="application/javascript")
+    
+    # Serve css/ and js/ directories from root
+    if path.startswith("/css/") or path.startswith("/js/"):
+        file_path = FRONTEND_DIR / path.lstrip("/")
+        if file_path.exists():
+            # Determine content type based on extension
+            if path.endswith(".css"):
+                media_type = "text/css"
+            elif path.endswith(".js"):
+                media_type = "application/javascript"
+            else:
+                media_type = None
+            return FileResponse(str(file_path), media_type=media_type)
+    
+    return await call_next(request)
+
 # Initialize database
 from .database import init_db
 init_db()
 
 # Mount static files
 app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+# Mount frontend for CSS, JS and other assets (HTML blocked by middleware)
 app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR)), name="frontend")
 
 # Initialize services
@@ -236,21 +308,67 @@ def clear_temp_dir(temp_dir: Path):
 
 @app.get("/")
 async def read_root():
-    """
-    API Root - Returns API information
-    """
+    """Serve frontend index page"""
+    return FileResponse(str(FRONTEND_DIR / "index.html"), media_type="text/html")
+
+
+# Short URL routes for cleaner access
+@app.get("/login")
+async def login_page():
+    """Serve login page"""
+    return FileResponse(str(FRONTEND_DIR / "login.html"), media_type="text/html")
+
+
+@app.get("/register")
+async def register_page():
+    """Serve register page"""
+    return FileResponse(str(FRONTEND_DIR / "register.html"), media_type="text/html")
+
+
+@app.get("/projects")
+async def projects_page():
+    """Serve projects page"""
+    return FileResponse(str(FRONTEND_DIR / "projects.html"), media_type="text/html")
+
+
+@app.get("/edit")
+async def edit_page():
+    """Serve edit page"""
+    return FileResponse(str(FRONTEND_DIR / "edit.html"), media_type="text/html")
+
+
+@app.get("/guide")
+async def guide_page():
+    """Serve guide page"""
+    return FileResponse(str(FRONTEND_DIR / "guide.html"), media_type="text/html")
+
+
+@app.get("/streaming")
+async def streaming_page():
+    """Serve streaming page"""
+    return FileResponse(str(FRONTEND_DIR / "streaming.html"), media_type="text/html")
+
+
+@app.get("/structure-editor")
+async def structure_editor_page():
+    """Serve structure editor page"""
+    return FileResponse(str(FRONTEND_DIR / "structure-editor.html"), media_type="text/html")
+
+
+@app.get("/view-project")
+async def view_project_page():
+    """Serve view project page"""
+    return FileResponse(str(FRONTEND_DIR / "view_project.html"), media_type="text/html")
+
+
+@app.get("/api")
+async def api_info():
+    """API Root - Returns API information"""
     return {
         "name": "SlideGen Backend API",
         "version": "1.0.0",
         "status": "running",
-        "docs": "/docs",
-        "endpoints": {
-            "upload_docx": "POST /api/upload-docx",
-            "slides": "GET /api/slides/{project_name}",
-            "export_pdf": "POST /api/export-slides-pdf",
-            "images": "GET /api/images/{name}"
-        },
-        "frontend": "http://localhost:8000"
+        "docs": "/docs"
     }
 
 

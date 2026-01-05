@@ -102,6 +102,9 @@
         const API_BASE_URL = (window.config && window.config.API_BASE_URL) || 'http://localhost:12008';
         // const API_BASE_URL = window.location.origin;
 
+        // Get redirect URL from query params
+        const urlParams = new URLSearchParams(window.location.search);
+        const redirectUrl = urlParams.get('redirect');
 
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
@@ -129,8 +132,12 @@
                 // Store token in localStorage
                 localStorage.setItem('access_token', data.access_token);
 
-                // Redirect to home page
-                window.location.href = 'index.html';
+                // Redirect to original page or home
+                if (redirectUrl) {
+                    window.location.href = decodeURIComponent(redirectUrl);
+                } else {
+                    window.location.href = '/';
+                }
 
             } catch (error) {
                 errorAlert.textContent = error.message;

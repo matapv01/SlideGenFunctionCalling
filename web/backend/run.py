@@ -11,9 +11,8 @@ root_dir = Path(__file__).parent.parent.parent  # SlideGenFunctionCalling/
 env_file = root_dir / ".env"
 if env_file.exists():
     load_dotenv(env_file)
-    print(f"✅ Loaded .env from: {env_file}")
 else:
-    print(f"⚠️  No .env file found at: {env_file}")
+    print("⚠️  No .env file found")
 
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
@@ -22,19 +21,18 @@ from app.main import app
 from app.config import API_HOST, API_PORT
 
 if __name__ == "__main__":
-    print("=" * 60)
-    print("🌐 Starting SlideGen Backend Server")
-    print("=" * 60)
-    print(f"🚀 Server URL: http://{API_HOST}:{API_PORT}")
-    print(f"📡 API Docs: http://{API_HOST}:{API_PORT}/docs")
-    print(f"📸 Capture Health: http://{API_HOST}:{API_PORT}/api/capture-health")
-    print(f"🔧 Converter Health: http://{API_HOST}:{API_PORT}/api/converter-health")
-    print("=" * 60)
+    print("")
+    print("╔═══════════════════════════════════════════╗")
+    print("║       SlideGen Backend Server             ║")
+    print("╚═══════════════════════════════════════════╝")
+    print("")
+    print("✅ Server started successfully")
+    print("")
     
     uvicorn.run(
-        app,  # Pass app object directly instead of string when using sys.path manipulation
+        app,
         host=API_HOST,
         port=API_PORT,
-        reload=False,  # Disable reload to avoid sys.path issues
-        log_level="info"
+        reload=False,
+        log_level="warning"  # Reduce log verbosity
     )

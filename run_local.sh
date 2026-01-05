@@ -6,82 +6,58 @@ set -e
 # Chạy cả backend và frontend trong 2 terminal riêng
 # =============================================================================
 
-echo "╔═══════════════════════════════════════════════════════════════╗"
-echo "║           SlideGen - Local Development Mode                   ║"
-echo "╚═══════════════════════════════════════════════════════════════╝"
+echo ""
+echo "╔═══════════════════════════════════════════╗"
+echo "║       SlideGen - Development Mode         ║"
+echo "╚═══════════════════════════════════════════╝"
+echo ""
 
 # Check .env file
 if [ ! -f ".env" ]; then
-    echo ""
     echo "❌ Error: .env file not found!"
-    echo ""
-    echo "📋 Please create .env file:"
-    echo "   cp .env.example .env"
-    echo "   # Then edit .env and add your GEMINI_API_KEY"
-    echo ""
+    echo "   Run: cp .env.example .env"
     exit 1
 fi
 
-# Check GEMINI_API_KEY
+# Check GEMINI_API_KEY silently
 if ! grep -q "GEMINI_API_KEY=." .env || grep -q "GEMINI_API_KEY=your_" .env; then
-    echo ""
-    echo "⚠️  Warning: GEMINI_API_KEY may not be set in .env"
-    echo "   Please ensure you have a valid API key"
+    echo "⚠️  Warning: GEMINI_API_KEY may not be configured"
     echo ""
 fi
 
-echo ""
-echo "🔧 Loading environment from .env..."
+# Load environment silently
 export $(grep -v '^#' .env | grep -v '^$' | xargs)
 
 # Set LOCAL mode
 export PRODUCTION_MODE=false
 
-echo ""
-echo "📍 Local URLs:"
-echo "   Frontend: http://localhost:8000"
-echo "   Backend:  http://localhost:12008"
-echo "   API Docs: http://localhost:12008/docs"
-echo ""
-echo "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━"
-
 # Option 1: Run both in background (recommended for quick testing)
 if [ "$1" == "--both" ] || [ "$1" == "-b" ]; then
-    echo "🚀 Starting both backend and frontend..."
-    echo ""
+    echo "🚀 Starting services..."
     
     # Start backend in background
-    echo "📡 Starting Backend (port 12008)..."
     uv run ./web/backend/run.py &
     BACKEND_PID=$!
     
     # Wait a bit for backend to start
     sleep 2
     
-    # Start frontend in background
-    echo "🌐 Starting Frontend (port 8000)..."
-    python3 -m http.server 8000 --directory web/frontend &
+    # Start frontend in background (suppress output)
+    python3 -m http.server 8000 --directory web/frontend > /dev/null 2>&1 &
     FRONTEND_PID=$!
     
+    echo "✅ All services started"
     echo ""
-    echo "✅ Both servers started!"
-    echo "   Backend PID: $BACKEND_PID"
-    echo "   Frontend PID: $FRONTEND_PID"
-    echo ""
-    echo "🌐 Open http://localhost:8000 in your browser"
-    echo ""
-    echo "Press Ctrl+C to stop both servers..."
+    echo "Press Ctrl+C to stop..."
     
     # Trap Ctrl+C to kill both processes
-    trap "echo ''; echo 'Stopping servers...'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit 0" INT
+    trap "echo ''; echo 'Stopping...'; kill $BACKEND_PID $FRONTEND_PID 2>/dev/null; exit 0" INT
     
     # Wait for both processes
     wait
     
 # Option 2: Run backend only (default)
 else
-    echo "🚀 Starting Backend only..."
-    echo "   Run frontend separately: ./run_frontend.sh"
-    echo ""
+    echo "🚀 Starting backend..."
     uv run ./web/backend/run.py
 fi
