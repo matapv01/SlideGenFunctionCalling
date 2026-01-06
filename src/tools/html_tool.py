@@ -4664,359 +4664,7 @@ def generate_section_header_slide_1(
 </html>"""
     
     return html_code
-
-def generate_section_header_slide_2(
-    section_title="Name of the section",
-    subtitle="You can enter a subtitle here if you need it",
-    bg_color="#FFF9F0",
-    title_color="#2D1B4E",
-    subtitle_color="#333333",
-    show_balloons=True,
-    show_bunting=True,
-    show_flowers=True,
-    custom_css=""
-):
-    """
-    Generate a watercolor birthday/celebration section slide HTML.
     
-    Parameters:
-    - section_title: Main title text
-    - subtitle: Subtitle text below the title
-    - bg_color: Background color
-    - title_color: Color of main title
-    - subtitle_color: Color of subtitle
-    - show_balloons: Show watercolor balloons decoration
-    - show_bunting: Show bunting flags decoration
-    - show_flowers: Show watercolor flowers
-    - custom_css: Additional CSS to inject
-    
-    Returns:
-    - Complete HTML string
-    """
-    
-    # Handle list inputs
-    if isinstance(section_title, list):
-        section_title = section_title[0] if section_title else "Name of the section"
-    if isinstance(subtitle, list):
-        subtitle = subtitle[0] if subtitle else "You can enter a subtitle here if you need it"
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Section Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{
-            width: 1920px;
-            height: 1080px;
-        }}
-        
-        body {{
-            width: 1920px;
-            height: 1080px;
-            background-color: {bg_color};
-            font-family: 'Montserrat', sans-serif;
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        body {{
-            width: 1920px;
-            height: 1080px;
-            background-color: {bg_color};
-            font-family: 'Montserrat', sans-serif;
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        /* Content */
-        .content {{
-            position: absolute;
-            top: 390px;
-            left: 192px;
-            text-align: center;
-            z-index: 10;
-            width: 1536px;
-        }}
-        
-        .section-title {{
-            font-family: 'Playfair Display', serif;
-            font-size: 6rem;
-            font-weight: 700;
-            color: {title_color};
-            margin-bottom: 20px;
-            line-height: 1.2;
-        }}
-        
-        .subtitle {{
-            font-family: 'Montserrat', sans-serif;
-            font-size: 3rem;
-            font-weight: 400;
-            color: {subtitle_color};
-        }}
-        
-        /* Balloons */
-        .balloons {{
-            position: absolute;
-            top: 40px;
-            left: 80px;
-            display: {'block' if show_balloons else 'none'};
-        }}
-        
-        .balloon {{
-            position: absolute;
-            width: 120px;
-            height: 140px;
-            border-radius: 50%;
-            opacity: 0.85;
-            filter: blur(1.5px);
-        }}
-        
-        .balloon:nth-child(1) {{
-            background: radial-gradient(circle at 30% 30%, #FFE66D, #F4D03F);
-            top: 0;
-            left: 0;
-        }}
-        
-        .balloon:nth-child(2) {{
-            background: radial-gradient(circle at 30% 30%, #FFD89B, #FFA94D);
-            top: 20px;
-            left: 100px;
-            width: 100px;
-            height: 120px;
-        }}
-        
-        .balloon:nth-child(3) {{
-            background: radial-gradient(circle at 30% 30%, #FFB6D9, #FF8FB1);
-            top: 120px;
-            left: 30px;
-        }}
-        
-        .balloon::after {{
-            content: '';
-            position: absolute;
-            bottom: -30px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 2px;
-            height: 30px;
-            background: rgba(200, 180, 150, 0.6);
-        }}
-        
-        /* Bunting */
-        .bunting {{
-            position: absolute;
-            top: 20px;
-            right: 80px;
-            display: {'flex' if show_bunting else 'none'};
-            gap: -10px;
-        }}
-        
-        .flag {{
-            width: 0;
-            height: 0;
-            border-left: 50px solid transparent;
-            border-right: 50px solid transparent;
-            border-top: 80px solid;
-            opacity: 0.85;
-            filter: blur(1px);
-        }}
-        
-        .flag:nth-child(1) {{
-            border-top-color: #FFE66D;
-        }}
-        
-        .flag:nth-child(2) {{
-            border-top-color: #FFB6D9;
-        }}
-        
-        .flag:nth-child(3) {{
-            border-top-color: #FFE66D;
-        }}
-        
-        .flag:nth-child(4) {{
-            border-top-color: #FFB6D9;
-        }}
-        
-        /* Hearts */
-        .heart {{
-            position: absolute;
-            width: 40px;
-            height: 40px;
-            opacity: 0.7;
-            filter: blur(1px);
-        }}
-        
-        .heart:nth-child(1) {{
-            top: 80px;
-            left: 380px;
-        }}
-        
-        .heart:nth-child(2) {{
-            top: 240px;
-            right: 280px;
-        }}
-        
-        .heart:nth-child(3) {{
-            bottom: 320px;
-            left: 280px;
-        }}
-        
-        /* Flowers */
-        .flowers-left {{
-            position: absolute;
-            bottom: 120px;
-            left: 60px;
-            display: {'block' if show_flowers else 'none'};
-        }}
-        
-        .flowers-right {{
-            position: absolute;
-            bottom: 140px;
-            right: 80px;
-            display: {'block' if show_flowers else 'none'};
-        }}
-        
-        .flower-right-top {{
-            position: absolute;
-            top: 240px;
-            right: 200px;
-            display: {'block' if show_flowers else 'none'};
-        }}
-        
-        /* Leaves */
-        .leaves {{
-            position: absolute;
-            bottom: 220px;
-            left: 40px;
-            display: {'block' if show_flowers else 'none'};
-        }}
-        
-        /* Feathers */
-        .feathers {{
-            position: absolute;
-            right: 120px;
-            top: 440px;
-            display: {'block' if show_flowers else 'none'};
-        }}
-        
-
-        
-        {custom_css}
-    </style>
-</head>
-<body>
-        <!-- Balloons -->
-        <div class="balloons">
-            <div class="balloon"></div>
-            <div class="balloon"></div>
-            <div class="balloon"></div>
-        </div>
-        
-        <!-- Bunting -->
-        <div class="bunting">
-            <div class="flag"></div>
-            <div class="flag"></div>
-            <div class="flag"></div>
-            <div class="flag"></div>
-        </div>
-        
-        <!-- Hearts -->
-        <svg class="heart" viewBox="0 0 32 29.6">
-            <path fill="#FFB6D9" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
-                c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
-        </svg>
-        <svg class="heart" viewBox="0 0 32 29.6">
-            <path fill="#FFB6D9" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
-                c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
-        </svg>
-        <svg class="heart" viewBox="0 0 32 29.6">
-            <path fill="#FFB6D9" d="M23.6,0c-3.4,0-6.3,2.7-7.6,5.6C14.7,2.7,11.8,0,8.4,0C3.8,0,0,3.8,0,8.4c0,9.4,9.5,11.9,16,21.2
-                c6.1-9.3,16-12.1,16-21.2C32,3.8,28.2,0,23.6,0z"/>
-        </svg>
-        
-        <!-- Flowers Left -->
-        <svg class="flowers-left" width="200" height="200" viewBox="0 0 200 200">
-            <!-- Pink Flower -->
-            <circle cx="100" cy="120" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="80" cy="100" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="120" cy="100" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="90" cy="135" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="110" cy="135" r="25" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="100" cy="115" r="15" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
-        </svg>
-        
-        <!-- Leaves -->
-        <svg class="leaves" width="150" height="250" viewBox="0 0 150 250">
-            <ellipse cx="30" cy="200" rx="12" ry="40" fill="#C3B1E1" opacity="0.7" filter="blur(1.5px)" transform="rotate(-30 30 200)"/>
-            <ellipse cx="50" cy="180" rx="12" ry="40" fill="#C3B1E1" opacity="0.7" filter="blur(1.5px)" transform="rotate(-45 50 180)"/>
-            <ellipse cx="70" cy="200" rx="12" ry="40" fill="#C3B1E1" opacity="0.7" filter="blur(1.5px)" transform="rotate(-20 70 200)"/>
-            <ellipse cx="40" cy="150" rx="12" ry="40" fill="#D4A5C9" opacity="0.7" filter="blur(1.5px)" transform="rotate(30 40 150)"/>
-            <ellipse cx="60" cy="130" rx="12" ry="40" fill="#D4A5C9" opacity="0.7" filter="blur(1.5px)" transform="rotate(20 60 130)"/>
-        </svg>
-        
-        <!-- Flower Right Top -->
-        <svg class="flower-right-top" width="120" height="120" viewBox="0 0 120 120">
-            <circle cx="60" cy="60" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="40" cy="50" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="80" cy="50" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="50" cy="75" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="70" cy="75" r="22" fill="#FFB6D9" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="60" cy="60" r="12" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
-        </svg>
-        
-        <!-- Flowers Right -->
-        <svg class="flowers-right" width="200" height="200" viewBox="0 0 200 200">
-            <!-- Purple Flower -->
-            <circle cx="80" cy="100" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="55" cy="80" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="105" cy="80" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="60" cy="120" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="100" cy="120" r="30" fill="#C3B1E1" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="80" cy="100" r="18" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
-            
-            <!-- Yellow Flower -->
-            <circle cx="140" cy="130" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="120" cy="115" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="160" cy="115" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="125" cy="145" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="155" cy="145" r="25" fill="#FFE66D" opacity="0.8" filter="blur(1.5px)"/>
-            <circle cx="140" cy="130" r="15" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
-            
-            <!-- White Flower -->
-            <circle cx="170" cy="80" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
-            <circle cx="155" cy="70" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
-            <circle cx="185" cy="70" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
-            <circle cx="160" cy="90" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
-            <circle cx="180" cy="90" r="20" fill="#FFFEF2" opacity="0.85" filter="blur(1.5px)"/>
-            <circle cx="170" cy="80" r="12" fill="#D4A574" opacity="0.85" filter="blur(1px)"/>
-        </svg>
-        
-        <!-- Feathers -->
-        <svg class="feathers" width="150" height="200" viewBox="0 0 150 200">
-            <ellipse cx="60" cy="100" rx="20" ry="80" fill="#87CEEB" opacity="0.7" filter="blur(1.5px)" transform="rotate(30 60 100)"/>
-            <ellipse cx="80" cy="90" rx="20" ry="80" fill="#87CEEB" opacity="0.7" filter="blur(1.5px)" transform="rotate(20 80 90)"/>
-            <path d="M 60 60 Q 65 100 60 140" stroke="#D4A574" stroke-width="3" fill="none" opacity="0.6"/>
-            <path d="M 80 50 Q 85 90 80 130" stroke="#D4A574" stroke-width="3" fill="none" opacity="0.6"/>
-        </svg>
-        
-        <!-- Main Content -->
-        <div class="content">
-            <h1 class="section-title">{section_title}</h1>
-            <p class="subtitle">{subtitle}</p>
-        </div>
-</body>
-</html>"""
-    
-    return html_code
 
 def generate_section_header_slide_3(
     main_title="Introduction",
@@ -5592,10 +5240,10 @@ def generate_section_header_slide_6(
 
 def generate_section_header_slide_7(
     main_title="This is the title of this section",
+    subtitle="Your subtitle goes here",
     bg_gradient_from="#ffffff",
     bg_gradient_to="#ff9999",
     text_color="#2d2d2d",
-    side_bar_color="#e8e8e8",
     custom_css=""
 ):
     """
@@ -5603,11 +5251,11 @@ def generate_section_header_slide_7(
     
     Parameters:
     - main_title: Main title text (default: "This is the title of this section")
+    - subtitle: Subtitle text (default: "")
     - bg_gradient_from: Starting gradient color (default: "#ffffff")
     - bg_gradient_to: Ending gradient color (default: "#ff9999")
     - text_color: Main text color (default: "#2d2d2d")
     - number_color: Section number color (default: "#2d2d2d")
-    - side_bar_color: Left sidebar color (default: "#e8e8e8")
     - custom_css: Additional CSS to inject (default: "")
     
     Returns:
@@ -5618,11 +5266,8 @@ def generate_section_header_slide_7(
     if isinstance(main_title, list):
         main_title = main_title[0] if main_title else "This is the title of this section"
     
-    
-    # Sidebar HTML (always shown)
-    sidebar_html = '''
-        <div class="sidebar"></div>
-    '''
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else ""
     
     html_code = f"""
     <!DOCTYPE html>
@@ -5659,16 +5304,6 @@ def generate_section_header_slide_7(
                 overflow: hidden;
             }}
             
-            .sidebar {{
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 210px;
-                height: 100%;
-                background: {side_bar_color};
-                z-index: 1;
-            }}
-            
             
             
             .main-content {{
@@ -5686,6 +5321,19 @@ def generate_section_header_slide_7(
                 letter-spacing: -0.02em;
                 word-wrap: break-word;
                 overflow-wrap: break-word;
+                margin-bottom: 1rem;
+            }}
+            
+            .subtitle {{
+                font-size: 2rem;
+                font-weight: 300;
+                color: {text_color};
+                opacity: 0.8;
+                line-height: 1.4;
+                letter-spacing: -0.01em;
+                word-wrap: break-word;
+                overflow-wrap: break-word;
+                margin-top: 1rem;
             }}
             
             {custom_css}
@@ -5693,10 +5341,9 @@ def generate_section_header_slide_7(
     </head>
     <body>
         <div class="slide-container">
-            {sidebar_html}
-            
             <div class="main-content">
                 <h1 class="main-title">{main_title}</h1>
+                {f'<p class="subtitle">{subtitle}</p>' if subtitle else ''}
             </div>
         </div>
     </body>
@@ -5709,159 +5356,23 @@ def generate_section_header_slide_7(
 def generate_section_header_slide_8(
     main_title="Name of the section",
     subtitle="You can enter a subtitle here if you need it",
-    bg_color="#5FEDD8",
+    bg_color="#FFB84D",
     text_color="#2C2C2C",
-    subtitle_color="#3C3C3C",
+    subtitle_color="#4A4A4A",
     custom_css="",
 ):
     """
-    Generate a party-themed section slide with decorative elements.
-    
-    Args:
-        main_title: Main title text
-        subtitle: Subtitle text below the title
-        bg_color: Background color
-        text_color: Main title text color
-        subtitle_color: Subtitle text color
-        custom_css: Additional custom CSS
-    
-    Returns:
-        Complete HTML string for the slide
+    Simplified section slide: left-aligned text and external SVG on the right.
+    This definition intentionally overrides the previous one in the file.
     """
-    
-    # Section number removed; no HTML placeholder
-    section_number_html = ''
-    
-    # Party hat SVG (wrapped in a div to avoid standalone <svg> issues)
-    party_hat_svg = """
-        <div class="party-hat-wrapper">
-        <svg class="party-hat" width="180" height="220" viewBox="0 0 180 220">
-            <!-- Hat cone -->
-            <path d="M 20 200 Q 90 20 160 200" fill="#FF8C5A" stroke="#2C2C2C" stroke-width="2"/>
-            <!-- Stripes -->
-            <path d="M 40 180 Q 90 60 140 180" fill="none" stroke="white" stroke-width="8" opacity="0.8"/>
-            <path d="M 50 160 Q 90 80 130 160" fill="none" stroke="white" stroke-width="8" opacity="0.8"/>
-            <path d="M 60 140 Q 90 100 120 140" fill="none" stroke="white" stroke-width="8" opacity="0.8"/>
-            <!-- Outline -->
-            <path d="M 20 200 Q 90 20 160 200" fill="none" stroke="#2C2C2C" stroke-width="3"/>
-            <!-- Bottom rim -->
-            <ellipse cx="90" cy="200" rx="70" ry="12" fill="#FFB088" stroke="#2C2C2C" stroke-width="2"/>
-            <!-- Pom pom -->
-            <circle cx="90" cy="25" r="18" fill="#2C2C2C"/>
-        </svg>
-        </div>
-    """
-    
-    # Gift box SVG (wrapped in a div)
-    gift_box_svg = """
-        <div class="gift-box-wrapper">
-        <svg class="gift-box" width="200" height="220" viewBox="0 0 200 220">
-            <!-- Shadow -->
-            <ellipse cx="100" cy="210" rx="80" ry="10" fill="#4DD4C4" opacity="0.4"/>
-            <!-- Box body -->
-            <rect x="30" y="90" width="140" height="120" fill="#FF4F8B" stroke="#2C2C2C" stroke-width="3" rx="5"/>
-            <!-- Stripes on box -->
-            <line x1="50" y1="100" x2="40" y2="200" stroke="white" stroke-width="6" opacity="0.6"/>
-            <line x1="80" y1="95" x2="70" y2="205" stroke="white" stroke-width="6" opacity="0.6"/>
-            <line x1="120" y1="95" x2="130" y2="205" stroke="white" stroke-width="6" opacity="0.6"/>
-            <line x1="150" y1="100" x2="160" y2="200" stroke="white" stroke-width="6" opacity="0.6"/>
-            <!-- Ribbon vertical -->
-            <rect x="85" y="90" width="30" height="120" fill="#FF4F8B" stroke="#2C2C2C" stroke-width="3"/>
-            <!-- Box lid -->
-            <rect x="25" y="70" width="150" height="25" fill="#FF6BA0" stroke="#2C2C2C" stroke-width="3" rx="3"/>
-            <!-- Ribbon horizontal -->
-            <rect x="25" y="77" width="150" height="12" fill="#FF4F8B" stroke="#2C2C2C" stroke-width="2"/>
-            <!-- Bow -->
-            <path d="M 70 70 Q 60 50 80 45 Q 90 40 100 50 Q 110 40 120 45 Q 140 50 130 70" 
-                  fill="#2C2C2C" stroke="#2C2C2C" stroke-width="2"/>
-            <ellipse cx="80" cy="60" rx="15" ry="20" fill="#2C2C2C"/>
-            <ellipse cx="120" cy="60" rx="15" ry="20" fill="#2C2C2C"/>
-            <circle cx="100" cy="65" r="8" fill="#2C2C2C"/>
-        </svg>
-        </div>
-    """
-    
-    # Candle SVG (wrapped in a div)
-    candle_svg = """
-        <div class="candle-wrapper">
-        <svg class="candle" width="60" height="120" viewBox="0 0 60 120">
-            <!-- Candle body -->
-            <rect x="15" y="40" width="30" height="70" fill="#FF8C5A" stroke="#2C2C2C" stroke-width="2" rx="3"/>
-            <!-- Stripes -->
-            <line x1="15" y1="55" x2="45" y2="55" stroke="white" stroke-width="3" opacity="0.6"/>
-            <line x1="15" y1="75" x2="45" y2="75" stroke="white" stroke-width="3" opacity="0.6"/>
-            <line x1="15" y1="95" x2="45" y2="95" stroke="white" stroke-width="3" opacity="0.6"/>
-            <!-- Wick -->
-            <line x1="30" y1="40" x2="30" y2="25" stroke="#2C2C2C" stroke-width="2"/>
-            <!-- Flame -->
-            <ellipse cx="30" cy="20" rx="8" ry="12" fill="#FFD93D" opacity="0.8"/>
-            <ellipse cx="30" cy="18" rx="5" ry="8" fill="#FFF5BA"/>
-        </svg>
-        </div>
-    """
-    
-    # Confetti dots
-    confetti_html = """
-        <div class="confetti-dot" style="top: 8%; left: 25%; background: #FF8C5A; width: 15px; height: 15px;"></div>
-        <div class="confetti-dot" style="top: 15%; left: 28%; background: #FF4F8B; width: 12px; height: 12px;"></div>
-        <div class="confetti-dot" style="top: 6%; left: 52%; background: #FFD93D; width: 18px; height: 18px;"></div>
-        <div class="confetti-dot" style="top: 12%; left: 72%; background: #FF4F8B; width: 14px; height: 14px;"></div>
-        <div class="confetti-dot" style="top: 65%; left: 35%; background: #FF4F8B; width: 13px; height: 13px;"></div>
-        <div class="confetti-dot" style="top: 72%; left: 52%; background: #FFD93D; width: 15px; height: 15px;"></div>
-        <div class="confetti-dot" style="top: 75%; left: 62%; background: #FF8C5A; width: 16px; height: 16px;"></div>
-    """
-    
-    # Sparkles
-    sparkles_html = """
-        <div class="sparkle" style="top: 10%; right: 35%;">
-            <svg width="40" height="40" viewBox="0 0 40 40">
-                <path d="M 20 2 L 22 18 L 38 20 L 22 22 L 20 38 L 18 22 L 2 20 L 18 18 Z" 
-                      fill="none" stroke="#2C2C2C" stroke-width="2"/>
-            </svg>
-        </div>
-        <div class="sparkle" style="top: 25%; right: 25%;">
-            <svg width="35" height="35" viewBox="0 0 40 40">
-                <path d="M 20 2 L 22 18 L 38 20 L 22 22 L 20 38 L 18 22 L 2 20 L 18 18 Z" 
-                      fill="none" stroke="#2C2C2C" stroke-width="2"/>
-            </svg>
-        </div>
-    """
-    
-    # Decorative wavy shapes
-    decorative_shapes_html = """
-        <div class="wavy-shape" style="top: 12%; right: 15%; width: 450px; height: 180px; opacity: 0.3;">
-            <svg width="100%" height="100%" viewBox="0 0 450 180">
-                <path d="M 0 90 Q 100 30 200 90 T 450 90 L 450 180 L 0 180 Z" 
-                      fill="#A0F5E8" opacity="0.5"/>
-            </svg>
-        </div>
-        <div class="wavy-shape" style="top: 35%; right: 8%; width: 500px; height: 200px; opacity: 0.25;">
-            <svg width="100%" height="100%" viewBox="0 0 500 200">
-                <path d="M 0 100 Q 120 40 240 100 T 500 100 L 500 200 L 0 200 Z" 
-                      fill="#A0F5E8" opacity="0.4"/>
-            </svg>
-        </div>
-        <div class="wavy-shape" style="top: 60%; right: 5%; width: 550px; height: 220px; opacity: 0.2;">
-            <svg width="100%" height="100%" viewBox="0 0 550 220">
-                <path d="M 0 110 Q 130 50 260 110 T 550 110 L 550 220 L 0 220 Z" 
-                      fill="#A0F5E8" opacity="0.35"/>
-            </svg>
-        </div>
-    """
-    
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Party Section Slide</title>
+    <title>Section Slide</title>
     <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
             font-family: 'Arial', sans-serif;
             overflow: hidden;
@@ -5872,89 +5383,43 @@ def generate_section_header_slide_8(
             background: {bg_color};
             position: relative;
         }}
-        
         .content {{
             position: absolute;
-            left: 50%;
+            left: 6%;
             top: 50%;
-            transform: translate(-50%, -50%);
-            z-index: 10;
+            transform: translateY(-50%);
+            z-index: 20;
             text-align: left;
-            max-width: 900px;
+            width: 44%;
+            padding-right: 20px;
         }}
-            
-        
-        .main-title {{
-            font-size: 4rem;
-            font-weight: 900;
-            color: {text_color};
-            margin: 10px 0 20px 0;
-            line-height: 1.2;
-        }}
-        
-        .subtitle {{
-            font-size: 2rem;
-            color: {subtitle_color};
-            font-weight: 400;
-            line-height: 1.6;
-            max-width: 900px;
-        }}
-        
-        .party-hat {{
+        .main-title {{ font-size: 4rem; font-weight: 900; color: {text_color}; margin: 0 0 12px 0; line-height: 1.05; }}
+        .subtitle {{ font-size: 1.75rem; color: {subtitle_color}; font-weight: 400; line-height: 1.6; max-width: 100%; margin: 0; }}
+        .svg-decoration {{
             position: absolute;
-            top: 5%;
-            left: 5%;
-            z-index: 5;
+            right: 50px;
+            top: 100%;
+            transform: translateY(-50%);
+            width: 900px;
+            height: 1024px;
+            z-index: 10;
         }}
-        
-        .gift-box {{
-            position: absolute;
-            bottom: 8%;
-            left: 8%;
-            z-index: 5;
-        }}
-        
-        .candle {{
-            position: absolute;
-            top: 15%;
-            left: 18%;
-            z-index: 4;
-        }}
-        
-        .confetti-dot {{
-            position: absolute;
-            border-radius: 50%;
-            z-index: 3;
-        }}
-        
-        .sparkle {{
-            position: absolute;
-            z-index: 4;
-        }}
-        
-        .wavy-shape {{
-            position: absolute;
-            z-index: 2;
-        }}
-        
         {custom_css}
     </style>
 </head>
 <body>
-    {decorative_shapes_html}
-    {party_hat_svg}
-    {gift_box_svg}
-    {candle_svg}
-    {confetti_html}
-    {sparkles_html}
-    
     <div class="content">
-            <h1 class="main-title">{main_title}</h1>
-            <p class="subtitle">{subtitle}</p>
-        </div>
+        <h1 class="main-title">{main_title}</h1>
+        <p class="subtitle">{subtitle}</p>
+    </div>
+    <!-- Embedded SVG decoration (placed on the right side) -->
+    <div class="svg-decoration">
+        <svg xmlns:xlink="http://www.w3.org/1999/xlink" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1100 1200" width="100%" height="100%" preserveAspectRatio="xMidYMid meet"> <defs> <linearGradient id="d"> <stop stop-color="#ff6134" offset="0"/> <stop stop-color="#f00" offset="1"/> </linearGradient> <linearGradient id="h"> <stop stop-color="#5f0000" stop-opacity="0" offset="0"/> <stop stop-color="#f00" stop-opacity="0" offset=".5"/> <stop stop-color="#590000" offset="1"/> </linearGradient> <linearGradient id="c"> <stop stop-color="#525252" offset="0"/> <stop stop-color="#d9d9d9" offset="1"/> </linearGradient> <linearGradient id="a"> <stop offset="0"/> <stop stop-opacity="0" offset="1"/> </linearGradient> <linearGradient id="b"> <stop stop-color="#fff" offset="0"/> <stop stop-color="#fff" stop-opacity="0" offset="1"/> </linearGradient> <linearGradient id="j"> <stop stop-color="#00575f" stop-opacity="0" offset="0"/> <stop stop-color="#0062ff" stop-opacity="0" offset=".5"/> <stop stop-color="#002859" offset="1"/> </linearGradient> <linearGradient id="k"> <stop stop-color="#34abff" offset="0"/> <stop stop-color="#0057ff" offset="1"/> </linearGradient> <linearGradient id="e"> <stop stop-color="#ffff34" offset="0"/> <stop stop-color="#ffc200" offset="1"/> </linearGradient> <linearGradient id="i"> <stop stop-color="#5a5f00" stop-opacity="0" offset="0"/> <stop stop-color="#ffde00" stop-opacity="0" offset=".5"/> <stop stop-color="#cf9800" offset="1"/> </linearGradient> <linearGradient id="ce" x1="336.15" x2="345.4" y1="1203.6" y2="608.36" gradientTransform="matrix(1.2302 -.27318 .17203 .77468 -201.81 -17.563)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="cd" x1="-683.5" x2="1100.7" y1="-283.39" y2="504.58" gradientTransform="matrix(.83134 -.18461 .25456 1.1464 -201.81 -17.563)" gradientUnits="userSpaceOnUse" xlink:href="#j"/> <linearGradient id="cc" x1="350.37" x2="285.9" y1="168.43" y2="601.16" gradientTransform="matrix(1.1836 -.26282 .17881 .80521 -201.81 -17.563)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <linearGradient id="cj" x1="309.16" x2="302.31" y1="900.84" y2="958.59" gradientTransform="matrix(1.2191 0 0 .82029 0 -6)" gradientUnits="userSpaceOnUse" xlink:href="#k"/> <linearGradient id="ci" x1="299.34" x2="301.38" y1="959.69" y2="945.18" gradientTransform="matrix(1.2191 0 0 .82029 0 -6)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="ch" x1="293.05" x2="311.93" y1="901.66" y2="937.79" gradientTransform="matrix(1.2191 0 0 .82029 0 -6)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="cg" x1="293.24" x2="310.45" y1="923.83" y2="927.12" gradientTransform="matrix(1.2191 0 0 .82029 0 -6)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="cf" x1="1063" x2="1075" y1="281.09" y2="396.2" gradientTransform="matrix(.36618 0 0 2.7309 0 -6)" gradientUnits="userSpaceOnUse" xlink:href="#c"/> <linearGradient id="cb" x1="423.76" x2="448.12" y1="614.4" y2="654.13" gradientTransform="matrix(.82209 0 0 1.2164 0 -6)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="ca" x1="608.27" x2="572.03" y1="588.05" y2="590.56" gradientTransform="matrix(.64452 0 0 1.5515 0 -6)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="bz" x1="469.01" x2="491.66" y1="838.2" y2="843.22" gradientTransform="matrix(.81392 0 0 1.2286 0 -6)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="by" x1="365.56" x2="374.19" y1="996.04" y2="1011.3" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="bx" x1="376.49" x2="387.39" y1="736.07" y2="743.21" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#a"/> <linearGradient id="bw" x1="423.76" x2="448.12" y1="614.4" y2="654.13" gradientTransform="matrix(-.78264 .25163 .37232 1.158 576.36 -7.9357)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="bv" x1="370.79" x2="381.53" y1="747.38" y2="754.63" gradientTransform="matrix(1.0103 -.1009 .097869 .97999 -17.724 122.41)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#a"/> <linearGradient id="bu" x1="608.27" x2="572.03" y1="588.05" y2="590.56" gradientTransform="matrix(-.61798 .18305 .44065 1.4876 597.5 -4.4262)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="bt" x1="293.24" x2="310.45" y1="923.83" y2="927.12" gradientTransform="matrix(1.213 -.12114 .081515 .81623 1.6793 116.44)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="bs" x1="293.05" x2="311.93" y1="901.66" y2="937.79" gradientTransform="matrix(1.213 -.12114 .081515 .81623 1.6793 116.44)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="br" x1="299.34" x2="301.38" y1="959.69" y2="945.18" gradientTransform="matrix(1.213 -.12114 .081515 .81623 1.6793 116.44)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="bq" x1="309.16" x2="302.31" y1="900.84" y2="958.59" gradientTransform="matrix(1.213 -.12114 .081515 .81623 1.6793 116.44)" gradientUnits="userSpaceOnUse" xlink:href="#d"/> <linearGradient id="bp" x1="336.15" x2="345.4" y1="1203.6" y2="608.36" gradientTransform="matrix(1.197 -.39408 .24816 .75375 -200.28 124.99)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="bo" x1="-683.5" x2="1100.7" y1="-283.39" y2="504.58" gradientTransform="matrix(.80888 -.26631 .36722 1.1154 -200.28 124.99)" gradientUnits="userSpaceOnUse" xlink:href="#h"/> <linearGradient id="bn" x1="350.37" x2="285.9" y1="168.43" y2="601.16" gradientTransform="matrix(1.1516 -.37914 .25794 .78345 -200.28 124.99)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <linearGradient id="bm" x1="1063" x2="1075" y1="281.09" y2="396.2" gradientTransform="matrix(.36436 -.036388 .27138 2.7174 1.6793 116.44)" gradientUnits="userSpaceOnUse" xlink:href="#c"/> <linearGradient id="bl" x1="469.01" x2="491.66" y1="838.2" y2="843.22" gradientTransform="matrix(.80989 -.080882 .12209 1.2225 1.6793 116.44)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="bk" x1="432.33" x2="442.94" y1="816.66" y2="835.01" gradientTransform="matrix(.80989 -.080882 .12209 1.2225 1.6793 116.44)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="bj" x1="391.06" x2="584.44" gradientUnits="userSpaceOnUse" xlink:href="#e"/> <linearGradient id="bi" x1="309.16" x2="302.31" y1="900.84" y2="958.59" gradientTransform="matrix(.86745 -.09367 .43221 .63112 -2.0673 133.58)" gradientUnits="userSpaceOnUse" xlink:href="#d"/> <linearGradient id="bh" x1="423.76" x2="448.12" y1="614.4" y2="654.13" gradientTransform="matrix(.75888 .31614 -.46778 1.1229 639.92 -47.664)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="bg" x1="370.79" x2="381.53" y1="747.38" y2="754.63" gradientTransform="matrix(.93728 .39046 -.37874 .90913 637.62 -42.126)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#a"/> <linearGradient id="bf" x1="432.33" x2="442.94" y1="816.66" y2="835.01" gradientTransform="matrix(.75133 .313 -.47247 1.1341 639.92 -47.664)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="be" x1="469.01" x2="491.66" y1="838.2" y2="843.22" gradientTransform="matrix(.75133 .313 -.47247 1.1341 639.92 -47.664)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="bd" x1="608.27" x2="572.03" y1="588.05" y2="590.56" gradientTransform="matrix(.59496 .24785 -.59666 1.4322 639.92 -47.664)" gradientUnits="userSpaceOnUse" spreadMethod="reflect" xlink:href="#c"/> <linearGradient id="bc" x1="293.24" x2="310.45" y1="923.83" y2="927.12" gradientTransform="matrix(1.1253 .46881 -.31545 .75721 639.92 -47.664)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="bb" x1="293.05" x2="311.93" y1="901.66" y2="937.79" gradientTransform="matrix(1.1253 .46881 -.31545 .75721 639.92 -47.664)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="ba" x1="299.34" x2="301.38" y1="959.69" y2="945.18" gradientTransform="matrix(1.1253 .46881 -.31545 .75721 639.92 -47.664)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="az" x1="309.16" x2="302.31" y1="900.84" y2="958.59" gradientTransform="matrix(1.1253 .46881 -.31545 .75721 639.92 -47.664)" gradientUnits="userSpaceOnUse" xlink:href="#e"/> <linearGradient id="ay" x1="336.15" x2="345.4" y1="1203.6" y2="608.36" gradientTransform="matrix(1.2406 .2209 -.13911 .78126 458.08 -135.94)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <linearGradient id="ax" x1="-683.5" x2="1100.7" y1="-283.39" y2="504.58" gradientTransform="matrix(.8384 .14928 -.20585 1.1561 458.08 -135.94)" gradientUnits="userSpaceOnUse" xlink:href="#i"/> <linearGradient id="aw" x1="681" x2="606.26" y1="1.5028" y2="160.02" gradientTransform="matrix(1.1936 .21253 -.14459 .81205 0 0)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <linearGradient id="av" x1="1063" x2="1075" y1="281.09" y2="396.2" gradientTransform="matrix(.33802 .14082 -1.0502 2.5209 639.92 -47.664)" gradientUnits="userSpaceOnUse" xlink:href="#c"/> <linearGradient id="au" x1="309.16" x2="302.31" y1="900.84" y2="958.59" gradientTransform="matrix(.55499 .017588 .092123 .42968 275.04 290.57)" gradientUnits="userSpaceOnUse" xlink:href="#e"/> <linearGradient id="at" x1="878.35" x2="921.76" y1="504.53" y2="572.13" gradientTransform="matrix(.49907 .54378 -.99819 .91612 586.87 -250.89)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <linearGradient id="as" x1="878.35" x2="921.76" y1="504.53" y2="572.13" gradientTransform="matrix(.73148 .098521 -.18085 1.3427 97.836 -77.665)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <radialGradient id="ao" cx="413.89" cy="440.37" r="359.53" gradientTransform="matrix(.96831 -.21503 .29652 1.3353 -211.6 -61.667)" gradientUnits="userSpaceOnUse"> <stop stop-color="#00f1ff" stop-opacity="0" offset="0"/> <stop stop-color="#00c9ff" stop-opacity="0" offset=".5"/> <stop stop-color="#0065a6" stop-opacity="0" offset=".75"/> <stop stop-color="#002454" offset="1"/> </radialGradient> <radialGradient id="ae" cx="413.89" cy="440.37" r="359.53" gradientTransform="matrix(.94215 -.31018 .42774 1.2992 -214.4 82.076)" gradientUnits="userSpaceOnUse"> <stop stop-color="#f00" stop-opacity="0" offset="0"/> <stop stop-color="#f00" stop-opacity="0" offset=".5"/> <stop stop-color="#a60000" stop-opacity="0" offset=".75"/> <stop stop-color="#540000" offset="1"/> </radialGradient> <radialGradient id="r" cx="413.89" cy="440.37" r="359.53" gradientTransform="matrix(.97653 .17388 -.23978 1.3466 466 -180.42)" gradientUnits="userSpaceOnUse"> <stop stop-color="#ffdf00" stop-opacity="0" offset="0"/> <stop stop-color="#ff9f00" stop-opacity="0" offset=".5"/> <stop stop-color="#ff9a00" stop-opacity="0" offset=".75"/> <stop stop-color="#793900" offset="1"/> </radialGradient> <radialGradient id="g" cx="457.14" cy="263.79" r="94.286" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="f" cx="480.13" cy="516.87" r="175.44" gradientTransform="scale(.83995 1.1905)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="am" cx="478.66" cy="290.04" r="372.49" gradientTransform="matrix(.96831 -.21503 .29652 1.3353 -211.6 -61.667)" gradientUnits="userSpaceOnUse" xlink:href="#j"/> <radialGradient id="al" cx="462.46" cy="233.67" r="330.33" gradientTransform="matrix(.96831 -.21503 .29652 1.3353 -211.6 -61.667)" gradientUnits="userSpaceOnUse" xlink:href="#k"/> <radialGradient id="ar" cx="214.76" cy="1378.8" r="15.406" gradientTransform="matrix(1.4686 0 0 .42526 72.665 179.83)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="aq" cx="378.57" cy="752.36" r="8.5714" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="ap" cx="269.79" cy="1031.8" r="32.826" gradientTransform="scale(1.3926 .71807)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <radialGradient id="an" cx="376.4" cy="753.87" r="27.902" gradientUnits="userSpaceOnUse" xlink:href="#c"/> <radialGradient id="ak" cx="247.71" cy="1161.1" r="14.647" fy="1161.4" gradientTransform="scale(1.5804 .63275)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <radialGradient id="aj" cx="247.71" cy="1161.1" r="14.647" fy="1161.4" gradientTransform="matrix(1.5726 -.15705 .062879 .62962 -17.724 122.41)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <radialGradient id="ai" cx="370.71" cy="771.55" r="27.48" gradientTransform="matrix(1.0103 -.1009 .097869 .97999 -18.321 116.44)" gradientUnits="userSpaceOnUse" xlink:href="#c"/> <radialGradient id="ah" cx="378.57" cy="752.36" r="8.5714" gradientTransform="matrix(.44933 -.21734 .43543 .90022 -57.849 230.67)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="ag" cx="214.76" cy="1378.8" r="15.406" gradientTransform="matrix(1.4614 -.14594 .04226 .42316 92.451 294.13)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="af" cx="269.79" cy="1031.8" r="32.826" gradientTransform="matrix(1.3039 -.33682 .14896 .45905 -58.59 432.36)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <radialGradient id="ad" cx="480.13" cy="516.87" r="175.44" gradientTransform="matrix(.38873 -.31541 .42025 .51793 -35.161 543.49)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="ac" cx="480.13" cy="516.87" r="175.44" gradientTransform="matrix(.65225 -.52924 .75014 .92449 -378.41 379.69)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="ab" cx="457.14" cy="263.79" r="94.286" gradientTransform="matrix(1.1513 -.37905 .37905 1.1513 -309.88 102.16)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="aa" cx="457.14" cy="263.79" r="94.286" gradientTransform="matrix(.40297 -.13267 .13267 .40297 97.222 186.94)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="z" cx="478.66" cy="290.04" r="372.49" gradientTransform="matrix(.94215 -.31018 .42774 1.2992 -214.4 82.076)" gradientUnits="userSpaceOnUse" xlink:href="#h"/> <radialGradient id="y" cx="462.46" cy="233.67" r="330.33" gradientTransform="matrix(.94215 -.31018 .42774 1.2992 -214.4 82.076)" gradientUnits="userSpaceOnUse" xlink:href="#d"/> <radialGradient id="x" cx="893.91" cy="318.43" r="179.96" gradientTransform="scale(.72831 1.373)" gradientUnits="userSpaceOnUse" xlink:href="#d"/> <radialGradient id="w" cx="247.71" cy="1161.1" r="14.647" fy="1161.4" gradientTransform="matrix(1.4589 .60775 -.24333 .5841 637.62 -42.126)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <radialGradient id="v" cx="370.71" cy="771.55" r="27.48" gradientTransform="matrix(.93728 .39046 -.37874 .90913 639.92 -47.664)" gradientUnits="userSpaceOnUse" xlink:href="#c"/> <radialGradient id="u" cx="378.57" cy="752.36" r="8.5714" gradientTransform="matrix(.49865 .021831 -.043739 .99904 550.94 34.141)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="t" cx="214.76" cy="1378.8" r="15.406" gradientTransform="matrix(1.3557 .56477 -.16354 .39256 635.54 151.82)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="s" cx="269.79" cy="1031.8" r="32.826" gradientTransform="matrix(1.3076 .32203 -.086631 .47478 437 201.86)" gradientUnits="userSpaceOnUse" xlink:href="#a"/> <radialGradient id="q" cx="480.13" cy="516.87" r="175.44" gradientTransform="matrix(.49183 -.093258 .12426 .65531 404.91 310.8)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="p" cx="480.13" cy="516.87" r="175.44" gradientTransform="matrix(.82525 -.15648 .22179 1.1697 180.44 3.7704)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="o" cx="457.14" cy="263.79" r="94.286" gradientTransform="matrix(1.1934 .21248 -.21248 1.1934 372.42 -208.03)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="n" cx="457.14" cy="263.79" r="94.286" gradientTransform="matrix(.41767 .074369 -.074369 .41767 690.59 59.723)" gradientUnits="userSpaceOnUse" xlink:href="#b"/> <radialGradient id="m" cx="478.66" cy="290.04" r="372.49" gradientTransform="matrix(.97653 .17388 -.23978 1.3466 466 -180.42)" gradientUnits="userSpaceOnUse" xlink:href="#i"/> <radialGradient id="l" cx="462.46" cy="233.67" r="330.33" gradientTransform="matrix(.97653 .17388 -.23978 1.3466 466 -180.42)" gradientUnits="userSpaceOnUse" xlink:href="#e"/> </defs> <g transform="translate(164.09 17.006)"> <path d="m369.76 746.35 40.333 399.16h7.1117l-37.384-400.17-10.061 1.0102z" fill="url(#cf)" fill-rule="evenodd"/> <path d="m558.54 282.83c39.66 178.6-67.947 439.47-174.54 466.06-103.81 25.979-315.74-169.78-355.4-348.38s46.86-349.91 193.13-382.39 297.16 86.108 336.82 264.71z" fill="url(#al)" fill-rule="evenodd" opacity=".75"/> <path d="m558.54 282.83c39.66 178.6-67.947 439.47-174.54 466.06-103.81 25.979-315.74-169.78-355.4-348.38s46.86-349.91 193.13-382.39 297.16 86.108 336.82 264.71z" fill="url(#am)" fill-rule="evenodd"/> <path d="m171.19 67.388c-12.157 0.12378-36.516 19.763-45.87 30.673-19.234 22.433-30.838 37.65-41.846 61.974-16.9 37.343 4.575 39.084 32.847 16.12 21.599-17.544-12.858 35.603-15.812 47.412-4.9339 19.723-24.964 31.75-34.405 42.761-9.848 11.486-7.2461 33.213-27.588 47.101-22.198 15.155 18.255 23.315 29.746 28.515 18.361 8.3097-10.76 46.533 27.888 20.148 22.79-15.559 16.769-31.547 31.92-1.2348 4.9966 9.997 47.588-37.134 49.59-40.28 2.3396-3.6754-3.8543-56.896-4.6394-60.431-0.01593-0.07178 13.061-19.124 28.823-15.181 24.45 6.1164 16.739 28.761 38.737 3.1049 11.176-13.035 25.825 50.398 26.334 52.687 7.2909 32.832 48.788-4.8665 62.289 3.7282 14.421 9.1801 9.0842 39.312 25.714 49.898 13.119 8.3514 43.278-30.363 47.42-36.871 13.556-21.296 0.68902-23.511 38.118 0.31566 26.363 16.782 22.406-31.973 58.262-1.2308 21.82 18.709 6.7702-20.076 7.1328-33.778 0.61195-23.122-11.942-57.191-20.132-77.478-4.6345-11.481 44.373 16.124 36.567 6.5134-14.238-17.529-32.694-32.145-45.858-48.351-17.055-20.997-24.405-34.878-36.559-59.197-10.501-21.011-5.9465-25.34-22.617-35.952-17.603-11.206-33.648 17.928-44.935-4.6553-7.8512-15.708-37.869 9.4224-52.683-0.00796-4.1717-2.6556-16.656-32.666-19.828-36.571-6.9822-8.5961-42.542 3.5936-54.234 6.1898l-11.157 2.4775c-12.796 2.8416-28.611 3.4267-42.457 6.5015-1.0072 0.22366-12.546 19.486-20.767 25.099z" fill="url(#cc)" fill-rule="evenodd" opacity=".6"/> <path transform="matrix(.41416 -.091969 .091969 .41416 88.064 73.647)" d="m551.43 263.79c0 52.073-42.213 94.286-94.286 94.286s-94.286-42.213-94.286-94.286 42.213-94.286 94.286-94.286 94.286 42.213 94.286 94.286z" fill="url(#g)" fill-rule="evenodd"/> <path transform="matrix(1.1833 -.26277 .26277 1.1833 -308.6 -51.166)" d="m551.43 263.79c0 52.073-42.213 94.286-94.286 94.286s-94.286-42.213-94.286-94.286 42.213-94.286 94.286-94.286 94.286 42.213 94.286 94.286z" fill="url(#g)" fill-rule="evenodd" opacity=".6"/> <path d="m221.72 18.129c-146.27 32.48-232.8 203.77-193.14 382.37s251.61 374.37 355.42 348.39c106.6-26.598 214.21-287.48 174.55-466.08s-190.56-297.16-336.83-264.68zm-5.2444 5.3581c5.1999-1.6039 11.041-2.4297 17.65-2.2548 19.368 0.51262 32.663 26.514 38.091 26.658 20.479 0.54202 30.72-19.317 45.575-18.924 18.58 0.49176 21.189 8.7208 32.842 16.139 10.823 6.8899 24.287 20.228 38.738 29.427 11.837 7.5353 32.715 24.002 47.104 27.601 13.508 3.3792 31.701 11.002 34.698 24.498 6.3324 28.516-14.448 21.375-14.899 38.425-0.62 23.425 41.676 16.277 48.04 44.936 6.5796 29.629-30.816 41.326-22.019 45.864 0.17767 0.09165 72.199 61.527 30.995 60.437-23.067-0.61051-67.778-34.504-74.698-6.8446-2.5144 10.051-25.863 61.413-44.016 39.065-38.873-47.858-17.132 7.8411-68.795 6.4738-17.014-0.45032-14.751-19.047-14.254-37.809 2.0721-78.291-54.609-11.471-55.159-37.497-1.6588-78.521 6.5776-10.145-17.647-39.969-14.593-17.967-25.614-36.775-52.063-23.555-40.782 20.383-6.405 29.476-4.9505 56.703 1.3524 25.317-31.749 21.715-17.676 39.041 4.7249 5.8171 30.882 53.188 22.316 47.735l-10.252-6.5264c-36.746-23.391-37.037 43.629-65.062-3.0943-21.787-36.324-21.001 20.857-50.222 37.498-11.176 33.51-15.372 9.7713-19.197-7.4531-3.4558-15.562-0.49431-28.606-4.3283-45.871-6.2542-28.164 15.771-21.03 28.811-41.514 7.5872-11.919 36.258-30.446 9.3167-37.185-14.15-3.5397-37.511 6.5336-19.844-10.222 11.358-10.773 59.758-50.389 37.207-69.724-12.698-10.888-49.658-41.663-8.3746-50.831 36.849-8.1828 45.989-9.051 46.799-39.651 0.65948-24.917 38.08-10.894 51.461-31.915 8.2807-13.008 18.212-24.848 33.812-29.66z" fill="url(#cd)" fill-rule="evenodd" opacity=".4"/> <path transform="matrix(.8353 -.54979 .54979 .8353 -404.37 218.18)" d="m568.57 602.36c0 128.6-73.553 232.86-164.29 232.86s-164.29-104.25-164.29-232.86 73.553-232.86 164.29-232.86 164.29 104.25 164.29 232.86z" fill="url(#f)" fill-rule="evenodd" opacity=".53"/> <path transform="matrix(.49782 -.32766 .30801 .46797 -79.096 415.27)" d="m568.57 602.36c0 128.6-73.553 232.86-164.29 232.86s-164.29-104.25-164.29-232.86 73.553-232.86 164.29-232.86 164.29 104.25 164.29 232.86z" fill="url(#f)" fill-rule="evenodd" opacity=".3"/> <path d="m223.16 647.36c-18.335-24.262-60.967-66.679-84.57-101.25-13.367-19.579-23.259-50.613 1.3224-49.962 37.268 0.98637 32.963 59.583 31.556-7.0075-0.0903-4.2743 28.978 44.927 54.783 4.3909 20.491-32.189 27.586 49.668 31.545 67.498 1.5402 6.9357 35.923 12.726 49.962 1.3223 35.296-28.67 6.9329 34.373 6.5667 48.21-0.89095 33.662 73.164-41.607 76.703-46.006 32.961-40.966 50.845-10.706 72.759-45.13 23.006-36.141 48.395-65.382 66.192-93.341 14.1-22.149-23.01-31.227 10.087-47.769 25.06-12.525 21.8 45.562 16.208 54.347-13.638 21.424-38.608 14.175-39.451 46.012-0.52715 19.917-0.87959 33.317 4.374 56.975 4.6926 21.132-20.482 53.457-30.251 68.803-13.828 21.722-3.488 30.228-31.562 44.26-19.256 9.6243-21.792 50.293-39.451 46.012-13.722 11.146-36.205 27.079-46.023 35.054-18.363 14.915-39.258-16.116-68.368-9.6522-21.973 4.8795-45.83-9.4892-58.286-20.169-11.998-10.287-20.75-37.527-24.097-52.596z" fill="url(#ce)" fill-rule="evenodd" opacity=".1"/> <path d="m558.54 282.83c39.66 178.6-67.947 439.47-174.54 466.06-103.81 25.979-315.74-169.78-355.4-348.38s46.86-349.91 193.13-382.39 297.16 86.108 336.82 264.71z" fill="url(#ao)" fill-rule="evenodd"/> <path transform="matrix(.95567 -.14762 .1429 .65673 -91.365 302.37)" d="m421.43 740.93c0.00747 13.021-20.462 23.578-45.714 23.578s-45.722-10.558-45.714-23.578c-0.00747-13.021 20.462-23.578 45.714-23.578s45.722 10.558 45.714 23.578z" fill="url(#ap)" fill-rule="evenodd" opacity=".3"/> <path d="m372.75 735.24c-5.9355 3.6492-15.409 17.309-18.183 24.244-1.5433 3.8583-9.0917 5.0509-13.132 7.0711-7.9485 3.9742-3.7394 11.112 4.0406 11.112 10.363 0 20.275 0.0143 30.305 2.0203 7.5648 1.513 15.433 1.0102 23.234 1.0102 7.9438 0 8.9786-5.2763 7.0711-9.0914-1.7358-3.4716-10.956-7.7692-13.132-12.122-2.0656-4.1313-1.8953-18.342-7.0711-22.223-0.38095-0.28571-6.7176-5.9639-13.132-2.0203z" fill="url(#cj)" fill-rule="evenodd"/> <path d="m372.75 735.24c-5.9355 3.6492-15.409 17.309-18.183 24.244-1.5433 3.8583-9.0917 5.0509-13.132 7.0711-7.9485 3.9742-3.7394 11.112 4.0406 11.112 10.363 0 20.275 0.0143 30.305 2.0203 7.5648 1.513 15.433 1.0102 23.234 1.0102 7.9438 0 8.9786-5.2763 7.0711-9.0914-1.7358-3.4716-10.956-7.7692-13.132-12.122-2.0656-4.1313-1.8953-18.342-7.0711-22.223-0.38095-0.28571-6.7176-5.9639-13.132-2.0203z" fill="url(#ci)" fill-rule="evenodd"/> <path d="m372.75 735.24c-5.9355 3.6492-15.409 17.309-18.183 24.244-1.5433 3.8583-9.0917 5.0509-13.132 7.0711-7.9485 3.9742-3.7394 11.112 4.0406 11.112 10.363 0 20.275 0.0143 30.305 2.0203 7.5648 1.513 15.433 1.0102 23.234 1.0102 7.9438 0 8.9786-5.2763 7.0711-9.0914-1.7358-3.4716-10.956-7.7692-13.132-12.122-2.0656-4.1313-1.8953-18.342-7.0711-22.223-0.38095-0.28571-6.7176-5.9639-13.132-2.0203z" fill="url(#ch)" fill-rule="evenodd" opacity=".46759"/> <path d="m372.75 735.24c-5.9355 3.6492-15.409 17.309-18.183 24.244-1.5433 3.8583-9.0917 5.0509-13.132 7.0711-7.9485 3.9742-3.7394 11.112 4.0406 11.112 10.363 0 20.275 0.0143 30.305 2.0203 7.5648 1.513 15.433 1.0102 23.234 1.0102 7.9438 0 8.9786-5.2763 7.0711-9.0914-1.7358-3.4716-10.956-7.7692-13.132-12.122-2.0656-4.1313-1.8953-18.342-7.0711-22.223-0.38095-0.28571-6.7176-5.9639-13.132-2.0203z" fill="url(#cg)" fill-rule="evenodd" opacity=".50926"/> <path d="m358.6 766.36c3.3826 0.43801 11.266-0.30613 16.576-1.5379 4.4948-1.0425 7.2171-1.3132 9.9457-3.8446 3.9482-3.6629 3.8424-0.52886 9.1169 1.895 2.9303 3.1286 7.1762 2.0828 10.147 8.1011 2.9303 2.7186-11.804 0-15.948 0-4.452 0-8.2997-0.76893-12.432-0.76893-2.8509 0-8.6656-1.0487-10.775-1.5378-3.2818-0.76117-1.5859-1.3708-6.6305-2.3068z" fill="url(#ar)" fill-rule="evenodd" opacity=".67593"/> <path transform="matrix(.4687 -.17161 .34381 .93904 -50.684 103.73)" d="m387.14 752.36c0 4.7339-3.8376 8.5714-8.5714 8.5714s-8.5714-3.8376-8.5714-8.5714 3.8376-8.5714 8.5714-8.5714 8.5714 3.8376 8.5714 8.5714z" fill="url(#aq)" fill-rule="evenodd" opacity=".46759"/> <path d="m384.1 745.83c-0.3158 0.0821-0.62775-0.17836-0.94162-0.26754 7.0312 1.4632 0.11247-0.14806 1.1833-1.5578-0.28866-0.20965-0.10011 0.09788-0.23015 0.22502l4.0129-9.4232c1.896 1.2204 3.96 1.8661 5.0791 4.0618 4.6622 11.939-2.839 20.797-15.457 15.351-8.5854-7.9009-5.3668-17.927 6.3536-18.753v10.365z" fill="url(#an)"/> <path d="m389.06 848.98c19.503 32.603-39.407 32.936-38.039 67.422 1.3817 34.843 31.458 19.787 50.022 50.331l1.3578 12.088c-27.175-37.964-52.084-27.652-53.159-61.72s44.852-45.57 40.61-61.82l-0.79116-6.3017z" fill="url(#ca)"/> <path d="m395.35 1000.7c-9.2864 13.302-34.107 17.943-33.956 2.474 0.35989-36.898 41.699-9.7649 42.919 20.404 0.59378 14.678-36.308 13.991-42.145 26.91l-1.0611-8.487c4.8986-11.006 39.145-9.5745 37.448-17.73-5.8074-27.907-21.85-36.132-32.52-27.469 1.285 15.131 21.256 9.9175 28.94-3.5845l0.37509 7.482z" fill="url(#bz)"/> <path d="m409.79 998.3c-9.2864 9.0131-48.541 18.335-48.39 7.8531l4.641-4.3172c1.285 10.252 35.69 0.5431 43.374-8.6056l0.37509 5.0697z" fill="url(#by)"/> <path d="m384.1 745.83c-0.3158 0.0821-0.62775-0.17836-0.94162-0.26754 7.0312 1.4632 0.11247-0.14806 1.1833-1.5578-0.28866-0.20965-0.10011 0.09788-0.23015 0.22502l4.0129-9.4232c1.896 1.2204 3.96 1.8661 5.0791 4.0618 4.6622 11.939-2.839 20.797-15.457 15.351-8.5854-7.9009-5.3668-17.927 6.3536-18.753v10.365z" fill="url(#bx)"/> <path d="m392.33 736.55c-9.7508 22.191-12.99 1.4424-21.293 2.7533-12.743-0.02489-32.129 6.3088-38.989 16.555-9.4043 14.048-13.051 28.868-5.669 47.75 7.4303 19.005 29.43 25.712 53.501 39.274l0.31106 4.0082c-18.274-14.306-48.774-14.918-58.939-36.509-10.303-21.883-9.6147-39.627 10.162-58.705 10.473-9.7433 22.831-17.617 37.494-17.937l23.422 2.8103z" fill="url(#cb)"/> <path d="m392.33 736.55c-9.7508 22.191-12.99 1.4424-21.293 2.7533-12.743-0.02489-16.792-5.2439-2.1289-5.5636l23.422 2.8103z" fill="url(#ak)" opacity=".63889"/> </g> <path d="m695.62 790.56-117.58 373.78 10.257 2.2731 113.3-374.65-5.9833-1.3983z" fill="url(#av)" fill-rule="evenodd"/> <path d="m1044.4 433.74c-32.07 180.12-231.72 379.54-340.35 363.1-105.82-15.939-226.17-278.15-194.1-458.26s177.82-304.98 325.32-278.72 241.2 193.76 209.13 373.88z" fill="url(#l)" fill-rule="evenodd" opacity=".75"/> <path d="m1044.4 433.74c-32.071 180.12-231.72 379.54-340.35 363.1-105.82-15.939-226.17-278.15-194.1-458.26s177.82-304.98 325.32-278.72 241.2 193.76 209.13 373.88z" fill="url(#m)" fill-rule="evenodd"/> <path d="m769.73 85.914c-11.27-4.5609-41.308 4.2011-54.138 10.675-26.381 13.311-42.945 22.896-62.46 41.116-29.961 27.973-10.807 37.838 24.122 27.512 26.685-7.8888-25.56 27.921-32.829 37.686-12.139 16.309-35.254 19.708-48.204 26.242-13.508 6.8155-19.461 27.872-43.58 32.87-26.319 5.4529 7.8851 28.542 16.493 37.762 13.754 14.732-27.827 38.817 17.996 29.323 27.02-5.5982 27.612-22.672 29.94 11.135 0.76797 11.15 58.208-15.978 61.267-18.112 3.5731-2.493 18.322-54.003 18.957-57.568 0.0129-0.07239 19.41-12.631 32.444-2.9293 20.217 15.048 4.3917 32.987 34.564 17.763 15.33-7.7349 4.4585 56.453 4.0474 58.762-5.8957 33.111 46.908 14.269 56.066 27.395 9.7818 14.02-6.7319 39.782 4.5483 55.949 8.8988 12.754 51.626-11.386 57.953-15.8 20.703-14.445 9.6772-21.438 35.065 14.95 17.882 25.629 32.979-20.898 54.255 21.269 12.948 25.661 13.97-15.929 19.574-28.438 9.4565-21.108 10.969-57.385 11.211-79.262 0.137-12.38 34.76 31.948 31.251 20.075-6.4022-21.656-17.819-42.246-23.738-62.268-7.6688-25.941-9.1154-41.581-10.984-68.704-1.6141-23.433 4.2552-25.678-7.0526-41.885-11.94-17.113-37.954 3.6099-39.689-21.577-1.2067-17.52-38.58-5.8649-48.629-20.267-2.8297-4.0556-2.8132-36.559-4.2397-41.384-3.1396-10.62-40.653-13.043-52.443-15.142l-11.252-2.0034c-12.905-2.2978-27.729-7.8393-41.693-10.326-1.0157-0.18086-19.074 13.163-28.822 15.183z" fill="url(#aw)" fill-rule="evenodd" opacity=".6"/> <path d="m901.29 210.91c-3.8726 21.749-24.643 36.241-46.393 32.369s-36.241-24.643-32.369-46.393 24.643-36.241 46.393-32.369 36.241 24.643 32.369 46.393z" fill="url(#n)" fill-rule="evenodd"/> <path d="m974.42 223.93c-11.065 62.141-70.409 103.55-132.55 92.482s-103.55-70.409-92.482-132.55 70.409-103.55 132.55-92.482 103.55 70.409 92.482 132.55z" fill="url(#o)" fill-rule="evenodd" opacity=".6"/> <path d="m835.32 59.873c-147.51-26.265-293.26 98.576-325.33 278.69s88.292 442.34 194.11 458.28c108.63 16.44 308.29-183 340.36-363.11s-61.631-347.59-209.14-373.86zm-6.9016 2.9293c5.4168 0.51906 11.126 2.0029 17.16 4.7059 17.682 7.9213 19.956 37.036 24.91 39.256 18.696 8.3757 35.787-6.0177 49.348 0.05774 16.962 7.599 16.206 16.198 24.11 27.528 7.3415 10.522 14.64 28.012 24.443 42.061 8.0292 11.508 20.969 34.737 32.867 43.593 11.17 8.3139 25.033 22.347 22.609 35.958-5.1206 28.759-21.557 14.175-28.53 29.74-9.5807 21.386 32.212 31.052 27.065 59.954-5.3206 29.881-44.339 26.297-37.963 33.87 0.12877 0.15292 42.986 84.56 5.3702 67.709-21.058-9.434-49.298-57.915-66.321-35.044-6.1864 8.3115-47.491 46.745-55.653 19.134-17.479-59.127-18.83 0.64981-65.994-20.48-15.533-6.9586-6.2918-23.255 1.3818-40.383 32.02-71.473-45.999-31.589-36.498-55.825 28.664-73.121 9.9731-6.8354-0.91946-43.681-6.562-22.197-9.5024-43.797-39.001-41.765-45.485 3.1329-17.248 24.746-26.375 50.439-8.4872 23.89-37.658 7.8361-31.33 29.242 2.1246 7.1868 8.0537 60.974 2.2435 52.646l-6.9542-9.9671c-24.925-35.723-50.967 26.031-58.869-27.876-6.1429-41.909-27.407 11.177-60.78 15.301-23.203 26.636-17.948 3.1084-14.855-14.262 2.7945-15.694 10.544-26.596 13.645-44.008 5.0574-28.403 22.646-13.348 42.56-27.242 11.587-8.0845 45.177-14.161 22.9-30.743-11.7-8.7089-37.139-8.394-14.387-17.068 14.628-5.5763 74.54-23.533 61.159-50.054-7.535-14.934-29.817-57.556 11.817-50.142 37.162 6.6169 45.933 9.3303 58.448-18.605 10.191-22.747 39.341 4.5877 59.777-9.6709 12.646-8.8235 26.367-15.934 42.618-14.377z" fill="url(#ax)" fill-rule="evenodd" opacity=".4"/> <path d="m851.27 489.67c23.958 126.35-28.885 242.48-118.03 259.39s-180.83-71.823-204.79-198.18 28.885-242.48 118.03-259.39 180.83 71.823 204.79 198.18z" fill="url(#p)" fill-rule="evenodd" opacity=".53"/> <path d="m800.7 579.23c13.422 70.787-18.765 136.34-71.893 146.41s-107.08-39.144-120.5-109.93 18.765-136.34 71.893-146.41 107.08 39.144 120.5 109.93z" fill="url(#q)" fill-rule="evenodd" opacity=".3"/> <path d="m594.67 641.27c-7.5955-29.447-30.637-84.997-39.13-125.99-4.8096-23.214-2.0073-55.665 20.434-45.612 34.022 15.242 7.515 67.678 31.824 5.6665 1.5604-3.9803 9.473 52.616 48.881 25.12 31.294-21.834 6.3642 56.456 3.1625 74.438-1.2454 6.9946 28.267 25.561 45.612 20.434 43.607-12.891-6.8184 34.395-12.478 47.028-13.768 30.731 83.538-10.272 88.497-12.972 46.18-25.14 51.052 9.6701 84.519-13.68 35.135-24.514 69.816-41.744 96.997-60.708 21.533-15.024-9.2324-37.674 27.682-40.217 27.949-1.9251 2.603 50.441-5.9384 56.401-20.828 14.532-41.09-1.762-54.111 27.303-8.1459 18.183-13.624 30.417-17.872 54.276-3.7946 21.311-39.464 41.47-54.383 51.879-21.118 14.734-14.844 26.563-46.155 28.719-21.476 1.4792-39.457 38.045-54.111 27.303-16.953 5.0117-43.834 11.074-55.964 14.66-22.687 6.7067-30.042-29.974-59.399-35.201-22.16-3.9457-38.657-26.384-46.048-41.032-7.1194-14.11-4.7236-42.621-2.0177-57.818z" fill="url(#ay)" fill-rule="evenodd" opacity=".1"/> <path d="m1044.4 433.74c-32.071 180.12-231.72 379.54-340.35 363.1-105.82-15.939-226.17-278.15-194.1-458.26s177.82-304.98 325.32-278.72 241.2 193.76 209.13 373.88z" fill="url(#r)" fill-rule="evenodd"/> <path d="m743.31 789.2c-1.5639 8.6109-22.057 10.858-45.768 5.0187s-41.657-17.553-40.079-26.161c1.5639-8.6109 22.057-10.858 45.768-5.0187s41.657 17.553 40.079 26.161z" fill="url(#s)" fill-rule="evenodd" opacity=".3"/> <path d="m698.96 779.91c-6.8824 1.086-20.88 10.052-26.108 15.387-2.9084 2.9681-10.335 1.1662-14.841 1.4773-8.8656 0.61199-7.7249 8.8192-0.54317 11.811 9.5657 3.985 18.71 7.8099 27.197 13.519 6.4012 4.3057 13.858 6.8672 21.058 9.867 7.3329 3.0548 10.317-1.4178 10.023-5.673-0.26729-3.8722-7.1255-11.385-7.4606-16.24-0.31809-4.6079 5.3038-17.66 2.0188-23.234-0.24178-0.41024-3.9076-8.0885-11.345-6.9149z" fill="url(#az)" fill-rule="evenodd"/> <path d="m698.96 779.91c-6.8824 1.086-20.88 10.052-26.108 15.387-2.9084 2.9681-10.335 1.1662-14.841 1.4773-8.8656 0.61199-7.7249 8.8192-0.54317 11.811 9.5657 3.985 18.71 7.8099 27.197 13.519 6.4012 4.3057 13.858 6.8672 21.058 9.867 7.3329 3.0548 10.317-1.4178 10.023-5.673-0.26729-3.8722-7.1255-11.385-7.4606-16.24-0.31809-4.6079 5.3038-17.66 2.0188-23.234-0.24178-0.41024-3.9076-8.0885-11.345-6.9149z" fill="url(#ba)" fill-rule="evenodd"/> <path d="m698.96 779.91c-6.8824 1.086-20.88 10.052-26.108 15.387-2.9084 2.9681-10.335 1.1662-14.841 1.4773-8.8656 0.61199-7.7249 8.8192-0.54317 11.811 9.5657 3.985 18.71 7.8099 27.197 13.519 6.4012 4.3057 13.858 6.8672 21.058 9.867 7.3329 3.0548 10.317-1.4178 10.023-5.673-0.26729-3.8722-7.1255-11.385-7.4606-16.24-0.31809-4.6079 5.3038-17.66 2.0188-23.234-0.24178-0.41024-3.9076-8.0885-11.345-6.9149z" fill="url(#bb)" fill-rule="evenodd" opacity=".46759"/> <path d="m698.96 779.91c-6.8824 1.086-20.88 10.052-26.108 15.387-2.9084 2.9681-10.335 1.1662-14.841 1.4773-8.8656 0.61199-7.7249 8.8192-0.54317 11.811 9.5657 3.985 18.71 7.8099 27.197 13.519 6.4012 4.3057 13.858 6.8672 21.058 9.867 7.3329 3.0548 10.317-1.4178 10.023-5.673-0.26729-3.8722-7.1255-11.385-7.4606-16.24-0.31809-4.6079 5.3038-17.66 2.0188-23.234-0.24178-0.41024-3.9076-8.0885-11.345-6.9149z" fill="url(#bc)" fill-rule="evenodd" opacity=".50926"/> <path d="m673.94 803.2c2.954 1.7051 10.517 4.0497 15.893 4.9549 4.55 0.76615 7.1671 1.5632 10.659 0.2757 5.0532-1.863 3.7503 0.98943 7.6871 5.2552 1.5018 4.0149 5.8234 4.6822 6.2512 11.38 1.6595 3.6364-10.897-4.5395-14.722-6.1331-4.1097-1.712-7.3658-3.9015-11.18-5.4907-2.6317-1.0963-7.596-4.3005-9.3546-5.563-2.7367-1.9647-0.93683-1.8752-5.2335-4.6792z" fill="url(#t)" fill-rule="evenodd" opacity=".67593"/> <path d="m711.08 794.23c-0.20706 4.7294-2.2885 8.4794-4.6491 8.3761s-4.1063-4.021-3.8993-8.7504 2.2885-8.4794 4.6491-8.3761 4.1063 4.021 3.8993 8.7503z" fill="url(#u)" fill-rule="evenodd" opacity=".46759"/> <path d="m705.36 794.06c-0.32309-0.04566-0.51089-0.40605-0.76633-0.60907 5.9278 4.0546 0.16076-0.09343 1.6914-0.98296-0.18584-0.30454-0.13005 0.05185-0.29899 0.11921l7.3281-7.1554c1.2809 1.8557 2.9379 3.2454 3.1266 5.7026-0.28744 12.814-10.618 18.106-20.172 8.2261-4.8868-10.595 1.9398-18.612 13.077-14.868l-3.9858 9.5676z" fill="url(#v)"/> <path d="m670.98 891.48c5.4655 37.595-49.744 14.957-61.743 47.317-12.124 32.695 22.131 30.655 27.522 65.989l-3.3953 11.681c-10.486-45.495-38.146-45.847-26.038-77.709s59.629-24.526 61.962-41.157l1.693-6.1213z" fill="url(#bd)"/> <path d="m619.74 1033.7c-13.688 8.7079-56.512 6.6035-50.425-7.6177 14.522-33.922 58.376 3.865 47.901 32.183-5.0964 13.778-38.896-1.0468-49.253 8.6333l2.2842-8.2425c8.7543-8.2756 39.817 6.2152 41.386-1.9654 5.3709-27.994-22.403-38.599-35.584-34.706-4.6325 14.461 33.936 14.172 46.221 4.6636l-2.531 7.0509z" fill="url(#be)"/> <path d="m617.74 1033.7c-13.688 8.7079-54.512 6.6035-48.425-7.6177l6.7343-4.0968c-4.6325 14.461 31.936 14.172 44.221 4.6636l-2.531 7.0509z" fill="url(#bf)"/> <path d="m705.36 794.06c-0.32309-0.04566-0.51089-0.40605-0.76633-0.60907 5.9278 4.0546 0.16076-0.09343 1.6914-0.98296-0.18584-0.30454-0.13005 0.05185-0.29899 0.11921l7.3281-7.1554c1.2809 1.8557 2.9379 3.2454 3.1266 5.7026-0.28744 12.814-10.618 18.106-20.172 8.2261-4.8868-10.595 1.9398-18.612 13.077-14.868l-3.9858 9.5676z" fill="url(#bg)"/> <path d="m716.53 788.65c-17.535 16.735-12.546-3.6637-20.714-5.6466-11.754-4.9235-32.085-6.5319-42.357 0.28891-14.083 9.3511-23.149 21.63-23.595 41.898-0.44949 20.401 19.383 35.929 36.387 57.704l-1.2542 3.8196c-11.367-20.233-41.39-33.404-42.47-57.243-1.0951-24.162 6.3633-40.277 31.956-50.283 13.415-4.9665 27.85-7.4825 41.508-2.139l20.54 11.601z" fill="url(#bh)"/> <path d="m716.53 788.65c-17.535 16.735-12.546-3.6637-20.714-5.6466-11.754-4.9235-13.484-11.298 0.17431-5.9545l20.54 11.601z" fill="url(#w)" opacity=".63889"/> <path d="m446.35 827.92 71.38 339.85 9.0567 0.8958-72.506-342.35-7.9305 1.6074z" fill="url(#bm)" fill-rule="evenodd"/> <path d="m586.15 348.33c57.212 173.77-23.94 444.04-127.37 481.1-100.71 36.166-331.05-137.57-388.26-311.34s11.857-352.83 154.17-399.69 304.25 56.152 361.46 229.92z" fill="url(#y)" fill-rule="evenodd" opacity=".75"/> <path d="m586.15 348.33c57.212 173.77-23.94 444.04-127.37 481.1-100.71 36.166-331.05-137.57-388.26-311.34s11.857-352.83 154.17-399.69 304.25 56.152 361.46 229.92z" fill="url(#z)" fill-rule="evenodd"/> <path transform="matrix(1.2202 0 0 1 -135.79 0)" d="m782.11 437.22a131.07 247.1 0 1 1-262.14 0 131.07 247.1 0 1 1 262.14 0z" fill="url(#x)" fill-rule="evenodd" opacity=".15"/> <path d="m179.32 172.45c-12.085 1.3313-34.371 23.294-42.595 35.08-16.91 24.233-26.944 40.528-35.48 65.825-13.106 38.838 8.4362 38.436 34.286 12.776 19.749-19.604-9.2562 36.704-11.022 48.749-2.9496 20.116-21.686 34.073-29.986 45.968-8.6579 12.408-3.9097 33.769-22.771 49.609-20.582 17.285 20.481 21.385 32.433 25.418 19.096 6.444-6.0822 47.372 29.752 17.277 21.131-17.746 13.552-33.057 31.639-4.4007 5.9653 9.451 43.662-41.679 45.342-45.008 1.9628-3.8897-9.4891-56.231-10.622-59.671-0.02298-0.06984 11.096-20.327 27.172-17.97 24.936 3.6564 19.514 26.955 38.854-0.75993 9.8258-14.081 30.706 47.582 31.439 49.809 10.517 31.945 48.063-9.6906 62.352-2.4801 15.262 7.7016 12.946 38.214 30.545 47.096 13.884 7.0063 40.046-34.514 43.522-41.401 11.373-22.538-1.6507-23.463 37.96-3.4738 27.9 14.079 19.118-34.042 57.851-7.0143 23.572 16.448 4.7416-20.65 3.7409-34.32-1.6887-23.068-17.566-55.721-27.731-75.094-5.7524-10.963 45.756 11.634 37.034 2.8474-15.909-16.027-35.727-28.737-50.436-43.555-19.057-19.199-27.75-32.28-42.261-55.271-12.537-19.863-8.4352-24.623-26.078-33.526-18.629-9.4008-31.699 21.183-45.175-0.16694-9.3733-14.85-36.745 13.139-52.423 5.2274-4.4149-2.2279-19.819-30.849-23.364-34.42-7.8018-7.8597-41.975 7.8034-53.35 11.549l-10.855 3.5739c-12.451 4.0992-28.129 6.2529-41.601 10.688-0.97996 0.32263-10.547 20.636-18.17 27.038z" fill="url(#bn)" fill-rule="evenodd" opacity=".6"/> <path d="m354.43 220.08c6.9084 20.983-4.5016 43.594-25.485 50.503s-43.594-4.5016-50.503-25.485 4.5016-43.594 25.485-50.503 43.594 4.5016 50.503 25.485z" fill="url(#aa)" fill-rule="evenodd"/> <path d="m424.99 196.85c19.738 59.953-12.862 124.55-72.814 144.29s-124.55-12.862-144.29-72.814 12.862-124.55 72.814-144.29 124.55 12.862 144.29 72.814z" fill="url(#ab)" fill-rule="evenodd" opacity=".6"/> <path d="m224.7 118.42c-142.31 46.854-211.4 225.9-154.19 399.67s287.56 347.52 388.28 311.35c103.43-37.059 184.58-307.34 127.37-481.12s-219.15-276.76-361.46-229.9zm-4.686 5.8527c5.0148-2.1127 10.745-3.5148 17.338-3.9975 19.323-1.4146 35.137 23.137 40.552 22.741 20.432-1.4957 28.649-22.274 43.469-23.359 18.537-1.357 21.95 6.5721 34.283 12.796 11.454 5.7802 26.177 17.714 41.47 25.432 12.527 6.3217 34.938 20.632 49.613 22.784 13.777 2.0201 32.638 7.7975 36.961 20.929 9.1348 27.746-12.253 22.705-11.007 39.715 1.7109 23.371 43.087 12.055 52.268 39.939 9.4914 28.829-26.557 44.184-17.352 47.825 0.1859 0.07354 77.955 54.048 36.847 57.058-23.013 1.6847-70.872-27.598-75.008 0.61222-1.5032 10.251-19.632 63.679-39.916 43.245-43.436-43.758-16.268 9.5048-67.811 13.278-16.975 1.2427-16.57-17.487-17.941-36.205-5.7181-78.109-55.479-5.9875-58.612-31.83-9.4534-77.967 5.5369-10.748-21.531-38.017-16.307-16.428-29.142-34.047-54.146-18.265-38.555 24.335-3.4441 29.967 0.70873 56.914 3.8615 25.057-29.434 24.763-13.708 40.605 5.2796 5.3188 36.015 49.856 26.949 45.281l-10.85-5.4753c-38.888-19.624-32.519 47.093-65.047 3.3864-25.289-33.979-18.825 22.841-46.247 42.303-7.7904 34.455-14.325 11.251-19.843-5.5085-4.9852-15.142-3.3345-28.415-8.8652-45.214-9.022-27.403 13.603-22.494 24.543-44.172 6.3652-12.614 33.053-33.898 5.5754-37.927-14.432-2.1161-36.676 10.229-20.762-8.1999 10.232-11.848 54.455-56.078 30.094-73.076-13.718-9.5719-53.552-36.522-13.384-49.747 35.853-11.804 44.862-13.576 42.627-44.105-1.8199-24.859 36.809-14.624 48.035-36.871 6.9471-13.767 15.653-26.535 30.697-32.873z" fill="url(#bo)" fill-rule="evenodd" opacity=".4"/> <path d="m442.64 489.2c81.03 99.865 89.602 227.17 19.145 284.33s-193.26 22.557-274.29-77.308-89.602-227.17-19.145-284.33 193.26-22.557 274.29 77.308z" fill="url(#ac)" fill-rule="evenodd" opacity=".53"/> <path d="m440.6 592.04c45.396 55.948 48.157 128.92 6.1664 162.99s-112.83 16.337-158.23-39.611-48.157-128.92-6.1664-162.99 112.83-16.337 158.23 39.611z" fill="url(#ad)" fill-rule="evenodd" opacity=".3"/> <path d="m288.67 744.39c-20.656-22.32-67.291-60.291-94.213-92.347-15.246-18.154-28.174-48.051-3.6491-49.846 37.181-2.7219 38.721 56.013 30.704-10.109-0.51461-4.2442 33.299 41.825 54.948-1.0747 17.191-34.066 32.385 46.68 38.096 64.029 2.2218 6.7483 37.01 9.0928 49.846-3.6491 32.273-32.035 10.314 33.513 11.325 47.319 2.4586 33.584 68.667-48.672 71.752-53.401 28.727-44.038 49.53-15.706 67.914-52.137 19.301-38.248 41.658-69.868 56.589-99.456 11.829-23.441-26-28.786 5.2904-48.535 23.691-14.953 26.22 43.17 21.528 52.468-11.441 22.673-37.009 17.942-34.683 49.705 1.4547 19.871 2.4356 33.239 10.014 56.259 6.7693 20.561-15.068 55.228-23.264 71.469-11.601 22.988-0.46685 30.425-27.007 47.177-18.204 11.49-16.687 52.209-34.683 49.705-12.546 12.454-33.335 30.543-42.312 39.454-16.79 16.666-40.666-12.135-68.989-2.8104-21.38 7.0389-46.546-4.8879-60.002-14.277-12.961-9.044-24.377-35.279-29.204-49.941z" fill="url(#bp)" fill-rule="evenodd" opacity=".1"/> <path d="m586.15 348.33c57.212 173.77-23.94 444.04-127.37 481.1-100.71 36.166-331.05-137.57-388.26-311.34s11.857-352.83 154.17-399.69 304.25 56.152 361.46 229.92z" fill="url(#ae)" fill-rule="evenodd"/> <path d="m489.69 804.11c2.7082 8.3222-14.266 20.022-37.91 26.13s-44.998 4.309-47.692-4.0168c-2.7082-8.3222 14.266-20.022 37.91-26.13s44.998-4.309 47.692 4.0168z" fill="url(#af)" fill-rule="evenodd" opacity=".3"/> <path d="m446.24 816.97c-5.5435 4.2209-13.612 18.754-15.684 25.931-1.1523 3.9925-8.5448 5.9294-12.364 8.341-7.5142 4.7444-2.6167 11.428 5.1248 10.655 10.311-1.0298 20.176-2.0005 30.355-1.0012 7.6777 0.75372 15.457-0.52845 23.219-1.3036 7.9045-0.7894 8.4098-6.1424 6.1326-9.749-2.0722-3.2819-11.673-6.642-14.272-10.757-2.466-3.9056-3.7086-18.062-9.2445-21.411-0.40746-0.24644-7.277-5.2668-13.268-0.70533z" fill="url(#bq)" fill-rule="evenodd"/> <path d="m446.24 816.97c-5.5435 4.2209-13.612 18.754-15.684 25.931-1.1523 3.9925-8.5448 5.9294-12.364 8.341-7.5142 4.7444-2.6167 11.428 5.1248 10.655 10.311-1.0298 20.176-2.0005 30.355-1.0012 7.6777 0.75372 15.457-0.52845 23.219-1.3036 7.9045-0.7894 8.4098-6.1424 6.1326-9.749-2.0722-3.2819-11.673-6.642-14.272-10.757-2.466-3.9056-3.7086-18.062-9.2445-21.411-0.40746-0.24644-7.277-5.2668-13.268-0.70533z" fill="url(#br)" fill-rule="evenodd"/> <path d="m446.24 816.97c-5.5435 4.2209-13.612 18.754-15.684 25.931-1.1523 3.9925-8.5448 5.9294-12.364 8.341-7.5142 4.7444-2.6167 11.428 5.1248 10.655 10.311-1.0298 20.176-2.0005 30.355-1.0012 7.6777 0.75372 15.457-0.52845 23.219-1.3036 7.9045-0.7894 8.4098-6.1424 6.1326-9.749-2.0722-3.2819-11.673-6.642-14.272-10.757-2.466-3.9056-3.7086-18.062-9.2445-21.411-0.40746-0.24644-7.277-5.2668-13.268-0.70533z" fill="url(#bs)" fill-rule="evenodd" opacity=".46759"/> <path d="m446.24 816.97c-5.5435 4.2209-13.612 18.754-15.684 25.931-1.1523 3.9925-8.5448 5.9294-12.364 8.341-7.5142 4.7444-2.6167 11.428 5.1248 10.655 10.311-1.0298 20.176-2.0005 30.355-1.0012 7.6777 0.75372 15.457-0.52845 23.219-1.3036 7.9045-0.7894 8.4098-6.1424 6.1326-9.749-2.0722-3.2819-11.673-6.642-14.272-10.757-2.466-3.9056-3.7086-18.062-9.2445-21.411-0.40746-0.24644-7.277-5.2668-13.268-0.70533z" fill="url(#bt)" fill-rule="evenodd" opacity=".50926"/> <path d="m435.26 849.34c3.4094 0.0997 11.179-1.4241 16.341-3.1775 4.3689-1.484 7.0509-2.0238 9.5144-4.814 3.5647-4.0372 3.7708-0.90807 9.2601 0.97965 3.2267 2.822 7.3476 1.3593 10.902 7.0526 3.1859 2.4139-11.746 1.173-15.87 1.5848-4.43 0.44241-8.335 0.05964-12.447 0.47029-2.8368 0.28331-8.7269-0.1824-10.874-0.45953-3.3412-0.43128-1.7143-1.2064-6.8269-1.6365z" fill="url(#ag)" fill-rule="evenodd" opacity=".67593"/> <path d="m443.7 823.82c2.0613 4.2616 2.0079 8.5502-0.11917 9.5791s-5.5224-1.5918-7.5836-5.8533-2.0079-8.5502 0.11918-9.5791 5.5224 1.5918 7.5836 5.8533z" fill="url(#ah)" fill-rule="evenodd" opacity=".46759"/> <path d="m438.59 826.38c-0.30608 0.11307-0.64237-0.1151-0.96355-0.17265 7.1418 0.75729 0.0972-0.1585 1.0227-1.6677-0.30807-0.17992-0.08989 0.10735-0.20665 0.24678l3.0566-9.7754c2.0079 1.026 4.1259 1.4634 5.4576 3.537 5.8255 11.416-0.75823 20.976-13.855 16.811-9.328-7.0086-7.1217-17.305 4.4586-19.292l1.03 10.313z" fill="url(#ai)"/> <path d="m464.55 908.06c-9.4404 36.799 49.867 38.173 58.35 71.627 8.5707 33.8-28.511 2.1226-37.637 36.68l2.1313 11.976c15.274-44.119 46.055-15.522 37.41-48.492s-58.676-48.74-59.223-65.525l-1.0311-6.2669z" fill="url(#bu)"/> <g transform="matrix(-.99601 .089248 .089248 .99601 894.77 -68.925)"> <path d="m491.89 1079.2c-7.9185 14.159-41.628 31.384-43.015 15.977-3.3086-36.751 53.223-24.29 57.435 5.6083 2.0494 14.546-34.737 17.53-39.263 30.965l-1.8992-8.3395c3.7807-11.438 38-13.417 35.501-21.363-8.5518-27.192-38.033-23.352-47.789-13.672 2.7822 14.928 33.601-2.5629 39.906-16.762l-0.87527 7.5863z" fill="url(#bl)"/> <path d="m489.62 1079.4c-7.9185 14.159-39.358 31.18-40.745 15.773l3.9849-6.8011c2.7822 14.928 31.331-2.3595 37.636-16.558l-0.87527 7.5863z" fill="url(#bk)"/> </g> <path d="m438.59 826.38c-0.30608 0.11307-0.64237-0.1151-0.96355-0.17265 7.1418 0.75729 0.0972-0.1585 1.0227-1.6677-0.30807-0.17992-0.08989 0.10735-0.20665 0.24678l3.0566-9.7754c2.0079 1.026 4.1259 1.4634 5.4576 3.537 5.8255 11.416-0.75823 20.976-13.855 16.811-9.328-7.0086-7.1217-17.305 4.4586-19.292l1.03 10.313z" fill="url(#bv)"/> <path d="m430.14 819.06c16.075 18.141 12.808-2.6027 21.113-3.896 12.124-3.9242 32.518-3.8281 42.185 3.8271 13.253 10.495 21.261 23.488 20.012 43.723-1.2567 20.367-26.318 14.183-45.082 34.462l0.93068 3.911c13.018-19.213 48.036-9.8287 51.105-33.494 3.1102-23.986-2.9757-40.668-27.643-52.777-12.953-6.07-27.128-9.7834-41.185-5.5998l-21.437 9.8443z" fill="url(#bw)"/> <path d="m445.85 816.33c-7.4974 23.05-12.782 2.7261-20.914 4.8556-12.683 1.2416-17.23-3.5493-2.6713-5.3245l23.585 0.4689z" fill="url(#aj)" opacity=".63889"/> <path transform="matrix(.98588 -.16181 .16746 .95261 -68.149 66.993)" d="m584.44 473.75a96.69 257.84 0 1 1-193.38 0 96.69 257.84 0 1 1 193.38 0z" fill="url(#bj)" fill-rule="evenodd" opacity=".15"/> <path d="m653.71 683.68c-2.3007 3.2637-1.8444 6.0549-0.16423 11.604 0.93475 3.0871-3.808 4.5847-5.6184 6.4494-3.5618 3.6684 3.1939 8.8365 8.7298 8.2387 7.3736-0.79623 14.434-1.5468 22.628-0.7741 6.1799 0.58278 11.514-0.40861 17.064-1.008 5.6524-0.61038 3.6087-4.7494 0.24127-7.5381-3.0643-2.5376-11.889-5.1357-15.731-8.3173-3.6466-3.0198-11.013-9.9661-16.741-12.555 0.65272 4.1068-7.9223 0.37365-10.409 3.9006z" fill="url(#bi)" fill-rule="evenodd" opacity=".15"/> <path d="m650.41 689.82c-6.113 15.956 4.0377 47.01 12.005 65.761 7.3191 15.227 15.94 29.876 27.587 42.183l-6.7716 6.1009c-11.662-13.528-20.585-29.018-28.232-45.127-7.2436-16.986-32.176-69.766-3.2666-78.734l-1.3221 9.8162z" fill="url(#as)" opacity=".1"/> <path d="m527.98 684.22c-2.2923 1.8259-5.071 8.8442-5.5551 12.437-0.26929 1.9988-3.5718 2.5146-5.1842 3.5145-3.1722 1.9671-0.4545 5.7665 3.0874 5.8788 4.7176 0.1495 9.2316 0.29999 14.023 1.4955 3.6138 0.90165 7.1393 0.75178 10.691 0.86432 3.6164 0.11461 3.495-2.6343 2.1981-4.6602-1.1801-1.8435-5.8601-4.2277-7.3397-6.539-1.4044-2.1938-2.9227-9.6349-5.7149-11.743-0.20551-0.15516-3.728-3.2209-6.2053-1.2477z" fill="url(#au)" fill-rule="evenodd" opacity=".15"/> <path d="m520.4 692.48c-14.908 8.3495-26.979 38.709-32.855 58.217-4.119 16.384-6.8686 33.159-5.7929 50.069l-9.1076 0.35515c-0.30527-17.858 2.7493-35.472 7.1814-52.744 5.3031-17.689 19.917-74.201 47.871-62.595l-7.2974 6.6974z" fill="url(#at)" opacity=".15"/> 
+        </svg>
+    </div>
 </body>
-</html>"""
-    
+</html>
+"""
     return html_code
 
 def generate_section_header_slide_9(
@@ -6116,39 +5581,32 @@ def generate_section_header_slide_10(
     subtitle="You can enter a subtitle here if you need it",
     bg_color="#9BD89B",
     notebook_bg="#FFFFFF",
-    notebook_border="#E89A8F",
     title_color="#A84A3A",
     subtitle_color="#5A5A5A",
-    speech_bubble_color="#C8E6C9",
     sticky_note_colors=["#FFD966", "#FFB3B3"],
     custom_css=""
 ):
     """
-    Generate a notebook-style overview slide with spiral binding and sticky notes.
+    Generate a notebook-style overview slide with spiral binding and bookmark sticky notes.
     
     Parameters:
-    - main_title: Main title text (default: "OVERVIEW")
-    - subtitle: Subtitle text below the main title
-    - bg_color: Background color (default: light green)
-    - notebook_bg: Notebook paper background color (default: white)
-    - notebook_border: Color of the notebook border edges (default: coral)
-    - title_color: Color of the main title (default: brown/red)
-    - subtitle_color: Color of the subtitle (default: gray)
-    - speech_bubble_color: Color of the speech bubble outline (default: light green)
-    - sticky_note_colors: List of colors for sticky notes (default: yellow and pink)
-    - custom_css: Additional custom CSS to inject
+    - main_title: Main title text (default: "Main Title Here")
+    - subtitle: Subtitle text displayed below the main title (default: "You can enter a subtitle here if you need it")
+    - bg_color: Background color of the slide (default: "#9BD89B" - light green)
+    - notebook_bg: Notebook paper background color (default: "#FFFFFF" - white)
+    - title_color: Color of the main title text (default: "#A84A3A" - brown/red)
+    - subtitle_color: Color of the subtitle text (default: "#5A5A5A" - gray)
+    - sticky_note_colors: List of colors for bookmark sticky notes (default: ["#FFD966", "#FFB3B3"] - yellow and pink)
+    - custom_css: Additional custom CSS to inject into the style block (default: "")
     
     Returns:
-    - HTML string for the slide
+    - Complete HTML string for the slide
     """
     
     if isinstance(main_title, list):
         main_title = main_title[0]
     if isinstance(subtitle, list):
         subtitle = subtitle[0]
-    
-    # Section number removed for this variant
-    section_number_html = ''
     
     # Generate sticky notes (always show)
     sticky_notes_html = ""
@@ -6193,84 +5651,85 @@ def generate_section_header_slide_10(
             }}
             
             .notebook {{
-                width: 900px;
-                height: 600px;
+                width: 1400px;
+                height: 700px;
                 background: {notebook_bg};
-                border-radius: 10px;
-                box-shadow: 0 20px 60px rgba(0,0,0,0.2);
+                border-radius: 0 15px 15px 0;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
                 position: relative;
                 display: flex;
                 flex-direction: column;
                 align-items: center;
                 justify-content: center;
-                padding: 60px 80px;
+                padding: 60px 100px 60px 140px;
+                background-image: 
+                    repeating-linear-gradient(
+                        to bottom,
+                        transparent 0px,
+                        transparent 39px,
+                        rgba(180, 180, 180, 0.25) 39px,
+                        rgba(180, 180, 180, 0.25) 40px
+                    ),
+                    linear-gradient(
+                        to right,
+                        transparent 0px,
+                        transparent 89px,
+                        rgba(255, 100, 100, 0.4) 89px,
+                        rgba(255, 100, 100, 0.4) 92px,
+                        transparent 92px
+                    );
             }}
             
-            .notebook::before {{
-                content: '';
+            .spiral-binding {{
                 position: absolute;
-                left: 0;
-                top: 0;
-                bottom: 0;
-                width: 30px;
-                background: {notebook_border};
-                border-radius: 10px 0 0 10px;
+                left: 15px;
+                top: 40px;
+                bottom: 40px;
+                width: 60px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 10;
             }}
             
-            .notebook::after {{
-                content: '';
-                position: absolute;
-                right: 0;
-                top: 0;
-                bottom: 0;
-                width: 30px;
-                background: {notebook_border};
-                border-radius: 0 10px 10px 0;
+            .spiral-ring {{
+                width: 35px;
+                height: 45px;
+                border: 5px solid #2a2a2a;
+                border-radius: 50%;
+                background: linear-gradient(to right, rgba(0,0,0,0.1) 0%, transparent 50%, rgba(255,255,255,0.3) 100%);
+                box-shadow: inset -2px 0 4px rgba(0,0,0,0.3), inset 2px 0 4px rgba(255,255,255,0.3);
             }}
             
             .sticky-notes {{
                 position: absolute;
-                top: -40px;
-                left: 50%;
-                transform: translateX(-50%);
+                top: -50px;
+                right: 200px;
                 display: flex;
-                gap: 20px;
+                flex-direction: row;
+                gap: 30px;
+                z-index: 5;
             }}
             
             .sticky-note {{
-                width: 100px;
-                height: 60px;
-                border-radius: 3px;
-                box-shadow: 0 4px 10px rgba(0,0,0,0.15);
-                position: relative;
-            }}
-            
-            .speech-bubble {{
                 width: 180px;
-                height: 120px;
-                background: transparent;
-                border: 4px solid {speech_bubble_color};
-                border-radius: 50%;
+                height: 100px;
+                border-radius: 3px;
+                box-shadow: 0 6px 15px rgba(0,0,0,0.2);
                 position: relative;
-                display: flex;
-                justify-content: center;
-                align-items: center;
-                margin-bottom: 30px;
             }}
             
-            .speech-bubble::after {{
+            .sticky-note::before {{
                 content: '';
                 position: absolute;
-                bottom: -20px;
-                right: 40px;
-                width: 30px;
-                height: 30px;
-                background: transparent;
-                border: 4px solid {speech_bubble_color};
-                border-radius: 50%;
-                border-top-color: transparent;
-                border-left-color: transparent;
-                transform: rotate(-30deg);
+                top: -10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 60px;
+                height: 20px;
+                background: rgba(255, 255, 255, 0.4);
+                border-radius: 2px;
             }}
             
             .section-number {{
@@ -6288,6 +5747,8 @@ def generate_section_header_slide_10(
                 margin-bottom: 20px;
                 font-family: 'Roboto', 'Noto Sans', sans-serif;
                 letter-spacing: 1px;
+                position: relative;
+                z-index: 3;
             }}
             
             .subtitle {{
@@ -6297,6 +5758,8 @@ def generate_section_header_slide_10(
                 text-align: center;
                 line-height: 1.6;
                 font-family: 'Noto Sans', 'Roboto', sans-serif;
+                position: relative;
+                z-index: 3;
             }}
             
             {custom_css}
@@ -6305,11 +5768,20 @@ def generate_section_header_slide_10(
     <body>
         <div class="slide-container">
             <div class="notebook">
-                {sticky_notes_html}
-                
-                <div class="speech-bubble">
-                    {section_number_html}
+                <div class="spiral-binding">
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
                 </div>
+                
+                {sticky_notes_html}
                 
                 <div class="main-title">{main_title}</div>
                 <div class="subtitle">{subtitle}</div>
@@ -6320,7 +5792,6 @@ def generate_section_header_slide_10(
     """
     
     return html_code
-
 def generate_section_header_slide_11(
     headline="MAIN TITLE HERE",
     bg_color="#0a3d3d",
@@ -6499,6 +5970,24 @@ def generate_section_header_slide_12(
     arrow_block_html = f'<div class="block section-arrow-block" style="position:absolute; top:220px; left:120px; width:120px; height:60px;">{section_arrow_html}</div>'
     question_block_html = f'<div class="block question-block" style="position:absolute; top:320px; left:120px; width:1680px;"><div class="question">{main_title}</div></div>'
     
+    # SVG decoration - wrapped in container for converter recognition
+    svg_decoration_html = '''<div class="svg-decoration">
+        <svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" viewBox="0 0 349.98 404.85" width="100%" height="100%" preserveAspectRatio="xMidYMid meet">
+            <path d="m21.673 387.4c4.5311 3.232 17.093-3.7092 49.835-92.884 33.132-99.223 24.842-98.113 25.195-101.22" fill="none" stroke="#000" stroke-width="7.5808"/>
+            <path d="m9.3338 385.21c-5.5634-0.15978-12.914-8.7261 11.535-105.52 20.728-67.241 34.065-95.705 42.635-100.65" fill="none" stroke="#000" stroke-width="7.5808"/>
+            <path d="m61.099 188.17c-10.657-2.6855-5.8822-19.804 4.5119-19.243" fill="none" stroke="#000" stroke-width="7.5808"/>
+            <path d="m62.697 183.18c-22.413 35.084-56.478 144.18-54.97 197.09-0.60276 2.2927 16.176 7.2052 17.088 5.5113 30.438-42.974 65.799-150.21 70.849-192.18-16.275-10.679-32.967-10.426-32.967-10.426z" fill="#8c9fbd" fill-rule="evenodd" stroke="#000" stroke-width=".75808"/>
+            <path d="m95.724 198.47c7.003 1.0866 14.704-8.1263 6.0323-18.638" fill="none" stroke="#000" stroke-width="7.5808"/>
+            <path d="m60.643 170.62c0.41893-30.713 20.418-81.326 23.13-89.395s34.271-83.326 54.962-77.064 15.761 49.195-4.0546 109.54-31.179 70.414-31.179 70.414" fill="none" stroke="#000" stroke-width="7.5808"/>
+            <path d="m138.33 8.0324c-26.672-7.7494-73.214 116.23-74.078 162.46-1.6226 6.4141 8.773 5.6941 19.431 8.4432 10.951 2.8473 16.689 9.4584 18.172 3.5716 26.955-44.869 64.655-165.41 36.475-174.48z" fill="#8c9fbd" fill-rule="evenodd" stroke="#000" stroke-width=".75808"/>
+            <path d="m59.342 177.84c-3.0174 10.06 8.254 6.7068 19.528 9.8798s20.139 10.726 22.553 3.5391-8.9971-15.837-18.174-17.69-21.447-4.1303-23.907 4.2715z" fill="#fae472" fill-rule="evenodd" stroke="#000" stroke-width="3.7904"/>
+            <path d="m16.687 365.96c14.006-84.171 34.011-136.85 41.926-156.3 7.2339-20.325-10.548 53.861-14.186 64.687l-27.74 91.613z" fill="#fff" fill-opacity=".54167" fill-rule="evenodd"/>
+            <path d="m73.835 167.51c10.3-61.664 30.716-108.86 36.591-116.65s-2.9963 28.3-2.9963 28.3l-33.595 88.354z" fill="#fff" fill-opacity=".54167" fill-rule="evenodd"/>
+            <path d="m299.95 263.47c-2.5923-0.21458-5.2364-0.12238-7.8339-0.15105-20.089-0.35718-40.131-0.33793-60.223 0.14397-39.199 1.1043-79.194 2.0061-117.79 9.5691-1.3237 0.30448-9.4849 1.2978-10.201 3.1465-0.41149 1.0623 2.4222-1.051 2.6412-2.169 0.24313-1.2413-2.5334-3.6461-1.2706-3.5755 12.583 0.70346 26.129 4.7564 38.692 6.487 60.37 8.0202 121.77 11.682 181.68 22.654 70.271 16.203-32.569 30.647-46.417 31.868-44.378 3.3506-91.065 1.0639-134.84 9.6982-0.70183 0.21654 0.06344-5.6501 5.8595-2.8015 11.429 5.617 23.275 10.42 34.919 15.568 9.3567 4.1975 46.284 15.711 41.876 30.768-9.6527 12.142-34.543 10.79-48.474 11.519-17.674 0.76333-35.359 0.81646-53.046 0.90711-7.4686 0.06817-14.967 0.07921-22.397 0.9282-6.0326 0.73547-12.023 1.3194-18.092 1.6709-6.4636 0.36966-12.923 0.89954-19.363 1.5609-5.6366 0.66362-11.24 1.5034-16.906 1.8983-4.4927 0.26851-8.9764 0.65414-13.475 0.82453-4.0933 0.13039-8.1854 0.09711-12.28 0.03899-3.432-0.05008-6.8606-0.15735-10.28 0.2206l-2.5826-10.563c4.4102-0.41538 8.7977-0.3954 13.221-0.33603 3.6548 0.04764 7.3085 0.0822 10.963-0.0244 4.236-0.14708 8.4596-0.49794 12.692-0.72209 5.3906-0.34108 10.721-1.1824 16.086-1.7698 6.783-0.65499 13.579-1.1935 20.381-1.6097 5.6498-0.34735 11.22-0.97668 16.839-1.6301 8.398-0.87682 16.85-0.7782 25.283-0.70632 17.208 0.2056 34.409 0.37522 51.605-0.45325 9.1431-0.54983 18.434-1.1124 27.415-3.0235 0.66456-0.1414 6.4881-2.0766 6.6064-1.5154 1.6398 3.0727-4.8004-5.1582-7.7546-7.0031-8.413-5.2539-17.542-9.3368-26.549-13.442-4.9411-2.1898-71.688-24.188-36.103-30.023 45.252-4.9962 91.151-3.7838 136.54-7.7894 8.3014-0.87416 81.643-4.8198 44.088-15.768-58.6-13.412-120.19-16.717-179.87-22.926-11.232-1.1549-89.41-10.698-31.427-21.082 39.938-6.172 80.689-7.4134 121.01-9.1726 20.313-0.86285 40.616-1.5948 60.944-1.9562 2.5975-0.02866 5.2416 0.06353 7.8339-0.15104v10.892z" fill-opacity=".75"/>
+            <path d="m8.6731 383.7c-3.8858 22.709 2.0327 25.782 14.192 4.3371-5.4783-0.44454-12.119-3.1366-14.192-4.3371z" fill="#929292" fill-rule="evenodd" stroke="#000" stroke-width="4.6243"/>
+        </svg>
+    </div>'''
+    
     html_code = f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -6540,12 +6029,21 @@ def generate_section_header_slide_12(
             padding: 20px;
         }}
         
+        .svg-decoration {{
+            position: absolute;
+            right: 50px;
+            bottom: 50px;
+            width: 500px;
+            height: 680px;
+            z-index: 5;
+        }}
+        
         {custom_css}
     </style>
 </head>
 <body>
-    {arrow_block_html}
     {question_block_html}
+    {svg_decoration_html}
 </body>
 </html>"""
     

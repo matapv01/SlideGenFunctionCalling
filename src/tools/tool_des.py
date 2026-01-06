@@ -41,7 +41,6 @@ from src.tools.html_tool import (
     generate_intro_slide, # slide chuyển slide
     generate_credits_slide,     # slide chuyen slide
     generate_section_header_slide_1, # slide chuyển slide(hien)
-    generate_section_header_slide_2, # slide chuyển slide(hien)
     generate_section_header_slide_3, # slide chuyển slide(hien)
     generate_section_header_slide_4, # slide chuyển slide(hien)
     generate_section_header_slide_5, # slide chuyển slide(hien)
@@ -469,17 +468,6 @@ class GenerateSectionHeaderSlide1Input(BaseModel):
     accent_color_2: str = Field(default="#ffc857", description="Second accent color for decorations (default: yellow).")
     custom_css: str = Field(default="", description="Additional CSS to inject.")
 
-class GenerateSectionHeaderSlide2Input(BaseModel):
-    """Input schema for generate_section_header_slide_2."""
-    section_title: str = Field(..., description="Main section title text. Default: 'Name of the section'.")
-    subtitle: str = Field(..., description="Subtitle text below the main title. Default: 'You can enter a subtitle here if you need it'.")
-    bg_color: str = Field(default="#FFF9F0", description="Background color (default: soft cream).")
-    title_color: str = Field(default="#2D1B4E", description="Main title text color (default: dark purple).")
-    subtitle_color: str = Field(default="#333333", description="Subtitle text color (default: dark gray).")
-    show_balloons: bool = Field(default=True, description="Show watercolor balloons decoration.")
-    show_bunting: bool = Field(default=True, description="Show bunting flags decoration.")
-    show_flowers: bool = Field(default=True, description="Show watercolor flowers decoration.")
-    custom_css: str = Field(default="", description="Additional CSS to inject.")
 
 class GenerateSectionHeaderSlide3Input(BaseModel):
     """Input schema for generate_section_header_slide_3."""
@@ -524,19 +512,19 @@ class GenerateSectionHeaderSlide6Input(BaseModel):
 class GenerateSectionHeaderSlide7Input(BaseModel):
     """Input schema for generate_section_header_slide_7."""
     main_title: str = Field(..., description="Main title text for the slide. Will automatically wrap to multiple lines if too long.")
+    subtitle: str = Field(..., description="Subtitle text displayed below the main title.")
     bg_gradient_from: str = Field(default="#ffffff", description="Starting gradient color (left side).")
     bg_gradient_to: str = Field(default="#ff9999", description="Ending gradient color (right side).")
-    text_color: str = Field(default="#2d2d2d", description="Color of the main title text.")
-    side_bar_color: str = Field(default="#e8e8e8", description="Color of the left sidebar.")
+    text_color: str = Field(default="#2d2d2d", description="Color of the title and subtitle text.")
     custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
 
 class GenerateSectionHeaderSlide8Input(BaseModel):
     """Input schema for generate_section_header_slide_8."""
     main_title: str = Field(..., description="Main title text for the slide.")
     subtitle: str = Field(..., description="Subtitle text displayed below the title.")
-    bg_color: str = Field(default="#5FEDD8", description="Background color of the slide.")
-    text_color: str = Field(default="#2C2C2C", description="Color of the main title text.")
-    subtitle_color: str = Field(default="#3C3C3C", description="Color of the subtitle text.")
+    bg_color: str = Field(default="#FFB84D", description="Background color of the slide (warm peach/orange).")
+    text_color: str = Field(default="#2C2C2C", description="Color of the main title text (dark gray).")
+    subtitle_color: str = Field(default="#4A4A4A", description="Color of the subtitle text (medium gray).")
     custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
 
 class GenerateSectionHeaderSlide9Input(BaseModel):
@@ -554,11 +542,9 @@ class GenerateSectionHeaderSlide10Input(BaseModel):
     subtitle: str = Field(..., description="Subtitle text displayed below the title.")
     bg_color: str = Field(default="#9BD89B", description="Background color (light green).")
     notebook_bg: str = Field(default="#FFFFFF", description="Notebook paper background color.")
-    notebook_border: str = Field(default="#E89A8F", description="Color of the notebook border edges (coral).")
     title_color: str = Field(default="#A84A3A", description="Color of the main title (brown/red).")
     subtitle_color: str = Field(default="#5A5A5A", description="Color of the subtitle text (gray).")
-    speech_bubble_color: str = Field(default="#C8E6C9", description="Color of the speech bubble outline (light green).")
-    sticky_note_colors: list = Field(default=["#FFD966", "#FFB3B3"], description="List of colors for sticky notes (yellow and pink).")
+    sticky_note_colors: list = Field(default=["#FFD966", "#FFB3B3"], description="List of colors for bookmark sticky notes at the top (yellow and pink).")
     custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
 
 class GenerateSectionHeaderSlide11Input(BaseModel):
@@ -572,10 +558,10 @@ class GenerateSectionHeaderSlide11Input(BaseModel):
 
 class GenerateSectionHeaderSlide12Input(BaseModel):
     """Input schema for generate_section_header_slide_12."""
-    main_title: str = Field(..., description="Main title text to display.")
-    bg_color: str = Field(default="#f5f5f5", description="Background color of the slide.")
-    section_number_color: str = Field(default="#e91e63", description="Color of the section number text.")
-    title_color: str = Field(default="#2d3748", description="Color of the main title text.")
+    main_title: str = Field(..., description="Main title text (question) to display.")
+    bg_color: str = Field(default="#f5f5f5", description="Background color of the slide (light gray).")
+    section_number_color: str = Field(default="#e91e63", description="Color for decorative pen SVG elements (pink).")
+    title_color: str = Field(default="#2d3748", description="Color of the main title text (dark gray).")
     custom_css: str = Field(default="", description="Additional custom CSS.")
 
 
@@ -1901,12 +1887,6 @@ TRANSITION_TOOLS = [
         args_schema=GenerateSectionHeaderSlide1Input
     ),
     StructuredTool.from_function(
-        func=generate_section_header_slide_2,
-        name="generate_section_header_slide_2",
-        description="Generates an elegant watercolor-themed section header slide with decorative elements. Features soft pastel colors, watercolor balloons, bunting flags, flowers, hearts, and feathers on a cream background. Uses beautiful Playfair Display font for title and Montserrat for subtitle. Perfect for creating warm, festive, celebration-themed section dividers or transition slides with an artistic watercolor aesthetic.",
-        args_schema=GenerateSectionHeaderSlide2Input
-    ),
-    StructuredTool.from_function(
         func=generate_section_header_slide_3,
         name="generate_section_header_slide_3",
         description="Generates a minimal and elegant section header slide with decorative corner curves and horizontal lines. Features elegant title typography using Playfair Display and clean geometric decorative elements on a soft beige background. Perfect for creating sophisticated, minimalist section dividers or introduction slides with a timeless, editorial aesthetic.",
@@ -1933,13 +1913,13 @@ TRANSITION_TOOLS = [
     StructuredTool.from_function(
         func=generate_section_header_slide_7,
         name="generate_section_header_slide_7",
-        description="Generates a modern gradient section header slide with minimalist design. Features a centered title with auto line-wrapping, a left sidebar, and a horizontal gradient background. No animations or footer. Perfect for creating clean, contemporary section dividers with a simple and bold aesthetic.",
+        description="Generates a modern gradient section header slide with minimalist design. Features a centered title with auto line-wrapping and optional subtitle, on a horizontal gradient background. No sidebar, no animations, no footer. Perfect for creating clean, contemporary section dividers with a simple and elegant aesthetic.",
         args_schema=GenerateSectionHeaderSlide7Input
     ),
     StructuredTool.from_function(
         func=generate_section_header_slide_8,
         name="generate_section_header_slide_8",
-        description="Generates a vibrant party-themed section header slide with playful decorative elements. Features centered content with title and subtitle, surrounded by colorful decorations including a party hat, gift box, candle, confetti dots, sparkles, and wavy shapes on a bright turquoise background. No animations. Perfect for creating fun, festive, celebration-themed section dividers with an energetic and joyful aesthetic.",
+        description="Generates a cheerful balloon-themed section header slide with a modern, clean design. Features left-aligned title and subtitle text, with colorful balloon decorations (red, blue, yellow) positioned on the right side. Background uses a warm pastel gradient (peach to light pink) creating a bright, balanced, and festive atmosphere. No animations. Perfect for celebration-themed section dividers, party presentations, or any content requiring a fun, uplifting, and contemporary aesthetic.",
         args_schema=GenerateSectionHeaderSlide8Input
     ),
     StructuredTool.from_function(
@@ -1951,7 +1931,7 @@ TRANSITION_TOOLS = [
     StructuredTool.from_function(
         func=generate_section_header_slide_10,
         name="generate_section_header_slide_10",
-        description="Generates a notebook-style section header slide with a playful school/education aesthetic. Features a centered white notebook with coral border edges, a speech-bubble area used as a decorative label, bold title, and subtitle. Decorated with colorful sticky notes on top (yellow and pink). Light green background. No animations. Ideal for educational or casual section dividers.",
+        description="Generates a spiral-bound notebook-style slide with a realistic school/education aesthetic. Features a centered white notebook with spiral binding on the left (10 metal rings), horizontal ruled lines with light opacity, a vertical red margin line, bold title, and subtitle. Decorated with colorful bookmark sticky notes at the top edge (yellow and pink). Light green background. No animations. Perfect for educational or casual section dividers with a handwritten notebook feel.",
         args_schema=GenerateSectionHeaderSlide10Input
     ),
     StructuredTool.from_function(
@@ -1963,7 +1943,7 @@ TRANSITION_TOOLS = [
     StructuredTool.from_function(
         func=generate_section_header_slide_12,
         name="generate_section_header_slide_12",
-        description="Generates a minimal question slide featuring a decorative arrow label and a prominent title. Blocks are positioned for converter compatibility.",
+        description="Generates a minimalist question slide with clean design. Features a prominent question/title text on the left and a decorative pen SVG illustration with writing stroke on the bottom right. Light gray background for a professional, modern look. No animations. Perfect for Q&A sections, topic introduction slides, or thought-provoking questions with a clean, contemporary aesthetic.",
         args_schema=GenerateSectionHeaderSlide12Input
     ),
     StructuredTool.from_function(
