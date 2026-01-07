@@ -531,8 +531,8 @@ class GenerateSectionHeaderSlide9Input(BaseModel):
     """Input schema for generate_section_header_slide_9."""
     main_title: str = Field(..., description="Main title text for the slide.")
     subtitle: str = Field(default="Here you could describe the topic of the section", description="Subtitle text displayed below the title.")
-    bg_gradient_from: str = Field(default="#4ecdc4", description="Starting gradient color (e.g., teal).")
-    bg_gradient_to: str = Field(default="#3d5a80", description="Ending gradient color (e.g., dark blue).")
+    bg_gradient_from: str = Field(default="#fef5e7", description="Starting gradient color (light cream).")
+    bg_gradient_to: str = Field(default="#d4a574", description="Ending gradient color (warm brown).")
     text_color: str = Field(default="#ffffff", description="Color of all text elements.")
     custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
 
@@ -567,13 +567,13 @@ class GenerateSectionHeaderSlide12Input(BaseModel):
 
 class GenerateSectionHeaderSlide13Input(BaseModel):
     """Input schema for generate_section_header_slide_13."""
-    main_title: str = Field(..., description="Main title text to display.")
-    subtitle: str = Field(..., description="Subtitle text below the main title.")
-    bg_start_color: str = Field(default="#FFFFFF", description="Background gradient start color (left side).")
-    bg_end_color: str = Field(default="#C8F4F0", description="Background gradient end color (right side).")
-    accent_gradient_color: str = Field(default="#FFB366", description="Accent gradient color (bottom left).")
-    text_color: str = Field(default="#1A1A1A", description="Color of text.")
-    custom_css: str = Field(default="", description="Additional custom CSS to inject.")
+    main_title: str = Field(..., description="Main title text for the slide.")
+    subtitle: str = Field(..., description="Subtitle text displayed below the title.")
+    bg_start_color: str = Field(default="#FFFFFF", description="Starting gradient color (white/left side).")
+    bg_end_color: str = Field(default="#C8F4F0", description="Ending gradient color (light cyan/right side).")
+    accent_gradient_color: str = Field(default="#FFB366", description="Accent gradient color for the bottom left corner (peach/orange).")
+    text_color: str = Field(default="#1A1A1A", description="Color of all text elements (dark gray).")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
 
 
 class GenerateSectionHeaderSlide14Input(BaseModel):
@@ -591,13 +591,13 @@ class GenerateSectionHeaderSlide14Input(BaseModel):
 
 class GenerateSectionHeaderSlide15Input(BaseModel):
     """Input schema for generate_section_header_slide_15."""
-    main_title: str = Field(..., description="Main title text to display. Default: 'This is the title of this section'.")
-    bg_color: str = Field(default="#e8e8e8", description="Background color for the slide.")
-    text_color: str = Field(default="#2d2d2d", description="Text color for the title.")
-    blob1_color: str = Field(default="rgba(255, 180, 120, 0.6)", description="Color for the first blurred gradient blob (CSS color string).")
-    blob2_color: str = Field(default="rgba(200, 120, 255, 0.6)", description="Color for the second blurred gradient blob (CSS color string).")
-    blob3_color: str = Field(default="rgba(120, 180, 255, 0.6)", description="Color for the third blurred gradient blob (CSS color string).")
-    custom_css: str = Field(default="", description="Additional custom CSS to include in the slide.")
+    main_title: str = Field(..., description="Main title text for the slide.")
+    bg_color: str = Field(default="#0f2f1f", description="Background color (default: dark evergreen green for Christmas theme).")
+    text_color: str = Field(default="#f8f8f8", description="Text color (default: bright white).")
+    blob1_color: str = Field(default="rgba(220, 38, 38, 0.5)", description="First gradient blob color (default: Christmas red).")
+    blob2_color: str = Field(default="rgba(34, 139, 34, 0.5)", description="Second gradient blob color (default: forest green).")
+    blob3_color: str = Field(default="rgba(218, 165, 32, 0.4)", description="Third gradient blob color (default: golden yellow).")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
 
 
 class GenerateSectionHeaderSlide16Input(BaseModel):
@@ -1925,7 +1925,7 @@ TRANSITION_TOOLS = [
     StructuredTool.from_function(
         func=generate_section_header_slide_9,
         name="generate_section_header_slide_9",
-        description="Generates a modern tech-style section header slide with hexagonal pattern decoration. Features a diagonal gradient background (teal to dark blue), right-aligned title and subtitle, and a decorative hexagon pattern with connecting dots on the left. No animations. Optimized for technology-focused section dividers.",
+        description="Generates a modern section header slide with house SVG illustration container on the left and text on the right. Features a warm diagonal gradient background (light cream to warm brown), white text, and space for custom SVG artwork. Layout uses space-between alignment with SVG container (50% width) and content area (50% width). No animations. Perfect for visually enriched section dividers with custom illustrations or graphics.",
         args_schema=GenerateSectionHeaderSlide9Input
     ),
     StructuredTool.from_function(
@@ -1949,7 +1949,7 @@ TRANSITION_TOOLS = [
     StructuredTool.from_function(
         func=generate_section_header_slide_13,
         name="generate_section_header_slide_13",
-        description="Generates a static section header slide without circuit/DNA decorations. Uses fixed font sizes and a subtle accent gradient; optimized for converter compatibility.",
+        description="Generates a modern section header slide with SVG illustration container on the right and text content on the left. Features a diagonal gradient background (white to light cyan), accent gradient at bottom left (peach/orange), and flexible layout with 55% text area and 45% SVG container. Text uses dark gray color with Roboto Mono font. Layout uses flexbox with space-between alignment for balanced composition. No animations. Perfect for visually enriched section dividers with custom SVG illustrations or graphics. The SVG container can hold any custom artwork.",
         args_schema=GenerateSectionHeaderSlide13Input
     ),
     StructuredTool.from_function(
@@ -1961,7 +1961,7 @@ TRANSITION_TOOLS = [
     StructuredTool.from_function(
         func=generate_section_header_slide_15,
         name="generate_section_header_slide_15",
-        description="Generates a modern gradient colorful title slide with large, italic bold title and three blurred gradient blobs. Static and converter-friendly. Parameters: main_title, bg_color, text_color, blob1_color, blob2_color, blob3_color, custom_css.",
+        description="Generates a Christmas-themed section header slide with festive gradient blobs and Christmas tree SVG illustration on the right. Features dark evergreen background, white text, and colorful festive gradient blobs (red, green, gold). Layout uses flexbox with text content on left (65% width) and SVG container on right (35% width). Text is large, italic, and bold. No animations. Perfect for holiday presentations and festive section dividers. Includes embedded Christmas tree SVG with ornaments and star.",
         args_schema=GenerateSectionHeaderSlide15Input
     ),
     StructuredTool.from_function(
