@@ -3519,7 +3519,703 @@ def generate_title_slide_10(
     
     return html_code
 
+def generate_title_slide_11(
+    main_title="Simple and Minimalist Thesis Defense",
+    subtitle="Here is where your presentation begins",
+    bg_left_color="#f5d7d7",
+    bg_right_color="#e8e8e8",
+    text_color="#2d2d2d"
+):
+    """
+    Generate a ultra-minimalist introduction slide with split background colors.
+    
+    Parameters:
+    - main_title: Main title text (str)
+    - subtitle: Subtitle text below the title (str)
+    - bg_left_color: Background color for left half (str)
+    - bg_right_color: Background color for right half (str)
+    - text_color: Text color (str)
+    
+    Returns:
+    - HTML string for the slide
+    """
+    
+    # Handle list inputs (take first element)
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "Simple and Minimalist Thesis Defense"
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else "Here is where your presentation begins"
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Circle Slide</title>
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            background: linear-gradient(90deg, {bg_left_color} 0%, {bg_left_color} 50%, {bg_right_color} 50%, {bg_right_color} 100%);
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }}
+        
+        .slide-wrapper {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            transform-origin: top left;
+        }}
+        
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
 
+        /* Content container */
+        .content {{
+            position: absolute;
+            z-index: 5;
+            text-align: center;
+            top: 400px;
+            left: 960px;
+            transform: translateX(-50%);
+            width: 1200px;
+        }}
+        
+        .title {{
+            font-family: Georgia, 'Times New Roman', serif;
+            font-size: 110px;
+            font-weight: 400;
+            color: {text_color};
+            line-height: 1.2;
+            margin-bottom: 0px;
+        }}
+        
+        .subtitle {{
+            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-size: 36px;
+            font-weight: 400;
+            color: {text_color};
+            margin-top: 40px;
+            opacity: 0.9;
+        }}
+        
+        /* Responsive scaling */
+        @media (max-width: 1920px) {{
+            .slide-wrapper {{
+                transform: scale(0.8);
+            }}
+        }}
+        
+        @media (max-width: 1440px) {{
+            .slide-wrapper {{
+                transform: scale(0.6);
+            }}
+        }}
+        
+        @media (max-width: 768px) {{
+            .slide-wrapper {{
+                transform: scale(0.4);
+            }}
+        }}
+        
+        @media (max-width: 480px) {{
+            .slide-wrapper {{
+                transform: scale(0.25);
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <!-- Content -->
+            <div class="content">
+                <h1 class="title">{main_title}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_12(
+    main_title="Elegant Black and White Thesis Defense",
+    subtitle="Here is where your presentation begins",
+    bg_color="#F5F5F5",
+    circle_color="#E5E5E5",
+    border_color="#000000",
+    text_color="#000000"
+):
+    """
+    Generate an elegant black and white minimalist slide with circular decoration.
+    
+    Args:
+        main_title (str): Main title text
+        subtitle (str): Subtitle text below main title
+        bg_color (str): Background color (default: light gray)
+        circle_color (str): Large circle decoration color (default: gray)
+        border_color (str): Border frame color (default: black)
+        text_color (str): Text color (default: black)
+    
+    Returns:
+        str: Complete HTML code for the slide
+    """
+    
+    # Handle list inputs by taking first element
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "Elegant Black and White Thesis Defense"
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else "Here is where your presentation begins"
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Black and White Thesis Defense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Open Sans', sans-serif;
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        
+        .slide-wrapper {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }}
+        
+        /* Border frame */
+        .border-frame {{
+            position: absolute;
+            top: 160px;
+            left: 160px;
+            right: 160px;
+            bottom: 160px;
+            border: 3px solid {border_color};
+            z-index: 2;
+        }}
+        
+        /* Large decorative circle */
+        .decorative-circle {{
+            position: absolute;
+            top: 50%;
+            right: -200px;
+            transform: translateY(-50%);
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background-color: {circle_color};
+            z-index: 1;
+        }}
+        
+        /* Content area */
+        .content-wrapper {{
+            position: absolute;
+            top: 50%;
+            left: 300px;
+            transform: translateY(-50%);
+            z-index: 3;
+            max-width: 1100px;
+        }}
+        
+        .main-title {{
+            font-family: 'Montserrat', sans-serif;
+            font-size: 88px;
+            font-weight: 900;
+            color: {text_color};
+            line-height: 1.1;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+        }}
+        
+        .subtitle {{
+            font-family: 'Open Sans', sans-serif;
+            font-size: 36px;
+            font-weight: 400;
+            color: {text_color};
+            line-height: 1.4;
+            opacity: 0.8;
+        }}
+        
+        /* Responsive scaling */
+        @media (max-width: 1920px) {{
+            .slide-wrapper {{
+                transform: scale(0.9);
+            }}
+        }}
+        
+        @media (max-width: 1600px) {{
+            .slide-wrapper {{
+                transform: scale(0.75);
+            }}
+        }}
+        
+        @media (max-width: 1280px) {{
+            .slide-wrapper {{
+                transform: scale(0.6);
+            }}
+        }}
+        
+        @media (max-width: 768px) {{
+            .slide-wrapper {{
+                transform: scale(0.35);
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <!-- Decorative circle -->
+        <div class="decorative-circle"></div>
+        
+        <!-- Border frame -->
+        <div class="border-frame"></div>
+        
+        <!-- Content -->
+        <div class="content-wrapper">
+            <h1 class="main-title">{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_13(
+    main_title="Head of Presentation",
+    subtitle="Here is where your presentation begins",
+    bg_color="#E8F4F8",
+    text_color="#1A1A4D",
+    decoration_color="#A8D5E2",
+):
+    """
+    Generate an HTML slide with diagonal geometric decorative elements
+    matching the Inverse Functions design.
+    
+    Args:
+        main_title: The main title text 
+        subtitle: The subtitle text 
+        bg_color: Background color (default: "#E8F4F8" - light cyan)
+        text_color: Color for title and subtitle text (default: "#1A1A4D" - dark blue)
+        decoration_color: Color for geometric decorations (default: "#A8D5E2" - light blue)
+    
+    Returns:
+        HTML string for the complete slide
+    """
+    
+    # Handle list inputs
+    if isinstance(main_title, list):
+        main_title = main_title[0] if main_title else "Inverse Functions"
+    if isinstance(subtitle, list):
+        subtitle = subtitle[0] if subtitle else "Here is where your presentation begins"
+    if isinstance(bg_color, list):
+        bg_color = bg_color[0] if bg_color else "#E8F4F8"
+    if isinstance(text_color, list):
+        text_color = text_color[0] if text_color else "#1A1A4D"
+    if isinstance(decoration_color, list):
+        decoration_color = decoration_color[0] if decoration_color else "#A8D5E2"
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverse Functions Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+
+        body {{
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, {bg_color} 0%, #D4E8F0 100%);
+        }}
+
+        .slide-wrapper {{
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }}
+
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+
+        .content {{
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            max-width: 1400px;
+        }}
+
+        .main-title {{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 100px;
+            color: {text_color};
+            line-height: 1.2;
+            letter-spacing: -2px;
+            margin-bottom: 30px;
+        }}
+        
+        .subtitle {{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 40px;
+            color: {text_color};
+            opacity: 0.8;
+            line-height: 1.4;
+        }}
+
+        /* Decorative geometric elements - rounded rectangles at diagonal angles */
+        .geo-element {{
+            position: absolute;
+            border-radius: 50px;
+            opacity: 0.6;
+        }}
+
+        /* Top-left corner elements */
+        .geo-1 {{
+            width: 120px;
+            height: 350px;
+            background: {decoration_color};
+            top: -50px;
+            left: -20px;
+            transform: rotate(-45deg);
+        }}
+
+        .geo-2 {{
+            width: 100px;
+            height: 280px;
+            background: {decoration_color};
+            top: 20px;
+            left: 120px;
+            transform: rotate(-45deg);
+            filter: brightness(0.85);
+        }}
+
+        .geo-3 {{
+            width: 80px;
+            height: 220px;
+            background: {decoration_color};
+            top: 80px;
+            left: 240px;
+            transform: rotate(-45deg);
+            filter: brightness(1.1);
+        }}
+
+        /* Bottom-right corner elements */
+        .geo-4 {{
+            width: 100px;
+            height: 280px;
+            background: {decoration_color};
+            bottom: 50px;
+            right: 120px;
+            transform: rotate(-45deg);
+        }}
+
+        .geo-5 {{
+            width: 90px;
+            height: 240px;
+            background: {decoration_color};
+            bottom: -30px;
+            right: 0px;
+            transform: rotate(-45deg);
+            filter: brightness(0.85);
+        }}
+
+        .geo-6 {{
+            width: 110px;
+            height: 300px;
+            background: {decoration_color};
+            bottom: 100px;
+            right: 250px;
+            transform: rotate(-45deg);
+            filter: brightness(1.1);
+        }}
+
+        /* Top-right small element */
+        .geo-7 {{
+            width: 70px;
+            height: 180px;
+            background: {decoration_color};
+            top: 150px;
+            right: 50px;
+            transform: rotate(-45deg);
+            filter: brightness(1.1);
+        }}
+
+        /* Small circle in top-left area */
+        .geo-circle {{
+            width: 80px;
+            height: 80px;
+            background: {decoration_color};
+            border-radius: 50%;
+            top: 50px;
+            left: 50px;
+            opacity: 0.5;
+        }}
+
+        /* Responsive scaling */
+        @media (max-width: 1920px) {{
+            .slide-container {{
+                transform: scale(0.8);
+            }}
+        }}
+
+        @media (max-width: 1440px) {{
+            .slide-container {{
+                transform: scale(0.6);
+            }}
+        }}
+
+        @media (max-width: 1024px) {{
+            .slide-container {{
+                transform: scale(0.4);
+            }}
+        }}
+
+        @media (max-width: 768px) {{
+            .slide-container {{
+                transform: scale(0.25);
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <!-- Decorative geometric elements -->
+            <div class="geo-element geo-circle"></div>
+            <div class="geo-element geo-1"></div>
+            <div class="geo-element geo-2"></div>
+            <div class="geo-element geo-3"></div>
+            <div class="geo-element geo-4"></div>
+            <div class="geo-element geo-5"></div>
+            <div class="geo-element geo-6"></div>
+            <div class="geo-element geo-7"></div>
+
+            <!-- Content -->
+            <div class="content">
+                <h1 class="main-title">{main_title}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_14(
+    main_title="Head of Presentation",
+    subtitle="Here is where your presentation begins",
+    bg_gradient_start="#FFFFFF",
+    bg_gradient_end="#E6D5F5",
+    text_color="#000000",
+    circle_color="#8B5CF6",
+    border_color="#000000"
+):
+    """
+    Generate an HTML slide with gradient background and elegant frame design.
+    
+    Args:
+        main_title (str): Main title text
+        subtitle (str): Subtitle text below the title
+        bg_gradient_start (str): Gradient background start color (left side)
+        bg_gradient_end (str): Gradient background end color (right side)
+        text_color (str): Color for all text
+        circle_color (str): Color for decorative circles
+        border_color (str): Color for the border frame
+    
+    Returns:
+        str: Complete HTML string for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple and Elegant Gradients Pitch Deck</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Montserrat', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(to right, {bg_gradient_start}, {bg_gradient_end});
+        }}
+        
+        .slide-wrapper {{
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        /* Decorative circles */
+        .circle {{
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background-color: {circle_color};
+            z-index: 10;
+        }}
+        
+        .circle.top-left {{
+            top: 30px;
+            left: 30px;
+        }}
+        
+        .circle.bottom-right {{
+            top: 1000px;
+            left: 1840px;
+        }}
+        
+        /* Border frame */
+        .border-frame {{
+            position: absolute;
+            top: 21px;
+            left: 1px;
+            width: 1560px;
+            height: 840px;
+            border: 3px solid {border_color};
+            z-index: 5;
+        }}
+        
+        /* Content container */
+        .content {{
+            position: relative;
+            z-index: 1;
+            text-align: left;
+            padding: 0 100px;
+            max-width: 1200px;
+        }}
+        
+        .main-title {{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 800;
+            font-size: 72px;
+            line-height: 1.1;
+            color: {text_color};
+            margin-bottom: 60px;
+        }}
+        
+        .subtitle {{
+            font-family: 'Montserrat', sans-serif;
+            font-weight: 400;
+            font-size: 36px;
+            color: {text_color};
+            opacity: 0.9;
+        }}
+        
+        /* Responsive scaling */
+        @media screen and (max-width: 1920px) {{
+            .slide-container {{
+                transform: scale(0.8);
+                transform-origin: center center;
+            }}
+        }}
+        
+        @media screen and (max-width: 1440px) {{
+            .slide-container {{
+                transform: scale(0.6);
+                transform-origin: center center;
+            }}
+        }}
+        
+        @media screen and (max-width: 768px) {{
+            .slide-container {{
+                transform: scale(0.4);
+                transform-origin: center center;
+            }}
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <!-- Decorative circles -->
+            <div class="circle top-left"></div>
+            <div class="circle bottom-right"></div>
+            
+            <!-- Border frame -->
+            <div class="border-frame"></div>
+            
+            <!-- Content -->
+            <div class="content">
+                <h1 class="main-title">{main_title}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
 #----------------------SLIDE CHUYỂN SLIDE
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",

@@ -29,6 +29,10 @@ from src.tools.html_tool import (
     generate_title_slide_8, # slide intro (hien)
     generate_title_slide_9, # slide intro (hien)
     generate_title_slide_10, # slide intro (hien)
+    generate_title_slide_11, # slide intro (hien)
+    generate_title_slide_12, # slide intro (hien)
+    generate_title_slide_13, # slide intro (hien)
+    generate_title_slide_14, # slide intro (hien)
 
   
     
@@ -394,6 +398,41 @@ class GenerateTitleSlide10Input(BaseModel):
     bg_gradient_end: str = Field(default="#4a0e4e", description="Gradient end color (hex).")
     accent_glow_color: str = Field(default="#1e90ff", description="Accent glow color (hex).")
     text_color: str = Field(default="#ffffff", description="Color for text (hex).")
+
+class GenerateTitleSlide11Input(BaseModel):
+    """Input schema for generate_title_slide_11."""
+    main_title: str = Field(..., description="Main title text displayed in large Georgia serif font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
+    bg_left_color: str = Field(default="#f5d7d7", description="Background color for left half of the slide (hex).")
+    bg_right_color: str = Field(default="#e8e8e8", description="Background color for right half of the slide (hex).")
+    text_color: str = Field(default="#2d2d2d", description="Color for all text elements (hex).")
+
+class GenerateTitleSlide12Input(BaseModel):
+    """Input schema for generate_title_slide_12."""
+    main_title: str = Field(..., description="Main title text in Montserrat bold font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
+    bg_color: str = Field(default="#F5F5F5", description="Background color of the slide (hex).")
+    circle_color: str = Field(default="#E5E5E5", description="Color of the large decorative circle on the right (hex).")
+    border_color: str = Field(default="#000000", description="Color of the rectangular border frame (hex).")
+    text_color: str = Field(default="#000000", description="Color for all text elements (hex).")
+
+class GenerateTitleSlide13Input(BaseModel):
+    """Input schema for generate_title_slide_13."""
+    main_title: str = Field(..., description="Main title text in Montserrat extra-bold font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
+    bg_color: str = Field(default="#E8F4F8", description="Starting color for diagonal gradient background (hex).")
+    text_color: str = Field(default="#1A1A4D", description="Color for title and subtitle text (hex).")
+    decoration_color: str = Field(default="#A8D5E2", description="Color for geometric decorations - rounded rectangles and circle (hex).")
+
+class GenerateTitleSlide14Input(BaseModel):
+    """Input schema for generate_title_slide_14."""
+    main_title: str = Field(..., description="Main title text in Montserrat bold font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
+    bg_gradient_start: str = Field(default="#FFFFFF", description="Starting color for horizontal gradient background (left side, hex).")
+    bg_gradient_end: str = Field(default="#E6D5F5", description="Ending color for horizontal gradient background (right side, hex).")
+    text_color: str = Field(default="#000000", description="Color for all text elements (hex).")
+    circle_color: str = Field(default="#8B5CF6", description="Color for decorative circles in corners (hex).")
+    border_color: str = Field(default="#000000", description="Color for the rectangular border frame (hex).")
     
 # === SLIDE CHUYỂN SLIDE CLASSES ===
 
@@ -1839,6 +1878,34 @@ INTRO_TOOLS = [
         name="generate_title_slide_10",
         description="Generates a static tech-themed title slide (fixed 1920x1080) with a dark gradient background and a single decorative glow. Layout uses fixed pixel sizes to be converter-friendly.",
         args_schema=GenerateTitleSlide10Input,
+    )
+    ,
+    StructuredTool.from_function(
+        func=generate_title_slide_11,
+        name="generate_title_slide_11",
+        description="Generates an ultra-minimalist title slide with split background colors (left/right). Features large centered title in Georgia serif and subtle subtitle, perfect for clean, professional presentations.",
+        args_schema=GenerateTitleSlide11Input,
+    )
+    ,
+    StructuredTool.from_function(
+        func=generate_title_slide_12,
+        name="generate_title_slide_12",
+        description="Generates an elegant black and white minimalist title slide with decorative circle and border frame. Features bold Montserrat title, clean layout with left-aligned text, perfect for formal academic presentations.",
+        args_schema=GenerateTitleSlide12Input,
+    )
+    ,
+    StructuredTool.from_function(
+        func=generate_title_slide_13,
+        name="generate_title_slide_13",
+        description="Generates a modern geometric title slide with diagonal gradient background and 8 rotated decorative elements (rounded rectangles and circle). Features centered Montserrat typography with flexible layout, perfect for contemporary and creative presentations.",
+        args_schema=GenerateTitleSlide13Input,
+    )
+    ,
+    StructuredTool.from_function(
+        func=generate_title_slide_14,
+        name="generate_title_slide_14",
+        description="Generates an elegant gradient title slide with horizontal gradient background, decorative circles in corners, and rectangular border frame. Features Montserrat typography with customizable gradient colors, perfect for modern business presentations.",
+        args_schema=GenerateTitleSlide14Input,
     )
 ]
 
