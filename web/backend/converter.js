@@ -7,7 +7,7 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
     // ⚠️ DEV ONLY: --no-sandbox bypasses AppArmor restrictions on Ubuntu 23.10+
     // For production, fix Chrome sandbox properly per Chromium docs
     const browser = await puppeteer.launch({
-    executablePath: "/usr/bin/chromium-browser",
+    executablePath: "/usr/bin/chromium-browser", // comment dòng này lại nếu dùng Chrome mặc định (hoặc chạy trên windows)
     headless: true,
     args: [
         "--no-sandbox",
