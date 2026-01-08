@@ -6483,24 +6483,32 @@ ${slide.content}
             for (let style of styleElements) {
                 const cssText = style.textContent || style.innerHTML;
 
-                // Regex để tìm body background-color
-                const bodyBgMatch = cssText.match(/body[^{]*\{[^}]*background-color:\s*([^;]+);/i);
-                if (bodyBgMatch) {
-                    const color = bodyBgMatch[1].trim();
-                    console.log('🎨 Found BODY background from CSS:', color);
-                    return color;
-                }
-
-                // Regex để tìm body background (general)
+                // Regex để tìm body background (general) - check này TRƯỚC để bắt gradient
                 const bodyBgGeneralMatch = cssText.match(/body[^{]*\{[^}]*background:\s*([^;]+);/i);
                 if (bodyBgGeneralMatch) {
                     const bgValue = bodyBgGeneralMatch[1].trim();
-                    // Extract chỉ color part nếu có
-                    const colorMatch = bgValue.match(/rgb\([^)]+\)|#[a-fA-F0-9]{3,6}|[a-zA-Z]+/);
+                    console.log('🎨 Found BODY background (general) from CSS:', bgValue);
+                    
+                    // Check if it's a gradient - return full value
+                    if (bgValue.includes('gradient') || bgValue.includes('url(')) {
+                        console.log('🎨 Returning gradient/url background:', bgValue);
+                        return bgValue;
+                    }
+                    
+                    // For solid colors, extract the color part
+                    const colorMatch = bgValue.match(/rgb\([^)]+\)|rgba\([^)]+\)|#[a-fA-F0-9]{3,8}|[a-zA-Z]+/);
                     if (colorMatch) {
-                        console.log('🎨 Found BODY background (general) from CSS:', colorMatch[0]);
+                        console.log('🎨 Returning solid color:', colorMatch[0]);
                         return colorMatch[0];
                     }
+                }
+
+                // Regex để tìm body background-color (solid color only)
+                const bodyBgMatch = cssText.match(/body[^{]*\{[^}]*background-color:\s*([^;]+);/i);
+                if (bodyBgMatch) {
+                    const color = bodyBgMatch[1].trim();
+                    console.log('🎨 Found BODY background-color from CSS:', color);
+                    return color;
                 }
             }
         }
@@ -6529,9 +6537,18 @@ ${slide.content}
             }
         }
 
-        // METHOD 3: Check iframe content có thể có background trong HTML
+        // METHOD 3: Check iframe content có thể có background trong HTML inline style
         if (doc && doc.documentElement) {
             const htmlContent = doc.documentElement.outerHTML;
+            
+            // Try to match background with gradient (can contain parentheses)
+            const bodyBgGradientMatch = htmlContent.match(/body[^>]*style="[^"]*background:\s*((?:linear|radial)-gradient\([^)]+\))/i);
+            if (bodyBgGradientMatch) {
+                console.log('🎨 Found BODY gradient background from HTML:', bodyBgGradientMatch[1]);
+                return bodyBgGradientMatch[1].trim();
+            }
+            
+            // Fallback to simple background match
             const bodyBgMatch = htmlContent.match(/body[^>]*style="[^"]*background[^:]*:\s*([^;"]+)/i);
             if (bodyBgMatch) {
                 console.log('🎨 Found BODY background from HTML:', bodyBgMatch[1]);
@@ -6544,7 +6561,17 @@ ${slide.content}
     }
 
     applyCanvasBackground(sourceElement, sourceWindow, targetCanvas) {
-        targetCanvas.style.backgroundColor = this.findSolidBackgroundColor(sourceElement, sourceWindow);
+        const bgValue = this.findSolidBackgroundColor(sourceElement, sourceWindow);
+        
+        // Apply background - use 'background' for gradients, 'backgroundColor' for solid colors
+        if (bgValue.includes('gradient') || bgValue.includes('url(')) {
+            targetCanvas.style.background = bgValue;
+            targetCanvas.setAttribute('data-bg', bgValue);
+        } else {
+            targetCanvas.style.backgroundColor = bgValue;
+            targetCanvas.setAttribute('data-bg', bgValue);
+        }
+        
         const beforeStyle = sourceWindow.getComputedStyle(sourceElement, '::before');
         if (beforeStyle.content !== 'none' && beforeStyle.backgroundImage !== 'none') {
             const pseudoBgLayer = document.createElement('div');
