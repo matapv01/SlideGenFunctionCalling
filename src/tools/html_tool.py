@@ -11619,6 +11619,8 @@ def generate_corporate_content_slide(
     bg_color="#F8FAFC",
     accent_panel_color="#6366F1",
     title_color="#FFFFFF",
+    card_bg_color="#FFFFFF",
+    card_border_color="#E5E7EB",
     list_title_color="#000000",
     list_text_color="#333333"
 ):
@@ -11701,12 +11703,12 @@ def generate_corporate_content_slide(
         }}
 
         .list-item-card {{
-            background: #FFFFFF;
+            background: {card_bg_color};
             border-radius: 1rem;
             padding: 2.5rem;
             position: relative;
             overflow: hidden;
-            border: 1px solid #E5E7EB;
+            border: 1px solid {card_border_color};
             box-shadow: 0 8px 25px rgba(0,0,0,0.07);
             /* ĐÃ XÓA: transition */
         }}
