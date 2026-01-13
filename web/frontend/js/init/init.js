@@ -1,6 +1,7 @@
 // Application Initialization
 import { SlideEditor } from '../core/SlideEditor.js';
 import { loadGeneratedSlidesIfAvailable, convertApiSlideToEditorFormat, convertHtmlToEditorElements, showNotification, toggleSlideView, openSlideInNewTab } from '../utils/utils.js';
+import { PixabayManager } from '../pixabay.js';
 
 // Make functions globally accessible
 window.loadGeneratedSlidesIfAvailable = loadGeneratedSlidesIfAvailable;
@@ -14,6 +15,11 @@ window.openSlideInNewTab = openSlideInNewTab;
 const initEditor = () => {
 console.log('🎬 Initializing editor...');
 window.slideEditor = new SlideEditor();
+
+// Initialize Pixabay Manager with slideEditor reference
+console.log('🌐 Initializing Pixabay Manager...');
+window.pixabayManager = new PixabayManager(window.slideEditor);
+console.log('✅ Pixabay Manager connected to SlideEditor');
 
 // Global debug functions for console testing
 window.testCapture = () => {

@@ -160,7 +160,7 @@
             <div class="btn-group-separator"></div>
 
             <div class="btn-group">
-                <button id="importBtn" style="display: none;">📂 Nhập</button>
+                <button id="importBtn" >📂 Nhập</button>
             </div>
         </div>
     </div>
@@ -172,22 +172,26 @@
     <div class="left-panels">
         <div class="left-panel-tabs">
             <div class="left-panel-tab active" data-tab="slides" data-target="slides-panel-content">
-                <span class="tab-icon">📊</span>
-                <span class="tab-text">Slides</span>
+                <span class="tab-icon" style="font-size: 22px;">📊</span>
+                <span class="tab-text" style="font-size: 14px; font-weight: 600;">Slides</span>
             </div>
             <div class="left-panel-tab" data-tab="templates" data-target="templates-panel-content">
-                <span class="tab-icon">🎨</span>
-                <span class="tab-text">Mẫu</span>
+                <span class="tab-icon" style="font-size: 22px;">🎨</span>
+                <span class="tab-text" style="font-size: 14px; font-weight: 600;">Mẫu</span>
             </div>
             <div class="left-panel-tab" data-tab="elements" data-target="elements-panel-content">
-                <span class="tab-icon">✨</span>
-                <span class="tab-text">Thành phần</span>
+                <span class="tab-icon" style="font-size: 22px;">✨</span>
+                <span class="tab-text" style="font-size: 14px; font-weight: 600;">Thành phần</span>
+            </div>
+            <div class="left-panel-tab" data-tab="icons" data-target="icons-panel-content">
+                <span class="tab-icon" style="font-size: 22px;">🎭</span>
+                <span class="tab-text" style="font-size: 14px; font-weight: 600;">Biểu tượng</span>
             </div>
         </div>
 
         <div id="slides-panel-content" class="left-panel-content active">
             <div class="panel-header">
-                <h3>Slides</h3>
+                <h3 style="font-size: 18px; font-weight: 700;">Slides</h3>
                 <div class="slide-controls">
                     <button id="newSlideBtn">+ Mới</button>
                     <button id="duplicateSlideBtn">Nhân bản</button>
@@ -198,8 +202,8 @@
 
         <div id="templates-panel-content" class="left-panel-content">
             <div class="panel-header">
-                <h3>Mẫu Slide</h3>
-                <p style="font-size: 12px; color: #718096; margin-top: 5px;">Kéo mẫu vào canvas để tạo slide mới</p>
+                <h3 style="font-size: 18px; font-weight: 700;">Mẫu Slide</h3>
+                <p style="font-size: 13px; color: #718096; margin-top: 5px;">Kéo mẫu vào canvas để tạo slide mới</p>
             </div>
             <div class="templates-content">
                 <div class="template-category">
@@ -278,37 +282,120 @@
 
         <div id="elements-panel-content" class="left-panel-content">
             <div class="panel-header">
-                <h3>Thành phần Thiết kế</h3>
-                <p style="font-size: 12px; color: #718096; margin-top: 5px;">Click để thêm thành phần vào slide</p>
+                <h3 style="font-size: 18px; font-weight: 700;">Thành phần Thiết kế</h3>
+                <p style="font-size: 13px; color: #718096; margin-top: 5px;">Click để thêm thành phần vào slide</p>
             </div>
             <div class="elements-content">
-                <!-- Media Elements - Moved to top for easy access -->
+                <!-- Upload/URL Image Section -->
                 <div class="element-category">
-                    <div class="category-title">📱 Import từ máy</div>
-                    <div class="element-grid">
-                        <div class="element-item" data-element="image" title="Click để chọn ảnh từ máy tính">
-                            <div class="element-icon">
-                                <div class="media-placeholder"
-                                    style="width: 24px; height: 18px; background: linear-gradient(45deg, #48bb78, #38a169); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white;">
-                                    📁</div>
-                            </div>
-                            <div class="element-label">Thêm Ảnh</div>
+                    <div class="category-title">📁 Thêm ảnh của bạn</div>
+                    <div style="padding: 12px;">
+                        <!-- Upload from Computer -->
+                        <div style="margin-bottom: 12px;">
+                            <button 
+                                onclick="document.getElementById('imageFile').click()"
+                                style="width: 100%; padding: 12px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 8px; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3);"
+                                onmouseover="this.style.transform='translateY(-2px)'; this.style.boxShadow='0 4px 8px rgba(72, 187, 120, 0.4)'"
+                                onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(72, 187, 120, 0.3)'"
+                            >
+                                <span style="font-size: 18px;">💻</span>
+                                <span>Tải ảnh từ máy tính</span>
+                            </button>
                         </div>
-                        <div class="element-item" data-element="video" title="Click để chọn video từ máy tính">
-                            <div class="element-icon">
-                                <div class="media-placeholder"
-                                    style="width: 24px; height: 18px; background: linear-gradient(45deg, #4299e1, #3182ce); border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 12px; color: white;">
-                                    🎬</div>
+                        
+                        <!-- Add Image from URL -->
+                        <div style="position: relative;">
+                            <div style="position: relative; display: flex; gap: 8px;">
+                                <div style="flex: 1; position: relative;">
+                                    <span style="position: absolute; left: 12px; top: 50%; transform: translateY(-50%); font-size: 16px; color: #a0aec0;">🔗</span>
+                                    <input 
+                                        type="text" 
+                                        id="imageUrlInput" 
+                                        placeholder="Dán link ảnh từ internet..."
+                                        style="width: 100%; padding: 12px 12px 12px 40px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; outline: none; transition: border-color 0.2s;"
+                                        onfocus="this.style.borderColor='#48bb78'"
+                                        onblur="this.style.borderColor='#e2e8f0'"
+                                    />
+                                </div>
+                                <button 
+                                    id="addImageUrlBtn"
+                                    style="padding: 12px 20px; background: linear-gradient(135deg, #48bb78 0%, #38a169 100%); color: white; border: none; border-radius: 8px; cursor: pointer; font-size: 13px; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 4px rgba(72, 187, 120, 0.3); white-space: nowrap;"
+                                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(72, 187, 120, 0.4)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(72, 187, 120, 0.3)'"
+                                >
+                                    Thêm
+                                </button>
                             </div>
-                            <div class="element-label">Thêm Video</div>
-                        </div>
-                        <div class="element-item" data-element="avatar">
-                            <div class="element-icon" style="font-size: 20px;">👤</div>
-                            <div class="element-label">Avatar</div>
+                            <p style="font-size: 11px; color: #718096; margin-top: 6px; margin-left: 2px;">Hỗ trợ: JPG, PNG, GIF, WebP</p>
                         </div>
                     </div>
                 </div>
 
+                <!-- Pixabay Search - Canva Style -->
+                <div class="element-category">
+                    <div class="category-title">🌐 Pixabay - Hình ảnh miễn phí</div>
+                    <div style="padding: 12px;">
+                        <!-- Search Bar - Canva Style -->
+                        <div style="position: relative; margin-bottom: 12px;">
+                            <div style="position: relative; display: flex; align-items: center; background: white; border: 2px solid #e2e8f0; border-radius: 8px; transition: all 0.2s;" class="pixabay-search-wrapper">
+                                <span style="position: absolute; left: 12px; font-size: 16px; color: #a0aec0;">🔍</span>
+                                <input 
+                                    type="text" 
+                                    id="pixabaySearchInput" 
+                                    placeholder="Tìm kiếm hình ảnh trên Pixabay..."
+                                    style="width: 100%; padding: 12px 12px 12px 40px; border: none; border-radius: 8px; font-size: 14px; outline: none; background: transparent;"
+                                />
+                                <button 
+                                    id="pixabaySearchBtn"
+                                    style="position: absolute; right: 6px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; padding: 8px 16px; border-radius: 6px; cursor: pointer; font-size: 13px; font-weight: 600; transition: transform 0.2s, box-shadow 0.2s; box-shadow: 0 2px 4px rgba(102, 126, 234, 0.3);"
+                                    onmouseover="this.style.transform='translateY(-1px)'; this.style.boxShadow='0 4px 8px rgba(102, 126, 234, 0.4)'"
+                                    onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(102, 126, 234, 0.3)'"
+                                >
+                                    Tìm kiếm
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Filter Pills - Canva Style -->
+                        <div style="display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap;">
+                            <select id="pixabayImageType" style="flex: 1; min-width: 100px; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                                <option value="photo">📷 Ảnh</option>
+                                <option value="illustration">🎨 Minh họa</option>
+                                <option value="vector">🔷 Nhãn dán</option>
+                            </select>
+                            <select id="pixabayOrientation" style="flex: 1; min-width: 100px; padding: 8px 12px; border: 2px solid #e2e8f0; border-radius: 8px; font-size: 13px; background: white; cursor: pointer; transition: border-color 0.2s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e2e8f0'">
+                                <option value="all">📐 Tất cả</option>
+                                <option value="horizontal">↔️ Ngang</option>
+                                <option value="vertical">↕️ Dọc</option>
+                            </select>
+                        </div>
+                        
+                        <!-- Results Grid - 2 Columns Canva Style -->
+                        <div id="pixabayResults" style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; max-height: 800px; overflow-y: auto; margin-top: 10px; padding-right: 4px;">
+                            <div style="grid-column: 1 / -1; text-align: center; padding: 40px 20px; color: #a0aec0; font-size: 14px;">
+                                <div style="font-size: 48px; margin-bottom: 12px;">🖼️</div>
+                                <div style="font-weight: 600; color: #4a5568; margin-bottom: 6px;">Tìm kiếm hình ảnh</div>
+                                <div>Nhập từ khóa để tìm hàng triệu ảnh miễn phí</div>
+                            </div>
+                        </div>
+                        
+                        <!-- Loading Indicator -->
+                        <div id="pixabayLoading" style="display: none; text-align: center; padding: 40px 20px; color: #667eea;">
+                            <div style="display: inline-block; width: 24px; height: 24px; border: 3px solid #e2e8f0; border-top-color: #667eea; border-radius: 50%; animation: spin 1s linear infinite;"></div>
+                            <p style="margin-top: 12px; font-size: 14px; font-weight: 500;">Đang tìm kiếm...</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- NEW: Icons Panel -->
+        <div id="icons-panel-content" class="left-panel-content">
+            <div class="panel-header">
+                <h3 style="font-size: 18px; font-weight: 700;">Biểu tượng & Icon</h3>
+                <p style="font-size: 13px; color: #718096; margin-top: 5px;">Click để thêm biểu tượng vào slide</p>
+            </div>
+            <div class="elements-content">
                 <!-- Basic Shapes -->
                 <div class="element-category">
                     <div class="category-title">🔷 Hình Cơ bản</div>
@@ -423,7 +510,6 @@
                     </div>
                 </div>
 
-                <!-- Symbols & Icons -->
                 <div class="element-category">
                     <div class="category-title">🎨 Symbols & Icons</div>
                     <div class="element-grid">
@@ -1000,12 +1086,6 @@
 
     <!-- Editor Script - ES6 Modules -->
     <script type="module">
-        // Force reload editor.js with NEW FILENAME to bypass cache
-        const editorScript = document.createElement('script');
-        editorScript.src = `js/editor-new-1765301429.js`;
-        editorScript.noModule = true;
-        document.body.appendChild(editorScript);
-
         console.log('⚡ Starting dynamic import of init.js...');
         // Force reload init.js with timestamp + random to bypass aggressive cache
         const bust = Date.now() + Math.random();

@@ -29,6 +29,13 @@ from .schemas import (
 )
 from .services import SlideService, CaptureService, ConversionService, WorkflowService
 
+# Import Pixabay tool
+import sys
+from pathlib import Path as SysPath
+project_root = SysPath(__file__).parent.parent.parent.parent
+sys.path.insert(0, str(project_root))
+from src.tools.pixabay_tool import PixabayTool
+
 # Setup logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL))
 logger = logging.getLogger(__name__)
@@ -2896,3 +2903,91 @@ async def generate_from_idea_stream(
             "X-Accel-Buffering": "no"
         }
     )
+
+
+# ============================================================================
+# PIXABAY API ENDPOINTS
+# ============================================================================
+
+@app.get("/api/pixabay/search/images")
+async def search_pixabay_images(
+    q: str = Query(..., description="Search query"),
+    image_type: str = Query("photo", description="Image type: all, photo, illustration, vector"),
+    orientation: str = Query("horizontal", description="Orientation: all, horizontal, vertical"),
+    per_page: int = Query(20, ge=3, le=200, description="Results per page"),
+    page: int = Query(1, ge=1, description="Page number"),
+    category: str = Query(None, description="Category filter"),
+    colors: str = Query(None, description="Color filter"),
+    order: str = Query("popular", description="Order: popular, latest")
+):
+    """
+    Tìm kiếm hình ảnh từ Pixabay
+    """
+    try:
+        result = PixabayTool.search_images(
+            q=q,
+            image_type=image_type,
+            orientation=orientation,
+            per_page=per_page,
+            page=page,
+            category=category,
+            colors=colors,
+            order=order
+        )
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error searching Pixabay images: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/pixabay/search/videos")
+async def search_pixabay_videos(
+    q: str = Query(..., description="Search query"),
+    video_type: str = Query("all", description="Video type: all, film, animation"),
+    per_page: int = Query(20, ge=3, le=200, description="Results per page"),
+    page: int = Query(1, ge=1, description="Page number"),
+    category: str = Query(None, description="Category filter"),
+    order: str = Query("popular", description="Order: popular, latest")
+):
+    """
+    Tìm kiếm video từ Pixabay
+    """
+    try:
+        result = PixabayTool.search_videos(
+            q=q,
+            video_type=video_type,
+            per_page=per_page,
+            page=page,
+            category=category,
+            order=order
+        )
+        return JSONResponse(content=result)
+    except Exception as e:
+        logger.error(f"Error searching Pixabay videos: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/pixabay/best-image")
+async def get_best_pixabay_image(
+    q: str = Query(..., description="Search query"),
+    orientation: str = Query("horizontal", description="Orientation: horizontal, vertical"),
+    quality: str = Query("large", description="Quality: preview, webformat, large"),
+    image_type: str = Query("photo", description="Image type: photo, illustration, vector")
+):
+    """
+    Lấy URL của hình ảnh tốt nhất cho từ khóa
+    """
+    try:
+        result = PixabayTool.search_and_get_best_image(
+            query=q,
+            orientation=orientation,
+            quality=quality,
+            image_type=image_type
+        )
+        if result:
+            return JSONResponse(content=result)
+        else:
+            raise HTTPException(status_code=404, detail="No images found")
+    except Exception as e:
+        logger.error(f"Error getting best Pixabay image: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

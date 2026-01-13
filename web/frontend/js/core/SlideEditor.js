@@ -2067,12 +2067,21 @@ export class SlideEditor {
         });
 
         document.querySelectorAll('.element-item').forEach(item => {
+            // Click handler
             item.addEventListener('click', (e) => {
                 const elementType = e.currentTarget.dataset.element;
                 if (elementType === 'image') document.getElementById('imageFile').click();
                 else if (elementType === 'video') document.getElementById('videoFile').click();
                 else this.createElement(elementType);
             });
+            
+            // Drag and drop handlers for elements
+            const elementType = item.dataset.element;
+            if (elementType && elementType !== 'image' && elementType !== 'video') {
+                item.setAttribute('draggable', 'true');
+                item.addEventListener('dragstart', (e) => this.handleElementDragStart(e));
+                item.addEventListener('dragend', (e) => this.handleElementDragEnd(e));
+            }
         });
 
         // Template drag and drop events
@@ -2096,12 +2105,26 @@ export class SlideEditor {
             tab.addEventListener('click', () => {
                 // Nếu panel đang collapsed, mở rộng nó ra
                 const leftPanels = document.querySelector('.left-panels');
+                const canvasContainer = document.querySelector('.canvas-container');
+                
                 if (leftPanels && leftPanels.classList.contains('collapsed')) {
                     leftPanels.classList.remove('collapsed');
                     const toggleBtn = document.getElementById('toggleSlidesBtn');
                     if (toggleBtn) {
                         toggleBtn.title = 'Thu gọn Slides';
                         toggleBtn.setAttribute('aria-pressed', 'true');
+                    }
+                }
+
+                // Toggle wide-panel class for elements and icons tabs
+                const tabType = tab.dataset.tab;
+                if (leftPanels && canvasContainer) {
+                    if (tabType === 'elements' || tabType === 'icons') {
+                        leftPanels.classList.add('wide-panel');
+                        canvasContainer.classList.add('wide-panel');
+                    } else {
+                        leftPanels.classList.remove('wide-panel');
+                        canvasContainer.classList.remove('wide-panel');
                     }
                 }
 
@@ -2717,8 +2740,16 @@ export class SlideEditor {
         el.dataset.type = type;
         el.id = `element_${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         el.style.position = 'absolute';
-        el.style.left = '200px';
-        el.style.top = '200px';
+        
+        // Use pending position from drag drop if available, otherwise default position
+        if (this.pendingElementPosition) {
+            el.style.left = `${this.pendingElementPosition.x}px`;
+            el.style.top = `${this.pendingElementPosition.y}px`;
+        } else {
+            el.style.left = '200px';
+            el.style.top = '200px';
+        }
+        
         el.style.zIndex = this.zIndexCounter++;
 
         switch (type) {
@@ -3560,7 +3591,7 @@ export class SlideEditor {
         // Force cleanup of all drag states first
         this.cleanupDragStates();
 
-        // Handle file drop
+        // Handle file drop (from desktop/file system)
         if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
             const files = Array.from(e.dataTransfer.files);
 
@@ -3579,11 +3610,51 @@ export class SlideEditor {
 
             return false;
         }
-        // Handle template drop
-        else if (e.dataTransfer.types.includes('text/plain')) {
-            const templateType = e.dataTransfer.getData('text/plain');
-            if (templateType) {
+        // Handle image URL drop (from Pixabay or other sources)
+        if (e.dataTransfer.types.includes('text/uri-list')) {
+            const imageUrl = e.dataTransfer.getData('text/uri-list');
+            if (imageUrl && (imageUrl.startsWith('http') || imageUrl.startsWith('data:'))) {
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const dropX = (e.clientX - canvasRect.left) / this.zoomLevel;
+                const dropY = (e.clientY - canvasRect.top) / this.zoomLevel;
+                
+                console.log('Creating image from URL:', imageUrl);
+                this.createImageElementFromURL(imageUrl, dropX, dropY);
+                return false;
+            }
+        }
+        
+        // Handle template, element, or fallback image URL drop
+        if (e.dataTransfer.types.includes('text/plain')) {
+            const data = e.dataTransfer.getData('text/plain');
+            
+            console.log('Text/plain data:', data);
+            
+            // Template drop (creates new slide)
+            if (data && data.startsWith('layout-')) {
+                const templateType = data.replace('layout-', '');
                 this.createSlideFromTemplate(templateType);
+                return false;
+            }
+            // Element drop (adds to current slide)
+            else if (data && data.startsWith('element-')) {
+                const elementType = data.replace('element-', '');
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const dropX = (e.clientX - canvasRect.left) / this.zoomLevel;
+                const dropY = (e.clientY - canvasRect.top) / this.zoomLevel;
+                
+                this.createElementAtPosition(elementType, dropX, dropY);
+                return false;
+            }
+            // Fallback: Check if it's an image URL in text/plain
+            else if (data && (data.startsWith('http') || data.startsWith('data:'))) {
+                const canvasRect = this.canvas.getBoundingClientRect();
+                const dropX = (e.clientX - canvasRect.left) / this.zoomLevel;
+                const dropY = (e.clientY - canvasRect.top) / this.zoomLevel;
+                
+                console.log('Creating image from text/plain URL:', data);
+                this.createImageElementFromURL(data, dropX, dropY);
+                return false;
             }
         }
     }
@@ -3718,6 +3789,55 @@ export class SlideEditor {
             }, 400);
         };
         reader.readAsDataURL(file);
+    }
+
+    createImageElementFromURL(imageUrl, x, y) {
+        const el = document.createElement('div');
+        el.className = 'element';
+        el.dataset.type = 'image';
+        el.style.position = 'absolute';
+        el.style.left = `${x}px`;
+        el.style.top = `${y}px`;
+        el.style.width = '400px';
+        el.style.height = '300px';
+        el.style.zIndex = this.zIndexCounter++;
+        el.style.borderRadius = '12px';
+        el.style.overflow = 'hidden';
+        el.style.border = '3px solid #667eea';
+        el.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.3)';
+        el.style.cursor = 'move';
+
+        const imgElement = document.createElement('img');
+        imgElement.src = imageUrl;
+        imgElement.style.width = '100%';
+        imgElement.style.height = '100%';
+        imgElement.style.objectFit = 'cover';
+        imgElement.style.display = 'block';
+        imgElement.style.borderRadius = 'inherit';
+        imgElement.style.pointerEvents = 'none';
+        imgElement.draggable = false;
+        imgElement.crossOrigin = 'anonymous';
+        el.appendChild(imgElement);
+
+        // Add success animation
+        el.style.transform = 'scale(0.8)';
+        el.style.opacity = '0';
+
+        this.canvas.appendChild(el);
+        this.makeElementInteractive(el);
+        this.selectElement(el);
+
+        // Animate in with bounce effect
+        setTimeout(() => {
+            el.style.transition = 'all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            el.style.transform = 'scale(1)';
+            el.style.opacity = '1';
+        }, 10);
+
+        setTimeout(() => {
+            el.style.transition = '';
+            this.saveState();
+        }, 400);
     }
 
     createVideoElementFromFile(file, x, y) {
@@ -6483,24 +6603,32 @@ ${slide.content}
             for (let style of styleElements) {
                 const cssText = style.textContent || style.innerHTML;
 
-                // Regex để tìm body background-color
-                const bodyBgMatch = cssText.match(/body[^{]*\{[^}]*background-color:\s*([^;]+);/i);
-                if (bodyBgMatch) {
-                    const color = bodyBgMatch[1].trim();
-                    console.log('🎨 Found BODY background from CSS:', color);
-                    return color;
-                }
-
-                // Regex để tìm body background (general)
+                // Regex để tìm body background (general) - check này TRƯỚC để bắt gradient
                 const bodyBgGeneralMatch = cssText.match(/body[^{]*\{[^}]*background:\s*([^;]+);/i);
                 if (bodyBgGeneralMatch) {
                     const bgValue = bodyBgGeneralMatch[1].trim();
-                    // Extract chỉ color part nếu có
-                    const colorMatch = bgValue.match(/rgb\([^)]+\)|#[a-fA-F0-9]{3,6}|[a-zA-Z]+/);
+                    console.log('🎨 Found BODY background (general) from CSS:', bgValue);
+                    
+                    // Check if it's a gradient - return full value
+                    if (bgValue.includes('gradient') || bgValue.includes('url(')) {
+                        console.log('🎨 Returning gradient/url background:', bgValue);
+                        return bgValue;
+                    }
+                    
+                    // For solid colors, extract the color part
+                    const colorMatch = bgValue.match(/rgb\([^)]+\)|rgba\([^)]+\)|#[a-fA-F0-9]{3,8}|[a-zA-Z]+/);
                     if (colorMatch) {
-                        console.log('🎨 Found BODY background (general) from CSS:', colorMatch[0]);
+                        console.log('🎨 Returning solid color:', colorMatch[0]);
                         return colorMatch[0];
                     }
+                }
+
+                // Regex để tìm body background-color (solid color only)
+                const bodyBgMatch = cssText.match(/body[^{]*\{[^}]*background-color:\s*([^;]+);/i);
+                if (bodyBgMatch) {
+                    const color = bodyBgMatch[1].trim();
+                    console.log('🎨 Found BODY background-color from CSS:', color);
+                    return color;
                 }
             }
         }
@@ -6529,9 +6657,18 @@ ${slide.content}
             }
         }
 
-        // METHOD 3: Check iframe content có thể có background trong HTML
+        // METHOD 3: Check iframe content có thể có background trong HTML inline style
         if (doc && doc.documentElement) {
             const htmlContent = doc.documentElement.outerHTML;
+            
+            // Try to match background with gradient (can contain parentheses)
+            const bodyBgGradientMatch = htmlContent.match(/body[^>]*style="[^"]*background:\s*((?:linear|radial)-gradient\([^)]+\))/i);
+            if (bodyBgGradientMatch) {
+                console.log('🎨 Found BODY gradient background from HTML:', bodyBgGradientMatch[1]);
+                return bodyBgGradientMatch[1].trim();
+            }
+            
+            // Fallback to simple background match
             const bodyBgMatch = htmlContent.match(/body[^>]*style="[^"]*background[^:]*:\s*([^;"]+)/i);
             if (bodyBgMatch) {
                 console.log('🎨 Found BODY background from HTML:', bodyBgMatch[1]);
@@ -6544,7 +6681,17 @@ ${slide.content}
     }
 
     applyCanvasBackground(sourceElement, sourceWindow, targetCanvas) {
-        targetCanvas.style.backgroundColor = this.findSolidBackgroundColor(sourceElement, sourceWindow);
+        const bgValue = this.findSolidBackgroundColor(sourceElement, sourceWindow);
+        
+        // Apply background - use 'background' for gradients, 'backgroundColor' for solid colors
+        if (bgValue.includes('gradient') || bgValue.includes('url(')) {
+            targetCanvas.style.background = bgValue;
+            targetCanvas.setAttribute('data-bg', bgValue);
+        } else {
+            targetCanvas.style.backgroundColor = bgValue;
+            targetCanvas.setAttribute('data-bg', bgValue);
+        }
+        
         const beforeStyle = sourceWindow.getComputedStyle(sourceElement, '::before');
         if (beforeStyle.content !== 'none' && beforeStyle.backgroundImage !== 'none') {
             const pseudoBgLayer = document.createElement('div');
@@ -6772,7 +6919,8 @@ ${slide.content}
     // Template drag & drop methods
     handleTemplateDragStart(e) {
         const templateType = e.target.closest('.template-item').dataset.template;
-        e.dataTransfer.setData('text/plain', templateType);
+        // Add 'layout-' prefix to identify as template drag
+        e.dataTransfer.setData('text/plain', 'layout-' + templateType);
         e.dataTransfer.effectAllowed = 'copy';
 
         // Add visual feedback
@@ -6781,6 +6929,35 @@ ${slide.content}
 
     handleTemplateDragEnd(e) {
         e.target.style.opacity = '1';
+    }
+
+    handleElementDragStart(e) {
+        const elementType = e.target.closest('.element-item').dataset.element;
+        // Add 'element-' prefix to identify as element drag (not template)
+        e.dataTransfer.setData('text/plain', 'element-' + elementType);
+        e.dataTransfer.effectAllowed = 'copy';
+
+        // Add visual feedback
+        e.target.style.opacity = '0.5';
+    }
+
+    handleElementDragEnd(e) {
+        e.target.style.opacity = '1';
+    }
+
+    createElementAtPosition(elementType, x, y) {
+        // Create element at specific position (from drag drop)
+        const currentSlide = this.slides[this.currentSlideIndex];
+        if (!currentSlide) return;
+
+        // Temporarily store the position for createElement
+        this.pendingElementPosition = { x, y };
+        
+        // Use existing createElement method
+        this.createElement(elementType);
+        
+        // Clear pending position
+        delete this.pendingElementPosition;
     }
 
     // Legacy template handlers (replaced by unified handlers)

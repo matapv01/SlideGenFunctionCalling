@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Pixabay Integration</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 40px 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        h1 {
+            color: #2d3748;
+            margin-bottom: 10px;
+            font-size: 32px;
+        }
+        
+        .subtitle {
+            color: #718096;
+            margin-bottom: 30px;
+            font-size: 16px;
+        }
+        
+        .search-box {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        input[type="text"] {
+            flex: 1;
+            padding: 12px 16px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border 0.2s;
+        }
+        
+        input[type="text"]:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        button {
+            padding: 12px 24px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        button:hover {
+            background: #5568d3;
+            transform: translateY(-1px);
+        }
+        
+        button:active {
+            transform: translateY(0);
+        }
+        
+        .filters {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        select {
+            flex: 1;
+            padding: 10px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+        }
+        
+        .results {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 20px;
+        }
+        
+        .image-card {
+            position: relative;
+            aspect-ratio: 1;
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: #f7fafc;
+            border: 2px solid transparent;
+        }
+        
+        .image-card:hover {
+            border-color: #667eea;
+            transform: scale(1.05);
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1);
+        }
+        
+        .image-card img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+            padding: 12px 10px 8px;
+            opacity: 0;
+            transition: opacity 0.2s;
+            font-size: 12px;
+            color: white;
+        }
+        
+        .image-card:hover .overlay {
+            opacity: 1;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: #667eea;
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 40px;
+            height: 40px;
+            border: 4px solid #e2e8f0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .message {
+            padding: 16px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 14px;
+        }
+        
+        .message.info {
+            background: #ebf4ff;
+            color: #2c5282;
+            border: 1px solid #bee3f8;
+        }
+        
+        .message.success {
+            background: #f0fff4;
+            color: #22543d;
+            border: 1px solid #9ae6b4;
+        }
+        
+        .stats {
+            display: flex;
+            justify-content: space-between;
+            padding: 16px;
+            background: #f7fafc;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            color: #667eea;
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: #718096;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 Pixabay Integration Test</h1>
+        <p class="subtitle">Test tìm kiếm hình ảnh từ Pixabay API</p>
+        
+        <div id="message"></div>
+        
+        <div class="search-box">
+            <input 
+                type="text" 
+                id="searchInput" 
+                placeholder="Nhập từ khóa tìm kiếm (VD: technology, business, nature...)"
+                value="technology"
+            />
+            <button onclick="searchImages()">🔍 Tìm kiếm</button>
+        </div>
+        
+        <div class="filters">
+            <select id="imageType">
+                <option value="photo">📸 Ảnh</option>
+                <option value="illustration">🎨 Minh họa</option>
+                <option value="vector">📐 Vector</option>
+            </select>
+            <select id="orientation">
+                <option value="horizontal">➡️ Ngang</option>
+                <option value="vertical">⬆️ Dọc</option>
+                <option value="all">🔄 Tất cả</option>
+            </select>
+        </div>
+        
+        <div id="stats" style="display: none;"></div>
+        
+        <div id="results">
+            <div class="message info">
+                👆 Nhập từ khóa và nhấn nút Tìm kiếm để bắt đầu
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        async function searchImages() {
+            const query = document.getElementById('searchInput').value.trim();
+            const imageType = document.getElementById('imageType').value;
+            const orientation = document.getElementById('orientation').value;
+            const resultsDiv = document.getElementById('results');
+            const messageDiv = document.getElementById('message');
+            const statsDiv = document.getElementById('stats');
+            
+            if (!query) {
+                messageDiv.innerHTML = '<div class="message info">⚠️ Vui lòng nhập từ khóa tìm kiếm</div>';
+                return;
+            }
+            
+            // Show loading
+            resultsDiv.innerHTML = `
+                <div class="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 16px;">Đang tìm kiếm...</p>
+                </div>
+            `;
+            messageDiv.innerHTML = '';
+            statsDiv.style.display = 'none';
+            
+            try {
+                const params = new URLSearchParams({
+                    q: query,
+                    image_type: imageType,
+                    orientation: orientation,
+                    per_page: 20
+                });
+                
+                const response = await fetch(`/api/pixabay/search/images?${params}`);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const data = await response.json();
+                displayResults(data);
+                
+            } catch (error) {
+                console.error('Search error:', error);
+                messageDiv.innerHTML = `
+                    <div class="message info">
+                        ❌ Lỗi: ${error.message}<br>
+                        Đảm bảo backend đang chạy tại http://localhost:8000
+                    </div>
+                `;
+                resultsDiv.innerHTML = '';
+            }
+        }
+        
+        function displayResults(data) {
+            const resultsDiv = document.getElementById('results');
+            const messageDiv = document.getElementById('message');
+            const statsDiv = document.getElementById('stats');
+            
+            if (!data.hits || data.hits.length === 0) {
+                resultsDiv.innerHTML = `
+                    <div class="message info">
+                        😕 Không tìm thấy kết quả. Thử từ khóa khác nhé!
+                    </div>
+                `;
+                return;
+            }
+            
+            // Show stats
+            statsDiv.innerHTML = `
+                <div class="stat">
+                    <div class="stat-value">${data.totalHits.toLocaleString()}</div>
+                    <div class="stat-label">Tổng số ảnh</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">${data.hits.length}</div>
+                    <div class="stat-label">Hiển thị</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">FREE</div>
+                    <div class="stat-label">Miễn phí 100%</div>
+                </div>
+            `;
+            statsDiv.style.display = 'flex';
+            
+            messageDiv.innerHTML = `
+                <div class="message success">
+                    ✅ Tìm thấy ${data.totalHits.toLocaleString()} hình ảnh!
+                </div>
+            `;
+            
+            resultsDiv.innerHTML = '';
+            
+            data.hits.forEach(image => {
+                const card = document.createElement('div');
+                card.className = 'image-card';
+                card.innerHTML = `
+                    <img src="${image.previewURL}" alt="${image.tags}" loading="lazy" />
+                    <div class="overlay">
+                        <div style="font-weight: 600;">👤 ${image.user}</div>
+                        <div style="margin-top: 4px; opacity: 0.9;">
+                            ❤️ ${image.likes} | 💾 ${image.downloads.toLocaleString()}
+                        </div>
+                    </div>
+                `;
+                
+                card.onclick = () => {
+                    window.open(image.pageURL, '_blank');
+                };
+                
+                resultsDiv.appendChild(card);
+            });
+            
+            // Add attribution
+            const attribution = document.createElement('div');
+            attribution.style.cssText = 'grid-column: 1 / -1; text-align: center; padding: 20px; font-size: 13px; color: #718096;';
+            attribution.innerHTML = `
+                Images from <a href="https://pixabay.com/" target="_blank" style="color: #667eea; text-decoration: none; font-weight: 600;">Pixabay</a>
+            `;
+            resultsDiv.appendChild(attribution);
+        }
+        
+        // Allow Enter key to search
+        document.getElementById('searchInput').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                searchImages();
+            }
+        });
+    </script>
+</body>
+</html>

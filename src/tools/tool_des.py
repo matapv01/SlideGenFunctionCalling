@@ -929,6 +929,8 @@ class GenerateCorporateContentSlideInput(BaseModel):
     bg_color: str = Field(default="#F8FAFC", description="The background color for the main content area (typically off-white).")
     accent_panel_color: str = Field(default="#6366F1", description="The background color for the diagonal title panel.")
     title_color: str = Field(default="#FFFFFF", description="Text color for the main title on the colored panel.")
+    card_bg_color: str = Field(default="#FFFFFF", description="Background color for the content cards.")
+    card_border_color: str = Field(default="#E5E7EB", description="Border color for the content cards.")
     list_title_color: str = Field(default="#000000", description="Text color for the titles inside the content cards. Use dark colors for visibility on white backgrounds.")
     list_text_color: str = Field(default="#333333", description="Text color for the description text inside the content cards. Use dark colors for visibility on white backgrounds.")
 
