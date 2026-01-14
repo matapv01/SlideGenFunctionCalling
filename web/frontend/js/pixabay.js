@@ -80,6 +80,29 @@ export class PixabayManager {
         }
     }
 
+    // Detect if text contains Vietnamese characters
+    detectVietnamese(text) {
+        const vietnamesePattern = /[àáạảãâầấậẩẫăằắặẳẵèéẹẻẽêềếệểễìíịỉĩòóọỏõôồốộổỗơờớợởỡùúụủũưừứựửữỳýỵỷỹđ]/i;
+        return vietnamesePattern.test(text);
+    }
+
+    // Translate Vietnamese to English using MyMemory API (free)
+    async translateToEnglish(text) {
+        try {
+            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=vi|en`;
+            const response = await fetch(url);
+            const data = await response.json();
+            
+            if (data.responseStatus === 200 && data.responseData.translatedText) {
+                return data.responseData.translatedText;
+            }
+            return text; // Return original if translation fails
+        } catch (error) {
+            console.warn('Translation error:', error);
+            return text; // Return original on error
+        }
+    }
+
     async searchImages(page = 1) {
         const searchInput = document.getElementById('pixabaySearchInput');
         const imageType = document.getElementById('pixabayImageType');
@@ -87,22 +110,29 @@ export class PixabayManager {
         const resultsContainer = document.getElementById('pixabayResults');
         const loadingIndicator = document.getElementById('pixabayLoading');
 
-        const query = searchInput.value.trim();
+        let query = searchInput.value.trim();
         if (!query) {
             this.showMessage('Vui lòng nhập từ khóa tìm kiếm', 'warning');
             return;
         }
         
-        // Store search params
-        this.currentPage = page;
-        this.lastQuery = query;
-        this.lastImageType = imageType.value;
-        this.lastOrientation = orientation.value;
-
         try {
             // Show loading
             if (loadingIndicator) loadingIndicator.style.display = 'block';
             if (resultsContainer) resultsContainer.style.display = 'none';
+
+            // Auto-translate Vietnamese to English
+            if (this.detectVietnamese(query)) {
+                const translatedQuery = await this.translateToEnglish(query);
+                console.log(`🌐 Đã dịch: "${query}" → "${translatedQuery}"`);
+                query = translatedQuery;
+            }
+
+            // Store search params
+            this.currentPage = page;
+            this.lastQuery = query;
+            this.lastImageType = imageType.value;
+            this.lastOrientation = orientation.value;
 
             // Call API
             const params = new URLSearchParams({
