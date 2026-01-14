@@ -4997,6 +4997,479 @@ def generate_title_slide_19(
 </html>"""
     
     return html_code
+
+def generate_title_slide_20(
+    main_title="Heading of Presentation",
+    subtitle="Here is where your presentation begins",
+    bg_color="#565771",
+    bg_gradient_color="#3e3c56",
+    text_color="#FFFFFF",
+    decoration_color="#FFFFFF"
+):
+    """
+    Generate a title slide with minimalist design.
+    
+    Layout: Title in upper left with decorative line above, one pill-shaped button 
+    in lower right corner. Dark purple gradient background with subtle texture.
+    
+    Parameters:
+    -----------
+    main_title : str
+        Main title text displayed in upper left (default: "Sales Funnel Growth")
+    subtitle : str
+        Subtitle text in button at lower right (default: "Here is where your presentation begins")
+    bg_color : str
+        Background gradient start color - hex code (default: "#565771" - dark purple)
+    bg_gradient_color : str
+        Background gradient end color - hex code (default: "#3e3c56" - darker purple)
+    text_color : str
+        Text color for title and buttons (default: "#FFFFFF" - white)
+    decoration_color : str
+        Color for decorative line and button borders (default: "#FFFFFF" - white)
+    
+    Returns:
+    --------
+    str
+        Complete HTML code for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:ital,wght@0,400;0,500;1,300&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{
+            font-size: 16px;
+            width: 1920px;
+            height: 1080px;
+        }}
+        
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: 'Roboto', sans-serif;
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            background: linear-gradient(135deg, {bg_color} 0%, {bg_gradient_color} 100%);
+            position: relative;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+        
+        /* Decorative line at top */
+        .decorative-line {{
+            position: absolute;
+            top: 60px;
+            left: 100px;
+            width: 450px;
+            height: 2px;
+            background-color: {decoration_color};
+            opacity: 0.6;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+        }}
+        
+        /* Title section */
+        .title-section {{
+            padding-top: 40px;
+            z-index: 10;
+        }}
+        
+        .main-title {{
+            font-size: 140px;
+            font-weight: 400;
+            color: {text_color};
+            line-height: 1.1;
+            letter-spacing: -0.02em;
+            text-shadow: 0 8px 24px rgba(0, 0, 0, 0.3),
+                         0 4px 12px rgba(0, 0, 0, 0.2);
+        }}
+        
+        /* Buttons section */
+        .buttons-section {{
+            display: flex;
+            justify-content: flex-end;
+            align-items: center;
+            padding-bottom: 20px;
+            padding-right: 50px;
+        }}
+        
+        .button-container {{
+            position: relative;
+            min-width: 500px;
+            max-width: 900px;
+        }}
+        
+        .button-border {{
+            border: 3px solid {decoration_color};
+            border-radius: 60px;
+            padding: 35px 120px;
+            background-color: transparent;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3),
+                        0 4px 12px rgba(0, 0, 0, 0.2);
+        }}
+        
+        .button-border:hover {{
+            background-color: rgba(255, 255, 255, 0.15);
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.4),
+                        0 6px 18px rgba(0, 0, 0, 0.25);
+            transform: translateY(-3px);
+        }}
+        
+        .button-text {{
+            color: {text_color};
+            font-size: 32px;
+            font-weight: 400;
+            white-space: nowrap;
+            display: block;
+            text-align: center;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Decorative line -->
+        <div class="decorative-line"></div>
+        
+        <!-- Title section -->
+        <div class="title-section">
+            <div class="main-title">{main_title}</div>
+        </div>
+        
+        <!-- Buttons section -->
+        <div class="buttons-section">
+            <div class="button-container">
+                <div class="button-border">
+                    <div class="button-text">{subtitle}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_21(
+    main_title="Heading of Presentation",
+    subtitle="Here is where your presentation begins",
+    bg_color_start="#E8F4F8",
+    bg_color_end="#A8D5E2",
+    text_color="#1e3a5f",
+    decoration_color="#1e3a5f"
+):
+    """
+    Generate a clean minimal slide with gradient background and horizontal divider line.
+    
+    Layout: Title positioned on the right side with large font, horizontal divider line 
+    across the middle of the slide, and subtitle text in the bottom left corner. Simple 
+    and elegant design with blue gradient background.
+    
+    Parameters:
+    -----------
+    main_title : str
+        Main title text displayed on the right side
+    subtitle : str
+        Subtitle text displayed in bottom left
+    bg_color_start : str
+        Starting color of background gradient (top)
+    bg_color_end : str
+        Ending color of background gradient (bottom)
+    text_color : str
+        Color for all text elements
+    decoration_color : str
+        Color for the horizontal divider line
+    
+    Returns:
+    --------
+    str
+        Complete HTML code for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blue Gradient Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Roboto', sans-serif;
+            width: 1920px;
+            height: 1080px;
+            background: linear-gradient(180deg, {bg_color_start} 0%, {bg_color_end} 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow: hidden;
+        }}
+        
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            padding: 80px 120px;
+            display: flex;
+            flex-direction: column;
+        }}
+        
+        .title {{
+            position: absolute;
+            right: 120px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 90px;
+            font-weight: 500;
+            color: {text_color};
+            text-align: right;
+            line-height: 1.2;
+            margin-top: -60px;
+        }}
+        
+        .divider {{
+            position: absolute;
+            left: 0;
+            right: 0;
+            top: 470px;
+            height: 2px;
+            background-color: {decoration_color};
+        }}
+        
+        .subtitle {{
+            position: absolute;
+            left: 120px;
+            bottom: 380px;
+            font-size: 40px;
+            font-weight: 400;
+            color: {text_color};
+            line-height: 1.5;
+            max-width: 900px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="title">{main_title}</div>
+        <div class="divider"></div>
+        <div class="subtitle">{subtitle}</div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_title_slide_22(
+    main_title="Heading of Presentation",
+    subtitle="Here is where your presentation begins",
+    bg_gradient_start="#FFFFFF",
+    bg_gradient_end="#F5E6D3",
+    text_color="#C84B4B",
+    decoration_color="#C84B4B"
+):
+    """
+    Generate an HTML slide with elegant gradient background and geometric decorations.
+    
+    Layout Structure:
+    - Full-screen diagonal gradient background from white to cream/beige
+    - Blurred decorative blobs in top-left and bottom-right corners for depth
+    - Geometric line decorations: rotated rectangle in top-right, arrow pointing right in bottom-left
+    - Main title and subtitle centered in the middle of the slide (vertically and horizontally)
+    
+    All text elements are centered with generous spacing for a clean, modern look.
+    
+    Parameters:
+    -----------
+    main_title : str
+        Main title text
+    subtitle : str
+        Subtitle text below the main title
+    bg_gradient_start : str
+        Starting color of background gradient
+    bg_gradient_end : str
+        Ending color of background gradient
+    text_color : str
+        Color for all text elements
+    decoration_color : str
+        Color for geometric decorations and blobs
+    
+    Returns:
+    --------
+    str
+        Complete HTML code for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Business Plan Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{
+            width: 1920px;
+            height: 1080px;
+        }}
+        
+        body {{
+            font-family: 'Poppins', sans-serif;
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+        }}
+        
+        .slide {{
+            width: 1920px;
+            height: 1080px;
+            background: linear-gradient(135deg, {bg_gradient_start} 0%, {bg_gradient_end} 100%);
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }}
+        
+        /* Blurred decorative blobs */
+        .blob {{
+            position: absolute;
+            border-radius: 50%;
+            background: {decoration_color};
+            filter: blur(80px);
+            opacity: 0.4;
+        }}
+        
+        .blob-top-left {{
+            width: 300px;
+            height: 300px;
+            top: -50px;
+            left: -50px;
+        }}
+        
+        .blob-bottom-right {{
+            width: 400px;
+            height: 400px;
+            bottom: -100px;
+            right: -100px;
+        }}
+        
+        /* Geometric line decorations */
+        .geometric-decoration {{
+            position: absolute;
+            border: 3px solid {decoration_color};
+        }}
+        
+        .geo-top-right {{
+            width: 250px;
+            height: 250px;
+            top: 0;
+            right: 0;
+            border-left: none;
+            border-bottom: none;
+            transform: rotate(45deg);
+            transform-origin: top right;
+        }}
+        
+        /* Content container - centered by parent flexbox */
+        .content {{
+            position: absolute;
+            bottom: 100px;
+            right: 120px;
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 20px;
+            max-width: 900px;
+        }}
+        
+        .main-title {{
+            font-size: 100px;
+            font-weight: 700;
+            color: {text_color};
+            line-height: 1.2;
+            margin: 0;
+            letter-spacing: -2px;
+            text-align: left;
+            width: 100%;
+        }}
+        
+        .subtitle-container {{
+            border: 3px solid {decoration_color};
+            border-radius: 50px;
+            padding: 20px 60px;
+            background-color: transparent;
+        }}
+        
+        .subtitle {{
+            font-size: 36px;
+            font-weight: 400;
+            color: {decoration_color};
+            margin: 0;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide">
+        <!-- Blurred decorative blobs -->
+        <div class="blob blob-top-left"></div>
+        <div class="blob blob-bottom-right"></div>
+        
+        <!-- Geometric line decorations -->
+        <div class="geometric-decoration geo-top-right"></div>
+        
+        <!-- Content -->
+        <div class="content">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle-container">
+                <p class="subtitle">{subtitle}</p>
+            </div>
+        </div>
+        
+        <!-- Bottom horizontal line -->
+        <div class="bottom-line"></div>
+    </div>
+</body>
+</html>"""
+    
+    return html_code
 #----------------------SLIDE CHUYỂN SLIDE
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
@@ -23223,6 +23696,138 @@ def generate_thank_you_slide_8(
     
     <!-- Main content -->
     <h1 class="main-title">{main_text}</h1>
+</body>
+</html>"""
+    
+    return html_code
+
+def generate_thank_you_slide_9(
+    addition_text="Do you have any questions?",
+    main_text="Thank you for your attention",
+    bg_color="#4A3F5C",
+    text_color="#FFFFFF",
+    decoration_color="#FFFFFF"
+):
+    """
+    Generate a minimalist thank you slide with split layout.
+    
+    Layout: Large "Thank you" text on the right side, 
+    question prompt on the left side. Clean split-screen design 
+    with horizontal decorative line at top. Background is solid color with 
+    subtle gradient effect.
+    
+    Parameters:
+    -----------
+    addition_text : str
+        The additional text displayed on the left side 
+    main_text : str
+        The main thank you text displayed large on the right
+    bg_color : str
+        Background color of the slide 
+    text_color : str
+        Color of all text elements 
+    decoration_color : str
+        Color of the decorative line at top 
+    
+    Returns:
+    --------
+    str
+        Complete HTML code for the slide
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        body {{
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, {bg_color} 0%, {bg_color}dd 100%);
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            position: relative;
+        }}
+        
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            padding: 60px 80px;
+        }}
+        
+        .top-line {{
+            position: absolute;
+            top: 40px;
+            left: 80px;
+            width: 1760px;
+            height: 8px;
+            background-color: {decoration_color};
+            opacity: 0.3;
+        }}
+        
+        .content-wrapper {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            justify-content: center;
+            margin-top: 40px;
+            padding-right: 200px;
+        }}
+        
+        .main-section {{
+            text-align: right;
+            margin-bottom: 40px;
+        }}
+        
+        .main-title {{
+            font-size: 100px;
+            font-weight: 300;
+            color: {text_color};
+            line-height: 1;
+            letter-spacing: -3px;
+            margin-bottom: 30px;
+        }}
+        
+        .addition-section {{
+            text-align: right;
+        }}
+        
+        .addition-text {{
+            font-size: 42px;
+            font-weight: 400;
+            color: {text_color};
+            line-height: 1.3;
+            letter-spacing: -0.5px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="top-line">&nbsp;</div>
+        
+        <div class="content-wrapper">
+            <div class="main-section">
+                <div class="main-title">{main_text}</div>
+            </div>
+            
+            <div class="addition-section">
+                <div class="addition-text">{addition_text}</div>
+            </div>
+        </div>
+    </div>
 </body>
 </html>"""
     

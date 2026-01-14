@@ -38,6 +38,9 @@ from src.tools.html_tool import (
     generate_title_slide_17, # slide intro (hien)
     generate_title_slide_18, # slide intro (hien)
     generate_title_slide_19, # slide intro (hien)
+    generate_title_slide_20, # slide intro (hien)
+    generate_title_slide_21, # slide intro (hien)
+    generate_title_slide_22, # slide intro (hien)
 
   
     
@@ -142,6 +145,7 @@ from src.tools.html_tool import (
     generate_thank_you_slide_6, # slide cảm ơn(hien)
     generate_thank_you_slide_7, # slide cảm ơn(hien)
     generate_thank_you_slide_8, # slide cảm ơn(hien)
+    generate_thank_you_slide_9, # slide cảm ơn(hien)
 
 )
 
@@ -489,6 +493,33 @@ class GenerateTitleSlide19Input(BaseModel):
     bg_color: str = Field(default="#1a5560", description="Background color (hex).")
     text_color: str = Field(default="#ffffff", description="Color for all text elements (hex).")
     accent_color: str = Field(default="#a4d65e", description="Color for decorative watercolor blobs (hex).")
+
+class GenerateTitleSlide20Input(BaseModel):
+    """Input schema for generate_title_slide_20."""
+    main_title: str = Field(..., description="Main title text displayed in upper left.")
+    subtitle: str = Field(..., description="Subtitle text in button at lower right.")
+    bg_color: str = Field(default="#565771", description="Background gradient start color - hex code (dark purple).")
+    bg_gradient_color: str = Field(default="#3e3c56", description="Background gradient end color - hex code (darker purple).")
+    text_color: str = Field(default="#FFFFFF", description="Text color for title and buttons (white).")
+    decoration_color: str = Field(default="#FFFFFF", description="Color for decorative line and button borders (white).")
+
+class GenerateTitleSlide21Input(BaseModel):
+    """Input schema for generate_title_slide_21."""
+    main_title: str = Field(..., description="Main title text displayed on the right side.")
+    subtitle: str = Field(..., description="Subtitle text displayed in bottom left.")
+    bg_color_start: str = Field(default="#E8F4F8", description="Starting color of background gradient (top).")
+    bg_color_end: str = Field(default="#A8D5E2", description="Ending color of background gradient (bottom).")
+    text_color: str = Field(default="#1e3a5f", description="Color for all text elements.")
+    decoration_color: str = Field(default="#1e3a5f", description="Color for the horizontal divider line.")
+
+class GenerateTitleSlide22Input(BaseModel):
+    """Input schema for generate_title_slide_22."""
+    main_title: str = Field(..., description="Main title text displayed in bottom right.")
+    subtitle: str = Field(..., description="Subtitle text in bordered container below main title.")
+    bg_gradient_start: str = Field(default="#FFFFFF", description="Starting color of background gradient (top-left).")
+    bg_gradient_end: str = Field(default="#F5E6D3", description="Ending color of background gradient (bottom-right).")
+    text_color: str = Field(default="#C84B4B", description="Color for main title text.")
+    decoration_color: str = Field(default="#C84B4B", description="Color for subtitle border, blobs, and geometric decorations.")
     
 # === SLIDE CHUYỂN SLIDE CLASSES ===
 
@@ -1841,6 +1872,14 @@ class GenerateThankYouSlide8Input(BaseModel):
     text_color: str = Field(default="#FFFFFF", description="Color of the main text. Default: white (#FFFFFF).")
     decoration_color: str = Field(default="#FFFFFF", description="Color for geometric decorations - triangles and circles. Default: white (#FFFFFF).")
 
+class GenerateThankYouSlide9Input(BaseModel):
+    """Input schema for generate_thank_you_slide_9 (minimalist thank you slide with right-aligned layout)."""
+    addition_text: str = Field(..., description="Additional text displayed below main text.")
+    main_text: str = Field(..., description="Main thank you text displayed large on the right side.")
+    bg_color: str = Field(default="#4A3F5C", description="Background color of the slide. Default: dark purple (#4A3F5C).")
+    text_color: str = Field(default="#FFFFFF", description="Color of all text elements. Default: white (#FFFFFF).")
+    decoration_color: str = Field(default="#FFFFFF", description="Color of the decorative line at top. Default: white (#FFFFFF).")
+
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
     StructuredTool.from_function(
@@ -1937,102 +1976,120 @@ INTRO_TOOLS = [
         func = generate_title_slide_5,
         name="generate_title_slide_5",
         description="Generates a warm and nostalgic **Title or Introduction Slide** with a notebook cover design aesthetic. Features a tilted polaroid-style photo frame with decorative hand-drawn doodles, a four-leaf clover icon, horizontal decorative lines at top and bottom, and personalized text elements in corners ('Our shared moments', year). The soft blue-gray background combined with elegant typography creates a scrapbook-like, memory-capturing feel. Perfect for personal presentations, photo albums, travel stories, memory collections, family events, or any presentation wanting an intimate, handcrafted, and sentimental opening that evokes cherished moments and personal connections.",
-        args_schema=GenerateTitleSlide5Input,
+        args_schema=GenerateTitleSlide5Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_6,
         name="generate_title_slide_6",
         description="Generates a playful and whimsical **Title or Introduction Slide** with a cartoon-style design using converter-compatible fixed positioning (1920x1080px). Features a rounded content box (1300x500px) with thick borders, soft pastel gradient background, fluffy white clouds floating at the top, and a cheerful flower character at the bottom-left corner. The design uses bold, friendly typography (68px title, 30px subtitle) with absolute positioning perfect for educational content, children's presentations, fun workshops, creative projects, or any presentation wanting a lighthearted, approachable, and joyful atmosphere that captures attention with its charming and inviting visual style.",
-        args_schema=GenerateTitleSlide6Input,
+        args_schema=GenerateTitleSlide6Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_7,
         name="generate_title_slide_7",
         description="Generates a centered title slide with a single decorative bandage element and a centered text frame containing title and subtitle.",
-        args_schema=GenerateTitleSlide7Input,
+        args_schema=GenerateTitleSlide7Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_8,
         name="generate_title_slide_8",
         description="Generates a static title slide with large main title, subtitle, and decorative gradient blobs (converter-friendly fixed layout).",
-        args_schema=GenerateTitleSlide8Input,
+        args_schema=GenerateTitleSlide8Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_9,
         name="generate_title_slide_9",
         description="Generates a static title slide with large main title, subtitle, and geometric decorations (converter-friendly fixed layout). Decorations are separate, absolutely-positioned SVG blocks and the subtitle is positioned under the title for reliable extraction by the converter.",
-        args_schema=GenerateTitleSlide9Input,
+        args_schema=GenerateTitleSlide9Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_10,
         name="generate_title_slide_10",
         description="Generates a static tech-themed title slide (fixed 1920x1080) with a dark gradient background and a single decorative glow. Layout uses fixed pixel sizes to be converter-friendly.",
-        args_schema=GenerateTitleSlide10Input,
+        args_schema=GenerateTitleSlide10Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_11,
         name="generate_title_slide_11",
         description="Generates an ultra-minimalist title slide with split background colors (left/right). Features large centered title in Georgia serif and subtle subtitle, perfect for clean, professional presentations.",
-        args_schema=GenerateTitleSlide11Input,
+        args_schema=GenerateTitleSlide11Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_12,
         name="generate_title_slide_12",
         description="Generates an elegant black and white minimalist title slide with decorative circle and border frame. Features bold Montserrat title, clean layout with left-aligned text, perfect for formal academic presentations.",
-        args_schema=GenerateTitleSlide12Input,
+        args_schema=GenerateTitleSlide12Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_13,
         name="generate_title_slide_13",
         description="Generates a modern geometric title slide with diagonal gradient background and 8 rotated decorative elements (rounded rectangles and circle). Features centered Montserrat typography with flexible layout, perfect for contemporary and creative presentations.",
-        args_schema=GenerateTitleSlide13Input,
+        args_schema=GenerateTitleSlide13Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_14,
         name="generate_title_slide_14",
         description="Generates an elegant gradient title slide with horizontal gradient background, decorative circles in corners, and rectangular border frame. Features Montserrat typography with customizable gradient colors, perfect for modern business presentations.",
-        args_schema=GenerateTitleSlide14Input,
+        args_schema=GenerateTitleSlide14Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_15,
         name="generate_title_slide_15",
         description="Generates a clean and simple meeting title slide with large decorative circles in corners. Features Montserrat bold typography with centered layout, perfect for minimalist business presentations and meeting slides.",
-        args_schema=GenerateTitleSlide15Input,
+        args_schema=GenerateTitleSlide15Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_16,
         name="generate_title_slide_16",
         description="Generates an title slide with a colorful stacked books illustration. Features clean card-based layout with rounded corners, gradient blue background, and large bold title text using Inter font. Perfect for educational presentations, learning materials, and academic slides.",
-        args_schema=GenerateTitleSlide16Input,
+        args_schema=GenerateTitleSlide16Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_17,
         name="generate_title_slide_17",
         description="Generates a title slide with centered text content and decorative circles positioned at four corners. Features Montserrat typography with customizable colors for background, title, subtitle, and three decorative circle colors. Perfect for meetings, town halls, and minimalist presentations.",
-        args_schema=GenerateTitleSlide17Input,
+        args_schema=GenerateTitleSlide17Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_18,
         name="generate_title_slide_18",
         description="Generates a minimalist title slide with centered card containing title and subtitle on full-slide geometric cube pattern background. Features Bebas Neue font for title, customizable pattern and card colors. Perfect for modern, minimalist presentations and meetings.",
-        args_schema=GenerateTitleSlide18Input,
+        args_schema=GenerateTitleSlide18Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_19,
         name="generate_title_slide_19",
         description="Generates an environmental-themed title slide with organic watercolor blob decorations at corners. Features Poppins font, 4 SVG watercolor blobs with organic filter effect positioned at corners, and centered content area. Perfect for nature-themed, environmental, or organic presentations.",
-        args_schema=GenerateTitleSlide19Input,
+        args_schema=GenerateTitleSlide19Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_20,
+        name="generate_title_slide_20",
+        description="Generates a minimalist title slide with modern design. Features large title in upper left with decorative line above, and pill-shaped button with subtitle in lower right corner. Dark purple diagonal gradient background with shadow effects on title and button for depth. Perfect for professional, modern presentations needing a clean, sophisticated opening slide.",
+        args_schema=GenerateTitleSlide20Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_21,
+        name="generate_title_slide_21",
+        description="Generates a clean minimal title slide with blue gradient background. Features large title (90px) positioned on the right side, horizontal divider line across the middle, and subtitle text in the bottom left corner. Simple and elegant design with soft blue gradient (light to darker blue). Perfect for professional presentations needing a minimalist, balanced layout with clear visual separation between title and subtitle.",
+        args_schema=GenerateTitleSlide21Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_22,
+        name="generate_title_slide_22",
+        description="Generates an elegant title slide with diagonal gradient background and artistic decorations. Features main title and bordered subtitle container positioned in bottom-right corner, blurred decorative blobs in corners, and geometric line decoration in top-right. Warm gradient from white to cream/beige with coral red text. Perfect for creative, elegant presentations needing sophisticated visual elements and bottom-right content placement.",
+        args_schema=GenerateTitleSlide22Input
     )
 ]
 
@@ -2607,7 +2664,13 @@ THANK_YOU_TOOLS = [
         name="generate_thank_you_slide_8",
         description="Generates a modern geometric 'Thank You' slide with wireframe triangles and circle dots. Features a coral pink background with large cursive text (Dancing Script font) centered in the middle. The slide includes SVG wireframe triangles scattered across the background, white circular dots positioned at strategic points for visual balance, and a darker bottom gradient strip for depth. The decorative elements use opacity to create a subtle, playful geometric pattern. Perfect for presentations needing a modern, minimalist closing with geometric decorative elements.",
         args_schema=GenerateThankYouSlide8Input
-    )
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_slide_9,
+        name="generate_thank_you_slide_9",
+        description="Generates a minimalist 'Thank You' slide with clean right-aligned layout. Features large main text on the right side with additional text below, horizontal decorative line at top, and dark purple gradient background. Uses Inter font for modern, professional appearance. Perfect for presentations needing a clean, sophisticated closing slide with split-screen design.",
+        args_schema=GenerateThankYouSlide9Input
+    ) 
 ]
 
 # All available slide generation tools with complete parameter schemas
