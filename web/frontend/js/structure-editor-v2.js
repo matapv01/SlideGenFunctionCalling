@@ -5,7 +5,7 @@ let documentText = "";
 let documentStructure = []; // Backend format: {level, title, content, children}
 let sessionId = null;
 let introSlide = null;
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:12008';
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', function () {
@@ -19,7 +19,7 @@ document.addEventListener('DOMContentLoaded', function () {
     }
 
     loadDocumentData();
-    setupEditorListeners();
+    // setupEditorListeners will be called after data loads successfully
 });
 
 // Setup editor event listeners
@@ -55,9 +55,23 @@ function debounce(func, wait) {
 
 // ========== LOAD DATA ==========
 async function loadDocumentData() {
+    console.log('🔄 loadDocumentData called with sessionId:', sessionId);
+    console.log('🔗 API URL:', `${API_BASE_URL}/api/structure/current?session_id=${sessionId}`);
+
     try {
-        const response = await fetch(`${API_BASE_URL}/api/structure/current?session_id=${sessionId}`);
+        const url = `${API_BASE_URL}/api/structure/current?session_id=${sessionId}`;
+        console.log('📡 Fetching:', url);
+
+        const response = await fetch(url);
+        console.log('📥 Response status:', response.status, response.statusText);
+
+        if (!response.ok) {
+            console.error('API response not OK:', response.status, response.statusText);
+            throw new Error(`API error: ${response.status}`);
+        }
+
         const data = await response.json();
+        console.log('Loaded data:', data);
 
         if (data.document_text) {
             documentText = data.document_text;
@@ -74,10 +88,14 @@ async function loadDocumentData() {
                 editor.innerHTML = escapeHtml(documentText);
             }
 
+            // Setup listeners AFTER content is loaded
+            setupEditorListeners();
+
             updateStats();
             syncEditorToStructure();
             renderSlides();
         } else {
+            console.error('No document_text in response:', data);
             throw new Error('No document data received');
         }
     } catch (error) {
@@ -267,14 +285,18 @@ function syncEditorToStructure() {
     const editor = document.getElementById('wordEditor');
     const blocks = editor.querySelectorAll('.text-block');
 
-    // Build flat list of blocks
+    // Build flat list of blocks (filter empty ones)
     const flatBlocks = [];
     blocks.forEach(block => {
+        const text = block.textContent.trim();
+        // Skip blocks with empty text
+        if (!text) return;
+
         flatBlocks.push({
             node_id: block.dataset.nodeId || generateNodeId(),
-            level: parseInt(block.dataset.level) || 1,
+            level: block.dataset.level !== undefined ? parseInt(block.dataset.level) : 1,
             type: block.dataset.type || 'content',
-            text: block.textContent.trim(),
+            text: text,
             is_transition: block.dataset.transition === 'true'
         });
     });
@@ -282,26 +304,34 @@ function syncEditorToStructure() {
     // Convert flat list to hierarchical structure (like backend expects)
     documentStructure = buildHierarchy(flatBlocks);
 
+    // Debug logging
     console.log('📊 Synced structure:', documentStructure.length, 'root nodes');
+    console.log('🔍 flatBlocks:', flatBlocks.map(b => ({ level: b.level, type: b.type, text: b.text.substring(0, 30) })));
+    console.log('🏗️ documentStructure:', documentStructure.map(n => ({ level: n.level, title: n.title?.substring(0, 30) })));
+    console.log('🎬 introSlide:', introSlide ? introSlide.content?.substring(0, 30) : 'null');
 }
 
 // Build hierarchy from flat blocks
 function buildHierarchy(flatBlocks) {
-    // Filter out Level 0 (Intro) - handled separately
-    const blocks = flatBlocks.filter(b => b.level > 0);
-
-    // Check for intro slide
-    const introBlock = flatBlocks.find(b => b.level === 0);
-    if (introBlock) {
+    // Reset intro slide first
+    // (Only set it if we find a level 0 block in this sync)
+    const introBlocks = flatBlocks.filter(b => b.level === 0);
+    if (introBlocks.length > 0) {
+        // Combine all level 0 blocks into one intro slide
+        const combinedText = introBlocks.map(b => b.text).join('\n');
         introSlide = {
             id: 'intro_slide_0',
             level: 0,
             title: 'Intro',
-            content: introBlock.text,
+            content: combinedText,
             type: 'title',
             children: []
         };
     }
+    // Note: Don't reset introSlide to null here - it may have been set via modal
+
+    // Filter out Level 0 (Intro) - handled separately above
+    const blocks = flatBlocks.filter(b => b.level > 0);
 
     const result = [];
     const stack = [{ level: 0, children: result }];
