@@ -7,6 +7,7 @@ from langchain_core.output_parsers import StrOutputParser
 from src.graph.stage import State
 from langchain_core.runnables import RunnableConfig
 from src.utils.config import CONTENT_CHAR_LIMIT_FOR_SPLIT
+from src.utils.helper import _convert_llm_tree_to_nodes
 import time
 
 
@@ -75,31 +76,6 @@ CONTENT TO SPLIT:
 
 {content_to_split}
 """
-
-
-def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> List[Dict]:
-    """
-    Recursively converts the LLM's nested JSON output into the standard
-    node format used by the document_structure.
-    """
-    new_nodes = []
-    for item in llm_json_list:
-        if "sub_headline" not in item or "sub_content" not in item:
-            continue  # Skip malformed items
-
-        new_node = {
-            "level": parent_level + 1,
-            "title": item["sub_headline"],
-            "content": "\n".join(item.get("sub_content", [])),
-            "children": []  # Default to empty
-        }
-
-        # If there are nested sections, recurse!
-        if item.get("sub_sections") and isinstance(item["sub_sections"], list):
-            new_node["children"] = _convert_llm_tree_to_nodes(item["sub_sections"], parent_level + 1)
-
-        new_nodes.append(new_node)
-    return new_nodes
 
 
 def split_content(state: State, config: RunnableConfig) -> State:

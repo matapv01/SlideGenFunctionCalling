@@ -1,12 +1,11 @@
 # File: src/nodes/slide_evaluator.py
 
-import logging
-import base64
 import json
 from typing import Literal
 from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
+from src.utils.helper import image_to_base64
 from src.graph.stage import State
 
 EVALUATION_PROMPT = """
@@ -108,20 +107,6 @@ class Evaluation(BaseModel):
     """
     feedback: str = Field(description="Detailed analysis of what's good and what needs improvement in the slide. Provide specific suggestions to make the slide better.")
     decision: Literal["accept", "deny"] = Field(description="Final decision. 'accept' if slide is good, 'deny' if it needs to be redone.")
-
-
-def image_to_base64(image_path: str) -> str:
-    """Convert image file to base64 string."""
-    if image_path is None:
-        logging.warning("Image path is None, cannot convert to base64")
-        return ""
-
-    try:
-        with open(image_path, "rb") as image_file:
-            return base64.b64encode(image_file.read()).decode('utf-8')
-    except Exception as e:
-        logging.error(f"Error encoding image to base64: {image_path}, Error: {e}")
-        return ""
 
 
 def slide_evaluator(state: State) -> State:

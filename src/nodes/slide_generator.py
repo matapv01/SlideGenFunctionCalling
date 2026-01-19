@@ -133,43 +133,6 @@ EVALUATION OF PREVIOUS ATTEMPT:
 """
 
 
-def create_default_html(content_data) -> str:
-    """Create default HTML when unable to get from LLM"""
-    # Handle both dict and string formats
-    if isinstance(content_data, dict):
-        title = content_data.get('heading', 'Slide')
-        content_text = content_data.get('text_content', 'Default slide content')
-    else:
-        content_text = content_data if content_data else "Default slide content"
-        title = "Slide"
-
-    lines = content_text.split('\n')
-    if not title:
-        title = lines[0] if lines else "Slide"
-    content = '<br>'.join(lines[1:]) if len(lines) > 1 else content_text
-
-    html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>{title}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }}
-        .slide {{ width: 800px; height: 600px; margin: 0 auto; background-color: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 40px; position: relative; }}
-        .title {{ font-size: 32px; color: #2c3e50; margin-bottom: 30px; text-align: center; }}
-        .content {{ font-size: 24px; line-height: 1.5; color: #34495e; }}
-    </style>
-</head>
-<body>
-    <div class="slide">
-        <div class="title">{title}</div>
-        <div class="content">{content}</div>
-    </div>
-</body>
-</html>"""
-    return html
-
-
 def generate_slide(state: State, config: RunnableConfig) -> State:
     """
     Node for slide generation: Uses an LLM to generate a tool call based on a plan.
