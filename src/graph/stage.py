@@ -1,6 +1,28 @@
 # src/graph/stage.py
-from typing import List, Dict, TypedDict, Any
+from typing import List, Dict, TypedDict, Any, Literal
+from pydantic import BaseModel, Field
 from src.utils.slide_context import slide_context
+
+# Define the allowed tool categories based on your TOOLS_DICT keys
+ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS']
+
+
+class Evaluation(BaseModel):
+    """
+    An object containing detailed feedback and final decision about the slide.
+    """
+    feedback: str = Field(description="Detailed analysis of what's good and what needs improvement in the slide. Provide specific suggestions to make the slide better.")
+    decision: Literal["accept", "deny"] = Field(description="Final decision. 'accept' if slide is good, 'deny' if it needs to be redone.")
+
+
+class SlidePlan(BaseModel):
+    """Defines the structure of a slide plan."""
+    thought: str = Field(
+        description="A detailed creative brief for designing the slide. Describe the desired visual style, color palette, layout, typography, and whether to include images, icons, or specific visual elements. This should be a guide for the next step."
+    )
+    action: ToolCategory = Field(
+        description="The single, most appropriate category of tools to use for generating this slide."
+    )
 
 
 class State(TypedDict, total=False):

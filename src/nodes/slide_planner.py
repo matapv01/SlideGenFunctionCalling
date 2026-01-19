@@ -1,26 +1,10 @@
 # File: src/nodes/slide_planner.py
 
-from typing import Literal
-from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
-from src.graph.stage import State
+from src.graph.stage import State, SlidePlan
 from langchain_core.runnables import RunnableConfig
 from src.utils.config import PLANNING_BATCH_SIZE
 import time
-
-# Define the allowed tool categories based on your TOOLS_DICT keys
-ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS']
-
-
-class SlidePlan(BaseModel):
-    """Defines the structure of a slide plan."""
-    thought: str = Field(
-        description="A detailed creative brief for designing the slide. Describe the desired visual style, color palette, layout, typography, and whether to include images, icons, or specific visual elements. This should be a guide for the next step."
-    )
-    action: ToolCategory = Field(
-        description="The single, most appropriate category of tools to use for generating this slide."
-    )
-
 
 # --- Prompts for the Slide Planner ---
 

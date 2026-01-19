@@ -1,12 +1,10 @@
 # File: src/nodes/slide_evaluator.py
 
 import json
-from typing import Literal
-from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from src.utils.helper import image_to_base64
-from src.graph.stage import State
+from src.graph.stage import State, Evaluation
 
 EVALUATION_PROMPT = """
 Evaluate the following slide based on these criteria:
@@ -99,14 +97,6 @@ However, do NOT remove or alter the **core message** of the content. Preserve it
 
 Provide detailed feedback on what works well and what needs improvement, then make your final decision.
 """
-
-
-class Evaluation(BaseModel):
-    """
-    An object containing detailed feedback and final decision about the slide.
-    """
-    feedback: str = Field(description="Detailed analysis of what's good and what needs improvement in the slide. Provide specific suggestions to make the slide better.")
-    decision: Literal["accept", "deny"] = Field(description="Final decision. 'accept' if slide is good, 'deny' if it needs to be redone.")
 
 
 def slide_evaluator(state: State) -> State:
