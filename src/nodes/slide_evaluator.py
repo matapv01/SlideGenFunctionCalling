@@ -1,4 +1,4 @@
-# /app/src/nodes/slide_evaluator.py (FIXED VERSION)
+# File: src/nodes/slide_evaluator.py
 
 import logging
 import base64
@@ -8,12 +8,12 @@ from pydantic import BaseModel, Field
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
 from src.graph.stage import State
-import time
 
 EVALUATION_PROMPT = """
 Evaluate the following slide based on these criteria:
 Improved Prompt for Slide Content Evaluation
-Please evaluate the slide according to the following detailed criteria. Assess not only the design and formatting, but also whether the content is placed in a suitable location, the meaning is clear, and the message supports the intended purpose of the slide.
+Please evaluate the slide according to the following detailed criteria. Assess not only the design and formatting, but also whether the content is placed in a suitable location,
+the meaning is clear, and the message supports the intended purpose of the slide.
 
 1. Title
     - Is the title clearly stating the main idea or topic of the slide (e.g., "Market Overview" instead of "Slide 2")?
@@ -78,10 +78,10 @@ In addition, if a previous slide is available, evaluate consistency between the 
 - Font size
 - Font family
 
-Previous accepted tool call:  
+Previous accepted tool call:
 {previous_accepted_tool_call}
 
-Current tool call:  
+Current tool call:
 {tool_call_output}
 
 If you deny the slide:
@@ -101,6 +101,7 @@ However, do NOT remove or alter the **core message** of the content. Preserve it
 Provide detailed feedback on what works well and what needs improvement, then make your final decision.
 """
 
+
 class Evaluation(BaseModel):
     """
     An object containing detailed feedback and final decision about the slide.
@@ -108,12 +109,13 @@ class Evaluation(BaseModel):
     feedback: str = Field(description="Detailed analysis of what's good and what needs improvement in the slide. Provide specific suggestions to make the slide better.")
     decision: Literal["accept", "deny"] = Field(description="Final decision. 'accept' if slide is good, 'deny' if it needs to be redone.")
 
+
 def image_to_base64(image_path: str) -> str:
     """Convert image file to base64 string."""
     if image_path is None:
         logging.warning("Image path is None, cannot convert to base64")
         return ""
-        
+
     try:
         with open(image_path, "rb") as image_file:
             return base64.b64encode(image_file.read()).decode('utf-8')
@@ -121,15 +123,15 @@ def image_to_base64(image_path: str) -> str:
         logging.error(f"Error encoding image to base64: {image_path}, Error: {e}")
         return ""
 
+
 def slide_evaluator(state: State) -> State:
     """
-    Node for slide evaluation: Uses VLM and with_structured_output to ensure
-    structured and reliable output.
+    Sử dụng VLM và with_structured_output
+    để đảm bảo phản hồi có cấu trúc.
     """
     retry_count = state.get('retry_count', 0)
     idx = state['current_slide_index']
-    print(f"\n---------------- Executing Node: slide_evaluator (Slide {idx + 1}, Retry attempt {retry_count}) using structured_output ----------------")
-    time.sleep(20)
+    print(f"\n---------------- Node Slide Evaluator (Slide thứ {idx + 1}, Retry attempt {retry_count}) using structured_output ----------------")
 
     # Get current tool call and image path
     recent_function_call = state.get('current_tool_call', None)
@@ -154,7 +156,7 @@ def slide_evaluator(state: State) -> State:
         tool_call_output=json.dumps(recent_function_call, indent=2),
         previous_accepted_tool_call=json.dumps(previous_accepted_tool_call, indent=2)
     )
-    
+
     message_content = [
         {"type": "text", "text": formatted_prompt}
     ]
@@ -195,14 +197,13 @@ def slide_evaluator(state: State) -> State:
 
         print(f"VLM Decision: {response.decision}")
         print(f"VLM Feedback: {response.feedback}")
-        
+
         # if response['completion_tokens'] == 0:
         #     llm._rotate_key_and_recreate_instance()
         #     continue
 
         state['vlm_decision'] = response.decision
         state['vlm_feedback'] = response.feedback
-
 
         # Update retry count if decision is 'deny'
         if state['vlm_decision'] == 'deny':
@@ -212,5 +213,5 @@ def slide_evaluator(state: State) -> State:
             # Reset retry count on successful acceptance
             state['retry_count'] = 0
             print("Slide accepted.")
-        
+
         return state

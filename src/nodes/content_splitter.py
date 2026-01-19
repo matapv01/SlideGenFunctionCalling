@@ -1,15 +1,14 @@
-# src/nodes/content_splitter.py
+# File: src/nodes/content_splitter.py
 
 import json
 from typing import Dict, Any, List
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
 from src.graph.stage import State
-from langchain_core.runnables import RunnableConfig # <-- 1. IMPORT
+from langchain_core.runnables import RunnableConfig
 from src.utils.config import CONTENT_CHAR_LIMIT_FOR_SPLIT
 import time
 
-# --- REVISED PROMPTS FOR HIERARCHICAL SPLITTING ---
 
 CONTENT_SPLITTER_SYSTEM_PROMPT = """
 You are a master content organizer. Your task is to take a single, large block of text and create a hierarchical (nested) breakdown of its content.
@@ -77,6 +76,7 @@ CONTENT TO SPLIT:
 {content_to_split}
 """
 
+
 def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> List[Dict]:
     """
     Recursively converts the LLM's nested JSON output into the standard
@@ -85,13 +85,13 @@ def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> 
     new_nodes = []
     for item in llm_json_list:
         if "sub_headline" not in item or "sub_content" not in item:
-            continue # Skip malformed items
+            continue  # Skip malformed items
 
         new_node = {
             "level": parent_level + 1,
             "title": item["sub_headline"],
             "content": "\n".join(item.get("sub_content", [])),
-            "children": [] # Default to empty
+            "children": []  # Default to empty
         }
 
         # If there are nested sections, recurse!
@@ -102,24 +102,24 @@ def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> 
     return new_nodes
 
 
-def split_content(state: State, config: RunnableConfig) -> State: # <-- 2. ADD CONFIG
+def split_content(state: State, config: RunnableConfig) -> State:
     """
     Traverses the document structure and uses an LLM to hierarchically split
     any nodes with content exceeding a defined character limit.
     SKIP if slide_chunks already exists (from idea generation)
     """
     print("\n---------------- Executing Node: split_content ----------------")
-    
+
     # Skip if slide_chunks already provided (idea-based workflow)
     if state.get('slide_chunks'):
         print("⏭️  Skipping split_content: slide_chunks already exists")
         return state
-    
+
     start_time = time.time()
     # --- 3. GET RESOURCES FROM CONFIG ---
     configurable = config["configurable"]
     llm = configurable.get('llm')
-    
+
     # Emit streaming event
     stream_callback = configurable.get('stream_callback')
     if stream_callback:
@@ -164,10 +164,12 @@ def split_content(state: State, config: RunnableConfig) -> State: # <-- 2. ADD C
                 # 1. Clean and find the JSON substring
                 # This is more robust against markdown code blocks or other text
                 start_index = llm_response_str.find('[')
-                if start_index == -1: start_index = llm_response_str.find('{')
+                if start_index == -1:
+                    start_index = llm_response_str.find('{')
 
                 end_index = llm_response_str.rfind(']')
-                if end_index == -1: end_index = llm_response_str.rfind('}')
+                if end_index == -1:
+                    end_index = llm_response_str.rfind('}')
 
                 if start_index == -1 or end_index == -1:
                     raise ValueError("Could not find a JSON-like object in the response.")
@@ -188,13 +190,13 @@ def split_content(state: State, config: RunnableConfig) -> State: # <-- 2. ADD C
                 new_children = _convert_llm_tree_to_nodes(split_data, node['level'])
 
                 if not new_children:
-                     raise ValueError("Failed to convert LLM response into valid nodes.")
+                    raise ValueError("Failed to convert LLM response into valid nodes.")
 
                 print(f"  -> LLM successfully created a nested structure. Adding {len(new_children)} top-level new sections.")
 
                 # Replace the old content with the new hierarchical child nodes
-                node['content'] = "" # Clear the original long content
-                node['children'] = new_children + node.get('children', []) # Prepend new structure
+                node['content'] = ""  # Clear the original long content
+                node['children'] = new_children + node.get('children', [])  # Prepend new structure
 
             except (json.JSONDecodeError, ValueError) as e:
                 print(f"  -> FAILED to process LLM response for '{current_heading}'. Keeping original content. Error: {e}")

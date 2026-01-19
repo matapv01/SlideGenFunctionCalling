@@ -1,6 +1,5 @@
-# src/nodes/document_converter.py
+# File: src/nodes/document_converter.py
 
-import tempfile
 import os
 import re
 import json
@@ -9,6 +8,7 @@ from markitdown import MarkItDown
 from src.graph.stage import State
 from langchain_core.runnables import RunnableConfig
 import time
+
 
 def parse_markdown_to_hierarchical_json(markdown_text: str) -> Tuple[str, List[Dict[str, Any]]]:
     """
@@ -59,22 +59,23 @@ def parse_markdown_to_hierarchical_json(markdown_text: str) -> Tuple[str, List[D
     preamble_content = "\n".join(preamble_lines).strip()
     return preamble_content, root_nodes
 
+
 def convert_document(state: State, config: Optional[RunnableConfig] = None) -> State:
     """
-    Node 1: Reads DOCX, converts to Markdown, parses it into a clean hierarchical
+    Reads DOCX, converts to Markdown, parses it into a clean hierarchical
     JSON structure, and initializes the state.
     SKIP if slide_chunks already exists (from idea generation)
     """
     print("\n---------------- Executing Node: convert_document ----------------")
-    
+
     # Skip if slide_chunks already provided (idea-based workflow)
     if state.get('slide_chunks'):
         print("⏭️  Skipping convert_document: slide_chunks already exists")
         return state
-    
+
     start_time = time.time()
     docx_file = state['docx_file']
-    
+
     # Emit streaming event
     if config:
         configurable = config.get('configurable', {})

@@ -1,6 +1,7 @@
 # src/graph/stage.py
 from typing import List, Dict, TypedDict, Any
-from src.utils.slide_context import slide_context # Assuming this is a class you have defined
+from src.utils.slide_context import slide_context
+
 
 class State(TypedDict, total=False):
     """

@@ -1,12 +1,11 @@
-# src/nodes/slide_generator.py
+# File: src/nodes/slide_generator.py
 
 from src.graph.stage import State
 from langchain_core.prompts import ChatPromptTemplate
 from src.tools.tool_des import execute_tool
 import json
 from langchain_core.runnables import RunnableConfig
-from src.utils.config import TOOL_RETRIEVER_TOP_K, SLIDE_GENERATION_MAX_RETRIES
-import time
+from src.utils.config import TOOL_RETRIEVER_TOP_K, MAX_REMAKE
 
 # === SLIDE TYPE SPECIFIC PROMPTS ===
 
@@ -133,6 +132,7 @@ EVALUATION OF PREVIOUS ATTEMPT:
 {previous_evaluation}
 """
 
+
 def create_default_html(content_data) -> str:
     """Create default HTML when unable to get from LLM"""
     # Handle both dict and string formats
@@ -142,12 +142,12 @@ def create_default_html(content_data) -> str:
     else:
         content_text = content_data if content_data else "Default slide content"
         title = "Slide"
-    
+
     lines = content_text.split('\n')
     if not title:
         title = lines[0] if lines else "Slide"
     content = '<br>'.join(lines[1:]) if len(lines) > 1 else content_text
-    
+
     html = f"""<!DOCTYPE html>
 <html>
 <head>
@@ -170,17 +170,16 @@ def create_default_html(content_data) -> str:
     return html
 
 
-def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD CONFIG
+def generate_slide(state: State, config: RunnableConfig) -> State:
     """
     Node for slide generation: Uses an LLM to generate a tool call based on a plan.
     """
     print("\n---------------- Executing Node: slide_generator ----------------")
-    start_time = time.time()
-    # --- 3. GET RESOURCES FROM CONFIG ---
+
     configurable = config["configurable"]
     llm = configurable.get('llm')
-    tool_retriever = configurable.get('tool_retriever') # <-- Get the retriever
-    all_tools_dict = configurable.get('tools_dict', {}) # Get the full dict as a fallback
+    tool_retriever = configurable.get('tool_retriever')
+    all_tools_dict = configurable.get('tools_dict', {})
     if not llm:
         raise ValueError("LLM instance not found in config.")
 
@@ -195,14 +194,14 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
     slide_context_maps = state.get('slide_context_maps', [])
 
     print(f"--- Generating slide {idx + 1}/{length_slide_chunks} ---")
-    
+
     if not current_text:
         print("WARNING: No slide text provided. Using default.")
         current_text = "Default slide content"
-    
+
     if not slide_plans or idx >= len(slide_plans):
         raise ValueError(f"Missing slide plan for slide index {idx}.")
-        
+
     if not slide_context_maps or idx >= len(slide_context_maps):
         raise ValueError(f"Missing slide context map for slide index {idx}.")
 
@@ -210,7 +209,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
     current_plan = slide_plans[idx]
     current_context_map = slide_context_maps[idx]
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
-    creative_thought = current_plan.get('thought', '') # This is our query!
+    creative_thought = current_plan.get('thought', '')
 
     print(f"  -> Using plan with action: '{tool_category}'")
     print(f"  -> Creative thought (query): '{creative_thought[:200]}...'")
@@ -223,7 +222,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             # Find the exact same tool from the dict
             all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
             matching_tool = next((t for t in all_transition_tools if t.name == prev_transition_tool_name), None)
-            
+
             if matching_tool:
                 my_tools = [matching_tool]  # Use ONLY this tool
                 print(f"  -> 🔄 REUSING previous transition tool for consistency: {prev_transition_tool_name}")
@@ -250,7 +249,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             query=creative_thought,
             top_k=TOOL_RETRIEVER_TOP_K
         )
-        
+
         if not retrieved_tools:
             print(f"  -> WARNING: Could not retrieve any tools. Falling back to all tools in category '{tool_category}'.")
             my_tools = all_tools_dict.get(tool_category, [])
@@ -259,7 +258,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             print(f"  -> Retrieved {len(my_tools)} relevant tools: {[tool.name for tool in my_tools]}")
 
     if not my_tools:
-         # Final fallback if category is empty
+        # Final fallback if category is empty
         print(f"  -> CRITICAL WARNING: No tools found for category '{tool_category}'. Using default content tools.")
         my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
 
@@ -267,7 +266,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 
     # Get slide type and corresponding prompt
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
-    
+
     # Prepare system prompt based on slide type
     if slide_type == 'CONTENT_TOOLS':
         # Handle highlight color for content slides
@@ -277,19 +276,19 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         else:
             # First content slide - let LLM choose
             highlight_instruction = "- This is the FIRST content slide - choose ONE color from the list and use it consistently"
-        
+
         system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
-    
+
     elif slide_type == 'TRANSITION_TOOLS':
         # Handle previous transition context
         previous_transition = state.get('previous_transition_tool_call', {})
         if previous_transition:
             prev_tool_name = previous_transition.get('name', 'unknown')
             prev_args = previous_transition.get('arguments', {})
-            
+
             # Format arguments as readable text (avoiding JSON braces that confuse LangChain)
             args_text = "\n".join([f"    - {key}: {value}" for key, value in prev_args.items()])
-            
+
             # Extract key styling info from previous transition
             transition_context = f"""* PREVIOUS TRANSITION details:
   - Tool used: {prev_tool_name}
@@ -305,22 +304,20 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 * ONLY change the text content to match the new section heading"""
         else:
             transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-        
+
         system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
-    
+
     else:
         system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, CONTENT_PROMPT)
-    
+
     slidegen_prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("human", HUMAN_PROMPT_TEMPLATE)
     ])
 
     slide_generator_runnable = slidegen_prompt | llm_with_tools
-    
-    retry_feedback = ""
 
-    MAX_REMAKE = 3
+    retry_feedback = ""
 
     for attempt in range(1, MAX_REMAKE + 1):
         print(f"🔁 Function-call generation attempt {attempt}/{MAX_REMAKE}")

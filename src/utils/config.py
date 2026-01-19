@@ -1,12 +1,10 @@
-import asyncio
 import os
 from dotenv import load_dotenv
 from playwright.async_api import async_playwright
 import logging
+import traceback
+
 logger = logging.getLogger(__name__)
-import re
-from PIL import Image
-import io
 
 # ============================================================================
 # HYPERPARAMETERS - Tùy chỉnh để điều chỉnh hành vi của hệ thống
@@ -23,6 +21,8 @@ LLM_TEMPERATURE = 0.5
 LLM_MAX_TOKENS = 20000
 # Top-p sampling (nucleus sampling) - khuyến nghị giữ 1.0 cho tool calling
 LLM_TOP_P = 1.0
+# Số lần retry tối đa khi gọi LLM thất bại (network error, timeout, v.v.)
+MAX_REMAKE = 3
 
 # --- Idea Structure LLM Configuration ---
 # Model cho việc tạo cấu trúc slide từ idea (create with idea feature)
@@ -38,6 +38,8 @@ SLIDE_CHAR_LIMIT = 600
 # Giới hạn ký tự để quyết định có cần split content hay không
 # Nếu content > giá trị này, LLM sẽ chia nhỏ thành sub-sections
 CONTENT_CHAR_LIMIT_FOR_SPLIT = 800
+# Giới hạn ký tự cho 1 chunk content (nếu vượt quá sẽ split)
+THRESHOLD_CHAR_LIMIT = 800
 
 # --- Slide Planning ---
 # Số lượng slides được plan cùng lúc trong 1 batch (tăng = nhanh hơn nhưng tốn RAM)
@@ -68,6 +70,7 @@ BROWSER_DEVICE_SCALE_FACTOR = 1
 # END OF HYPERPARAMETERS
 # ============================================================================
 
+
 def setup_environment():
     """Load environment variables and set API keys and return a dictionary of them."""
     load_dotenv()
@@ -85,8 +88,9 @@ def setup_environment():
     #     os.environ["AQUANG2"] = os.getenv('AQUANG2')
     # if "MATA01" not in os.environ:
     #     os.environ["MATA01"] = os.getenv('MATA01')
-    
     return api_keys
+
+
 async def initialize_playwright():
     try:
         playwright = await async_playwright().__aenter__()
@@ -107,5 +111,5 @@ async def initialize_playwright():
         return {"playwright": playwright, "browser": browser, "context": context}
     except Exception as e:
         print(f"❌ Error initializing Playwright: {e}")
-        import traceback; traceback.print_exc()
+        traceback.print_exc()
         return None

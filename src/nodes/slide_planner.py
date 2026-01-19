@@ -1,6 +1,6 @@
-# src/nodes/slide_planner.py
+# File: src/nodes/slide_planner.py
 
-from typing import List, Literal
+from typing import Literal
 from pydantic import BaseModel, Field
 from langchain_core.prompts import ChatPromptTemplate
 from src.graph.stage import State
@@ -8,10 +8,9 @@ from langchain_core.runnables import RunnableConfig
 from src.utils.config import PLANNING_BATCH_SIZE
 import time
 
-# --- Pydantic Model for Structured LLM Output ---
-
 # Define the allowed tool categories based on your TOOLS_DICT keys
 ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS']
+
 
 class SlidePlan(BaseModel):
     """Defines the structure of a slide plan."""
@@ -58,7 +57,7 @@ SLIDE_PLANNER_HUMAN_PROMPT = """
 🔢 SLIDE NUMBER: {slide_number}
 ===============================================
 
-IMPORTANT: 
+IMPORTANT:
 - If slide number is 1 → MUST use INTRO_TOOLS
 - If slide number is 2 or higher → NEVER use INTRO_TOOLS
 
@@ -75,6 +74,7 @@ This is the raw text content for the slide you need to create a plan for.
 {slide_content}
 """
 
+
 def planning_slide(state: State, config: RunnableConfig) -> State:
     """
     Analyzes all slide content in manageable chunks (batches) to create a design
@@ -85,7 +85,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     start_time = time.time()
     configurable = config["configurable"]
     llm = configurable.get('llm')
-    
+
     # Emit streaming event
     stream_callback = configurable.get('stream_callback')
     if stream_callback:
@@ -95,24 +95,24 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             'description': 'Đang lập kế hoạch thiết kế cho các slide...',
             'message': 'Đang phân tích nội dung để thiết kế slide'
         })
-    
+
     if not llm:
         raise ValueError("LLM instance not found in config.")
 
     slide_chunks = state.get('slide_chunks', [])
     slide_context_maps = state.get('slide_context_maps', [])
     document_structure = state.get('document_structure', {})
-    
+
     if not slide_chunks:
         print("WARNING: No slide chunks found. Skipping planning.")
         state['slide_plans'] = []
         return state
-    
+
     # --- AUTO-CREATE INTRO SLIDE IF MISSING ---
     first_chunk = slide_chunks[0] if slide_chunks else {}
     if first_chunk.get('position', 0) != 0:
         print("⚠️  First chunk is not an intro slide. Creating intro slide...")
-        
+
         # Get title from document structure (handle both dict and list)
         if isinstance(document_structure, dict):
             title = document_structure.get('title', 'Presentation Title')
@@ -120,35 +120,35 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             title = document_structure[0].get('title', 'Presentation Title') if isinstance(document_structure[0], dict) else 'Presentation Title'
         else:
             title = 'Presentation Title'
-        
+
         # Create intro chunk
         intro_chunk = {
             'position': 0,
             'heading': '',
             'text_content': f"Title: {title}\nSubtitle: Overview"
         }
-        
+
         # Insert at beginning
         slide_chunks.insert(0, intro_chunk)
         print(f"✅ Created intro slide with title: {title}")
-    
+
     # --- REMOVE DUPLICATE THANK YOU SLIDES ---
     thank_you_positions = []
     for i, chunk in enumerate(slide_chunks):
         if chunk.get('position') == -2 or chunk.get('heading') == 'THANK_YOU':
             thank_you_positions.append(i)
-    
+
     if len(thank_you_positions) > 1:
         print(f"⚠️  Found {len(thank_you_positions)} thank you slides at positions: {thank_you_positions}")
         # Keep only the last one (remove duplicates from end to start to preserve indices)
         for pos in reversed(thank_you_positions[:-1]):
             print(f"   Removing duplicate thank you slide at index {pos}")
             slide_chunks.pop(pos)
-        print(f"✅ Kept only the last thank you slide")
-    
+        print("✅ Kept only the last thank you slide")
+
     # Update state with cleaned chunks
     state['slide_chunks'] = slide_chunks
-    
+
     # Recreate or update context maps to match current chunks
     if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
         print(f"⚠️  Context maps mismatch (maps: {len(slide_context_maps)}, chunks: {len(slide_chunks)}). Regenerating...")
@@ -156,7 +156,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         for i, chunk in enumerate(slide_chunks):
             heading = chunk.get('heading', '')
             position = chunk.get('position', i)
-            
+
             if position == 0 or i == 0:
                 context = f"[Slide {i+1}] INTRO SLIDE"
             elif heading == 'TRANSITION' or position == -1:
@@ -184,10 +184,10 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             "slide_context_map": slide_context_maps[i],
             "slide_content": content
         })
-    
+
     total_slides = len(all_inputs)
     all_slide_plans = []
-    
+
     print(f"Total slides to plan: {total_slides}. Processing in chunks of {PLANNING_BATCH_SIZE}.")
 
     try:
@@ -197,16 +197,16 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             chunk_inputs = all_inputs[i : i + PLANNING_BATCH_SIZE]
             chunk_start_num = i + 1
             chunk_end_num = min(i + PLANNING_BATCH_SIZE, total_slides)
-            
+
             print(f"  -> Processing chunk: slides {chunk_start_num}-{chunk_end_num}...")
 
             # Invoke the chain with the current chunk.
             batch_results = planner_chain.batch(chunk_inputs, config={"max_concurrency": 5})
-            
+
             # Add the results from this chunk to the main list.
             chunk_plans = [plan.dict() for plan in batch_results]
             all_slide_plans.extend(chunk_plans)
-            print(f"     ... done.")
+            print("     ... done.")
 
         print(f"\n  -> Successfully generated plans for all {len(all_slide_plans)} slides.")
         state['slide_plans'] = all_slide_plans

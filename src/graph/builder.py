@@ -26,26 +26,27 @@ def route_to_task(state: State) -> str:
         print("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
         return END
 
+
 def evaluate_vlm_decision(state: State) -> str:
     """
     Đánh giá quyết định của VLM và quyết định luồng tiếp theo.
     """
     print("--- Router: evaluate_vlm_decision ---")
-    
+
     # Đảm bảo vlm_decision luôn tồn tại trong state
     decision = state.get('vlm_decision', 'deny')  # Mặc định deny nếu không có quyết định
     print(f"Đang xử lý quyết định VLM: {decision}")
-    
+
     # Lấy retry_count hiện tại
     retry_count = state.get('retry_count', 0)
     max_retries = state.get('max_retries', 3)
     print(f"Giá trị retry_count hiện tại: {retry_count}")
-    
+
     if decision == "accept":
         print("Slide được chấp nhận. Chuyển đến bước hoàn tất.")
 
         return "finalizer"
-    else: # deny
+    else:
         # Kiểm tra nếu đã đạt số lần thử lại tối đa
         if retry_count >= max_retries:
             print(f"Đã đạt số lần thử lại tối đa ({max_retries}). Buộc chấp nhận slide.")
@@ -53,6 +54,7 @@ def evaluate_vlm_decision(state: State) -> str:
         else:
             print(f"Slide bị từ chối. Thử lại lần {retry_count}.")
             return "generate_slide"  # Quay lại node generate_slide để thử lại slide
+
 
 def build_workflow(router_flags: bool) -> StateGraph:
     """
