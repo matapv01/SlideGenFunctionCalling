@@ -4,59 +4,8 @@ from langchain_core.prompts import ChatPromptTemplate
 from src.graph.stage import State, SlidePlan
 from langchain_core.runnables import RunnableConfig
 from src.utils.config import PLANNING_BATCH_SIZE
+from src.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
 import time
-
-# --- Prompts for the Slide Planner ---
-
-SLIDE_PLANNER_SYSTEM_PROMPT = """
-You are an expert presentation designer and slide planner. Your task is to analyze the content for a single slide and create a high-level plan for its visual design and type.
-
-**INSTRUCTIONS:**
-
-1.  **Check Slide Number FIRST:** Before anything else, check the SLIDE NUMBER provided.
-2.  **Develop a Creative Vision (`thought`):** Based on the content, describe your vision for the slide.
-    *   What is the key message?
-    *   What layout would be best (e.g., two-column, grid, single image with text)?
-    *   What is the appropriate mood or tone (e.g., professional, playful, minimalist, high-tech)?
-    *   Suggest color themes, font styles, and whether an image or icon would enhance the message.
-3.  **Select the Right Tool Category (`action`):** Based on the slide number and content type, choose the appropriate tool category.
-
-**CRITICAL RULES FOR TOOL SELECTION:**
-- **SLIDE NUMBER 1 ONLY**: MUST use 'INTRO_TOOLS' - This is the title/introduction slide
-- **SLIDE NUMBER 2+**: Choose based on content:
-  * If content starts with "TRANSITION SLIDE" → use 'TRANSITION_TOOLS'
-  * If content starts with "THANK YOU SLIDE" → use 'THANK_YOU_TOOLS'
-  * If content is about team members → use 'TEAM_TOOLS'
-  * For all other content (main points, details, lists) → use 'CONTENT_TOOLS'
-- **NEVER use INTRO_TOOLS for slides after slide 1**
-
-**CRITICAL OUTPUT REQUIREMENT:**
-- You MUST return ONLY a single, valid JSON object that strictly follows the required schema.
-- Do not add any text, explanations, or markdown formatting before or after the JSON object.
-- The 'action' key must be one of the following exact strings: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS'.
-"""
-
-SLIDE_PLANNER_HUMAN_PROMPT = """
-===============================================
-🔢 SLIDE NUMBER: {slide_number}
-===============================================
-
-IMPORTANT:
-- If slide number is 1 → MUST use INTRO_TOOLS
-- If slide number is 2 or higher → NEVER use INTRO_TOOLS
-
----
-**PRESENTATION CONTEXT (OUTLINE):**
-This is the structure of the entire presentation. The "YOU ARE HERE" marker shows the position of the current slide you are planning.
-
-{slide_context_map}
-
----
-**SLIDE CONTENT TO PLAN:**
-This is the raw text content for the slide you need to create a plan for.
-
-{slide_content}
-"""
 
 
 def planning_slide(state: State, config: RunnableConfig) -> State:

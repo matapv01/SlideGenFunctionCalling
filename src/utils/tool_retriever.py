@@ -5,6 +5,7 @@ from src.utils import config
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
 from langchain_core.documents import Document
 
+
 class ToolRetriever:
     """
     A retriever for dynamically finding the most relevant tools based on a query.
@@ -19,7 +20,7 @@ class ToolRetriever:
             index_path (str): Path to the directory where the FAISS index will be saved/loaded.
         """
         print("Initializing ToolRetriever with Google Gemini Embeddings...")
-        
+
         # The model name is the standard for Gemini embeddings.
 
         env_keys = config.setup_environment()
@@ -28,10 +29,10 @@ class ToolRetriever:
             raise RuntimeError("Không có API key hợp lệ trong biến môi trường.")
 
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_keys[0])
-        
+
         self.retrievers = {}
         self.tools_dict = tools_dict
-        
+
         if os.path.exists(index_path):
             print(f"Found existing index at '{index_path}'. Loading retrievers from disk...")
             for category in tools_dict.keys():
@@ -40,9 +41,9 @@ class ToolRetriever:
                     try:
                         # --- CHANGE: 'allow_dangerous_deserialization' is often not needed for Google's embeddings ---
                         vector_store = FAISS.load_local(
-                            folder_path=category_index_path, 
+                            folder_path=category_index_path,
                             embeddings=self.embeddings,
-                            allow_dangerous_deserialization=True # Keep for safety with FAISS
+                            allow_dangerous_deserialization=True  # Keep for safety with FAISS
                         )
                         self.retrievers[category] = vector_store.as_retriever()
                         print(f"  - Successfully loaded retriever for '{category}'.")
@@ -61,7 +62,8 @@ class ToolRetriever:
 
     def _build_and_save_retriever(self, category: str, tools: List[Any], base_index_path: str):
         # (This function remains exactly the same)
-        if not tools: return
+        if not tools:
+            return
         category_index_path = os.path.join(base_index_path, category)
         try:
             print(f"  - Building retriever for category '{category}'...")
@@ -75,7 +77,8 @@ class ToolRetriever:
 
     def get_relevant_tools(self, category: str, query: str, top_k: int = 5) -> List[Any]:
         # (This function remains exactly the same)
-        if category not in self.retrievers: return []
+        if category not in self.retrievers:
+            return []
         retriever = self.retrievers[category]
         relevant_docs = retriever.invoke(query, k=top_k)
         relevant_tool_names = [doc.metadata['name'] for doc in relevant_docs]
