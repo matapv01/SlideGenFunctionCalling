@@ -5,6 +5,8 @@ uv sync
 python -m playwright install chromium
 cd web\backend
 npm install
+npm uninstall puppeteer-core
+npm install puppeteer
 npx puppeteer browsers install chrome
 
 
