@@ -5,6 +5,9 @@ import uvicorn
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
+from app.main import app
+from app.config import API_HOST, API_PORT
+
 
 # Load .env from root project directory
 root_dir = Path(__file__).parent.parent.parent  # SlideGenFunctionCalling/
@@ -18,9 +21,6 @@ else:
 # Add parent directory to path
 sys.path.insert(0, str(Path(__file__).parent))
 
-from app.main import app
-from app.config import API_HOST, API_PORT
-
 if __name__ == "__main__":
     print("=" * 60)
     print("🌐 Starting SlideGen Backend Server")
@@ -30,7 +30,7 @@ if __name__ == "__main__":
     print(f"📸 Capture Health: http://{API_HOST}:{API_PORT}/api/capture-health")
     print(f"🔧 Converter Health: http://{API_HOST}:{API_PORT}/api/converter-health")
     print("=" * 60)
-    
+
     uvicorn.run(
         app,  # Pass app object directly instead of string when using sys.path manipulation
         host=API_HOST,

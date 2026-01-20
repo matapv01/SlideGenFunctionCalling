@@ -118,7 +118,7 @@ class StateOutputResponse(BaseModel):
     success: bool
     message: str
     session_id: str
-    
+
     # State fields (matching chunk_organizer output)
     document_title: str
     document_outline: List[Dict[str, Any]]

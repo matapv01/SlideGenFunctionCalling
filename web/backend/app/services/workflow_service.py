@@ -8,20 +8,18 @@ import logging
 import tempfile
 import shutil
 import zipfile
-from pathlib import Path
 from typing import Optional, Dict, Any
-from datetime import datetime
 
 logger = logging.getLogger(__name__)
 
 
 class WorkflowService:
     """Service for AI workflow operations using LangGraph"""
-    
+
     def __init__(self, project_dir: str):
         self.project_dir = project_dir
         self.workflow_available = self._check_workflow_availability()
-    
+
     def _check_workflow_availability(self) -> bool:
         """Check if workflow module is available"""
         try:
@@ -29,16 +27,13 @@ class WorkflowService:
             # project_dir is: N:\slidegen\SlideGenFunctionCalling\web
             # Need to go up 1 level to: N:\slidegen\SlideGenFunctionCalling
             parent_dir = os.path.dirname(self.project_dir)
-            
             logger.info(f"project_dir: {self.project_dir}")
             logger.info(f"parent_dir to add: {parent_dir}")
-            
+
             if parent_dir not in sys.path:
                 sys.path.append(parent_dir)
                 logger.info(f"✅ Added to sys.path: {parent_dir}")
-            
-            # Try to import workflow
-            from workflow import main_workflow
+
             logger.info("✅ LangGraph workflow module available")
             return True
         except ImportError as e:
@@ -48,14 +43,14 @@ class WorkflowService:
         except Exception as e:
             logger.error(f"❌ Error checking workflow: {e}")
             return False
-    
+
     def is_available(self) -> bool:
         """Check if workflow service is available"""
         return self.workflow_available
-    
+
     async def process_docx_with_workflow(
-        self, 
-        docx_path: str, 
+        self,
+        docx_path: str,
         output_folder: str,
         router_flags: bool = False,
         callback: Optional[Any] = None,
@@ -63,29 +58,29 @@ class WorkflowService:
     ) -> Optional[str]:
         """
         Process DOCX file using LangGraph AI workflow - EXACT COPY from main_web.py
-        
+
         Args:
             docx_path: Path to DOCX file
             output_folder: Output folder for slides
             router_flags: Enable router flags in workflow
             callback: Optional callback for streaming events
             slide_options: Options for slide generation (transition_slides, thank_you_slide)
-            
+
         Returns:
             Path to result ZIP file or None if failed
         """
         if not self.workflow_available:
             logger.error("Workflow not available")
             return None
-        
+
         try:
             logger.info(f"🤖 Processing DOCX with AI workflow: {os.path.basename(docx_path)}")
-            
+
             # Load environment variables from backend .env and root .env
             from dotenv import load_dotenv
             backend_env = os.path.join(os.path.dirname(self.project_dir), 'backend', '.env')
             root_env = os.path.join(os.path.dirname(self.project_dir), '.env')
-            
+
             # Load both env files
             if os.path.exists(backend_env):
                 load_dotenv(backend_env)
@@ -93,7 +88,7 @@ class WorkflowService:
             if os.path.exists(root_env):
                 load_dotenv(root_env)
                 logger.info(f"Loaded env from: {root_env}")
-            
+
             # Verify GEMINI_API_KEY is available
             gemini_key = os.getenv('GEMINI_API_KEY')
             if not gemini_key:
@@ -101,23 +96,23 @@ class WorkflowService:
                 return None
             else:
                 logger.info(f"✅ GEMINI_API_KEY loaded: {gemini_key[:10]}...")
-            
+
             # Import workflow function
             from workflow import main_workflow
-            
+
             # Create temporary workflow directory
             temp_workflow_dir = tempfile.mkdtemp(prefix="slidegen_workflow_")
             logger.info(f"Created temporary workflow directory: {temp_workflow_dir}")
-            
+
             # Pre-create required subdirectories
             subdirs = ["html", "png", "temp_debug", "temp_debug/html", "temp_debug/png"]
             for subdir in subdirs:
                 dir_path = os.path.join(temp_workflow_dir, subdir)
                 os.makedirs(dir_path, exist_ok=True)
-            
+
             # Store temp directory path to return
             result_zip_path = None
-            
+
             try:
                 # Run workflow in temporary directory
                 logger.info(f"Running workflow with temp directory: {temp_workflow_dir}")
@@ -129,10 +124,10 @@ class WorkflowService:
                     callback=callback,
                     slide_options=slide_options or {}
                 )
-                
+
                 # Find result ZIP file
                 result_zip = self._find_result_zip(result, temp_workflow_dir, output_folder)
-                
+
                 if result_zip and os.path.exists(result_zip):
                     logger.info(f"✅ Workflow completed successfully: {result_zip}")
                     # Return tuple of (zip_path, temp_dir) instead of just zip_path
@@ -141,7 +136,7 @@ class WorkflowService:
                 else:
                     logger.error("❌ Workflow did not produce valid output")
                     return None
-                    
+
             except Exception as e:
                 # Cleanup temp directory on error
                 logger.error(f"Error during workflow: {e}")
@@ -154,18 +149,18 @@ class WorkflowService:
                 except Exception as cleanup_error:
                     logger.warning(f"Could not cleanup temp directory: {cleanup_error}")
                 return None
-                    
+
         except Exception as e:
             logger.error(f"❌ Error in workflow processing: {e}")
             import traceback
             logger.error(traceback.format_exc())
             return None
-    
+
     def _find_result_zip(self, result: Any, temp_dir: str, output_folder: str) -> Optional[str]:
         """Find and copy result ZIP file - EXACT COPY from main_web.py"""
         try:
             result_zip = None
-            
+
             # Check if result is a message string
             if isinstance(result, str):
                 if "được lưu tại:" in result or "saved at:" in result.lower() or "hoàn thành" in result.lower():
@@ -177,14 +172,14 @@ class WorkflowService:
                         if os.path.exists(zip_path):
                             logger.info(f"Found zip file from message: {zip_path}")
                             result_zip = zip_path
-                
+
                 # If path extraction failed, search for zip files
                 if not result_zip:
                     zip_files = [f for f in os.listdir(temp_dir) if f.endswith('.zip')]
                     if zip_files:
                         result_zip = os.path.join(temp_dir, zip_files[0])
                         logger.info(f"Using found zip file: {result_zip}")
-                        
+
             # Last resort: search for any zip files in temp_dir
             if not result_zip:
                 zip_files = [f for f in os.listdir(temp_dir) if f.endswith('.zip')]
@@ -195,7 +190,7 @@ class WorkflowService:
                     # Try to create ZIP from html and png contents
                     html_dir = os.path.join(temp_dir, "html")
                     png_dir = os.path.join(temp_dir, "png")
-                    
+
                     if os.path.exists(html_dir):
                         html_files = [f for f in os.listdir(html_dir) if f.endswith('.html')]
                         if html_files:
@@ -205,14 +200,14 @@ class WorkflowService:
                                 for file in html_files:
                                     file_path = os.path.join(html_dir, file)
                                     zipf.write(file_path, f"html/{file}")
-                                
+
                                 # Add PNG files if they exist
                                 if os.path.exists(png_dir):
                                     png_files = [f for f in os.listdir(png_dir) if f.endswith('.png')]
                                     for file in png_files:
                                         file_path = os.path.join(png_dir, file)
                                         zipf.write(file_path, f"png/{file}")
-                            
+
                             logger.info(f"Created zip from html/png: {result_zip}")
                         else:
                             logger.error("No HTML files found in workflow output")
@@ -220,7 +215,7 @@ class WorkflowService:
                     else:
                         logger.error("Workflow did not produce html directory")
                         return None
-            
+
             # Copy to permanent location in output folder
             if result_zip and os.path.exists(result_zip):
                 import uuid
@@ -231,13 +226,13 @@ class WorkflowService:
                 return final_zip
             else:
                 return None
-                
+
         except Exception as e:
             logger.error(f"Error finding result zip: {e}")
             import traceback
             logger.error(traceback.format_exc())
             return None
-    
+
     async def process_idea_with_workflow(
         self,
         slide_chunks: list,
@@ -249,55 +244,55 @@ class WorkflowService:
         """
         Process idea-generated slide chunks using LangGraph workflow
         Bypasses document conversion and splits, directly starts from organize_chunks
-        
+
         Args:
             slide_chunks: Pre-generated slide structure from LLM
             title: Presentation title
             output_folder: Output folder for slides
             callback: Optional callback for streaming events
             slide_options: Options for slide generation
-            
+
         Returns:
             Tuple of (result_zip_path, temp_workflow_dir) or None if failed
         """
         if not self.workflow_available:
             logger.error("Workflow not available")
             return None
-        
+
         try:
             logger.info(f"🤖 Processing idea with {len(slide_chunks)} chunks")
-            
+
             # Load environment variables
             from dotenv import load_dotenv
             backend_env = os.path.join(os.path.dirname(self.project_dir), 'backend', '.env')
             root_env = os.path.join(os.path.dirname(self.project_dir), '.env')
-            
+
             if os.path.exists(backend_env):
                 load_dotenv(backend_env)
             if os.path.exists(root_env):
                 load_dotenv(root_env)
-            
+
             # Verify GEMINI_API_KEY
             gemini_key = os.getenv('GEMINI_API_KEY')
             if not gemini_key:
                 logger.error("❌ GEMINI_API_KEY not found")
                 return None
-            
+
             # Import workflow function
             from workflow import main_workflow_from_chunks
-            
+
             # Create temporary workflow directory
             temp_workflow_dir = tempfile.mkdtemp(prefix="slidegen_idea_")
             logger.info(f"Created temp directory: {temp_workflow_dir}")
-            
+
             # Pre-create subdirectories
             subdirs = ["html", "png", "temp_debug", "temp_debug/html", "temp_debug/png"]
             for subdir in subdirs:
                 dir_path = os.path.join(temp_workflow_dir, subdir)
                 os.makedirs(dir_path, exist_ok=True)
-            
+
             result_zip_path = None
-            
+
             try:
                 # Run workflow with pre-loaded chunks
                 logger.info(f"Running idea workflow with {len(slide_chunks)} chunks")
@@ -308,10 +303,10 @@ class WorkflowService:
                     callback=callback,
                     slide_options=slide_options or {}
                 )
-                
+
                 # Find result ZIP
                 result_zip = self._find_result_zip(result, temp_workflow_dir, output_folder)
-                
+
                 if result_zip and os.path.exists(result_zip):
                     logger.info(f"✅ Idea workflow completed: {result_zip}")
                     result_zip_path = result_zip
@@ -319,7 +314,7 @@ class WorkflowService:
                 else:
                     logger.error("❌ Workflow did not produce valid output")
                     return None
-                    
+
             except Exception as e:
                 logger.error(f"Error during idea workflow: {e}")
                 import traceback
@@ -330,7 +325,7 @@ class WorkflowService:
                 except Exception as cleanup_error:
                     logger.warning(f"Could not cleanup temp directory: {cleanup_error}")
                 return None
-                    
+
         except Exception as e:
             logger.error(f"❌ Error in idea workflow processing: {e}")
             import traceback
@@ -347,55 +342,55 @@ class WorkflowService:
         """
         Process manual structure from structure editor using LangGraph workflow
         Similar to process_idea_with_workflow but for user-defined structure
-        
+
         Args:
             slide_chunks: User-defined slide chunks from structure editor
             document_title: Document title
             output_folder: Output folder for slides
             callback: Optional callback for streaming events
-            
+
         Returns:
             Tuple of (result_zip_path, temp_workflow_dir) or None if failed
         """
         if not self.workflow_available:
             logger.error("Workflow not available")
             return None
-        
+
         try:
             logger.info(f"🎨 Processing manual structure with {len(slide_chunks)} chunks")
             logger.info(f"📄 Document title: {document_title}")
-            
+
             # Load environment variables
             from dotenv import load_dotenv
             backend_env = os.path.join(os.path.dirname(self.project_dir), 'backend', '.env')
             root_env = os.path.join(os.path.dirname(self.project_dir), '.env')
-            
+
             if os.path.exists(backend_env):
                 load_dotenv(backend_env)
             if os.path.exists(root_env):
                 load_dotenv(root_env)
-            
+
             # Verify GEMINI_API_KEY
             gemini_key = os.getenv('GEMINI_API_KEY')
             if not gemini_key:
                 logger.error("❌ GEMINI_API_KEY not found")
                 return None
-            
+
             # Import workflow function
             from workflow import main_workflow_from_chunks
-            
+
             # Create temporary workflow directory
             temp_workflow_dir = tempfile.mkdtemp(prefix="slidegen_manual_")
             logger.info(f"Created temp directory: {temp_workflow_dir}")
-            
+
             # Pre-create subdirectories
             subdirs = ["html", "png", "temp_debug", "temp_debug/html", "temp_debug/png"]
             for subdir in subdirs:
                 dir_path = os.path.join(temp_workflow_dir, subdir)
                 os.makedirs(dir_path, exist_ok=True)
-            
+
             result_zip_path = None
-            
+
             try:
                 # Run workflow with user-defined chunks
                 logger.info(f"Running manual structure workflow with {len(slide_chunks)} chunks")
@@ -409,10 +404,10 @@ class WorkflowService:
                         'enable_thank_you_slide': False
                     }
                 )
-                
+
                 # Find result ZIP
                 result_zip = self._find_result_zip(result, temp_workflow_dir, output_folder)
-                
+
                 if result_zip and os.path.exists(result_zip):
                     logger.info(f"✅ Manual structure workflow completed: {result_zip}")
                     result_zip_path = result_zip
@@ -420,7 +415,7 @@ class WorkflowService:
                 else:
                     logger.error("❌ Workflow did not produce valid output")
                     return None
-                    
+
             except Exception as e:
                 logger.error(f"Error during manual structure workflow: {e}")
                 import traceback
@@ -431,7 +426,7 @@ class WorkflowService:
                 except Exception as cleanup_error:
                     logger.warning(f"Could not cleanup temp directory: {cleanup_error}")
                 return None
-                    
+
         except Exception as e:
             logger.error(f"❌ Error in manual structure processing: {e}")
             import traceback
@@ -446,14 +441,13 @@ class WorkflowService:
                 "can_import": False,
                 "langgraph_installed": False
             }
-            
+
             if self.workflow_available:
                 try:
-                    from workflow import main_workflow
                     health["can_import"] = True
                 except Exception as e:
                     health["import_error"] = str(e)
-                
+
                 # Check LangGraph installation
                 try:
                     import langgraph
@@ -461,9 +455,9 @@ class WorkflowService:
                     health["langgraph_version"] = getattr(langgraph, "__version__", "unknown")
                 except ImportError:
                     health["langgraph_installed"] = False
-            
+
             return health
-            
+
         except Exception as e:
             logger.error(f"Workflow health check error: {e}")
             return {
