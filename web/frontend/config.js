@@ -10,7 +10,7 @@ console.log(`🛠️ Frontend running in ${isDevelopment ? 'development' : 'prod
 
 // Backend API URL
 const API_BASE_URL = isDevelopment 
-    ? 'http://localhost:12008/api'  // Development: backend on port 12008
+    ? 'http://localhost:12008'  // Development: backend on port 12008
     : window.location.origin;                       // Production: same origin
 
 // Backend download URL
