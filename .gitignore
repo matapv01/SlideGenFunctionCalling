@@ -13,5 +13,6 @@ web/static/uploads/
 
 node_modules/
 web/node_modules/
+web/backend/node_modules/
 
 *.db
