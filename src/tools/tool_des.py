@@ -30,7 +30,16 @@ from src.tools.html_tool import (
     generate_title_slide_4, # slide intro(hien)
     generate_title_slide_5, # slide intro(hien)
     generate_title_slide_6, # slide intro(hien)
+    generate_title_slide_7, # slide intro(hien)
+    generate_title_slide_11, # slide intro(hien)
+    generate_title_slide_12, # slide intro(hien)
+    generate_title_slide_13, # slide intro(hien)
+    generate_title_slide_15, # slide intro(hien)
+    generate_title_slide_17, # slide intro(hien)
+    generate_title_slide_18, # slide intro(hien)
+    generate_title_slide_21, # slide intro(hien)
   
+    
     
     generate_geometric_transition_slide, # slide chuyển slide 
     generate_dusk_transition_slide, # slide chuyển slide
@@ -40,6 +49,19 @@ from src.tools.html_tool import (
     generate_intro_slide, # slide chuyển slide
     generate_research_proposal_transition_slide, # slide chuyển slide
     generate_business_transition_slide, # slide chuyển slide
+    generate_section_header_slide_5, # slide chuyển slide(hien)
+    generate_section_header_slide_6, # slide chuyển slide(hien)
+    generate_section_header_slide_8, # slide chuyển slide(hien)
+    generate_section_header_slide_9, # slide chuyển slide(hien)
+    generate_section_header_slide_10, # slide chuyển slide(hien)
+    generate_section_header_slide_12, # slide chuyển slide(hien)
+    generate_section_header_slide_13, # slide chuyển slide(hien)
+    generate_section_header_slide_15, # slide chuyển slide(hien)
+    generate_section_header_slide_17,
+    generate_section_header_slide_18,
+    generate_section_header_slide_19,
+
+
 
     generate_content_slide, # slide content
     generate_comparison_slide,  # slide content
@@ -353,6 +375,75 @@ class GenerateTitleSlide6Input(BaseModel):
     show_clouds: bool = Field(default=True, description="Whether to display cloud decorations at the top of the slide.")
     show_flower: bool = Field(default=True, description="Whether to display the cute flower character at the bottom-left corner.")
     custom_css: str = Field(default="", description="Additional custom CSS to be included in the slide.")
+
+class GenerateTitleSlide7Input(BaseModel):
+    """Input schema for generate_title_slide_7."""
+    main_title: str = Field(..., description="Main title text displayed prominently (e.g., 'BUSINESS PLAN').")
+    subtitle: str = Field(..., description="Subtitle text displayed below the main title.")
+    bg_color: str = Field(default="#F5F7FA", description="Background color of the slide (hex code).")
+    card_bg_color: str = Field(default="#FFFFFF", description="Background color for the text card or frame (hex code).")
+    border_color: str = Field(default="#E5E7EB", description="Border color for framed elements (hex code).")
+    accent_color: str = Field(default="#B99C6B", description="Accent color used for decorative elements (hex code).")
+    title_color: str = Field(default="#1F2937", description="Color of the main title text (hex code).")
+    subtitle_color: str = Field(default="#4B5563", description="Color of the subtitle text (hex code).")
+    custom_css: str = Field(default="", description="Additional custom CSS to include.")
+
+class GenerateTitleSlide11Input(BaseModel):
+    """Input schema for generate_title_slide_11."""
+    main_title: str = Field(..., description="Main title text displayed in large Georgia serif font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
+    bg_left_color: str = Field(default="#f5d7d7", description="Background color for left half of the slide (hex).")
+    bg_right_color: str = Field(default="#e8e8e8", description="Background color for right half of the slide (hex).")
+    text_color: str = Field(default="#2d2d2d", description="Color for all text elements (hex).")
+
+class GenerateTitleSlide12Input(BaseModel):
+    """Input schema for generate_title_slide_12."""
+    main_title: str = Field(..., description="Main title text in Montserrat bold font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
+    bg_color: str = Field(default="#F5F5F5", description="Background color of the slide (hex).")
+    circle_color: str = Field(default="#E5E5E5", description="Color of the large decorative circle on the right (hex).")
+    border_color: str = Field(default="#000000", description="Color of the rectangular border frame (hex).")
+    text_color: str = Field(default="#000000", description="Color for all text elements (hex).")
+
+class GenerateTitleSlide13Input(BaseModel):
+    """Input schema for generate_title_slide_13."""
+    main_title: str = Field(..., description="Main title text in Montserrat extra-bold font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
+    bg_color: str = Field(default="#E8F4F8", description="Starting color for diagonal gradient background (hex).")
+    text_color: str = Field(default="#1A1A4D", description="Color for title and subtitle text (hex).")
+    decoration_color: str = Field(default="#A8D5E2", description="Color for geometric decorations - rounded rectangles and circle (hex).")
+
+class GenerateTitleSlide15Input(BaseModel):
+    """Input schema for generate_title_slide_15."""
+    main_title: str = Field(..., description="Main title text in Montserrat bold uppercase font.")
+    subtitle: str = Field(..., description="Subtitle text shown above the main title.")
+    background_color: str = Field(default="#F5F5F0", description="Background color for the slide (hex).")
+    subtitle_color: str = Field(default="#7A7A7A", description="Color for the subtitle text (hex).")
+    title_color: str = Field(default="#E8B45E", description="Color for the main title text (hex, default golden yellow).")
+    accent_line_color: str = Field(default="#E37854", description="Color for the decorative horizontal line below title (hex, default coral orange).")
+    top_circle_color: str = Field(default="#E37854", description="Color for the top-left decorative circle (hex, default coral orange).")
+    bottom_circle_color: str = Field(default="#5A7A7F", description="Color for the bottom-right decorative circle (hex, default teal gray).")
+
+class GenerateTitleSlide17Input(BaseModel):
+    """Input schema for generate_title_slide_17."""
+    main_title: str = Field(..., description="Main title text.")
+    subtitle: str = Field(..., description="Subtitle text.")
+    bg_color: str = Field(default="#F5F5F5", description="Background color (hex).")
+    title_color: str = Field(default="#2D2D2D", description="Main title color (hex).")
+    subtitle_color: str = Field(default="#6B6B6B", description="Subtitle text color (hex).")
+    circle_color_1: str = Field(default="#5DBBBB", description="First decorative circle color (hex).")
+    circle_color_2: str = Field(default="#6BA3C8", description="Second decorative circle color (hex).")
+    circle_color_3: str = Field(default="#E8B858", description="Third decorative circle color (hex).")
+
+class GenerateTitleSlide18Input(BaseModel):
+    """Input schema for generate_title_slide_18."""
+    main_title: str = Field(..., description="Main heading text.")
+    subtitle: str = Field(..., description="Subtitle text below main title.")
+    bg_pattern_color: str = Field(default="#E8E8E8", description="Color for the geometric cube pattern background (hex).")
+    card_bg_color: str = Field(default="#F9ED9B", description="Background color of center card (hex).")
+    title_color: str = Field(default="#000000", description="Color for main title text (hex).")
+    subtitle_color: str = Field(default="#2D2D2D", description="Color for subtitle text (hex).")
+
 # === SLIDE CHUYỂN SLIDE CLASSES ===
 
 class GenerateGeometricTransitionSlideInput(BaseModel):
@@ -485,6 +576,115 @@ class GenerateCompanyMissionSlideInput(BaseModel):
     number_text_color: str = Field(default="#000000", description="Text color for numbers in circles . default='#000000'")
     accent_bar_color: str = Field(default="#0052CC", description="Color for bottom accent bar in left section (hex code). default='#0052CC'")
     bg_color: str = Field(default="#F5F5F5", description="Background color for the slide (hex code). default='#F5F5F5'")
+
+class GenerateSectionHeaderSlide5Input(BaseModel):
+    """Input schema for generate_section_header_slide_5."""
+    section_title: str = Field(..., description="Main section title. Default: 'THIS IS THE TITLE OF THIS SECTION'.")
+    bg_color: str = Field(default="#1a3d4a", description="Background color (default: dark teal).")
+    text_color: str = Field(default="#ffffff", description="Text color (default: white).")
+    stripe_color: str = Field(default="#2a5566", description="Color of decorative stripes (default: medium teal).")
+    custom_css: str = Field(default="", description="Additional CSS to inject.")
+
+class GenerateSectionHeaderSlide6Input(BaseModel):
+    """Input schema for generate_section_header_slide_6."""
+    title: str = Field(..., description="Main heading text for the slide.")
+    description: str = Field(..., description="Supporting text displayed below the title and underline.")
+    bg_color: str = Field(default="#ffffff", description="Starting color of the background gradient (top).")
+    bg_gradient_to: str = Field(default="#e3f2fd", description="Ending color of the background gradient (bottom).")
+    title_color: str = Field(default="#1a1a1a", description="Color of the main title text.")
+    text_color: str = Field(default="#4a4a4a", description="Color of the description text.")
+    underline_color: str = Field(default="#1a1a1a", description="Color of the decorative underline.")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
+
+
+class GenerateSectionHeaderSlide8Input(BaseModel):
+    """Input schema for generate_section_header_slide_8."""
+    main_title: str = Field(..., description="Main title text for the slide.")
+    subtitle: str = Field(..., description="Subtitle text displayed below the title.")
+    bg_color: str = Field(default="#FFB84D", description="Background color of the slide (warm peach/orange).")
+    text_color: str = Field(default="#2C2C2C", description="Color of the main title text (dark gray).")
+    subtitle_color: str = Field(default="#4A4A4A", description="Color of the subtitle text (medium gray).")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
+  
+class GenerateSectionHeaderSlide9Input(BaseModel):
+    """Input schema for generate_section_header_slide_9."""
+    main_title: str = Field(..., description="Main title text for the slide. default='SECTION TITLE HERE'.")
+    subtitle: str = Field(default="Here you could describe the topic of the section", description="Subtitle text displayed below the title.")
+    bg_gradient_from: str = Field(default="#fef5e7", description="Starting gradient color (light cream).")
+    bg_gradient_to: str = Field(default="#d4a574", description="Ending gradient color (warm brown).")
+    text_color: str = Field(default="#ffffff", description="Color of all text elements.")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
+
+class GenerateSectionHeaderSlide10Input(BaseModel):
+    """Input schema for generate_section_header_slide_10."""
+    main_title: str = Field(..., description="Main title text for the slide. default='SECTION TITLE HERE'.")
+    subtitle: str = Field(..., description="Subtitle text displayed below the title.")
+    bg_color: str = Field(default="#9BD89B", description="Background color (light green).")
+    notebook_bg: str = Field(default="#FFFFFF", description="Notebook paper background color.")
+    title_color: str = Field(default="#A84A3A", description="Color of the main title (brown/red).")
+    subtitle_color: str = Field(default="#5A5A5A", description="Color of the subtitle text (gray).")
+    sticky_note_colors: list = Field(default=["#FFD966", "#FFB3B3"], description="List of colors for bookmark sticky notes at the top (yellow and pink).")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
+
+class GenerateSectionHeaderSlide12Input(BaseModel):
+    """Input schema for generate_section_header_slide_12."""
+    main_title: str = Field(..., description="Main title text (question) to display. default='WHAT IS THE MAIN <br> TOPIC OF THIS SECTION?'.")
+    bg_color: str = Field(default="#f5f5f5", description="Background color of the slide (light gray).")
+    title_color: str = Field(default="#2d3748", description="Color of the main title text (dark gray).")
+    custom_css: str = Field(default="", description="Additional custom CSS.")
+
+class GenerateSectionHeaderSlide13Input(BaseModel):
+    """Input schema for generate_section_header_slide_13."""
+    main_title: str = Field(..., description="Main title text for the slide.")
+    subtitle: str = Field(..., description="Subtitle text displayed below the title.")
+    bg_start_color: str = Field(default="#FFFFFF", description="Starting gradient color (white/left side).")
+    bg_end_color: str = Field(default="#C8F4F0", description="Ending gradient color (light cyan/right side).")
+    accent_gradient_color: str = Field(default="#FFB366", description="Accent gradient color for the bottom left corner (peach/orange).")
+    text_color: str = Field(default="#1A1A1A", description="Color of all text elements (dark gray).")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
+
+
+class GenerateSectionHeaderSlide15Input(BaseModel):
+    """Input schema for generate_section_header_slide_15."""
+    main_title: str = Field(..., description="Main title text for the slide. default='MERRY CHRISTMAS AND HAPPY NEW YEAR!'.")
+    bg_color: str = Field(default="#0f2f1f", description="Background color (default: dark evergreen green for Christmas theme).")
+    text_color: str = Field(default="#f8f8f8", description="Text color (default: bright white).")
+    blob1_color: str = Field(default="rgba(220, 38, 38, 0.5)", description="First gradient blob color (default: Christmas red).")
+    blob2_color: str = Field(default="rgba(34, 139, 34, 0.5)", description="Second gradient blob color (default: forest green).")
+    blob3_color: str = Field(default="rgba(218, 165, 32, 0.4)", description="Third gradient blob color (default: golden yellow).")
+    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
+
+class GenerateSectionHeaderSlide17Input(BaseModel):
+    """Input schema for generate_section_header_slide_17."""
+    section_title: str = Field(..., description="Main title text in uppercase. Default: PROJECT SCHEDULE.")
+    section_subtitle: str = Field(..., description="Subtitle text below main title. Default: You could enter a subtitle here if you need it")
+    bg_color: str = Field(default="#f5f3ed", description="Background color (hex).")
+    title_color: str = Field(default="#d4af6a", description="Color for main title (hex).")
+    subtitle_color: str = Field(default="#7a8288", description="Color for subtitle text (hex).")
+    circle_left_color: str = Field(default="#e8b558", description="Color for top-left corner circle (hex).")
+    circle_right_color: str = Field(default="#d9653b", description="Color for bottom-right corner circle (hex).")
+    bar_color: str = Field(default="#6b7f82", description="Color for horizontal decorative bars (hex).")
+
+
+class GenerateSectionHeaderSlide18Input(BaseModel):
+    """Input schema for generate_section_header_slide_18."""
+    section_title: str = Field(..., description="Main title text. Default: ANALYSIS AND RESULTS.")
+    section_subtitle: str = Field(..., description="Subtitle text below main title. Default: You could enter a subtitle here if you need it")
+    bg_color: str = Field(default="#f5f5f0", description="Background color (hex).")
+    title_color: str = Field(default="#E8B44F", description="Color for main title (hex).")
+    subtitle_color: str = Field(default="#666666", description="Color for subtitle text (hex).")
+    circle_blue: str = Field(default="#6B9FBD", description="Color for blue circles (hex).")
+    circle_yellow: str = Field(default="#E8B44F", description="Color for yellow circles (hex).")
+    circle_teal: str = Field(default="#6FBAAA", description="Color for teal circles (hex).")
+
+
+class GenerateSectionHeaderSlide19Input(BaseModel):
+    """Input schema for generate_section_header_slide_19."""
+    section_title: str = Field(..., description="Main title text for the section.")
+    section_subtitle: str = Field(..., description="Subtitle text below main title.")
+    bg_color: str = Field(default="#1a4d4d", description="Background color (hex).")
+    text_color: str = Field(default="#ffffff", description="Color for all text elements (hex).")
+    accent_color: str = Field(default="#a4d65e", description="Color for organic decoration blobs (hex).")
 
 # === SLIDE CONTENT CLASSES ===
 
@@ -840,6 +1040,8 @@ class GenerateCorporateContentSlideInput(BaseModel):
     bg_color: str = Field(default="#F8FAFC", description="The background color for the main content area (typically off-white).")
     accent_panel_color: str = Field(default="#6366F1", description="The background color for the diagonal title panel.")
     title_color: str = Field(default="#FFFFFF", description="Text color for the main title on the colored panel.")
+    card_bg_color: str = Field(default="#FFFFFF", description="Background color for the content cards.")
+    card_border_color: str = Field(default="#E5E7EB", description="Border color for the content cards.")
     list_title_color: str = Field(default="#000000", description="Text color for the titles inside the content cards. Use dark colors for visibility on white backgrounds.")
     list_text_color: str = Field(default="#333333", description="Text color for the description text inside the content cards. Use dark colors for visibility on white backgrounds.")
 
@@ -1505,7 +1707,51 @@ INTRO_TOOLS = [
         name="generate_title_slide_6",
         description="Generates a playful and whimsical **Title or Introduction Slide** with a cartoon-style design using converter-compatible fixed positioning (1920x1080px). Features a rounded content box (1300x500px) with thick borders, soft pastel gradient background, fluffy white clouds floating at the top, and a cheerful flower character at the bottom-left corner. The design uses bold, friendly typography (68px title, 30px subtitle) with absolute positioning perfect for educational content, children's presentations, fun workshops, creative projects, or any presentation wanting a lighthearted, approachable, and joyful atmosphere that captures attention with its charming and inviting visual style.",
         args_schema=GenerateTitleSlide6Input,
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_7,
+        name="generate_title_slide_7",
+        description="Generates a centered title slide with a single decorative bandage element and a centered text frame containing title and subtitle.",
+        args_schema=GenerateTitleSlide7Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_11,
+        name="generate_title_slide_11",
+        description="Generates an ultra-minimalist title slide with split background colors (left/right). Features large centered title in Georgia serif and subtle subtitle, perfect for clean, professional presentations.",
+        args_schema=GenerateTitleSlide11Input
     )
+    ,
+    StructuredTool.from_function(
+        func=generate_title_slide_12,
+        name="generate_title_slide_12",
+        description="Generates an elegant black and white minimalist title slide with decorative circle and border frame. Features bold Montserrat title, clean layout with left-aligned text, perfect for formal academic presentations.",
+        args_schema=GenerateTitleSlide12Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_13,
+        name="generate_title_slide_13",
+        description="Generates a modern geometric title slide with diagonal gradient background and 8 rotated decorative elements (rounded rectangles and circle). Features centered Montserrat typography with flexible layout, perfect for contemporary and creative presentations.",
+        args_schema=GenerateTitleSlide13Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_15,
+        name="generate_title_slide_15",
+        description="Generates a clean and simple meeting title slide with large decorative circles in corners. Features Montserrat bold typography with centered layout, perfect for minimalist business presentations and meeting slides.",
+        args_schema=GenerateTitleSlide15Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_17,
+        name="generate_title_slide_17",
+        description="Generates a title slide with centered text content and decorative circles positioned at four corners. Features Montserrat typography with customizable colors for background, title, subtitle, and three decorative circle colors. Perfect for meetings, town halls, and minimalist presentations.",
+        args_schema=GenerateTitleSlide17Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_18,
+        name="generate_title_slide_18",
+        description="Generates a minimalist title slide with centered card containing title and subtitle on full-slide geometric cube pattern background. Features Bebas Neue font for title, customizable pattern and card colors. Perfect for modern, minimalist presentations and meetings.",
+        args_schema=GenerateTitleSlide18Input
+    ),
+    
 ]
 
 TRANSITION_TOOLS = [
@@ -1557,6 +1803,79 @@ TRANSITION_TOOLS = [
         name="generate_business_transition_slide",
         description="Generates a clean business transition slide with centered text, decorative D-shapes on sides, and subtle grid background pattern. Features large uppercase headline and descriptive subtitle. Perfect for professional business presentations requiring clean section breaks.",
         args_schema=GenerateBusinessTransitionSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_5,
+        name="generate_section_header_slide_5",
+        description="Generates a split-design section header slide with title on left and decorative stripes on right. Features bold Playfair Display typography, a vertical stripe pattern, and a curved line decoration on a dark teal background. Perfect for creating elegant, architectural section dividers with a strong visual split and modern geometric aesthetic.",
+        args_schema=GenerateSectionHeaderSlide5Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_6,
+        name="generate_section_header_slide_6",
+        description="Generates a clean and elegant section header slide with centered content. Features a large title, decorative underline, and description text on a gradient background. Perfect for creating simple, professional section dividers or introduction slides with a minimalist, modern aesthetic.",
+        args_schema=GenerateSectionHeaderSlide6Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_8,
+        name="generate_section_header_slide_8",
+        description="Generates a cheerful balloon-themed section header slide with a modern, clean design. Features left-aligned title and subtitle text, with colorful balloon decorations (red, blue, yellow) positioned on the right side. Background uses a warm pastel gradient (peach to light pink) creating a bright, balanced, and festive atmosphere. No animations. Perfect for celebration-themed section dividers, party presentations, or any content requiring a fun, uplifting, and contemporary aesthetic.",
+        args_schema=GenerateSectionHeaderSlide8Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_9,
+        name="generate_section_header_slide_9",
+        description="Generates a modern section header slide with house SVG illustration container on the left and text on the right. Features a warm diagonal gradient background (light cream to warm brown), white text, and space for custom SVG artwork. Layout uses space-between alignment with SVG container (50% width) and content area (50% width). No animations. Perfect for visually enriched section dividers with custom illustrations or graphics.",
+        args_schema=GenerateSectionHeaderSlide9Input
+    ),
+    
+    StructuredTool.from_function(
+        func=generate_section_header_slide_10,
+        name="generate_section_header_slide_10",
+        description="Generates a spiral-bound notebook-style slide with a realistic school/education aesthetic. Features a centered white notebook with spiral binding on the left (10 metal rings), horizontal ruled lines with light opacity, a vertical red margin line, bold title, and subtitle. Decorated with colorful bookmark sticky notes at the top edge (yellow and pink). Light green background. No animations. Perfect for educational or casual section dividers with a handwritten notebook feel.",
+        args_schema=GenerateSectionHeaderSlide10Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_12,
+        name="generate_section_header_slide_12",
+        description="Generates a minimalist question slide with clean design. Features a prominent question/title text on the left and a decorative pen SVG illustration with writing stroke on the bottom right. Light gray background for a professional, modern look. No animations. Perfect for Q&A sections, topic introduction slides, or thought-provoking questions with a clean, contemporary aesthetic.",
+        args_schema=GenerateSectionHeaderSlide12Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_13,
+        name="generate_section_header_slide_13",
+        description="Generates a modern section header slide with SVG illustration container on the right and text content on the left. Features a diagonal gradient background (white to light cyan), accent gradient at bottom left (peach/orange), and flexible layout with 55% text area and 45% SVG container. Text uses dark gray color with Roboto Mono font. Layout uses flexbox with space-between alignment for balanced composition. No animations. Perfect for visually enriched section dividers with custom SVG illustrations or graphics. The SVG container can hold any custom artwork.",
+        args_schema=GenerateSectionHeaderSlide13Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_15,
+        name="generate_section_header_slide_15",
+        description="Generates a Christmas-themed section header slide with festive gradient blobs and Christmas tree SVG illustration on the right. Features dark evergreen background, white text, and colorful festive gradient blobs (red, green, gold). Layout uses flexbox with text content on left (65% width) and SVG container on right (35% width). Text is large, italic, and bold. No animations. Perfect for holiday presentations and festive section dividers. Includes embedded Christmas tree SVG with ornaments and star.",
+        args_schema=GenerateSectionHeaderSlide15Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_17,
+        name="generate_section_header_slide_17",
+        description="Generates a section header slide with centered title, subtitle, decorative circles at corners, and horizontal bars. Features Montserrat typography with customizable colors for background, title, subtitle, corner circles, and decorative bars. Perfect for project schedules, section dividers, and minimalist transitions.",
+        args_schema=GenerateSectionHeaderSlide17Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_18,
+        name="generate_section_header_slide_18",
+        description="Generates a minimalist section header slide with centered title, subtitle, and decorative circles at corners. Features Inter typography with customizable colors for background, title, subtitle, and corner circle groups (blue, yellow, teal). Perfect for modern section dividers and minimalist transitions.",
+        args_schema=GenerateSectionHeaderSlide18Input
+    ),
+    StructuredTool.from_function(
+        func=generate_section_header_slide_19,
+        name="generate_section_header_slide_19",
+        description="Generates a section header slide with organic environmental decorations. Features 4 organic watercolor blobs positioned at corners with turbulence filter and centered content area using Poppins font. Perfect for nature-themed presentations and environmental topics.",
+        args_schema=GenerateSectionHeaderSlide19Input
+    ),
+    StructuredTool.from_function(
+        func=generate_title_slide_21,
+        name="generate_title_slide_21",
+        description="Generates a clean minimal title slide with blue gradient background. Features large title (90px) positioned on the right side, horizontal divider line across the middle, and subtitle text in the bottom left corner. Simple and elegant design with soft blue gradient (light to darker blue). Perfect for professional presentations needing a minimalist, balanced layout with clear visual separation between title and subtitle.",
+        args_schema=GenerateTitleSlide21Input
     )
 ]
 
