@@ -3892,6 +3892,212 @@ def generate_title_slide_6(
 </html>"""
     
     return html_code
+
+def generate_modern_company_profile_slide(
+    company_name="Borcelle",
+    address="123 Anywhere St., Any City",
+    main_title="COMPANY\nPROFILE",
+    tagline="Innovating for a Better Tomorrow",
+    footer_text="@reallygreatsite",
+    slide_number="01",
+    image_url="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop",
+    bg_color="#F3EDE4",
+    box_color="#46322B",
+    text_color="#F3EDE4",
+    font_family="'Manrope', sans-serif"
+):
+    """
+    Generate a modern company profile slide with earthy tones and an overlapping layout.
+    Features a bold content box on the left overlapping a large office image on the right.
+
+    :param company_name: Small brand name at the top left.
+    :param address: Address text below the company name.
+    :param main_title: The main headline text (Massive). Use \n for line breaks.
+    :param tagline: Subtitle text below the main headline.
+    :param footer_text: Social handle or website at the bottom left.
+    :param slide_number: The page number displayed in a tab on the right.
+    :param image_url: URL of the corporate office image.
+    :param bg_color: Background color (Light Cream/Beige).
+    :param box_color: Color of the main text content box (Dark Brown).
+    :param text_color: Color of the text inside the dark box.
+    :param font_family: Font family (Modern Sans-serif recommended).
+    :return: HTML string for the slide.
+    """
+
+    # Xử lý xuống dòng cho tiêu đề lớn
+    formatted_title = main_title.replace("\n", "<br/>")
+
+    # SVG cho đường kẻ ngang trang trí (Divider)
+    divider_svg = f"""
+    <svg width="60" height="4" viewBox="0 0 60 4" xmlns="http://www.w3.org/2000/svg">
+        <rect width="60" height="2" fill="{text_color}" opacity="0.5"/>
+    </svg>
+    """
+
+    # SVG cho Tab số trang (Page Number Tab)
+    tab_svg = f"""
+    <svg class="page-tab" width="60" height="100" viewBox="0 0 60 100" xmlns="http://www.w3.org/2000/svg">
+        <path d="M 0 0 L 60 0 L 60 80 C 60 91.046 51.046 100 40 100 L 20 100 C 8.954 100 0 91.046 0 80 Z" fill="{box_color}" />
+        <text x="30" y="55" font-family="{font_family}" font-size="24" fill="{text_color}" text-anchor="middle" dominant-baseline="middle">{slide_number}</text>
+    </svg>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Company Profile Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;800&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        
+        body, html {{
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            font-family: {font_family};
+            background-color: {bg_color};
+            color: {text_color};
+        }}
+
+        .slide-container {{
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+        }}
+
+        /* --- Right Image Section --- */
+        .image-wrapper {{
+            position: absolute;
+            top: 100px;
+            right: 150px; /* Inset from right */
+            width: 1100px;
+            height: 800px;
+            border-radius: 20px;
+            overflow: hidden;
+            z-index: 1;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+        }}
+
+        .main-image {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }}
+
+        /* --- Page Number Tab --- */
+        .page-tab-container {{
+            position: absolute;
+            top: 100px;
+            right: 90px; /* Sticks out from the image slightly */
+            z-index: 0; /* Behind the image visually? Or beside it. Image provided shows separate */
+        }}
+
+        /* --- Left Content Box (Overlay) --- */
+        .content-box {{
+            position: absolute;
+            top: 200px;
+            left: 0; /* Anchored to left edge */
+            width: 850px;
+            height: 615px;
+            background-color: {box_color};
+            border-top-right-radius: 30px;
+            border-bottom-right-radius: 30px;
+            padding: 80px 100px;
+            z-index: 5; /* Overlap the image */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            box-shadow: 20px 20px 50px rgba(0,0,0,0.15);
+        }}
+
+        /* Typography */
+        .brand-section {{
+            margin-bottom: 2rem;
+        }}
+
+        .company-name {{
+            font-size: 2.5rem;
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+            opacity: 0.9;
+        }}
+
+        .address {{
+            font-size: 1rem;
+            font-weight: 300;
+            opacity: 0.6;
+            letter-spacing: 0.05em;
+        }}
+
+        .main-title {{
+            font-size: 6.5rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            line-height: 0.9;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            color: #E8DCCF; /* Slightly lighter than pure bg for contrast */
+        }}
+
+        .tagline {{
+            font-size: 1.8rem;
+            font-weight: 400;
+            opacity: 0.9;
+            margin-bottom: 2rem;
+        }}
+
+        .divider {{
+            margin-bottom: 2rem;
+        }}
+
+        .footer {{
+            font-size: 1.1rem;
+            font-weight: 300;
+            opacity: 0.7;
+        }}
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        
+        <div class="page-tab-container" style="right: 90px; top: 120px; z-index: 2;">
+            {tab_svg}
+        </div>
+
+        <div class="image-wrapper">
+            <img class="main-image" src="{image_url}" alt="Office Environment" />
+        </div>
+
+        <div class="content-box">
+            <div class="top-content">
+                <div class="brand-section">
+                    <div class="company-name">{company_name}</div>
+                    <div class="address">{address}</div>
+                </div>
+
+                <h1 class="main-title">{formatted_title}</h1>
+                <p class="tagline">{tagline}</p>
+                
+                <div class="divider">
+                    {divider_svg}
+                </div>
+            </div>
+
+            <div class="footer">
+                {footer_text}
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>"""
+
+    return html_code
 #----------------------SLIDE CHUYỂN SLIDE
 
 def generate_geometric_transition_slide(
@@ -17366,6 +17572,258 @@ def generate_corporate_team_slide(
 </html>"""
     return html_code
 
+def s(
+    main_title="DANH SÁCH THÀNH VIÊN",
+    teams_data=[
+        {
+            "name": "Team thiết kế",
+            "members": ["Nguyễn Tiến Long", "Lê Viết Hoàng Lân", "Nguyễn Văn Bảo", "Hà Huy Hải Long"]
+        },
+        {
+            "name": "Team thuyết trình",
+            "members": ["Đoàn Hồng Quân", "Ngô Đình Tâm", "Nguyễn Đức Nghĩa", "Chu Đức Nhật Minh"]
+        },
+        {
+            "name": "Team nội dung",
+            "members": ["Phạm Đức Huy", "Hoàng Đinh Tuấn Anh", "Phùng Quốc Khánh Nam", "Nguyễn Đăng Minh"]
+        }
+    ],
+    bg_color="#222222",
+    header_bg_color="#A60000",
+    text_color="#FFFFFF",
+    floor_texture_color="#C19A6B",
+    font_family_header="'Times New Roman', serif",
+    font_family_content="'Arial', sans-serif",
+    show_trophies=True,
+    show_chalk_drawings=True,
+    custom_css=""
+):
+    """
+    Generate a 'Team Member List' slide with a blackboard theme, wooden floor, and team columns.
+    Features a red banner header, dotted boxes for names, and classroom-style decorations (trophies, chalk drawings).
+
+    :param main_title: Title text displayed in the red banner at the top.
+    :param teams_data: A list of dictionaries, each containing 'name' (team name) and 'members' (list of strings).
+    :param bg_color: Background color of the chalkboard (dark grey/black).
+    :param header_bg_color: Background color of the top title banner (red).
+    :param text_color: Main text color (white).
+    :param floor_texture_color: Base color for the wooden floor.
+    :param font_family_header: Font family for the team names (serif recommended).
+    :param font_family_content: Font family for member names (sans-serif recommended).
+    :param show_trophies: Whether to show the gold trophy illustrations on the floor.
+    :param show_chalk_drawings: Whether to show the tactical board and target chalk drawings.
+    :param custom_css: Additional custom CSS.
+    :return: A string containing the HTML code for the slide.
+    """
+
+    # Generate columns HTML dynamically based on input data
+    columns_html = ""
+    for team in teams_data:
+        members_html = "".join([f'<div class="member-name">{m}</div>' for m in team.get("members", [])])
+        columns_html += f"""
+        <div class="team-column">
+            <h3 class="team-title">{team.get("name", "Team Name")}</h3>
+            <div class="member-box">
+                {members_html}
+            </div>
+        </div>
+        """
+
+    # SVGs for decorations
+    trophy_svg = """
+    <svg width="250" height="250" viewBox="0 0 200 200" class="trophy-decoration">
+        <path d="M40 40 Q40 120 100 120 Q160 120 160 40 L150 40 L50 40 Z" fill="#FFD700" stroke="#FFC107" stroke-width="2"/>
+        <path d="M50 40 L40 40 C20 40 20 80 40 90 L50 85" fill="none" stroke="#FFD700" stroke-width="8"/>
+        <path d="M150 40 L160 40 C180 40 180 80 160 90 L150 85" fill="none" stroke="#FFD700" stroke-width="8"/>
+        <rect x="85" y="120" width="30" height="40" fill="#FFD700"/>
+        <rect x="70" y="160" width="60" height="10" fill="#FFD700"/>
+        <rect x="65" y="170" width="70" height="20" fill="#3E2723"/> 
+        
+        <g transform="translate(130, 100) scale(0.6)">
+             <path d="M80 0 L120 0 L110 50 L90 50 Z" fill="#FFD700"/>
+             <circle cx="100" cy="0" r="20" fill="#FFD700"/>
+             <rect x="90" y="50" width="20" height="40" fill="#FFD700"/>
+             <rect x="80" y="90" width="40" height="15" fill="#3E2723"/>
+        </g>
+    </svg>
+    """
+
+    chalk_drawings_svg = """
+    <svg width="400" height="250" viewBox="0 0 400 250" class="chalk-decoration">
+        <g transform="translate(20, 20) rotate(-2)">
+            <text x="50" y="-10" fill="rgba(255,255,255,0.7)" font-family="cursive" font-size="14">4-4-2</text>
+            <rect x="0" y="0" width="140" height="100" fill="none" stroke="rgba(255,255,255,0.7)" stroke-width="2"/>
+            <line x1="70" y1="0" x2="70" y2="100" stroke="rgba(255,255,255,0.7)"/>
+            <circle cx="70" cy="50" r="15" fill="none" stroke="rgba(255,255,255,0.7)"/>
+            <rect x="0" y="30" width="20" height="40" fill="none" stroke="rgba(255,255,255,0.7)"/>
+            <rect x="120" y="30" width="20" height="40" fill="none" stroke="rgba(255,255,255,0.7)"/>
+            <text x="20" y="20" fill="rgba(255,255,255,0.7)" font-size="12">x</text>
+            <text x="20" y="80" fill="rgba(255,255,255,0.7)" font-size="12">x</text>
+            <text x="100" y="40" fill="rgba(255,255,255,0.7)" font-size="12">o</text>
+            <text x="60" y="120" fill="rgba(255,255,255,0.7)" font-family="cursive" font-size="16">DEFENCE</text>
+        </g>
+
+        <g transform="translate(250, 10)">
+            <circle cx="50" cy="50" r="30" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+            <circle cx="50" cy="50" r="20" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+            <circle cx="50" cy="50" r="5" fill="rgba(255,255,255,0.8)"/>
+            <line x1="20" y1="120" x2="50" y2="50" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+            <path d="M45 55 L50 50 L55 58" fill="none" stroke="rgba(255,255,255,0.8)" stroke-width="2"/>
+            <text x="0" y="140" fill="#FFC0CB" font-family="cursive" font-size="32" transform="rotate(-10)">Target</text>
+        </g>
+    </svg>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body, html {{ width: 1920px; height: 1080px; overflow: hidden; font-family: {font_family_content}; }}
+        
+        .container {{
+            width: 1920px;
+            height: 1080px;
+            background-color: {bg_color};
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        /* Header Banner */
+        .header-banner {{
+            width: 100%;
+            height: 150px;
+            background-color: {header_bg_color};
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border-bottom: 2px solid rgba(255,255,255,0.3);
+            margin-top: 40px;
+            position: relative;
+            z-index: 10;
+        }}
+
+        .main-title {{
+            color: {text_color};
+            font-size: 5rem;
+            text-transform: uppercase;
+            font-weight: bold;
+            font-family: 'Arial Black', sans-serif;
+            letter-spacing: 2px;
+        }}
+
+        /* Main Content Grid */
+        .content-area {{
+            flex: 1;
+            display: flex;
+            justify-content: space-around;
+            align-items: flex-start;
+            padding: 80px 150px;
+            position: relative;
+            z-index: 5;
+        }}
+
+        .team-column {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 30%;
+        }}
+
+        .team-title {{
+            color: {text_color};
+            font-family: {font_family_header};
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            font-weight: 400;
+        }}
+
+        .member-box {{
+            border: 3px dashed rgba(255,255,255,0.8);
+            padding: 30px 20px;
+            width: 100%;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+            border-radius: 4px;
+        }}
+
+        .member-name {{
+            color: {text_color};
+            font-size: 1.8rem;
+            font-weight: 700;
+        }}
+
+        /* Floor */
+        .floor {{
+            height: 120px;
+            background: repeating-linear-gradient(
+                90deg,
+                {floor_texture_color},
+                {floor_texture_color} 20px,
+                #A07A50 20px,
+                #A07A50 40px
+            );
+            box-shadow: inset 0 10px 20px rgba(0,0,0,0.5);
+            border-top: 5px solid #5d4037;
+            position: relative;
+            z-index: 10;
+        }}
+
+        /* Decorations */
+        .trophy-decoration {{
+            position: absolute;
+            bottom: 60px; /* Sitting on floor */
+            left: 100px;
+            z-index: 15;
+            display: {('block' if show_trophies else 'none')};
+            filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.5));
+        }}
+
+        .chalk-decoration {{
+            position: absolute;
+            bottom: 150px; /* On the wall above floor */
+            right: 150px;
+            z-index: 4;
+            display: {('block' if show_chalk_drawings else 'none')};
+        }}
+
+        /* Responsive scaling for preview only */
+        @media (max-width: 768px) {{
+            .container {{
+                transform: scale(0.4);
+                transform-origin: top left;
+            }}
+        }}
+
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header-banner">
+            <h1 class="main-title">{main_title}</h1>
+        </div>
+
+        <div class="content-area">
+            {columns_html}
+        </div>
+
+        {chalk_drawings_svg}
+
+        <div class="floor"></div>
+
+        {trophy_svg}
+    </div>
+</body>
+</html>"""
+
+    return html_code
 
 #------------------------ SLIDE THANK YOU
 

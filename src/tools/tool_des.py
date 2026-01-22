@@ -30,7 +30,7 @@ from src.tools.html_tool import (
     generate_title_slide_4, # slide intro(hien)
     generate_title_slide_5, # slide intro(hien)
     generate_title_slide_6, # slide intro(hien)
-  
+    generate_modern_company_profile_slide, # slide intro(quang)
     
     generate_geometric_transition_slide, # slide chuyển slide 
     generate_dusk_transition_slide, # slide chuyển slide
@@ -105,7 +105,8 @@ from src.tools.html_tool import (
     generate_team_slide, # slide giới thiệu team 
     generate_colorful_team_grid_slide,  # slide giới thiệu team
     generate_corporate_team_slide, # slide giới thiệu team
-    
+    generate_team_list_slide, # slide giới thiệu team(quang),
+
     
 
     
@@ -364,6 +365,20 @@ class GenerateTitleSlide6Input(BaseModel):
     show_clouds: bool = Field(default=True, description="Whether to display cloud decorations at the top of the slide.")
     show_flower: bool = Field(default=True, description="Whether to display the cute flower character at the bottom-left corner.")
     custom_css: str = Field(default="", description="Additional custom CSS to be included in the slide.")
+
+class GenerateModernCompanyProfileSlideInput(BaseModel):
+    """Input schema for generate_modern_company_profile_slide."""
+    company_name: str = Field(default="Borcelle", description="Brand name displayed at the top left.")
+    address: str = Field(default="123 Anywhere St., Any City", description="Small address text below the brand name.")
+    main_title: str = Field(default="COMPANY\nPROFILE", description="Large headline text. Use '\\n' for line breaks.")
+    tagline: str = Field(default="Innovating for a Better Tomorrow", description="Subtitle text below the main headline.")
+    footer_text: str = Field(default="@reallygreatsite", description="Footer text (e.g., website or social handle).")
+    slide_number: str = Field(default="01", description="Slide number displayed in the tab.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=2069&auto=format&fit=crop", description="URL of the main office image.")
+    bg_color: str = Field(default="#F3EDE4", description="Background color (Light Cream/Beige).")
+    box_color: str = Field(default="#46322B", description="Color of the content box (Dark Brown).")
+    text_color: str = Field(default="#F3EDE4", description="Text color inside the content box.")
+    font_family: str = Field(default="'Manrope', sans-serif", description="Font family used for the slide.")
 # === SLIDE CHUYỂN SLIDE CLASSES ===
 
 class GenerateGeometricTransitionSlideInput(BaseModel):
@@ -1352,6 +1367,26 @@ class GenerateCorporateTeamSlideInput(BaseModel):
     role_color: str = Field(default="#6B7280", description="The secondary text color for roles.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
 
+class GenerateTeamListSlideInput(BaseModel):
+    """Input schema for generate_team_list_slide."""
+    main_title: str = Field(default="DANH SÁCH THÀNH VIÊN", description="Title text displayed in the top red banner.")
+    teams_data: List[Dict] = Field(
+        default=[
+            {"name": "Team thiết kế", "members": ["Nguyễn Tiến Long", "Lê Viết Hoàng Lân", "Nguyễn Văn Bảo", "Hà Huy Hải Long"]},
+            {"name": "Team thuyết trình", "members": ["Đoàn Hồng Quân", "Ngô Đình Tâm", "Nguyễn Đức Nghĩa", "Chu Đức Nhật Minh"]},
+            {"name": "Team nội dung", "members": ["Phạm Đức Huy", "Hoàng Đinh Tuấn Anh", "Phùng Quốc Khánh Nam", "Nguyễn Đăng Minh"]}
+        ],
+        description="List of teams. Each item should be a dictionary with 'name' (string) and 'members' (list of strings)."
+    )
+    bg_color: str = Field(default="#222222", description="Background color of the chalkboard (dark hex code).")
+    header_bg_color: str = Field(default="#A60000", description="Background color of the top header banner (red).")
+    text_color: str = Field(default="#FFFFFF", description="Color of the text.")
+    floor_texture_color: str = Field(default="#C19A6B", description="Base color for the wooden floor.")
+    show_trophies: Optional[bool] = Field(default=True, description="Whether to show the trophy illustrations on the floor.")
+    show_chalk_drawings: Optional[bool] = Field(default=True, description="Whether to show the chalkboard drawings (tactics board, target).")
+    custom_css: str = Field(default="", description="Additional custom CSS.")
+
+
 # === SLIDE CẢM ƠN CLASSES ===
 
 class GenerateThankYouSlide3Input(BaseModel):
@@ -1596,6 +1631,12 @@ INTRO_TOOLS = [
         name="generate_title_slide_6",
         description="Generates a playful and whimsical **Title or Introduction Slide** with a cartoon-style design using converter-compatible fixed positioning (1920x1080px). Features a rounded content box (1300x500px) with thick borders, soft pastel gradient background, fluffy white clouds floating at the top, and a cheerful flower character at the bottom-left corner. The design uses bold, friendly typography (68px title, 30px subtitle) with absolute positioning perfect for educational content, children's presentations, fun workshops, creative projects, or any presentation wanting a lighthearted, approachable, and joyful atmosphere that captures attention with its charming and inviting visual style.",
         args_schema=GenerateTitleSlide6Input,
+    ),
+    StructuredTool.from_function(
+    func=generate_modern_company_profile_slide,
+    name="generate_modern_company_profile_slide",
+    description="Generates a modern corporate profile slide featuring a dark overlapping content box on a light background with an office image.",
+    args_schema=GenerateModernCompanyProfileSlideInput
     )
 ]
 
@@ -2005,7 +2046,13 @@ TEAM_TOOLS = [
         name="generate_corporate_team_slide",
         description="Generates a creative and personal **Team Slide** with a 'Polaroid photo' theme. This slide is perfect for introducing team members in a warm and approachable way. Its unique characteristics include a central title and a grid of team member profiles, each styled to look like a Polaroid picture with a handwritten name. The photos are scattered and slightly rotated for a friendly, scrapbook-like feel. **The layout is flexible, but it is visually optimized for 3 to 4 members** to create a balanced, single-row composition.",
         args_schema=GenerateCorporateTeamSlideInput
-    )
+    ),
+    StructuredTool.from_function(
+    func=generate_team_list_slide,
+    name="generate_team_list_slide",
+    description="Generates a team member list slide with a classroom/blackboard theme. Features columns for teams, dotted name boxes, wooden floor, and chalkboard decorations. Ideal for group introductions.",
+    args_schema=GenerateTeamListSlideInput
+    ),
 ]
 
 THANK_YOU_TOOLS = [
