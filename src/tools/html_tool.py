@@ -17825,6 +17825,2119 @@ def s(
 
     return html_code
 
+def generate_team_intro_slide(
+    team_title="NHÓM 1",
+    sub_text="Đông Quân",
+    member_1_name="Sarah Jenkins",
+    member_1_img="https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=600",
+    member_2_name="David Okonjo",
+    member_2_img="https://images.pexels.com/photos/3778603/pexels-photo-3778603.jpeg?auto=compress&cs=tinysrgb&w=600",
+    member_3_name="Amina Al-Fayed",
+    member_3_img="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=600",
+    member_4_name="Elena Rodriguez",
+    member_4_img="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=600",
+    bg_color="#314B86",
+    title_color="#F3B3A5",
+    box_bg_color="#FFFFFF",
+    font_family="'Nunito', sans-serif"
+):
+    """
+    Generates a team introduction slide with a creative lightbulb graphic, optimized for 1920x1080.
+    Features a horizontal layout for 4 team members with circular avatars and name boxes.
+
+    :param team_title: The main group name or title (Top Left).
+    :param sub_text: Small text displayed in the top right corner.
+    :param member_1_name: Name of the first team member.
+    :param member_1_img: URL for the first member's photo.
+    :param member_2_name: Name of the second team member.
+    :param member_2_img: URL for the second member's photo.
+    :param member_3_name: Name of the third team member.
+    :param member_3_img: URL for the third member's photo.
+    :param member_4_name: Name of the fourth team member.
+    :param member_4_img: URL for the fourth member's photo.
+    :param bg_color: Main background color (Hex).
+    :param title_color: Color for the main title text (Hex).
+    :param box_bg_color: Background color for the name boxes (Hex).
+    :param font_family: Font family for text elements.
+    :return: A string containing the HTML code.
+    """
+
+    # Custom SVG for the hanging lightbulb graphic (Flat design style)
+    lightbulb_svg = """
+    <svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: -50px; right: 25%; transform: rotate(15deg); z-index: 0;">
+        <path d="M200 0 V100" stroke="#F0F0F0" stroke-width="8"/>
+        
+        <circle cx="200" cy="220" r="90" fill="#FFC83D"/>
+        
+        <rect x="170" y="100" width="60" height="50" rx="5" fill="#FFFFFF"/>
+        <rect x="175" y="100" width="50" height="10" fill="#E0E0E0"/>
+        
+        <circle cx="200" cy="220" r="80" fill="#FFD54F"/>
+        <path d="M230 180 Q250 200 240 240" stroke="#FFFFFF" stroke-width="5" stroke-linecap="round" opacity="0.6"/>
+        
+        <circle cx="120" cy="280" r="10" fill="#5D8AA8" opacity="0.8"/>
+        <circle cx="140" cy="300" r="5" fill="#5D8AA8" opacity="0.6"/>
+        <rect x="130" y="130" width="40" height="60" rx="5" fill="#FFFFFF" transform="rotate(-30 130 130)"/>
+        <circle cx="280" cy="130" r="60" fill="#FFC83D" opacity="0.2"/>
+    </svg>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Intro Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;900&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family};
+            overflow: hidden;
+            background-color: {bg_color};
+        }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }}
+        
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }}
+
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }}
+
+        /* Header Section */
+        .header {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            width: 100%;
+            z-index: 10;
+            position: relative;
+        }}
+
+        .main-title {{
+            font-size: 8rem;
+            font-weight: 900;
+            color: {title_color};
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            line-height: 1;
+            text-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+        }}
+
+        .sub-text {{
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-top: 20px;
+        }}
+
+        /* Members Grid */
+        .members-container {{
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            width: 100%;
+            margin-bottom: 60px;
+            gap: 40px;
+            z-index: 10;
+        }}
+
+        .member-card {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 350px;
+        }}
+
+        .avatar-frame {{
+            width: 320px;
+            height: 320px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 8px solid rgba(255,255,255,0.1);
+            margin-bottom: 30px;
+            position: relative;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }}
+
+        .avatar-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }}
+
+        .name-box {{
+            width: 100%;
+            height: 140px;
+            background-color: {box_bg_color};
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            padding: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }}
+
+        .member-name {{
+            font-size: 2rem;
+            font-weight: 700;
+            color: #333;
+        }}
+
+        /* Decorations */
+        .decoration-bulb {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+        }}
+
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="header">
+                    <h1 class="main-title">{team_title}</h1>
+                    <div class="sub-text">{sub_text}</div>
+                </div>
+
+                <div class="decoration-bulb">
+                    {lightbulb_svg}
+                </div>
+
+                <div class="members-container">
+                    <div class="member-card">
+                        <div class="avatar-frame">
+                            <img src="{member_1_img}" alt="{member_1_name}" class="avatar-img">
+                        </div>
+                        <div class="name-box">
+                            <span class="member-name">{member_1_name}</span>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="avatar-frame">
+                            <img src="{member_2_img}" alt="{member_2_name}" class="avatar-img">
+                        </div>
+                        <div class="name-box">
+                            <span class="member-name">{member_2_name}</span>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="avatar-frame">
+                            <img src="{member_3_img}" alt="{member_3_name}" class="avatar-img">
+                        </div>
+                        <div class="name-box">
+                            <span class="member-name">{member_3_name}</span>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="avatar-frame">
+                            <img src="{member_4_img}" alt="{member_4_name}" class="avatar-img">
+                        </div>
+                        <div class="name-box">
+                            <span class="member-name">{member_4_name}</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html_code
+
+def generate_meet_the_team_slide(
+    title_text="Gặp gỡ nhóm",
+    subtitle_text="Đông Quân",
+    member_1_name="",
+    member_1_img="https://images.pexels.com/photos/16972166/pexels-photo-16972166.jpeg?auto=compress&cs=tinysrgb&w=600",
+    member_2_name="",
+    member_2_img="https://images.pexels.com/photos/15976532/pexels-photo-15976532.jpeg?auto=compress&cs=tinysrgb&w=600",
+    member_3_name="",
+    member_3_img="https://images.pexels.com/photos/5621884/pexels-photo-5621884.jpeg?auto=compress&cs=tinysrgb&w=600",
+    member_4_name="",
+    member_4_img="https://images.pexels.com/photos/16093557/pexels-photo-16093557.jpeg?auto=compress&cs=tinysrgb&w=600",
+    accent_color="#F26522",
+    text_color="#1F3A8A",
+    bg_color="#FFFFFF",
+    font_family="'Montserrat', sans-serif"
+):
+    """
+    Generates a clean, minimalist 'Meet the Team' slide optimized for 1920x1080.
+    Features a white background, an abstract orange stroke decoration, and 4 rounded rectangular image slots with name boxes below.
+
+    :param title_text: Main centered title (e.g., "Gặp gỡ nhóm").
+    :param subtitle_text: Small text in top right corner.
+    :param member_1_name: Name text for the first box (can be empty).
+    :param member_1_img: URL for the first member's photo.
+    :param member_2_name: Name text for the second box.
+    :param member_2_img: URL for the second member's photo.
+    :param member_3_name: Name text for the third box.
+    :param member_3_img: URL for the third member's photo.
+    :param member_4_name: Name text for the fourth box.
+    :param member_4_img: URL for the fourth member's photo.
+    :param accent_color: Color of the decorative curved line (Hex).
+    :param text_color: Color of the main title (Hex).
+    :param bg_color: Background color of the slide (Hex).
+    :param font_family: Font family for text elements.
+    :return: A string containing the HTML code.
+    """
+
+    # SVG for the orange swoosh decoration on the left
+    decoration_svg = f"""
+    <svg width="600" height="600" viewBox="0 0 600 600" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; top: 150px; left: -100px; z-index: 1;">
+        <path d="M50 400 C 50 400, 150 450, 250 300 C 300 200, 280 100, 280 100" stroke="{accent_color}" stroke-width="40" stroke-linecap="round" fill="none"/>
+    </svg>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meet The Team</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <style>
+        * {{
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }}
+        
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family};
+            overflow: hidden;
+            background-color: {bg_color};
+            color: {text_color};
+        }}
+        
+        .outer-wrapper {{
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }}
+        
+        .content-wrapper {{
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }}
+
+        .slide-container {{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            padding: 60px 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }}
+
+        /* Header */
+        .header-container {{
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            position: relative;
+            margin-bottom: 80px;
+            z-index: 10;
+        }}
+
+        .main-title {{
+            font-size: 6rem;
+            font-weight: 800;
+            color: {text_color};
+            text-align: center;
+        }}
+
+        .subtitle {{
+            position: absolute;
+            right: 0;
+            top: 10px;
+            font-size: 2rem;
+            font-weight: 700;
+            color: {text_color};
+            opacity: 0.8;
+        }}
+
+        /* Grid */
+        .members-grid {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 50px;
+            width: 100%;
+            height: auto;
+            z-index: 10;
+        }}
+
+        .member-card {{
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+        }}
+
+        .image-box {{
+            width: 100%;
+            aspect-ratio: 1/1;
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+            background-color: #eee;
+        }}
+
+        .member-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }}
+
+        .name-input-box {{
+            width: 100%;
+            height: 100px;
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            border: 2px solid #F0F0F0;
+        }}
+
+        .member-name {{
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #555;
+        }}
+
+        /* Decoration */
+        .decoration-layer {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1; 
+        }}
+
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                
+                <div class="decoration-layer">
+                    {decoration_svg}
+                </div>
+
+                <div class="header-container">
+                    <h1 class="main-title">{title_text}</h1>
+                    <div class="subtitle">{subtitle_text}</div>
+                </div>
+
+                <div class="members-grid">
+                    <div class="member-card">
+                        <div class="image-box">
+                            <img src="{member_1_img}" alt="Member 1" class="member-img">
+                        </div>
+                        <div class="name-input-box">
+                            <span class="member-name">{member_1_name}</span>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="image-box">
+                            <img src="{member_2_img}" alt="Member 2" class="member-img">
+                        </div>
+                        <div class="name-input-box">
+                            <span class="member-name">{member_2_name}</span>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="image-box">
+                            <img src="{member_3_img}" alt="Member 3" class="member-img">
+                        </div>
+                        <div class="name-input-box">
+                            <span class="member-name">{member_3_name}</span>
+                        </div>
+                    </div>
+
+                    <div class="member-card">
+                        <div class="image-box">
+                            <img src="{member_4_img}" alt="Member 4" class="member-img">
+                        </div>
+                        <div class="name-input-box">
+                            <span class="member-name">{member_4_name}</span>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html_code
+
+def generate_team_intro_slide1(
+    main_title="OUR LEADERSHIP TEAM",
+    subtitle="Meet the experts behind our success",
+    members=[
+        {
+            "name": "Sarah Jenkins", 
+            "role": "Chief Executive Officer", 
+            "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop"
+        },
+        {
+            "name": "David Chen", 
+            "role": "Head of Technology", 
+            "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1000&auto=format&fit=crop"
+        },
+        {
+            "name": "Amara Diallo", 
+            "role": "Creative Director", 
+            "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1000&auto=format&fit=crop"
+        },
+        {
+            "name": "Michael Ross", 
+            "role": "VP of Marketing", 
+            "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1000&auto=format&fit=crop"
+        }
+    ],
+    font_family="'Inter', 'Helvetica Neue', sans-serif",
+    bg_color="#F3F4F6",
+    card_bg_color="#FFFFFF",
+    primary_text_color="#111827",
+    role_text_color="#6B7280",
+    accent_color="#3B82F6",
+    show_social_icons=True
+):
+    """
+    Generates a neutral, professional team introduction slide optimized for 4 members.
+    The layout uses a clean grid system with absolute positioning for the main container,
+    ensuring perfect rendering with converter.js.
+
+    Features:
+    - Clean card-based layout
+    - Circular or rounded-square profile images
+    - Minimalist typography
+    - Subtle hover-like aesthetics (static)
+    """
+    
+    # Generate HTML for each member card
+    cards_html = ""
+    for member in members:
+        social_html = ""
+        if show_social_icons:
+            social_html = f"""
+            <div class="social-links">
+                <div class="social-icon"></div>
+                <div class="social-icon"></div>
+                <div class="social-icon"></div>
+            </div>
+            """
+            
+        cards_html += f"""
+        <div class="team-card">
+            <div class="image-wrapper">
+                <img src="{member.get('image', '')}" alt="{member.get('name', 'Member')}" class="member-image">
+            </div>
+            <div class="member-info">
+                <h3 class="member-name">{member.get('name', 'Name')}</h3>
+                <p class="member-role">{member.get('role', 'Role')}</p>
+                {social_html}
+            </div>
+        </div>
+        """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Introduction Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family};
+            background-color: {bg_color};
+            color: {primary_text_color};
+            overflow: hidden;
+        }}
+        
+        /* Subtle Background Decoration - Absolute Positioned */
+        .bg-decoration-top {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 400px;
+            background: linear-gradient(180deg, #E5E7EB 0%, {bg_color} 100%);
+            z-index: 0;
+            opacity: 0.5;
+        }}
+
+        .slide-container {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 1080px;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }}
+
+        .header-section {{
+            text-align: center;
+            margin-bottom: 80px;
+            width: 100%;
+            max-width: 1200px;
+        }}
+
+        .main-title {{
+            font-size: 4.5rem;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            margin-bottom: 1.5rem;
+            color: {primary_text_color};
+            position: relative;
+            display: inline-block;
+        }}
+        
+        /* Decorative underline for title */
+        .main-title::after {{
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 80px;
+            height: 6px;
+            background-color: {accent_color};
+            border-radius: 3px;
+        }}
+
+        .subtitle {{
+            font-size: 2rem;
+            color: {role_text_color};
+            font-weight: 300;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.5;
+        }}
+
+        .team-grid {{
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            width: 100%;
+            max-width: 1600px;
+            justify-content: center;
+        }}
+
+        .team-card {{
+            background-color: {card_bg_color};
+            border-radius: 20px;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 50px 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0,0,0,0.03);
+            position: relative;
+            height: 550px; /* Fixed height for consistency */
+        }}
+        
+        /* Accent top border for cards */
+        .team-card::before {{
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 6px;
+            background-color: {accent_color};
+            opacity: 0.8;
+        }}
+
+        .image-wrapper {{
+            width: 220px;
+            height: 220px;
+            margin-bottom: 35px;
+            position: relative;
+            border-radius: 50%;
+            border: 4px solid {bg_color};
+            box-shadow: 0 8px 16px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }}
+
+        .member-image {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+        }}
+
+        .member-info {{
+            text-align: center;
+            width: 100%;
+        }}
+
+        .member-name {{
+            font-size: 1.75rem;
+            font-weight: 700;
+            color: {primary_text_color};
+            margin-bottom: 10px;
+            line-height: 1.2;
+        }}
+
+        .member-role {{
+            font-size: 1.25rem;
+            color: {accent_color};
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 25px;
+        }}
+
+        .social-links {{
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: auto;
+        }}
+
+        .social-icon {{
+            width: 12px;
+            height: 12px;
+            background-color: {role_text_color};
+            opacity: 0.3;
+            border-radius: 50%;
+        }}
+
+    </style>
+</head>
+<body>
+    <div class="bg-decoration-top"></div>
+    
+    <svg style="position: absolute; top: 100px; right: 50px; width: 300px; height: 300px; opacity: 0.05; z-index: 1;" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <path fill="{primary_text_color}" d="M42.7,-72.2C54.6,-66.6,63.1,-52.3,69.8,-39.2C76.5,-26.1,81.4,-14.2,80.4,-2.7C79.4,8.8,72.4,19.9,64.2,30.3C56,40.7,46.5,50.4,35.6,58.3C24.7,66.2,12.3,72.3,-1.2,74.4C-14.8,76.5,-29.6,74.7,-42.6,68.2C-55.6,61.7,-66.8,50.6,-73.4,37.3C-80,24,-81.9,8.5,-78.9,-5.8C-75.9,-20.1,-68,-33.2,-58.2,-43.8C-48.4,-54.4,-36.7,-62.5,-24.5,-67.9C-12.3,-73.3,0.4,-75.9,13.2,-75.9C26,-75.9,52,-75.9,42.7,-72.2Z" transform="translate(100 100)" />
+    </svg>
+    <svg style="position: absolute; bottom: 50px; left: 50px; width: 400px; height: 400px; opacity: 0.03; z-index: 1;" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <path fill="{accent_color}" d="M41.4,-67.4C53.7,-61.7,63.9,-50.8,70.9,-38.4C77.9,-26,81.8,-12,80.1,1.5C78.4,14.9,71.1,27.8,61.8,38.2C52.5,48.6,41.2,56.5,29.3,62.7C17.4,68.9,4.9,73.4,-6.9,72.6C-18.7,71.8,-29.8,65.7,-40.4,58.6C-51,51.5,-61.1,43.4,-68.2,32.7C-75.3,22,-79.4,8.7,-77.9,-3.9C-76.4,-16.5,-69.3,-28.4,-60.1,-37.9C-50.9,-47.4,-39.6,-54.5,-28.3,-60.8C-17,-67.1,-5.7,-72.6,3.9,-77.3C13.5,-82,27,-85.9,41.4,-67.4Z" transform="translate(100 100)" />
+    </svg>
+
+    <div class="slide-container">
+        <div class="header-section">
+            <h1 class="main-title">{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+
+        <div class="team-grid">
+            {cards_html}
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html_code
+
+def generate_cute_group_intro_slide(
+    main_title="DREAM TEAM",
+    subtitle="Class 12A1 - Group 4 Project",
+    members=[
+        {
+            "name": "Mochi Mint",
+            "role": "Leader & Idea",
+            "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1000&auto=format&fit=crop",
+            "color": "#FFB7B2"
+        },
+        {
+            "name": "Pudding",
+            "role": "Designer",
+            "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop",
+            "color": "#B5EAD7"
+        },
+        {
+            "name": "Sunny",
+            "role": "Presenter",
+            "image": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1000&auto=format&fit=crop",
+            "color": "#C7CEEA"
+        },
+        {
+            "name": "Cookie",
+            "role": "Researcher",
+            "image": "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=1000&auto=format&fit=crop",
+            "color": "#FFDAC1"
+        }
+    ],
+    font_family_title="'Fredoka', sans-serif",
+    font_family_body="'Patrick Hand', cursive",
+    bg_color="#FFF9E5",
+    text_color="#4A4A4A"
+):
+    """
+    Generates a cute, student-friendly team introduction slide with a 'scrapbook/polaroid' style.
+    Features pastel colors, handwritten fonts, and washi-tape effects.
+    
+    Structure optimized for converter.js (Absolute positioning main containers, flat hierarchy).
+    """
+
+    # SVG Definitions (Washi Tape & Blobs)
+    tape_svg = """
+    <svg class="tape-svg" viewBox="0 0 100 30" preserveAspectRatio="none">
+        <path d="M0,0 L100,0 L98,5 L100,10 L98,15 L100,20 L98,25 L100,30 L0,30 L2,25 L0,20 L2,15 L0,10 L2,5 L0,0 Z" fill="rgba(255,255,255,0.6)" />
+    </svg>
+    """
+    
+    # Generate Member Cards
+    cards_html = ""
+    for member in members:
+        tape_color = member.get("color", "#FFB7B2")
+        cards_html += f"""
+        <div class="polaroid-card">
+            <div class="tape-strip" style="background-color: {tape_color};"></div>
+            
+            <div class="photo-frame">
+                <img src="{member.get('image', '')}" alt="{member.get('name', 'Member')}" class="member-photo">
+            </div>
+            
+            <div class="caption-area">
+                <h3 class="member-name">{member.get('name', 'Name')}</h3>
+                <p class="member-role">{member.get('role', 'Role')}</p>
+            </div>
+        </div>
+        """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cute Team Intro</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family_body};
+            background-color: {bg_color};
+            color: {text_color};
+            overflow: hidden;
+            background-image: radial-gradient(#E0E0E0 1px, transparent 1px);
+            background-size: 30px 30px; /* Dot grid paper effect */
+        }}
+
+        /* --- Background Shapes (Absolute) --- */
+        .blob-shape {{
+            position: absolute;
+            z-index: 0;
+            opacity: 0.8;
+        }}
+        
+        .blob-1 {{
+            top: -100px;
+            left: -100px;
+            width: 600px;
+            height: 600px;
+            fill: #FFDAC1; /* Pastel Peach */
+        }}
+        
+        .blob-2 {{
+            bottom: -150px;
+            right: -100px;
+            width: 700px;
+            height: 700px;
+            fill: #C7CEEA; /* Pastel Purple */
+        }}
+        
+        /* --- Doodle Decorations --- */
+        .doodle {{
+            position: absolute;
+            z-index: 1;
+            pointer-events: none;
+        }}
+
+        /* --- Main Content --- */
+        .slide-container {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            padding: 50px;
+        }}
+
+        .header-section {{
+            text-align: center;
+            margin-bottom: 60px;
+            position: relative;
+        }}
+
+        .main-title {{
+            font-family: {font_family_title};
+            font-size: 6rem;
+            color: #FF6F61;
+            text-shadow: 4px 4px 0px #FFFFFF;
+            margin-bottom: 10px;
+            letter-spacing: 2px;
+            transform: rotate(-2deg);
+        }}
+
+        .subtitle {{
+            font-family: {font_family_body};
+            font-size: 2.5rem;
+            background-color: #FFF;
+            padding: 5px 20px;
+            border-radius: 20px;
+            box-shadow: 2px 2px 0px rgba(0,0,0,0.1);
+            display: inline-block;
+            transform: rotate(1deg);
+        }}
+
+        /* --- Card Grid --- */
+        .members-grid {{
+            display: flex;
+            gap: 50px;
+            justify-content: center;
+            align-items: center;
+            width: 100%;
+        }}
+
+        .polaroid-card {{
+            background: #FFFFFF;
+            padding: 20px 20px 60px 20px; /* Polaroid bottom spacing */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.1);
+            width: 320px;
+            transform-origin: center top;
+            position: relative;
+            transition: none; /* No animation for converter */
+        }}
+        
+        /* Simulating slight rotation for "messy" look using nth-child */
+        .polaroid-card:nth-child(odd) {{
+            transform: rotate(-3deg);
+            margin-top: 20px;
+        }}
+        .polaroid-card:nth-child(even) {{
+            transform: rotate(2deg);
+            margin-bottom: 20px;
+        }}
+
+        .photo-frame {{
+            width: 100%;
+            height: 320px;
+            background: #F0F0F0;
+            overflow: hidden;
+            margin-bottom: 20px;
+            border: 1px solid #EEE;
+        }}
+
+        .member-photo {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: sepia(10%); /* Slight vintage filter */
+        }}
+
+        .tape-strip {{
+            position: absolute;
+            top: -15px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 35px;
+            opacity: 0.8;
+            z-index: 20;
+            /* Jagged edges via mask could be complex, simple colored strip works well for tape */
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }}
+
+        .caption-area {{
+            text-align: center;
+            color: {text_color};
+        }}
+
+        .member-name {{
+            font-family: {font_family_body};
+            font-size: 2.2rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+            line-height: 1.1;
+        }}
+
+        .member-role {{
+            font-family: {font_family_title};
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: #888;
+        }}
+
+    </style>
+</head>
+<body>
+    <svg class="blob-shape blob-1" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <path d="M44.7,-76.4C58.9,-69.2,71.8,-59.1,79.6,-46.6C87.4,-34.2,90.2,-19.4,87.6,-5.8C85,7.8,77.1,20.2,68.2,31.5C59.3,42.8,49.4,52.9,38.3,60.8C27.2,68.7,14.9,74.3,1.7,71.4C-11.5,68.5,-25.6,57,-38.3,47.8C-51.1,38.6,-62.5,31.7,-69.7,21.5C-76.9,11.3,-79.9,-2.3,-76.4,-14.8C-72.9,-27.3,-62.9,-38.7,-51.7,-46.7C-40.5,-54.6,-28.1,-59.1,-15.9,-63.3C-3.6,-67.5,14,-71.4,30.5,-83.6" transform="translate(100 100)" />
+    </svg>
+    <svg class="blob-shape blob-2" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+        <path d="M41.4,-65.3C52.1,-56.7,58.3,-42.6,64.3,-28.5C70.3,-14.4,76.1,-0.3,73.5,12.7C70.9,25.7,59.9,37.6,48.8,47.8C37.7,58,26.5,66.4,13.8,69.5C1.1,72.6,-13.1,70.3,-25.1,63.9C-37.1,57.5,-46.9,46.9,-55.8,34.8C-64.7,22.7,-72.7,9,-72.3,-4.5C-71.9,-18,-63.1,-31.2,-52.3,-40.4C-41.5,-49.6,-28.7,-54.8,-15.8,-57.8C-2.9,-60.8,12.4,-61.6,30.7,-73.9" transform="translate(100 100)" />
+    </svg>
+
+    <div class="slide-container">
+        <div class="header-section">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+
+        <div class="members-grid">
+            {cards_html}
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html_code
+def generate_notebook_team_slide(
+    main_title="OUR SQUAD",
+    subtitle="Creative Project Group 01",
+    members=[
+        {
+            "name": "Alex Minh",
+            "role": "Team Leader",
+            "image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1000&auto=format&fit=crop",
+            "note_color": "#FFDFBA" # Pastel Orange
+        },
+        {
+            "name": "Bao Chau",
+            "role": "Content Creator",
+            "image": "https://images.unsplash.com/photo-1554151228-14d9def656ec?q=80&w=1000&auto=format&fit=crop",
+            "note_color": "#FFFFBA" # Pastel Yellow
+        },
+        {
+            "name": "Chris Vo",
+            "role": "Visual Artist",
+            "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1000&auto=format&fit=crop",
+            "note_color": "#BAFFC9" # Pastel Green
+        },
+        {
+            "name": "Dana Le",
+            "role": "Researcher",
+            "image": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1000&auto=format&fit=crop",
+            "note_color": "#BAE1FF" # Pastel Blue
+        }
+    ],
+    font_family_handwriting="'Architects Daughter', cursive",
+    font_family_marker="'Caveat', cursive",
+    paper_color="#FFFFFF",
+    grid_color="#E5E7EB",
+    ink_color="#374151"
+):
+    """
+    Generates a playful 'Notebook' style team slide with a zig-zag layout.
+    Features a grid paper background, doodle connectors, and sticky-note style member cards.
+    
+    Optimized for converter.js using absolute positioning coordinates.
+    """
+
+    # Coordinates for Zig-Zag layout (4 positions)
+    # Format: (left, top, rotation_deg)
+    positions = [
+        (150, 380, -3),  # Member 1 (Low)
+        (550, 180, 2),   # Member 2 (High)
+        (950, 380, -2),  # Member 3 (Low)
+        (1350, 180, 3)   # Member 4 (High)
+    ]
+    
+    # SVG Doodle Path (Connecting line)
+    # A curved line connecting the centers of the positions approx.
+    connector_svg = f"""
+    <svg class="doodle-connector" viewBox="0 0 1920 1080" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+        <path d="M 300,500 Q 450,550 650,350 T 1050,500 T 1450,350" 
+              fill="none" stroke="{ink_color}" stroke-width="3" stroke-dasharray="15,10" stroke-opacity="0.5" stroke-linecap="round"/>
+        
+        <path d="M 200,300 L 220,350 L 180,330 Z" fill="none" stroke="#FFB7B2" stroke-width="3" transform="rotate(15 200 300)"/>
+        <circle cx="1600" cy="200" r="10" fill="none" stroke="#B5EAD7" stroke-width="3"/>
+        <path d="M 1200,700 L 1220,720 M 1220,700 L 1200,720" stroke="#C7CEEA" stroke-width="4"/>
+    </svg>
+    """
+
+    # Generate Member HTML
+    members_html = ""
+    for i, member in enumerate(members):
+        if i >= len(positions): break # Safety break
+        
+        pos = positions[i]
+        left, top, rot = pos
+        
+        # Pin color cycling
+        pin_colors = ["#FF6B6B", "#4ECDC4", "#FFE66D", "#1A535C"]
+        pin_color = pin_colors[i % 4]
+
+        members_html += f"""
+        <div class="sticker-container" style="left: {left}px; top: {top}px; transform: rotate({rot}deg);">
+            <div class="push-pin" style="background-color: {pin_color};"></div>
+            
+            <div class="sticky-note" style="background-color: {member.get('note_color', '#FFF')};">
+                <div class="photo-wrapper">
+                    <img src="{member.get('image', '')}" alt="{member.get('name', 'Member')}" class="member-img">
+                </div>
+                <div class="note-text">
+                    <h3 class="name-text">{member.get('name', 'Name')}</h3>
+                    <div class="highlight-strip"></div>
+                    <p class="role-text">{member.get('role', 'Role')}</p>
+                </div>
+            </div>
+        </div>
+        """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook Team Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Architects+Daughter&family=Caveat:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family_handwriting};
+            background-color: {paper_color};
+            color: {ink_color};
+            overflow: hidden;
+        }}
+
+        /* Grid Paper Background */
+        .notebook-bg {{
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-image: 
+                linear-gradient({grid_color} 2px, transparent 2px),
+                linear-gradient(90deg, {grid_color} 2px, transparent 2px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }}
+        
+        /* Left Margin Line (Red line like in notebooks) */
+        .margin-line {{
+            position: absolute;
+            top: 0; left: 100px; bottom: 0;
+            width: 2px;
+            background-color: #FF9AA2;
+            opacity: 0.7;
+            z-index: 0;
+        }}
+
+        .slide-container {{
+            position: absolute;
+            top: 0; left: 0;
+            width: 1920px; height: 1080px;
+            z-index: 10;
+        }}
+
+        /* Title Section - Top Right Sticker */
+        .title-sticker {{
+            position: absolute;
+            top: 60px;
+            right: 80px;
+            width: 500px;
+            padding: 30px;
+            background-color: #FFDAC1;
+            box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
+            transform: rotate(-2deg);
+            z-index: 20;
+            text-align: center;
+            border: 2px dashed rgba(255,255,255,0.5);
+        }}
+        
+        .main-title {{
+            font-family: {font_family_marker};
+            font-size: 5rem;
+            font-weight: 700;
+            line-height: 1;
+            margin-bottom: 10px;
+            color: {ink_color};
+        }}
+        
+        .subtitle {{
+            font-size: 2rem;
+            font-weight: 400;
+            background: rgba(255,255,255,0.4);
+            padding: 5px 15px;
+            border-radius: 15px;
+            display: inline-block;
+        }}
+
+        /* Member Stickers */
+        .sticker-container {{
+            position: absolute;
+            width: 320px;
+            z-index: 5;
+            /* transform set inline */
+        }}
+        
+        .sticky-note {{
+            padding: 25px;
+            padding-top: 40px; /* Space for pin */
+            box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+            border-bottom-right-radius: 60px 10px; /* Curled corner effect */
+            transition: none;
+        }}
+
+        .push-pin {{
+            position: absolute;
+            top: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            box-shadow: 2px 2px 5px rgba(0,0,0,0.3);
+            z-index: 30;
+        }}
+        
+        .push-pin::after {{
+            content: '';
+            position: absolute;
+            top: 5px; right: 5px;
+            width: 8px; height: 8px;
+            background: rgba(255,255,255,0.6);
+            border-radius: 50%;
+        }}
+
+        .photo-wrapper {{
+            width: 100%;
+            height: 250px;
+            background: #FFF;
+            border: 8px solid #FFF;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+            transform: rotate(1deg); /* Inner photo rotation */
+            overflow: hidden;
+        }}
+        
+        .member-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(20%) contrast(110%); /* Slight rough look */
+        }}
+
+        .note-text {{
+            text-align: center;
+        }}
+
+        .name-text {{
+            font-family: {font_family_marker};
+            font-size: 2.8rem;
+            margin-bottom: 5px;
+            line-height: 1;
+        }}
+
+        .role-text {{
+            font-size: 1.4rem;
+            opacity: 0.8;
+            font-weight: bold;
+        }}
+        
+        .highlight-strip {{
+            height: 8px;
+            background-color: rgba(0,0,0,0.05);
+            width: 80%;
+            margin: 0 auto 10px auto;
+            border-radius: 4px;
+        }}
+
+    </style>
+</head>
+<body>
+    <div class="notebook-bg"></div>
+    <div class="margin-line"></div>
+    
+    {connector_svg}
+
+    <div class="slide-container">
+        <div class="title-sticker">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+
+        {members_html}
+    </div>
+</body>
+</html>"""
+
+    return html_code
+
+def generate_luxury_team_slide(
+    main_title="EXECUTIVE BOARD",
+    subtitle="Leading with Vision & Integrity",
+    members=[
+        {
+            "name": "Alexander Hamilton",
+            "role": "Chief Executive Officer",
+            "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop"
+        },
+        {
+            "name": "Victoria Sterling",
+            "role": "Director of Operations",
+            "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop"
+        },
+        {
+            "name": "James Rothschild",
+            "role": "Head of Finance",
+            "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1000&auto=format&fit=crop"
+        }
+    ],
+    font_family_serif="'Playfair Display', serif",
+    font_family_sans="'Lato', sans-serif",
+    bg_color="#0F0F0F",
+    text_color="#FFFFFF",
+    accent_color="#D4AF37" # Metallic Gold
+):
+    """
+    Generates a high-end, luxury style team introduction slide.
+    Features a dark theme, serif typography, gold accents, and a clean, sophisticated layout.
+    Optimized for executive presentations or luxury brand pitches.
+    """
+
+    # SVG for Art Deco / Luxury Lines
+    # Gold lines decorative element
+    deco_lines_svg = f"""
+    <svg class="deco-lines" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 1;">
+        <line x1="1600" y1="0" x2="1920" y2="320" stroke="{accent_color}" stroke-width="1" opacity="0.5"/>
+        <line x1="1650" y1="0" x2="1920" y2="270" stroke="{accent_color}" stroke-width="1" opacity="0.3"/>
+        
+        <line x1="0" y1="760" x2="320" y2="1080" stroke="{accent_color}" stroke-width="1" opacity="0.5"/>
+        <line x1="0" y1="810" x2="270" y2="1080" stroke="{accent_color}" stroke-width="1" opacity="0.3"/>
+        
+        <line x1="860" y1="220" x2="1060" y2="220" stroke="{accent_color}" stroke-width="2" />
+    </svg>
+    """
+
+    # Generate Member Cards HTML
+    cards_html = ""
+    for member in members:
+        cards_html += f"""
+        <div class="luxury-card">
+            <div class="image-container">
+                <img src="{member.get('image', '')}" alt="{member.get('name', 'Executive')}" class="member-img">
+                <div class="image-overlay"></div>
+                <div class="gold-border-overlay"></div>
+            </div>
+            <div class="text-container">
+                <h3 class="member-name">{member.get('name', 'Name')}</h3>
+                <p class="member-role">{member.get('role', 'Role')}</p>
+            </div>
+        </div>
+        """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Luxury Team Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&family=Playfair+Display:ital,wght@0,400;0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family_sans};
+            background-color: {bg_color};
+            color: {text_color};
+            overflow: hidden;
+            /* Subtle texture overlay for richness */
+            background-image: radial-gradient(circle at 50% 0%, #2a2a2a 0%, {bg_color} 60%);
+        }}
+
+        .slide-container {{
+            position: absolute;
+            top: 0; left: 0;
+            width: 1920px; height: 1080px;
+            padding: 80px 120px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }}
+
+        /* Typography */
+        .header-section {{
+            text-align: center;
+            margin-bottom: 100px;
+            position: relative;
+            z-index: 20;
+        }}
+
+        .main-title {{
+            font-family: {font_family_serif};
+            font-size: 5rem;
+            font-weight: 400;
+            text-transform: uppercase;
+            letter-spacing: 0.2em; /* Wide letter spacing for elegance */
+            margin-bottom: 20px;
+            background: linear-gradient(to right, #FFF 0%, #CCC 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }}
+
+        .subtitle {{
+            font-family: {font_family_sans};
+            font-size: 1.5rem;
+            text-transform: uppercase;
+            letter-spacing: 0.4em;
+            color: {accent_color};
+            font-weight: 300;
+        }}
+
+        /* Grid Layout */
+        .members-grid {{
+            display: flex;
+            justify-content: center;
+            gap: 80px;
+            width: 100%;
+            max-width: 1600px;
+        }}
+
+        /* Card Design */
+        .luxury-card {{
+            width: 350px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }}
+
+        .image-container {{
+            width: 100%;
+            height: 450px;
+            position: relative;
+            margin-bottom: 40px;
+        }}
+
+        .member-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            /* Black and white filter for "Vogue" look */
+            filter: grayscale(100%) contrast(110%);
+        }}
+
+        /* Gold Border Effect - Offset */
+        .gold-border-overlay {{
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 100%;
+            height: 100%;
+            border: 1px solid {accent_color};
+            z-index: -1; /* Behind image */
+            transition: none;
+        }}
+        
+        /* Inner shine */
+        .image-overlay {{
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(to bottom, transparent 70%, rgba(0,0,0,0.8) 100%);
+        }}
+
+        .text-container {{
+            text-align: center;
+        }}
+
+        .member-name {{
+            font-family: {font_family_serif};
+            font-size: 2.2rem;
+            font-weight: 400;
+            color: #FFFFFF;
+            margin-bottom: 10px;
+            letter-spacing: 0.05em;
+        }}
+
+        .member-role {{
+            font-family: {font_family_sans};
+            font-size: 1rem;
+            color: {accent_color};
+            text-transform: uppercase;
+            letter-spacing: 0.2em;
+            padding-top: 10px;
+            border-top: 1px solid rgba(212, 175, 55, 0.3);
+            display: inline-block;
+        }}
+
+        /* Additional Decoration */
+        .vertical-line {{
+            position: absolute;
+            height: 150px;
+            width: 1px;
+            background: linear-gradient(to bottom, {accent_color}, transparent);
+        }}
+        
+        .vl-top {{ top: 0; left: 50%; transform: translateX(-50%); }}
+
+    </style>
+</head>
+<body>
+    {deco_lines_svg}
+    
+    <div class="vertical-line vl-top"></div>
+
+    <div class="slide-container">
+        <div class="header-section">
+            <h1 class="main-title">{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+
+        <div class="members-grid">
+            {cards_html}
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html_code
+
+def generate_modern_minimalist_team_slide(
+    main_title="Core Team.",
+    subtitle="Building the future of digital experience.",
+    members=[
+        {
+            "name": "Elena Fisher",
+            "role": "Product Lead",
+            "bio": "10+ years driving product strategy for SaaS unicorns. Obsessed with user-centric design.",
+            "skills": "Strategy • UX • Agile",
+            "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop"
+        },
+        {
+            "name": "Nathan Drake",
+            "role": "Technical Architect",
+            "bio": "Full-stack wizard specializing in scalable cloud infrastructure and AI integration.",
+            "skills": "Python • AWS • React",
+            "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1000&auto=format&fit=crop"
+        },
+        {
+            "name": "Chloe Frazer",
+            "role": "Design Director",
+            "bio": "Award-winning creative director helping brands tell their stories through visual art.",
+            "skills": "Branding • UI/UX • Motion",
+            "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1000&auto=format&fit=crop"
+        }
+    ],
+    font_family="'Inter', 'Roboto', sans-serif",
+    bg_color="#FFFFFF",
+    card_bg_color="#F8F9FA",
+    text_primary="#111827",
+    text_secondary="#6B7280",
+    accent_color="#000000"
+):
+    """
+    Generates a modern, minimalist, and detailed team slide.
+    Features 'Swiss Style' design: bold typography, grid layout, detailed bio sections,
+    and architectural lines. Optimized for 3 key members.
+    """
+
+    # SVG Decoration: Architectural Grid Lines
+    # Thin lines creating a technical/architectural feel
+    grid_svg = f"""
+    <svg class="architectural-grid" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 0;">
+        <line x1="120" y1="280" x2="1800" y2="280" stroke="{text_secondary}" stroke-width="1" opacity="0.2" />
+        
+        <line x1="120" y1="0" x2="120" y2="1080" stroke="{text_secondary}" stroke-width="1" opacity="0.2" />
+        <line x1="680" y1="280" x2="680" y2="900" stroke="{text_secondary}" stroke-width="1" opacity="0.1" />
+        <line x1="1240" y1="280" x2="1240" y2="900" stroke="{text_secondary}" stroke-width="1" opacity="0.1" />
+        <line x1="1800" y1="0" x2="1800" y2="1080" stroke="{text_secondary}" stroke-width="1" opacity="0.2" />
+        
+        <circle cx="1700" cy="150" r="80" stroke="{text_secondary}" stroke-width="1" fill="none" opacity="0.1" />
+        <text x="1700" y="155" text-anchor="middle" font-family="{font_family}" font-size="14" fill="{text_secondary}" opacity="0.5">EST. 2024</text>
+    </svg>
+    """
+
+    # Generate Member Cards
+    cards_html = ""
+    for i, member in enumerate(members):
+        index_str = f"0{i+1}"
+        cards_html += f"""
+        <div class="detail-card">
+            <div class="card-header">
+                <span class="index-number">{index_str}</span>
+                <div class="image-box">
+                    <img src="{member.get('image', '')}" alt="{member.get('name', 'Member')}" class="member-img">
+                </div>
+            </div>
+            
+            <div class="card-body">
+                <div class="role-badge">{member.get('role', 'Role')}</div>
+                <h3 class="member-name">{member.get('name', 'Name')}</h3>
+                <div class="separator-line"></div>
+                <p class="member-bio">{member.get('bio', 'Bio goes here...')}</p>
+                <div class="member-skills">
+                    <span class="skill-label">EXPERTISE:</span>
+                    <span class="skill-list">{member.get('skills', '')}</span>
+                </div>
+            </div>
+            
+            <div class="hover-indicator"></div>
+        </div>
+        """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Minimalist Team</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;800&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family};
+            background-color: {bg_color};
+            color: {text_primary};
+            overflow: hidden;
+        }}
+
+        .slide-container {{
+            position: absolute;
+            top: 0; left: 0;
+            width: 1920px; height: 1080px;
+            padding: 100px 120px;
+            z-index: 10;
+        }}
+
+        /* Header Section */
+        .header-section {{
+            margin-bottom: 80px;
+            max-width: 800px;
+        }}
+
+        .main-title {{
+            font-size: 5rem;
+            font-weight: 800;
+            letter-spacing: -0.04em;
+            line-height: 0.9;
+            margin-bottom: 20px;
+            color: {text_primary};
+        }}
+        
+        /* Modern dot accent on title */
+        .main-title span {{
+            color: {accent_color};
+        }}
+
+        .subtitle {{
+            font-size: 1.5rem;
+            color: {text_secondary};
+            font-weight: 400;
+            border-left: 2px solid {accent_color};
+            padding-left: 20px;
+            margin-top: 10px;
+        }}
+
+        /* Grid Layout */
+        .team-grid {{
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 40px;
+            width: 100%;
+            height: 600px; /* Fixed height area */
+        }}
+
+        /* Detailed Card Design */
+        .detail-card {{
+            background-color: {card_bg_color};
+            height: 100%;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            transition: none; /* No animations */
+        }}
+
+        .card-header {{
+            position: relative;
+            height: 300px;
+            width: 100%;
+            overflow: hidden;
+        }}
+
+        .image-box {{
+            width: 100%;
+            height: 100%;
+        }}
+
+        .member-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%); /* Start BW */
+        }}
+        
+        /* Modern Index Number overlay */
+        .index-number {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            background-color: {accent_color};
+            color: #FFFFFF;
+            padding: 15px 25px;
+            font-size: 1.5rem;
+            font-weight: 600;
+            z-index: 10;
+        }}
+
+        .card-body {{
+            padding: 40px 30px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .role-badge {{
+            font-size: 0.875rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            font-weight: 600;
+            color: {text_secondary};
+            margin-bottom: 10px;
+        }}
+
+        .member-name {{
+            font-size: 2rem;
+            font-weight: 700;
+            color: {text_primary};
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }}
+
+        .separator-line {{
+            width: 40px;
+            height: 2px;
+            background-color: {accent_color};
+            margin-bottom: 20px;
+        }}
+
+        .member-bio {{
+            font-size: 1rem;
+            line-height: 1.6;
+            color: {text_secondary};
+            margin-bottom: auto; /* Pushes skills to bottom */
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }}
+
+        .member-skills {{
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(0,0,0,0.05);
+            font-size: 0.9rem;
+        }}
+
+        .skill-label {{
+            font-weight: 700;
+            color: {text_primary};
+            margin-right: 10px;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+        }}
+
+        .skill-list {{
+            color: {text_secondary};
+        }}
+
+        /* Bottom highlight bar */
+        .hover-indicator {{
+            height: 4px;
+            width: 100%;
+            background: linear-gradient(90deg, {accent_color}, transparent);
+            opacity: 0.5;
+        }}
+
+    </style>
+</head>
+<body>
+    {grid_svg}
+
+    <div class="slide-container">
+        <div class="header-section">
+            <h1 class="main-title">{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+
+        <div class="team-grid">
+            {cards_html}
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html_code
+
+def generate_retro_game_team_slide_v3(
+    main_title="PLAYER SELECT",
+    subtitle="CHOOSE YOUR HERO TO START",
+    members=[
+        {
+            "name": "Alex 'Code'",
+            "role": "Lead Dev",
+            "level": "LVL 99",
+            "class": "Wizard",
+            "image": "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop",
+            "color": "#00FF41"
+        },
+        {
+            "name": "Sarah 'Pixel'",
+            "role": "Art Director",
+            "level": "LVL 85",
+            "class": "Artist",
+            "image": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1000&auto=format&fit=crop",
+            "color": "#FF007F"
+        },
+        {
+            "name": "Max 'Logic'",
+            "role": "Strategist",
+            "level": "LVL 90",
+            "class": "Knight",
+            "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop",
+            "color": "#00FFFF"
+        },
+        {
+            "name": "Leo 'Bug'",
+            "role": "QA Tester",
+            "level": "LVL 88",
+            "class": "Rogue",
+            "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1000&auto=format&fit=crop",
+            "color": "#FFFF00"
+        }
+    ],
+    font_family_header="'Press Start 2P', cursive",
+    font_family_body="'VT323', monospace",
+    bg_color="#181026", 
+    frame_color="#FFFFFF"
+):
+    """
+    Generates the Retro Game team slide V3.
+    Fixes layout bugs by removing external connecting lines.
+    Replaces the broken bar with an internal 'STATUS: READY' box inside each card.
+    Maintains 'image-container' for converter compatibility.
+    """
+
+    cards_html = ""
+    for index, member in enumerate(members):
+        accent = member.get('color', '#00FF41')
+        
+        cards_html += f"""
+        <div class="pixel-card" style="border-color: {accent}; box-shadow: 10px 10px 0px rgba(0,0,0,0.5);">
+            <div class="card-header" style="background-color: {accent}; color: {bg_color};">
+                <span class="player-tag">P{index + 1}</span>
+                <span class="player-class">{member.get('class', 'Hero')}</span>
+            </div>
+            
+            <div class="image-container">
+                <img src="{member.get('image', '')}" alt="{member.get('name', 'Player')}" class="pixel-img">
+                <div class="scanlines"></div>
+            </div>
+            
+            <div class="stats-box">
+                <h3 class="member-name" style="color: {accent};">{member.get('name', 'Name')}</h3>
+                <p class="member-role">ROLE: {member.get('role', 'Role')}</p>
+                
+                <div class="status-container" style="border: 2px solid {accent};">
+                    <div class="status-label" style="background-color: {accent}; color: {bg_color};">LVL</div>
+                    <div class="status-value" style="color: {accent};">{member.get('level', '99')}</div>
+                    <div class="status-indicator" style="background-color: {accent};"></div>
+                </div>
+            </div>
+        </div>
+        """
+
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Retro Game Team Slide V3</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{
+            height: 1080px;
+            width: 1920px;
+            font-family: {font_family_body};
+            background-color: {bg_color};
+            color: {frame_color};
+            overflow: hidden;
+            /* Grid Background */
+            background-image: 
+                linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+            background-size: 50px 50px;
+        }}
+
+        .slide-container {{
+            position: absolute;
+            top: 0; left: 0;
+            width: 1920px; height: 1080px;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            z-index: 10;
+        }}
+
+        /* Header */
+        .header-box {{
+            text-align: center;
+            margin-bottom: 80px;
+            border: 4px solid {frame_color};
+            padding: 20px 60px;
+            background-color: #000;
+            box-shadow: 8px 8px 0px rgba(0,0,0,0.5);
+        }}
+
+        .main-title {{
+            font-family: {font_family_header};
+            font-size: 3.5rem;
+            color: #FF0055;
+            text-shadow: 4px 4px 0px #FFF;
+            margin-bottom: 15px;
+            line-height: 1.2;
+            text-transform: uppercase;
+        }}
+
+        .subtitle {{
+            font-family: {font_family_header};
+            font-size: 1.2rem;
+            color: #00FF41;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }}
+
+        /* Grid */
+        .members-grid {{
+            display: flex;
+            gap: 50px; /* Tăng khoảng cách vì không còn nối dây */
+            width: 100%;
+            justify-content: center;
+            align-items: flex-start;
+        }}
+
+        /* Card */
+        .pixel-card {{
+            width: 350px;
+            background-color: #000;
+            border: 4px solid #FFF; /* Inline style overrides this */
+            display: flex;
+            flex-direction: column;
+        }}
+
+        .card-header {{
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 15px;
+            font-family: {font_family_header};
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }}
+
+        /* Image Container for Converter */
+        .image-container {{
+            width: 100%;
+            height: 320px;
+            position: relative;
+            overflow: hidden;
+            border-top: 4px solid #000;
+            border-bottom: 4px solid #000;
+        }}
+
+        .pixel-img {{
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            filter: contrast(110%) brightness(110%);
+        }}
+
+        .scanlines {{
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(rgba(0,0,0,0) 50%, rgba(0,0,0,0.25) 50%);
+            background-size: 100% 4px;
+            pointer-events: none;
+            z-index: 2;
+        }}
+
+        .stats-box {{
+            padding: 25px;
+            background-color: #1a1a1a;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }}
+
+        .member-name {{
+            font-family: {font_family_header};
+            font-size: 1.2rem;
+            line-height: 1.4;
+            min-height: 3rem;
+        }}
+
+        .member-role {{
+            font-size: 1.4rem;
+            color: #CCC;
+            text-transform: uppercase;
+            border-bottom: 1px dashed #555;
+            padding-bottom: 10px;
+            margin-bottom: 5px;
+        }}
+
+        /* New Status Box (Replaces broken bar) */
+        .status-container {{
+            display: flex;
+            align-items: center;
+            height: 36px;
+            margin-top: auto; /* Push to bottom */
+            background-color: #000;
+        }}
+
+        .status-label {{
+            font-family: {font_family_header};
+            font-size: 0.7rem;
+            padding: 0 10px;
+            height: 100%;
+            display: flex;
+            align-items: center;
+        }}
+
+        .status-value {{
+            font-family: {font_family_header};
+            font-size: 0.8rem;
+            padding: 0 15px;
+            flex-grow: 1;
+            text-align: right;
+        }}
+        
+        /* Small square indicator like a blinking cursor (static) */
+        .status-indicator {{
+            width: 20px;
+            height: 20px;
+            margin-right: 8px;
+        }}
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header-box">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle">► {subtitle}</div>
+        </div>
+
+        <div class="members-grid">
+            {cards_html}
+        </div>
+    </div>
+</body>
+</html>"""
+
+    return html_code
 #------------------------ SLIDE THANK YOU
 
 

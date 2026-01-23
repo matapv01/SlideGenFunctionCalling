@@ -105,9 +105,15 @@ from src.tools.html_tool import (
     generate_team_slide, # slide giới thiệu team 
     generate_colorful_team_grid_slide,  # slide giới thiệu team
     generate_corporate_team_slide, # slide giới thiệu team
-    generate_team_list_slide, # slide giới thiệu team(quang),
-
-    
+    generate_team_list_slide, # slide giới thiệu team(quang)
+    generate_team_intro_slide, # slide giới thiệu team(quang)
+    generate_meet_the_team_slide, # slide giới thiệu team(quang)
+    generate_team_intro_slide1, # slide giới thiệu team(quang)
+    generate_cute_group_intro_slide, # slide giới thiệu team(quang)
+    generate_notebook_team_slide, # slide giới thiệu team(quang)
+    generate_luxury_team_slide, # slide giới thiệu team(quang)
+    generate_modern_minimalist_team_slide, # slide giới thiệu team(quang)
+    generate_retro_game_team_slide_v3, # slide giới thiệu team(quang)
 
     
     
@@ -1386,7 +1392,252 @@ class GenerateTeamListSlideInput(BaseModel):
     show_chalk_drawings: Optional[bool] = Field(default=True, description="Whether to show the chalkboard drawings (tactics board, target).")
     custom_css: str = Field(default="", description="Additional custom CSS.")
 
+class GenerateTeamIntroSlideInput(BaseModel):
+    """Input schema for generate_team_intro_slide."""
+    team_title: str = Field(default="NHÓM 1", description="The main group name or title displayed in large text at the top left.")
+    sub_text: str = Field(default="Đông Quân", description="Small text displayed in the top right corner (e.g., date, class name).")
+    
+    member_1_name: str = Field(default="Sarah Jenkins", description="Name of the first team member.")
+    member_1_img: str = Field(default="https://images.pexels.com/photos/3763188/pexels-photo-3763188.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the first member's photo.")
+    
+    member_2_name: str = Field(default="David Okonjo", description="Name of the second team member.")
+    member_2_img: str = Field(default="https://images.pexels.com/photos/3778603/pexels-photo-3778603.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the second member's photo.")
+    
+    member_3_name: str = Field(default="Amina Al-Fayed", description="Name of the third team member.")
+    member_3_img: str = Field(default="https://images.pexels.com/photos/774909/pexels-photo-774909.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the third member's photo.")
+    
+    member_4_name: str = Field(default="Elena Rodriguez", description="Name of the fourth team member.")
+    member_4_img: str = Field(default="https://images.pexels.com/photos/1239291/pexels-photo-1239291.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the fourth member's photo.")
+    
+    bg_color: str = Field(default="#314B86", description="Main background color (Hex code). Default is a deep blue.")
+    title_color: str = Field(default="#F3B3A5", description="Color for the main title text (Hex code). Default is a light peach/pink.")
+    box_bg_color: str = Field(default="#FFFFFF", description="Background color for the name boxes (Hex code).")
+    font_family: str = Field(default="'Nunito', sans-serif", description="Font family for text elements.")
 
+class GenerateMeetTheTeamInput(BaseModel):
+    """Input schema for generate_meet_the_team_slide."""
+    title_text: str = Field(default="Gặp gỡ nhóm", description="Main centered title text.")
+    subtitle_text: str = Field(default="Đông Quân", description="Small text displayed in the top right corner.")
+    
+    member_1_name: str = Field(default="", description="Name or text for the first member's box (can be empty).")
+    member_1_img: str = Field(default="https://images.pexels.com/photos/16972166/pexels-photo-16972166.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the first member's photo.")
+    
+    member_2_name: str = Field(default="", description="Name or text for the second member's box.")
+    member_2_img: str = Field(default="https://images.pexels.com/photos/15976532/pexels-photo-15976532.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the second member's photo.")
+    
+    member_3_name: str = Field(default="", description="Name or text for the third member's box.")
+    member_3_img: str = Field(default="https://images.pexels.com/photos/5621884/pexels-photo-5621884.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the third member's photo.")
+    
+    member_4_name: str = Field(default="", description="Name or text for the fourth member's box.")
+    member_4_img: str = Field(default="https://images.pexels.com/photos/16093557/pexels-photo-16093557.jpeg?auto=compress&cs=tinysrgb&w=600", description="URL for the fourth member's photo.")
+    
+    accent_color: str = Field(default="#F26522", description="Color for the decorative stroke/curve (Hex). Default is Orange.")
+    text_color: str = Field(default="#1F3A8A", description="Color for the main title (Hex). Default is Dark Blue.")
+    bg_color: str = Field(default="#FFFFFF", description="Background color of the slide (Hex). Default is White.")
+    font_family: str = Field(default="'Montserrat', sans-serif", description="Font family for text elements.")
+class GenerateTeamIntroSlide1Input(BaseModel):
+    """Input schema for generate_team_intro_slide1."""
+    main_title: str = Field(
+        default="OUR LEADERSHIP TEAM", 
+        description="Main title text, displayed prominently at the top."
+    )
+    subtitle: str = Field(
+        default="Meet the experts behind our success", 
+        description="Subtitle text describing the team or department."
+    )
+    members: List[Dict[str, str]] = Field(
+        default=[
+            {"name": "Sarah Jenkins", "role": "CEO", "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop"},
+            {"name": "David Chen", "role": "CTO", "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1000&auto=format&fit=crop"},
+            {"name": "Amara Diallo", "role": "Creative Dir.", "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1000&auto=format&fit=crop"},
+            {"name": "Michael Ross", "role": "VP Marketing", "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1000&auto=format&fit=crop"}
+        ],
+        description="List of 4 team members. Each dict should have 'name', 'role', and 'image' (URL) keys."
+    )
+    font_family: str = Field(
+        default="'Inter', 'Helvetica Neue', sans-serif", 
+        description="Font family for the slide text."
+    )
+    bg_color: str = Field(
+        default="#F3F4F6", 
+        description="Background color of the slide (hex code)."
+    )
+    card_bg_color: str = Field(
+        default="#FFFFFF", 
+        description="Background color of the member cards (hex code)."
+    )
+    primary_text_color: str = Field(
+        default="#111827", 
+        description="Color for the main title and member names (hex code)."
+    )
+    role_text_color: str = Field(
+        default="#6B7280", 
+        description="Color for the subtitle and social icons (hex code)."
+    )
+    accent_color: str = Field(
+        default="#3B82F6", 
+        description="Accent color used for roles and decorative elements (hex code)."
+    )
+    show_social_icons: bool = Field(
+        default=True,
+        description="Whether to show decorative placeholders for social media icons."
+    )
+    class GenerateCuteGroupIntroSlideInput(BaseModel):
+    """Input schema for generate_cute_group_intro_slide."""
+    main_title: str = Field(
+        default="DREAM TEAM", 
+        description="The group name or main title. Example: 'GROUP 1', 'BIOLOGY SQUAD'."
+    )
+    subtitle: str = Field(
+        default="Class 12A1 - Group 4 Project", 
+        description="Subtitle for class name or project topic."
+    )
+    members: List[Dict[str, str]] = Field(
+        default=[
+            {"name": "Mochi Mint", "role": "Leader", "image": "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=1000&auto=format&fit=crop", "color": "#FFB7B2"},
+            {"name": "Pudding", "role": "Designer", "image": "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=1000&auto=format&fit=crop", "color": "#B5EAD7"},
+            {"name": "Sunny", "role": "Presenter", "image": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1000&auto=format&fit=crop", "color": "#C7CEEA"},
+            {"name": "Cookie", "role": "Researcher", "image": "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?q=80&w=1000&auto=format&fit=crop", "color": "#FFDAC1"}
+        ],
+        description="List of 4 members. Keys: 'name', 'role', 'image' (url), 'color' (hex for tape/decoration)."
+    )
+    font_family_title: str = Field(
+        default="'Fredoka', sans-serif", 
+        description="Font for the title (rounded sans-serif)."
+    )
+    font_family_body: str = Field(
+        default="'Patrick Hand', cursive", 
+        description="Font for body text (handwritten style)."
+    )
+    bg_color: str = Field(
+        default="#FFF9E5", 
+        description="Background color (warm cream/paper color)."
+    )
+    text_color: str = Field(
+        default="#4A4A4A", 
+        description="Main text color."
+    )
+class GenerateNotebookTeamSlideInput(BaseModel):
+    """Input schema for generate_notebook_team_slide."""
+    main_title: str = Field(
+        default="OUR SQUAD", 
+        description="Main group name. Example: 'Biology Team'."
+    )
+    subtitle: str = Field(
+        default="Creative Project Group 01", 
+        description="Subtitle or tagline."
+    )
+    members: List[Dict[str, str]] = Field(
+        default=[
+            {"name": "Alex Minh", "role": "Team Leader", "image": "https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=1000&auto=format&fit=crop", "note_color": "#FFDFBA"},
+            {"name": "Bao Chau", "role": "Content", "image": "https://images.unsplash.com/photo-1554151228-14d9def656ec?q=80&w=1000&auto=format&fit=crop", "note_color": "#FFFFBA"},
+            {"name": "Chris Vo", "role": "Visual", "image": "https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?q=80&w=1000&auto=format&fit=crop", "note_color": "#BAFFC9"},
+            {"name": "Dana Le", "role": "Research", "image": "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?q=80&w=1000&auto=format&fit=crop", "note_color": "#BAE1FF"}
+        ],
+        description="List of 4 members. Keys: 'name', 'role', 'image' (URL), 'note_color' (hex code for the sticky note background)."
+    )
+    paper_color: str = Field(
+        default="#FFFFFF", 
+        description="Background color representing paper."
+    )
+    grid_color: str = Field(
+        default="#E5E7EB", 
+        description="Color of the grid lines."
+    )
+    ink_color: str = Field(
+        default="#374151", 
+        description="Color of the text and drawings."
+    )
+
+class GenerateLuxuryTeamSlideInput(BaseModel):
+    """Input schema for generate_luxury_team_slide."""
+    main_title: str = Field(
+        default="EXECUTIVE BOARD", 
+        description="Main title, usually the department or board name. Uppercase recommended."
+    )
+    subtitle: str = Field(
+        default="Leading with Vision & Integrity", 
+        description="A short, elegant tagline."
+    )
+    members: List[Dict[str, str]] = Field(
+        default=[
+            {"name": "Alexander Hamilton", "role": "CEO", "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop"},
+            {"name": "Victoria Sterling", "role": "COO", "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop"},
+            {"name": "James Rothschild", "role": "CFO", "image": "https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?q=80&w=1000&auto=format&fit=crop"}
+        ],
+        description="List of 3-4 members. Keys: 'name', 'role', 'image' (URL). Images are auto-converted to B&W."
+    )
+    bg_color: str = Field(
+        default="#0F0F0F", 
+        description="Background color. Dark colors (Black, Navy, Dark Grey) work best."
+    )
+    text_color: str = Field(
+        default="#FFFFFF", 
+        description="Primary text color."
+    )
+    accent_color: str = Field(
+        default="#D4AF37", 
+        description="Accent color for borders and subtitles. Default is Metallic Gold."
+    )
+ class GenerateModernMinimalistTeamSlideInput(BaseModel):
+    """Input schema for generate_modern_minimalist_team_slide."""
+    main_title: str = Field(
+        default="Core Team.", 
+        description="Main headline ending with a dot for style."
+    )
+    subtitle: str = Field(
+        default="Building the future of digital experience.", 
+        description="Descriptive subtitle."
+    )
+    members: List[Dict[str, str]] = Field(
+        default=[
+            {"name": "Elena Fisher", "role": "Product Lead", "bio": "10+ years driving product strategy.", "skills": "Strategy • UX", "image": "https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?q=80&w=1000&auto=format&fit=crop"},
+            {"name": "Nathan Drake", "role": "Tech Lead", "bio": "Full-stack wizard specializing in AI.", "skills": "Python • AWS", "image": "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=1000&auto=format&fit=crop"},
+            {"name": "Chloe Frazer", "role": "Art Director", "bio": "Award-winning creative director.", "skills": "Branding • UI/UX", "image": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1000&auto=format&fit=crop"}
+        ],
+        description="List of 3 members. Includes 'bio' and 'skills' for detail."
+    )
+    font_family: str = Field(
+        default="'Inter', 'Roboto', sans-serif", 
+        description="San-serif font family."
+    )
+    bg_color: str = Field(
+        default="#FFFFFF", 
+        description="Main background color (White/Off-white)."
+    )
+    card_bg_color: str = Field(
+        default="#F8F9FA", 
+        description="Background color for the cards."
+    )
+    text_primary: str = Field(
+        default="#111827", 
+        description="Dark color for main text."
+    )
+    accent_color: str = Field(
+        default="#000000", 
+        description="Accent color (Black or a bold color like Royal Blue)."
+    )   
+class GenerateRetroGameTeamSlideV3Input(BaseModel):
+    """Input schema for generate_retro_game_team_slide_v3."""
+    main_title: str = Field(
+        default="PLAYER SELECT", 
+        description="Main title in 8-bit style."
+    )
+    subtitle: str = Field(
+        default="CHOOSE YOUR HERO TO START", 
+        description="Subtitle prompting selection."
+    )
+    members: List[Dict[str, str]] = Field(
+        default=[
+            {"name": "Alex 'Code'", "role": "Dev", "level": "LVL 99", "class": "Wizard", "image": "https://images.unsplash.com/photo-1542751371-adc38448a05e?q=80&w=1000&auto=format&fit=crop", "color": "#00FF41"},
+            {"name": "Sarah 'Art'", "role": "Artist", "level": "LVL 85", "class": "Mage", "image": "https://images.unsplash.com/photo-1573497019940-1c28c88b4f3e?q=80&w=1000&auto=format&fit=crop", "color": "#FF007F"},
+            {"name": "Max 'Strat'", "role": "Lead", "level": "LVL 90", "class": "Knight", "image": "https://images.unsplash.com/photo-1560250097-0b93528c311a?q=80&w=1000&auto=format&fit=crop", "color": "#00FFFF"},
+            {"name": "Leo 'Test'", "role": "QA", "level": "LVL 88", "class": "Rogue", "image": "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?q=80&w=1000&auto=format&fit=crop", "color": "#FFFF00"}
+        ],
+        description="List of 4 members."
+    )
+    bg_color: str = Field(default="#181026", description="Background color.")
+    frame_color: str = Field(default="#FFFFFF", description="Main text/border color.")
 # === SLIDE CẢM ƠN CLASSES ===
 
 class GenerateThankYouSlide3Input(BaseModel):
@@ -2052,6 +2303,54 @@ TEAM_TOOLS = [
     name="generate_team_list_slide",
     description="Generates a team member list slide with a classroom/blackboard theme. Features columns for teams, dotted name boxes, wooden floor, and chalkboard decorations. Ideal for group introductions.",
     args_schema=GenerateTeamListSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_team_intro_slide,
+    name="generate_team_intro_slide",
+    description="Generates a creative team introduction slide with a dark blue background, a hanging lightbulb graphic (SVG), and circular profile placeholders for 4 members with name boxes.",
+    args_schema=GenerateTeamIntroSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_meet_the_team_slide,
+    name="generate_meet_the_team_slide",
+    description="Generates a minimalist 'Meet the Team' slide with a white background, orange decorative stroke, and 4 rounded image slots.",
+    args_schema=GenerateMeetTheTeamInput
+    ),
+    StructuredTool.from_function(
+    func=generate_team_intro_slide1,
+    name="generate_team_intro_slide1",
+    description="Generates a creative team introduction slide with a dark blue background, a hanging lightbulb graphic (SVG), and circular profile placeholders for 4 members with name boxes.",
+    args_schema=GenerateTeamIntroSlide1Input
+    ),
+    StructuredTool.from_function(
+    func=generate_cute_group_intro_slide,
+    name="generate_cute_group_intro_slide",
+    description="Generates a cute, handwritten-style team introduction slide suitable for students (High school/University). Features polaroid photo frames, washi tape effects, and pastel colors.",
+    args_schema=GenerateCuteGroupIntroSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_notebook_team_slide,
+    name="generate_notebook_team_slide",
+    description="Generates a creative team introduction slide with a dark blue background, a hanging lightbulb graphic (SVG), and circular profile placeholders for 4 members with name boxes.",
+    args_schema=GenerateNotebookTeamSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_luxury_team_slide,
+    name="generate_luxury_team_slide",
+    description="Generates a high-end, luxury style team introduction slide (Dark Mode). Features serif fonts, gold accents, and black & white imagery. Ideal for executive boards or luxury brands.",
+    args_schema=GenerateLuxuryTeamSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_modern_minimalist_team_slide,
+    name="generate_modern_minimalist_team_slide",
+    description="Generates a modern, minimalist team introduction slide. Features a clean layout with a main headline ending in a dot, subtle card-based member profiles, and a focus on typography.",
+    args_schema=GenerateModernMinimalistTeamSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_retro_game_team_slide_v3,
+    name="generate_retro_game_team_slide_v3",
+    description="Generates a retro game-style team introduction slide. Features 8-bit pixel art design, player cards with stats, and vibrant colors.",
+    args_schema=GenerateRetroGameTeamSlideV3Input
     ),
 ]
 
