@@ -119,7 +119,15 @@ from src.tools.html_tool import (
     generate_thank_you_slide_5, # slide cảm ơn(hien)
     generate_thank_you_slide_6, # slide cảm ơn(hien)
     generate_thank_you_slide_7, # slide cảm ơn(hien)
-
+    generate_modern_contact_slide, # slide cảm ơn (mhung)
+    generate_blue_abstract_thank_you_slide, # slide cảm ơn (mhung)
+    generate_closing_slide, # slide cảm ơn (mhung)
+    generate_minimalist_thank_you_slide, # slide cảm ơn (mhung)
+    generate_minimalist_sage_slide, # slide cảm ơn (mhung)
+    generate_thank_you_so_much_slide, # slide cảm ơn (mhung)
+    generate_brand_collaboration_closing_slide, # slide cảm ơn (mhung)
+    generate_military_thank_you_slide, # slide cảm ơn (mhung)
+    generate_thank_you_farm_slide, # slide cảm ơn (mhung)
 )
 
 # ===========================================================================================
@@ -1463,6 +1471,140 @@ class GenerateThankYouSlide7Input(BaseModel):
     bg_color: str = Field(default="#F5F3F0", description="Background color of the slide. Default: light warm gray (#F5F3F0).")
     text_color: str = Field(default="#7A6350", description="Color of the main text. Default: brown/taupe (#7A6350).")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
+
+class GenerateModernContactSlideInput(BaseModel):
+    """Input schema for generate_modern_contact_slide."""
+    main_title: str = Field(default="Thank You For Attention", description="The central large text (e.g., 'Thank You', 'Contact Us').")
+    company_name: str = Field(default="Thynk Unlimited", description="Name of the company displayed near the logo.")
+    website: str = Field(default="www.reallygreatsite.com", description="Website URL to display.")
+    email: str = Field(default="hello@reallygreatsite.com", description="Contact email address.")
+    phone: str = Field(default="+123-456-7890", description="Contact phone number.")
+    primary_color: str = Field(default="#1E88E5", description="Main accent color (hex code, typically blue) for the geometric shape.")
+    secondary_color: str = Field(default="#1565C0", description="Darker shade (hex code) for gradients/depth.")
+    text_color: str = Field(default="#FFFFFF", description="Color of the main title text on the colored background.")
+    contact_text_color: str = Field(default="#333333", description="Color of the contact details on the white background.")
+    top_image_url: str = Field(default="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop", description="URL for the top-right background image (charts/abstract).")
+    bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop", description="URL for the bottom-right corner image (team/office).")
+    font_family: str = Field(default="'Roboto', sans-serif", description="Font family for all text elements.")
+    show_logo: Optional[bool] = Field(default=True, description="Whether to display the logo placeholder.")
+
+class GenerateBlueAbstractThankYouSlideInput(BaseModel):
+    """Input schema for generate_blue_abstract_thank_you_slide."""
+    main_text: str = Field(default="THANK\nYOU", description="The central text content. Use '\\n' to stack words vertically like the example.")
+    font_family: str = Field(default="'Chewy', cursive", description="Font family. 'Chewy' is best for the marker-style look. Alternatives: 'Fredoka One', 'Sniglet'.")
+    bg_color: str = Field(default="#F9FBFF", description="Background color hex code. Should be white or very pale blue.")
+    text_color: str = Field(default="#4A6FA5", description="Color of the text (Hex code). Default is a denim blue.")
+    blob_color_dark: str = Field(default="#4A6FA5", description="Hex code for the darkest blue blobs (corners).")
+    blob_color_medium: str = Field(default="#75AADB", description="Hex code for the medium blue blobs.")
+    blob_color_light: str = Field(default="#BEE3F8", description="Hex code for the light blue blobs.")
+    blob_color_pale: str = Field(default="#D6EAF8", description="Hex code for the very pale background blobs.")
+    font_size: str = Field(default="12rem", description="Font size with units (e.g., '12rem', '150px').")
+
+class GenerateClosingSlideInput(BaseModel):
+    """Input schema for generate_closing_slide."""
+    main_text: str = Field(default="THANK\nYOU!", description="The large closing text displayed on the right. Use newline characters for multiple lines.")
+    quote_text: str = Field(default="“Efficiency opens up more time to focus on the things that really matter.”", description="A closing thought, quote, or secondary message displayed on the left.")
+    contact_text: str = Field(default="@reallygreatsite", description="Contact information or social media handle.")
+    image_url: str = Field(default="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the feature image which will be masked in a circle.")
+    bg_color: str = Field(default="#FDFBF7", description="Background color of the slide (hex code). Default is a warm off-white.")
+    primary_color: str = Field(default="#263238", description="Color for the text and main graphic elements (hex code). Default is dark slate.")
+    accent_shape_color: str = Field(default="#DDE6ED", description="Color for the decorative background shape behind the image (hex code).")
+    font_family: str = Field(default="'DM Sans', sans-serif", description="Font family for the text.")
+    show_sunburst: Optional[bool] = Field(default=True, description="Whether to show the sunburst/line graphic.")
+    show_dots: Optional[bool] = Field(default=True, description="Whether to show the dot grid pattern.")
+    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
+
+class GenerateMinimalistThankYouSlideInput(BaseModel):
+    """Input schema for generate_minimalist_thank_you_slide."""
+    main_title: str = Field(default="THANK<br>YOU", description="The main large text centered on the slide. Use <br> for line breaks. Default: 'THANK<br>YOU'.")
+    company_name: str = Field(default="Timmerman Industries", description="Vertical text displayed on the left side. Default: 'Timmerman Industries'.")
+    date_text: str = Field(default="02 May, 2024", description="Date or footer text displayed at the bottom right. Default: '02 May, 2024'.")
+    primary_color: str = Field(default="#59664D", description="Main accent color for text and decorations (Hex code). Default: Olive Green (#59664D).")
+    secondary_color: str = Field(default="#E8E8E8", description="Color for the background geometric blocks (Hex code). Default: Light Gray (#E8E8E8).")
+    bg_color: str = Field(default="#FFFFFF", description="Background color of the slide (Hex code). Default: White.")
+    font_family: str = Field(default="'DM Sans', 'Arial', sans-serif", description="Font family for text. Default: DM Sans.")
+    show_shapes: Optional[bool] = Field(default=True, description="Whether to show the decorative corner rectangles. Default: True.")
+    custom_css: str = Field(default="", description="Additional custom CSS to append to the style block.")
+
+class GenerateMinimalistSageSlideInput(BaseModel):
+    """Input schema for generate_minimalist_sage_slide."""
+    main_text: str = Field(default="THANK YOU", description="The central, largest text on the slide. Default: 'THANK YOU'.")
+    top_text: str = Field(default="Timmerman Industries", description="Small text displayed at the top center. Default: 'Timmerman Industries'.")
+    bottom_text: str = Field(default="02 May, 2024", description="Small text displayed at the bottom center. Default: '02 May, 2024'.")
+    bg_color: str = Field(default="#F7F9F9", description="The background color of the slide (Hex code). Default: Off-white.")
+    accent_color: str = Field(default="#FFDAC1", description="Color for the glowing accents/orbs (Hex code). Default: Pastel Peach.")
+    shape_color: str = Field(default="#E0E7E5", description="Color for the large geometric curved shapes (Hex code). Default: Sage Green.")
+    text_color: str = Field(default="#1A2F28", description="Color of the text elements (Hex code). Default: Dark Green.")
+    font_family: str = Field(default="'Montserrat', sans-serif", description="Font family to use.")
+    main_font_size: str = Field(default="8rem", description="Font size of the main central text.")
+    show_glow_effects: bool = Field(default=True, description="Whether to render the soft blurred gradient orbs.")
+
+class GenerateThankYouSoMuchSlideInput(BaseModel):
+    """Input schema for generate_thank_you_so_much_slide."""
+    main_text: str = Field(default="Thank You", description="The primary large text displayed (Bold weight).")
+    sub_text: str = Field(default="So Much", description="The secondary large text displayed below the main text (Light/Thin weight).")
+    presenter_label: str = Field(default="Presented by :", description="Label text above the presenter's name.")
+    presenter_name: str = Field(default="Cahaya Dewi", description="Name of the presenter displayed in the bottom left.")
+    organization_name: str = Field(default="Larana University", description="Name of the university or organization shown in the header.")
+    phone_number: str = Field(default="+123-456-7890", description="Contact phone number.")
+    website: str = Field(default="www.reallygreatsite.com", description="Contact website URL.")
+    email: str = Field(default="hello@reallygreatsite.com", description="Contact email address.")
+    bg_color: str = Field(default="#F9F7F2", description="Primary background color (hex code). Default is a light cream/beige.")
+    text_color: str = Field(default="#5A6B6D", description="Primary text color (hex code). Default is a slate grey.")
+    accent_color: str = Field(default="#5A6B6D", description="Color for icons and graphical elements.")
+    font_family: str = Field(default="'Inter', sans-serif", description="Font family for the slide text.")
+    show_corner_accent: Optional[bool] = Field(default=True, description="Whether to show the decorative geometric arrow in the bottom left corner.")
+
+class GenerateBrandCollaborationClosingSlideInput(BaseModel):
+    """Input schema for generate_brand_collaboration_closing_slide."""
+    main_title: str = Field(default="Thank you", description="The large central title text. Default: 'Thank you'.")
+    message_text: str = Field(
+        default="THANK YOU FOR TAKING THE TIME TO VIEW THIS PRESENTATION. I APPRECIATE YOUR INTEREST AND CONSIDERATION, AND I'M EXCITED ABOUT THE POSSIBILITY OF WORKING TOGETHER.", 
+        description="The uppercase body paragraph below the title."
+    )
+    signature_text: str = Field(default="Looking forward to connecting soon!", description="The handwritten-style text at the bottom center.")
+    brand_header: str = Field(default="BRAND COLLABORATION", description="Small uppercase text in the top left corner.")
+    website_url: str = Field(default="WWW.REALLYGREATSITE.COM", description="Small uppercase text in the top right corner.")
+    prepared_by: str = Field(default="PREPARED BY:<br>OLIVIA WILSON", description="Text for the bottom left corner (supports <br> for line breaks).")
+    date_text: str = Field(default="DATE:<br>01\\06\\2030", description="Text for the bottom right corner (supports <br> for line breaks).")
+    primary_color: str = Field(default="#1D4E89", description="The main color for text (Hex code). Default: Deep Blue.")
+    bg_color: str = Field(default="#F5F2EB", description="The background color (Hex code). Default: Light Paper Beige.")
+    left_image_url: str = Field(
+        default="https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1740&auto=format&fit=crop", 
+        description="URL for the large vertical image on the left."
+    )
+    right_image_url: str = Field(
+        default="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1740&auto=format&fit=crop", 
+        description="URL for the smaller image on the right."
+    )
+    title_font: str = Field(default="'Playfair Display', serif", description="Font family for the main title.")
+    body_font: str = Field(default="'DM Sans', sans-serif", description="Font family for body text and headers.")
+    script_font: str = Field(default="'Mrs Saint Delafield', cursive", description="Font family for the signature text.")
+
+class GenerateMilitaryThankYouSlideInput(BaseModel):
+    """Input schema for generate_military_thank_you_slide."""
+    main_text: str = Field(default="THANK YOU", description="The main large text on the slide, typically 'THANK YOU' or a section title.")
+    description: str = Field(default="Contact us for further information.", description="Small descriptive paragraph or contact details displayed below the title.")
+    bg_image_url: str = Field(default="https://images.unsplash.com/photo-1590236141044-bc849495115d?q=80&w=1920", description="URL for the background image showing military personnel or equipment.")
+    primary_color: str = Field(default="#4B5320", description="The primary olive green/military color for the design accents (Hex).")
+    secondary_color: str = Field(default="#556B2F", description="The secondary lighter green or accent color (Hex).")
+    text_color: str = Field(default="#000000", description="The color of the typography (Hex).")
+    font_family: str = Field(default="'Arial Black', sans-serif", description="The font family for the slide.")
+    overlay_opacity: float = Field(default=0.2, description="The opacity of the white overlay on the background image (0.0 to 1.0).")
+    accent_width: str = Field(default="450px", description="The width of the left-side diagonal colored block.")
+
+class GenerateThankYouFarmSlideInput(BaseModel):
+    """Input schema for generate_thank_you_farm_slide."""
+    main_text: str = Field(default="THANK YOU", description="Primary text, usually 'THANK YOU'.")
+    sub_text: str = Field(default="For Your Attention", description="Subtext below the main title.")
+    bg_color: str = Field(default="#FDF6D8", description="Sky background color (hex).")
+    text_color: str = Field(default="#8B5A2B", description="Outline and shadow color for main text.")
+    accent_color: str = Field(default="#F39C12", description="Fill color for main text.")
+    font_family: str = Field(default="'Short Stack', cursive, sans-serif", description="Playful font family.")
+    show_animals: Optional[bool] = Field(default=True, description="Toggle chicken and chick illustrations.")
+    show_windmill: Optional[bool] = Field(default=True, description="Toggle windmill illustration.")
+    show_kite: Optional[bool] = Field(default=True, description="Toggle kite illustration.")
+
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
     StructuredTool.from_function(
@@ -1596,7 +1738,8 @@ INTRO_TOOLS = [
         name="generate_title_slide_6",
         description="Generates a playful and whimsical **Title or Introduction Slide** with a cartoon-style design using converter-compatible fixed positioning (1920x1080px). Features a rounded content box (1300x500px) with thick borders, soft pastel gradient background, fluffy white clouds floating at the top, and a cheerful flower character at the bottom-left corner. The design uses bold, friendly typography (68px title, 30px subtitle) with absolute positioning perfect for educational content, children's presentations, fun workshops, creative projects, or any presentation wanting a lighthearted, approachable, and joyful atmosphere that captures attention with its charming and inviting visual style.",
         args_schema=GenerateTitleSlide6Input,
-    )
+    ),
+
 ]
 
 TRANSITION_TOOLS = [
@@ -2063,6 +2206,60 @@ THANK_YOU_TOOLS = [
         name="generate_thank_you_slide_7",
         description="Generates an elegant minimalist 'Thank You' slide. Features a clean, sophisticated design with a large serif font (Playfair Display) for the main text centered on the slide. The slide has a light warm gray background with generous white space, creating a refined and professional look. Perfect for presentations needing a simple, elegant closing that emphasizes beautiful typography without any decorative elements.",
         args_schema=GenerateThankYouSlide7Input
+    ),
+    StructuredTool.from_function(
+        func=generate_modern_contact_slide,
+        name="generate_modern_contact_slide",
+        description="Generates a modern 'Thank You' or Contact slide featuring a large blue geometric overlay, integrated images, and clear contact details.",
+        args_schema=GenerateModernContactSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_blue_abstract_thank_you_slide,
+        name="generate_blue_abstract_thank_you_slide",
+        description="Generates a playful 'Thank You' or closing slide featuring organic, fluid blue blob shapes in the corners and large hand-drawn style typography.",
+        args_schema=GenerateBlueAbstractThankYouSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_closing_slide,
+        name="generate_closing_slide",
+        description="Generates a modern, minimalist closing or 'Thank You' slide with asymmetric layout, circular image mask, and geometric decorative elements.",
+        args_schema=GenerateClosingSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_minimalist_thank_you_slide,
+        name="generate_minimalist_thank_you_slide",
+        description="Generates a modern, clean 'Thank You' slide with large centered typography, vertical side text, and geometric decorative blocks.",
+        args_schema=GenerateMinimalistThankYouSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_minimalist_sage_slide,
+        name="generate_minimalist_sage_slide",
+        description="Generates a minimalist, elegant slide with a soft sage green and peach theme, featuring organic curved shapes and glow effects. Best used for 'Thank You', Title, or clean transitional slides.",
+        args_schema=GenerateMinimalistSageSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_so_much_slide,
+        name="generate_thank_you_slide",
+        description="Generates a minimalist 'Thank You' / End slide with contact details, following a clean Blue/Beige aesthetic.",
+        args_schema=GenerateThankYouSoMuchSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_brand_collaboration_closing_slide,
+        name="generate_brand_collaboration_closing_slide",
+        description="Generates a sophisticated closing/thank you slide with an asymmetrical image layout, elegant serif and script typography, and a paper-textured background.",
+        args_schema=GenerateBrandCollaborationClosingSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_military_thank_you_slide,
+        name="generate_military_thank_you_slide",
+        description="Generates a professional military-themed presentation slide with a diagonal split layout, ideal for 'Thank You' or section break slides.",
+        args_schema=GenerateMilitaryThankYouSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_farm_slide,
+        name="generate_thank_you_farm_slide",
+        description="Generates a playful farm-themed 'Thank You' slide with nature elements, windmill, and animals.",
+        args_schema=GenerateThankYouFarmSlideInput
     )
 ]
 
