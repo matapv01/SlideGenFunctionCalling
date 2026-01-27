@@ -20333,3 +20333,1930 @@ def generate_thank_you_slide_7(
 </html>"""
     
     return html_code
+
+
+def generate_modern_contact_slide(
+    main_title="Thank You For Attention",
+    company_name="Thynk Unlimited",
+    website="www.reallygreatsite.com",
+    email="hello@reallygreatsite.com",
+    phone="+123-456-7890",
+    primary_color="#1E88E5",
+    secondary_color="#1565C0",
+    text_color="#FFFFFF",
+    contact_text_color="#333333",
+    top_image_url="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
+    bottom_image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop",
+    font_family="'Roboto', sans-serif",
+    show_logo=True
+):
+    """
+    Generate a modern, geometric style 'Thank You' or Contact slide. 
+    Features a dynamic blue angular overlay, integrated image placeholders, and a clean contact information section.
+
+    :param main_title: The central large text (e.g., 'Thank You', 'Contact Us').
+    :param company_name: Name of the company displayed near the logo.
+    :param website: Website URL to display.
+    :param email: Contact email address.
+    :param phone: Contact phone number.
+    :param primary_color: Main accent color (typically blue) for the geometric shape.
+    :param secondary_color: Darker shade for gradients/depth.
+    :param text_color: Color of the main title text on the colored background.
+    :param contact_text_color: Color of the contact details on the white background.
+    :param top_image_url: URL for the top-right background image (charts/abstract).
+    :param bottom_image_url: URL for the bottom-right corner image (team/office).
+    :param font_family: Font family for all text elements.
+    :param show_logo: Whether to display the logo placeholder.
+    :return: A string containing the HTML code for the slide.
+    """
+
+    # SVG Icons
+    logo_svg = f"""
+    <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 45H45" stroke="{primary_color}" stroke-width="4" stroke-linecap="round"/>
+        <rect x="10" y="25" width="8" height="15" fill="{primary_color}"/>
+        <rect x="22" y="15" width="8" height="25" fill="{secondary_color}"/>
+        <rect x="34" y="5" width="8" height="35" fill="{primary_color}"/>
+    </svg>
+    """
+
+    globe_icon = f"""
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="{primary_color}" stroke-width="2"/>
+        <path d="M2 12H22" stroke="{primary_color}" stroke-width="2"/>
+        <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2V2Z" stroke="{primary_color}" stroke-width="2"/>
+    </svg>
+    """
+
+    email_icon = f"""
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="{primary_color}" stroke-width="2"/>
+        <path d="M3 7L12 13L21 7" stroke="{primary_color}" stroke-width="2"/>
+    </svg>
+    """
+
+    phone_icon = f"""
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 16.92V19.92C22.0011 20.1986 21.9441 20.4742 21.8325 20.7294C21.7209 20.9846 21.5573 21.2137 21.3521 21.4019C21.1468 21.5901 20.9046 21.7331 20.6412 21.8215C20.3778 21.9099 20.0991 21.9416 19.823 21.914C16.7428 21.5796 13.7828 20.5252 11.16 18.81C8.68233 17.2023 6.64333 15.0933 5.12 12.59C3.5855 9.94723 2.66249 6.97341 2.44 3.89C2.41979 3.61483 2.45887 3.33777 2.55469 3.07693C2.6505 2.8161 2.8009 2.57745 2.99608 2.3768C3.19126 2.17614 3.42681 2.01809 3.68749 1.91295C3.94817 1.80781 4.22817 1.75803 4.51 1.767H7.51C8.00645 1.76229 8.48628 1.94162 8.86178 2.27218C9.23727 2.60274 9.48208 3.06129 9.552 3.564C9.67843 4.52055 9.91244 5.45942 10.25 6.36C10.3546 6.63854 10.3756 6.94273 10.3106 7.23277C10.2456 7.52281 10.0975 7.78508 9.885 7.985L8.615 9.255C10.0384 11.7578 12.1222 13.8416 14.625 15.265L15.895 13.995C16.1054 13.7915 16.3707 13.6508 16.6586 13.5898C16.9465 13.5288 17.2447 13.5501 17.518 13.651C18.4238 13.9902 19.3683 14.2248 20.33 14.351C20.8407 14.4239 21.3045 14.6789 21.6335 15.0678C21.9626 15.4566 22.1341 15.9525 22.115 16.455V16.92Z" stroke="{primary_color}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>{main_title}</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+            body, html {{
+                height: 1080px;
+                width: 1920px;
+                font-family: {font_family};
+                overflow: hidden;
+                background-color: #FFFFFF;
+            }}
+            
+            .outer-wrapper {{
+                padding: 0;
+                box-sizing: border-box;
+                width: 1920px;
+                height: 1080px;
+                overflow: hidden;
+            }}
+
+            /* Content wrapper for scaling */
+            .content-wrapper {{
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                width: 1920px;
+                height: 1080px;
+                overflow: hidden;
+                background: #FFFFFF;
+            }}
+            
+            .slide-container {{
+                width: 1920px;
+                height: 1080px;
+                position: relative;
+                background-color: #FFFFFF;
+            }}
+
+            /* --- Header / Logo Section --- */
+            .header {{
+                position: absolute;
+                top: 50px;
+                left: 80px;
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                z-index: 20;
+            }}
+
+            .company-name {{
+                font-size: 28px;
+                font-weight: 500;
+                color: #000;
+                letter-spacing: 1px;
+            }}
+
+            /* --- Background Images --- */
+            .top-right-image {{
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 65%;
+                height: 60%;
+                z-index: 1;
+                overflow: hidden;
+            }}
+
+            .top-right-image img {{
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                /* Mask to create the diagonal feel for the image underneath */
+                clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
+            }}
+
+            .bottom-right-image {{
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 45%;
+                height: 50%;
+                z-index: 2;
+            }}
+
+            .bottom-right-image img {{
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                /* Triangle cut for bottom corner */
+                clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
+            }}
+
+            /* --- Main Geometric Blue Overlay --- */
+            .blue-overlay {{
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                pointer-events: none; /* Let clicks pass through if needed */
+            }}
+
+            .blue-shape {{
+                position: absolute;
+                top: 20%;
+                left: 0;
+                width: 110%; /* Extend slightly to ensure coverage */
+                height: 45%;
+                background: linear-gradient(90deg, {primary_color} 0%, {secondary_color} 100%);
+                /* Complex polygon to match the sample slide: starts flat, goes up, cuts down sharp */
+                clip-path: polygon(
+                    0% 20%,     /* Top Left Start */
+                    35% 0%,     /* Angle Up */
+                    100% 35%,   /* Top Right */
+                    100% 80%,   /* Bottom Right */
+                    75% 100%,   /* Angle Down */
+                    0% 75%      /* Bottom Left */
+                );
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                padding-left: 80px;
+            }}
+
+            .main-title {{
+                font-size: 100px;
+                font-weight: 900;
+                color: {text_color};
+                text-transform: capitalize;
+                line-height: 1.1;
+                margin-top: -20px; /* Slight optical adjustment */
+                text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                width: 70%;
+            }}
+
+            /* --- Contact Section --- */
+            .contact-section {{
+                position: absolute;
+                bottom: 80px;
+                left: 80px;
+                display: flex;
+                flex-direction: column;
+                gap: 40px;
+                z-index: 20;
+            }}
+
+            .contact-item {{
+                display: flex;
+                align-items: center;
+                gap: 25px;
+            }}
+
+            .contact-text {{
+                font-size: 32px;
+                color: {contact_text_color};
+                font-weight: 500;
+            }}
+            
+            /* Decorative line under contacts */
+            .contact-line {{
+                height: 2px;
+                width: 500px;
+                background-color: {primary_color};
+                margin-top: -10px;
+                margin-left: 65px; /* Align with text */
+                opacity: 0.7;
+            }}
+
+        </style>
+    </head>
+    <body>
+        <div class="outer-wrapper">
+            <div class="content-wrapper">
+                <div class="slide-container">
+                    
+                    <div class="header">
+                        {logo_svg if show_logo else ""}
+                        <div class="company-name">{company_name}</div>
+                    </div>
+
+                    <div class="top-right-image">
+                        <img src="{top_image_url}" alt="Business Analysis">
+                    </div>
+                    
+                    <div class="blue-overlay">
+                        <div class="blue-shape">
+                            <h1 class="main-title">{main_title}</h1>
+                        </div>
+                    </div>
+
+                    <div class="bottom-right-image">
+                        <img src="{bottom_image_url}" alt="Teamwork">
+                    </div>
+
+                    <div class="contact-section">
+                        <div class="contact-item">
+                            {globe_icon}
+                            <div class="contact-text">{website}</div>
+                        </div>
+                        <div class="contact-line"></div>
+                        
+                        <div class="contact-item">
+                            {email_icon}
+                            <div class="contact-text">{email}</div>
+                        </div>
+                        <div class="contact-line"></div>
+                        
+                        <div class="contact-item">
+                            {phone_icon}
+                            <div class="contact-text">{phone}</div>
+                        </div>
+                        <div class="contact-line"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    
+    return html_code
+
+
+def generate_closing_slide(
+    main_text="THANK\nYOU!",
+    quote_text="“Efficiency opens up more time to focus on the things that really matter.”",
+    contact_text="@reallygreatsite",
+    image_url="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
+    bg_color="#FDFBF7",
+    primary_color="#263238",
+    accent_shape_color="#DDE6ED",
+    font_family="'DM Sans', sans-serif",
+    show_sunburst=True,
+    show_dots=True,
+    custom_css=""
+):
+    """
+    Generate a modern, minimalist closing slide with a circular image mask, geometric accents, and bold typography.
+    Suitable for "Thank You" slides, contact pages, or final thoughts.
+
+    :param main_text: The large closing text (e.g., "THANK YOU!"). Supports newline characters.
+    :param quote_text: A closing thought, quote, or secondary message displayed on the left.
+    :param contact_text: Contact information or social media handle (e.g., "@username").
+    :param image_url: URL for the feature image which will be masked in a circle.
+    :param bg_color: Background color of the slide (hex code).
+    :param primary_color: Color for the text and main graphic elements (hex code).
+    :param accent_shape_color: Color for the decorative background shape behind the image (hex code).
+    :param font_family: Font family for the text.
+    :param show_sunburst: Whether to show the sunburst/line graphic.
+    :param show_dots: Whether to show the dot grid pattern.
+    :param custom_css: Additional CSS to override styles.
+    :return: A string containing the HTML code for the slide.
+    """
+
+    # SVG Definitions
+    sunburst_svg = f"""
+    <svg class="sunburst-icon" viewBox="0 0 100 100" fill="none" stroke="{primary_color}" stroke-width="2" stroke-linecap="round">
+        <line x1="50" y1="10" x2="50" y2="30" />
+        <line x1="50" y1="70" x2="50" y2="90" />
+        <line x1="90" y1="50" x2="70" y2="50" />
+        <line x1="30" y1="50" x2="10" y2="50" />
+        <line x1="78.28" y1="21.72" x2="64.14" y2="35.86" />
+        <line x1="35.86" y1="64.14" x2="21.72" y2="78.28" />
+        <line x1="78.28" y1="78.28" x2="64.14" y2="64.14" />
+        <line x1="35.86" y1="35.86" x2="21.72" y2="21.72" />
+        <circle cx="50" cy="50" r="8" fill="none" />
+    </svg>
+    """ if show_sunburst else ""
+
+    # Generate Dot Pattern SVG
+    dots_content = ""
+    for r in range(4):
+        for c in range(10):
+            dots_content += f'<circle cx="{c * 15 + 5}" cy="{r * 15 + 5}" r="2.5" fill="{accent_shape_color}" />'
+    
+    dots_svg = f"""
+    <svg class="dots-pattern" viewBox="0 0 150 60" xmlns="http://www.w3.org/2000/svg">
+        {dots_content}
+    </svg>
+    """ if show_dots else ""
+
+    # Search Icon SVG for contact
+    search_icon_svg = f"""
+    <svg class="search-icon" viewBox="0 0 24 24" fill="{primary_color}" xmlns="http://www.w3.org/2000/svg">
+         <path d="M11 19C15.4183 19 19 15.4183 19 11C19 6.58172 15.4183 3 11 3C6.58172 3 3 6.58172 3 11C3 15.4183 6.58172 19 11 19Z" stroke="white" stroke-width="2" fill="{primary_color}"/>
+         <path d="M21 21L16.65 16.65" stroke="{primary_color}" stroke-width="2" stroke-linecap="round"/>
+    </svg>
+    """
+
+    formatted_main_text = main_text.replace('\n', '<br>')
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Closing Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+            body, html {{
+                height: 1080px;
+                width: 1920px;
+                font-family: {font_family};
+                overflow: hidden;
+                background-color: {bg_color};
+                color: {primary_color};
+            }}
+            
+            body {{
+                display: grid;
+                grid-template-columns: 45% 55%;
+                padding: 100px;
+                position: relative;
+            }}
+
+            /* --- Left Column --- */
+            .left-col {{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                position: relative;
+                padding-right: 50px;
+            }}
+
+            .quote-block {{
+                font-size: 2.8rem;
+                font-weight: 700;
+                line-height: 1.3;
+                margin-bottom: 80px;
+                color: {primary_color};
+                z-index: 10;
+            }}
+
+            .image-composition {{
+                position: relative;
+                width: 500px;
+                height: 500px;
+            }}
+
+            .accent-blob {{
+                position: absolute;
+                bottom: -40px;
+                left: -80px;
+                width: 450px;
+                height: 450px;
+                background-color: {accent_shape_color};
+                border-top-right-radius: 50%;
+                border-bottom-right-radius: 20%;
+                border-top-left-radius: 10%;
+                z-index: 1;
+            }}
+
+            .image-circle {{
+                width: 400px;
+                height: 400px;
+                border-radius: 50%;
+                overflow: hidden;
+                position: absolute;
+                top: 0;
+                left: 40px;
+                z-index: 2;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }}
+
+            .image-circle img {{
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }}
+
+            /* --- Right Column --- */
+            .right-col {{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                position: relative;
+                padding-left: 50px;
+            }}
+
+            .decorations-top {{
+                display: flex;
+                align-items: center;
+                gap: 40px;
+                margin-bottom: 40px;
+            }}
+
+            .sunburst-icon {{
+                width: 120px;
+                height: 120px;
+                opacity: 0.6;
+            }}
+
+            .dots-pattern {{
+                width: 200px;
+                height: 80px;
+                opacity: 0.8;
+            }}
+
+            .contact-info {{
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                font-size: 1.5rem;
+                font-weight: 500;
+                color: #7f8c8d;
+                margin-bottom: 20px;
+            }}
+
+            .search-icon {{
+                width: 30px;
+                height: 30px;
+            }}
+
+            .main-title {{
+                font-size: 11rem;
+                line-height: 0.9;
+                font-weight: 800;
+                text-transform: uppercase;
+                color: {primary_color};
+                letter-spacing: -2px;
+                margin-bottom: 30px;
+            }}
+
+            .title-underline {{
+                width: 100%;
+                max-width: 600px;
+                height: 12px;
+                background-color: {primary_color};
+                border-radius: 6px;
+            }}
+
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        <div class="left-col">
+            <div class="quote-block">
+                {quote_text}
+            </div>
+            
+            <div class="image-composition">
+                <div class="accent-blob"></div>
+                <div class="image-circle">
+                    <img src="{image_url}" alt="Smart Living" />
+                </div>
+            </div>
+        </div>
+
+        <div class="right-col">
+            <div class="decorations-top">
+                {sunburst_svg}
+                {dots_svg}
+            </div>
+
+            <div class="contact-info">
+                {search_icon_svg}
+                <span>{contact_text}</span>
+            </div>
+
+            <h1 class="main-title">{formatted_main_text}</h1>
+            <div class="title-underline"></div>
+        </div>
+    </body>
+    </html>"""
+
+    return html_code
+
+def generate_minimalist_thank_you_slide(
+    main_title="THANK<br>YOU",
+    company_name="Timmerman Industries",
+    date_text="02 May, 2024",
+    primary_color="#59664D",
+    secondary_color="#E8E8E8",
+    bg_color="#FFFFFF",
+    font_family="'Arial', sans-serif",
+    show_shapes=True,
+    custom_css=""
+):
+    """
+    Generate a modern, minimalist 'Thank You' slide with geometric accents and vertical typography.
+    Designed for 1920x1080 resolution.
+
+    :param main_title: The main text content (supports <br> for line breaks). Default is stacked "THANK YOU".
+    :param company_name: Text displayed vertically on the left side.
+    :param date_text: Date or footer text displayed on the bottom right.
+    :param primary_color: Main accent color for text and small decorations (Hex code).
+    :param secondary_color: Color for the large geometric background blocks (Hex code).
+    :param bg_color: Background color of the slide (Hex code).
+    :param font_family: Font family for all text elements.
+    :param show_shapes: Whether to show the geometric background blocks.
+    :param custom_css: Additional custom CSS to be included.
+    :return: A string containing the HTML code for the slide.
+    """
+
+    # SVG Definitions for Geometric Shapes
+    
+    # 1. Top Right Rectangle (Gray Block)
+    rect_top_right_svg = f"""
+    <div class="shape-rect-top-right">
+        <svg width="500" height="300" viewBox="0 0 500 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="500" height="300" fill="{secondary_color}"/>
+        </svg>
+    </div>
+    """ if show_shapes else ""
+
+    # 2. Bottom Left Rectangle (Gray Block)
+    rect_bottom_left_svg = f"""
+    <div class="shape-rect-bottom-left">
+        <svg width="500" height="300" viewBox="0 0 500 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="500" height="300" fill="{secondary_color}"/>
+        </svg>
+    </div>
+    """ if show_shapes else ""
+
+    # 3. Top Left Circle (Green Dot)
+    circle_dot_svg = f"""
+    <div class="shape-circle-dot">
+        <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="30" cy="30" r="25" fill="{secondary_color if not show_shapes else '#C2C5AA'}"/> 
+            <circle cx="30" cy="30" r="25" fill="{primary_color}" fill-opacity="0.4"/>
+        </svg>
+    </div>
+    """
+
+    # 4. Bottom Right Dotted Line
+    dotted_line_svg = f"""
+    <div class="shape-dotted-line">
+        <svg width="20" height="250" viewBox="0 0 20 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="10" y1="0" x2="10" y2="250" stroke="{secondary_color}" stroke-width="8" stroke-dasharray="15 15" stroke-linecap="square"/>
+        </svg>
+    </div>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Thank You Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+            body, html {{
+                height: 1080px;
+                width: 1920px;
+                font-family: {font_family};
+                background-color: {bg_color};
+                overflow: hidden;
+                color: {primary_color};
+            }}
+            
+            body {{
+                position: relative;
+            }}
+
+            /* --- Geometric Shapes Positioning --- */
+            .shape-rect-top-right {{
+                position: absolute;
+                top: 0;
+                right: 0;
+                z-index: 1;
+            }}
+
+            .shape-rect-bottom-left {{
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                z-index: 1;
+            }}
+
+            .shape-circle-dot {{
+                position: absolute;
+                top: 80px;
+                left: 80px;
+                z-index: 2;
+            }}
+
+            .shape-dotted-line {{
+                position: absolute;
+                bottom: 80px;
+                right: 280px; /* Positioned to the left of the date */
+                z-index: 2;
+            }}
+
+            /* --- Text Content --- */
+            .main-title {{
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 13rem; /* Huge size matching the image */
+                font-weight: 700;
+                text-transform: uppercase;
+                line-height: 0.9;
+                text-align: center;
+                z-index: 10;
+                letter-spacing: -2px;
+            }}
+
+            .vertical-text {{
+                position: absolute;
+                top: 350px; /* Adjusted to center vertically roughly */
+                left: 100px;
+                font-size: 1.8rem;
+                font-weight: 400;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                transform: rotate(-90deg);
+                transform-origin: left top;
+                white-space: nowrap;
+                z-index: 10;
+                color: {primary_color};
+                opacity: 0.9;
+            }}
+
+            .date-text {{
+                position: absolute;
+                bottom: 80px;
+                right: 80px;
+                font-size: 2rem;
+                font-weight: 400;
+                text-align: right;
+                z-index: 10;
+                color: {primary_color};
+            }}
+
+            {custom_css}
+        </style>
+    </head>
+    <body>
+        {rect_top_right_svg}
+        {rect_bottom_left_svg}
+        {circle_dot_svg}
+        {dotted_line_svg}
+
+        <div class="vertical-text">{company_name}</div>
+        
+        <h1 class="main-title">{main_title}</h1>
+        
+        <div class="date-text">{date_text}</div>
+    </body>
+    </html>"""
+
+    return html_code
+
+def generate_minimalist_sage_slide(
+    main_text="THANK YOU",
+    top_text="Timmerman Industries",
+    bottom_text="02 May, 2024",
+    bg_color="#F7F9F9",
+    accent_color="#FFDAC1",
+    shape_color="#E0E7E5",
+    text_color="#1A2F28",
+    font_family="'Montserrat', sans-serif",
+    show_glow_effects=True
+):
+    """
+    Generates a minimalist slide with a soft sage green theme, featuring organic curved shapes 
+    and soft glowing accents. Suitable for 'Thank You' slides, Title slides, or Section breaks.
+
+    :param main_text: The central, largest text on the slide (e.g., "THANK YOU").
+    :param top_text: Small text displayed at the top center (e.g., Company Name).
+    :param bottom_text: Small text displayed at the bottom center (e.g., Date or Website).
+    :param bg_color: The background color of the slide (Hex code).
+    :param accent_color: Color for the glowing accents/orbs (Hex code, usually peach/orange).
+    :param shape_color: Color for the large geometric curved shapes (Hex code, usually sage green).
+    :param text_color: Color of the text elements (Hex code).
+    :param font_family: Font family to use.
+    :param show_glow_effects: Whether to render the soft blurred gradient orbs.
+    :return: A string containing the HTML code for the slide.
+    """
+
+    # SVG Definitions for gradients and shapes
+    # Creating a soft radial gradient for the "glow" effect
+    svg_defs = f"""
+    <defs>
+        <filter id="blurFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation="30" />
+        </filter>
+        <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%" fx="50%" fy="50%">
+            <stop offset="0%" stop-color="{accent_color}" stop-opacity="0.8"/>
+            <stop offset="100%" stop-color="{accent_color}" stop-opacity="0"/>
+        </radialGradient>
+    </defs>
+    """
+
+    # Top Left Corner Shape (Quarter circle/blob)
+    top_left_svg = f"""
+    <svg class="shape-corner-tl" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,0 L300,0 A300,300 0 0,1 0,300 Z" fill="{shape_color}" opacity="0.5"/>
+    </svg>
+    """
+
+    # Top Right Corner Shape
+    top_right_svg = f"""
+    <svg class="shape-corner-tr" viewBox="0 0 300 300" xmlns="http://www.w3.org/2000/svg">
+        <path d="M300,0 L0,0 A300,300 0 0,0 300,300 Z" fill="{shape_color}" opacity="0.5"/>
+    </svg>
+    """
+
+    # Side Semi-circles (Left and Right)
+    side_shapes_svg = f"""
+    <svg class="shape-side-left" viewBox="0 0 150 400" xmlns="http://www.w3.org/2000/svg">
+        <path d="M0,0 A200,400 0 0,1 0,400 Z" fill="{shape_color}" transform="translate(0,0) scale(-1,1) translate(-150,0)"/> 
+        <ellipse cx="0" cy="200" rx="150" ry="300" fill="{shape_color}" opacity="0.6"/>
+    </svg>
+    <svg class="shape-side-right" viewBox="0 0 150 400" xmlns="http://www.w3.org/2000/svg">
+        <ellipse cx="150" cy="200" rx="150" ry="300" fill="{shape_color}" opacity="0.6"/>
+    </svg>
+    """
+
+    # Bottom Arch/Hill
+    bottom_arch_svg = f"""
+    <svg class="shape-bottom" viewBox="0 0 1920 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
+        <path d="M0,300 L0,150 Q960,-100 1920,150 L1920,300 Z" fill="{shape_color}" opacity="0.4"/>
+    </svg>
+    """
+
+    # Glow/Sparkle effects (Peach blobs)
+    glow_effects_html = ""
+    if show_glow_effects:
+        glow_effects_html = f"""
+        <svg class="glow-tl" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            {svg_defs}
+            <circle cx="100" cy="100" r="80" fill="url(#glowGradient)" filter="url(#blurFilter)"/>
+        </svg>
+        <svg class="glow-tr" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="100" cy="100" r="80" fill="url(#glowGradient)" filter="url(#blurFilter)"/>
+        </svg>
+        <svg class="sparkle-top" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+             <path d="M50,0 C55,40 60,45 100,50 C60,55 55,60 50,100 C45,60 40,55 0,50 C40,45 45,40 50,0 Z" fill="{accent_color}" opacity="0.8"/>
+        </svg>
+        <svg class="glow-bottom" viewBox="0 0 600 300" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="300" cy="300" rx="300" ry="150" fill="url(#glowGradient)" filter="url(#blurFilter)" opacity="0.7"/>
+        </svg>
+        """
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Minimalist Sage Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            
+            html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+            body, html {{
+                height: 1080px;
+                width: 1920px;
+                font-family: {font_family};
+                background-color: {bg_color};
+                color: {text_color};
+                overflow: hidden;
+            }}
+
+            body {{
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                align-items: center;
+            }}
+
+            /* Typography */
+            .top-text {{
+                position: absolute;
+                top: 80px;
+                font-size: 1.5rem;
+                letter-spacing: 0.1em;
+                font-weight: 500;
+                color: {text_color};
+                opacity: 0.8;
+                z-index: 20;
+            }}
+
+            .main-text {{
+                font-size: 8rem;
+                font-weight: 800;
+                text-transform: uppercase;
+                letter-spacing: -0.02em;
+                color: {text_color};
+                z-index: 20;
+                text-align: center;
+                line-height: 1.1;
+            }}
+
+            .bottom-text {{
+                position: absolute;
+                bottom: 80px;
+                font-size: 1.25rem;
+                letter-spacing: 0.05em;
+                color: {text_color};
+                opacity: 0.7;
+                z-index: 20;
+                font-weight: 500;
+            }}
+
+            /* Shapes Positioning */
+            .shape-corner-tl {{
+                position: absolute;
+                top: -50px;
+                left: -50px;
+                width: 300px;
+                height: 300px;
+                z-index: 1;
+            }}
+
+            .shape-corner-tr {{
+                position: absolute;
+                top: -50px;
+                right: -50px;
+                width: 300px;
+                height: 300px;
+                z-index: 1;
+            }}
+
+            .shape-side-left {{
+                position: absolute;
+                top: 50%;
+                left: 0;
+                transform: translateY(-50%);
+                width: 150px;
+                height: 400px;
+                z-index: 1;
+            }}
+
+            .shape-side-right {{
+                position: absolute;
+                top: 50%;
+                right: 0;
+                transform: translateY(-50%);
+                width: 150px;
+                height: 400px;
+                z-index: 1;
+            }}
+
+            .shape-bottom {{
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 100%;
+                height: 400px;
+                z-index: 1;
+            }}
+
+            /* Glow & Sparkle Positioning */
+            .glow-tl {{
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 200px;
+                height: 200px;
+                z-index: 2;
+            }}
+
+            .glow-tr {{
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 200px;
+                height: 200px;
+                z-index: 2;
+            }}
+            
+            .sparkle-top {{
+                position: absolute;
+                top: 150px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 60px;
+                height: 60px;
+                z-index: 5;
+            }}
+            
+            .sparkle-top-right {{
+                position: absolute;
+                top: 150px;
+                right: 300px;
+                width: 40px;
+                height: 40px;
+                z-index: 5;
+            }}
+
+            .glow-bottom {{
+                position: absolute;
+                bottom: 0;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 800px;
+                height: 400px;
+                z-index: 0;
+                pointer-events: none;
+            }}
+
+        </style>
+    </head>
+    <body>
+        {top_left_svg}
+        {top_right_svg}
+        {side_shapes_svg}
+        {bottom_arch_svg}
+        {glow_effects_html}
+        
+        <svg class="sparkle-top-right" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50,0 C55,40 60,45 100,50 C60,55 55,60 50,100 C45,60 40,55 0,50 C40,45 45,40 50,0 Z" fill="{accent_color}" opacity="0.6"/>
+        </svg>
+
+        <div class="top-text">{top_text}</div>
+        <div class="main-text">{main_text}</div>
+        <div class="bottom-text">{bottom_text}</div>
+    </body>
+    </html>"""
+
+    return html_code
+
+def generate_thank_you_so_much_slide(
+    main_text="Thank You",
+    sub_text="So Much",
+    presenter_label="Presented by :",
+    presenter_name="Cahaya Dewi",
+    organization_name="Larana University",
+    phone_number="+123-456-7890",
+    website="www.reallygreatsite.com",
+    email="hello@reallygreatsite.com",
+    bg_color="#F9F7F2",
+    text_color="#5A6B6D",
+    accent_color="#5A6B6D",
+    font_family="'Inter', sans-serif",
+    show_corner_accent=True
+):
+    """
+    Generates a minimalist 'Thank You' slide with large typography, contact details, and subtle geometric background shapes.
+    Designed to match the 'Blue and Beige Modern Minimalist' aesthetic.
+
+    :param main_text: The primary large text (e.g., "Thank You").
+    :param sub_text: The secondary large text, usually thinner weight (e.g., "So Much").
+    :param presenter_label: Label for the presenter section (e.g., "Presented by :").
+    :param presenter_name: Name of the presenter.
+    :param organization_name: Name of the university or organization shown in the top left.
+    :param phone_number: Contact phone number.
+    :param website: Contact website URL.
+    :param email: Contact email address.
+    :param bg_color: Main background color (Off-white/Cream).
+    :param text_color: Main text color (Slate/Grey).
+    :param accent_color: Color for icons and graphical elements.
+    :param font_family: Font family to use.
+    :param show_corner_accent: Whether to show the geometric arrow in the bottom left.
+    :return: A string containing the HTML code for the slide.
+    """
+
+    # SVG Icons Definitions
+    
+    # 1. Logo Icon (Stylized Lotus/Flower)
+    logo_svg = f"""
+    <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 40C20 40 22 30 30 25C35 22 40 20 40 20C40 20 30 18 25 10C22 5 20 0 20 0C20 0 18 10 10 15C5 18 0 20 0 20C0 20 10 22 15 30C18 35 20 40 20 40Z" fill="{text_color}"/>
+        <path d="M20 30C20 30 21 25 25 22.5C27.5 21 30 20 30 20C30 20 25 19 22.5 15C21 12.5 20 10 20 10C20 10 19 15 15 17.5C12.5 19 10 20 10 20C10 20 15 21 17.5 25C19 27.5 20 30 20 30Z" fill="{bg_color}"/>
+    </svg>
+    """
+
+    # 2. Phone Icon
+    phone_svg = f"""
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="{text_color}" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20.01 15.38C18.8 15.38 17.64 15.19 16.55 14.83C16.21 14.71 15.82 14.8 15.56 15.07L13.7 17.42C10.28 15.77 7.78 13.06 6.3 9.91L8.85 7.63C9.07 7.42 9.17 7.08 9.07 6.78C8.75 5.75 8.58 4.67 8.58 3.56C8.58 3.05 8.13 2.6 7.62 2.6H4.07C3.56 2.6 3.12 3.05 3.12 3.56C3.12 13.68 10.74 22 20.01 22C20.48 22 20.89 21.57 20.89 21.05V17.35C20.89 16.83 20.48 16.39 20.01 16.39V15.38Z"/>
+    </svg>
+    """
+
+    # 3. Web/Globe Icon
+    web_svg = f"""
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="{text_color}" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM11 19.93C7.05 19.44 4 16.08 4 12C4 11.38 4.08 10.79 4.21 10.21L9 15V16C9 17.1 9.9 18 11 18V19.93ZM17.9 17.39C17.64 16.58 16.9 16 16 16H15V13C15 12.45 14.55 12 14 12H8V10H10C10.55 10 11 9.55 11 9V7H13C14.1 7 15 6.1 15 5V4.59C17.93 5.78 20 8.65 20 12C20 14.08 19.2 15.97 17.9 17.39Z"/>
+    </svg>
+    """
+
+    # 4. Email Icon
+    email_svg = f"""
+    <svg width="24" height="24" viewBox="0 0 24 24" fill="{text_color}" xmlns="http://www.w3.org/2000/svg">
+        <path d="M20 4H4C2.9 4 2.01 4.9 2.01 6L2 18C2 19.1 2.9 20 4 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 8L12 13L4 8V6L12 11L20 6V8Z"/>
+    </svg>
+    """
+
+    # 5. Corner Arrow Accent
+    corner_arrow_svg = f"""
+    <svg width="250" height="100" viewBox="0 0 250 100" fill="none" xmlns="http://www.w3.org/2000/svg" class="corner-accent">
+        <path d="M0 100 L0 50 L50 0 L250 0" stroke="{text_color}" stroke-width="4" fill="none"/>
+        <path d="M20 100 L20 70 L70 20 L250 20" stroke="{text_color}" stroke-width="2" stroke-opacity="0.5" fill="none"/>
+    </svg>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Thank You Slide</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            
+            html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+            body, html {{
+                height: 1080px;
+                width: 1920px;
+                font-family: {font_family};
+                background-color: {bg_color};
+                color: {text_color};
+                overflow: hidden;
+            }}
+
+            body {{
+                position: relative;
+                padding: 80px 100px;
+                display: grid;
+                grid-template-rows: auto 1fr auto;
+                gap: 0;
+            }}
+
+            /* --- Background Decoration --- */
+            .bg-circle {{
+                position: absolute;
+                border-radius: 50%;
+                background-color: rgba(255, 255, 255, 0.4);
+                z-index: 0;
+            }}
+
+            .circle-1 {{
+                width: 800px;
+                height: 800px;
+                top: -200px;
+                right: -100px;
+                border: 1px solid rgba(0,0,0,0.03);
+            }}
+
+            .circle-2 {{
+                width: 600px;
+                height: 600px;
+                bottom: -150px;
+                right: 200px;
+                background-color: rgba(255, 255, 255, 0.6);
+            }}
+
+            /* --- Header / Logo --- */
+            header {{
+                display: flex;
+                align-items: center;
+                gap: 15px;
+                z-index: 10;
+            }}
+
+            header span {{
+                font-size: 24px;
+                font-weight: 600;
+                color: {text_color};
+                letter-spacing: -0.02em;
+            }}
+
+            /* --- Main Content (Center) --- */
+            .title-container {{
+                display: flex;
+                flex-direction: column;
+                justify-content: center;
+                z-index: 10;
+            }}
+
+            .title-huge {{
+                font-size: 200px;
+                font-weight: 800;
+                line-height: 0.85;
+                letter-spacing: -0.04em;
+                color: {text_color};
+                margin-bottom: 0px;
+            }}
+
+            .subtitle-huge {{
+                font-size: 100px;
+                font-weight: 300; /* Thin weight */
+                line-height: 0.9;
+                letter-spacing: -0.04em;
+                color: {text_color};
+            }}
+
+            /* --- Footer (Bottom) --- */
+            footer {{
+                position: relative;
+                z-index: 10;
+            }}
+
+            .presenter-info {{
+                position: absolute;
+                bottom: 200px;
+                left: 100px;
+                display: flex;
+                flex-direction: column;
+                gap: 8px;
+                z-index: 10;
+            }}
+
+            .presenter-info > span:first-child {{
+                font-size: 20px;
+                opacity: 0.7;
+                font-weight: 400;
+            }}
+
+            .presenter-info > span:last-child {{
+                font-size: 32px;
+                font-weight: 700;
+                letter-spacing: -0.01em;
+            }}
+
+            .contact-list {{
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                display: flex;
+                flex-direction: column;
+                gap: 20px;
+                text-align: left;
+            }}
+
+            .contact-item {{
+                display: flex;
+                align-items: center;
+                gap: 15px;
+            }}
+
+            .contact-item svg {{
+                width: 40px;
+                height: 40px;
+                padding: 8px;
+                background-color: rgba(90, 107, 109, 0.1);
+                border-radius: 50%;
+            }}
+            
+            .contact-item span {{
+                font-size: 18px;
+                font-weight: 400;
+                opacity: 0.9;
+            }}
+
+            /* --- Decorative Corner --- */
+            .corner-accent {{
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                width: 350px;
+                height: 150px;
+                z-index: 5;
+                display: {("block" if show_corner_accent else "none")};
+            }}
+
+        </style>
+    </head>
+    <body>
+        <!-- Background decorations -->
+        <div class="bg-circle circle-1"></div>
+        <div class="bg-circle circle-2"></div>
+        {corner_arrow_svg}
+        
+        <!-- Semantic HTML structure -->
+        <header>
+            {logo_svg}
+            <span>{organization_name}</span>
+        </header>
+
+        <div class="title-container">
+            <h1 class="title-huge">{main_text}</h1>
+            <h2 class="subtitle-huge">{sub_text}</h2>
+        </div>
+
+        <footer>
+            <div class="presenter-info">
+                <span>{presenter_label}</span>
+                <span>{presenter_name}</span>
+            </div>
+
+            <nav class="contact-list">
+                <div class="contact-item">
+                    {phone_svg}
+                    <span>{phone_number}</span>
+                </div>
+                <div class="contact-item">
+                    {web_svg}
+                    <span>{website}</span>
+                </div>
+                <div class="contact-item">
+                    {email_svg}
+                    <span>{email}</span>
+                </div>
+            </nav>
+        </footer>
+    </body>
+    </html>"""
+
+    return html_code
+
+def generate_brand_collaboration_closing_slide(
+    main_title="Thank you",
+    message_text="THANK YOU FOR TAKING THE TIME TO VIEW THIS PRESENTATION. I APPRECIATE YOUR INTEREST AND CONSIDERATION, AND I'M EXCITED ABOUT THE POSSIBILITY OF WORKING TOGETHER. LET'S CREATE SOMETHING MEANINGFUL, IMPACTFUL, AND BEAUTIFULLY ALIGNED.",
+    signature_text="Looking forward to connecting soon!",
+    brand_header="BRAND COLLABORATION",
+    website_url="WWW.REALLYGREATSITE.COM",
+    prepared_by="PREPARED BY:<br>OLIVIA WILSON",
+    date_text="DATE:<br>01\\06\\2030",
+    primary_color="#1D4E89",
+    bg_color="#F5F2EB",
+    left_image_url="https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1740&auto=format&fit=crop",
+    right_image_url="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1740&auto=format&fit=crop",
+    title_font="'Playfair Display', serif",
+    body_font="'DM Sans', sans-serif",
+    script_font="'Mrs Saint Delafield', cursive"
+):
+    """
+    Generate a sophisticated 'Thank You' or closing slide with an asymmetrical image layout,
+    elegant typography mixing serif and script fonts, and a textured paper background feel.
+
+    :param main_title: The large central title text (e.g., "Thank you").
+    :param message_text: The uppercase body paragraph below the title.
+    :param signature_text: The handwritten-style text at the bottom center.
+    :param brand_header: Small uppercase text in the top left corner.
+    :param website_url: Small uppercase text in the top right corner.
+    :param prepared_by: Text for the bottom left corner (supports <br> for line breaks).
+    :param date_text: Text for the bottom right corner (supports <br> for line breaks).
+    :param primary_color: The main color for text (Hex code).
+    :param bg_color: The background color (light beige/paper color).
+    :param left_image_url: URL for the large vertical image on the left.
+    :param right_image_url: URL for the smaller image on the right.
+    :param title_font: Font family for the main title.
+    :param body_font: Font family for body text and headers.
+    :param script_font: Font family for the signature text.
+    :return: HTML string of the slide.
+    """
+
+    # SVG Noise Pattern for Paper Texture Effect
+    svg_texture = """
+    <div>
+        <svg style="position: absolute; width: 0; height: 0; overflow: hidden;">
+            <filter id="paper-noise">
+                <feTurbulence type="fractalNoise" baseFrequency="0.8" numOctaves="3" stitchTiles="stitch" result="noise"/>
+                <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 0.4 0" in="noise" result="coloredNoise"/>
+            </filter>
+        </svg>
+    </div>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Brand Collaboration Closing Slide</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;700&family=Mrs+Saint+Delafield&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+            * {{
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }}
+            
+            html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+            body, html {{
+                height: 1080px;
+                width: 1920px;
+                overflow: hidden;
+                background-color: {bg_color};
+                color: {primary_color};
+                font-family: {body_font};
+            }}
+
+            body {{
+                position: relative;
+            }}
+
+            body::before {{
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                opacity: 0.15;
+                filter: url(#paper-noise);
+                z-index: 0;
+                pointer-events: none;
+            }}
+
+            /* --- Header & Footer Metadata --- */
+            .meta-text {{
+                position: absolute;
+                font-size: 1.2rem;
+                font-weight: 700;
+                text-transform: uppercase;
+                letter-spacing: 0.05em;
+                z-index: 10;
+            }}
+
+            .top-left {{ top: 60px; left: 80px; }}
+            .top-right {{ top: 60px; right: 80px; }}
+            .bottom-left {{ bottom: 60px; left: 80px; line-height: 1.4; }}
+            .bottom-right {{ bottom: 60px; right: 80px; text-align: right; line-height: 1.4; }}
+
+            /* --- Images --- */
+            .img-left {{
+                position: absolute;
+                left: 110px;
+                top: 200px;
+                width: 460px;
+                height: 650px;
+                z-index: 5;
+                overflow: hidden;
+                filter: grayscale(100%);
+                transition: filter 0.3s ease;
+            }}
+
+            .img-right {{
+                position: absolute;
+                right: 200px;
+                bottom: 220px;
+                width: 250px;
+                height: 280px;
+                z-index: 5;
+                overflow: hidden;
+                filter: grayscale(100%);
+                transition: filter 0.3s ease;
+            }}
+
+            .img-left img,
+            .img-right img {{
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+            }}
+
+            /* --- Center Content --- */
+            .center-content {{
+                position: absolute;
+                left: 50%;
+                top: 48%;
+                transform: translate(-40%, -50%); /* Slightly offset to right because of large left image */
+                width: 800px;
+                text-align: center;
+                z-index: 10;
+            }}
+
+            .main-title {{
+                font-family: {title_font};
+                font-size: 10rem; /* Huge text */
+                font-weight: 400; /* Serif usually looks better regular/light at this size */
+                line-height: 0.9;
+                margin-bottom: 3rem;
+                letter-spacing: -0.02em;
+                transform: scaleY(1.1); /* Slight vertical stretch for elegance */
+            }}
+
+            .message-block {{
+                font-family: {body_font};
+                font-size: 1.1rem;
+                line-height: 1.6;
+                font-weight: 700;
+                text-transform: uppercase;
+                max-width: 750px;
+                margin: 0 auto 3rem auto;
+                letter-spacing: 0.05em;
+                text-align: center;
+            }}
+
+            .signature {{
+                font-family: {script_font};
+                font-size: 4rem;
+                font-weight: 400;
+                opacity: 0.9;
+                text-align: center;
+            }}
+
+        </style>
+    </head>
+    <body>
+        {svg_texture}
+        
+        <span class="meta-text top-left">{brand_header}</span>
+        <span class="meta-text top-right">{website_url}</span>
+        <span class="meta-text bottom-left">{prepared_by}</span>
+        <span class="meta-text bottom-right">{date_text}</span>
+
+        <figure class="img-left">
+            <img src="{left_image_url}" alt="Brand Mood Image Left" />
+        </figure>
+        
+        <figure class="img-right">
+            <img src="{right_image_url}" alt="Fashion Detail Image Right" />
+        </figure>
+
+        <main class="center-content">
+            <h1 class="main-title">{main_title}</h1>
+            <p class="message-block">
+                {message_text}
+            </p>
+            <p class="signature">{signature_text}</p>
+        </main>
+    </body>
+    </html>"""
+
+    return html_code
+
+def generate_military_thank_you_slide(
+    main_text="THANK YOU",
+    description="Lorem ipsum dolor sit amet, consectetur adipiscing elit. In luctus fermentum risus nec feugiat. Nunc condimentum mauris blandit orci convallis dapibus.",
+    bg_image_url="https://images.unsplash.com/photo-1590236141044-bc849495115d?q=80&w=1920",
+    primary_color="#4B5320",
+    secondary_color="#556B2F",
+    text_color="#000000",
+    font_family="'Arial Black', 'Arial', sans-serif",
+    overlay_opacity=0.2
+):
+    """
+    Generate a professional military-style closing or thank you slide.
+    Features a split-diagonal layout with olive green accents and bold typography.
+
+    :param main_text: Large prominent text (e.g., 'THANK YOU' or 'Q&A').
+    :param description: Supporting paragraph text for details or contact info.
+    :param bg_image_url: Background image for the right/underlay section.
+    :param primary_color: Main olive green color for the diagonal stripes.
+    :param secondary_color: Lighter green for the thin separator line.
+    :param text_color: Color for the main and description text.
+    :param font_family: Font used for the slide. Bold sans-serif recommended.
+    :param overlay_opacity: Opacity of the image background overlay.
+    :return: A string containing the HTML code for the slide.
+    """
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>{main_text}</title>
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            html {{ width: 1920px; height: 1080px; font-size: 16px; }}
+            body {{
+                width: 1920px; height: 1080px;
+                font-family: {font_family};
+                overflow: hidden;
+                background-color: #f0f0f0;
+            }}
+
+            .outer-wrapper {{
+                width: 1920px; height: 1080px;
+                overflow: hidden;
+                position: relative;
+            }}
+
+            .content-wrapper {{
+                position: absolute;
+                width: 1920px; height: 1080px;
+                display: flex;
+                align-items: center;
+            }}
+
+            /* Image Background with Overlay */
+            .bg-image {{
+                position: absolute;
+                right: 0; top: 0;
+                width: 100%; height: 100%;
+                background: url('{bg_image_url}') center/cover no-repeat;
+                z-index: 1;
+            }}
+            
+            .bg-overlay {{
+                position: absolute;
+                width: 100%; height: 100%;
+                background: rgba(255, 255, 255, {overlay_opacity});
+                z-index: 2;
+            }}
+
+            /* Geometric Accents */
+            .diagonal-block {{
+                position: absolute;
+                left: -100px; top: 0;
+                width: 450px;
+                height: 100%;
+                background: {primary_color};
+                transform: skewX(-15deg);
+                z-index: 3;
+                box-shadow: 20px 0 50px rgba(0,0,0,0.2);
+            }}
+
+            .separator-line {{
+                position: absolute;
+                left: calc(450px + 20px); top: 0;
+                width: 15px;
+                height: 100%;
+                background: white;
+                transform: skewX(-15deg);
+                z-index: 3;
+            }}
+
+            /* Content Area */
+            .text-content {{
+                position: absolute;
+                right: 150px;
+                width: 800px;
+                z-index: 10;
+                text-align: left;
+            }}
+
+            .main-title {{
+                font-size: 180px;
+                line-height: 0.9;
+                font-weight: 900;
+                color: {text_color};
+                margin-bottom: 40px;
+                text-transform: uppercase;
+                letter-spacing: -5px;
+            }}
+
+            .description {{
+                font-size: 28px;
+                line-height: 1.6;
+                color: {text_color};
+                max-width: 700px;
+                font-weight: 400;
+            }}
+
+            /* SVG Placeholder for badges/icons */
+            .badge-container {{
+                position: absolute;
+                left: 100px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 5;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="outer-wrapper">
+            <div class="bg-image"></div>
+            <div class="bg-overlay"></div>
+            
+            <div class="content-wrapper">
+                <div class="diagonal-block"></div>
+                <div class="separator-line"></div>
+                
+                <div class="badge-container">
+                    <svg width="120" height="120" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" />
+                    </svg>
+                </div>
+
+                <div class="text-content">
+                    <h1 class="main-title">{main_text}</h1>
+                    <p class="description">{description}</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    return html_code
+
+def generate_thank_you_farm_slide(
+    main_text="THANK YOU",
+    sub_text="For Your Attention",
+    bg_color="#667eea",
+    text_color="#ffffff",
+    accent_color="#764ba2",
+    font_family="'Poppins', sans-serif",
+    show_animals=True,
+    show_windmill=True,
+    show_kite=True
+):
+    """
+    Generates a professional, modern 'Thank You' slide with nature elements.
+    Features Glassmorphism design, Flat Design SVG illustrations, and smooth CSS animations.
+    Includes: animated tree, floating kite with sway effect, and flying bird.
+
+    :param main_text: Large prominent 'Thank You' text.
+    :param sub_text: Smaller secondary text below the main title.
+    :param bg_color: The primary gradient color (hex).
+    :param text_color: Color of the main text (hex).
+    :param accent_color: Secondary gradient color (hex).
+    :param font_family: Font family for modern typography.
+    :param show_animals: Whether to display the bird animation.
+    :param show_windmill: (Deprecated - tree is now shown by default).
+    :param show_kite: Whether to display the kite with animation.
+    :return: HTML string for the slide.
+    """
+
+    # SVG Illustrations with modern Glassmorphism style
+    
+    # Tree with Flat Design
+    tree_svg = """
+    <div class="tree-container">
+        <svg viewBox="0 0 200 300" xmlns="http://www.w3.org/2000/svg">
+            <!-- Tree Trunk -->
+            <rect x="85" y="200" width="30" height="100" fill="#8B6F47" rx="5"/>
+            <!-- Tree Foliage Layers -->
+            <ellipse cx="100" cy="200" rx="60" ry="55" fill="#52B788" opacity="0.9"/>
+            <ellipse cx="100" cy="170" rx="70" ry="60" fill="#40916C" opacity="0.85"/>
+            <ellipse cx="100" cy="140" rx="80" ry="65" fill="#2D6A4F" opacity="0.8"/>
+            <ellipse cx="100" cy="110" rx="65" ry="55" fill="#1B4332" opacity="0.75"/>
+        </svg>
+    </div>
+    """
+    
+    # Kite with Glassmorphism effect
+    kite_svg = """
+    <div class="kite-container">
+        <svg viewBox="0 0 120 180" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+                <linearGradient id="kiteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" style="stop-color:#667eea;stop-opacity:0.8" />
+                    <stop offset="100%" style="stop-color:#764ba2;stop-opacity:0.9" />
+                </linearGradient>
+                <filter id="glass-blur">
+                    <feGaussianBlur stdDeviation="1" result="blur"/>
+                    <feComposite in="SourceGraphic" in2="blur" operator="over"/>
+                </filter>
+            </defs>
+            <!-- Kite Diamond Shape -->
+            <path d="M60 10 L100 60 L60 110 L20 60 Z" 
+                  fill="url(#kiteGrad)" 
+                  stroke="white" 
+                  stroke-width="2" 
+                  filter="url(#glass-blur)"
+                  opacity="0.9"/>
+            <!-- Cross Pattern -->
+            <line x1="60" y1="10" x2="60" y2="110" stroke="white" stroke-width="2" opacity="0.7"/>
+            <line x1="20" y1="60" x2="100" y2="60" stroke="white" stroke-width="2" opacity="0.7"/>
+            <!-- Kite Tail -->
+            <path d="M60 110 Q50 130 60 150 Q70 170 60 180" 
+                  fill="none" 
+                  stroke="#ff6b6b" 
+                  stroke-width="3" 
+                  stroke-linecap="round"/>
+            <circle cx="60" cy="140" r="4" fill="#ffd93d"/>
+            <circle cx="60" cy="165" r="4" fill="#6bcf7f"/>
+        </svg>
+    </div>
+    """
+    
+    # Bird with subtle animation
+    bird_svg = """
+    <div class="bird-container">
+        <svg viewBox="0 0 80 40" xmlns="http://www.w3.org/2000/svg">
+            <g class="bird-wings">
+                <!-- Left Wing -->
+                <path d="M25 20 Q15 10 20 18" 
+                      fill="none" 
+                      stroke="#2C3E50" 
+                      stroke-width="2" 
+                      stroke-linecap="round"/>
+                <!-- Right Wing -->
+                <path d="M35 20 Q45 10 40 18" 
+                      fill="none" 
+                      stroke="#2C3E50" 
+                      stroke-width="2" 
+                      stroke-linecap="round"/>
+            </g>
+            <!-- Bird Body -->
+            <ellipse cx="30" cy="20" rx="8" ry="5" fill="#34495E"/>
+        </svg>
+    </div>
+    """
+
+    html_code = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=1920, initial-scale=1.0">
+        <title>Professional Thank You Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;600;800&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            
+            html, body {{ 
+                width: 100vw; 
+                height: 100vh; 
+                overflow: hidden; 
+                font-family: 'Poppins', sans-serif;
+            }}
+            
+            .slide-container {{
+                width: 100vw;
+                height: 100vh;
+                background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                position: relative;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }}
+
+            /* Decorative Background Elements */
+            .bg-circles {{
+                position: absolute;
+                width: 100%;
+                height: 100%;
+                overflow: hidden;
+                z-index: 0;
+            }}
+
+            .circle {{
+                position: absolute;
+                border-radius: 50%;
+                background: rgba(255, 255, 255, 0.1);
+                backdrop-filter: blur(10px);
+            }}
+
+            .circle1 {{ width: 400px; height: 400px; top: -100px; left: -100px; }}
+            .circle2 {{ width: 300px; height: 300px; bottom: -80px; right: -80px; }}
+            .circle3 {{ width: 200px; height: 200px; top: 50%; right: 10%; }}
+
+            /* Content Layout with Grid */
+            .content-grid {{
+                position: relative;
+                z-index: 10;
+                display: grid;
+                grid-template-columns: 1fr 2fr 1fr;
+                grid-template-rows: 1fr auto 1fr;
+                gap: 20px;
+                width: 90%;
+                height: 80%;
+                max-width: 1600px;
+            }}
+
+            /* Tree Container - Left Side */
+            .tree-container {{
+                grid-column: 1;
+                grid-row: 2 / 4;
+                align-self: end;
+                justify-self: start;
+                width: 200px;
+                height: 300px;
+                filter: drop-shadow(0 10px 20px rgba(0,0,0,0.3));
+            }}
+
+            /* Kite Container - Top Right */
+            .kite-container {{
+                grid-column: 3;
+                grid-row: 1;
+                justify-self: end;
+                align-self: start;
+                width: 120px;
+                height: 180px;
+                filter: drop-shadow(0 5px 15px rgba(0,0,0,0.2));
+            }}
+
+            /* Bird Container - Moving Bird */
+            .bird-container {{
+                position: absolute;
+                top: 20%;
+                left: 15%;
+                width: 80px;
+                height: 40px;
+                filter: drop-shadow(0 2px 5px rgba(0,0,0,0.2));
+            }}
+
+            /* Text Container - Center */
+            .text-container {{
+                grid-column: 2;
+                grid-row: 2;
+                text-align: center;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                background: rgba(255, 255, 255, 0.15);
+                backdrop-filter: blur(20px);
+                border-radius: 30px;
+                padding: 60px 40px;
+                box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+                border: 2px solid rgba(255, 255, 255, 0.3);
+            }}
+
+            .main-text {{
+                font-size: 140px;
+                font-weight: 800;
+                color: #ffffff;
+                line-height: 1.1;
+                text-shadow: 
+                    4px 4px 8px rgba(0, 0, 0, 0.3),
+                    0 0 40px rgba(255, 255, 255, 0.2);
+                letter-spacing: -2px;
+                margin-bottom: 20px;
+            }}
+
+            .sub-text {{
+                font-size: 36px;
+                font-weight: 300;
+                color: #f0f0f0;
+                letter-spacing: 8px;
+                text-transform: uppercase;
+                opacity: 0.95;
+                text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+            }}
+
+
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <!-- Background Circles -->
+            <div class="bg-circles">
+                <div class="circle circle1"></div>
+                <div class="circle circle2"></div>
+                <div class="circle circle3"></div>
+            </div>
+
+            <!-- Main Content Grid -->
+            <div class="content-grid">
+                <!-- Tree on Left -->
+                {tree_svg}
+                
+                <!-- Kite on Top Right -->
+                {kite_svg if show_kite else ""}
+                
+                <!-- Bird Flying -->
+                {bird_svg}
+                
+                <!-- Main Text in Center -->
+                <div class="text-container">
+                    <h1 class="main-text">{main_text}</h1>
+                    <p class="sub-text">{sub_text}</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>"""
+    return html_code
