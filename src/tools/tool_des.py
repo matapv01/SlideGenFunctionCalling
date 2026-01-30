@@ -99,6 +99,10 @@ from src.tools.html_tool import (
     generate_premium_abstract_slide, # slide content
     generate_methodology_slide, # slide content
     generate_planning_phase_slide, # slide content
+    generate_timeline_slide, # slide content (quang)
+    generate_quote_slide, # slide content (quang)
+    generate_classic_content_slide, # slide content (quang)
+    generate_swot_analysis_slide, # slide content (quang)
 
 
 
@@ -126,7 +130,11 @@ from src.tools.html_tool import (
     generate_thank_you_slide_5, # slide cảm ơn(hien)
     generate_thank_you_slide_6, # slide cảm ơn(hien)
     generate_thank_you_slide_7, # slide cảm ơn(hien)
-
+    generate_corporate2_thank_you_slide, # slide cảm ơn(quang)
+    generate_creative_thank_you_slide, # slide cảm ơn(quang)
+    generate_tech_thank_you_slide, # slide cảm ơn(quang)
+    generate_minimalist_thank_you_slide, # slide cảm ơn(quang)
+    generate_elegant_thank_you_slide # slide cảm ơn(quang)
 )
 
 # ===========================================================================================
@@ -1339,6 +1347,127 @@ class GeneratePlanningPhaseSlideInput(BaseModel):
     timeline_color: str = Field(default="#FFFFFF", description="Color for the timeline line and dots")
     custom_css: str = Field(default="", description="Additional custom CSS to inject")
 
+class MilestoneItem(BaseModel):
+    year: str = Field(..., description="The year or time marker (e.g., '2023', 'Q1').")
+    title: str = Field(..., description="Title of the milestone (e.g., 'Foundation').")
+    desc: str = Field(..., description="Short description of the milestone.")
+
+class GenerateTimelineSlideInput(BaseModel):
+    """Input schema for generate_timeline_slide."""
+    main_title: str = Field(
+        default="COMPANY HISTORY", 
+        description="Main title of the slide."
+    )
+    subtitle: str = Field(
+        default="A journey of innovation and growth", 
+        description="Subtitle text below the main title."
+    )
+    milestones: List[MilestoneItem] = Field(
+        ..., 
+        description="List of milestones to display on the timeline. Recommended 4-5 items."
+    )
+    bg_color: str = Field(
+        default="#1E1E2E", 
+        description="Background color hex code."
+    )
+    accent_color: str = Field(
+        default="#F43F5E", 
+        description="Accent color for the timeline line and active elements."
+    )
+    text_color: str = Field(
+        default="#FFFFFF", 
+        description="Color for text elements."
+    )
+    font_family: str = Field(
+        default="'Inter', sans-serif", 
+        description="Font family string."
+    )
+class GenerateQuoteSlideInput(BaseModel):
+    """Input schema for generate_quote_slide."""
+    quote: str = Field(
+        ..., 
+        description="The main quote text or core message to display."
+    )
+    author: str = Field(
+        default="", 
+        description="Name of the author or speaker."
+    )
+    role: str = Field(
+        default="", 
+        description="Role or title of the author (e.g., 'CEO', 'Founder')."
+    )
+    bg_color: str = Field(
+        default="#FAF9F6", 
+        description="Background color hex code (usually light for elegance)."
+    )
+    quote_color: str = Field(
+        default="#18181B", 
+        description="Color of the quote text."
+    )
+    accent_color: str = Field(
+        default="#EA580C", 
+        description="Accent color for decorative elements (lines, quotation marks)."
+    )
+    font_family: str = Field(
+        default="'Playfair Display', serif", 
+        description="Font family (Serif fonts recommended for quotes)."
+    )
+class GenerateClassicContentSlideInput(BaseModel):
+    """Input schema for generate_classic_content_slide."""
+    main_title: str = Field(
+        default="MARKET OPPORTUNITY", 
+        description="The main headline of the content slide."
+    )
+    paragraph: str = Field(
+        ..., 
+        description="A detailed paragraph explaining the topic (2-3 sentences)."
+    )
+    bullet_points: List[str] = Field(
+        default=[], 
+        description="List of key points/bullets to display on the left side."
+    )
+    image_url: str = Field(
+        default="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015", 
+        description="URL of the illustrative image on the right side."
+    )
+    theme_color: str = Field(
+        default="#2563EB", 
+        description="Primary theme color for accents and bullets."
+    )
+    text_color: str = Field(
+        default="#1F2937", 
+        description="Main text color."
+    )
+    bg_color: str = Field(
+        default="#FFFFFF", 
+        description="Background color hex code."
+    )
+class GenerateSwotSlideInput(BaseModel):
+    """Input schema for generate_swot_analysis_slide."""
+    s_text: str = Field(
+        ..., 
+        description="Content for STRENGTHS. Separate multiple items with commas (e.g., 'Item 1, Item 2, Item 3')."
+    )
+    w_text: str = Field(
+        ..., 
+        description="Content for WEAKNESSES. Separate multiple items with commas."
+    )
+    o_text: str = Field(
+        ..., 
+        description="Content for OPPORTUNITIES. Separate multiple items with commas."
+    )
+    t_text: str = Field(
+        ..., 
+        description="Content for THREATS. Separate multiple items with commas."
+    )
+    bg_color: str = Field(
+        default="#F8FAFC", 
+        description="Background color hex code."
+    )
+    font_family: str = Field(
+        default="'Inter', sans-serif", 
+        description="Font family string."
+    )
 # === SLIDE GIỚI THIỆU TEAM CLASSES ===
 
 class GenerateTeamSlideInput(BaseModel):
@@ -1482,7 +1611,7 @@ class GenerateTeamIntroSlide1Input(BaseModel):
         default=True,
         description="Whether to show decorative placeholders for social media icons."
     )
-    class GenerateCuteGroupIntroSlideInput(BaseModel):
+class GenerateCuteGroupIntroSlideInput(BaseModel):
     """Input schema for generate_cute_group_intro_slide."""
     main_title: str = Field(
         default="DREAM TEAM", 
@@ -1579,7 +1708,7 @@ class GenerateLuxuryTeamSlideInput(BaseModel):
         default="#D4AF37", 
         description="Accent color for borders and subtitles. Default is Metallic Gold."
     )
- class GenerateModernMinimalistTeamSlideInput(BaseModel):
+class GenerateModernMinimalistTeamSlideInput(BaseModel):
     """Input schema for generate_modern_minimalist_team_slide."""
     main_title: str = Field(
         default="Core Team.", 
@@ -1749,6 +1878,30 @@ class GenerateThankYouSlide7Input(BaseModel):
     bg_color: str = Field(default="#F5F3F0", description="Background color of the slide. Default: light warm gray (#F5F3F0).")
     text_color: str = Field(default="#7A6350", description="Color of the main text. Default: brown/taupe (#7A6350).")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
+class CorporateThankYouInput(BaseModel):
+    main_title: str = Field(default="THANK YOU", description="Tiêu đề chính")
+    closing_message: str = Field(default="We look forward to collaborating with you.", description="Lời nhắn kết thúc")
+    contact_email: str = Field(default="contact@business.com", description="Email liên hệ")
+    website: str = Field(default="www.business.com", description="Website")
+    primary_color: str = Field(default="#1E3A8A", description="Màu chính (Hex)")
+    accent_color: str = Field(default="#3B82F6", description="Màu nhấn (Hex)")
+class CreativeThankYouInput(BaseModel):
+    main_title: str = Field(default="Any Questions?", description="Tiêu đề chính")
+    subtitle: str = Field(default="THANKS FOR WATCHING", description="Tiêu đề phụ")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop", description="URL ảnh hiển thị")
+    accent_color: str = Field(default="#BE123C", description="Màu nhấn")
+class TechThankYouInput(BaseModel):
+    main_title: str = Field(default="THANK YOU", description="Chữ tiêu đề")
+    social_handle: str = Field(default="@tech_studio", description="Tên tài khoản mạng xã hội")
+    neon_color: str = Field(default="#00FFFF", description="Màu neon chủ đạo")
+class MinimalistThankYouInput(BaseModel):
+    main_title: str = Field(default="END.", description="Tiêu đề")
+    footer_text: str = Field(default="2026 Portfolio Studio", description="Thông tin ở chân slide")
+class ElegantThankYouInput(BaseModel):
+    main_title: str = Field(default="Thank You", description="Chữ cảm ơn cách điệu")
+    subtitle: str = Field(default="FOR YOUR KIND ATTENTION", description="Phụ đề bên dưới")
+    bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="URL ảnh nền sang trọng")
+
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
     StructuredTool.from_function(
@@ -2275,7 +2428,32 @@ CONTENT_TOOLS = [
         name="generate_planning_phase_slide",
         description="Generates a Planning Phase slide with timeline and icon markers. This slide shows 4 stages represented by pin markers containing line art icons (brain, checklist, design, puzzle), each with its own timeline dot, title, and description. The markers are displayed horizontally above the timeline items, creating a visual flow. Perfect for presenting project phases, process steps, strategic planning stages, or any sequential workflow with 4 key stages. Features customizable colors for markers and timeline elements.",
         args_schema=GeneratePlanningPhaseSlideInput
-    )
+    ),
+    StructuredTool.from_function(
+    func=generate_timeline_slide,
+    name="generate_timeline_slide",
+    description="Generates a horizontal timeline slide to visualize progress, history, or future roadmap.",
+    args_schema=GenerateTimelineSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_quote_slide,
+    name="generate_quote_slide",
+    description="Generates an elegant, centered quote slide to highlight a key message or testimonial.",
+    args_schema=GenerateQuoteSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_classic_content_slide,
+    name="generate_classic_content_slide",
+    description="Generates a standard content slide with a title, paragraph, bullet points on the left, and a large image on the right.",
+    args_schema=GenerateClassicContentSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_swot_analysis_slide,
+    name="generate_swot_analysis_slide",
+    description="Generates a 2x2 matrix slide specifically for SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats).",
+    args_schema=GenerateSwotSlideInput
+    ),
+    
 ]
 
 TEAM_TOOLS = [
@@ -2409,6 +2587,36 @@ THANK_YOU_TOOLS = [
         name="generate_thank_you_slide_7",
         description="Generates an elegant minimalist 'Thank You' slide. Features a clean, sophisticated design with a large serif font (Playfair Display) for the main text centered on the slide. The slide has a light warm gray background with generous white space, creating a refined and professional look. Perfect for presentations needing a simple, elegant closing that emphasizes beautiful typography without any decorative elements.",
         args_schema=GenerateThankYouSlide7Input
+    ),
+    StructuredTool.from_function(
+        func=generate_corporate2_thank_you_slide,
+        name="generate_corporate2_thank_you_slide",
+        description="Tạo slide cảm ơn phong cách doanh nghiệp chuyên nghiệp với màu xanh navy và trắng, có logo, thông tin liên hệ và website.",
+        args_schema=CorporateThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_creative_thank_you_slide,
+        name="generate_creative_thank_you_slide",
+        description="Tạo slide cảm ơn sáng tạo với ảnh lớn, chữ nghệ thuật và màu sắc nổi bật.",
+        args_schema=CreativeThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_tech_thank_you_slide,
+        name="generate_tech_thank_you_slide",
+        description="Tạo slide cảm ơn phong cách công nghệ với hiệu ứng neon, nền tối và icon mạng xã hội.",
+        args_schema=TechThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_minimalist_thank_you_slide,
+        name="generate_minimalist_thank_you_slide",
+        description="Tạo slide cảm ơn tối giản, hiện đại với chữ lớn và không trang trí rườm rà.",
+        args_schema=MinimalistThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_elegant_thank_you_slide,
+        name="generate_elegant_thank_you_slide",
+        description="Tạo slide cảm ơn sang trọng với ảnh nền đẹp, chữ viết tay và không gian thoáng.",
+        args_schema=ElegantThankYouInput
     )
 ]
 

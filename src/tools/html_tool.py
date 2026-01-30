@@ -19938,6 +19938,245 @@ def generate_retro_game_team_slide_v3(
 </html>"""
 
     return html_code
+
+def generate_timeline_slide(
+    main_title="COMPANY HISTORY",
+    subtitle="A journey of innovation and growth",
+    milestones=[
+        {"year": "2020", "title": "Foundation", "desc": "Started with a team of 5 visionaries."},
+        {"year": "2021", "title": "Series A", "desc": "Raised $10M to expand operations."},
+        {"year": "2022", "title": "Global Launch", "desc": "Entered 3 new international markets."},
+        {"year": "2023", "title": "Market Leader", "desc": "Achieved #1 status in the industry."}
+    ],
+    bg_color="#1E1E2E",
+    accent_color="#F43F5E",
+    text_color="#FFFFFF",
+    font_family="'Inter', sans-serif"
+):
+    """
+    Generates a horizontal timeline slide to visualize progress or history.
+    Layout: Horizontal axis with alternating or aligned milestones.
+    """
+    milestone_html = ""
+    start_x = 200
+    gap = 400
+    
+    for i, item in enumerate(milestones):
+        x_pos = start_x + (i * gap)
+        # Alternate positions for visual interest if desired, but kept linear here for flat structure reliability
+        top_pos_circle = 540 - 15  # Center line is at 540px
+        top_pos_content = 580
+        top_pos_year = 450
+        
+        milestone_html += f"""
+        <div style="position: absolute; left: {x_pos}px; top: {top_pos_circle}px; width: 30px; height: 30px; background: {accent_color}; border: 4px solid {bg_color}; border-radius: 50%; z-index: 2; box-shadow: 0 0 0 4px {accent_color}40;"></div>
+        
+        <div style="position: absolute; left: {x_pos - 60}px; top: {top_pos_year}px; width: 150px; text-align: center;">
+            <span style="font-size: 36px; font-weight: 800; color: {accent_color};">{item['year']}</span>
+        </div>
+        
+        <div style="position: absolute; left: {x_pos - 100}px; top: {top_pos_content}px; width: 230px; text-align: center;">
+            <h3 style="font-size: 24px; font-weight: 700; color: {text_color}; margin-bottom: 10px;">{item['title']}</h3>
+            <p style="font-size: 18px; color: {text_color}; opacity: 0.7; line-height: 1.4;">{item['desc']}</p>
+        </div>
+        """
+
+    html = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background: {bg_color}; overflow: hidden; }}
+        </style>
+    </head>
+    <body>
+        <div style="position: absolute; top: 100px; left: 0; width: 1920px; text-align: center;">
+            <h1 style="font-size: 72px; font-weight: 800; color: {text_color}; margin-bottom: 20px;">{main_title}</h1>
+            <p style="font-size: 28px; color: {text_color}; opacity: 0.6;">{subtitle}</p>
+        </div>
+
+        <div style="position: absolute; top: 554px; left: 150px; width: 1620px; height: 2px; background: rgba(255,255,255,0.1);"></div>
+        <div style="position: absolute; top: 554px; left: 150px; width: {len(milestones) * gap}px; height: 2px; background: {accent_color};"></div>
+
+        {milestone_html}
+
+        <svg style="position: absolute; bottom: 0; right: 0; width: 400px; height: 400px; opacity: 0.05;" viewBox="0 0 200 200">
+            <circle cx="200" cy="200" r="180" fill="{text_color}" />
+        </svg>
+    </body>
+    </html>"""
+    return html
+
+def generate_quote_slide(
+    quote="Design is not just what it looks like and feels like. Design is how it works.",
+    author="Steve Jobs",
+    role="Co-founder, Apple",
+    bg_color="#FAF9F6",
+    quote_color="#18181B",
+    accent_color="#EA580C",
+    font_family="'Playfair Display', serif"
+):
+    """
+    Generates an elegant quote slide centered on screen.
+    """
+    html = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background: {bg_color}; overflow: hidden; }}
+        </style>
+    </head>
+    <body>
+        <div style="position: absolute; top: 180px; left: 200px; font-size: 300px; color: {accent_color}; opacity: 0.1; font-family: 'Playfair Display', serif; line-height: 1;">“</div>
+        
+        <div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 0 300px; text-align: center;">
+            <h1 style="font-size: 80px; font-weight: 700; color: {quote_color}; line-height: 1.3; margin-bottom: 60px; font-style: italic;">
+                {quote}
+            </h1>
+            <div style="width: 100px; height: 4px; background: {accent_color}; margin-bottom: 40px;"></div>
+            <div style="font-family: 'Inter', sans-serif;">
+                <h3 style="font-size: 36px; font-weight: 700; color: {quote_color}; margin-bottom: 10px;">{author}</h3>
+                <p style="font-size: 24px; color: #71717A;">{role}</p>
+            </div>
+        </div>
+        
+        <div style="position: absolute; top: 60px; left: 60px; width: 1800px; height: 960px; border: 2px solid {quote_color}; opacity: 0.1; pointer-events: none;"></div>
+    </body>
+    </html>"""
+    return html
+
+def generate_classic_content_slide(
+    main_title="MARKET OPPORTUNITY",
+    paragraph="The global market for our solution is expanding rapidly. By leveraging our unique technology stack, we can capture significant market share in the next fiscal year.",
+    bullet_points=[
+        "Target audience growth of 15% YoY",
+        "Low competition in the premium segment",
+        "High barrier to entry for new players",
+        "Strong demand for automated solutions"
+    ],
+    image_url="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015&auto=format&fit=crop",
+    theme_color="#2563EB",
+    text_color="#1F2937",
+    bg_color="#FFFFFF"
+):
+    """
+    Generates a classic content slide with Title, Paragraph, Bullet Points (Left) and Image (Right).
+    Perfect for detailed explanations.
+    """
+    # Tạo HTML cho danh sách bullet points
+    bullets_html = ""
+    for i, point in enumerate(bullet_points):
+        top_pos = 500 + (i * 60)
+        bullets_html += f"""
+        <div style="position: absolute; left: 120px; top: {top_pos}px; display: flex; align-items: flex-start;">
+            <div style="width: 10px; height: 10px; background: {theme_color}; border-radius: 50%; margin-top: 12px; margin-right: 20px; flex-shrink: 0;"></div>
+            <p style="font-size: 24px; color: {text_color}; line-height: 1.4; width: 700px;">{point}</p>
+        </div>
+        """
+
+    html = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: 'Inter', sans-serif; background: {bg_color}; overflow: hidden; }}
+        </style>
+    </head>
+    <body>
+        <div style="position: absolute; top: 100px; left: 120px;">
+            <div style="width: 100px; height: 8px; background: {theme_color}; margin-bottom: 30px;"></div>
+            <h1 style="font-size: 72px; font-weight: 800; color: {text_color}; margin-bottom: 40px; text-transform: uppercase;">{main_title}</h1>
+        </div>
+
+        <div style="position: absolute; top: 300px; left: 120px; width: 750px;">
+            <p style="font-size: 28px; line-height: 1.6; color: {text_color}; opacity: 0.8; margin-bottom: 40px;">
+                {paragraph}
+            </p>
+        </div>
+
+        {bullets_html}
+
+        <div style="position: absolute; top: 100px; right: 120px; width: 800px; height: 880px; border-radius: 30px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,0.1);">
+            <img src="{image_url}" style="width: 100%; height: 100%; object-fit: cover;">
+        </div>
+        
+        <div style="position: absolute; bottom: 50px; left: 120px; font-size: 16px; color: {text_color}; opacity: 0.4;">
+            CONFIDENTIAL - {main_title}
+        </div>
+    </body>
+    </html>"""
+    return html
+
+def generate_swot_analysis_slide(
+    s_text="Market leader position, Proprietary technology, Strong brand equity",
+    w_text="High operational costs, Limited global presence, Dependency on key suppliers",
+    o_text="Emerging markets expansion, New product lines, Strategic partnerships",
+    t_text="Intense competition, Regulatory changes, Economic downturn",
+    bg_color="#F8FAFC",
+    font_family="'Inter', sans-serif"
+):
+    """
+    Generates a 2x2 Matrix slide specifically designed for SWOT Analysis.
+    S (Strengths), W (Weaknesses), O (Opportunities), T (Threats).
+    """
+    # Colors for SWOT
+    colors = {
+        "S": {"bg": "#DCFCE7", "text": "#166534", "label": "STRENGTHS"},  # Green
+        "W": {"bg": "#FEE2E2", "text": "#991B1B", "label": "WEAKNESSES"}, # Red
+        "O": {"bg": "#DBEAFE", "text": "#1E40AF", "label": "OPPORTUNITIES"}, # Blue
+        "T": {"bg": "#FEF3C7", "text": "#92400E", "label": "THREATS"}     # Yellow
+    }
+    
+    # Position logic for 2x2 grid
+    # Top-Left (S), Top-Right (W), Bottom-Left (O), Bottom-Right (T)
+    positions = [
+        {"x": 120, "y": 250, "type": "S", "content": s_text},
+        {"x": 980, "y": 250, "type": "W", "content": w_text},
+        {"x": 120, "y": 660, "type": "O", "content": o_text},
+        {"x": 980, "y": 660, "type": "T", "content": t_text}
+    ]
+    
+    grid_html = ""
+    for item in positions:
+        c = colors[item["type"]]
+        content_lines = item["content"].split(',')
+        list_items = "".join([f"<li style='margin-bottom: 15px;'>{line.strip()}</li>" for line in content_lines])
+        
+        grid_html += f"""
+        <div style="position: absolute; top: {item['y']}px; left: {item['x']}px; width: 820px; height: 350px; background: {c['bg']}; border-radius: 20px; padding: 40px;">
+            <div style="position: absolute; top: 0; left: 0; width: 80px; height: 80px; background: rgba(255,255,255,0.5); border-bottom-right-radius: 20px; border-top-left-radius: 20px; display: flex; align-items: center; justify-content: center;">
+                <span style="font-size: 40px; font-weight: 800; color: {c['text']};">{item['type']}</span>
+            </div>
+            <h3 style="margin-left: 100px; font-size: 32px; font-weight: 800; color: {c['text']}; margin-bottom: 30px;">{c['label']}</h3>
+            <ul style="margin-left: 40px; font-size: 24px; line-height: 1.5; color: {c['text']};">
+                {list_items}
+            </ul>
+        </div>
+        """
+
+    html = f"""<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+        <style>
+            * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background: {bg_color}; overflow: hidden; }}
+        </style>
+    </head>
+    <body>
+        <h1 style="position: absolute; top: 80px; left: 0; width: 100%; text-align: center; font-size: 72px; font-weight: 900; color: #0F172A;">SWOT ANALYSIS</h1>
+        {grid_html}
+    </body>
+    </html>"""
+    return html
 #------------------------ SLIDE THANK YOU
 
 
@@ -21344,3 +21583,311 @@ def generate_thank_you_slide_7(
     
     return html_code
 
+def generate_corporate2_thank_you_slide(
+    main_title="THANK YOU",
+    closing_message="We look forward to collaborating with you.",
+    contact_email="contact@business.com",
+    website="www.business.com",
+    primary_color="#1E3A8A",
+    accent_color="#3B82F6",
+    text_color="#1F2937",
+    bg_color="#F8FAFC",
+    font_family="'Inter', sans-serif"
+):
+    """
+    Generates a professional corporate Thank You slide with contact information.
+    Features a clean, structured layout with a side accent panel.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        
+        .side-panel {{
+            position: absolute;
+            left: 0; top: 0; width: 480px; height: 1080px;
+            background-color: {primary_color};
+            z-index: 1;
+        }}
+        
+        .accent-bar {{
+            position: absolute;
+            left: 480px; top: 0; width: 20px; height: 1080px;
+            background-color: {accent_color};
+            z-index: 2;
+        }}
+
+        .main-content {{
+            position: absolute;
+            left: 600px; top: 300px;
+            width: 1100px;
+            z-index: 3;
+        }}
+
+        .title {{
+            font-size: 144px;
+            font-weight: 900;
+            color: {primary_color};
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }}
+
+        .message {{
+            font-size: 48px;
+            color: {text_color};
+            margin-bottom: 80px;
+            opacity: 0.8;
+        }}
+
+        .contact-info {{
+            font-size: 32px;
+            color: {text_color};
+            line-height: 1.6;
+        }}
+
+        .contact-item {{
+            margin-bottom: 15px;
+            font-weight: 600;
+        }}
+    </style>
+</head>
+<body>
+    <div class="side-panel"></div>
+    <div class="accent-bar"></div>
+    <div class="main-content">
+        <h1 class="title">{main_title}</h1>
+        <p class="message">{closing_message}</p>
+        <div class="contact-info">
+            <div class="contact-item">Email: {contact_email}</div>
+            <div class="contact-item">Website: {website}</div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_creative_thank_you_slide(
+    main_title="Questions?",
+    subtitle="THANKS FOR WATCHING",
+    image_url="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop",
+    bg_gradient_start="#FFF1F2",
+    bg_gradient_end="#FCE7F3",
+    accent_color="#BE123C",
+    font_family="'Montserrat', sans-serif"
+):
+    """
+    Generates a creative Thank You slide with aurora background shapes and a featured image.
+    Perfect for portfolios or creative pitches.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; 
+                      background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end}); overflow: hidden; }}
+        
+        .aurora-1 {{
+            position: absolute; width: 800px; height: 800px; 
+            background: #FBCFE8; filter: blur(120px); border-radius: 50%;
+            top: -200px; right: -200px; opacity: 0.6;
+        }}
+
+        .image-container {{
+            position: absolute; left: 150px; top: 180px;
+            width: 700px; height: 720px;
+            border-radius: 40px; overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+            z-index: 5;
+        }}
+
+        .text-container {{
+            position: absolute; left: 950px; top: 400px;
+            width: 800px;
+            z-index: 10;
+        }}
+
+        .subtitle {{
+            font-size: 32px;
+            font-weight: 700;
+            color: {accent_color};
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+        }}
+
+        .title {{
+            font-size: 120px;
+            font-weight: 900;
+            color: #1F2937;
+            line-height: 1;
+        }}
+    </style>
+</head>
+<body>
+    <div class="aurora-1"></div>
+    <div class="image-container">
+        <img src="{image_url}" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+    <div class="text-container">
+        <p class="subtitle">{subtitle}</p>
+        <h1 class="title">{main_title}</h1>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_tech_thank_you_slide(
+    main_title="STAY CONNECTED",
+    social_handle="@tech_studio",
+    primary_neon="#00FFFF",
+    bg_dark="#1a1a2e",
+    font_family="'Montserrat', sans-serif"
+):
+    """
+    Generates a tech-themed Thank You slide with neon glow effects and geometric SVG elements.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_dark}; overflow: hidden; }}
+        
+        .grid-bg {{
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient({primary_neon} 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.1;
+        }}
+
+        .neon-title {{
+            position: absolute; left: 0; right: 0; top: 350px;
+            font-size: 160px; font-weight: 900; text-align: center;
+            color: {primary_neon};
+            text-shadow: 0 0 20px {primary_neon}, 0 0 40px {primary_neon};
+            letter-spacing: 15px;
+        }}
+
+        .social-box {{
+            position: absolute; left: 760px; top: 650px;
+            width: 400px; padding: 20px;
+            border: 2px solid {primary_neon};
+            border-radius: 10px;
+            color: white; font-size: 32px; text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,255,255,0.2);
+        }}
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="neon-title">THANK YOU</div>
+    <div class="social-box">{social_handle}</div>
+</body>
+</html>"""
+    return html_code
+
+def generate_minimalist_thank_you_slide(
+    main_title="END.",
+    footer_note="Copyright 2026 Studio",
+    text_color="#000000",
+    bg_color="#FFFFFF",
+    font_family="'Inter', sans-serif"
+):
+    """
+    Generates a minimalist Thank You slide focusing on high-end typography and white space.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        
+        .main-title {{
+            position: absolute; left: 120px; top: 400px;
+            font-size: 280px; font-weight: 800;
+            color: {text_color};
+            line-height: 0.8;
+        }}
+
+        .divider {{
+            position: absolute; left: 120px; top: 750px;
+            width: 100px; height: 12px;
+            background-color: {text_color};
+        }}
+
+        .footer {{
+            position: absolute; left: 120px; bottom: 80px;
+            font-size: 24px; text-transform: uppercase;
+            letter-spacing: 4px;
+            color: {text_color}; opacity: 0.5;
+        }}
+    </style>
+</head>
+<body>
+    <h1 class="main-title">{main_title}</h1>
+    <div class="divider"></div>
+    <p class="footer">{footer_note}</p>
+</body>
+</html>"""
+    return html_code
+
+def generate_elegant_thank_you_slide(
+    main_title="Thank You",
+    subtitle="FOR YOUR KIND ATTENTION",
+    bg_image="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop",
+    overlay_color="rgba(255, 255, 255, 0.85)",
+    font_family="'Playfair Display', serif"
+):
+    """
+    Generates an elegant Thank You slide with an image background and a glassmorphism card.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; overflow: hidden; }}
+        
+        .bg-img {{
+            position: absolute; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1;
+        }}
+
+        .glass-card {{
+            position: absolute; left: 560px; top: 290px;
+            width: 800px; height: 500px;
+            background-color: {overlay_color};
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            z-index: 5;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+        }}
+
+        .title {{
+            font-size: 110px; font-style: italic; color: #4A403A; margin-bottom: 20px;
+        }}
+
+        .subtitle {{
+            font-size: 24px; letter-spacing: 6px; color: #8B7E74;
+        }}
+    </style>
+</head>
+<body>
+    <img src="{bg_image}" class="bg-img">
+    <div class="glass-card">
+        <h1 class="title">{main_title}</h1>
+        <p class="subtitle">{subtitle}</p>
+    </div>
+</body>
+</html>"""
+    return html_code
