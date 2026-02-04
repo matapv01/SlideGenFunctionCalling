@@ -134,7 +134,12 @@ from src.tools.html_tool import (
     generate_thank_you_so_much_slide,   # slide cảm ơn (mhung)
     generate_brand_collaboration_closing_slide, # slide cảm ơn (mhung)
     generate_military_thank_you_slide,  # slide cảm ơn (mhung)
-    generate_corporate2_thank_you_slide, # slide cảm ơn (mhung)
+    generate_corporate2_thank_you_slide, 
+    generate_creative_thank_you_slide, 
+    generate_tech_thank_you_slide,
+    generate_minimalist_thank_you_slide_2,
+    generate_elegant_thank_you_slide
+     
 )
 
 # ===========================================================================================
@@ -1758,7 +1763,48 @@ class GenerateMilitaryThankYouSlideInput(BaseModel):
     font_family: str = Field(default="'Arial Black', sans-serif", description="The font family for the slide.")
     overlay_opacity: float = Field(default=0.2, description="The opacity of the white overlay on the background image (0.0 to 1.0).")
 
+class GenerateCorporate2ThankYouInput(BaseModel):
+    """Input schema for generate_corporate2_thank_you_slide ."""
+    main_title: str = Field(default="THANK YOU", description="The large main title text displayed prominently (e.g., 'THANK YOU').")
+    closing_message: str = Field(default="We look forward to collaborating with you.", description="Closing message or subtitle text displayed below the main title.")
+    contact_email: str = Field(default="contact@business.com", description="Contact email address to display on the slide.")
+    website: str = Field(default="www.business.com", description="Website URL to display on the slide.")
+    primary_color: str = Field(default="#1E3A8A", description="Primary color for decorative elements and accents (Hex code).")
+    accent_color: str = Field(default="#3B82F6", description="Accent color for highlights and secondary elements (Hex code).")
+    text_color: str = Field(default="#7A6350", description="Color for the main text content (Hex code).")
+    bg_color: str = Field(default="#F5F3F0", description="Background color of the slide (Hex code).")
+    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the text. Default: Playfair Display.")
 
+class GenerateCreativeThankYouInput(BaseModel):
+    """Input schema for generate_creative_thank_you_slide ."""
+    main_title: str = Field(default="Any Questions?", description="The large main title text displayed prominently (e.g., 'Any Questions?', 'Thank You').")
+    subtitle: str = Field(default="THANKS FOR WATCHING", description="Subtitle text displayed below or above the main title, typically in uppercase.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop", description="URL of the background or decorative image to display on the slide.")
+    bg_gradient_start: str = Field(default="#F5F3F0", description="Starting color of the background gradient (Hex code).")
+    bg_gradient_end: str = Field(default="#F5F3F0", description="Ending color of the background gradient (Hex code).")
+    accent_color: str = Field(default="#BE123C", description="Accent color for decorative elements and highlights (Hex code).")
+    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the text. Default: Playfair Display.")
+
+class GenerateTechThankYouInput(BaseModel):
+    main_title: str = Field(default="THANK YOU", description="The main title text displayed prominently in large letters (e.g., 'THANK YOU').")
+    social_handle: str = Field(default="@tech_studio", description="Social media handle or username to display (e.g., '@tech_studio', '@yourcompany').")
+    primary_neon: str = Field(default="#00FFFF", description="Primary neon color for glowing effects and accent elements (Hex code).")
+    bg_dark: str = Field(default="#1a1a2e", description="Dark background color of the slide (Hex code).")
+    font_family: str = Field(default="'Montserrat', sans-serif", description="Font family for the main text. Default: Montserrat.")
+
+class GenerateMinimalistThankYouInput2(BaseModel):
+    main_title: str = Field(default="END.", description="The main title text displayed prominently in large, bold letters (e.g., 'END.', 'THANK YOU').")
+    footer_note: str = Field(default="2026 Portfolio Studio", description="Footer note or information displayed at the bottom of the slide (e.g., '2026 Portfolio Studio', company name, date).")
+    text_color: str = Field(default="#000000", description="Text color for all text elements on the slide (Hex code).")
+    bg_color: str = Field(default="#FFFFFF", description="Background color of the slide (Hex code).")
+    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
+
+class GenerateElegantThankYouInput(BaseModel):
+    main_title: str = Field(default="Thank You", description="The stylized, decorative thank you text displayed in elegant script or serif font.")
+    subtitle: str = Field(default="FOR YOUR KIND ATTENTION", description="Subtitle text displayed below the main title, typically in uppercase letters.")
+    bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="URL of the elegant or sophisticated background image to display on the slide.")
+    overlay_color: str = Field(default="rgba(255, 255, 255, 0.85)", description="Semi-transparent overlay color applied over the background image to ensure text readability (RGBA format).")
+    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
@@ -1927,6 +1973,7 @@ INTRO_TOOLS = [
         description="Generates a minimalist title slide with centered card containing title and subtitle on full-slide geometric cube pattern background. Features Bebas Neue font for title, customizable pattern and card colors. Perfect for modern, minimalist presentations and meetings.",
         args_schema=GenerateTitleSlide18Input
     ),
+
     
 ]
 
@@ -2468,6 +2515,36 @@ THANK_YOU_TOOLS = [
         name="generate_military_thank_you_slide",
         description="Generates a professional military-themed presentation slide with a diagonal split layout, ideal for 'Thank You' or section break slides.",
         args_schema=GenerateMilitaryThankYouSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_corporate2_thank_you_slide,
+        name="generate_corporate2_thank_you_slide",
+        description="Generates a professional corporate 'Thank You' slide with navy blue and white color scheme. Features a clean layout with company logo placeholder, contact email, and website information. Uses elegant Playfair Display typography with decorative accent elements. Perfect for business presentations, corporate meetings, and professional closing slides requiring a sophisticated, trustworthy aesthetic.",
+        args_schema=GenerateCorporate2ThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_creative_thank_you_slide,
+        name="generate_creative_thank_you_slide",
+        description="Generates a creative and artistic 'Thank You' slide featuring a large background or decorative image, artistic typography, and vibrant accent colors. The design combines visual impact with elegant Playfair Display fonts and customizable gradient backgrounds. Perfect for creative presentations, design portfolios, marketing pitches, or any presentation wanting to make a bold, memorable closing statement with strong visual appeal.",
+        args_schema=GenerateCreativeThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_tech_thank_you_slide,
+        name="generate_tech_thank_you_slide",
+        description="Generates a modern tech-style 'Thank You' slide with neon glow effects, dark background, and social media icons. Features futuristic design elements with glowing text effects, high-tech aesthetic, and modern typography. Includes customizable social media icon links. Perfect for technology presentations, startup pitches, product launches, or any presentation targeting a tech-savvy audience wanting a cutting-edge, digital-forward closing slide.",
+        args_schema=GenerateTechThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_minimalist_thank_you_slide_2,
+        name="generate_minimalist_thank_you_slide_2",
+        description="Generates a clean, minimalist 'Thank You' slide with modern design featuring large, bold typography without excessive decorations. Emphasizes whitespace and simplicity with a focused message and contemporary fonts. The ultra-minimal approach creates maximum impact through restraint and clarity. Perfect for modern business presentations, professional meetings, or any presentation wanting a sleek, sophisticated closing that lets the message speak for itself.",
+        args_schema=GenerateMinimalistThankYouInput2
+    ),
+    StructuredTool.from_function(
+        func=generate_elegant_thank_you_slide,
+        name="generate_elegant_thank_you_slide",
+        description="Generates an elegant and sophisticated 'Thank You' slide featuring a beautiful background image, handwritten-style script typography, and generous whitespace. The design combines refined aesthetics with flowing calligraphy fonts and breathable layout spacing. Creates a luxurious, high-end feel with artistic typography. Perfect for wedding presentations, luxury brand pitches, upscale events, formal ceremonies, or any presentation requiring a refined, graceful closing with timeless elegance.",
+        args_schema=GenerateElegantThankYouInput
     )
 ]
 

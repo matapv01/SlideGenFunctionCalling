@@ -21363,3 +21363,311 @@ def generate_military_thank_you_slide(
     </html>"""
     return html_code
 
+def generate_corporate2_thank_you_slide(
+    main_title="THANK YOU",
+    closing_message="We look forward to collaborating with you.",
+    contact_email="contact@business.com",
+    website="www.business.com",
+    primary_color="#1E3A8A",
+    accent_color="#3B82F6",
+    text_color="#1F2937",
+    bg_color="#F8FAFC",
+    font_family="'Inter', sans-serif"
+):
+    """
+    Generates a professional corporate Thank You slide with contact information.
+    Features a clean, structured layout with a side accent panel.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        
+        .side-panel {{
+            position: absolute;
+            left: 0; top: 0; width: 480px; height: 1080px;
+            background-color: {primary_color};
+            z-index: 1;
+        }}
+        
+        .accent-bar {{
+            position: absolute;
+            left: 480px; top: 0; width: 20px; height: 1080px;
+            background-color: {accent_color};
+            z-index: 2;
+        }}
+
+        .main-content {{
+            position: absolute;
+            left: 600px; top: 300px;
+            width: 1100px;
+            z-index: 3;
+        }}
+
+        .title {{
+            font-size: 144px;
+            font-weight: 900;
+            color: {primary_color};
+            letter-spacing: 4px;
+            margin-bottom: 20px;
+        }}
+
+        .message {{
+            font-size: 48px;
+            color: {text_color};
+            margin-bottom: 80px;
+            opacity: 0.8;
+        }}
+
+        .contact-info {{
+            font-size: 32px;
+            color: {text_color};
+            line-height: 1.6;
+        }}
+
+        .contact-item {{
+            margin-bottom: 15px;
+            font-weight: 600;
+        }}
+    </style>
+</head>
+<body>
+    <div class="side-panel"></div>
+    <div class="accent-bar"></div>
+    <div class="main-content">
+        <h1 class="title">{main_title}</h1>
+        <p class="message">{closing_message}</p>
+        <div class="contact-info">
+            <div class="contact-item">Email: {contact_email}</div>
+            <div class="contact-item">Website: {website}</div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_creative_thank_you_slide(
+    main_title="Questions?",
+    subtitle="THANKS FOR WATCHING",
+    image_url="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop",
+    bg_gradient_start="#FFF1F2",
+    bg_gradient_end="#FCE7F3",
+    accent_color="#BE123C",
+    font_family="'Montserrat', sans-serif"
+):
+    """
+    Generates a creative Thank You slide with aurora background shapes and a featured image.
+    Perfect for portfolios or creative pitches.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; 
+                      background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end}); overflow: hidden; }}
+        
+        .aurora-1 {{
+            position: absolute; width: 800px; height: 800px; 
+            background: #FBCFE8; filter: blur(120px); border-radius: 50%;
+            top: -200px; right: -200px; opacity: 0.6;
+        }}
+
+        .image-container {{
+            position: absolute; left: 150px; top: 180px;
+            width: 700px; height: 720px;
+            border-radius: 40px; overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+            z-index: 5;
+        }}
+
+        .text-container {{
+            position: absolute; left: 950px; top: 400px;
+            width: 800px;
+            z-index: 10;
+        }}
+
+        .subtitle {{
+            font-size: 32px;
+            font-weight: 700;
+            color: {accent_color};
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+        }}
+
+        .title {{
+            font-size: 120px;
+            font-weight: 900;
+            color: #1F2937;
+            line-height: 1;
+        }}
+    </style>
+</head>
+<body>
+    <div class="aurora-1"></div>
+    <div class="image-container">
+        <img src="{image_url}" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+    <div class="text-container">
+        <p class="subtitle">{subtitle}</p>
+        <h1 class="title">{main_title}</h1>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_tech_thank_you_slide(
+    main_title="STAY CONNECTED",
+    social_handle="@tech_studio",
+    primary_neon="#00FFFF",
+    bg_dark="#1a1a2e",
+    font_family="'Montserrat', sans-serif"
+):
+    """
+    Generates a tech-themed Thank You slide with neon glow effects and geometric SVG elements.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_dark}; overflow: hidden; }}
+        
+        .grid-bg {{
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-image: radial-gradient({primary_neon} 1px, transparent 1px);
+            background-size: 50px 50px;
+            opacity: 0.1;
+        }}
+
+        .neon-title {{
+            position: absolute; left: 0; right: 0; top: 350px;
+            font-size: 160px; font-weight: 900; text-align: center;
+            color: {primary_neon};
+            text-shadow: 0 0 20px {primary_neon}, 0 0 40px {primary_neon};
+            letter-spacing: 15px;
+        }}
+
+        .social-box {{
+            position: absolute; left: 760px; top: 650px;
+            width: 400px; padding: 20px;
+            border: 2px solid {primary_neon};
+            border-radius: 10px;
+            color: white; font-size: 32px; text-align: center;
+            box-shadow: inset 0 0 15px rgba(0,255,255,0.2);
+        }}
+    </style>
+</head>
+<body>
+    <div class="grid-bg"></div>
+    <div class="neon-title">THANK YOU</div>
+    <div class="social-box">{social_handle}</div>
+</body>
+</html>"""
+    return html_code
+
+def generate_minimalist_thank_you_slide_2(
+    main_title="END.",
+    footer_note="Copyright 2026 Studio",
+    text_color="#000000",
+    bg_color="#FFFFFF",
+    font_family="'Inter', sans-serif"
+):
+    """
+    Generates a minimalist Thank You slide focusing on high-end typography and white space.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        
+        .main-title {{
+            position: absolute; left: 120px; top: 400px;
+            font-size: 280px; font-weight: 800;
+            color: {text_color};
+            line-height: 0.8;
+        }}
+
+        .divider {{
+            position: absolute; left: 120px; top: 750px;
+            width: 100px; height: 12px;
+            background-color: {text_color};
+        }}
+
+        .footer {{
+            position: absolute; left: 120px; bottom: 80px;
+            font-size: 24px; text-transform: uppercase;
+            letter-spacing: 4px;
+            color: {text_color}; opacity: 0.5;
+        }}
+    </style>
+</head>
+<body>
+    <h1 class="main-title">{main_title}</h1>
+    <div class="divider"></div>
+    <p class="footer">{footer_note}</p>
+</body>
+</html>"""
+    return html_code
+
+def generate_elegant_thank_you_slide(
+    main_title="Thank You",
+    subtitle="FOR YOUR KIND ATTENTION",
+    bg_image="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop",
+    overlay_color="rgba(255, 255, 255, 0.85)",
+    font_family="'Playfair Display', serif"
+):
+    """
+    Generates an elegant Thank You slide with an image background and a glassmorphism card.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; overflow: hidden; }}
+        
+        .bg-img {{
+            position: absolute; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1;
+        }}
+
+        .glass-card {{
+            position: absolute; left: 560px; top: 290px;
+            width: 800px; height: 500px;
+            background-color: {overlay_color};
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            z-index: 5;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+        }}
+
+        .title {{
+            font-size: 110px; font-style: italic; color: #4A403A; margin-bottom: 20px;
+        }}
+
+        .subtitle {{
+            font-size: 24px; letter-spacing: 6px; color: #8B7E74;
+        }}
+    </style>
+</head>
+<body>
+    <img src="{bg_image}" class="bg-img">
+    <div class="glass-card">
+        <h1 class="title">{main_title}</h1>
+        <p class="subtitle">{subtitle}</p>
+    </div>
+</body>
+</html>"""
+    return html_code
