@@ -1880,45 +1880,45 @@ class GenerateThankYouSlide7Input(BaseModel):
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 class GenerateCorporate2ThankYouInput(BaseModel):
     """Input schema for generate_corporate2_thank_you (corporate thank you slide with decorative elements)."""
-    main_title: str = Field(default="THANK YOU", description="Tiêu đề chính")
-    closing_message: str = Field(default="We look forward to collaborating with you.", description="Lời nhắn kết thúc")
-    contact_email: str = Field(default="contact@business.com", description="Email liên hệ")
-    website: str = Field(default="www.business.com", description="Website")
-    primary_color: str = Field(default="#1E3A8A", description="Màu chính (Hex)")
-    accent_color: str = Field(default="#3B82F6", description="Màu nhấn (Hex)")
-    text_color: str = Field(default="#7A6350", description="Màu chữ (Hex)")
-    bg_color: str = Field(default="#F5F3F0", description="Màu nền (Hex)")
+    main_title: str = Field(default="THANK YOU", description="Main title")
+    closing_message: str = Field(default="We look forward to collaborating with you.", description="Closing message")
+    contact_email: str = Field(default="contact@business.com", description="Contact email")
+    website: str = Field(default="www.business.com", description="Website URL")
+    primary_color: str = Field(default="#1E3A8A", description="Primary color (Hex)")
+    accent_color: str = Field(default="#3B82F6", description="Accent color (Hex)")
+    text_color: str = Field(default="#7A6350", description="Text color (Hex)")
+    bg_color: str = Field(default="#F5F3F0", description="Background color (Hex)")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
 class GenerateCreativeThankYouInput(BaseModel):
     """Input schema for generate_creative_thank_you (creative thank you slide with decorative elements)."""
-    main_title: str = Field(default="Any Questions?", description="Tiêu đề chính")
-    subtitle: str = Field(default="THANKS FOR WATCHING", description="Tiêu đề phụ")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop", description="URL ảnh hiển thị")
-    bg_gradient_start: str = Field(default="#F5F3F0", description="Màu nền (Hex)")
-    bg_gradient_end: str = Field(default="#F5F3F0", description="Màu nền (Hex)")
-    accent_color: str = Field(default="#BE123C", description="Màu nhấn")
+    main_title: str = Field(default="Any Questions?", description="Main title")
+    subtitle: str = Field(default="THANKS FOR WATCHING", description="Subtitle")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop", description="Image URL")
+    bg_gradient_start: str = Field(default="#F5F3F0", description="Background gradient start color (Hex)")
+    bg_gradient_end: str = Field(default="#F5F3F0", description="Background gradient end color (Hex)")
+    accent_color: str = Field(default="#BE123C", description="Accent color")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 class GenerateTechThankYouInput(BaseModel):
     """Input schema for generate_tech_thank_you (tech thank you slide with decorative elements)."""
-    main_title: str = Field(default="THANK YOU", description="Chữ tiêu đề")
-    social_handle: str = Field(default="@tech_studio", description="Tên tài khoản mạng xã hội")
-    primary_neon: str = Field(default="#00FFFF", description="Màu neon chủ đạo")
-    bg_dark: str = Field(default="#1a1a2e", description="Màu nền tối")
+    main_title: str = Field(default="THANK YOU", description="Title text")
+    social_handle: str = Field(default="@tech_studio", description="Social media handle")
+    primary_neon: str = Field(default="#00FFFF", description="Primary neon color")
+    bg_dark: str = Field(default="#1a1a2e", description="Dark background color")
     font_family: str = Field(default="'Montserrat', sans-serif", description="Font family for the main text. Default: Playfair Display.")
 class GenerateMinimalistThankYouInput(BaseModel):
     """Input schema for generate_minimalist_thank_you (minimalist thank you slide with decorative elements)."""
-    main_title: str = Field(default="END.", description="Tiêu đề")
-    footer_note: str = Field(default="2026 Portfolio Studio", description="Thông tin ở chân slide")
-    text_color: str = Field(default="#000000", description="Màu chữ")
-    bg_color: str = Field(default="#FFFFFF", description="Màu nền")
+    main_title: str = Field(default="END.", description="Title")
+    footer_note: str = Field(default="2026 Portfolio Studio", description="Footer note")
+    text_color: str = Field(default="#000000", description="Text color")
+    bg_color: str = Field(default="#FFFFFF", description="Background color")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 class GenerateElegantThankYouInput(BaseModel):
     """Input schema for generate_elegant_thank_you (elegant thank you slide with decorative elements)."""
-    main_title: str = Field(default="Thank You", description="Chữ cảm ơn cách điệu")
-    subtitle: str = Field(default="FOR YOUR KIND ATTENTION", description="Phụ đề bên dưới")
-    bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="URL ảnh nền sang trọng")
-    overlay_color: str = Field(default="rgba(255, 255, 255, 0.85)", description="Màu nền tối")
+    main_title: str = Field(default="Thank You", description="Stylized thank you text")
+    subtitle: str = Field(default="FOR YOUR KIND ATTENTION", description="Subtitle below")
+    bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="Elegant background image URL")
+    overlay_color: str = Field(default="rgba(255, 255, 255, 0.85)", description="Background overlay color")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
 INTRO_TOOLS = [
