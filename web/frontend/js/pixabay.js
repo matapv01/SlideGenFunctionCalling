@@ -86,16 +86,28 @@ export class PixabayManager {
         return vietnamesePattern.test(text);
     }
 
-    // Translate Vietnamese to English using MyMemory API (free)
+    // Translate Vietnamese to English using Backend API
     async translateToEnglish(text) {
+        // Check cache first
+        if (this.translationCache && this.translationCache.has(text)) {
+            return this.translationCache.get(text);
+        }
+
         try {
-            const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=vi|en`;
-            const response = await fetch(url);
+            // Use backend translation API
+            const apiUrl = `${window.API_BASE_URL || 'http://localhost:12008'}/api/translate?q=${encodeURIComponent(text)}&source=vi&target=en`;
+            const response = await fetch(apiUrl);
             const data = await response.json();
             
-            if (data.responseStatus === 200 && data.responseData.translatedText) {
-                return data.responseData.translatedText;
+            if (data.translated && data.translated !== text) {
+                // Save to cache
+                if (!this.translationCache) {
+                    this.translationCache = new Map();
+                }
+                this.translationCache.set(text, data.translated);
+                return data.translated;
             }
+            
             return text; // Return original if translation fails
         } catch (error) {
             console.warn('Translation error:', error);

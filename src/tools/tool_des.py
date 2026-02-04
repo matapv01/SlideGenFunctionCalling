@@ -27,9 +27,7 @@ from src.tools.html_tool import (
     generate_company_mission_slide, # slide intro
     generate_title_slide_3,# slide intro(hien)
     generate_minimalist_slide, # slide intro(hien)
-    generate_title_slide_4, # slide intro(hien)
     generate_title_slide_5, # slide intro(hien)
-    generate_title_slide_6, # slide intro(hien)
     generate_title_slide_7, # slide intro(hien)
     generate_title_slide_11, # slide intro(hien)
     generate_title_slide_12, # slide intro(hien)
@@ -37,7 +35,6 @@ from src.tools.html_tool import (
     generate_title_slide_15, # slide intro(hien)
     generate_title_slide_17, # slide intro(hien)
     generate_title_slide_18, # slide intro(hien)
-    generate_title_slide_21, # slide intro(hien)
   
     
     
@@ -55,7 +52,6 @@ from src.tools.html_tool import (
     generate_section_header_slide_9, # slide chuyển slide(hien)
     generate_section_header_slide_10, # slide chuyển slide(hien)
     generate_section_header_slide_12, # slide chuyển slide(hien)
-    generate_section_header_slide_13, # slide chuyển slide(hien)
     generate_section_header_slide_15, # slide chuyển slide(hien)
     generate_section_header_slide_17,   # slide chuyển slide(hien)
     generate_section_header_slide_18,   # slide chuyển slide(hien)
@@ -110,6 +106,9 @@ from src.tools.html_tool import (
     generate_premium_abstract_slide, # slide content
     generate_methodology_slide, # slide content
     generate_planning_phase_slide, # slide content
+    generate_timeline_slide, # slide content
+    generate_quote_slide, # slide content
+    generate_classic_content_slide, # slide content
 
 
 
@@ -135,8 +134,7 @@ from src.tools.html_tool import (
     generate_thank_you_so_much_slide,   # slide cảm ơn (mhung)
     generate_brand_collaboration_closing_slide, # slide cảm ơn (mhung)
     generate_military_thank_you_slide,  # slide cảm ơn (mhung)
-    generate_thank_you_farm_slide, # slide cảm ơn (mhung)
-
+    generate_corporate2_thank_you_slide, # slide cảm ơn (mhung)
 )
 
 # ===========================================================================================
@@ -344,16 +342,7 @@ class GenerateMinimalistSlideInput(BaseModel):
     line_color: str = Field(default="#2C2C2C", description="The color for the decorative lines.")
     curve_color: str = Field(default="#4A4A4A", description="The color for the decorative curves.")
     
-class GenerateTitleSlide4Input(BaseModel):
-    """Input schema for generate_title_slide_4."""
-    title: str = Field(..., description="The main title for the slide. Use <br> for line breaks. Default: 'Your Presentation Title'.")
-    subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Your subtitle goes here'.")
-    font_family: str = Field(default="Inter, system-ui, -apple-system, sans-serif", description="The font family for all text elements.")
-    background_color: str = Field(default="#E8E3DC", description="The background color of the slide (warm beige/cream).")
-    text_color: str = Field(default="#1A1A1A", description="The color for all text elements.")
-    accent_color_1: str = Field(default="#E85D75", description="First accent color for decorative shapes (coral red).")
-    accent_color_2: str = Field(default="#D8B4E2", description="Second accent color for decorative shapes (lavender).")
-    
+ 
 class GenerateTitleSlide5Input(BaseModel):
     """Input schema for generate_title_slide_5."""
     top_left_text: str = Field(default="Our shared moments", description="Text displayed in the top-left corner of the slide.")
@@ -369,18 +358,6 @@ class GenerateTitleSlide5Input(BaseModel):
     show_decorative_lines: bool = Field(default=True, description="Whether to display decorative horizontal lines.")
     custom_css: str = Field(default="", description="Additional custom CSS to be included in the slide.")
     
-class GenerateTitleSlide6Input(BaseModel):
-    """Input schema for generate_title_slide_6."""
-    main_title: str = Field(default="Your main title here", description="Main title text displayed prominently in the center of the content box.")
-    subtitle: str = Field(default="- Your subtitle here -", description="Subtitle text displayed below the main title.")
-    bg_color: str = Field(default="#E8D4F0", description="Background gradient start color in hex format.")
-    bg_gradient_to: str = Field(default="#F0E4F8", description="Background gradient end color in hex format.")
-    box_color: str = Field(default="#D4E8B4", description="Color of the central content box in hex format.")
-    title_color: str = Field(default="#2D3436", description="Color of the title and subtitle text in hex format.")
-    font_family: str = Field(default="Arial, monospace", description="Font family for title and subtitle text.")
-    show_clouds: bool = Field(default=True, description="Whether to display cloud decorations at the top of the slide.")
-    show_flower: bool = Field(default=True, description="Whether to display the cute flower character at the bottom-left corner.")
-    custom_css: str = Field(default="", description="Additional custom CSS to be included in the slide.")
 
 class GenerateTitleSlide7Input(BaseModel):
     """Input schema for generate_title_slide_7."""
@@ -638,16 +615,6 @@ class GenerateSectionHeaderSlide12Input(BaseModel):
     bg_color: str = Field(default="#f5f5f5", description="Background color of the slide (light gray).")
     title_color: str = Field(default="#2d3748", description="Color of the main title text (dark gray).")
     custom_css: str = Field(default="", description="Additional custom CSS.")
-
-class GenerateSectionHeaderSlide13Input(BaseModel):
-    """Input schema for generate_section_header_slide_13."""
-    main_title: str = Field(..., description="Main title text for the slide.")
-    subtitle: str = Field(..., description="Subtitle text displayed below the title.")
-    bg_start_color: str = Field(default="#FFFFFF", description="Starting gradient color (white/left side).")
-    bg_end_color: str = Field(default="#C8F4F0", description="Ending gradient color (light cyan/right side).")
-    accent_gradient_color: str = Field(default="#FFB366", description="Accent gradient color for the bottom left corner (peach/orange).")
-    text_color: str = Field(default="#1A1A1A", description="Color of all text elements (dark gray).")
-    custom_css: str = Field(default="", description="Additional CSS rules to inject into the style block.")
 
 
 class GenerateSectionHeaderSlide15Input(BaseModel):
@@ -1435,6 +1402,109 @@ class GeneratePlanningPhaseSlideInput(BaseModel):
     timeline_color: str = Field(default="#FFFFFF", description="Color for the timeline line and dots")
     custom_css: str = Field(default="", description="Additional custom CSS to inject")
 
+class GenerateTimelineSlideInput(BaseModel):
+    """Input schema for generate_timeline_slide."""
+    main_title: str = Field(
+        default="COMPANY HISTORY", 
+        description="Main title of the slide."
+    )
+    subtitle: str = Field(
+        default="A journey of innovation and growth", 
+        description="Subtitle text below the main title."
+    )
+    milestones: List[Dict[str, str]] = Field(
+        default=[
+            {"year": "2020", "title": "Foundation", "desc": "Started with a team of 5 visionaries."},
+            {"year": "2021", "title": "Series A", "desc": "Raised $10M to expand operations."},
+            {"year": "2022", "title": "Global Launch", "desc": "Entered 3 new international markets."},
+            {"year": "2023", "title": "Market Leader", "desc": "Achieved #1 status in the industry."}
+        ],
+        description="List of milestones to display on the timeline. Each dict should have 'year', 'title', and 'desc' keys. Recommended 4-5 items."
+    )
+    bg_color: str = Field(
+        default="#1E1E2E", 
+        description="Background color hex code."
+    )
+    accent_color: str = Field(
+        default="#F43F5E", 
+        description="Accent color for the timeline line and active elements."
+    )
+    text_color: str = Field(
+        default="#FFFFFF", 
+        description="Color for text elements."
+    )
+    font_family: str = Field(
+        default="'Inter', sans-serif", 
+        description="Font family string."
+    )
+
+class GenerateQuoteSlideInput(BaseModel):
+    """Input schema for generate_quote_slide."""
+    quote: str = Field(
+        ..., 
+        description="The main quote text or core message to display. Default: 'Design is not just what it looks like and feels like. Design is how it works.'"
+    )
+    author: str = Field(
+        default="Steve Jobs",
+        description="Name of the author or speaker."
+    )
+    role: str = Field(
+        default="Co-founder, Apple", 
+        description="Role or title of the author (e.g., 'CEO', 'Founder')."
+    )
+    bg_color: str = Field(
+        default="#FAF9F6", 
+        description="Background color hex code (usually light for elegance)."
+    )
+    quote_color: str = Field(
+        default="#18181B", 
+        description="Color of the quote text."
+    )
+    accent_color: str = Field(
+        default="#EA580C", 
+        description="Accent color for decorative elements (lines, quotation marks)."
+    )
+    font_family: str = Field(
+        default="Playfair Display", 
+        description="Font family (Serif fonts recommended for quotes)."
+    )
+
+class GenerateClassicContentSlideInput(BaseModel):
+    """Input schema for generate_classic_content_slide."""
+    main_title: str = Field(
+        default="MARKET OPPORTUNITY", 
+        description="The main headline of the content slide."
+    )
+    paragraph: str = Field(
+        ..., 
+        description="A detailed paragraph explaining the topic (2-3 sentences). Default: 'The market opportunity for our innovative solution is vast and growing rapidly. With increasing demand for efficient and user-friendly products, we are well-positioned to capture significant market share and drive substantial growth in the coming years.'"
+    )
+    bullet_points: List[str] = Field(
+        default=[
+        "Target audience growth of 15% YoY",
+        "Low competition in the premium segment",
+        "High barrier to entry for new players",
+        "Strong demand for automated solutions"
+    ], 
+        description="List of key points/bullets to display on the left side."
+    )
+    image_url: str = Field(
+        default="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015", 
+        description="URL of the illustrative image on the right side."
+    )
+    theme_color: str = Field(
+        default="#2563EB", 
+        description="Primary theme color for accents and bullets."
+    )
+    text_color: str = Field(
+        default="#1F2937", 
+        description="Main text color."
+    )
+    bg_color: str = Field(
+        default="#FFFFFF", 
+        description="Background color hex code."
+    )
+
 # === SLIDE GIỚI THIỆU TEAM CLASSES ===
 
 class GenerateTeamSlideInput(BaseModel):
@@ -1688,17 +1758,7 @@ class GenerateMilitaryThankYouSlideInput(BaseModel):
     font_family: str = Field(default="'Arial Black', sans-serif", description="The font family for the slide.")
     overlay_opacity: float = Field(default=0.2, description="The opacity of the white overlay on the background image (0.0 to 1.0).")
 
-class GenerateThankYouFarmSlideInput(BaseModel):
-    """Input schema for generate_thank_you_farm_slide."""
-    main_text: str = Field(default="THANK YOU", description="Primary text, usually 'THANK YOU'.")
-    sub_text: str = Field(default="For Your Attention", description="Subtext below the main title.")
-    bg_color: str = Field(default="#FDF6D8", description="Sky background color (hex).")
-    text_color: str = Field(default="#8B5A2B", description="Outline and shadow color for main text.")
-    accent_color: str = Field(default="#F39C12", description="Fill color for main text.")
-    font_family: str = Field(default="'Short Stack', cursive, sans-serif", description="Playful font family.")
-    show_animals: Optional[bool] = Field(default=True, description="Toggle chicken and chick illustrations.")
-    show_windmill: Optional[bool] = Field(default=True, description="Toggle windmill illustration.")
-    show_kite: Optional[bool] = Field(default=True, description="Toggle kite illustration.")
+
 
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
@@ -1816,24 +1876,14 @@ INTRO_TOOLS = [
         description="Generates an elegant and sophisticated **Title or Introduction Slide** with a minimalist design aesthetic using converter-compatible fixed positioning (1920x1080px). Features smooth decorative SVG curves in the top-left and bottom-right corners, horizontal line accents at top and bottom, and refined serif typography for the title (112px font) paired with clean sans-serif for the subtitle (26px font). Uses absolute positioning with pixel values instead of flexbox/responsive units for reliable HTML-to-absolute conversion. The warm beige/cream background creates a timeless, professional look perfect for business presentations, corporate meetings, consulting proposals, or any presentation requiring a clean, upscale, and distraction-free opening.",
         args_schema=GenerateMinimalistSlideInput
     ),
-    StructuredTool.from_function(
-        func=generate_title_slide_4,
-        name="generate_title_slide_4",
-        description="Generates a playful and modern **Title or Introduction Slide** with decorative geometric elements. Features a clean border frame with elegant corner curves, and colorful scattered shapes (circles and diamonds) in coral red, lavender, and black positioned at the corners and edges. The centered layout with bold sans-serif typography on a warm beige background creates a friendly yet professional aesthetic, perfect for creative presentations, design showcases, educational content, or any presentation needing a touch of visual interest while maintaining clarity and focus.",
-        args_schema=GenerateTitleSlide4Input
-    ),
+
     StructuredTool.from_function(
         func = generate_title_slide_5,
         name="generate_title_slide_5",
         description="Generates a warm and nostalgic **Title or Introduction Slide** with a notebook cover design aesthetic. Features a tilted polaroid-style photo frame with decorative hand-drawn doodles, a four-leaf clover icon, horizontal decorative lines at top and bottom, and personalized text elements in corners ('Our shared moments', year). The soft blue-gray background combined with elegant typography creates a scrapbook-like, memory-capturing feel. Perfect for personal presentations, photo albums, travel stories, memory collections, family events, or any presentation wanting an intimate, handcrafted, and sentimental opening that evokes cherished moments and personal connections.",
         args_schema=GenerateTitleSlide5Input,
     ),
-    StructuredTool.from_function(
-        func=generate_title_slide_6,
-        name="generate_title_slide_6",
-        description="Generates a playful and whimsical **Title or Introduction Slide** with a cartoon-style design using converter-compatible fixed positioning (1920x1080px). Features a rounded content box (1300x500px) with thick borders, soft pastel gradient background, fluffy white clouds floating at the top, and a cheerful flower character at the bottom-left corner. The design uses bold, friendly typography (68px title, 30px subtitle) with absolute positioning perfect for educational content, children's presentations, fun workshops, creative projects, or any presentation wanting a lighthearted, approachable, and joyful atmosphere that captures attention with its charming and inviting visual style.",
-        args_schema=GenerateTitleSlide6Input,
-    ),
+
     StructuredTool.from_function(
         func=generate_title_slide_7,
         name="generate_title_slide_7",
@@ -1968,12 +2018,6 @@ TRANSITION_TOOLS = [
         args_schema=GenerateSectionHeaderSlide12Input
     ),
     StructuredTool.from_function(
-        func=generate_section_header_slide_13,
-        name="generate_section_header_slide_13",
-        description="Generates a modern section header slide with SVG illustration container on the right and text content on the left. Features a diagonal gradient background (white to light cyan), accent gradient at bottom left (peach/orange), and flexible layout with 55% text area and 45% SVG container. Text uses dark gray color with Roboto Mono font. Layout uses flexbox with space-between alignment for balanced composition. No animations. Perfect for visually enriched section dividers with custom SVG illustrations or graphics. The SVG container can hold any custom artwork.",
-        args_schema=GenerateSectionHeaderSlide13Input
-    ),
-    StructuredTool.from_function(
         func=generate_section_header_slide_15,
         name="generate_section_header_slide_15",
         description="Generates a Christmas-themed section header slide with festive gradient blobs and Christmas tree SVG illustration on the right. Features dark evergreen background, white text, and colorful festive gradient blobs (red, green, gold). Layout uses flexbox with text content on left (65% width) and SVG container on right (35% width). Text is large, italic, and bold. No animations. Perfect for holiday presentations and festive section dividers. Includes embedded Christmas tree SVG with ornaments and star.",
@@ -1997,12 +2041,7 @@ TRANSITION_TOOLS = [
         description="Generates a section header slide with organic environmental decorations. Features 4 organic watercolor blobs positioned at corners with turbulence filter and centered content area using Poppins font. Perfect for nature-themed presentations and environmental topics.",
         args_schema=GenerateSectionHeaderSlide19Input
     ),
-    StructuredTool.from_function(
-        func=generate_title_slide_21,
-        name="generate_title_slide_21",
-        description="Generates a clean minimal title slide with blue gradient background. Features large title (90px) positioned on the right side, horizontal divider line across the middle, and subtitle text in the bottom left corner. Simple and elegant design with soft blue gradient (light to darker blue). Perfect for professional presentations needing a minimalist, balanced layout with clear visual separation between title and subtitle.",
-        args_schema=GenerateTitleSlide21Input
-    )
+
 ]
 
 CONTENT_TOOLS = [
@@ -2288,7 +2327,26 @@ CONTENT_TOOLS = [
         name="generate_planning_phase_slide",
         description="Generates a Planning Phase slide with timeline and icon markers. This slide shows 4 stages represented by pin markers containing line art icons (brain, checklist, design, puzzle), each with its own timeline dot, title, and description. The markers are displayed horizontally above the timeline items, creating a visual flow. Perfect for presenting project phases, process steps, strategic planning stages, or any sequential workflow with 4 key stages. Features customizable colors for markers and timeline elements.",
         args_schema=GeneratePlanningPhaseSlideInput
-    )
+    ),
+    StructuredTool.from_function(
+        func=generate_timeline_slide,
+        name="generate_timeline_slide",
+        description="Generates a horizontal timeline slide to visualize progress, history, or future roadmap.",
+        args_schema=GenerateTimelineSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_quote_slide,
+    name="generate_quote_slide",
+    description="Generates an elegant, centered quote slide to highlight a key message or testimonial.",
+    args_schema=GenerateQuoteSlideInput
+    ),
+    StructuredTool.from_function(
+    func=generate_classic_content_slide,
+    name="generate_classic_content_slide",
+    description="Generates a standard content slide with a title, paragraph, bullet points on the left, and a large image on the right.",
+    args_schema=GenerateClassicContentSlideInput
+    ),
+
 ]
 
 TEAM_TOOLS = [
@@ -2410,12 +2468,6 @@ THANK_YOU_TOOLS = [
         name="generate_military_thank_you_slide",
         description="Generates a professional military-themed presentation slide with a diagonal split layout, ideal for 'Thank You' or section break slides.",
         args_schema=GenerateMilitaryThankYouSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_thank_you_farm_slide,
-        name="generate_thank_you_farm_slide",
-        description="Generates a playful farm-themed 'Thank You' slide with nature elements, windmill, and animals.",
-        args_schema=GenerateThankYouFarmSlideInput
     )
 ]
 
