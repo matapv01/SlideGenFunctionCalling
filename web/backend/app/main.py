@@ -29,12 +29,13 @@ from .schemas import (
 )
 from .services import SlideService, CaptureService, ConversionService, WorkflowService
 
-# Import Pixabay tool
+# Import Pixabay tool and Translation tool
 import sys
 from pathlib import Path as SysPath
 project_root = SysPath(__file__).parent.parent.parent.parent
 sys.path.insert(0, str(project_root))
 from src.tools.pixabay_tool import PixabayTool
+from src.tools.translate_tool import get_translator
 
 # Setup logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL))
@@ -2991,3 +2992,43 @@ async def get_best_pixabay_image(
     except Exception as e:
         logger.error(f"Error getting best Pixabay image: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+# ============================================================================
+# TRANSLATION API
+# ============================================================================
+
+@app.get("/api/translate")
+async def translate_text(
+    q: str = Query(..., description="Text to translate"),
+    source: str = Query("vi", description="Source language code (default: vi)"),
+    target: str = Query("en", description="Target language code (default: en)")
+):
+    """
+    Translate text from one language to another
+    
+    - **q**: Text to translate
+    - **source**: Source language (default: Vietnamese - vi)
+    - **target**: Target language (default: English - en)
+    
+    Returns translated text with caching and multiple API fallbacks
+    """
+    try:
+        translator = get_translator()
+        translated = translator.translate(q, source=source, target=target)
+        
+        return JSONResponse(content={
+            "original": q,
+            "translated": translated,
+            "source": source,
+            "target": target
+        })
+    except Exception as e:
+        logger.error(f"Translation error: {e}")
+        # Return original text if translation fails
+        return JSONResponse(content={
+            "original": q,
+            "translated": q,
+            "source": source,
+            "target": target,
+            "error": str(e)
+        })
