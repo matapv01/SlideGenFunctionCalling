@@ -62,7 +62,7 @@ export class PixabayManager {
         // Check if it's likely an image URL
         const imageExtensions = ['.jpg', '.jpeg', '.png', '.gif', '.webp', '.bmp', '.svg'];
         const hasImageExtension = imageExtensions.some(ext => url.toLowerCase().includes(ext));
-        
+
         if (!hasImageExtension && !url.startsWith('data:image/')) {
             const confirm = window.confirm('URL này có thể không phải là ảnh. Bạn có muốn tiếp tục?');
             if (!confirm) return;
@@ -72,7 +72,7 @@ export class PixabayManager {
         if (this.slideEditor && this.slideEditor.createImageElementFromURL) {
             this.slideEditor.createImageElementFromURL(url, 200, 200);
             this.showMessage('Đã thêm ảnh từ URL!', 'success');
-            
+
             // Clear input
             imageUrlInput.value = '';
         } else {
@@ -95,10 +95,10 @@ export class PixabayManager {
 
         try {
             // Use backend translation API
-            const apiUrl = `${window.API_BASE_URL || 'http://localhost:12008'}/api/translate?q=${encodeURIComponent(text)}&source=vi&target=en`;
+            const apiUrl = `${window.config?.API_BASE_URL || 'http://localhost:12008'}/api/translate?q=${encodeURIComponent(text)}&source=vi&target=en`;
             const response = await fetch(apiUrl);
             const data = await response.json();
-            
+
             if (data.translated && data.translated !== text) {
                 // Save to cache
                 if (!this.translationCache) {
@@ -107,7 +107,7 @@ export class PixabayManager {
                 this.translationCache.set(text, data.translated);
                 return data.translated;
             }
-            
+
             return text; // Return original if translation fails
         } catch (error) {
             console.warn('Translation error:', error);
@@ -127,7 +127,7 @@ export class PixabayManager {
             this.showMessage('Vui lòng nhập từ khóa tìm kiếm', 'warning');
             return;
         }
-        
+
         try {
             // Show loading
             if (loadingIndicator) loadingIndicator.style.display = 'block';
@@ -155,15 +155,15 @@ export class PixabayManager {
                 page: page
             });
 
-            const apiUrl = `${window.API_BASE_URL || 'http://localhost:12008'}/api/pixabay/search/images?${params}`;
+            const apiUrl = `${window.config?.API_BASE_URL || 'http://localhost:12008'}/api/pixabay/search/images?${params}`;
             const response = await fetch(apiUrl);
-            
+
             if (!response.ok) {
                 throw new Error(`API error: ${response.status}`);
             }
 
             const data = await response.json();
-            
+
             // Store total hits for pagination
             this.totalHits = data.totalHits || 0;
 
@@ -177,7 +177,7 @@ export class PixabayManager {
         } catch (error) {
             console.error('Pixabay search error:', error);
             this.showMessage('Lỗi khi tìm kiếm. Vui lòng thử lại.', 'error');
-            
+
             if (loadingIndicator) loadingIndicator.style.display = 'none';
             if (resultsContainer) resultsContainer.style.display = 'grid';
         }
@@ -258,14 +258,14 @@ export class PixabayManager {
             // Drag and drop support for images
             const imgElement = imageCard.querySelector('img');
             let isDragging = false;
-            
+
             if (imgElement) {
                 imgElement.addEventListener('dragstart', (e) => {
                     isDragging = true;
                     e.dataTransfer.effectAllowed = 'copy';
                     e.dataTransfer.setData('text/uri-list', image.webformatURL);
                     e.dataTransfer.setData('text/plain', image.webformatURL);
-                    
+
                     console.log('Pixabay image drag started:', image.webformatURL);
                 });
 
@@ -310,9 +310,9 @@ export class PixabayManager {
 
     addPaginationControls(container) {
         const totalPages = Math.ceil(this.totalHits / this.perPage);
-        
+
         if (totalPages <= 1) return; // No pagination needed
-        
+
         const paginationDiv = document.createElement('div');
         paginationDiv.style.cssText = `
             grid-column: 1 / -1;
@@ -324,7 +324,7 @@ export class PixabayManager {
             border-top: 1px solid #e2e8f0;
             margin-top: 10px;
         `;
-        
+
         // Previous button
         const prevBtn = document.createElement('button');
         prevBtn.textContent = '← Trước';
@@ -345,7 +345,7 @@ export class PixabayManager {
             prevBtn.addEventListener('mouseleave', () => prevBtn.style.background = '#667eea');
             prevBtn.addEventListener('click', () => this.searchImages(this.currentPage - 1));
         }
-        
+
         // Page info
         const pageInfo = document.createElement('span');
         pageInfo.textContent = `Trang ${this.currentPage} / ${totalPages}`;
@@ -356,7 +356,7 @@ export class PixabayManager {
             min-width: 100px;
             text-align: center;
         `;
-        
+
         // Next button
         const nextBtn = document.createElement('button');
         nextBtn.textContent = 'Tiếp →';
@@ -377,7 +377,7 @@ export class PixabayManager {
             nextBtn.addEventListener('mouseleave', () => nextBtn.style.background = '#667eea');
             nextBtn.addEventListener('click', () => this.searchImages(this.currentPage + 1));
         }
-        
+
         paginationDiv.appendChild(prevBtn);
         paginationDiv.appendChild(pageInfo);
         paginationDiv.appendChild(nextBtn);
@@ -388,7 +388,7 @@ export class PixabayManager {
         try {
             // Use largeImageURL for better quality
             const imageUrl = imageData.largeImageURL || imageData.webformatURL;
-            
+
             // Show loading notification
             this.showMessage('Đang tải hình ảnh...', 'info');
 
@@ -402,7 +402,7 @@ export class PixabayManager {
             // Create image element to get dimensions
             const img = new Image();
             img.crossOrigin = 'anonymous';
-            
+
             await new Promise((resolve, reject) => {
                 img.onload = resolve;
                 img.onerror = reject;
@@ -414,7 +414,7 @@ export class PixabayManager {
             let height = img.height;
             const maxWidth = 800;
             const maxHeight = 600;
-            
+
             if (width > maxWidth) {
                 height = (height * maxWidth) / width;
                 width = maxWidth;
@@ -436,12 +436,12 @@ export class PixabayManager {
             el.style.height = height + 'px';
             el.style.zIndex = this.slideEditor.zIndexCounter++;
             el.style.borderRadius = '12px';
-            
+
             // Store Pixabay metadata
             el.dataset.pixabayId = imageData.id;
             el.dataset.pixabayUser = imageData.user;
             el.dataset.pixabayUrl = imageData.pageURL;
-            
+
             // Create img element
             const imgElement = document.createElement('img');
             imgElement.src = imageUrl;
@@ -450,10 +450,10 @@ export class PixabayManager {
             imgElement.style.objectFit = 'cover';
             imgElement.style.borderRadius = '12px';
             el.appendChild(imgElement);
-            
+
             // Add to canvas
             this.slideEditor.canvas.appendChild(el);
-            
+
             // Make interactive, select, and save state (following SlideEditor pattern)
             if (this.slideEditor.makeElementInteractive) {
                 this.slideEditor.makeElementInteractive(el);
@@ -464,7 +464,7 @@ export class PixabayManager {
             if (this.slideEditor.saveState) {
                 this.slideEditor.saveState();
             }
-            
+
             console.log('Image added to canvas successfully');
             this.showMessage('Đã thêm hình ảnh vào slide', 'success');
 
