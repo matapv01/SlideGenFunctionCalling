@@ -12,7 +12,6 @@ from src.tools.html_tool import (
     generate_introduction_slide, # slide intro
     generate_intro_slide1, # slide intro
     generate_elegant_intro_slide,   # slide intro
-    generate_inspirational_quote_slide, # slide intro
     generate_title_slide_2, # slide intro
     generate_dynamic_intro_slide,   # slide intro
     generate_big_concept_slide, # slide intro
@@ -87,7 +86,6 @@ from src.tools.html_tool import (
     generate_service_roadmap_slide, # slide content
     generate_financial_projections_slide_dark, # slide content
     generate_minimalist_tech_list_slide,    # slide content
-    generate_centered_tech_columns_slide,   # slide content
     generate_split_layout_list_slide, # slide content
     generate_reference_slide,   # slide content
     generate_icon_list_slide,   # slide content
@@ -205,14 +203,6 @@ class GenerateElegantIntroSlideInput(BaseModel):
     decoration_color_start: str = Field(default="#F7DC6F", description="The starting color for the gold gradient decorations.")
     decoration_color_end: str = Field(default="#C9A842", description="The ending color for the gold gradient decorations.")
 
-class GenerateInspirationalQuoteSlideInput(BaseModel):
-    """Input schema for generate_inspirational_quote_slide."""
-    quote_text: str = Field(..., description="The main quote or statement, displayed in a large, elegant font. Default: 'The best way to predict the future is to create it.'.")
-    attribution_text: str = Field(..., description="The attribution for the quote (e.g., author, source). Default: 'Peter Drucker'.")
-    font_family: str = Field(default="'Playfair Display', 'Inter', serif", description="Font family for all text elements. A serif font like 'Playfair Display' is recommended.")
-    background_image_url: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="URL for the full-screen background image. A bright, clean image is recommended for this theme.")
-    text_color: str = Field(default="#3A3A3A", description="Text color for the quote and attribution. A dark color is recommended for light backgrounds.")
-    decoration_color: str = Field(default="rgba(0, 0, 0, 0.08)", description="Color of the large, decorative quotation marks. A subtle, semi-transparent color is recommended.")
 
 class GenerateTitleSlide2Input(BaseModel):
     """Input schema for generate_title_slide_2."""
@@ -1167,18 +1157,6 @@ class GenerateMinimalistTechListSlideInput(BaseModel):
     accent_color: str = Field(default="#6366F1", description="The accent color for the side border and bullet points.")
     custom_css: str = Field(default="", description="Optional custom CSS for advanced styling.")
 
-class GenerateCenteredTechColumnsSlideInput(BaseModel):
-    """Input schema for generate_centered_tech_columns_slide."""
-    title: str = Field(..., description="The main title for the slide's content. Default: 'You can also split your content'.")
-    columns: List[Dict[str, str]] = Field(..., description="An array of objects, where each object represents a column with keys 'icon_name' (bulb, target, rocket), 'title', and 'description'. Default: [{'icon_name': 'bulb', 'title': 'Column One', 'description': 'Description for column one.'}, {'icon_name': 'target', 'title': 'Column Two', 'description': 'Description for column two.'}].")
-    font_family: str = Field(default="'Nunito', sans-serif", description="The font family for all text elements.")
-    text_color: str = Field(default="#F8FAFC", description="The color for all text elements.")
-    sky_top_color: str = Field(default="#0F172A", description="Background color for the top of the slide.")
-    sky_bottom_color: str = Field(default="#1E293B", description="Background color for the bottom of the slide.")
-    grid_dot_color: str = Field(default="rgba(255, 255, 255, 0.1)", description="The color and opacity for the dots in the background grid.")
-    accent_color: str = Field(default="#22D3EE", description="The accent color for borders and icons.")
-    card_bg_color: str = Field(default="rgba(30, 41, 59, 0.5)", description="Background color for the content cards.")
-
 class GenerateSplitLayoutListSlideInput(BaseModel):
     """Input schema for generate_split_layout_list_slide."""
     main_title: str = Field(..., description="The main title displayed in the left column. Supports HTML tags like <b>, <i>, and <br> for line breaks. Default: 'YOUR MAIN TOPIC'.")
@@ -1814,12 +1792,7 @@ INTRO_TOOLS = [
         description="Generates an elegant Introduction or Title slide, featuring an asymmetrical two-column layout with a large title on the left and a framed image on the right. Its unique features are the beautiful, golden botanical frame that adorns the image's bottom-right corner and a subtle cluster of stars at the top-left, creating a warm and celebratory feel. Ideal for presentation openers, chapter dividers, personal introductions, or event invitations.",
         args_schema=GenerateElegantIntroSlideInput
     ),
-    StructuredTool.from_function(
-        func=generate_inspirational_quote_slide,
-        name="generate_inspirational_quote_slide",
-        description="Generates a bright, airy, and sophisticated Quote Slide. It features a full-screen background image, elegant serif typography, and a semi-transparent, blurred content card to ensure readability. The design is framed by large, subtle decorative quotation marks, making it perfect for impactful opening statements, highlighting key messages, or as an elegant closing slide.",
-        args_schema=GenerateInspirationalQuoteSlideInput
-    ),
+
     StructuredTool.from_function(
         func=generate_title_slide_2,
         name="generate_title_slide_2",
@@ -2244,12 +2217,7 @@ CONTENT_TOOLS = [
         description="Generates a bright, clean, and professional **Content Slide**. This slide is characterized by its large, highly-legible fonts and a modern, tech-inspired aesthetic. Key features include a subtle dot-grid background over a light gradient, a prominent decorative border on the left, and stylized circular bullet points. It's ideal for presenting key information, features, or principles in corporate or technology presentations where clarity and a polished look are paramount.",
         args_schema=GenerateMinimalistTechListSlideInput
     ),
-    StructuredTool.from_function(
-        func=generate_centered_tech_columns_slide,
-        name="generate_centered_tech_columns_slide",
-        description="Generates a clean, minimalist multi-column Content Slide, supporting up to 4 columns. This slide is ideal for comparing items in a corporate or tech-focused presentation. Its unique characteristics are a main title and a grid of columns, all centered on the page. The background features the minimalist tech style: a solid color with a dot grid and subtly appearing rockets, with no clouds or orbs.",
-        args_schema=GenerateCenteredTechColumnsSlideInput
-    ),
+
     StructuredTool.from_function(
         func=generate_split_layout_list_slide,
         name="generate_split_layout_list_slide",
