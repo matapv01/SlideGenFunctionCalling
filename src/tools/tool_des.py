@@ -55,7 +55,6 @@ from src.tools.html_tool import (
     generate_section_header_slide_15, # slide chuyển slide(hien)
     generate_section_header_slide_17,   # slide chuyển slide(hien)
     generate_section_header_slide_18,   # slide chuyển slide(hien)
-    generate_section_header_slide_19,   # slide chuyển slide(hien)
 
 
 
@@ -98,7 +97,6 @@ from src.tools.html_tool import (
     generate_geometric_split_content_slide, # slide content
     generate_geometric_split_content_slide_2, # slide content
     generate_geometric_image_content_slide, # slide content
-    generate_geometric_content_slide, # slide content
     generate_geometric_grid_slide,  # slide content
     generate_memphis_content_slide, # slide content
     generate_memphis_multicolumn_slide, # slide content
@@ -656,13 +654,6 @@ class GenerateSectionHeaderSlide18Input(BaseModel):
     circle_teal: str = Field(default="#6FBAAA", description="Color for teal circles (hex).")
 
 
-class GenerateSectionHeaderSlide19Input(BaseModel):
-    """Input schema for generate_section_header_slide_19."""
-    section_title: str = Field(..., description="Main title text for the section.")
-    section_subtitle: str = Field(..., description="Subtitle text below main title.")
-    bg_color: str = Field(default="#1a4d4d", description="Background color (hex).")
-    text_color: str = Field(default="#ffffff", description="Color for all text elements (hex).")
-    accent_color: str = Field(default="#a4d65e", description="Color for organic decoration blobs (hex).")
 
 # === SLIDE CONTENT CLASSES ===
 
@@ -1288,15 +1279,6 @@ class GenerateGeometricImageContentSlideInput(BaseModel):
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The color for the non-highlighted text.")
 
-class GenerateGeometricContentSlideInput(BaseModel):
-    """Input schema for generate_geometric_content_slide."""
-    main_title: str = Field(..., description="The main title for the content slide, rendered in extra-bold weight. Default: 'Our Core Strategy'.")
-    list_items: List[str] = Field(..., description="A list of strings for the bullet points. Each string will be a separate list item rendered in semi-bold weight. Default: ['Focus on <b><i><u><span style=\'color:#A3E635;\'>user-centric design</span></u></i></b>.', 'Innovate with purpose and clarity.', 'Build for <b><i><u><span style=\'color:#A3E635;\'>scalability and performance</span></u></i></b>.']")
-    concluding_text: str = Field(..., description="A final sentence or paragraph displayed below the list, rendered in semi-bold weight. Default: 'These principles guide our every move forward.'.")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for all text elements. Should support weights 600 and 800.")
-    bg_color: str = Field(default="#2B233D", description="The dark background color of the slide.")
-    text_color: str = Field(default="#E5E7EB", description="The main color for alls text elements.")
-    bullet_color: str = Field(default="#FBBF24", description="The accent color for the chevron bullet points.")
 
 class GenerateGeometricGridSlideInput(BaseModel):
     """Input schema for generate_geometric_grid_slide."""
@@ -2082,12 +2064,7 @@ TRANSITION_TOOLS = [
         description="Generates a minimalist section header slide with centered title, subtitle, and decorative circles at corners. Features Inter typography with customizable colors for background, title, subtitle, and corner circle groups (blue, yellow, teal). Perfect for modern section dividers and minimalist transitions.",
         args_schema=GenerateSectionHeaderSlide18Input
     ),
-    StructuredTool.from_function(
-        func=generate_section_header_slide_19,
-        name="generate_section_header_slide_19",
-        description="Generates a section header slide with organic environmental decorations. Features 4 organic watercolor blobs positioned at corners with turbulence filter and centered content area using Poppins font. Perfect for nature-themed presentations and environmental topics.",
-        args_schema=GenerateSectionHeaderSlide19Input
-    ),
+
 
 ]
 
@@ -2326,12 +2303,6 @@ CONTENT_TOOLS = [
         name="generate_geometric_image_content_slide",
         description="Generates a **Content Slide** with a prominent, custom-shaped image on the left and text on the right. This slide is part of the 'geometric theme' but uses more compact and subtle decorative shapes in the corners. It is ideal for visually illustrating a point or concept described in the text.",
         args_schema=GenerateGeometricImageContentSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_geometric_content_slide,
-        name="generate_geometric_content_slide",
-        description="Generates a **Content Slide** that matches the 'geometric theme'. It features subtle, colorful shapes in the corners and a dark background. The layout is correctly positioned to avoid overlap, and the text is intentionally made bolder for superior readability. It's the perfect companion to the geometric transition slide for presenting detailed points.",
-        args_schema=GenerateGeometricContentSlideInput
     ),
     StructuredTool.from_function(
         func=generate_geometric_grid_slide,
