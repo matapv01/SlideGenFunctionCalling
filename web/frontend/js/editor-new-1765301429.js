@@ -6228,13 +6228,13 @@ transferComputedStyles(sourceNode, destNode, sourceWindow) {
     if (destNode.tagName && destNode.tagName.toLowerCase() === 'img') {
         const src = destNode.getAttribute('src') || '';
         if (src && !/^https?:\/\//i.test(src) && !/^\//.test(src) && !/^data:/i.test(src)) {
-            destNode.setAttribute('src', `/api/images/${src}`);
+            destNode.setAttribute('src', `/api/v1/image-serve/${src}`);
         }
     } else if (destNode.querySelectorAll) {
         destNode.querySelectorAll('img').forEach(img => {
             const src = img.getAttribute('src') || '';
             if (src && !/^https?:\/\//i.test(src) && !/^\//.test(src) && !/^data:/i.test(src)) {
-                img.setAttribute('src', `/api/images/${src}`);
+                img.setAttribute('src', `/api/v1/image-serve/${src}`);
             }
         });
     }
@@ -6449,7 +6449,7 @@ async loadSlidesFromURLOrStorage() {
 // Load slides từ backend API
 async loadSlidesFromAPI(projectName, source) {
     try {
-        const response = await fetch(`${config.BACKEND_URL}/api/slides/${projectName}`);
+        const response = await fetch(`${config.BACKEND_URL}/api/v1/slides/${projectName}`);
         
         if (!response.ok) {
             throw new Error(`Failed to load slides: ${response.status}`);
@@ -6958,7 +6958,7 @@ async exportCurrentSlideToPdf() {
             throw new Error('Không có slide để xuất');
         }
 
-        const response = await fetch('/api/export-slide-pdf', {
+        const response = await fetch('/api/v1/export/slide-pdf', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -6994,7 +6994,7 @@ async exportAllSlidesToPdf() {
             slide_name: slide.title || `slide_${index + 1}`
         }));
 
-        const response = await fetch('/api/export-slides-pdf', {
+        const response = await fetch('/api/v1/export/slides-pdf', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -8113,7 +8113,7 @@ try {
                 cloned.querySelectorAll('img').forEach(img => {
                     const src = img.getAttribute('src') || '';
                     if (src && !/^https?:\/\//i.test(src) && !/^\//.test(src) && !/^data:/i.test(src)) {
-                        img.setAttribute('src', `/api/images/${src}`);
+                        img.setAttribute('src', `/api/v1/image-serve/${src}`);
                     }
                 });
             }

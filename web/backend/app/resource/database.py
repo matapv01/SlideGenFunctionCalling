@@ -4,9 +4,9 @@ from typing import Optional, List
 from contextlib import contextmanager
 import os
 import json
-from datetime import datetime
 
 DATABASE_PATH = os.path.join(os.path.dirname(__file__), "slidegen.db")
+
 
 @contextmanager
 def get_db():
@@ -18,11 +18,12 @@ def get_db():
     finally:
         conn.close()
 
+
 def init_db():
     """Initialize database with all tables"""
     with get_db() as conn:
         cursor = conn.cursor()
-        
+
         # Users table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS users (
@@ -34,7 +35,7 @@ def init_db():
                 is_active BOOLEAN DEFAULT 1
             )
         """)
-        
+
         # User profile/info table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_profiles (
@@ -47,7 +48,7 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
-        
+
         # User settings table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS user_settings (
@@ -63,7 +64,7 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
-        
+
         # Projects table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS projects (
@@ -81,7 +82,7 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
             )
         """)
-        
+
         # Slides table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS slides (
@@ -98,7 +99,7 @@ def init_db():
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             )
         """)
-        
+
         # Project metadata table
         cursor.execute("""
             CREATE TABLE IF NOT EXISTS project_metadata (
@@ -111,14 +112,15 @@ def init_db():
                 FOREIGN KEY (project_id) REFERENCES projects(id) ON DELETE CASCADE
             )
         """)
-        
+
         # Create indexes for better performance
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_projects_user_id ON projects(user_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_slides_project_id ON slides(project_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_projects_updated_at ON projects(updated_at DESC)")
-        
+
         conn.commit()
         print("✅ Database initialized successfully with all tables")
+
 
 def get_user_by_email(email: str) -> Optional[dict]:
     """Get user by email"""
@@ -128,6 +130,7 @@ def get_user_by_email(email: str) -> Optional[dict]:
         row = cursor.fetchone()
         return dict(row) if row else None
 
+
 def get_user_by_id(user_id: int) -> Optional[dict]:
     """Get user by ID"""
     with get_db() as conn:
@@ -135,6 +138,7 @@ def get_user_by_id(user_id: int) -> Optional[dict]:
         cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
         row = cursor.fetchone()
         return dict(row) if row else None
+
 
 def create_user(email: str, username: str, hashed_password: str) -> int:
     """Create new user and return user ID"""
@@ -147,6 +151,7 @@ def create_user(email: str, username: str, hashed_password: str) -> int:
         conn.commit()
         return cursor.lastrowid
 
+
 def get_all_users() -> List[dict]:
     """Get all users (for admin purposes)"""
     with get_db() as conn:
@@ -156,6 +161,7 @@ def get_all_users() -> List[dict]:
 
 # ==================== User Profile Functions ====================
 
+
 def get_user_profile(user_id: int) -> Optional[dict]:
     """Get user profile"""
     with get_db() as conn:
@@ -164,8 +170,9 @@ def get_user_profile(user_id: int) -> Optional[dict]:
         row = cursor.fetchone()
         return dict(row) if row else None
 
-def create_or_update_user_profile(user_id: int, full_name: str = None, 
-                                   avatar_url: str = None, bio: str = None):
+
+def create_or_update_user_profile(user_id: int, full_name: str = None,
+                                  avatar_url: str = None, bio: str = None):
     """Create or update user profile"""
     with get_db() as conn:
         cursor = conn.cursor()
@@ -182,6 +189,7 @@ def create_or_update_user_profile(user_id: int, full_name: str = None,
 
 # ==================== User Settings Functions ====================
 
+
 def get_user_settings(user_id: int) -> Optional[dict]:
     """Get user settings"""
     with get_db() as conn:
@@ -195,6 +203,7 @@ def get_user_settings(user_id: int) -> Optional[dict]:
             return result
         return None
 
+
 def create_default_settings(user_id: int):
     """Create default settings for new user"""
     with get_db() as conn:
@@ -204,18 +213,19 @@ def create_default_settings(user_id: int):
         """, (user_id,))
         conn.commit()
 
-def update_user_settings(user_id: int, theme: str = None, 
-                        default_transition_enabled: bool = None,
-                        default_thank_you_enabled: bool = None,
-                        default_content_length: str = None,
-                        language: str = None,
-                        settings_json: dict = None):
+
+def update_user_settings(user_id: int, theme: str = None,
+                         default_transition_enabled: bool = None,
+                         default_thank_you_enabled: bool = None,
+                         default_content_length: str = None,
+                         language: str = None,
+                         settings_json: dict = None):
     """Update user settings"""
     with get_db() as conn:
         cursor = conn.cursor()
         settings_json_str = json.dumps(settings_json) if settings_json else None
         cursor.execute("""
-            INSERT INTO user_settings (user_id, theme, default_transition_enabled, 
+            INSERT INTO user_settings (user_id, theme, default_transition_enabled,
                                       default_thank_you_enabled, default_content_length,
                                       language, settings_json, updated_at)
             VALUES (?, ?, ?, ?, ?, ?, ?, CURRENT_TIMESTAMP)
@@ -235,8 +245,9 @@ def update_user_settings(user_id: int, theme: str = None,
 
 # ==================== Project Functions ====================
 
+
 def create_project(user_id: int, title: str, description: str = None,
-                  source_type: str = 'idea', source_data: dict = None) -> int:
+                   source_type: str = 'idea', source_data: dict = None) -> int:
     """Create new project and return project ID"""
     with get_db() as conn:
         cursor = conn.cursor()
@@ -248,17 +259,19 @@ def create_project(user_id: int, title: str, description: str = None,
         conn.commit()
         return cursor.lastrowid
 
+
 def get_user_projects(user_id: int, limit: int = 50, offset: int = 0) -> List[dict]:
     """Get all projects for a user"""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT * FROM projects 
-            WHERE user_id = ? 
-            ORDER BY updated_at DESC 
+            SELECT * FROM projects
+            WHERE user_id = ?
+            ORDER BY updated_at DESC
             LIMIT ? OFFSET ?
         """, (user_id, limit, offset))
         return [dict(row) for row in cursor.fetchall()]
+
 
 def get_project(project_id: int) -> Optional[dict]:
     """Get project by ID"""
@@ -268,6 +281,7 @@ def get_project(project_id: int) -> Optional[dict]:
         row = cursor.fetchone()
         return dict(row) if row else None
 
+
 def get_all_projects():
     """Get all projects"""
     with get_db() as conn:
@@ -276,9 +290,10 @@ def get_all_projects():
         rows = cursor.fetchall()
         return [dict(row) for row in rows]
 
+
 def update_project(project_id: int, title: str = None, description: str = None,
-                  status: str = None, slide_count: int = None, 
-                  thumbnail_url: str = None):
+                   status: str = None, slide_count: int = None,
+                   thumbnail_url: str = None):
     """Update project"""
     with get_db() as conn:
         cursor = conn.cursor()
@@ -294,6 +309,7 @@ def update_project(project_id: int, title: str = None, description: str = None,
         """, (title, description, status, slide_count, thumbnail_url, project_id))
         conn.commit()
 
+
 def delete_project(project_id: int):
     """Delete project and all associated slides"""
     with get_db() as conn:
@@ -303,29 +319,31 @@ def delete_project(project_id: int):
 
 # ==================== Slide Functions ====================
 
+
 def create_slide(project_id: int, slide_index: int, slide_type: str,
-                title: str = None, content_text: str = None,
-                html_content: str = None, design_settings: dict = None) -> int:
+                 title: str = None, content_text: str = None,
+                 html_content: str = None, design_settings: dict = None) -> int:
     """Create new slide"""
     with get_db() as conn:
         cursor = conn.cursor()
         design_settings_str = json.dumps(design_settings) if design_settings else None
         cursor.execute("""
-            INSERT INTO slides (project_id, slide_index, slide_type, title, 
+            INSERT INTO slides (project_id, slide_index, slide_type, title,
                               content_text, html_content, design_settings)
             VALUES (?, ?, ?, ?, ?, ?, ?)
-        """, (project_id, slide_index, slide_type, title, content_text, 
+        """, (project_id, slide_index, slide_type, title, content_text,
               html_content, design_settings_str))
         conn.commit()
         return cursor.lastrowid
+
 
 def get_project_slides(project_id: int) -> List[dict]:
     """Get all slides for a project"""
     with get_db() as conn:
         cursor = conn.cursor()
         cursor.execute("""
-            SELECT * FROM slides 
-            WHERE project_id = ? 
+            SELECT * FROM slides
+            WHERE project_id = ?
             ORDER BY slide_index ASC
         """, (project_id,))
         slides = []
@@ -335,6 +353,7 @@ def get_project_slides(project_id: int) -> List[dict]:
                 slide['design_settings'] = json.loads(slide['design_settings'])
             slides.append(slide)
         return slides
+
 
 def get_slide(slide_id: int) -> Optional[dict]:
     """Get slide by ID"""
@@ -349,8 +368,9 @@ def get_slide(slide_id: int) -> Optional[dict]:
             return slide
         return None
 
+
 def update_slide(slide_id: int, title: str = None, content_text: str = None,
-                html_content: str = None, design_settings: dict = None):
+                 html_content: str = None, design_settings: dict = None):
     """Update slide"""
     with get_db() as conn:
         cursor = conn.cursor()
@@ -366,6 +386,7 @@ def update_slide(slide_id: int, title: str = None, content_text: str = None,
         """, (title, content_text, html_content, design_settings_str, slide_id))
         conn.commit()
 
+
 def delete_slide(slide_id: int):
     """Delete slide"""
     with get_db() as conn:
@@ -375,15 +396,16 @@ def delete_slide(slide_id: int):
 
 # ==================== Project Metadata Functions ====================
 
+
 def save_project_metadata(project_id: int, slide_options: dict = None,
-                         workflow_config: dict = None, generation_params: dict = None):
+                          workflow_config: dict = None, generation_params: dict = None):
     """Save project metadata"""
     with get_db() as conn:
         cursor = conn.cursor()
         slide_options_str = json.dumps(slide_options) if slide_options else None
         workflow_config_str = json.dumps(workflow_config) if workflow_config else None
         generation_params_str = json.dumps(generation_params) if generation_params else None
-        
+
         cursor.execute("""
             INSERT INTO project_metadata (project_id, slide_options, workflow_config, generation_params)
             VALUES (?, ?, ?, ?)
@@ -394,6 +416,7 @@ def save_project_metadata(project_id: int, slide_options: dict = None,
         """, (project_id, slide_options_str, workflow_config_str, generation_params_str,
               slide_options_str, workflow_config_str, generation_params_str))
         conn.commit()
+
 
 def get_project_metadata(project_id: int) -> Optional[dict]:
     """Get project metadata"""

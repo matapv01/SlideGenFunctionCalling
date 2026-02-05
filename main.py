@@ -8,6 +8,7 @@ import uvicorn
 
 app = FastAPI()
 
+
 @app.post("/process/")
 async def process_docx(
     router_flags: bool = Form(True),
@@ -38,7 +39,7 @@ async def process_docx(
         )
     except Exception as e:
         return {"error": str(e)}
-    
+
 if __name__ == "__main__":
     uvicorn.run(
         "main:app",   # <--- thay bằng tên file chứa app của bạn

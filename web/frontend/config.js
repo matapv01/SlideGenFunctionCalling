@@ -25,11 +25,11 @@ const config = {
     
     // Specific endpoints
     endpoints: {
-        captureSlide: `${API_BASE_URL}/capture-slide`,
-        captureSlidesBatch: `${API_BASE_URL}/capture-slides-batch`,
-        exportSlidePdf: `${API_BASE_URL}/export-slide-pdf`,
-        exportSlidesPdf: `${API_BASE_URL}/export-slides-pdf`,
-        downloadCapture: (filename) => `${BACKEND_URL}/api/download-capture/${filename}`,
+        captureSlide: `${API_BASE_URL}/capture`,
+        captureSlidesBatch: `${API_BASE_URL}/capture/capture-slides-batch`,
+        exportSlidePdf: `${API_BASE_URL}/export/slide-pdf`,
+        exportSlidesPdf: `${API_BASE_URL}/export/slides-pdf`,
+        downloadCapture: (filename) => `${BACKEND_URL}/api/v1/capture/download-capture/${filename}`,
     },
     
     // Other settings

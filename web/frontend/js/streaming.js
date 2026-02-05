@@ -122,7 +122,7 @@ function startStreaming(filename) {
         return;
     }
 
-    const url = `${config.BACKEND_URL}/api/upload-docx-stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}`;
+    const url = `${config.BACKEND_URL}/api/v1/upload/docx-stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);
 
@@ -192,7 +192,7 @@ function startStreamingFromIdea(session_id) {
         return;
     }
 
-    const url = `${config.BACKEND_URL}/api/generate-from-idea-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
+    const url = `${config.BACKEND_URL}/api/v1/generate/from-idea-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);
 
@@ -241,7 +241,7 @@ function startStreamingFromManualStructure(session_id) {
 
     // Create EventSource for manual structure SSE with auth token
     const token = localStorage.getItem('access_token');
-    const url = `${config.BACKEND_URL}/api/generate-from-manual-structure-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
+    const url = `${config.BACKEND_URL}/api/v1/generate/from-manual-structure-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to manual structure endpoint:', url);
     eventSource = new EventSource(url);
 
@@ -540,7 +540,7 @@ function replacePlaceholderWithSlide(placeholder, slideData) {
 
     if (slideData.is_temp && slideData.html_path) {
         // Use temp file API for real-time streaming with query parameter
-        iframeUrl = `${config.BACKEND_URL}/api/temp-file?path=${encodeURIComponent(slideData.html_path)}`;
+        iframeUrl = `${config.BACKEND_URL}/api/v1/temp/file?path=${encodeURIComponent(slideData.html_path)}`;
         displayName = slideData.html_path.split('/').pop();
         console.log('📄 Loading from temp:', slideData.html_path);
         console.log('🔗 Iframe URL:', iframeUrl);
@@ -600,7 +600,7 @@ function addSlidePreview(slideData) {
     let iframeUrl = '';
     if (slideData.is_temp && slideData.html_path) {
         // Use temp file API for real-time streaming with query parameter
-        iframeUrl = `${config.BACKEND_URL}/api/temp-file?path=${encodeURIComponent(slideData.html_path)}`;
+        iframeUrl = `${config.BACKEND_URL}/api/v1/temp/file?path=${encodeURIComponent(slideData.html_path)}`;
         console.log('📄 Creating iframe from temp:', slideData.html_path);
         console.log('🔗 Iframe URL:', iframeUrl);
     } else {
@@ -700,7 +700,7 @@ async function goToEditor() {
     // Cleanup temp directory before navigating
     if (tempDirectory) {
         try {
-            const response = await fetch(`${config.BACKEND_URL}/api/cleanup-temp`, {
+            const response = await fetch(`${config.BACKEND_URL}/api/v1/temp/cleanup`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ temp_dir: tempDirectory })
@@ -802,7 +802,7 @@ function renderPresentationSlide() {
     // Build iframe URL
     let iframeUrl = '';
     if (slide.is_temp && slide.html_path) {
-        iframeUrl = `${config.BACKEND_URL}/api/temp-file?path=${encodeURIComponent(slide.html_path)}`;
+        iframeUrl = `${config.BACKEND_URL}/api/v1/temp/file?path=${encodeURIComponent(slide.html_path)}`;
     } else {
         const htmlFilename = slide.html_path ? slide.html_path.split('/').pop() : `slide_${slide.index + 1}.html`;
         iframeUrl = `${config.BACKEND_URL}/static/output/${projectName}/html/${htmlFilename}`;

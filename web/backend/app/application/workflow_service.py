@@ -9,6 +9,9 @@ import tempfile
 import shutil
 import zipfile
 from typing import Optional, Dict, Any
+from web.backend.app.config import (
+    PROJECT_DIR
+)
 
 logger = logging.getLogger(__name__)
 
@@ -464,3 +467,5 @@ class WorkflowService:
                 "workflow_available": False,
                 "error": str(e)
             }
+        
+workflow_service = WorkflowService(str(PROJECT_DIR))

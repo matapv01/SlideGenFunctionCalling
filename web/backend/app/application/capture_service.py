@@ -9,6 +9,11 @@ from pathlib import Path
 from datetime import datetime
 from io import BytesIO
 from typing import List, Dict, Any
+from web.backend.app.config import (
+    PROJECT_DIR, CAPTURES_DIR
+)
+import sys
+from web.backend.capture import SlideCapture
 
 logger = logging.getLogger(__name__)
 
@@ -206,3 +211,8 @@ class CaptureService:
             "details": health_status,
             "message": "Capture system is ready" if all_ok else "Capture system has issues"
         }
+
+
+sys.path.insert(0, str(PROJECT_DIR))
+slide_capture = SlideCapture()
+capture_service = CaptureService(CAPTURES_DIR, slide_capture)

@@ -3,7 +3,7 @@ Test Suite for SlideGen API
 """
 import pytest
 from fastapi.testclient import TestClient
-from ..app.main import app
+from web.backend.app.api import app
 
 client = TestClient(app)
 
@@ -16,35 +16,17 @@ def test_root_endpoint():
 
 def test_health_check():
     """Test health check endpoint"""
-    response = client.get("/api/health")
+    response = client.get("/health")
     assert response.status_code == 200
     data = response.json()
     assert "status" in data
     assert "services" in data
 
 
-def test_converter_health():
-    """Test converter health endpoint"""
-    response = client.get("/api/converter-health")
-    assert response.status_code == 200
-    data = response.json()
-    assert "healthy" in data
-    assert "message" in data
-
-
-def test_capture_health():
-    """Test capture health endpoint"""
-    response = client.get("/api/capture-health")
-    assert response.status_code == 200
-    data = response.json()
-    assert "healthy" in data
-    assert "message" in data
-
-
 def test_upload_docx_invalid_file():
     """Test DOCX upload with invalid file type"""
     files = {"file": ("test.txt", b"test content", "text/plain")}
-    response = client.post("/api/upload-docx", files=files)
+    response = client.post("/api/v1/upload/docx", files=files)
     assert response.status_code == 400
     assert "DOCX" in response.json()["detail"]
 
@@ -52,26 +34,26 @@ def test_upload_docx_invalid_file():
 def test_upload_zip_invalid_file():
     """Test ZIP upload with invalid file type"""
     files = {"file": ("test.txt", b"test content", "text/plain")}
-    response = client.post("/api/upload-zip", files=files)
+    response = client.post("/api/v1/upload-zip", files=files)
     assert response.status_code == 400
     assert "ZIP" in response.json()["detail"]
 
 
 def test_get_image_not_found():
     """Test image endpoint with non-existent image"""
-    response = client.get("/api/images/nonexistent.png")
+    response = client.get("/api/v1/images/nonexistent.png")
     assert response.status_code == 404
 
 
 def test_conversion_status_not_found():
     """Test conversion status for non-existent project"""
-    response = client.get("/api/conversion-status/nonexistent_project")
+    response = client.get("/api/v1/conversion-status/nonexistent_project")
     assert response.status_code in [404, 503]  # 503 if converter not available
 
 
 def test_download_capture_not_found():
     """Test download capture with non-existent file"""
-    response = client.get("/api/download-capture/nonexistent.png")
+    response = client.get("/api/v1/download-capture/nonexistent.png")
     assert response.status_code in [404, 503]
 
 

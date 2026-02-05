@@ -8,7 +8,7 @@ from src.graph.stage import State
 from langchain_core.runnables import RunnableConfig
 from src.utils.config import CONTENT_CHAR_LIMIT_FOR_SPLIT
 from src.utils.helper import _convert_llm_tree_to_nodes
-from src.utils.prompts import CONTENT_SPLITTER_SYSTEM_PROMPT, HUMAN_PROMPT_TEMPLATE
+from src.utils.prompts import CONTENT_SPLITTER_SYSTEM_PROMPT, CONTENT_SPLITTER_USER_PROMPT
 import time
 
 
@@ -49,7 +49,7 @@ def split_content(state: State, config: RunnableConfig) -> State:
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", CONTENT_SPLITTER_SYSTEM_PROMPT),
-        ("human", HUMAN_PROMPT_TEMPLATE)
+        ("human", CONTENT_SPLITTER_USER_PROMPT)
     ])
 
     # Note: Using the raw .llm attribute if your LLM class wraps it

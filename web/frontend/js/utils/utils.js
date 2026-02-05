@@ -11,7 +11,7 @@ const source = urlParams.get('source');
 if (projectName && source === 'generated') {
     console.log('📥 Loading converted slides from database API for project:', projectName);
     try {
-        const response = await fetch(`${window.config?.BACKEND_URL || 'http://localhost:3000'}/api/projects/by-name/${projectName}/slides`);
+        const response = await fetch(`${window.config?.BACKEND_URL || 'http://localhost:3000'}/api/v1/projects/by-name/${projectName}/slides`);
         if (!response.ok) {
             throw new Error(`API error: ${response.status}`);
         }
@@ -271,7 +271,7 @@ try {
                 cloned.querySelectorAll('img').forEach(img => {
                     const src = img.getAttribute('src') || '';
                     if (src && !/^https?:\/\//i.test(src) && !/^\//.test(src) && !/^data:/i.test(src)) {
-                        img.setAttribute('src', `/api/images/${src}`);
+                        img.setAttribute('src', `/api/v1/image-serve/${src}`);
                     }
                 });
             }

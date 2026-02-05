@@ -904,7 +904,7 @@ async createNewSlide() {
                 </div>
             `;
             
-            const response = await fetch(`${apiUrl}/api/projects/${this.currentProjectId}/slides`, {
+            const response = await fetch(`${apiUrl}/api/v1/projects/${this.currentProjectId}/slides`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -982,7 +982,7 @@ async duplicateCurrentSlide() {
                 </div>
             `;
             
-            const response = await fetch(`${apiUrl}/api/projects/${this.currentProjectId}/slides`, {
+            const response = await fetch(`${apiUrl}/api/v1/projects/${this.currentProjectId}/slides`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -1139,7 +1139,7 @@ async executeDeleteSlide(index) {
             const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
             const token = localStorage.getItem('access_token');
             
-            const response = await fetch(`${apiUrl}/api/slides/${slideId}`, {
+            const response = await fetch(`${apiUrl}/api/v1/slides/${slideId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`
@@ -6283,7 +6283,7 @@ ${slide.content}
             
             console.log(`💾 Saving slide ${i} (ID: ${slideId}), content length: ${slide.content.length}, bg: ${bgColor}`);
             
-            const response = await fetch(`${apiUrl}/api/slides/${slideId}`, {
+            const response = await fetch(`${apiUrl}/api/v1/slides/${slideId}`, {
                 method: 'PUT',
                 headers: {
                     'Authorization': `Bearer ${token}`,
@@ -6682,13 +6682,13 @@ transferComputedStyles(sourceNode, destNode, sourceWindow) {
     if (destNode.tagName && destNode.tagName.toLowerCase() === 'img') {
         const src = destNode.getAttribute('src') || '';
         if (src && !/^https?:\/\//i.test(src) && !/^\//.test(src) && !/^data:/i.test(src)) {
-            destNode.setAttribute('src', `/api/images/${src}`);
+            destNode.setAttribute('src', `/api/v1/image-serve/${src}`);
         }
     } else if (destNode.querySelectorAll) {
         destNode.querySelectorAll('img').forEach(img => {
             const src = img.getAttribute('src') || '';
             if (src && !/^https?:\/\//i.test(src) && !/^\//.test(src) && !/^data:/i.test(src)) {
-                img.setAttribute('src', `/api/images/${src}`);
+                img.setAttribute('src', `/api/v1/image-serve/${src}`);
             }
         });
     }
@@ -6903,7 +6903,7 @@ async loadSlidesFromURLOrStorage() {
 // Load slides từ backend API
 async loadSlidesFromAPI(projectName, source) {
     try {
-        const response = await fetch(`${config.BACKEND_URL}/api/slides/${projectName}`);
+        const response = await fetch(`${config.BACKEND_URL}/api/v1/slides/${projectName}`);
         
         if (!response.ok) {
             throw new Error(`Failed to load slides: ${response.status}`);

@@ -147,7 +147,7 @@ async function handleDocxImport() {
             formData.append('workflow_mode', 'manual');
 
             // Upload file and get document structure
-            const response = await fetch(config.BACKEND_URL + '/api/upload-docx-for-manual', {
+            const response = await fetch(config.BACKEND_URL + '/api/v1/upload/docx-for-manual', {
                 method: 'POST',
                 body: formData
             });
@@ -195,13 +195,13 @@ async function handleDocxImport() {
         formData.append('enable_transition_slides', enableTransitionSlides.toString());
         formData.append('enable_thank_you_slide', enableThankYouSlide.toString());
 
-        console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/upload-docx-for-stream');
+        console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/v1/upload/docx-for-stream');
         console.log('Options (boolean):', { enableTransitionSlides, enableThankYouSlide });
         console.log('Options (string):', {
             enable_transition_slides: enableTransitionSlides.toString(),
             enable_thank_you_slide: enableThankYouSlide.toString()
         });
-        const response = await fetch(config.BACKEND_URL + '/api/upload-docx-for-stream', {
+        const response = await fetch(config.BACKEND_URL + '/api/v1/upload/docx-for-stream', {
             method: 'POST',
             headers: getAuthHeaders(),
             body: formData
@@ -243,8 +243,8 @@ async function handleZipImport() {
         const formData = new FormData();
         formData.append('file', file);
 
-        console.log('Sending ZIP file to', config.BACKEND_URL + '/api/upload-zip');
-        const response = await fetch(config.BACKEND_URL + '/api/upload-zip', {
+        console.log('Sending ZIP file to', config.BACKEND_URL + '/api/v2/upload-zip');
+        const response = await fetch(config.BACKEND_URL + '/api/v2/upload-zip', {
             method: 'POST',
             body: formData
         });
@@ -542,7 +542,7 @@ async function exportToPDF() {
 
     try {
         showLoading("Đang xuất PDF...");
-        const response = await fetch('/api/export-pdf', {
+        const response = await fetch('/api/v2/export-pdf', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(slides),
@@ -576,7 +576,7 @@ async function exportToZip() {
 
     try {
         showLoading("Đang xuất ZIP...");
-        const response = await fetch('/api/save-slides', {
+        const response = await fetch('/api/v2/save-slides', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(slides)

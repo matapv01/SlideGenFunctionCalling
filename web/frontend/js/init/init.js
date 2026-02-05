@@ -92,8 +92,8 @@ if (document.readyState === 'loading') {
                 const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
                 
                 // First fetch project info
-                console.log('📡 Fetching project info from:', `${apiUrl}/api/projects/${projectId}`);
-                const projectResponse = await fetch(`${apiUrl}/api/projects/${projectId}`, {
+                console.log('📡 Fetching project info from:', `${apiUrl}/api/v1/projects/${projectId}`);
+                const projectResponse = await fetch(`${apiUrl}/api/v1/projects/${projectId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -108,8 +108,8 @@ if (document.readyState === 'loading') {
                 console.log('📋 Project info:', project);
                 
                 // Then fetch slides
-                console.log('📡 Fetching slides from:', `${apiUrl}/api/projects/${projectId}/slides`);
-                const response = await fetch(`${apiUrl}/api/projects/${projectId}/slides`, {
+                console.log('📡 Fetching slides from:', `${apiUrl}/api/v1/projects/${projectId}/slides`);
+                const response = await fetch(`${apiUrl}/api/v1/projects/${projectId}/slides`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -289,7 +289,7 @@ if (document.readyState === 'loading') {
                             // If no project ID, create new project first
                             if (!window.slideEditor?.currentProjectId) {
                                 console.log('📝 Creating new project in database...');
-                                const createResponse = await fetch(`${apiUrl}/api/projects`, {
+                                const createResponse = await fetch(`${apiUrl}/api/v1/projects`, {
                                     method: 'POST',
                                     headers: {
                                         'Authorization': `Bearer ${token}`,
@@ -318,7 +318,7 @@ if (document.readyState === 'loading') {
                                             </div>
                                         `;
                                         
-                                        const slideResponse = await fetch(`${apiUrl}/api/projects/${data.id}/slides`, {
+                                        const slideResponse = await fetch(`${apiUrl}/api/v1/projects/${data.id}/slides`, {
                                             method: 'POST',
                                             headers: {
                                                 'Authorization': `Bearer ${token}`,
@@ -350,7 +350,7 @@ if (document.readyState === 'loading') {
                                 }
                             } else {
                                 // Update existing project
-                                const response = await fetch(`${apiUrl}/api/projects/${window.slideEditor.currentProjectId}`, {
+                                const response = await fetch(`${apiUrl}/api/v1/projects/${window.slideEditor.currentProjectId}`, {
                                     method: 'PUT',
                                     headers: {
                                         'Authorization': `Bearer ${token}`,

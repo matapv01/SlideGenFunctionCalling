@@ -7,6 +7,7 @@ import subprocess
 import logging
 from pathlib import Path
 from typing import Dict, Any, List
+from web.backend.app.config import PROJECT_DIR
 
 logger = logging.getLogger(__name__)
 
@@ -140,3 +141,5 @@ class ConversionService:
             "details": health_status,
             "message": "Converter system is ready" if all_ok else "Converter system has issues"
         }
+
+conversion_service = ConversionService(PROJECT_DIR)

@@ -5,8 +5,8 @@ import uvicorn
 import sys
 from pathlib import Path
 from dotenv import load_dotenv
-from app.main import app
-from app.config import API_HOST, API_PORT
+from web.backend.app.api.app import app
+from web.backend.app.config import API_HOST, API_PORT
 
 
 # Load .env from root project directory
@@ -27,8 +27,7 @@ if __name__ == "__main__":
     print("=" * 60)
     print(f"🚀 Server URL: http://{API_HOST}:{API_PORT}")
     print(f"📡 API Docs: http://{API_HOST}:{API_PORT}/docs")
-    print(f"📸 Capture Health: http://{API_HOST}:{API_PORT}/api/capture-health")
-    print(f"🔧 Converter Health: http://{API_HOST}:{API_PORT}/api/converter-health")
+    print(f"📸 Capture Health: http://{API_HOST}:{API_PORT}/health")
     print("=" * 60)
 
     uvicorn.run(

@@ -33,7 +33,7 @@ document.addEventListener('DOMContentLoaded', function () {
 // Load document data from API
 async function loadDocumentData() {
     try {
-        const response = await fetch(`${API_BASE_URL}/api/structure/current?session_id=${sessionId}`);
+        const response = await fetch(`${API_BASE_URL}/api/v1/structure/current?session_id=${sessionId}`);
         const data = await response.json();
 
         if (data.document_text) {
@@ -990,7 +990,7 @@ async function saveStructure() {
 
         const backendStructure = convertToBackendFormat(documentStructure);
 
-        await fetch(`${API_BASE_URL}/api/structure/update`, {
+        await fetch(`${API_BASE_URL}/api/v1/structure/update`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
@@ -1060,7 +1060,7 @@ async function approveAndContinue() {
 
             await saveStructure();
 
-            const response = await fetch(`${API_BASE_URL}/api/structure/approve`, {
+            const response = await fetch(`${API_BASE_URL}/api/v1/structure/approve`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ session_id: sessionId })

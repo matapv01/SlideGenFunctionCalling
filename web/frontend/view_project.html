@@ -387,7 +387,7 @@
 
             try {
                 // Load project info
-                const projectResponse = await fetch(`${config.BACKEND_URL}/api/projects/${projectId}`, {
+                const projectResponse = await fetch(`${config.BACKEND_URL}/api/v1/projects/${projectId}`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -404,7 +404,7 @@
                 displayProjectInfo(currentProject);
 
                 // Load slides
-                const slidesResponse = await fetch(`${config.BACKEND_URL}/api/projects/${projectId}/slides`, {
+                const slidesResponse = await fetch(`${config.BACKEND_URL}/api/v1/projects/${projectId}/slides`, {
                     headers: {
                         'Authorization': `Bearer ${token}`
                     }
@@ -521,7 +521,7 @@
             const htmlContent = document.getElementById('htmlEditor').value;
 
             try {
-                const response = await fetch(`${config.BACKEND_URL}/api/slides/${currentSlide.id}`, {
+                const response = await fetch(`${config.BACKEND_URL}/api/v1/slides/${currentSlide.id}`, {
                     method: 'PUT',
                     headers: {
                         'Authorization': `Bearer ${token}`,

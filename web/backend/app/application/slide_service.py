@@ -5,6 +5,9 @@ import re
 import logging
 from pathlib import Path
 from typing import List, Dict, Any
+from web.backend.app.config import (
+    STATIC_DIR, IMAGE_DIR,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -114,3 +117,5 @@ class SlideService:
             logger.warning(f"Error extracting metadata from {filename}: {e}")
 
         return metadata
+    
+slide_service = SlideService(STATIC_DIR, IMAGE_DIR)
