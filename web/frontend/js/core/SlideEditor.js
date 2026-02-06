@@ -70,6 +70,7 @@ export class SlideEditor {
         this.presentationSlideIndex = 0;
         this.presentationKeyboardHandler = null;
         this.fullscreenChangeHandler = null;
+        this.isTransitioning = false; // Prevent spam during slide transitions
 
         // Initialize SlideCapture
         this.slideCapture = new SlideCapture(this);

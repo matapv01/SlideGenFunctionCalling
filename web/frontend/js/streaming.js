@@ -11,6 +11,7 @@ let slides = []; // Store all slides for presentation
 let currentPresentationIndex = 0;
 let isPresentationMode = false;
 let presentationKeyboardHandler = null;
+let isTransitioning = false; // Prevent spam during transitions
 
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function () {
@@ -819,12 +820,84 @@ function renderPresentationSlide() {
         iframeUrl = `${config.BACKEND_URL}/static/output/${projectName}/html/${htmlFilename}`;
     }
 
-    container.innerHTML = `
+    // Create new slide wrapper
+    const slideWrapper = document.createElement('div');
+    slideWrapper.style.cssText = `
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        opacity: 0;
+        transition: opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+        transform: scale(0.98);
+        z-index: 2;
+    `;
+
+    slideWrapper.innerHTML = `
         <iframe src="${iframeUrl}" 
                 frameborder="0" 
                 scrolling="no"
                 style="width: 1920px; height: 1080px; border: none; background: white;"></iframe>
     `;
+
+    // Get old slide
+    const oldSlide = container.firstChild;
+
+    if (oldSlide) {
+        // Set old slide z-index lower and prepare transition
+        oldSlide.style.zIndex = '1';
+        oldSlide.style.transition = 'opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+        // Add new slide
+        container.appendChild(slideWrapper);
+
+        // Wait for iframe to load, then start smooth crossfade
+        const iframe = slideWrapper.querySelector('iframe');
+        iframe.onload = () => {
+            requestAnimationFrame(() => {
+                requestAnimationFrame(() => {
+                    // Small delay then start transition
+                    setTimeout(() => {
+                        // Fade in new slide with scale
+                        slideWrapper.style.opacity = '1';
+                        slideWrapper.style.transform = 'scale(1)';
+
+                        // Fade out old slide with slight scale
+                        oldSlide.style.opacity = '0';
+                        oldSlide.style.transform = 'scale(1.02)';
+
+                        // Remove old slide after transition completes
+                        setTimeout(() => {
+                            if (oldSlide.parentNode) {
+                                oldSlide.remove();
+                            }
+                        }, 1250);
+                    }, 50);
+                });
+            });
+        };
+
+        // Fallback in case iframe doesn't fire onload
+        setTimeout(() => {
+            if (slideWrapper.style.opacity === '0') {
+                slideWrapper.style.opacity = '1';
+                slideWrapper.style.transform = 'scale(1)';
+                oldSlide.style.opacity = '0';
+                oldSlide.style.transform = 'scale(1.02)';
+                setTimeout(() => {
+                    if (oldSlide.parentNode) {
+                        oldSlide.remove();
+                    }
+                }, 1250);
+            }
+        }, 200);
+    } else {
+        // First slide - no transition needed
+        container.appendChild(slideWrapper);
+        slideWrapper.style.opacity = '1';
+        slideWrapper.style.transform = 'scale(1)';
+    }
 
     // Scale to fit
     scalePresentationToFit();
@@ -996,23 +1069,32 @@ function updatePresentationTimeline() {
 }
 
 function goToPresentationSlide(index) {
+    if (isTransitioning) return; // Prevent spam
     if (index >= 0 && index < slides.length) {
+        isTransitioning = true;
         currentPresentationIndex = index;
         renderPresentationSlide();
+        setTimeout(() => { isTransitioning = false; }, 1300);
     }
 }
 
 function nextPresentationSlide() {
+    if (isTransitioning) return; // Prevent spam
     if (currentPresentationIndex < slides.length - 1) {
+        isTransitioning = true;
         currentPresentationIndex++;
         renderPresentationSlide();
+        setTimeout(() => { isTransitioning = false; }, 1300);
     }
 }
 
 function previousPresentationSlide() {
+    if (isTransitioning) return; // Prevent spam
     if (currentPresentationIndex > 0) {
+        isTransitioning = true;
         currentPresentationIndex--;
         renderPresentationSlide();
+        setTimeout(() => { isTransitioning = false; }, 1300);
     }
 }
 

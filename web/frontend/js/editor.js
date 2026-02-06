@@ -1488,7 +1488,7 @@ ${this.slides.map((slide, index) => {
             </div>
             <div class="slide-info">
                 <div class="slide-name">Slide ${index + 1}</div>
-                <div class="slide-elements">${this.getSlideElementsCount(slide)} elements</div>
+                <div class="slide-elements">${this.getSlideElementsCount(slide)} thành phần</div>
             </div>
             <div class="slide-actions">
                 <button class="slide-action-btn" data-action="duplicate" data-slide-index="${index}" title="Duplicate">⧉</button>
@@ -2144,12 +2144,12 @@ ${this.slides.map((slide, index) => {
 
     updateProperties() {
         if (this.selectedElements.length === 0) {
-            this.propertiesContent.innerHTML = `<div style="text-align: center; margin-top: 50px; color: #718096;"><div style="font-size: 48px; margin-bottom: 15px;">🎨</div><h3 style="margin-bottom: 10px; color: #4a5568;">No Element Selected</h3><p>Select an element to edit its properties</p></div>`;
+            this.propertiesContent.innerHTML = `<div style="text-align: center; margin-top: 50px; color: #718096;"><div style="font-size: 48px; margin-bottom: 15px;">🎨</div><h3 style="margin-bottom: 10px; color: #4a5568;">Chưa Chọn Thành Phần Nào</h3><p>Chọn một thành phần để sửa thuộc tính</p></div>`;
             return;
         }
 
         if (this.selectedElements.length > 1) {
-            this.propertiesContent.innerHTML = `<div style="text-align: center; margin-top: 50px; color: #718096;"><div style="font-size: 48px; margin-bottom: 15px;">✨</div><h3 style="margin-bottom: 10px; color: #4a5568;">${this.selectedElements.length} Elements Selected</h3><p>Press Ctrl+G to group them.</p><div class="action-buttons" style="margin-top: 20px;"><button class="action-btn" onclick="window.slideEditor.groupSelectedElements()"><span>🗃️</span> Group</button><button class="action-btn danger" onclick="window.slideEditor.deleteSelected()"><span>🗑️</span> Delete All</button></div></div>`;
+            this.propertiesContent.innerHTML = `<div style="text-align: center; margin-top: 50px; color: #718096;"><div style="font-size: 48px; margin-bottom: 15px;">✨</div><h3 style="margin-bottom: 10px; color: #4a5568;">${this.selectedElements.length} Thành phần được chọn</h3><p>Nhấn Ctrl+G để nhóm chúng lại.</p><div class="action-buttons" style="margin-top: 20px;"><button class="action-btn" onclick="window.slideEditor.groupSelectedElements()"><span>🗃️</span> Nhóm</button><button class="action-btn danger" onclick="window.slideEditor.deleteSelected()"><span>🗑️</span> Xóa Tất Cả</button></div></div>`;
             return;
         }
 
@@ -2167,25 +2167,25 @@ ${this.slides.map((slide, index) => {
         let html = '';
 
         if (el.classList.contains('group-container')) {
-            html += `<div class="property-group"><div class="action-buttons"><button class="action-btn" onclick="window.slideEditor.ungroupElement()"><span>↔️</span> Ungroup</button></div></div>`;
+            html += `<div class="property-group"><div class="action-buttons"><button class="action-btn" onclick="window.slideEditor.ungroupElement()"><span>↔️</span> Bỏ Nhóm</button></div></div>`;
         }
 
         html += `
         <div class="property-group" style="background: linear-gradient(135deg, var(--primary-color), var(--secondary-color)); color: white; padding: 20px; border-radius: 12px; margin-bottom: 20px;">
-            <h3 style="color: white; margin-bottom: 8px;">${el.dataset.type.toUpperCase()} ELEMENT</h3>
-            <p style="opacity: 0.9; font-size: 12px; margin: 0;">ID: ${el.id || 'No ID'} • Type: ${el.dataset.type}</p>
+            <h3 style="color: white; margin-bottom: 8px;">THÀNH PHẦN ${el.dataset.type.toUpperCase()}</h3>
+            <p style="opacity: 0.9; font-size: 12px; margin: 0;">ID: ${el.id || 'Không ID'} • Loại: ${el.dataset.type}</p>
         </div>
         <div class="property-group">
-            <h3>📍 Position & Transform</h3>
+            <h3>📍 Vị Trí & Biến Đổi</h3>
             <div class="property-row">
-                <div class="property-col"><label class="property-label">X Position</label><input type="number" class="property-input" data-style="left" value="${parseInt(el.style.left) || 0}" step="1"></div>
-                <div class="property-col"><label class="property-label">Y Position</label><input type="number" class="property-input" data-style="top" value="${parseInt(el.style.top) || 0}" step="1"></div>
+                <div class="property-col"><label class="property-label">Vị Trí X</label><input type="number" class="property-input" data-style="left" value="${parseInt(el.style.left) || 0}" step="1"></div>
+                <div class="property-col"><label class="property-label">Vị Trí Y</label><input type="number" class="property-input" data-style="top" value="${parseInt(el.style.top) || 0}" step="1"></div>
             </div>
             <div class="property-row">
-                <div class="property-col"><label class="property-label">Width</label><input type="number" class="property-input" data-style="width" value="${parseInt(el.style.width) || el.offsetWidth}" step="1"></div>
-                <div class="property-col"><label class="property-label">Height</label><input type="number" class="property-input" data-style="height" value="${parseInt(el.style.height) || el.offsetHeight}" step="1"></div>
+                <div class="property-col"><label class="property-label">Chiều Rộng</label><input type="number" class="property-input" data-style="width" value="${parseInt(el.style.width) || el.offsetWidth}" step="1"></div>
+                <div class="property-col"><label class="property-label">Chiều Cao</label><input type="number" class="property-input" data-style="height" value="${parseInt(el.style.height) || el.offsetHeight}" step="1"></div>
             </div>
-            <label class="property-label">Rotation (degrees)</label>
+            <label class="property-label">Xoay (độ)</label>
             <div class="range-container"><input type="range" class="property-range" data-style="rotation" min="-180" max="180" value="0" step="1"><span class="range-value">0°</span></div>
         </div>
     `;
@@ -2193,8 +2193,8 @@ ${this.slides.map((slide, index) => {
         if (el.dataset.type === 'text') {
             html += `
             <div class="property-group">
-                <h3>✍️ Typography (Entire Element)</h3>
-                <label class="property-label">Font Family</label>
+                <h3>✍️ Kiểu Chữ (Toàn Bộ)</h3>
+                <label class="property-label">Phông Chữ</label>
                 <select class="property-input" data-style="fontFamily">
                     <option value="Inter, sans-serif" ${style.fontFamily.includes('Inter') ? 'selected' : ''}>Inter</option>
                     <option value="Arial, sans-serif" ${style.fontFamily.includes('Arial') ? 'selected' : ''}>Arial</option>
@@ -2203,32 +2203,32 @@ ${this.slides.map((slide, index) => {
                     <option value="'Times New Roman', serif" ${style.fontFamily.includes('Times') ? 'selected' : ''}>Times New Roman</option>
                 </select>
                 <div class="property-row">
-                    <div class="property-col"><label class="property-label">Font Size</label><input type="number" class="property-input" data-style="fontSize" value="${parseInt(style.fontSize)}" step="2" min="12" max="500"></div>
-                    <div class="property-col"><label class="property-label">Line Height</label><input type="number" class="property-input" data-style="lineHeight" value="${parseFloat(style.lineHeight) || 1.4}" step="0.1" min="0.5" max="3"></div>
+                    <div class="property-col"><label class="property-label">Cỡ Chữ</label><input type="number" class="property-input" data-style="fontSize" value="${parseInt(style.fontSize)}" step="2" min="12" max="500"></div>
+                    <div class="property-col"><label class="property-label">Độ Cao Dòng</label><input type="number" class="property-input" data-style="lineHeight" value="${parseFloat(style.lineHeight) || 1.4}" step="0.1" min="0.5" max="3"></div>
                 </div>
-                <label class="property-label">Font Weight</label>
+                <label class="property-label">Độ Dày Chữ</label>
                 <select class="property-input" data-style="fontWeight">
-                    <option value="100" ${style.fontWeight == '100' ? 'selected' : ''}>Thin</option> <option value="200" ${style.fontWeight == '200' ? 'selected' : ''}>Extra Light</option> <option value="300" ${style.fontWeight == '300' ? 'selected' : ''}>Light</option> <option value="400" ${style.fontWeight == '400' ? 'selected' : ''}>Regular</option> <option value="500" ${style.fontWeight == '500' ? 'selected' : ''}>Medium</option> <option value="600" ${style.fontWeight == '600' ? 'selected' : ''}>Semi Bold</option> <option value="700" ${style.fontWeight == '700' ? 'selected' : ''}>Bold</option> <option value="800" ${style.fontWeight == '800' ? 'selected' : ''}>Extra Bold</option> <option value="900" ${style.fontWeight == '900' ? 'selected' : ''}>Black</option>
+                    <option value="100" ${style.fontWeight == '100' ? 'selected' : ''}>Mỏng (Thin)</option> <option value="200" ${style.fontWeight == '200' ? 'selected' : ''}>Rất Nhẹ (Extra Light)</option> <option value="300" ${style.fontWeight == '300' ? 'selected' : ''}>Nhẹ (Light)</option> <option value="400" ${style.fontWeight == '400' ? 'selected' : ''}>Thường (Regular)</option> <option value="500" ${style.fontWeight == '500' ? 'selected' : ''}>Vừa (Medium)</option> <option value="600" ${style.fontWeight == '600' ? 'selected' : ''}>Bán Đậm (Semi Bold)</option> <option value="700" ${style.fontWeight == '700' ? 'selected' : ''}>Đậm (Bold)</option> <option value="800" ${style.fontWeight == '800' ? 'selected' : ''}>Rất Đậm (Extra Bold)</option> <option value="900" ${style.fontWeight == '900' ? 'selected' : ''}>Siêu Đậm (Black)</option>
                 </select>
-                <label class="property-label">Text Align</label>
+                <label class="property-label">Căn Chỉnh Văn Bản</label>
                 <div class="button-group">
                     <button class="style-btn ${style.textAlign === 'left' ? 'active' : ''}" data-style="textAlign" data-value="left">◀</button> <button class="style-btn ${style.textAlign === 'center' ? 'active' : ''}" data-style="textAlign" data-value="center">▣</button> <button class="style-btn ${style.textAlign === 'right' ? 'active' : ''}" data-style="textAlign" data-value="right">▶</button> <button class="style-btn ${style.textAlign === 'justify' ? 'active' : ''}" data-style="textAlign" data-value="justify">▦</button>
                 </div>
             </div>
             <div class="property-group">
-                <h3>📝 Text Formatting (Selected Text)</h3>
-                <p class="property-label" style="margin-bottom: 10px;">Select text inside the element to apply formatting.</p>
+                <h3>📝 Định Dạng Văn Bản (Đã Chọn)</h3>
+                <p class="property-label" style="margin-bottom: 10px;">Chọn văn bản bên trong thành phần để áp dụng định dạng.</p>
                 <div class="button-group">
-                    <button class="style-btn" data-format="bold" title="Bold"><b>B</b></button> <button class="style-btn" data-format="italic" title="Italic"><i>I</i></button> <button class="style-btn" data-format="underline" title="Underline"><u>U</u></button> <button class="style-btn" data-format="strikeThrough" title="Strikethrough"><s>S</s></button> <button class="style-btn" data-format="removeFormat" title="Clear Formatting">⌫</button>
+                    <button class="style-btn" data-format="bold" title="In đậm"><b>B</b></button> <button class="style-btn" data-format="italic" title="In nghiêng"><i>I</i></button> <button class="style-btn" data-format="underline" title="Gạch chân"><u>U</u></button> <button class="style-btn" data-format="strikeThrough" title="Gạch ngang"><s>S</s></button> <button class="style-btn" data-format="removeFormat" title="Xóa định dạng">⌫</button>
                 </div>
                 <div class="property-row">
-                    <div class="property-col"><label class="property-label">Highlight Color</label><input type="color" data-format-color="backColor" class="property-color-input" value="#ffff00" style="height: 40px;"></div>
-                    <div class="property-col"><label class="property-label">Text Color</label><input type="color" data-format-color="foreColor" class="property-color-input" value="${this.rgbToHex(style.color)}" style="height: 40px;"></div>
+                    <div class="property-col"><label class="property-label">Màu Hightlight</label><input type="color" data-format-color="backColor" class="property-color-input" value="#ffff00" style="height: 40px;"></div>
+                    <div class="property-col"><label class="property-label">Màu Chữ</label><input type="color" data-format-color="foreColor" class="property-color-input" value="${this.rgbToHex(style.color)}" style="height: 40px;"></div>
                 </div>
             </div>
             <div class="property-group">
-                <h3>🎨 Text Colors (Entire Element)</h3>
-                <label class="property-label">Text Color</label>
+                <h3>🎨 Màu Văn Bản (Toàn Bộ)</h3>
+                <label class="property-label">Màu Văn Bản</label>
                 <div class="color-input-container">
                     <input type="color" class="property-color-input" data-style="color" value="${this.rgbToHex(style.color)}"><input type="text" class="color-text-input" data-style="color" value="${this.rgbToHex(style.color)}" placeholder="#000000">
                 </div>
@@ -2238,38 +2238,38 @@ ${this.slides.map((slide, index) => {
 
         html += `
         <div class="property-group">
-            <h3>🎭 Appearance</h3>
-            <label class="property-label">Background Color</label>
+            <h3>🎭 Giao Diện</h3>
+            <label class="property-label">Màu Nền</label>
             <div class="color-input-container"><input type="color" class="property-color-input" data-style="backgroundColor" value="${this.rgbToHex(style.backgroundColor)}"><input type="text" class="color-text-input" data-style="backgroundColor" value="${this.rgbToHex(style.backgroundColor)}" placeholder="#ffffff"></div>
-            <label class="property-label">Border</label>
+            <label class="property-label">Viền</label>
             <div class="property-row">
                 <div class="property-col"><input type="number" class="property-input" data-style="borderWidth" value="${parseInt(style.borderWidth) || 0}" step="1" min="0" placeholder="Width"></div>
-                <div class="property-col"><select class="property-input" data-style="borderStyle"><option value="none" ${style.borderStyle === 'none' ? 'selected' : ''}>None</option><option value="solid" ${style.borderStyle === 'solid' ? 'selected' : ''}>Solid</option><option value="dashed" ${style.borderStyle === 'dashed' ? 'selected' : ''}>Dashed</option><option value="dotted" ${style.borderStyle === 'dotted' ? 'selected' : ''}>Dotted</option></select></div>
+                <div class="property-col"><select class="property-input" data-style="borderStyle"><option value="none" ${style.borderStyle === 'none' ? 'selected' : ''}>Không</option><option value="solid" ${style.borderStyle === 'solid' ? 'selected' : ''}>Đặc (Solid)</option><option value="dashed" ${style.borderStyle === 'dashed' ? 'selected' : ''}>Gạch (Dashed)</option><option value="dotted" ${style.borderStyle === 'dotted' ? 'selected' : ''}>Chấm (Dotted)</option></select></div>
             </div>
             <input type="color" class="property-color-input" data-style="borderColor" value="${this.rgbToHex(style.borderColor)}">
-            <label class="property-label">Border Radius</label>
+            <label class="property-label">Bo Góc</label>
             <div class="range-container"><input type="range" class="property-range" data-style="borderRadius" min="0" max="100" value="${parseInt(style.borderRadius) || 0}" step="1"><span class="range-value">${parseInt(style.borderRadius) || 0}px</span></div>
-            <label class="property-label">Box Shadow</label>
-            <div class="shadow-controls"><div class="property-row"><div class="property-col"><input type="number" class="property-input" data-style="shadowX" value="0" step="1" placeholder="X"></div><div class="property-col"><input type="number" class="property-input" data-style="shadowY" value="0" step="1" placeholder="Y"></div></div><input type="range" class="property-range" data-style="shadowBlur" min="0" max="50" value="0" step="1"><span class="range-label">Blur: <span class="range-value">0px</span></span></div>
+            <label class="property-label">Đổ Bóng</label>
+            <div class="shadow-controls"><div class="property-row"><div class="property-col"><input type="number" class="property-input" data-style="shadowX" value="0" step="1" placeholder="X"></div><div class="property-col"><input type="number" class="property-input" data-style="shadowY" value="0" step="1" placeholder="Y"></div></div><input type="range" class="property-range" data-style="shadowBlur" min="0" max="50" value="0" step="1"><span class="range-label">Độ Mờ: <span class="range-value">0px</span></span></div>
         </div>
         <div class="property-group">
-            <h3>✨ Effects</h3>
-            <label class="property-label">Opacity</label><div class="range-container"><input type="range" class="property-range" data-style="opacity" min="0" max="1" step="0.05" value="${style.opacity || 1}"><span class="range-value">${Math.round((style.opacity || 1) * 100)}%</span></div>
-            <label class="property-label">Blur</label><div class="range-container"><input type="range" class="property-range" data-style="filter-blur" min="0" max="20" value="0" step="0.5"><span class="range-value">0px</span></div>
-            <label class="property-label">Brightness</label><div class="range-container"><input type="range" class="property-range" data-style="filter-brightness" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
-            <label class="property-label">Saturation</label><div class="range-container"><input type="range" class="property-range" data-style="filter-saturate" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
+            <h3>✨ Hiệu Ứng</h3>
+            <label class="property-label">Độ Trong Suốt</label><div class="range-container"><input type="range" class="property-range" data-style="opacity" min="0" max="1" step="0.05" value="${style.opacity || 1}"><span class="range-value">${Math.round((style.opacity || 1) * 100)}%</span></div>
+            <label class="property-label">Độ Mờ</label><div class="range-container"><input type="range" class="property-range" data-style="filter-blur" min="0" max="20" value="0" step="0.5"><span class="range-value">0px</span></div>
+            <label class="property-label">Độ Sáng</label><div class="range-container"><input type="range" class="property-range" data-style="filter-brightness" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
+            <label class="property-label">Độ Bão Hòa</label><div class="range-container"><input type="range" class="property-range" data-style="filter-saturate" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
         </div>
         <div class="property-group">
-            <h3>📐 Layout</h3>
-            <label class="property-label">Z-Index (Layer Order)</label><div class="z-index-controls"><button class="control-btn" onclick="window.slideEditor.changeZIndex(-1)">Send Back</button><input type="number" class="property-input" data-style="zIndex" value="${style.zIndex === 'auto' ? 0 : style.zIndex}" style="width: 80px; text-align: center;"><button class="control-btn" onclick="window.slideEditor.changeZIndex(1)">Bring Front</button></div>
-            <label class="property-label">Padding</label>
+            <h3>📐 Bố Cục</h3>
+            <label class="property-label">Thứ Tự Lớp (Z-Index)</label><div class="z-index-controls"><button class="control-btn" onclick="window.slideEditor.changeZIndex(-1)">Gửi Ra Sau</button><input type="number" class="property-input" data-style="zIndex" value="${style.zIndex === 'auto' ? 0 : style.zIndex}" style="width: 80px; text-align: center;"><button class="control-btn" onclick="window.slideEditor.changeZIndex(1)">Đưa Ra Trước</button></div>
+            <label class="property-label">Đệm (Padding)</label>
             <div class="spacing-controls">
                  <div class="spacing-input-group"><span class="spacing-input-label">T</span><input type="number" class="spacing-input" data-style="paddingTop" value="${parseInt(style.paddingTop) || 0}"></div>
                  <div class="spacing-input-group"><span class="spacing-input-label">R</span><input type="number" class="spacing-input" data-style="paddingRight" value="${parseInt(style.paddingRight) || 0}"></div>
                  <div class="spacing-input-group"><span class="spacing-input-label">B</span><input type="number" class="spacing-input" data-style="paddingBottom" value="${parseInt(style.paddingBottom) || 0}"></div>
                  <div class="spacing-input-group"><span class="spacing-input-label">L</span><input type="number" class="spacing-input" data-style="paddingLeft" value="${parseInt(style.paddingLeft) || 0}"></div>
             </div>
-            <label class="property-label" style="margin-top: 15px;">Margin</label>
+            <label class="property-label" style="margin-top: 15px;">Lề (Margin)</label>
             <div class="spacing-controls">
                <div class="spacing-input-group"><span class="spacing-input-label">T</span><input type="number" class="spacing-input" data-style="marginTop" value="${parseInt(style.marginTop) || 0}"></div>
                <div class="spacing-input-group"><span class="spacing-input-label">R</span><input type="number" class="spacing-input" data-style="marginRight" value="${parseInt(style.marginRight) || 0}"></div>
@@ -2278,8 +2278,8 @@ ${this.slides.map((slide, index) => {
             </div>
         </div>
         <div class="property-group">
-            <h3>⚡ Quick Actions</h3>
-            <div class="action-buttons"><button class="action-btn" onclick="window.slideEditor.duplicateElement()"><span>⧉</span> Duplicate</button><button class="action-btn" onclick="window.slideEditor.copySelectedElement()"><span>📋</span> Copy</button><button class="action-btn danger" onclick="window.slideEditor.deleteSelected()"><span>🗑️</span> Delete</button></div>
+            <h3>⚡ Hành Động Nhanh</h3>
+            <div class="action-buttons"><button class="action-btn" onclick="window.slideEditor.duplicateElement()"><span>⧉</span> Nhân Bản</button><button class="action-btn" onclick="window.slideEditor.copySelectedElement()"><span>📋</span> Sao Chép</button><button class="action-btn danger" onclick="window.slideEditor.deleteSelected()"><span>🗑️</span> Xóa</button></div>
         </div>
     `;
 
@@ -2564,7 +2564,7 @@ ${this.slides.map((slide, index) => {
                 el.style.borderLeft = '6px solid #667eea'; el.style.borderRadius = '8px';
                 el.style.padding = '20px'; el.style.fontStyle = 'italic';
                 el.style.fontSize = '16px'; el.style.color = '#4a5568'; el.style.display = 'flex';
-                el.style.alignItems = 'center'; el.innerHTML = '"Your inspiring quote here"'; break;
+                el.style.alignItems = 'center'; el.innerHTML = '"Trích dẫn đầy cảm hứng của bạn tại đây"'; break;
             case 'sparkle':
                 el.style.width = '80px'; el.style.height = '80px';
                 el.style.fontSize = '60px'; el.style.display = 'flex';
@@ -3126,13 +3126,13 @@ ${this.slides.map((slide, index) => {
 
         // Validation
         if (!file.type.startsWith('image/')) {
-            alert('Please select a valid image file');
+            alert('Vui lòng chọn một tệp hình ảnh hợp lệ');
             return;
         }
 
         const maxSize = 5 * 1024 * 1024; // 5MB
         if (file.size > maxSize) {
-            alert('Image is too large. Please select an image under 5MB.');
+            alert('Hình ảnh quá lớn. Vui lòng chọn hình ảnh dưới 5MB.');
             return;
         }
 
@@ -3191,13 +3191,13 @@ ${this.slides.map((slide, index) => {
 
         // Validation
         if (!file.type.startsWith('video/')) {
-            alert('Please select a valid video file');
+            alert('Vui lòng chọn một tệp video hợp lệ');
             return;
         }
 
         const maxSize = 20 * 1024 * 1024; // 20MB
         if (file.size > maxSize) {
-            alert('Video is too large. Please select a video under 20MB.');
+            alert('Video quá lớn. Vui lòng chọn video dưới 20MB.');
             return;
         }
 
@@ -3545,7 +3545,7 @@ ${this.slides.map((slide, index) => {
         el.style.backdropFilter = 'blur(5px)';
         el.style.border = '2px solid rgba(102, 126, 234, 0.2)';
         el.style.borderRadius = '8px';
-        el.innerText = 'Click to edit text';
+        el.innerText = 'Nhấp để sửa văn bản';
 
         this.canvas.appendChild(el);
         this.makeElementInteractive(el);
@@ -6022,7 +6022,7 @@ ${this.slides.map((slide, index) => {
                     const doc = iframe.contentDocument;
                     doc.open(); doc.write(content); doc.close();
                 } catch (error) {
-                    alert(`Error importing slide ${file.name}: ${error.message}`);
+                    alert(`Lỗi khi nhập slide ${file.name}: ${error.message}`);
                     console.error("Import failed:", error);
                     importedCount++;
                     if (importedCount === totalFiles) {
@@ -6372,62 +6372,62 @@ ${this.slides.map((slide, index) => {
             case 'title-slide':
                 backgroundColor = 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
                 slideContent = `
-                <div class="element" data-type="text" style="left: 400px; top: 400px; width: 1120px; height: auto; font-size: 72px; font-weight: 800; color: white; text-align: center; z-index: 2;" contenteditable="true">Your Presentation Title</div>
-                <div class="element" data-type="text" style="left: 400px; top: 520px; width: 1120px; height: auto; font-size: 36px; font-weight: 400; color: rgba(255,255,255,0.9); text-align: center; z-index: 3;" contenteditable="true">Subtitle or description goes here</div>
+                <div class="element" data-type="text" style="left: 400px; top: 400px; width: 1120px; height: auto; font-size: 72px; font-weight: 800; color: white; text-align: center; z-index: 2;" contenteditable="true">Tiêu đề bài thuyết trình của bạn</div>
+                <div class="element" data-type="text" style="left: 400px; top: 520px; width: 1120px; height: auto; font-size: 36px; font-weight: 400; color: rgba(255,255,255,0.9); text-align: center; z-index: 3;" contenteditable="true">Phụ đề hoặc mô tả ở đây</div>
             `;
                 break;
 
             case 'content-slide':
                 slideContent = `
-                <div class="element" data-type="text" style="left: 100px; top: 100px; width: 800px; height: auto; font-size: 48px; font-weight: 700; color: #2d3748; z-index: 2;" contenteditable="true">Content Title</div>
-                <div class="element" data-type="text" style="left: 100px; top: 200px; width: 1720px; height: auto; font-size: 24px; color: #4a5568; z-index: 3;" contenteditable="true">• First point or bullet item
-• Second important point
-• Third key message
-• Additional details</div>
+                <div class="element" data-type="text" style="left: 100px; top: 100px; width: 800px; height: auto; font-size: 48px; font-weight: 700; color: #2d3748; z-index: 2;" contenteditable="true">Tiêu đề nội dung</div>
+                <div class="element" data-type="text" style="left: 100px; top: 200px; width: 1720px; height: auto; font-size: 24px; color: #4a5568; z-index: 3;" contenteditable="true">• Mục hoặc điểm đầu tiên
+• Điểm quan trọng thứ hai
+• Thông điệp chính thứ ba
+• Chi tiết bổ sung</div>
             `;
                 break;
 
             case 'two-column':
                 slideContent = `
-                <div class="element" data-type="text" style="left: 100px; top: 100px; width: 800px; height: auto; font-size: 36px; font-weight: 700; color: #2d3748; z-index: 2;" contenteditable="true">Left Column</div>
-                <div class="element" data-type="text" style="left: 100px; top: 200px; width: 800px; height: auto; font-size: 18px; color: #4a5568; z-index: 3;" contenteditable="true">Content for the left side goes here. Add your text, bullet points, or any other information.</div>
-                <div class="element" data-type="text" style="left: 1020px; top: 100px; width: 800px; height: auto; font-size: 36px; font-weight: 700; color: #2d3748; z-index: 4;" contenteditable="true">Right Column</div>
-                <div class="element" data-type="text" style="left: 1020px; top: 200px; width: 800px; height: auto; font-size: 18px; color: #4a5568; z-index: 5;" contenteditable="true">Content for the right side goes here. You can balance your information across both columns.</div>
+                <div class="element" data-type="text" style="left: 100px; top: 100px; width: 800px; height: auto; font-size: 36px; font-weight: 700; color: #2d3748; z-index: 2;" contenteditable="true">Cột Trái</div>
+                <div class="element" data-type="text" style="left: 100px; top: 200px; width: 800px; height: auto; font-size: 18px; color: #4a5568; z-index: 3;" contenteditable="true">Nội dung cho phía bên trái ở đây. Thêm văn bản, gạch đầu dòng hoặc thông tin khác của bạn.</div>
+                <div class="element" data-type="text" style="left: 1020px; top: 100px; width: 800px; height: auto; font-size: 36px; font-weight: 700; color: #2d3748; z-index: 4;" contenteditable="true">Cột Phải</div>
+                <div class="element" data-type="text" style="left: 1020px; top: 200px; width: 800px; height: auto; font-size: 18px; color: #4a5568; z-index: 5;" contenteditable="true">Nội dung cho phía bên phải ở đây. Bạn có thể cân bằng thông tin của mình trên cả hai cột.</div>
             `;
                 break;
 
             case 'image-content':
                 slideContent = `
                 <div class="element" data-type="shape" style="left: 100px; top: 200px; width: 600px; height: 400px; background-color: #f7fafc; border: 2px dashed #cbd5e0; z-index: 2; display: flex; align-items: center; justify-content: center; font-size: 48px; color: #a0aec0;">🖼️</div>
-                <div class="element" data-type="text" style="left: 800px; top: 100px; width: 1020px; height: auto; font-size: 48px; font-weight: 700; color: #2d3748; z-index: 3;" contenteditable="true">Image & Content</div>
-                <div class="element" data-type="text" style="left: 800px; top: 220px; width: 1020px; height: auto; font-size: 24px; color: #4a5568; line-height: 1.6; z-index: 4;" contenteditable="true">Add your image to the left and your content here. This layout works great for:
+                <div class="element" data-type="text" style="left: 800px; top: 100px; width: 1020px; height: auto; font-size: 48px; font-weight: 700; color: #2d3748; z-index: 3;" contenteditable="true">Hình ảnh & Nội dung</div>
+                <div class="element" data-type="text" style="left: 800px; top: 220px; width: 1020px; height: auto; font-size: 24px; color: #4a5568; line-height: 1.6; z-index: 4;" contenteditable="true">Thêm hình ảnh của bạn vào bên trái và nội dung của bạn tại đây. Bố cục này hoạt động tuyệt vời cho:
 
-• Product descriptions
-• Case studies
-• Before/after comparisons
-• Visual explanations</div>
+• Mô tả sản phẩm
+• Nghiên cứu tình huống
+• So sánh trước/sau
+• Giải thích trực quan</div>
             `;
                 break;
 
             case 'quote-slide':
                 backgroundColor = 'linear-gradient(45deg, #667eea, #764ba2)';
                 slideContent = `
-                <div class="element" data-type="text" style="left: 200px; top: 300px; width: 1520px; height: auto; font-size: 64px; font-weight: 400; color: white; text-align: center; font-style: italic; z-index: 2;" contenteditable="true">"Your inspiring quote goes here"</div>
-                <div class="element" data-type="text" style="left: 200px; top: 500px; width: 1520px; height: auto; font-size: 32px; font-weight: 500; color: rgba(255,255,255,0.8); text-align: center; z-index: 3;" contenteditable="true">— Author Name</div>
+                <div class="element" data-type="text" style="left: 200px; top: 300px; width: 1520px; height: auto; font-size: 64px; font-weight: 400; color: white; text-align: center; font-style: italic; z-index: 2;" contenteditable="true">"Trích dẫn đầy cảm hứng của bạn tại đây"</div>
+                <div class="element" data-type="text" style="left: 200px; top: 500px; width: 1520px; height: auto; font-size: 32px; font-weight: 500; color: rgba(255,255,255,0.8); text-align: center; z-index: 3;" contenteditable="true">— Tên tác giả</div>
             `;
                 break;
 
             case 'thank-you':
                 backgroundColor = 'linear-gradient(135deg, #48bb78 0%, #38a169 100%)';
                 slideContent = `
-                <div class="element" data-type="text" style="left: 400px; top: 440px; width: 1120px; height: auto; font-size: 96px; font-weight: 800; color: white; text-align: center; z-index: 2;" contenteditable="true">Thank You</div>
-                <div class="element" data-type="text" style="left: 400px; top: 580px; width: 1120px; height: auto; font-size: 28px; font-weight: 400; color: rgba(255,255,255,0.9); text-align: center; z-index: 3;" contenteditable="true">Questions & Discussion</div>
+                <div class="element" data-type="text" style="left: 400px; top: 440px; width: 1120px; height: auto; font-size: 96px; font-weight: 800; color: white; text-align: center; z-index: 2;" contenteditable="true">Cảm Ơn</div>
+                <div class="element" data-type="text" style="left: 400px; top: 580px; width: 1120px; height: auto; font-size: 28px; font-weight: 400; color: rgba(255,255,255,0.9); text-align: center; z-index: 3;" contenteditable="true">Câu hỏi & Thảo luận</div>
             `;
                 break;
 
             case 'blank-slide':
                 slideContent = `
-                <div class="element" data-type="text" style="left: 400px; top: 500px; width: 1120px; height: auto; font-size: 48px; font-weight: 400; color: #a0aec0; text-align: center; z-index: 2;" contenteditable="true">Click to add content</div>
+                <div class="element" data-type="text" style="left: 400px; top: 500px; width: 1120px; height: auto; font-size: 48px; font-weight: 400; color: #a0aec0; text-align: center; z-index: 2;" contenteditable="true">Nhấp để thêm nội dung</div>
             `;
                 break;
         }
@@ -6449,7 +6449,7 @@ ${this.slides.map((slide, index) => {
         this.saveState();
 
         // Show success message
-        this.showSuccessMessage(`✨ Created new slide: ${newSlide.name}`);
+        this.showSuccessMessage(`✨ Đã tạo slide mới: ${newSlide.name}`);
     }
 
     // Load slides từ URL params hoặc localStorage
@@ -8071,10 +8071,10 @@ function convertApiSlideToEditorFormat(apiSlide, index) {
         // Create editable text content from title or create new slide
         const slideText = apiSlide.title || `Slide ${index + 1}`;
         editorContent = `
-        <div class="element" style="position: absolute; left: 100px; top: 100px; width: 600px; height: 80px; font-size: 32px; font-weight: bold; color: #333; text-align: center; z-index: 1; cursor: move; padding: 0; border: 2px dashed #ddd; background: #f9f9f9;" data-type="heading" contenteditable="true">
+        <div class="element" style="position: absolute; left: 100px; top: 100px; width: 600px; height: 80px; font-size: 32px; font-weight: bold; color: #333; text-align: center; z-index: 1; cursor: move; padding: 20px; border: 2px dashed #ddd; background: #f9f9f9;" data-type="heading" contenteditable="true">
             ${slideText}
         </div>
-        <div class="element" style="position: absolute; left: 100px; top: 220px; width: 600px; height: 200px; font-size: 16px; color: #666; line-height: 1.6; z-index: 2; cursor: move; padding: 0; border: 2px dashed #ddd; background: #f9f9f9;" data-type="text" contenteditable="true">
+        <div class="element" style="position: absolute; left: 100px; top: 220px; width: 600px; height: 200px; font-size: 16px; color: #666; line-height: 1.6; z-index: 2; cursor: move; padding: 20px; border: 2px dashed #ddd; background: #f9f9f9;" data-type="text" contenteditable="true">
             Click here to add content...
         </div>
     `;
@@ -8173,7 +8173,7 @@ function convertHtmlToEditorElements(htmlContainer, slideIndex) {
         const textContent = htmlContainer.textContent.trim();
         if (textContent) {
             elements = `
-            <div class="element" style="position: absolute; left: 100px; top: 100px; width: 700px; height: auto; min-height: 200px; font-size: 16px; color: #333; line-height: 1.6; z-index: 1; cursor: move; padding: 0; border: 2px solid #e2e8f0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" data-type="text" contenteditable="true">
+            <div class="element" style="position: absolute; left: 100px; top: 100px; width: 700px; height: auto; min-height: 200px; font-size: 16px; color: #333; line-height: 1.6; z-index: 1; cursor: move; padding: 30px; border: 2px solid #e2e8f0; background: white; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" data-type="text" contenteditable="true">
                 ${textContent}
             </div>
         `;
@@ -8230,7 +8230,7 @@ function convertHtmlToEditorElements(htmlContainer, slideIndex) {
                 const textLength = element.textContent.length;
                 height = Math.max(60, Math.ceil(textLength / 100) * 25 + 40);
                 elementHtml = `
-                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.6; z-index: ${zIndex}; cursor: move; padding: 0; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="text" contenteditable="true">
+                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.6; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="text" contenteditable="true">
                     ${element.innerHTML}
                 </div>
             `;
@@ -8242,7 +8242,7 @@ function convertHtmlToEditorElements(htmlContainer, slideIndex) {
                 const listItems = element.children.length;
                 height = Math.max(100, listItems * 30 + 60);
                 elementHtml = `
-                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.8; z-index: ${zIndex}; cursor: move; padding: 0; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="list" contenteditable="true">
+                <div class="element" style="position: absolute; left: 100px; top: ${yOffset}px; width: ${width}px; min-height: ${height}px; font-size: 16px; color: #4a5568; line-height: 1.8; z-index: ${zIndex}; cursor: move; padding: 20px; border: 2px solid transparent; background: rgba(255,255,255,0.9); border-radius: 8px;" data-type="list" contenteditable="true">
                     ${element.outerHTML}
                 </div>
             `;

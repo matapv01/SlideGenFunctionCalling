@@ -4,8 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Chỉnh sửa Cấu trúc - SlideGen</title>
-    <script src="./config.js?v=2"></script> <!-- Load config -->
+    <title>Structure Editor - SlideGen</title>
     <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <!-- Bootstrap Icons -->
@@ -13,49 +12,313 @@
     <!-- Custom CSS -->
     <link rel="stylesheet" href="css/structure-editor.css">
     <style>
-        /* CRITICAL OVERRIDES */
-        .slide-bullet {
-            display: block !important;
-            position: relative !important;
-            padding-left: 1.2rem !important;
+        /* ========== WORD-LIKE EDITOR STYLES ========== */
+
+        /* 2-Column Layout */
+        .main-content {
+            display: flex;
+            gap: 1rem;
+            height: calc(100vh - 130px);
         }
 
-        .slide-bullet::before {
-            position: absolute !important;
-            left: 0 !important;
-            top: 0 !important;
+        .editor-column {
+            flex: 7;
+            display: flex;
+            flex-direction: column;
         }
 
-        .node-merged-content .btn {
-            padding: 1px 5px !important;
-            font-size: 0.75rem !important;
+        .preview-column {
+            flex: 5;
         }
 
-        /*  */
-
-        /* SELECTION CONTROLS - Better visibility */
-        .form-label {
-            color: #ffffff !important;
-            font-weight: 600 !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+        /* Toolbar Styles */
+        .editor-toolbar {
+            background: rgba(30, 30, 50, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 10px 15px;
+            border-radius: 10px;
+            display: flex;
+            gap: 15px;
+            align-items: center;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
         }
 
-        .form-select {
-            background-color: rgba(255, 255, 255, 0.95) !important;
-            color: #1a1a1a !important;
-            border: 2px solid rgba(255, 255, 255, 0.3) !important;
-            font-weight: 500 !important;
+        .toolbar-group {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            padding: 0 10px;
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
         }
 
-        .form-select option {
-            background-color: #ffffff !important;
-            color: #1a1a1a !important;
+        .toolbar-group:last-child {
+            border-right: none;
         }
 
-        #selectionPreview {
-            background-color: rgba(255, 255, 255, 0.15) !important;
-            color: #ffffff !important;
-            border: 1px solid rgba(255, 255, 255, 0.3) !important;
+        .toolbar-label {
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.7);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .toolbar-select {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            min-width: 120px;
+        }
+
+        .toolbar-select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.3);
+        }
+
+        .toolbar-select option {
+            background: #2a2a3a;
+            color: #fff;
+        }
+
+        .toolbar-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .toolbar-btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .toolbar-btn-apply {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            border: none;
+            color: #fff;
+        }
+
+        .toolbar-btn-remove {
+            background: rgba(220, 53, 69, 0.8);
+            border: none;
+            color: #fff;
+        }
+
+        /* Word-like Editor Container */
+        .word-editor {
+            flex: 1;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            padding: 30px 40px;
+            overflow-y: auto;
+            color: #1a1a1a;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 14px;
+            line-height: 1.8;
+            min-height: 400px;
+        }
+
+        .word-editor:focus {
+            outline: none;
+        }
+
+        /* Text Block Styles - Level Indentation */
+        .text-block {
+            display: block;
+            padding: 8px 12px;
+            margin: 4px 0;
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.2s ease;
+        }
+
+        .text-block:hover {
+            background: rgba(0, 0, 0, 0.03);
+        }
+
+        .text-block.selected {
+            box-shadow: 0 0 0 2px #667eea;
+        }
+
+        /* Level Indentation */
+        .text-level-0 {
+            margin-left: 0;
+        }
+
+        .text-level-1 {
+            margin-left: 0;
+        }
+
+        .text-level-2 {
+            margin-left: 30px;
+        }
+
+        .text-level-3 {
+            margin-left: 60px;
+        }
+
+        .text-level-4 {
+            margin-left: 90px;
+        }
+
+        .text-level-5 {
+            margin-left: 120px;
+        }
+
+        .text-level-6 {
+            margin-left: 150px;
+        }
+
+        .text-level-7 {
+            margin-left: 180px;
+        }
+
+        /* Type Styling - Title */
+        .text-title {
+            border-left: 4px solid #4dabf7;
+            background: rgba(77, 171, 247, 0.1);
+            font-weight: 600;
+            color: #1864ab;
+        }
+
+        .text-title::before {
+            content: 'T';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #4dabf7;
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        /* Type Styling - Content */
+        .text-content {
+            border-left: 4px solid #69db7c;
+            background: rgba(105, 219, 124, 0.1);
+            color: #2b8a3e;
+        }
+
+        .text-content::before {
+            content: 'C';
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: #69db7c;
+            color: #fff;
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-weight: 700;
+        }
+
+        /* Level badges */
+        .text-block::after {
+            position: absolute;
+            right: 35px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 0.65rem;
+            padding: 2px 6px;
+            border-radius: 3px;
+            background: rgba(0, 0, 0, 0.1);
+            color: #666;
+        }
+
+        .text-level-0::after {
+            content: 'L0';
+            background: #ff6b6b;
+            color: #fff;
+        }
+
+        .text-level-1::after {
+            content: 'L1';
+        }
+
+        .text-level-2::after {
+            content: 'L2';
+        }
+
+        .text-level-3::after {
+            content: 'L3';
+        }
+
+        .text-level-4::after {
+            content: 'L4';
+        }
+
+        .text-level-5::after {
+            content: 'L5';
+        }
+
+        /* Intro Slide Special Style */
+        .text-block.text-level-0.text-title {
+            background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(254, 202, 87, 0.15));
+            border-left: 4px solid #ff6b6b;
+            font-size: 1.2rem;
+        }
+
+        .text-block.text-level-0.text-title::before {
+            content: 'INTRO';
+            background: linear-gradient(135deg, #ff6b6b, #feca57);
+        }
+
+        /* Selection info bar */
+        .selection-info {
+            background: rgba(102, 126, 234, 0.2);
+            padding: 8px 15px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+            display: none;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .selection-info.visible {
+            display: flex;
+        }
+
+        .selection-text {
+            flex: 1;
+            font-size: 0.85rem;
+            color: rgba(255, 255, 255, 0.9);
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Stats bar */
+        .stats-bar {
+            display: flex;
+            gap: 20px;
+            padding: 8px 15px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 6px;
+            margin-top: 10px;
+            font-size: 0.8rem;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .stat-value {
+            font-weight: 600;
+            color: #fff;
         }
     </style>
 </head>
@@ -73,227 +336,153 @@
         <div class="particle"></div>
     </div>
 
-    <!-- Dark Mode Toggle Button -->
-    <button class="theme-toggle" onclick="toggleDarkMode()" aria-label="Chuyển đổi chế độ tối">
-        <i class="bi bi-moon-stars-fill icon moon-icon"></i>
-        <i class="bi bi-sun-fill icon sun-icon"></i>
-    </button>
-
     <div class="container-fluid px-4 py-3">
         <!-- Header -->
         <div class="header-section">
             <button class="btn btn-outline-light" onclick="goBack()">
-                <i class="bi bi-arrow-left"></i> Quay lại
+                <i class="bi bi-arrow-left"></i> Back
             </button>
             <h2 class="header-title">
-                <i class="bi bi-diagram-3"></i> Chỉnh sửa Cấu trúc Thủ công
+                <i class="bi bi-file-earmark-word"></i> Structure Editor
             </h2>
             <div class="document-info">
                 <i class="bi bi-file-text"></i>
-                <span id="documentTitle">Tài liệu</span>
+                <span id="documentTitle">Document</span>
             </div>
             <!-- Action Buttons in Header -->
             <div class="header-actions">
                 <button class="btn btn-sm btn-secondary" onclick="resetStructure()">
-                    <i class="bi bi-arrow-counterclockwise"></i> Đặt lại
+                    <i class="bi bi-arrow-counterclockwise"></i> Reset
                 </button>
                 <button class="btn btn-sm btn-danger" onclick="cancelEdit()">
-                    <i class="bi bi-x-circle"></i> Hủy
+                    <i class="bi bi-x-circle"></i> Cancel
                 </button>
                 <button class="btn btn-sm btn-success" onclick="approveAndContinue()">
-                    <i class="bi bi-check-circle"></i> Duyệt & Tiếp tục
+                    <i class="bi bi-check-circle"></i> Approve & Continue
                 </button>
             </div>
         </div>
 
-        <!-- Main Content: 3-Column Layout -->
-        <div class="row h-100 g-2">
-            <!-- COLUMN 1: Document Text -->
-            <div class="col-md-4 h-100">
-                <div class="panel-container">
-                    <div class="panel-header">
-                        <h5><i class="bi bi-file-text"></i> Nội dung Tài liệu</h5>
-                        <span class="text-muted small">Chọn văn bản để thêm</span>
-                    </div>
-
-                    <div class="document-text-container" id="documentTextContainer">
-                        <div class="text-center text-muted p-4">
-                            <i class="bi bi-hourglass-split" style="font-size: 3rem;"></i>
-                            <p class="mt-2">Đang tải tài liệu...</p>
+        <!-- Main Content: 2-Column Layout -->
+        <div class="main-content">
+            <!-- COLUMN 1: Word-like Editor -->
+            <div class="editor-column">
+                <div class="panel-container" style="padding: 1rem;">
+                    <!-- Toolbar -->
+                    <div class="editor-toolbar">
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">Level</span>
+                            <select class="toolbar-select" id="toolbarLevel">
+                                <option value="1" selected>L1 - Slide</option>
+                                <option value="2">L2 - Bullet</option>
+                                <option value="3">L3 - Sub</option>
+                                <option value="4">L4</option>
+                                <option value="5">L5</option>
+                            </select>
                         </div>
-                    </div>
 
-                    <!-- Selection Controls -->
-                    <div class="selection-controls" id="selectionControls" style="display:none;">
-                        <div class="selected-text-preview" id="selectedTextPreview">
-                            Chưa chọn văn bản nào
+                        <div class="toolbar-group">
+                            <span class="toolbar-label">Type</span>
+                            <select class="toolbar-select" id="toolbarType">
+                                <option value="title">Title</option>
+                                <option value="content">Content</option>
+                            </select>
                         </div>
-                        <div class="control-buttons">
-                            <div class="row g-2">
-                                <div class="col-md-6">
-                                    <label class="form-label">Kiểu:</label>
-                                    <select class="form-select form-select-sm" id="nodeType">
-                                        <option value="title">Tiêu đề</option>
-                                        <option value="content">Nội dung</option>
-                                    </select>
-                                </div>
-                                <div class="col-md-6">
-                                    <label class="form-label">Cấp độ:</label>
-                                    <select class="form-select form-select-sm" id="nodeLevel">
-                                        <option value="0">L0 (Slide Giới thiệu)</option>
-                                        <option value="1">L1 (Slide)</option>
-                                        <option value="2">L2 (Điểm chính)</option>
-                                        <option value="3">L3 (Phụ)</option>
-                                        <option value="4">L4</option>
-                                        <option value="5">L5</option>
-                                        <option value="6">L6</option>
-                                        <option value="7">L7</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="mt-2">
-                                <label class="form-label">Cha:</label>
-                                <select class="form-select form-select-sm" id="parentNode">
-                                    <option value="">Gốc</option>
-                                </select>
-                            </div>
-                            <button class="btn btn-primary btn-sm w-100 mt-2" onclick="addSelectedToStructure()">
-                                <i class="bi bi-plus-circle"></i> Thêm vào Cấu trúc
+
+                        <div class="toolbar-group">
+                            <button class="toolbar-btn toolbar-btn-apply" onclick="applyFormatting()"
+                                title="Apply formatting to selected text">
+                                <i class="bi bi-check2-circle"></i> Apply
                             </button>
+                            <button class="toolbar-btn toolbar-btn-remove" onclick="removeFormatting()"
+                                title="Remove formatting from selected block">
+                                <i class="bi bi-x-circle"></i> Remove
+                            </button>
+                        </div>
+
+                        <div class="toolbar-group" style="border-right: none;">
+                            <button class="btn btn-sm btn-info" onclick="openIntroSlideModal()" title="Add Intro Slide">
+                                <i class="bi bi-plus-lg"></i> Intro Slide
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Selection Info Bar -->
+                    <div class="selection-info" id="selectionInfo">
+                        <i class="bi bi-cursor-text"></i>
+                        <span class="selection-text" id="selectionText">No text selected</span>
+                        <span class="badge bg-secondary" id="selectionLength">0 chars</span>
+                    </div>
+
+                    <!-- Word-like Editor -->
+                    <div class="word-editor" id="wordEditor" contenteditable="true" spellcheck="false">
+                        <div class="text-center text-muted p-4">
+                            <i class="bi bi-hourglass-split" style="font-size: 3rem; color: #999;"></i>
+                            <p class="mt-2" style="color: #999;">Loading document...</p>
+                        </div>
+                    </div>
+
+                    <!-- Stats Bar -->
+                    <div class="stats-bar">
+                        <div class="stat-item">
+                            <i class="bi bi-card-text"></i>
+                            <span>Blocks:</span>
+                            <span class="stat-value" id="blockCount">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="bi bi-collection"></i>
+                            <span>Slides:</span>
+                            <span class="stat-value" id="slideCountStat">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <i class="bi bi-fonts"></i>
+                            <span>Characters:</span>
+                            <span class="stat-value" id="charCount">0</span>
                         </div>
                     </div>
                 </div>
             </div>
 
-            <!-- COLUMN 2: Structure Tree -->
-            <div class="col-md-4 h-100">
+            <!-- COLUMN 2: Slide Previews -->
+            <div class="preview-column">
                 <div class="panel-container">
                     <div class="panel-header">
-                        <h5><i class="bi bi-diagram-3"></i> Cấu trúc Tài liệu</h5>
-                        <div class="d-flex align-items-center gap-2">
-                            <button class="btn btn-sm btn-primary" onclick="showAddNodeForm()"
-                                title="Thêm Node Thủ công">
-                                <i class="bi bi-plus-circle"></i> Thêm
-                            </button>
-                            <span class="badge bg-info" id="nodeCount">0 mục</span>
-                        </div>
-                    </div>
-
-                    <!-- Intro Slide Section -->
-                    <div class="intro-slide-section mb-3 p-2">
-                        <button class="btn btn-sm btn-info w-100" onclick="openIntroSlideModal()" id="introSlideBtn">
-                            <i class="bi bi-plus-lg"></i> Thêm Slide Giới thiệu (Level 0)
-                        </button>
-                        <div id="introSlidePreview" style="display:none;"
-                            class="mt-2 p-2 bg-info bg-opacity-25 rounded">
-                            <small class="text-muted">Slide Giới thiệu (Level 0):</small>
-                            <div id="introSlideText" class="text-white small mt-1"></div>
-                            <button class="btn btn-xs btn-warning btn-sm mt-2" onclick="editIntroSlide()">Sửa</button>
-                            <button class="btn btn-xs btn-danger btn-sm mt-2" onclick="removeIntroSlide()">Xóa</button>
-                        </div>
-                    </div>
-
-                    <div class="tree-container" id="treeContainer">
-                        <div class="text-center text-muted p-4">
-                            <i class="bi bi-inbox" style="font-size: 3rem;"></i>
-                            <p class="mt-2">Chưa có cấu trúc. Chọn văn bản để bắt đầu.</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- COLUMN 3: Slide Previews -->
-            <div class="col-md-4 h-100">
-                <div class="panel-container">
-                    <div class="panel-header">
-                        <h5><i class="bi bi-collection"></i> Xem trước Slide</h5>
+                        <h5><i class="bi bi-collection"></i> Slide Previews</h5>
                         <span class="badge bg-success" id="slideCount">0 slides</span>
                     </div>
 
                     <div class="slides-container" id="slidesContainer">
                         <div class="text-center text-muted p-4">
                             <i class="bi bi-file-slides" style="font-size: 3rem;"></i>
-                            <p class="mt-2">Slides sẽ hiện ở đây</p>
+                            <p class="mt-2">Format text to generate slides</p>
                         </div>
                     </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- Edit Modal -->
-    <div class="modal fade" id="editModal" tabindex="-1">
-        <div class="modal-dialog modal-lg">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title">Sửa Node</h5>
-                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                </div>
-                <div class="modal-body">
-                    <div class="row g-3">
-                        <div class="col-md-6">
-                            <label class="form-label">Kiểu Node</label>
-                            <select class="form-select" id="editNodeType">
-                                <option value="title">Tiêu đề</option>
-                                <option value="content">Nội dung</option>
-                            </select>
-                        </div>
-                        <div class="col-md-6">
-                            <label class="form-label">Cấp độ</label>
-                            <select class="form-select" id="editNodeLevel">
-                                <option value="1">Cấp độ 1</option>
-                                <option value="2">Cấp độ 2</option>
-                                <option value="3">Cấp độ 3</option>
-                                <option value="4">Cấp độ 4</option>
-                                <option value="5">Cấp độ 5</option>
-                                <option value="6">Cấp độ 6</option>
-                                <option value="7">Cấp độ 7</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Node Cha</label>
-                            <select class="form-select" id="editParentNode">
-                                <option value="">Gốc (Không có cha)</option>
-                            </select>
-                        </div>
-                        <div class="col-12">
-                            <label class="form-label">Nội dung Văn bản</label>
-                            <textarea class="form-control" id="editNodeText" rows="8"></textarea>
-                            <small class="text-muted">Số ký tự: <span id="editCharCount">0</span></small>
-                        </div>
-                    </div>
-                </div>
-                <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-primary" onclick="saveNodeEdit()">Lưu thay đổi</button>
                 </div>
             </div>
         </div>
     </div>
 
     <!-- Intro Slide Modal -->
-
     <div class="modal fade" id="introSlideModal" tabindex="-1">
         <div class="modal-dialog modal-lg">
             <div class="modal-content">
                 <div class="modal-header">
-                    <h5 class="modal-title">Thêm/Sửa Slide Giới thiệu (Level 0)</h5>
+                    <h5 class="modal-title">Add/Edit Intro Slide (Level 0)</h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body">
                     <div class="row g-3">
                         <div class="col-12">
-                            <label class="form-label">Tiêu đề/Nội dung Slide Giới thiệu</label>
+                            <label class="form-label">Intro Slide Title/Content</label>
                             <textarea class="form-control" id="introSlideInput" rows="6"
-                                placeholder="Nhập nội dung cho slide giới thiệu..."></textarea>
-                            <small class="text-muted">Số ký tự: <span id="introCharCount">0</span></small>
+                                placeholder="Enter content for intro slide..."></textarea>
+                            <small class="text-muted">Character count: <span id="introCharCount">0</span></small>
                         </div>
                     </div>
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
-                    <button type="button" class="btn btn-success" onclick="saveIntroSlide()">Lưu Slide Giới
-                        thiệu</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="button" class="btn btn-success" onclick="saveIntroSlide()">Save Intro Slide</button>
                 </div>
             </div>
         </div>
@@ -305,7 +494,7 @@
             <div class="modal-content">
                 <div class="modal-header bg-info text-white">
                     <h5 class="modal-title">
-                        <i class="bi bi-info-circle"></i> Thông báo
+                        <i class="bi bi-info-circle"></i> Notification
                     </h5>
                     <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
                 </div>
@@ -325,15 +514,15 @@
             <div class="modal-content">
                 <div class="modal-header bg-warning text-dark">
                     <h5 class="modal-title">
-                        <i class="bi bi-question-circle"></i> Xác nhận hành động
+                        <i class="bi bi-question-circle"></i> Confirm Action
                     </h5>
                     <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
                 </div>
                 <div class="modal-body" id="customConfirmMessage">
-                    Xác nhận hành động này?
+                    Confirm this action?
                 </div>
                 <div class="modal-footer">
-                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
                     <button type="button" class="btn btn-warning" id="customConfirmOk">OK</button>
                 </div>
             </div>
@@ -343,7 +532,7 @@
     <!-- Bootstrap JS -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <!-- Custom JS -->
-    <script src="js/structure-editor.js?v=2"></script> <!-- v2: Fixed config usage -->
+    <script src="js/structure-editor-v2.js?v=8"></script>
 </body>
 
 </html>

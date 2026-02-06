@@ -193,6 +193,11 @@ except Exception as e:
     workflow_service = None
 
 
+# In-memory storage for structure editor sessions
+# TODO: Replace with Redis for production
+structure_sessions = {}
+
+
 # ========================== UTILITY FUNCTIONS ==========================
 
 def extract_slide_index(path):
@@ -1808,10 +1813,6 @@ async def serve_temp_file(path: str):
 
 
 # ========================== STRUCTURE EDITOR ENDPOINTS ==========================
-
-# In-memory storage for structure editor sessions
-# TODO: Replace with Redis for production
-structure_sessions = {}
 
 @app.get("/api/structure/current")
 async def get_current_structure(session_id: str):
