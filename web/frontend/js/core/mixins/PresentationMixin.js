@@ -228,11 +228,15 @@ export const PresentationMixin = {
         const cleanContent = tempDiv.innerHTML;
         const backgroundColor = slide.backgroundColor || 'white';
 
-        // Determine background CSS
+        // Determine background CSS - handle both gradients and solid colors
         let backgroundStyle = '';
         if (backgroundColor.startsWith('linear-gradient') ||
             backgroundColor.startsWith('radial-gradient') ||
             backgroundColor.startsWith('url(')) {
+        if (backgroundColor.includes('gradient') || 
+            backgroundColor.includes('linear') ||
+            backgroundColor.includes('radial') ||
+            backgroundColor.includes('url(')) {
             backgroundStyle = `background: ${backgroundColor};`;
         } else {
             backgroundStyle = `background-color: ${backgroundColor};`;

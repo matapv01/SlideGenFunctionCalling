@@ -15,6 +15,11 @@
     transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+/* Wide panel (480px) for Elements/Icons tabs */
+.canvas-container.wide-panel {
+    left: 480px;
+}
+
 .canvas-container.left-collapsed {
     left: 12%;
     right: -10%;

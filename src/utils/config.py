@@ -54,6 +54,31 @@ SLIDE_GENERATION_MAX_RETRIES = 2
 # Tăng số này nếu muốn LLM có nhiều lựa chọn tool hơn (nhưng làm chậm)
 TOOL_RETRIEVER_TOP_K = 5
 
+# --- Tool Retrieval Diversity Configuration ---
+# MMR (Maximal Marginal Relevance) lambda parameter
+# Higher = more focus on relevance, Lower = more focus on diversity
+# Range: 0.0 to 1.0, Recommended: 0.6-0.8
+TOOL_RETRIEVER_MMR_LAMBDA = 0.7
+
+# Number of candidates to retrieve before applying MMR
+# Should be 2-3x larger than TOOL_RETRIEVER_TOP_K
+TOOL_RETRIEVER_CANDIDATE_MULTIPLIER = 3
+
+# Temporal decay penalty weight
+# Higher = stronger penalty for recently used tools
+# Range: 0.0 to 1.0, Recommended: 0.15-0.3
+TOOL_RETRIEVER_TEMPORAL_DECAY_WEIGHT = 0.2
+
+# Maximum history window for temporal decay (in number of slides)
+# Tools used beyond this window won't receive penalty
+TOOL_RETRIEVER_TEMPORAL_WINDOW = 10
+
+# Enable/disable temporal decay feature
+TOOL_RETRIEVER_ENABLE_TEMPORAL_DECAY = True
+
+# Enable/disable MMR diversity re-ranking
+TOOL_RETRIEVER_ENABLE_MMR = True
+
 # --- VLM Evaluation (Visual Language Model) ---
 # Số lần retry tối đa khi VLM đánh giá slide (vòng lặp: generate → evaluate → regenerate)
 # Đặt = 3 nghĩa là tối đa 3 lần thử (lần đầu + 2 lần retry)

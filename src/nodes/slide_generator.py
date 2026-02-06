@@ -257,7 +257,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
                 retrieved_tools = tool_retriever.get_relevant_tools(
                     category=tool_category,
                     query=creative_thought,
-                    top_k=TOOL_RETRIEVER_TOP_K
+                    top_k=TOOL_RETRIEVER_TOP_K,
+                    current_slide_index=idx
                 )
                 my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
         else:
@@ -265,7 +266,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             retrieved_tools = tool_retriever.get_relevant_tools(
                 category=tool_category,
                 query=creative_thought,
-                top_k=TOOL_RETRIEVER_TOP_K
+                top_k=TOOL_RETRIEVER_TOP_K,
+                current_slide_index=idx
             )
             my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
     else:
@@ -273,7 +275,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         retrieved_tools = tool_retriever.get_relevant_tools(
             category=tool_category,
             query=creative_thought,
-            top_k=TOOL_RETRIEVER_TOP_K
+            top_k=TOOL_RETRIEVER_TOP_K,
+            current_slide_index=idx
         )
         
         if not retrieved_tools:
@@ -412,6 +415,13 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 
         state["current_tool_call"] = tool_call_dict
         state["current_html_content"] = html_content
+
+        # Record tool usage for temporal decay tracking
+        tool_retriever.record_tool_usage(
+            category=tool_category,
+            tool_name=tool_name,
+            slide_index=idx
+        )
 
         if slide_type == "TRANSITION_TOOLS":
             state["previous_transition_tool_call"] = tool_call_dict
