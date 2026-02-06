@@ -2448,50 +2448,54 @@ async def generate_from_idea(
         if not title or not prompt:
             raise HTTPException(status_code=400, detail="Title and prompt are required")
         
-        # Map content length to slide range (TOTAL slides including all types)
+        # Map content length to EXACT slide count (TOTAL slides including all types)
+        # User selects a preset, we give them a specific target total
         length_map = {
-            'brief': {'min': 5, 'max': 8, 'desc': 'Quick overview'},
-            'standard': {'min': 8, 'max': 12, 'desc': 'Balanced coverage'},
-            'detailed': {'min': 12, 'max': 18, 'desc': 'Comprehensive'},
-            'extensive': {'min': 18, 'max': 25, 'desc': 'In-depth analysis'}
+            'brief': {'total': 6, 'desc': 'Quick overview'},
+            'standard': {'total': 10, 'desc': 'Balanced coverage'},
+            'detailed': {'total': 15, 'desc': 'Comprehensive'},
+            'extensive': {'total': 22, 'desc': 'In-depth analysis'}
         }
         length_info = length_map.get(content_length, length_map['standard'])
         
-        # Calculate actual content slide target by subtracting overhead
-        # Assumptions:
-        # - 1 intro slide (always)
-        # - Estimate sections: brief=2, standard=3, detailed=4, extensive=5
-        # - 1 transition per section (if enabled)
-        # - 1 thank you slide (if enabled)
+        # EXACT calculation - NO RANGES
+        target_total = length_info['total']
         
-        estimated_sections = {
-            'brief': 2,
-            'standard': 3,
-            'detailed': 4,
-            'extensive': 5
-        }.get(content_length, 3)
+        # Fixed counts
+        intro_count = 1  # Always exactly 1 intro
+        thank_you_count = 1 if enable_thank_you_slide else 0
         
-        overhead_slides = 1  # Always 1 intro
+        # Calculate sections and transitions based on target
+        # Rule: ~3-4 content slides per section
         if enable_transition_slides:
-            # Estimate transitions: typically sections - 1 (no transition before first section)
-            estimated_transitions = max(0, estimated_sections - 1)
-            overhead_slides += estimated_transitions
-            logger.info(f"   Estimated {estimated_transitions} transition slides for {estimated_sections} sections")
+            # Estimate sections: for small presentations 2-3 sections, for large 4-5
+            if target_total <= 8:
+                num_sections = 2
+            elif target_total <= 12:
+                num_sections = 3
+            elif target_total <= 18:
+                num_sections = 4
+            else:
+                num_sections = 5
+            transition_count = num_sections - 1  # Transition between sections (not before first)
+        else:
+            num_sections = 3  # Default for organization
+            transition_count = 0
         
-        if enable_thank_you_slide:
-            overhead_slides += 1
-            logger.info(f"   Including 1 thank you slide")
+        # Calculate exact content slides
+        content_count = target_total - intro_count - transition_count - thank_you_count
+        content_count = max(2, content_count)  # At least 2 content slides
         
-        # Calculate target content slide range
-        content_min = max(1, length_info['min'] - overhead_slides)
-        content_max = max(content_min + 1, length_info['max'] - overhead_slides)
+        # Recalculate actual total after adjustments
+        actual_total = intro_count + content_count + transition_count + thank_you_count
         
         logger.info(f"🤖 Generating slides from idea:")
         logger.info(f"   Title: {title}")
         logger.info(f"   Prompt length: {len(prompt)} chars")
-        logger.info(f"   Total slide range: {length_info['min']}-{length_info['max']} slides")
-        logger.info(f"   Overhead slides: {overhead_slides} (intro + transitions + thank you)")
-        logger.info(f"   Target content slides: {content_min}-{content_max}")
+        logger.info(f"   🎯 Target EXACT: {target_total} slides")
+        logger.info(f"   📊 Breakdown: intro={intro_count}, content={content_count}, transitions={transition_count}, thank_you={thank_you_count}")
+        logger.info(f"   📊 Actual total: {actual_total} slides")
+        logger.info(f"   📊 Sections: {num_sections}")
         logger.info(f"   Options: transitions={enable_transition_slides}, thank_you={enable_thank_you_slide}")
         
         # Call LLM to generate slide structure
@@ -2518,7 +2522,7 @@ async def generate_from_idea(
             max_tokens=IDEA_STRUCTURE_LLM_MAX_TOKENS
         )
         
-        # Build structured prompt for slide generation
+        # Build structured prompt for slide generation with EXACT counts
         structure_prompt = f"""You are a presentation structure generator. Given a title and description, create a logical slide structure.
 
 PRESENTATION TITLE: {title}
@@ -2527,75 +2531,49 @@ USER DESCRIPTION:
 {prompt}
 
 CONTENT DEPTH: {content_length.upper()} ({length_info['desc']})
-TOTAL SLIDE TARGET: {length_info['min']}-{length_info['max']} slides (including ALL types)
-CONTENT SLIDE TARGET: {content_min}-{content_max} slides (after accounting for intro, transitions, thank you)
 
-SLIDE COMPOSITION:
-- 1 intro slide (position 0) - MANDATORY
-- {content_min} to {content_max} content slides (position 1, 2, 3...) - MAIN CONTENT
-- {"~" + str(estimated_sections - 1) + " transition slides (position -1) - between sections" if enable_transition_slides else "No transition slides"}
-- {"1 thank you slide (position -2) - at end" if enable_thank_you_slide else "No thank you slide"}
-- Expected total: {length_info['min']}-{length_info['max']} slides
+===== EXACT SLIDE COUNT REQUIREMENTS =====
+You MUST generate EXACTLY this many slides:
+- INTRO slides: {intro_count} (position 0)
+- CONTENT slides: {content_count} (position 1, 2, 3... up to {content_count})
+- TRANSITION slides: {transition_count} (position -1)
+- THANK YOU slides: {thank_you_count} (position -2)
+- TOTAL: {actual_total} slides EXACTLY
+
+DO NOT generate more or fewer slides than specified above.
+==========================================
+
+ORGANIZATION:
+- Organize content into {num_sections} major sections
+- Distribute the {content_count} content slides across these sections
 
 INSTRUCTIONS:
-1. Organize content into approximately {estimated_sections} major sections
-2. First slide MUST be intro/title slide (position 0)
-3. Generate EXACTLY {content_min} to {content_max} content slides (position 1, 2, 3...)
-4. Each section should have a clear heading (use markdown ## for major sections)
+1. First slide MUST be intro/title slide (position 0)
+2. Generate EXACTLY {content_count} content slides (position 1, 2, 3... up to {content_count})
+3. {"Add EXACTLY " + str(transition_count) + " transition slides (position -1) between major sections" if transition_count > 0 else "DO NOT add any transition slides"}
+4. {"Add EXACTLY 1 thank you slide (position -2) at the end" if thank_you_count > 0 else "DO NOT add any thank you slide"}
 5. **CRITICAL**: For each slide's text_content, provide COMPLETE and DETAILED information:
-   - DO NOT just list bullet point headings like "- Introduction" or "- Benefits" 
+   - DO NOT just list bullet point headings like "- Introduction" or "- Benefits"
    - INSTEAD, write out FULL information with specific details, data, and explanations
-   - Example GOOD: "- Machine learning improves efficiency by 80% through automated data processing and pattern recognition"
+   - Example GOOD: "- Machine learning improves efficiency by 80% through automated data processing"
    - Example BAD: "- Benefits" or "- Machine Learning"
-   - Include numbers, statistics, concrete examples, and technical details
-   - Each point should be a complete informative statement (10-30 words per point)
-   - Provide 3-5 detailed points per slide
-6. If transitions enabled: Add transition slide (position -1) BETWEEN each major section
-7. If thank you enabled: End with thank you slide (position -2)
+   - Each bullet point should be 10-30 words with concrete information
 
 OUTPUT FORMAT (JSON):
 {{
   "slide_chunks": [
-    {{"position": 0, "heading": "", "text_content": "Title: [title]\\nSubtitle: [subtitle]"}},
-    {{"position": 1, "heading": "Section 1 Title", "text_content": "- Detailed point 1 with specific information and data\\n- Complete explanation of point 2 with concrete examples\\n- Full description of point 3 with technical details and numbers"}},
-    {{"position": -1, "heading": "TRANSITION", "text_content": "Moving to: Next Section"}},
-    {{"position": 2, "heading": "Section 2 Title", "text_content": "- Comprehensive information about topic A with statistics\\n- Detailed explanation of topic B with real-world applications"}},
-    ...
-    {{"position": -2, "heading": "THANK_YOU", "text_content": "Thank you for your attention!"}}
+    {{"position": 0, "heading": "", "text_content": "Title: {title}\\nSubtitle: [subtitle]"}},
+    {{"position": 1, "heading": "Section Title", "text_content": "- Detailed point 1\\n- Detailed point 2\\n- Detailed point 3"}},
+    ... more content slides with position 2, 3, etc. up to {content_count} ...
+    {'{{"position": -1, "heading": "TRANSITION", "text_content": "Moving to: Next Section"}},' if transition_count > 0 else ''}
+    {'{{"position": -2, "heading": "THANK_YOU", "text_content": "Thank you for your attention!"}}' if thank_you_count > 0 else ''}
   ]
 }}
 
-IMPORTANT RULES - FOLLOW EXACTLY:
-- position: 0 for intro, -1 for transitions, -2 for thank you, regular numbers (1,2,3...) for content slides
-- heading: Empty string for intro, "TRANSITION" for transitions, "THANK_YOU" for thank you, actual section titles for content
-- text_content: For intro use "Title: X\\nSubtitle: Y" format
-  * For CONTENT slides: Use detailed bullet points with "-" that contain COMPLETE information
-  * Based on the user's idea, EXPAND and COMPLETE each point with specific details, examples, data, and explanations
-  * DO NOT write vague headings - write full informative statements
-  * Each bullet point should be self-explanatory and contain concrete information (10-30 words)
-
-CRITICAL REQUIREMENTS:
-1. Generate EXACTLY {content_min} to {content_max} CONTENT slides (position 1, 2, 3...)
-   - This is calculated to ensure total slides fit in range {length_info['min']}-{length_info['max']}
-   - DO NOT exceed {content_max} content slides
-   
-2. Structure with approximately {estimated_sections} major sections
-   - Distribute content slides across these sections
-   - Each section should have multiple slides
-   
-3. Transition slides (position -1):
-   - {"Add transition between each major section change" if enable_transition_slides else "DO NOT add any transitions"}
-   - {"Expected ~" + str(estimated_sections - 1) + " transitions total" if enable_transition_slides else ""}
-   
-4. Thank you slide (position -2):
-   - {"Add ONE thank you slide at the very end" if enable_thank_you_slide else "DO NOT add thank you slide"}
-
-FINAL CHECK:
-- Intro: 1 slide
-- Content: {content_min}-{content_max} slides
-- Transitions: {"~" + str(estimated_sections - 1) if enable_transition_slides else "0"} slides
-- Thank you: {"1" if enable_thank_you_slide else "0"} slide
-- TOTAL should be approximately {length_info['min']}-{length_info['max']} slides
+RULES:
+- position: 0 for intro, positive integers (1,2,3...) for content, -1 for transitions, -2 for thank you
+- heading: Empty string for intro, "TRANSITION" for transitions, "THANK_YOU" for thank you, actual titles for content
+- VERIFY your output has EXACTLY {actual_total} total slides before responding
 
 Now generate the slide structure as valid JSON only (no markdown code blocks):"""
         
@@ -2629,27 +2607,26 @@ Now generate the slide structure as valid JSON only (no markdown code blocks):""
         # Validate and adjust slide count
         content_slides = [s for s in slide_chunks if isinstance(s.get('position'), int) and s.get('position') > 0]
         intro_slides = [s for s in slide_chunks if s.get('position') == 0]
-        transition_slides = [s for s in slide_chunks if s.get('position') == -1]
+        transition_slides_gen = [s for s in slide_chunks if s.get('position') == -1]
         thank_you_slides = [s for s in slide_chunks if s.get('position') == -2]
         
         total_slides = len(slide_chunks)
         
-        logger.info(f"📊 Slide breakdown:")
-        logger.info(f"   Intro: {len(intro_slides)}")
-        logger.info(f"   Content: {len(content_slides)}")
-        logger.info(f"   Transitions: {len(transition_slides)}")
-        logger.info(f"   Thank you: {len(thank_you_slides)}")
-        logger.info(f"   TOTAL: {total_slides} slides")
+        logger.info(f"📊 Slide breakdown (LLM generated):")
+        logger.info(f"   Intro: {len(intro_slides)} (expected: {intro_count})")
+        logger.info(f"   Content: {len(content_slides)} (expected: {content_count})")
+        logger.info(f"   Transitions: {len(transition_slides_gen)} (expected: {transition_count})")
+        logger.info(f"   Thank you: {len(thank_you_slides)} (expected: {thank_you_count})")
+        logger.info(f"   TOTAL: {total_slides} slides (expected: {actual_total})")
         
-        # Validate content slide count
-        if not (content_min <= len(content_slides) <= content_max):
-            logger.warning(f"⚠️  Content slides: {len(content_slides)} (expected: {content_min}-{content_max})")
+        # Validate slide counts match expectations
+        if len(content_slides) != content_count:
+            logger.warning(f"⚠️  Content slides mismatch: got {len(content_slides)}, expected {content_count}")
         
-        # Validate total slide count
-        if not (length_info['min'] <= total_slides <= length_info['max']):
-            logger.warning(f"⚠️  Total slides: {total_slides} (target range: {length_info['min']}-{length_info['max']})")
+        if total_slides != actual_total:
+            logger.warning(f"⚠️  Total slides mismatch: got {total_slides}, expected {actual_total}")
         else:
-            logger.info(f"✅ Total slide count within target range!")
+            logger.info(f"✅ Total slide count matches expected: {actual_total}")
         
         logger.info(f"✅ Generated {len(slide_chunks)} total slide chunks")
         

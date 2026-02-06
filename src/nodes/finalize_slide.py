@@ -37,8 +37,9 @@ def finalize_slide(state: State, config: RunnableConfig) -> Dict[str, Any]:
         slide_text = state.get('current_slide_text', {})
         slide_title = slide_text.get('title', 'Untitled') if isinstance(slide_text, dict) else 'Untitled'
         
-        # Total = slides đã tạo + slides còn lại trong queue
-        total_slides = len(state['final_slides']) + len(state.get('slide_chunks', []))
+        # Total = use length_slide_chunks set at workflow start for consistent count
+        # Fallback to dynamic calculation if not set
+        total_slides = state.get('length_slide_chunks') or (len(state['final_slides']) + len(state.get('slide_chunks', [])))
         percentage = (len(state['final_slides']) / total_slides * 100) if total_slides > 0 else 0
         
         stream_callback('slide_completed', {

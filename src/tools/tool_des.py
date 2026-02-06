@@ -82,7 +82,7 @@ from src.tools.html_tool import (
     generate_corporate_grid_slide,  # slide content
     generate_business_overview_slide,   # slide content
     generate_vision_mission_slide,  # slide content
-    generate_strategic_goals_slide, # slide content
+    # generate_strategic_goals_slide, # slide content
     generate_service_roadmap_slide, # slide content
     generate_financial_projections_slide_dark, # slide content
     generate_minimalist_tech_list_slide,    # slide content
@@ -1072,23 +1072,23 @@ class GenerateVisionMissionSlideInput(BaseModel):
     pattern_opacity: Optional[float] = Field(default=0, description="Opacity of the geometric pattern (0.0 to 1.0). Default: 0.1.")
     custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
-class GenerateStrategicGoalsSlideInput(BaseModel):
-    """Input schema for generate_strategic_goals_slide."""
-    main_title: str = Field(..., description="Main title text (10-25 characters), displayed on the left side. Default: 'STRATEGIC GOALS'.")
-    goals: List[Dict] = Field(..., description="List of dictionaries with number and content for each strategic goal. . Default: 3 goals with Lorem ipsum content.")
-    bg_image: str = Field(default="skyscrapers.jpg", description="Background image URL or path (skyscraper/city image recommended).")
-    bg_overlay_color: str = Field(default="rgba(26, 75, 140, 0.85)", description="Color overlay for the background image (rgba with transparency).")
-    title_color: str = Field(default="#FFFFFF", description="Color of the main title text (hex code).")
-    number_bg_color: str = Field(default="#1a4b8c", description="Background color for the number circles (hex code).")
-    number_text_color: str = Field(default="#FFFFFF", description="Text color for the numbers (hex code).")
-    content_bg_color: str = Field(default="#FFFFFF", description="Background color for content text boxes (hex code).")
-    content_text_color: str = Field(default="#1a4b8c", description="Text color for content (hex code).")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
-    show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
-    border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
-    number_circle_size: str = Field(default="80px", description="Size of the circular number containers.")
-    content_padding: str = Field(default="20px", description="Padding inside content boxes.")
-    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
+# class GenerateStrategicGoalsSlideInput(BaseModel):
+#     """Input schema for generate_strategic_goals_slide."""
+#     main_title: str = Field(..., description="Main title text (10-25 characters), displayed on the left side. Default: 'STRATEGIC GOALS'.")
+#     goals: List[Dict] = Field(..., description="List of dictionaries with number and content for each strategic goal. . Default: 3 goals with Lorem ipsum content.")
+#     bg_image: str = Field(default="skyscrapers.jpg", description="Background image URL or path (skyscraper/city image recommended).")
+#     bg_overlay_color: str = Field(default="rgba(26, 75, 140, 0.85)", description="Color overlay for the background image (rgba with transparency).")
+#     title_color: str = Field(default="#FFFFFF", description="Color of the main title text (hex code).")
+#     number_bg_color: str = Field(default="#1a4b8c", description="Background color for the number circles (hex code).")
+#     number_text_color: str = Field(default="#FFFFFF", description="Text color for the numbers (hex code).")
+#     content_bg_color: str = Field(default="#FFFFFF", description="Background color for content text boxes (hex code).")
+#     content_text_color: str = Field(default="#1a4b8c", description="Text color for content (hex code).")
+#     font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
+#     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
+#     border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
+#     number_circle_size: str = Field(default="80px", description="Size of the circular number containers.")
+#     content_padding: str = Field(default="20px", description="Padding inside content boxes.")
+#     custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
 class GenerateServiceRoadmapSlideInput(BaseModel):
     """Input schema for generate_service_roadmap_slide."""
@@ -2193,12 +2193,12 @@ CONTENT_TOOLS = [
         description="Generates a professional vision and mission slide with split layout and numbered points.",
         args_schema=GenerateVisionMissionSlideInput
     ),
-    StructuredTool.from_function(
-        func=generate_strategic_goals_slide,
-        name="generate_strategic_goals_slide",
-        description="Generates a professional strategic goals slide with numbered points and background image.",
-        args_schema=GenerateStrategicGoalsSlideInput
-    ),
+    # StructuredTool.from_function(
+    #     func=generate_strategic_goals_slide,
+    #     name="generate_strategic_goals_slide",
+    #     description="Generates a professional strategic goals slide with numbered points and background image.",
+    #     args_schema=GenerateStrategicGoalsSlideInput
+    # ),
     StructuredTool.from_function(
         func=generate_service_roadmap_slide,
         name="generate_service_roadmap_slide",

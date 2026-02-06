@@ -109,9 +109,11 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         return state
     
     # --- AUTO-CREATE INTRO SLIDE IF MISSING ---
-    first_chunk = slide_chunks[0] if slide_chunks else {}
-    if first_chunk.get('position', 0) != 0:
-        print("⚠️  First chunk is not an intro slide. Creating intro slide...")
+    # Check if any chunk already has position=0 (intro already exists from idea workflow)
+    has_intro = any(chunk.get('position') == 0 for chunk in slide_chunks)
+    
+    if not has_intro:
+        print("⚠️  No intro slide found (position=0). Creating intro slide...")
         
         # Get title from document structure (handle both dict and list)
         if isinstance(document_structure, dict):

@@ -13340,290 +13340,290 @@ def generate_vision_mission_slide(
     return html_code
 
 
-def generate_strategic_goals_slide(
-    main_title="STRATEGIC GOALS",
-    goals=[
-        {
-            "number": "01",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-            "number": "02",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-            "number": "03",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        }
-    ],
-    bg_image="skyscrapers.jpg",
-    bg_overlay_color="rgba(26, 75, 140, 0.85)",
-    title_color="#FFFFFF",
-    number_bg_color="#1a4b8c",
-    number_text_color="#FFFFFF",
-    content_bg_color="#FFFFFF",
-    content_text_color="#1a4b8c",
-    font_family="'Inter', sans-serif",
-    show_border=True,
-    border_opacity=0.4,
-    number_circle_size="80px",
-    content_padding="20px",
-    custom_css=""
-):
-    """
-    Generate a professional strategic goals slide with numbered points and background image.
+# def generate_strategic_goals_slide(
+#     main_title="STRATEGIC GOALS",
+#     goals=[
+#         {
+#             "number": "01",
+#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+#         },
+#         {
+#             "number": "02",
+#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+#         },
+#         {
+#             "number": "03",
+#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+#         }
+#     ],
+#     bg_image="skyscrapers.jpg",
+#     bg_overlay_color="rgba(26, 75, 140, 0.85)",
+#     title_color="#FFFFFF",
+#     number_bg_color="#1a4b8c",
+#     number_text_color="#FFFFFF",
+#     content_bg_color="#FFFFFF",
+#     content_text_color="#1a4b8c",
+#     font_family="'Inter', sans-serif",
+#     show_border=True,
+#     border_opacity=0.4,
+#     number_circle_size="80px",
+#     content_padding="20px",
+#     custom_css=""
+# ):
+#     """
+#     Generate a professional strategic goals slide with numbered points and background image.
 
-    :param main_title: Main title text (10-25 characters), displayed on the left side
-    :param goals: List of dictionaries with number and content for each strategic goal,
-                 or list of lists where first element is content and second is number
-    :param bg_image: Background image URL or path (skyscraper/city image recommended)
-    :param bg_overlay_color: Color overlay for the background image (rgba with transparency)
-    :param title_color: Color of the main title text (hex code)
-    :param number_bg_color: Background color for the number circles (hex code)
-    :param number_text_color: Text color for the numbers (hex code)
-    :param content_bg_color: Background color for content text boxes (hex code)
-    :param content_text_color: Text color for content (hex code)
-    :param title_font_size: Font size for the main title
-    :param number_font_size: Font size for the numbers
-    :param content_font_size: Font size for content text
-    :param font_family: Font family for all text elements
-    :param show_border: Whether to show the dashed border frame
-    :param border_opacity: Opacity of the border frame (0.0 to 1.0)
-    :param number_circle_size: Size of the circular number containers
-    :param content_padding: Padding inside content boxes
-    :param custom_css: Additional custom CSS to be included
-    :return: A string containing the HTML code for the slide
-    """
+#     :param main_title: Main title text (10-25 characters), displayed on the left side
+#     :param goals: List of dictionaries with number and content for each strategic goal,
+#                  or list of lists where first element is content and second is number
+#     :param bg_image: Background image URL or path (skyscraper/city image recommended)
+#     :param bg_overlay_color: Color overlay for the background image (rgba with transparency)
+#     :param title_color: Color of the main title text (hex code)
+#     :param number_bg_color: Background color for the number circles (hex code)
+#     :param number_text_color: Text color for the numbers (hex code)
+#     :param content_bg_color: Background color for content text boxes (hex code)
+#     :param content_text_color: Text color for content (hex code)
+#     :param title_font_size: Font size for the main title
+#     :param number_font_size: Font size for the numbers
+#     :param content_font_size: Font size for content text
+#     :param font_family: Font family for all text elements
+#     :param show_border: Whether to show the dashed border frame
+#     :param border_opacity: Opacity of the border frame (0.0 to 1.0)
+#     :param number_circle_size: Size of the circular number containers
+#     :param content_padding: Padding inside content boxes
+#     :param custom_css: Additional custom CSS to be included
+#     :return: A string containing the HTML code for the slide
+#     """
 
-    # Generate goals HTML
-    goals_html = ""
-    for i, goal in enumerate(goals):
-        # Xử lý goal dạng list hoặc dictionary
-        if isinstance(goal, list):
-            # Nếu goal là list thì giả định [content, number]
-            if len(goal) >= 2:
-                # Kiểm tra loại dữ liệu của phần tử đầu tiên
-                if isinstance(goal[0], str) and not goal[0].isdigit():
-                    content = goal[0]
-                    number = goal[1] if len(goal) > 1 and goal[1] else f"{i+1:02d}"
-                else:
-                    number = goal[0] if goal[0] else f"{i+1:02d}"
-                    content = goal[1] if len(goal) > 1 else ""
-            else:
-                content = goal[0] if len(goal) > 0 else ""
-                number = f"{i+1:02d}"
-        else:
-            # Đối với dictionary, sử dụng get() như trước
-            number = goal.get("number", f"{i+1:02d}")
-            content = goal.get("content", "")
+#     # Generate goals HTML
+#     goals_html = ""
+#     for i, goal in enumerate(goals):
+#         # Xử lý goal dạng list hoặc dictionary
+#         if isinstance(goal, list):
+#             # Nếu goal là list thì giả định [content, number]
+#             if len(goal) >= 2:
+#                 # Kiểm tra loại dữ liệu của phần tử đầu tiên
+#                 if isinstance(goal[0], str) and not goal[0].isdigit():
+#                     content = goal[0]
+#                     number = goal[1] if len(goal) > 1 and goal[1] else f"{i+1:02d}"
+#                 else:
+#                     number = goal[0] if goal[0] else f"{i+1:02d}"
+#                     content = goal[1] if len(goal) > 1 else ""
+#             else:
+#                 content = goal[0] if len(goal) > 0 else ""
+#                 number = f"{i+1:02d}"
+#         else:
+#             # Đối với dictionary, sử dụng get() như trước
+#             number = goal.get("number", f"{i+1:02d}")
+#             content = goal.get("content", "")
         
-        goals_html += f'''
-        <div class="goal-item">
-            <div class="number-circle">
-                <span>{number}</span>
-            </div>
-            <div class="content-box">
-                <div class="content-text">{content}</div>
-            </div>
-        </div>
-        '''
+#         goals_html += f'''
+#         <div class="goal-item">
+#             <div class="number-circle">
+#                 <span>{number}</span>
+#             </div>
+#             <div class="content-box">
+#                 <div class="content-text">{content}</div>
+#             </div>
+#         </div>
+#         '''
 
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            font-family: {font_family};
-            overflow: hidden;
-        }}
+#     html_code = f"""<!DOCTYPE html>
+# <html lang="en">
+# <head>
+#     <meta charset="UTF-8">
+#     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+#     <title>{main_title}</title>
+#     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+#     <style>
+#         body, html {{
+#             margin: 0;
+#             padding: 0;
+#             height: 100%;
+#             width: 100%;
+#             font-family: {font_family};
+#             overflow: hidden;
+#         }}
         
-        .slide-container {{
-            width: 100%;
-            height: 100vh;
-            position: relative;
-            background-image: url('{bg_image}');
-            background-size: cover;
-            background-position: center;
-            padding: 40px;
-            box-sizing: border-box;
-        }}
+#         .slide-container {{
+#             width: 100%;
+#             height: 100vh;
+#             position: relative;
+#             background-image: url('{bg_image}');
+#             background-size: cover;
+#             background-position: center;
+#             padding: 40px;
+#             box-sizing: border-box;
+#         }}
         
-        .bg-overlay {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: {bg_overlay_color};
-            z-index: 1;
-        }}
+#         .bg-overlay {{
+#             position: absolute;
+#             top: 0;
+#             left: 0;
+#             width: 100%;
+#             height: 100%;
+#             background-color: {bg_overlay_color};
+#             z-index: 1;
+#         }}
         
-        .slide-border {{
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            border: {("2px dashed rgba(255, 255, 255, " + str(border_opacity) + ")" if show_border else "none")};
-            pointer-events: none;
-            z-index: 5;
-        }}
+#         .slide-border {{
+#             position: absolute;
+#             top: 20px;
+#             left: 20px;
+#             right: 20px;
+#             bottom: 20px;
+#             border: {("2px dashed rgba(255, 255, 255, " + str(border_opacity) + ")" if show_border else "none")};
+#             pointer-events: none;
+#             z-index: 5;
+#         }}
         
-        .content-wrapper {{
-            position: relative;
-            z-index: 10;
-            display: flex;
-            height: 100%;
-        }}
+#         .content-wrapper {{
+#             position: relative;
+#             z-index: 10;
+#             display: flex;
+#             height: 100%;
+#         }}
         
-        .title-section {{
-            width: 40%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
+#         .title-section {{
+#             width: 40%;
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#         }}
         
-        .main-title {{
-            font-size: 4.5rem;
-            font-weight: 700;
-            color: {title_color};
-            line-height: 1.1;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }}
+#         .main-title {{
+#             font-size: 4.5rem;
+#             font-weight: 700;
+#             color: {title_color};
+#             line-height: 1.1;
+#             text-transform: uppercase;
+#             letter-spacing: 0.05em;
+#             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+#         }}
         
-        .goals-section {{
-            width: 60%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 20px;
-        }}
+#         .goals-section {{
+#             width: 60%;
+#             display: flex;
+#             flex-direction: column;
+#             justify-content: center;
+#             gap: 20px;
+#         }}
         
-        .goal-item {{
-            display: flex;
-            align-items: center;
-        }}
+#         .goal-item {{
+#             display: flex;
+#             align-items: center;
+#         }}
         
-        .number-circle {{
-            width: {number_circle_size};
-            height: {number_circle_size};
-            min-width: {number_circle_size};
-            background-color: {number_bg_color};
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            z-index: 20;
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }}
+#         .number-circle {{
+#             width: {number_circle_size};
+#             height: {number_circle_size};
+#             min-width: {number_circle_size};
+#             background-color: {number_bg_color};
+#             border-radius: 50%;
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#             margin-right: 20px;
+#             z-index: 20;
+#             position: relative;
+#             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+#         }}
         
-        .number-circle span {{
-            color: {number_text_color};
-            font-size: 2.5rem;
-            font-weight: 700;
-        }}
+#         .number-circle span {{
+#             color: {number_text_color};
+#             font-size: 2.5rem;
+#             font-weight: 700;
+#         }}
         
-        .content-box {{
-            flex: 1;
-            background-color: {content_bg_color};
-            border-radius: 8px;
-            padding: {content_padding};
-            padding-left: {content_padding};
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 10;
-            position: relative;
-        }}
+#         .content-box {{
+#             flex: 1;
+#             background-color: {content_bg_color};
+#             border-radius: 8px;
+#             padding: {content_padding};
+#             padding-left: {content_padding};
+#             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+#             z-index: 10;
+#             position: relative;
+#         }}
         
-        .content-text {{
-            color: {content_text_color};
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }}
+#         .content-text {{
+#             color: {content_text_color};
+#             font-size: 0.9rem;
+#             line-height: 1.5;
+#         }}
         
-        @media (max-width: 768px) {{
-            .content-wrapper {{
-                flex-direction: column;
-            }}
+#         @media (max-width: 768px) {{
+#             .content-wrapper {{
+#                 flex-direction: column;
+#             }}
             
-            .title-section, .goals-section {{
-                width: 100%;
-            }}
+#             .title-section, .goals-section {{
+#                 width: 100%;
+#             }}
             
-            .title-section {{
-                height: 30%;
-                align-items: flex-start;
-                justify-content: center;
-            }}
+#             .title-section {{
+#                 height: 30%;
+#                 align-items: flex-start;
+#                 justify-content: center;
+#             }}
             
-            .goals-section {{
-                height: 70%;
-            }}
+#             .goals-section {{
+#                 height: 70%;
+#             }}
             
-            .main-title {{
-                font-size: 2.5rem;
-                text-align: center;
-                margin-top: 20px;
-            }}
+#             .main-title {{
+#                 font-size: 2.5rem;
+#                 text-align: center;
+#                 margin-top: 20px;
+#             }}
             
-            .number-circle {{
-                width: 60px;
-                height: 60px;
-                min-width: 60px;
-                margin-right: 15px;
-            }}
+#             .number-circle {{
+#                 width: 60px;
+#                 height: 60px;
+#                 min-width: 60px;
+#                 margin-right: 15px;
+#             }}
             
-            .number-circle span {{
-                font-size: 1.8rem;
-            }}
+#             .number-circle span {{
+#                 font-size: 1.8rem;
+#             }}
             
-            .content-box {{
-                padding: 15px;
-            }}
+#             .content-box {{
+#                 padding: 15px;
+#             }}
             
-            .content-text {{
-                font-size: 0.8rem;
-            }}
-        }}
+#             .content-text {{
+#                 font-size: 0.8rem;
+#             }}
+#         }}
         
-        {custom_css}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <!-- Background overlay -->
-        <div class="bg-overlay"></div>
+#         {custom_css}
+#     </style>
+# </head>
+# <body>
+#     <div class="slide-container">
+#         <!-- Background overlay -->
+#         <div class="bg-overlay"></div>
         
-        <!-- Border frame -->
-        <div class="slide-border"></div>
+#         <!-- Border frame -->
+#         <div class="slide-border"></div>
         
-        <!-- Content -->
-        <div class="content-wrapper">
-            <!-- Title section -->
-            <div class="title-section">
-                <h1 class="main-title">{main_title}</h1>
-            </div>
+#         <!-- Content -->
+#         <div class="content-wrapper">
+#             <!-- Title section -->
+#             <div class="title-section">
+#                 <h1 class="main-title">{main_title}</h1>
+#             </div>
             
-            <!-- Goals section -->
-            <div class="goals-section">
-                {goals_html}
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    return html_code
+#             <!-- Goals section -->
+#             <div class="goals-section">
+#                 {goals_html}
+#             </div>
+#         </div>
+#     </div>
+# </body>
+# </html>"""
+#     return html_code
 
 
 
