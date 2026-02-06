@@ -1,8 +1,11 @@
 /**
  * PresentationMixin.js
+ * Version: 2026-02-06-v2 - Smooth crossfade transitions
  * Handles presentation mode functionality for slides
  * Includes fullscreen mode, navigation, timeline, and keyboard controls
  */
+
+console.log('🎬 PresentationMixin loaded - v2026-02-06 with smooth crossfade');
 
 export const PresentationMixin = {
     /**
@@ -36,6 +39,13 @@ export const PresentationMixin = {
             elem.msRequestFullscreen();
         }
 
+        // Clear previous slides from container
+        const container = document.getElementById('presentationSlideContainer');
+        container.innerHTML = '';
+        
+        // Reset transition flag
+        this.isTransitioning = false;
+
         // Render first slide
         this.renderPresentationSlide();
 
@@ -47,17 +57,33 @@ export const PresentationMixin = {
     },
 
     /**
-     * Render current slide in presentation mode
+     * Render current slide in presentation mode with smooth crossfade transition
      */
     renderPresentationSlide() {
         const slide = this.slides[this.presentationSlideIndex];
+        if (!slide) return;
+        
         const container = document.getElementById('presentationSlideContainer');
-        container.innerHTML = '';
 
         // Create temporary HTML file for this slide and render via iframe
         const slideHtml = this.createPresentationSlideHtml(slide);
         const blob = new Blob([slideHtml], { type: 'text/html' });
         const iframeUrl = URL.createObjectURL(blob);
+
+        // Create new slide wrapper with smooth transition
+        const slideWrapper = document.createElement('div');
+        slideWrapper.className = 'presentation-slide-wrapper';
+        slideWrapper.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+            transform: scale(0.98);
+            z-index: 2;
+        `;
 
         // Create iframe to render the slide
         const iframe = document.createElement('iframe');
@@ -66,16 +92,81 @@ export const PresentationMixin = {
             height: 1080px;
             border: none;
             background: white;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
         `;
         iframe.src = iframeUrl;
 
-        // Clean up blob URL after iframe loads
-        iframe.onload = () => {
-            setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
-        };
+        slideWrapper.appendChild(iframe);
 
-        container.appendChild(iframe);
+        // Get old slide for crossfade
+        const oldSlide = container.querySelector('.presentation-slide-wrapper');
+
+        if (oldSlide) {
+            // Set old slide z-index lower and prepare transition
+            oldSlide.style.zIndex = '1';
+            oldSlide.style.transition = 'opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+            // Add new slide
+            container.appendChild(slideWrapper);
+
+            // Start smooth crossfade after iframe loads
+            iframe.onload = () => {
+                // Clean up blob URL
+                setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
+                
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            // Fade in new slide with scale
+                            slideWrapper.style.opacity = '1';
+                            slideWrapper.style.transform = 'scale(1)';
+
+                            // Fade out old slide with slight scale up
+                            oldSlide.style.opacity = '0';
+                            oldSlide.style.transform = 'scale(1.02)';
+
+                            // Remove old slide after transition completes
+                            setTimeout(() => {
+                                if (oldSlide.parentNode) {
+                                    oldSlide.remove();
+                                }
+                            }, 1250);
+                        }, 50);
+                    });
+                });
+            };
+
+            // Fallback in case iframe doesn't fire onload
+            setTimeout(() => {
+                if (slideWrapper.style.opacity === '0') {
+                    slideWrapper.style.opacity = '1';
+                    slideWrapper.style.transform = 'scale(1)';
+                    oldSlide.style.opacity = '0';
+                    oldSlide.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        if (oldSlide.parentNode) {
+                            oldSlide.remove();
+                        }
+                    }, 1250);
+                }
+            }, 300);
+        } else {
+            // First slide - no transition needed
+            container.appendChild(slideWrapper);
+            
+            iframe.onload = () => {
+                setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
+                slideWrapper.style.opacity = '1';
+                slideWrapper.style.transform = 'scale(1)';
+            };
+
+            // Fallback
+            setTimeout(() => {
+                if (slideWrapper.style.opacity === '0') {
+                    slideWrapper.style.opacity = '1';
+                    slideWrapper.style.transform = 'scale(1)';
+                }
+            }, 300);
+        }
 
         // Update counter
         document.getElementById('presentationCounter').textContent =
@@ -331,9 +422,12 @@ export const PresentationMixin = {
      * @param {number} index - Slide index
      */
     goToPresentationSlide(index) {
+        if (this.isTransitioning) return; // Prevent spam
         if (index >= 0 && index < this.slides.length) {
+            this.isTransitioning = true;
             this.presentationSlideIndex = index;
             this.renderPresentationSlide();
+            setTimeout(() => { this.isTransitioning = false; }, 1300);
         }
     },
 
@@ -341,9 +435,12 @@ export const PresentationMixin = {
      * Navigate to next slide
      */
     nextPresentationSlide() {
+        if (this.isTransitioning) return; // Prevent spam
         if (this.presentationSlideIndex < this.slides.length - 1) {
+            this.isTransitioning = true;
             this.presentationSlideIndex++;
             this.renderPresentationSlide();
+            setTimeout(() => { this.isTransitioning = false; }, 1300);
         }
     },
 
@@ -351,9 +448,12 @@ export const PresentationMixin = {
      * Navigate to previous slide
      */
     previousPresentationSlide() {
+        if (this.isTransitioning) return; // Prevent spam
         if (this.presentationSlideIndex > 0) {
+            this.isTransitioning = true;
             this.presentationSlideIndex--;
             this.renderPresentationSlide();
+            setTimeout(() => { this.isTransitioning = false; }, 650);
         }
     },
 
