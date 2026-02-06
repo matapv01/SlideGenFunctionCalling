@@ -78,7 +78,7 @@ export const PresentationMixin = {
         container.appendChild(iframe);
 
         // Update counter
-        document.getElementById('presentationCounter').textContent = 
+        document.getElementById('presentationCounter').textContent =
             `${this.presentationSlideIndex + 1} / ${this.slides.length}`;
 
         // Update button states
@@ -122,7 +122,7 @@ export const PresentationMixin = {
         tempDiv.querySelectorAll('.guide-line').forEach(el => el.remove());
         tempDiv.querySelectorAll('.distance-line').forEach(el => el.remove());
         tempDiv.querySelectorAll('.distance-label').forEach(el => el.remove());
-        
+
         // Clean up element attributes
         tempDiv.querySelectorAll('.element').forEach(el => {
             el.removeAttribute('contenteditable');
@@ -139,8 +139,8 @@ export const PresentationMixin = {
 
         // Determine background CSS
         let backgroundStyle = '';
-        if (backgroundColor.startsWith('linear-gradient') || 
-            backgroundColor.startsWith('radial-gradient') || 
+        if (backgroundColor.startsWith('linear-gradient') ||
+            backgroundColor.startsWith('radial-gradient') ||
             backgroundColor.startsWith('url(')) {
             backgroundStyle = `background: ${backgroundColor};`;
         } else {
@@ -181,11 +181,11 @@ export const PresentationMixin = {
         const container = document.getElementById('presentationSlideContainer');
         const windowWidth = window.innerWidth;
         const windowHeight = window.innerHeight;
-        
+
         const scaleX = windowWidth / 1920;
         const scaleY = windowHeight / 1080;
         const scale = Math.min(scaleX, scaleY); // Full screen, no padding
-        
+
         container.style.transform = `scale(${scale})`;
     },
 
@@ -194,7 +194,7 @@ export const PresentationMixin = {
      */
     setupPresentationKeyboard() {
         this.presentationKeyboardHandler = (e) => {
-            switch(e.key) {
+            switch (e.key) {
                 case 'ArrowRight':
                 case 'ArrowDown':
                 case ' ':
@@ -253,7 +253,7 @@ export const PresentationMixin = {
 
         // Setup timeline
         this.setupPresentationTimeline();
-        
+
         // Setup auto-hide for timeline and controls
         this.setupPresentationAutoHide();
     },
@@ -264,10 +264,10 @@ export const PresentationMixin = {
     setupPresentationTimeline() {
         const timelineSlides = document.getElementById('timelineSlides');
         const timelineTrack = document.getElementById('timelineTrack');
-        
+
         // Clear existing markers
         timelineSlides.innerHTML = '';
-        
+
         // Create slide markers
         this.slides.forEach((slide, index) => {
             const marker = document.createElement('div');
@@ -275,19 +275,19 @@ export const PresentationMixin = {
             if (index === this.presentationSlideIndex) {
                 marker.classList.add('active');
             }
-            
+
             const slideNumber = document.createElement('div');
             slideNumber.className = 'slide-number';
             slideNumber.textContent = `Slide ${index + 1}`;
             marker.appendChild(slideNumber);
-            
+
             marker.addEventListener('click', () => {
                 this.goToPresentationSlide(index);
             });
-            
+
             timelineSlides.appendChild(marker);
         });
-        
+
         // Click on track to jump to slide
         timelineTrack.addEventListener('click', (e) => {
             const rect = timelineTrack.getBoundingClientRect();
@@ -296,7 +296,7 @@ export const PresentationMixin = {
             const targetSlide = Math.floor(percentage * this.slides.length);
             this.goToPresentationSlide(Math.max(0, Math.min(targetSlide, this.slides.length - 1)));
         });
-        
+
         this.updatePresentationTimeline();
     },
 
@@ -307,15 +307,15 @@ export const PresentationMixin = {
         const progress = document.getElementById('timelineProgress');
         const indicator = document.getElementById('timelineIndicator');
         const markers = document.querySelectorAll('.timeline-slide-marker');
-        
+
         // Update progress bar
         const percentage = ((this.presentationSlideIndex + 1) / this.slides.length) * 100;
         progress.style.width = percentage + '%';
-        
+
         // Update indicator position
         const slidePercentage = (this.presentationSlideIndex / (this.slides.length - 1)) * 100;
         indicator.style.left = slidePercentage + '%';
-        
+
         // Update active marker
         markers.forEach((marker, index) => {
             if (index === this.presentationSlideIndex) {
@@ -364,7 +364,7 @@ export const PresentationMixin = {
         let hideTimeout;
         const timeline = document.getElementById('presentationTimeline');
         const controls = document.querySelector('.presentation-controls');
-        
+
         if (timeline && controls) {
             const showControls = () => {
                 timeline.classList.add('show');
@@ -375,11 +375,11 @@ export const PresentationMixin = {
                     controls.classList.remove('show');
                 }, 1500);
             };
-            
+
             // Listen on document to catch all mouse movements
             this.presentationMouseMoveHandler = showControls;
             document.addEventListener('mousemove', this.presentationMouseMoveHandler);
-            
+
             // Show initially
             showControls();
         }
@@ -396,7 +396,7 @@ export const PresentationMixin = {
             document.removeEventListener('msfullscreenchange', this.fullscreenChangeHandler);
             this.fullscreenChangeHandler = null;
         }
-        
+
         // Remove auto-hide mouse handler
         if (this.presentationMouseMoveHandler) {
             document.removeEventListener('mousemove', this.presentationMouseMoveHandler);
