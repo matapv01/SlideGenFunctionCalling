@@ -5,7 +5,7 @@ let documentText = "";
 let documentStructure = []; // Backend format: {level, title, content, children}
 let sessionId = null;
 let introSlide = null;
-const API_BASE_URL = 'http://localhost:12008';
+const API_BASE_URL = window.config?.API_BASE_URL || 'http://localhost:12008';
 
 // ========== INITIALIZATION ==========
 document.addEventListener('DOMContentLoaded', function () {

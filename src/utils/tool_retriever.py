@@ -4,7 +4,7 @@ from collections import deque
 import numpy as np
 from langchain_community.vectorstores import FAISS
 from src.utils import config
-from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_huggingface import HuggingFaceEmbeddings
 from langchain_core.documents import Document
 
 class ToolRetriever:
@@ -24,16 +24,15 @@ class ToolRetriever:
             tools_dict (Dict[str, List[Any]]): The dictionary of all tools, categorized.
             index_path (str): Path to the directory where the FAISS index will be saved/loaded.
         """
-        print("Initializing ToolRetriever with Google Gemini Embeddings...")
+        print("Initializing ToolRetriever with HuggingFace Local Embeddings...")
         
-        # The model name is the standard for Gemini embeddings.
-
-        env_keys = config.setup_environment()
-        api_keys = [v for v in env_keys.values() if v]
-        if not api_keys:
-            raise RuntimeError("Không có API key hợp lệ trong biến môi trường.")
-
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001", google_api_key=api_keys[0])
+        # Using sentence-transformers model for local embeddings (no API needed)
+        # all-MiniLM-L6-v2 is fast and has good quality for semantic search
+        self.embeddings = HuggingFaceEmbeddings(
+            model_name="sentence-transformers/all-MiniLM-L6-v2",
+            model_kwargs={'device': 'cuda'},  # Use 'cuda' if GPU available
+            encode_kwargs={'normalize_embeddings': True}
+        )
         
         self.retrievers = {}
         self.vector_stores = {}  # Store vector stores for similarity calculations
