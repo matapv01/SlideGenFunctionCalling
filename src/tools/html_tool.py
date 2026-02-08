@@ -20177,6 +20177,374 @@ def generate_swot_analysis_slide(
     </body>
     </html>"""
     return html
+
+def generate_content_split_text_image(
+    heading="Key Highlights",
+    body_text="Here is the main content. It is concise, clear, and easy to read. You can describe your product, service, or idea here.",
+    image_url="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop",
+    bg_color="#FFFFFF",
+    text_color="#333333",
+    accent_color="#007AFF",
+    font_family="'Helvetica Neue', Helvetica, Arial, sans-serif",
+    image_position="right"
+):
+    """
+    Generates a classic split-screen content slide (Text on one side, Image on the other).
+    Safe, robust layout using Flexbox.
+    """
+    
+    # Logic to swap order based on image_position
+    flex_direction = "row-reverse" if image_position == "left" else "row"
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Content Slide</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; font-family: {font_family}; background-color: {bg_color}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; display: flex; justify-content: center; align-items: center; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            background-color: {bg_color};
+            display: flex;
+            flex-direction: {flex_direction};
+            overflow: hidden;
+        }}
+
+        .text-section {{
+            width: 50%;
+            height: 100%;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+
+        .image-section {{
+            width: 50%;
+            height: 100%;
+            background-image: url('{image_url}');
+            background-size: cover;
+            background-position: center;
+        }}
+
+        .heading {{
+            font-size: 5rem;
+            font-weight: 700;
+            color: {text_color};
+            margin-bottom: 2rem;
+            line-height: 1.1;
+        }}
+
+        .separator {{
+            width: 100px;
+            height: 8px;
+            background-color: {accent_color};
+            margin-bottom: 3rem;
+        }}
+
+        .body-text {{
+            font-size: 2rem;
+            line-height: 1.6;
+            color: {text_color};
+            opacity: 0.9;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="text-section">
+                    <h2 class="heading">{heading}</h2>
+                    <div class="separator"></div>
+                    <p class="body-text">{body_text}</p>
+                </div>
+                <div class="image-section"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+
+def generate_content_three_columns(
+    heading="Core Features",
+    col1_title="Efficiency",
+    col1_text="Streamline your workflow with our advanced tools designed for speed.",
+    col2_title="Security",
+    col2_text="Enterprise-grade protection for your data at every level of the stack.",
+    col3_title="Scalability",
+    col3_text="Grow your business without worrying about infrastructure limits.",
+    bg_color="#F5F5F7",
+    card_bg_color="#FFFFFF",
+    text_color="#1D1D1F",
+    font_family="'Segoe UI', Roboto, sans-serif"
+):
+    """
+    Generates a 3-column content slide. Ideal for features, services, or comparisons.
+    Uses simple cards with shadow.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three Columns Slide</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; font-family: {font_family}; background-color: {bg_color}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; display: flex; justify-content: center; align-items: center; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            padding: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            background-color: {bg_color};
+        }}
+
+        .main-heading {{
+            font-size: 4.5rem;
+            text-align: center;
+            margin-bottom: 80px;
+            color: {text_color};
+            font-weight: 800;
+        }}
+
+        .columns-wrapper {{
+            display: flex;
+            justify-content: space-between;
+            gap: 60px;
+            height: 600px;
+        }}
+
+        .column-card {{
+            flex: 1;
+            background-color: {card_bg_color};
+            padding: 50px;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+        }}
+
+        .col-title {{
+            font-size: 2.5rem;
+            margin-bottom: 30px;
+            color: {text_color};
+            font-weight: 700;
+            border-bottom: 4px solid {bg_color};
+            padding-bottom: 15px;
+            width: 100%;
+        }}
+
+        .col-text {{
+            font-size: 1.8rem;
+            line-height: 1.5;
+            color: {text_color};
+            opacity: 0.8;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <h1 class="main-heading">{heading}</h1>
+                <div class="columns-wrapper">
+                    <div class="column-card">
+                        <h3 class="col-title">{col1_title}</h3>
+                        <p class="col-text">{col1_text}</p>
+                    </div>
+                    <div class="column-card">
+                        <h3 class="col-title">{col2_title}</h3>
+                        <p class="col-text">{col2_text}</p>
+                    </div>
+                    <div class="column-card">
+                        <h3 class="col-title">{col3_title}</h3>
+                        <p class="col-text">{col3_text}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+
+def generate_content_image_overlay(
+    heading="Vision & Mission",
+    body_text="To empower every person and every organization on the planet to achieve more. We believe in the power of technology to solve the world's most challenging problems.",
+    image_url="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop",
+    overlay_color="rgba(0, 0, 0, 0.7)",
+    text_color="#FFFFFF",
+    font_family="'Montserrat', sans-serif"
+):
+    """
+    Generates a slide with a full background image and a centered text overlay box.
+    Great for statements, quotes, or vision slides.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Overlay Slide</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; font-family: {font_family}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; display: flex; justify-content: center; align-items: center; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            background-image: url('{image_url}');
+            background-size: cover;
+            background-position: center;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }}
+
+        .overlay {{
+            position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: {overlay_color};
+            z-index: 1;
+        }}
+
+        .content-box {{
+            position: relative;
+            z-index: 2;
+            width: 70%;
+            text-align: center;
+            color: {text_color};
+            border: 2px solid rgba(255,255,255,0.3);
+            padding: 80px;
+            background-color: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(5px);
+        }}
+
+        .heading {{
+            font-size: 5rem;
+            text-transform: uppercase;
+            letter-spacing: 5px;
+            margin-bottom: 40px;
+            font-weight: 700;
+        }}
+
+        .body-text {{
+            font-size: 2.2rem;
+            line-height: 1.6;
+            font-weight: 300;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="overlay"></div>
+                <div class="content-box">
+                    <h1 class="heading">{heading}</h1>
+                    <p class="body-text">{body_text}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+
+def generate_content_big_number(
+    statistic="85%",
+    description="Of customers reported improved satisfaction after implementing our solution.",
+    bg_color="#FFFFFF",
+    number_color="#FF3B30",
+    text_color="#333333",
+    font_family="'Impact', 'Arial Black', sans-serif"
+):
+    """
+    Generates a slide focused on a single big statistic or number.
+    High impact for data-driven points.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Big Number Slide</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; font-family: 'Arial', sans-serif; background-color: {bg_color}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; display: flex; justify-content: center; align-items: center; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            background-color: {bg_color};
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0 100px;
+        }}
+
+        .content-flex {{
+            display: flex;
+            align-items: center;
+            gap: 80px;
+            width: 100%;
+            max-width: 1600px;
+        }}
+
+        .big-number {{
+            font-family: {font_family};
+            font-size: 25rem;
+            line-height: 1;
+            color: {number_color};
+            flex: 0 0 auto;
+        }}
+
+        .description {{
+            font-size: 4rem;
+            font-weight: 600;
+            color: {text_color};
+            line-height: 1.2;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="content-flex">
+                    <div class="big-number">{statistic}</div>
+                    <div class="description">{description}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
 #------------------------ SLIDE THANK YOU
 
 
@@ -21887,6 +22255,650 @@ def generate_elegant_thank_you_slide(
     <div class="glass-card">
         <h1 class="title">{main_title}</h1>
         <p class="subtitle">{subtitle}</p>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_holographic_thank_you_slide(
+    main_text="Thank You",
+    sub_text="Let's build something amazing together.",
+    email="hello@future.io",
+    bg_gradient_start="#4F46E5", # Indigo
+    bg_gradient_end="#EC4899", # Pink
+    orb_color_1="#60A5FA", # Blue
+    orb_color_2="#F472B6", # Pink
+    font_family="'Inter', sans-serif"
+):
+    """
+    Generates a modern Holographic/Glassmorphism Thank You slide with smooth gradients and blurred orbs.
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Holographic Thank You</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;700&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body, html {{
+            width: 1920px; height: 1080px;
+            font-family: {font_family};
+            background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end});
+            overflow: hidden;
+            color: #FFFFFF;
+        }}
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        /* Glowing Orbs */
+        .orb {{
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.8;
+            z-index: 1;
+        }}
+        .orb-1 {{
+            width: 600px; height: 600px;
+            background: {orb_color_1};
+            top: -100px; left: -100px;
+        }}
+        .orb-2 {{
+            width: 700px; height: 700px;
+            background: {orb_color_2};
+            bottom: -150px; right: -150px;
+        }}
+        .orb-3 {{
+            width: 400px; height: 400px;
+            background: #FFFFFF;
+            top: 40%; left: 60%;
+            opacity: 0.4;
+        }}
+        
+        .glass-card {{
+            position: relative;
+            z-index: 10;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            padding: 120px;
+            border-radius: 40px;
+            text-align: center;
+            width: 1200px;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.1);
+        }}
+        .main-text {{
+            font-size: 8rem;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            background: linear-gradient(to right, #FFFFFF, #E0E7FF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }}
+        .sub-text {{
+            font-size: 2.5rem;
+            font-weight: 300;
+            opacity: 0.9;
+            margin-bottom: 4rem;
+        }}
+        .contact-pill {{
+            display: inline-block;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px 60px;
+            border-radius: 100px;
+            font-size: 1.8rem;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.4);
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+        
+        <div class="glass-card">
+            <h1 class="main-text">{main_text}</h1>
+            <p class="sub-text">{sub_text}</p>
+            <div class="contact-pill">{email}</div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_bold_typo_thank_you_slide(
+    big_text="THE END",
+    small_text="Thank you for your attention.",
+    social_handle="@awesome_brand",
+    image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2940&auto=format&fit=crop",
+    bg_color="#18181B", # Zinc 900
+    text_color="#FFFFFF",
+    accent_color="#D4D4D8", # Zinc 300
+    font_family="'Oswald', sans-serif"
+):
+    """
+    Generates a Bold Typography Thank You slide with split layout (Image + Huge Text).
+    """
+    
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Bold Typography Thank You</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Oswald:wght@700&family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body, html {{
+            width: 1920px; height: 1080px;
+            font-family: {font_family};
+            background-color: {bg_color};
+            overflow: hidden;
+        }}
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            position: relative;
+        }}
+        /* Split Layout */
+        .left-panel {{
+            position: absolute;
+            top: 0; left: 0;
+            width: 50%; height: 100%;
+            overflow: hidden;
+        }}
+        .right-panel {{
+            position: absolute;
+            top: 0; right: 0;
+            width: 50%; height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 80px;
+            background-color: {bg_color};
+        }}
+        
+        .hero-image {{
+            width: 100%; height: 100%;
+            object-fit: cover;
+            filter: grayscale(100%); /* Cool effect */
+            opacity: 0.8;
+        }}
+        
+        .big-text {{
+            font-size: 14rem;
+            line-height: 0.85;
+            color: {text_color};
+            text-transform: uppercase;
+            font-weight: 700;
+            margin-bottom: 2rem;
+            letter-spacing: -5px;
+        }}
+        .small-text {{
+            font-family: 'Roboto', sans-serif;
+            font-size: 2.5rem;
+            color: {accent_color};
+            margin-bottom: 4rem;
+            max-width: 80%;
+        }}
+        .social {{
+            font-family: 'Roboto', sans-serif;
+            font-size: 1.5rem;
+            color: {text_color};
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }}
+        .line {{
+            width: 100px;
+            height: 4px;
+            background: {text_color};
+            display: inline-block;
+        }}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="left-panel">
+            <img src="{image_url}" class="hero-image" alt="Team">
+            <div style="position:absolute; top:0; left:0; width:100%; height:100%; background:{bg_color}; opacity:0.2;"></div>
+        </div>
+        
+        <div class="right-panel">
+            <h1 class="big-text">{big_text}</h1>
+            <p class="small-text">{small_text}</p>
+            <div class="social">
+                <div class="line"></div>
+                <span>{social_handle}</span>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_aesthetic_thank_you(
+    title="Thank You So Much",
+    quote="Success is not final, failure is not fatal.",
+    primary_color="#F4D0D0",
+    secondary_color="#D6E5FA"
+):
+    """Generates an aesthetic slide with soft organic shapes (blobs) and minimalist typography."""
+    
+    blob_svg = f"""<svg class='blob' viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'>
+        <path fill='{secondary_color}' d='M44.7,-76.4C58.1,-69.2,69.2,-58.1,76.4,-44.7C83.7,-31.3,87.1,-15.7,85.1,-0.1C83.1,15.4,75.7,30.8,66.4,44.4C57,58,45.7,69.8,32.1,76.5C18.5,83.2,2.6,84.7,-13.3,82.3C-29.2,79.9,-45.1,73.6,-58.2,62.8C-71.3,52,-81.6,36.7,-85.4,20C-89.2,3.3,-86.5,-14.8,-79.3,-31C-72.1,-47.2,-60.4,-61.5,-45.9,-68.1C-31.5,-74.7,-15.7,-73.7,0,-73.7C15.7,-73.7,31.3,-83.7,44.7,-76.4Z' transform='translate(100 100)' />
+    </svg>"""
+
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ width: 1920px; height: 1080px; background: #FFF9F9; font-family: 'DM Serif Display', serif; display: flex; justify-content: center; align-items: center; overflow: hidden; }}
+        .content {{ text-align: center; z-index: 2; }}
+        .title {{ font-size: 140px; color: #4A4A4A; font-style: italic; }}
+        .quote {{ font-family: 'Inter', sans-serif; font-size: 30px; color: #888; margin-top: 20px; }}
+        .blob {{ position: absolute; width: 800px; height: 800px; opacity: 0.6; }}
+        .b1 {{ top: -200px; right: -200px; }}
+        .b2 {{ bottom: -300px; left: -200px; transform: scale(1.2) rotate(45deg); }}
+    </style>
+</head>
+<body>
+    {blob_svg}
+    <div class='content'>
+        <h1 class='title'>{title}</h1>
+        <p class='quote'>{quote}</p>
+    </div>
+</body>
+</html>"""
+
+def generate_dark_3d_thank_you(
+    text="END OF SHOW",
+    accent_glow="#00F2FE"
+):
+    """Generates a high-tech dark mode slide with 3D text effect and neon glow."""
+    
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {{ width: 1920px; height: 1080px; background: #0A0A0A; display: flex; justify-content: center; align-items: center; overflow: hidden; font-family: 'Arial Black', sans-serif; }}
+        .text-3d {{
+            font-size: 200px; color: white;
+            text-shadow: 0 1px 0 #ccc, 0 2px 0 #c9c9c9, 0 3px 0 #bbb, 0 4px 0 #b9b9b9, 0 5px 0 #aaa,
+                         0 20px 40px rgba(0,0,0,0.5), 0 0 50px {accent_glow};
+            letter-spacing: 10px;
+        }}
+        .grid {{
+            position: absolute; width: 100%; height: 100%;
+            background-image: linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px);
+            background-size: 100px 100px; transform: perspective(500px) rotateX(60deg);
+            bottom: -300px;
+        }}
+    </style>
+</head>
+<body>
+    <div class='grid'></div>
+    <h1 class='text-3d'>{text}</h1>
+</body>
+</html>"""
+
+def generate_simple_minimalist_thank_you(
+    main_text="Thank You",
+    subtitle="We appreciate your time",
+    bg_color="#FFFFFF",
+    text_color="#000000",
+    accent_color="#FF3B30",
+    font_family="'Helvetica Neue', Helvetica, Arial, sans-serif"
+):
+    """
+    Generates a super clean, minimalist Thank You slide.
+    Safe for all converters. High contrast, centered typography.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Thank You</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden; font-family: {font_family}; background-color: {bg_color}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{
+            width: 1920px; height: 1080px;
+            display: flex; justify-content: center; align-items: center;
+        }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            background-color: {bg_color};
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            text-align: center;
+        }}
+
+        .main-text {{
+            font-size: 8rem;
+            font-weight: 800;
+            color: {text_color};
+            letter-spacing: -2px;
+            margin-bottom: 20px;
+            line-height: 1.1;
+        }}
+        
+        .dot {{ color: {accent_color}; }}
+
+        .subtitle {{
+            font-size: 2.5rem;
+            color: {text_color};
+            font-weight: 300;
+            opacity: 0.7;
+            margin-top: 10px;
+        }}
+        
+        .line {{
+            width: 100px; height: 6px;
+            background-color: {accent_color};
+            margin: 30px auto;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <h1 class="main-text">{main_text}<span class="dot">.</span></h1>
+                <div class="line"></div>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_split_screen_thank_you(
+    main_text="THANKS",
+    contact_info="contact@example.com",
+    left_bg_color="#1a1a1a",
+    right_bg_color="#f0f0f0",
+    left_text_color="#ffffff",
+    right_text_color="#1a1a1a",
+    font_family="'Arial', sans-serif"
+):
+    """
+    Generates a modern split-screen Thank You slide.
+    Left side dark, right side light (or customizable). Very stable layout.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Screen Thank You</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; overflow: hidden; font-family: {font_family}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            display: flex;
+        }}
+
+        .left-side {{
+            width: 50%; height: 100%;
+            background-color: {left_bg_color};
+            color: {left_text_color};
+            display: flex; justify-content: center; align-items: center;
+        }}
+
+        .right-side {{
+            width: 50%; height: 100%;
+            background-color: {right_bg_color};
+            color: {right_text_color};
+            display: flex; justify-content: center; align-items: center;
+        }}
+
+        .big-text {{
+            font-size: 10rem;
+            font-weight: 900;
+            text-transform: uppercase;
+        }}
+
+        .info-text {{
+            font-size: 2.5rem;
+            font-weight: 500;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="left-side">
+                    <h1 class="big-text">{main_text}</h1>
+                </div>
+                <div class="right-side">
+                    <p class="info-text">{contact_info}</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_border_frame_thank_you(
+    main_text="Thank You",
+    subtitle="The End",
+    bg_color="#F9F9F9",
+    border_color="#333333",
+    text_color="#333333",
+    font_family="'Georgia', serif"
+):
+    """
+    Generates a classic 'Framed' Thank You slide.
+    Features a double border frame. elegant and formal.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framed Thank You</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; overflow: hidden; font-family: {font_family}; background-color: {bg_color}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; display: flex; justify-content: center; align-items: center; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            background-color: {bg_color};
+            padding: 60px;
+            display: flex; justify-content: center; align-items: center;
+        }}
+
+        .frame-outer {{
+            width: 100%; height: 100%;
+            border: 4px solid {border_color};
+            display: flex; justify-content: center; align-items: center;
+            padding: 20px;
+        }}
+
+        .frame-inner {{
+            width: 100%; height: 100%;
+            border: 2px solid {border_color};
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+        }}
+
+        .title {{
+            font-size: 7rem;
+            color: {text_color};
+            font-style: italic;
+            margin-bottom: 2rem;
+        }}
+
+        .subtitle {{
+            font-size: 2rem;
+            color: {text_color};
+            text-transform: uppercase;
+            letter-spacing: 5px;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="frame-outer">
+                    <div class="frame-inner">
+                        <h1 class="title">{main_text}</h1>
+                        <p class="subtitle">{subtitle}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_bold_center_block_thank_you(
+    main_text="THANKS!",
+    bg_color="#2C3E50",
+    block_color="#E74C3C",
+    text_color="#FFFFFF",
+    font_family="'Verdana', sans-serif"
+):
+    """
+    Generates a slide with a bold colored block in the center.
+    High impact, very simple DOM structure.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bold Block Thank You</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; overflow: hidden; font-family: {font_family}; background-color: {bg_color}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; display: flex; justify-content: center; align-items: center; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            background-color: {bg_color};
+            display: flex; justify-content: center; align-items: center;
+        }}
+
+        .center-block {{
+            background-color: {block_color};
+            padding: 100px 200px;
+            box-shadow: 20px 20px 0px rgba(0,0,0,0.2);
+        }}
+
+        .title {{
+            font-size: 9rem;
+            color: {text_color};
+            font-weight: bold;
+            text-transform: uppercase;
+            margin: 0;
+            line-height: 1;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="center-block">
+                    <h1 class="title">{main_text}</h1>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_simple_gradient_thank_you(
+    main_text="Thank You",
+    subtitle="Any Questions?",
+    color_start="#4facfe",
+    color_end="#00f2fe",
+    text_color="#FFFFFF",
+    font_family="'Segoe UI', sans-serif"
+):
+    """
+    Generates a simple gradient background Thank You slide.
+    No complex shapes, just pure color and text.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gradient Thank You</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        body {{ width: 1920px; height: 1080px; overflow: hidden; font-family: {font_family}; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; overflow: hidden; }}
+        .content-wrapper {{ width: 1920px; height: 1080px; }}
+        
+        .slide-container {{
+            width: 1920px; height: 1080px;
+            background: linear-gradient(to right, {color_start}, {color_end});
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            color: {text_color};
+        }}
+
+        .title {{
+            font-size: 9rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            text-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }}
+
+        .subtitle {{
+            font-size: 3rem;
+            font-weight: 400;
+            opacity: 0.9;
+        }}
+        
+        .icon {{
+            font-size: 4rem;
+            margin-bottom: 2rem;
+        }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="icon">☺</div>
+                <h1 class="title">{main_text}</h1>
+                <p class="subtitle">{subtitle}</p>
+            </div>
+        </div>
     </div>
 </body>
 </html>"""

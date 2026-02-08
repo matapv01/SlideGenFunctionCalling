@@ -103,7 +103,10 @@ from src.tools.html_tool import (
     generate_quote_slide, # slide content (quang)
     generate_classic_content_slide, # slide content (quang)
     generate_swot_analysis_slide, # slide content (quang)
-
+    generate_content_split_text_image, # slide content (quang)
+    generate_content_three_columns, # slide content (quang)
+    generate_content_image_overlay, # slide content (quang)
+    generate_content_big_number, # slide content (quang)
 
 
     generate_team_slide, # slide giới thiệu team 
@@ -134,7 +137,16 @@ from src.tools.html_tool import (
     generate_creative_thank_you_slide, # slide cảm ơn(quang)
     generate_tech_thank_you_slide, # slide cảm ơn(quang)
     generate_minimalist_thank_you_slide, # slide cảm ơn(quang)
-    generate_elegant_thank_you_slide # slide cảm ơn(quang)
+    generate_elegant_thank_you_slide, # slide cảm ơn(quang)
+    generate_holographic_thank_you_slide, # slide cảm ơn(quang)
+    generate_bold_typo_thank_you_slide, # slide cảm ơn(quang)
+    generate_aesthetic_thank_you, # slide cảm ơn(quang)
+    generate_dark_3d_thank_you, # slide cảm ơn(quang)
+    generate_simple_minimalist_thank_you, # slide cảm ơn(quang)
+    generate_split_screen_thank_you, # slide cảm ơn(quang)
+    generate_border_frame_thank_you, # slide cảm ơn(quang)
+    generate_bold_center_block_thank_you, # slide cảm ơn(quang)
+    generate_simple_gradient_thank_you # slide cảm ơn(quang)
 )
 
 # ===========================================================================================
@@ -1468,6 +1480,48 @@ class GenerateSwotSlideInput(BaseModel):
         default="'Inter', sans-serif", 
         description="Font family string."
     )
+class GenerateContentSplitTextImageInput(BaseModel):
+    """Input schema for generate_content_split_text_image."""
+    heading: str = Field(default="Key Highlights", description="The main title of the slide.")
+    body_text: str = Field(default="Here is the main content...", description="The paragraph content.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1497215728101-856f4ea42174?q=80&w=2070&auto=format&fit=crop", description="URL of the image.")
+    bg_color: str = Field(default="#FFFFFF", description="Background color of text side.")
+    text_color: str = Field(default="#333333", description="Text color.")
+    accent_color: str = Field(default="#007AFF", description="Color of the separator line.")
+    font_family: str = Field(default="'Helvetica Neue', Helvetica, Arial, sans-serif", description="Font family.")
+    image_position: str = Field(default="right", description="Position of the image: 'left' or 'right'.")
+
+class GenerateContentThreeColumnsInput(BaseModel):
+    """Input schema for generate_content_three_columns."""
+    heading: str = Field(default="Core Features", description="Main slide heading.")
+    col1_title: str = Field(default="Efficiency", description="Title for column 1.")
+    col1_text: str = Field(default="Description for column 1.", description="Text for column 1.")
+    col2_title: str = Field(default="Security", description="Title for column 2.")
+    col2_text: str = Field(default="Description for column 2.", description="Text for column 2.")
+    col3_title: str = Field(default="Scalability", description="Title for column 3.")
+    col3_text: str = Field(default="Description for column 3.", description="Text for column 3.")
+    bg_color: str = Field(default="#F5F5F7", description="Slide background color.")
+    card_bg_color: str = Field(default="#FFFFFF", description="Background color of the column cards.")
+    text_color: str = Field(default="#1D1D1F", description="Text color.")
+    font_family: str = Field(default="'Segoe UI', Roboto, sans-serif", description="Font family.")
+
+class GenerateContentImageOverlayInput(BaseModel):
+    """Input schema for generate_content_image_overlay."""
+    heading: str = Field(default="Vision & Mission", description="Main headline.")
+    body_text: str = Field(default="Mission statement text...", description="Body paragraph.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1451187580459-43490279c0fa?q=80&w=2072&auto=format&fit=crop", description="Background image URL.")
+    overlay_color: str = Field(default="rgba(0, 0, 0, 0.7)", description="Color of the overlay (with transparency).")
+    text_color: str = Field(default="#FFFFFF", description="Text color.")
+    font_family: str = Field(default="'Montserrat', sans-serif", description="Font family.")
+
+class GenerateContentBigNumberInput(BaseModel):
+    """Input schema for generate_content_big_number."""
+    statistic: str = Field(default="85%", description="The big number or statistic (e.g., '10X', '$1M').")
+    description: str = Field(default="Description text...", description="Explanation of the statistic.")
+    bg_color: str = Field(default="#FFFFFF", description="Background color.")
+    number_color: str = Field(default="#FF3B30", description="Color of the big number.")
+    text_color: str = Field(default="#333333", description="Color of the description.")
+    font_family: str = Field(default="'Impact', 'Arial Black', sans-serif", description="Font family for the number.")
 # === SLIDE GIỚI THIỆU TEAM CLASSES ===
 
 class GenerateTeamSlideInput(BaseModel):
@@ -1891,7 +1945,7 @@ class GenerateCorporate2ThankYouInput(BaseModel):
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
 class GenerateCreativeThankYouInput(BaseModel):
-    """Input schema for generate_creative_thank_you (creative thank you slide with decorative elements)."""
+    """Input schema for generate_creative_thank_you_slide (creative thank you slide with decorative elements)."""
     main_title: str = Field(default="Any Questions?", description="Main title")
     subtitle: str = Field(default="THANKS FOR WATCHING", description="Subtitle")
     image_url: str = Field(default="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop", description="Image URL")
@@ -1900,26 +1954,98 @@ class GenerateCreativeThankYouInput(BaseModel):
     accent_color: str = Field(default="#BE123C", description="Accent color")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 class GenerateTechThankYouInput(BaseModel):
-    """Input schema for generate_tech_thank_you (tech thank you slide with decorative elements)."""
+    """Input schema for generate_tech_thank_you_slide (tech thank you slide with decorative elements)."""
     main_title: str = Field(default="THANK YOU", description="Title text")
     social_handle: str = Field(default="@tech_studio", description="Social media handle")
     primary_neon: str = Field(default="#00FFFF", description="Primary neon color")
     bg_dark: str = Field(default="#1a1a2e", description="Dark background color")
     font_family: str = Field(default="'Montserrat', sans-serif", description="Font family for the main text. Default: Playfair Display.")
 class GenerateMinimalistThankYouInput(BaseModel):
-    """Input schema for generate_minimalist_thank_you (minimalist thank you slide with decorative elements)."""
+    """Input schema for generate_minimalist_thank_you_slide (minimalist thank you slide with decorative elements)."""
     main_title: str = Field(default="END.", description="Title")
     footer_note: str = Field(default="2026 Portfolio Studio", description="Footer note")
     text_color: str = Field(default="#000000", description="Text color")
     bg_color: str = Field(default="#FFFFFF", description="Background color")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 class GenerateElegantThankYouInput(BaseModel):
-    """Input schema for generate_elegant_thank_you (elegant thank you slide with decorative elements)."""
+    """Input schema for generate_elegant_thank_you_slide (elegant thank you slide with decorative elements)."""
     main_title: str = Field(default="Thank You", description="Stylized thank you text")
     subtitle: str = Field(default="FOR YOUR KIND ATTENTION", description="Subtitle below")
     bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="Elegant background image URL")
     overlay_color: str = Field(default="rgba(255, 255, 255, 0.85)", description="Background overlay color")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
+class GenerateHolographicThankYouInput(BaseModel):
+    """Input schema for generate_holographic_thank_you_slide (holographic thank you slide with decorative elements)."""
+    main_text: str = Field(default="Thank You", description="Main heading.")
+    sub_text: str = Field(default="Let's build something amazing together.", description="Subheading.")
+    email: str = Field(default="hello@future.io", description="Contact email.")
+    bg_gradient_start: str = Field(default="#4F46E5", description="Start gradient color.")
+    title: str = Field(default="THANKS!", description="Main bold text.")
+    subtitle: str = Field(default="For watching", description="Subtitle text.")
+    contact: str = Field(default="connect@creative.agency", description="Contact info.")
+    bg_color: str = Field(default="#F3F4F6", description="Background hex color.")
+
+class GenerateBoldTypoThankYouInput(BaseModel):
+    """Input schema for generate_bold_typo_thank_you_slide (bold typo thank you slide with decorative elements)."""
+    big_text: str = Field(default="THE END", description="Huge uppercase text.")
+    small_text: str = Field(default="Thank you for your attention.", description="Message text.")
+    social_handle: str = Field(default="@brand_handle", description="Social media handle.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2940&auto=format&fit=crop", description="URL of the side image.")
+
+class GenerateAestheticThankYouInput(BaseModel):
+    """Input schema for generate_aesthetic_thank_you."""
+    title: str = Field(default="Thank You So Much", description="Soft title text.")
+    quote: str = Field(default="Success is not final...", description="Inspirational quote.")
+    primary_color: str = Field(default="#F4D0D0", description="Main pastel color.")
+
+class GenerateDark3DThankYouInput(BaseModel):
+    """Input schema for generate_dark_3d_thank_you."""
+    text: str = Field(default="END OF SHOW", description="Main 3D text.")
+    accent_glow: str = Field(default="#00F2FE", description="Color of the neon glow.")
+class GenerateSimpleMinimalistThankYouInput(BaseModel):
+    """Input schema for generate_simple_minimalist_thank_you."""
+    main_text: str = Field(default="Thank You", description="Main headline text.")
+    subtitle: str = Field(default="We appreciate your time", description="Subtitle text.")
+    bg_color: str = Field(default="#FFFFFF", description="Background color (hex).")
+    text_color: str = Field(default="#000000", description="Text color (hex).")
+    accent_color: str = Field(default="#FF3B30", description="Small accent color for dot/line (hex).")
+    font_family: str = Field(default="'Helvetica Neue', Helvetica, Arial, sans-serif", description="Font family string.")
+
+class GenerateSplitScreenThankYouInput(BaseModel):
+    """Input schema for generate_split_screen_thank_you."""
+    main_text: str = Field(default="THANKS", description="Text on the left side.")
+    contact_info: str = Field(default="contact@example.com", description="Text on the right side.")
+    left_bg_color: str = Field(default="#1a1a1a", description="Background color of left half.")
+    right_bg_color: str = Field(default="#f0f0f0", description="Background color of right half.")
+    left_text_color: str = Field(default="#ffffff", description="Text color of left half.")
+    right_text_color: str = Field(default="#1a1a1a", description="Text color of right half.")
+    font_family: str = Field(default="'Arial', sans-serif", description="Font family string.")
+
+class GenerateBorderFrameThankYouInput(BaseModel):
+    """Input schema for generate_border_frame_thank_you."""
+    main_text: str = Field(default="Thank You", description="Main headline text.")
+    subtitle: str = Field(default="The End", description="Subtitle text.")
+    bg_color: str = Field(default="#F9F9F9", description="Background color.")
+    border_color: str = Field(default="#333333", description="Color of the frame border.")
+    text_color: str = Field(default="#333333", description="Text color.")
+    font_family: str = Field(default="'Georgia', serif", description="Font family string (Serif recommended).")
+
+class GenerateBoldCenterBlockThankYouInput(BaseModel):
+    """Input schema for generate_bold_center_block_thank_you."""
+    main_text: str = Field(default="THANKS!", description="Text inside the block.")
+    bg_color: str = Field(default="#2C3E50", description="Main background color.")
+    block_color: str = Field(default="#E74C3C", description="Color of the center block.")
+    text_color: str = Field(default="#FFFFFF", description="Color of the text.")
+    font_family: str = Field(default="'Verdana', sans-serif", description="Font family string.")
+
+class GenerateSimpleGradientThankYouInput(BaseModel):
+    """Input schema for generate_simple_gradient_thank_you."""
+    main_text: str = Field(default="Thank You", description="Main headline text.")
+    subtitle: str = Field(default="Any Questions?", description="Subtitle text.")
+    color_start: str = Field(default="#4facfe", description="Gradient start color.")
+    color_end: str = Field(default="#00f2fe", description="Gradient end color.")
+    text_color: str = Field(default="#FFFFFF", description="Text color.")
+    font_family: str = Field(default="'Segoe UI', sans-serif", description="Font family string.")
 
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
@@ -2472,6 +2598,30 @@ CONTENT_TOOLS = [
     description="Generates a 2x2 matrix slide specifically for SWOT Analysis (Strengths, Weaknesses, Opportunities, Threats).",
     args_schema=GenerateSwotSlideInput
     ),
+    StructuredTool.from_function(
+    func=generate_content_split_text_image,
+    name="generate_content_split_text_image",
+    description="Generates a clean content slide with a 50/50 split layout. One side contains a heading and paragraph, the other side is a full-height image. You can choose to put the image on the left or right.",
+    args_schema=GenerateContentSplitTextImageInput
+    ),
+    StructuredTool.from_function(
+    func=generate_content_three_columns,
+    name="generate_content_three_columns",
+    description="Generates a content slide with 3 vertical column cards. Ideal for displaying features, services, steps, or comparisons. Each column has a title and description.",
+    args_schema=GenerateContentThreeColumnsInput
+    ),
+    StructuredTool.from_function(
+    func=generate_content_image_overlay,
+    name="generate_content_image_overlay",
+    description="Generates a visual content slide with a full-screen background image and a semi-transparent overlay box containing text. Perfect for quotes, vision statements, or impactful messaging.",
+    args_schema=GenerateContentImageOverlayInput
+    ),
+    StructuredTool.from_function(
+    func=generate_content_big_number,
+    name="generate_content_big_number",
+    description="Generates a data-focused content slide highlighting a single large statistic or number (e.g., '80%', '1 Million') alongside a descriptive text. High impact layout.",
+    args_schema=GenerateContentBigNumberInput
+    )
     
 ]
 
@@ -2610,32 +2760,86 @@ THANK_YOU_TOOLS = [
     StructuredTool.from_function(
         func=generate_corporate2_thank_you_slide,
         name="generate_corporate2_thank_you_slide",
-        description="Tạo slide cảm ơn phong cách doanh nghiệp chuyên nghiệp với màu xanh navy và trắng, có logo, thông tin liên hệ và website.",
+        description="Generates a professional corporate thank you slide in navy blue and white style, including logo, contact information, and website.",
         args_schema=GenerateCorporate2ThankYouInput
     ),
     StructuredTool.from_function(
         func=generate_creative_thank_you_slide,
         name="generate_creative_thank_you_slide",
-        description="Tạo slide cảm ơn sáng tạo với ảnh lớn, chữ nghệ thuật và màu sắc nổi bật.",
+        description="Generates a creative thank you slide with a large image, artistic typography, and striking colors.",
         args_schema=GenerateCreativeThankYouInput
     ),
     StructuredTool.from_function(
         func=generate_tech_thank_you_slide,
         name="generate_tech_thank_you_slide",
-        description="Tạo slide cảm ơn phong cách công nghệ với hiệu ứng neon, nền tối và icon mạng xã hội.",
+        description="Generates a tech-style thank you slide with neon effects, dark background, and social media icons.",
         args_schema=GenerateTechThankYouInput
     ),
     StructuredTool.from_function(
         func=generate_minimalist_thank_you_slide,
         name="generate_minimalist_thank_you_slide",
-        description="Tạo slide cảm ơn tối giản, hiện đại với chữ lớn và không trang trí rườm rà.",
+        description="Generates a minimalist, modern thank you slide with large text and minimal decoration.",
         args_schema=GenerateMinimalistThankYouInput
     ),
     StructuredTool.from_function(
         func=generate_elegant_thank_you_slide,
         name="generate_elegant_thank_you_slide",
-        description="Tạo slide cảm ơn sang trọng với ảnh nền đẹp, chữ viết tay và không gian thoáng.",
+        description="Generates an elegant thank you slide with a beautiful background image, handwritten text, and spacious layout.",
         args_schema=GenerateElegantThankYouInput
+    ),
+    StructuredTool.from_function(
+    func=generate_holographic_thank_you_slide,
+    name="generate_holographic_thank_you_slide",
+    description="Generates a modern glassmorphism Thank You slide.",
+    args_schema=GenerateHolographicThankYouInput
+    ),
+    StructuredTool.from_function(
+    func=generate_bold_typo_thank_you_slide,
+    name="generate_bold_typo_thank_you_slide",
+    description="Generates a split-screen Bold Typography Thank You slide.",
+    args_schema=GenerateBoldTypoThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_aesthetic_thank_you,
+        name="generate_aesthetic_thank_you",
+        description="Generates a minimalist aesthetic slide with organic blob shapes and soft colors. Suited for lifestyle, wellness, or artistic presentations.",
+        args_schema=GenerateAestheticThankYouInput
+    ),
+    StructuredTool.from_function(
+        func=generate_dark_3d_thank_you,
+        name="generate_dark_3d_thank_you",
+        description="Generates a premium 3D dark mode slide with neon glow effects. Great for gaming, crypto, or futuristic tech project endings.",
+        args_schema=GenerateDark3DThankYouInput
+    ),
+    StructuredTool.from_function(
+    func=generate_simple_minimalist_thank_you,
+    name="generate_simple_minimalist_thank_you",
+    description="Generates a safe, clean, minimalist Thank You slide. Features a white background with centered black bold text and a small colored accent. Highest compatibility with converters.",
+    args_schema=GenerateSimpleMinimalistThankYouInput
+    ),
+    StructuredTool.from_function(
+    func=generate_split_screen_thank_you,
+    name="generate_split_screen_thank_you",
+    description="Generates a modern split-screen layout (50/50). One side dark, one side light. Very stable structure, good for contrasting 'Thanks' with contact info.",
+    args_schema=GenerateSplitScreenThankYouInput
+    ),
+    StructuredTool.from_function(
+    func=generate_border_frame_thank_you,
+    name="generate_border_frame_thank_you",
+    description="Generates a classic elegant slide with a double-border frame. Suitable for formal, academic, or luxury presentations. Uses Serif fonts.",
+    args_schema=GenerateBorderFrameThankYouInput
+    ),
+    StructuredTool.from_function(
+    func=generate_bold_center_block_thank_you,
+    name="generate_bold_center_block_thank_you",
+    description="Generates a high-impact slide with a solid colored rectangle in the center containing the text. Simple but bold design.",
+    args_schema=GenerateBoldCenterBlockThankYouInput
+    ),
+    StructuredTool.from_function(
+    func=generate_simple_gradient_thank_you,
+    name="generate_simple_gradient_thank_you",
+    description="Generates a slide with a smooth linear gradient background and centered text. Clean and modern looking without complex shapes.",
+    args_schema=GenerateSimpleGradientThankYouInput
     )
 ]
 
