@@ -278,6 +278,18 @@ export const PresentationMixin = {
         const scaleY = windowHeight / 1080;
         const scale = Math.min(scaleX, scaleY); // Full screen, no padding
 
+        // Calculate the scaled dimensions
+        const scaledWidth = 1920 * scale;
+        const scaledHeight = 1080 * scale;
+
+        // Calculate position to center
+        const left = (windowWidth - scaledWidth) / 2;
+        const top = (windowHeight - scaledHeight) / 2;
+
+        container.style.position = 'absolute';
+        container.style.left = `${left}px`;
+        container.style.top = `${top}px`;
+        container.style.transformOrigin = 'top left';
         container.style.transform = `scale(${scale})`;
     },
 
