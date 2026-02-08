@@ -2155,9 +2155,17 @@ async def approve_structure(request: StructureApproveRequest):
                     
                     # Process content ONLY for non-transition nodes WITHOUT children
                     # If node has children, content will be merged via _create_slides_from_leaves
-                    if node.get("content") and node.get('is_transition') != True and not has_leaves and not has_sub_trees:
+                    # Also create slide if node has title but no content (use title as content)
+                    node_has_content = node.get("content") or node.get("title")
+                    if node_has_content and node.get('is_transition') != True and not has_leaves and not has_sub_trees:
                         pos = [node.get('index', '')]
-                        final_slides_content.append(_render_slide_content("", [node]))
+                        # If content is empty but title exists, use title as content
+                        if not node.get("content") and node.get("title"):
+                            node_with_content = dict(node)
+                            node_with_content["content"] = node.get("title", "")
+                            final_slides_content.append(_render_slide_content("", [node_with_content]))
+                        else:
+                            final_slides_content.append(_render_slide_content("", [node]))
                         final_slides_positions.append(pos)
                         
                         logger.info(f"🔍 Creating content context map with indices: {pos} (type: {type(pos)})")

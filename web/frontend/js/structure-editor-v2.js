@@ -642,7 +642,7 @@ async function approveAndContinue() {
             if (response.ok) {
                 const data = await response.json();
                 console.log('✅ APPROVE RESPONSE:', data);
-                window.location.href = `streaming.html?session=${sessionId}`;
+                window.location.href = `streaming.html?manual_session=${sessionId}`;
             } else {
                 throw new Error('Failed to approve structure');
             }

@@ -54,6 +54,31 @@ SLIDE_GENERATION_MAX_RETRIES = 2
 # Tăng số này nếu muốn LLM có nhiều lựa chọn tool hơn (nhưng làm chậm)
 TOOL_RETRIEVER_TOP_K = 5
 
+# --- Embedding Model Configuration ---
+# Model để tạo embeddings cho tool descriptions
+# Options phổ biến:
+#   - "sentence-transformers/all-MiniLM-L6-v2" (fast, 384 dims, ~22MB)
+#   - "sentence-transformers/all-mpnet-base-v2" (better quality, 768 dims, ~420MB)
+#   - "BAAI/bge-small-en-v1.5" (good balance, 384 dims)
+#   - "BAAI/bge-base-en-v1.5" (high quality, 768 dims)
+#   - "intfloat/e5-small-v2" (efficient, 384 dims)
+#   - "intfloat/e5-base-v2" (high quality, 768 dims)
+EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
+
+# Device cho embedding model: 'cpu', 'cuda', 'mps' (Apple Silicon)
+# Set 'cuda' nếu có GPU để tăng tốc embedding calculations
+EMBEDDING_DEVICE = "cuda"
+
+# Normalize embeddings để cosine similarity hoạt động tốt hơn
+# Recommend: True cho các model sentence-transformers
+EMBEDDING_NORMALIZE = True
+
+# Batch size khi encoding embeddings (giảm nếu bị out of memory)
+EMBEDDING_BATCH_SIZE = 32
+
+# Cache directory cho HuggingFace models (None = default ~/.cache/huggingface)
+EMBEDDING_CACHE_DIR = None
+
 # --- Tool Retrieval Diversity Configuration ---
 # MMR (Maximal Marginal Relevance) lambda parameter
 # Higher = more focus on relevance, Lower = more focus on diversity
@@ -78,6 +103,14 @@ TOOL_RETRIEVER_ENABLE_TEMPORAL_DECAY = True
 
 # Enable/disable MMR diversity re-ranking
 TOOL_RETRIEVER_ENABLE_MMR = True
+
+# --- FAISS Index Configuration ---
+# Path to save/load FAISS index (relative to project root)
+FAISS_INDEX_PATH = "faiss_tool_retriever_index"
+
+# Force rebuild FAISS index on startup (useful when changing embedding model)
+# Set to True after changing EMBEDDING_MODEL_NAME, then set back to False
+FAISS_FORCE_REBUILD = False
 
 # --- VLM Evaluation (Visual Language Model) ---
 # Số lần retry tối đa khi VLM đánh giá slide (vòng lặp: generate → evaluate → regenerate)

@@ -18,20 +18,30 @@ class ToolRetriever:
     """
     def __init__(self, tools_dict: Dict[str, List[Any]], index_path: str):
         """
-        Initializes the ToolRetriever using Google Generative AI embeddings.
+        Initializes the ToolRetriever using configurable embeddings.
 
         Args:
             tools_dict (Dict[str, List[Any]]): The dictionary of all tools, categorized.
             index_path (str): Path to the directory where the FAISS index will be saved/loaded.
         """
-        print("Initializing ToolRetriever with HuggingFace Local Embeddings...")
+        print(f"Initializing ToolRetriever with embedding model: {config.EMBEDDING_MODEL_NAME}")
+        
+        # Build model kwargs
+        model_kwargs = {'device': config.EMBEDDING_DEVICE}
+        if config.EMBEDDING_CACHE_DIR:
+            model_kwargs['cache_folder'] = config.EMBEDDING_CACHE_DIR
+        
+        # Build encode kwargs
+        encode_kwargs = {
+            'normalize_embeddings': config.EMBEDDING_NORMALIZE,
+            'batch_size': config.EMBEDDING_BATCH_SIZE
+        }
         
         # Using sentence-transformers model for local embeddings (no API needed)
-        # all-MiniLM-L6-v2 is fast and has good quality for semantic search
         self.embeddings = HuggingFaceEmbeddings(
-            model_name="sentence-transformers/all-MiniLM-L6-v2",
-            model_kwargs={'device': 'cuda'},  # Use 'cuda' if GPU available
-            encode_kwargs={'normalize_embeddings': True}
+            model_name=config.EMBEDDING_MODEL_NAME,
+            model_kwargs=model_kwargs,
+            encode_kwargs=encode_kwargs
         )
         
         self.retrievers = {}
@@ -43,17 +53,19 @@ class ToolRetriever:
         self.tool_usage_history = {category: deque(maxlen=config.TOOL_RETRIEVER_TEMPORAL_WINDOW * 2) 
                                      for category in tools_dict.keys()}
         
-        if os.path.exists(index_path):
+        # Check if force rebuild is enabled
+        should_rebuild = config.FAISS_FORCE_REBUILD
+        
+        if os.path.exists(index_path) and not should_rebuild:
             print(f"Found existing index at '{index_path}'. Loading retrievers from disk...")
             for category in tools_dict.keys():
                 category_index_path = os.path.join(index_path, category)
                 if os.path.exists(category_index_path):
                     try:
-                        # --- CHANGE: 'allow_dangerous_deserialization' is often not needed for Google's embeddings ---
                         vector_store = FAISS.load_local(
                             folder_path=category_index_path, 
                             embeddings=self.embeddings,
-                            allow_dangerous_deserialization=True # Keep for safety with FAISS
+                            allow_dangerous_deserialization=True
                         )
                         self.retrievers[category] = vector_store.as_retriever()
                         self.vector_stores[category] = vector_store  # Store for MMR
@@ -64,8 +76,14 @@ class ToolRetriever:
                 else:
                     self._build_and_save_retriever(category, tools_dict[category], index_path)
         else:
-            print(f"No index found at '{index_path}'. Building and saving new retrievers...")
-            os.makedirs(index_path)
+            if should_rebuild:
+                print(f"Force rebuild enabled. Rebuilding all retrievers...")
+                import shutil
+                if os.path.exists(index_path):
+                    shutil.rmtree(index_path)
+            else:
+                print(f"No index found at '{index_path}'. Building and saving new retrievers...")
+            os.makedirs(index_path, exist_ok=True)
             for category, tools in tools_dict.items():
                 self._build_and_save_retriever(category, tools, index_path)
 

@@ -15,12 +15,13 @@ from src.utils.config import (
     LLM_TEMPERATURE,
     LLM_MAX_TOKENS,
     LLM_TOP_P,
-    VLM_MAX_RETRIES
+    VLM_MAX_RETRIES,
+    FAISS_INDEX_PATH
 )
 import time
 from typing import Optional, Callable, Dict, Any
 
-FAISS_INDEX_PATH = "faiss_tool_retriever_index"
+
 
 # --- 1. Wrap the entire logic in an async function ---
 async def main_workflow(
