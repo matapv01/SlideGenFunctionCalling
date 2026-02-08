@@ -42,7 +42,7 @@ export const PresentationMixin = {
         // Clear previous slides from container
         const container = document.getElementById('presentationSlideContainer');
         container.innerHTML = '';
-        
+
         // Reset transition flag
         this.isTransitioning = false;
 
@@ -62,7 +62,7 @@ export const PresentationMixin = {
     renderPresentationSlide() {
         const slide = this.slides[this.presentationSlideIndex];
         if (!slide) return;
-        
+
         const container = document.getElementById('presentationSlideContainer');
 
         // Create temporary HTML file for this slide and render via iframe
@@ -112,7 +112,7 @@ export const PresentationMixin = {
             iframe.onload = () => {
                 // Clean up blob URL
                 setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
-                
+
                 requestAnimationFrame(() => {
                     requestAnimationFrame(() => {
                         setTimeout(() => {
@@ -152,7 +152,7 @@ export const PresentationMixin = {
         } else {
             // First slide - no transition needed
             container.appendChild(slideWrapper);
-            
+
             iframe.onload = () => {
                 setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
                 slideWrapper.style.opacity = '1';
@@ -230,13 +230,10 @@ export const PresentationMixin = {
 
         // Determine background CSS - handle both gradients and solid colors
         let backgroundStyle = '';
-        if (backgroundColor.startsWith('linear-gradient') ||
-            backgroundColor.startsWith('radial-gradient') ||
-            backgroundColor.startsWith('url(')) {
-        if (backgroundColor.includes('gradient') || 
+        if (backgroundColor.includes('gradient') ||
             backgroundColor.includes('linear') ||
             backgroundColor.includes('radial') ||
-            backgroundColor.includes('url(')) {
+            backgroundColor.startsWith('url(')) {
             backgroundStyle = `background: ${backgroundColor};`;
         } else {
             backgroundStyle = `background-color: ${backgroundColor};`;

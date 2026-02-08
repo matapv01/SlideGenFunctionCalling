@@ -2,8 +2,8 @@
 // Use global config loaded from config.js in head
 const config = window.config || { BACKEND_URL: 'http://localhost:12008' };
 
-export // SlideCapture Class - Chụp ảnh slides
-    class SlideCapture {
+// SlideCapture Class - Chụp ảnh slides
+export class SlideCapture {
     constructor(slideEditor) {
         this.slideEditor = slideEditor;
     }
