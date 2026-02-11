@@ -33,11 +33,54 @@ function setupEditorListeners() {
     // Listen for content changes
     editor.addEventListener('input', debounce(handleContentChange, 500));
 
-    // Click on text block to select it
-    editor.addEventListener('click', handleBlockClick);
+    // Prevent dragging text blocks unless using the handle
+    editor.addEventListener('dragstart', function (e) {
+        if (!e.target.closest('.drag-handle')) {
+            e.preventDefault();
+        }
+    });
 
     // Setup drag-drop for text blocks
     setupDragDrop();
+
+    // Handle Enter key to break out of text blocks
+    editor.addEventListener('keydown', handleEnterKey);
+}
+
+function handleEnterKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        const selection = window.getSelection();
+        if (!selection.rangeCount) return;
+
+        const range = selection.getRangeAt(0);
+        let node = range.commonAncestorContainer;
+        if (node.nodeType === 3) node = node.parentElement; // Text node -> Element
+
+        const block = node.closest('.text-block');
+
+        if (block) {
+            e.preventDefault();
+
+            // Create new line (standard contenteditable behavior is often div or br)
+            // We use a div to ensure a clean new line context
+            const newLine = document.createElement('div');
+            newLine.innerHTML = '<br>';
+
+            // Insert after the current block
+            if (block.nextSibling) {
+                block.parentNode.insertBefore(newLine, block.nextSibling);
+            } else {
+                block.parentNode.appendChild(newLine);
+            }
+
+            // Move cursor to the new line
+            const newRange = document.createRange();
+            newRange.setStart(newLine, 0);
+            newRange.collapse(true);
+            selection.removeAllRanges();
+            selection.addRange(newRange);
+        }
+    }
 }
 
 // Debounce helper
@@ -119,7 +162,7 @@ function renderExistingStructure(structure) {
                     data-level="${node.level}" 
                     data-type="title" 
                     data-node-id="${node.node_id || generateNodeId()}"
-                    ${node.is_transition ? 'data-transition="true"' : ''}>${escapeHtml(node.title)}</span>\n`;
+                    ${node.is_transition ? 'data-transition="true"' : ''}><span class="drag-handle" contenteditable="false"><i class="bi bi-grip-vertical"></i></span>${escapeHtml(node.title)}</span>\n`;
             }
 
             // Render content if exists
@@ -127,7 +170,7 @@ function renderExistingStructure(structure) {
                 result += `<span class="text-block text-level-${node.level} text-content" 
                     data-level="${node.level}" 
                     data-type="content" 
-                    data-node-id="${(node.node_id || generateNodeId()) + '_c'}">${escapeHtml(node.content)}</span>\n`;
+                    data-node-id="${(node.node_id || generateNodeId()) + '_c'}"><span class="drag-handle" contenteditable="false"><i class="bi bi-grip-vertical"></i></span>${escapeHtml(node.content)}</span>\n`;
             }
 
             // Render children
@@ -184,49 +227,164 @@ function handleBlockClick(event) {
 
 // ========== FORMATTING FUNCTIONS ==========
 
-// Apply formatting to selected text
-function applyFormatting() {
-    const selection = window.getSelection();
-    const selectedText = selection.toString().trim();
+// Global state for 2-step formatting
+let pendingLevel = null;
+let pendingType = null;
 
-    if (!selectedText) {
-        showAlert('Please select some text first!');
+// Apply formatting to selected text
+function applyFormatting(newLevel, newType) {
+    const selection = window.getSelection();
+
+    // Get existing block context
+    let existingBlock = null;
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+        existingBlock = range.commonAncestorContainer.closest?.('.text-block')
+            || range.commonAncestorContainer.parentElement?.closest('.text-block');
+    }
+
+    // CASE 1: EDITING EXISTING BLOCK (Immediate Effect)
+    if (existingBlock) {
+        // If Normal/Unformat requested
+        if (newLevel === 'normal') {
+            unformatBlock(existingBlock);
+            clearPendingState();
+            return;
+        }
+
+        // Apply partial updates immediately
+        const level = newLevel !== null ? newLevel : existingBlock.dataset.level;
+        const type = newType !== null ? newType : existingBlock.dataset.type;
+
+        updateBlockStyle(existingBlock, level, type);
+        clearPendingState(); // Clear any pending state to avoid confusion
+        updateToolbarVisuals(level, type);
         return;
     }
 
-    const level = document.getElementById('toolbarLevel').value;
-    const type = document.getElementById('toolbarType').value;
+    // CASE 2: CREATING NEW BLOCK (Two-Step Process)
+
+    // Update Pending State
+    if (newLevel !== null) pendingLevel = newLevel;
+    if (newType !== null) pendingType = newType;
+
+    // Handle "Normal" or "Intro" special cases
+    if (newLevel === 'normal') {
+        // Just clear pending, as we are already in normal text
+        clearPendingState();
+        updateToolbarVisuals(null, null);
+        return; // Already normal
+    }
+    if (newLevel === 0) {
+        // Intro doesn't usually need a type, default to 'title' if not set
+        if (!pendingType) pendingType = 'title';
+    }
+
+    // Update UI to show what's selected
+    updateToolbarVisuals(pendingLevel, pendingType);
+
+    // Check if we have BOTH Level and Type to proceed
+    if (pendingLevel !== null && pendingType !== null) {
+        createFormattedBlock(pendingLevel, pendingType);
+
+        // Reset pending state after creation? 
+        // Or keep it for continuous typing?
+        // User request suggests "then create box", implies one-off action.
+        // Let's reset to avoid sticking.
+        clearPendingState();
+        updateToolbarVisuals(null, null);
+    }
+}
+
+function clearPendingState() {
+    pendingLevel = null;
+    pendingType = null;
+}
+
+function updateToolbarVisuals(level, type) {
+    // Remove all active classes
+    document.querySelectorAll('.style-card').forEach(btn => btn.classList.remove('active'));
+
+    // Add active class to matching buttons
+    if (level !== null && level !== undefined) {
+        const levelBtn = document.querySelector(`.style-card[onclick*="applyFormatting(${level},"]`)
+            || document.querySelector(`.style-card[onclick*="applyFormatting('${level}',"]`);
+        if (levelBtn) levelBtn.classList.add('active');
+    }
+
+    if (type !== null && type !== undefined) {
+        const typeBtn = document.querySelector(`.style-card[onclick*="applyFormatting(null, '${type}')"]`);
+        if (typeBtn) typeBtn.classList.add('active');
+    }
+}
+
+function unformatBlock(block) {
+    // Clone block to get clean text without handle
+    const clone = block.cloneNode(true);
+    const handle = clone.querySelector('.drag-handle');
+    if (handle) handle.remove();
+
+    const text = clone.textContent; // Keep original spacing/newlines
+    const textNode = document.createTextNode(text);
+
+    // Check if next sibling is a <br> (added by us) and remove it
+    if (block.nextSibling && block.nextSibling.tagName === 'BR') {
+        block.nextSibling.remove();
+    }
+
+    block.replaceWith(textNode);
+    if (textNode.parentElement) textNode.parentElement.normalize();
+
+    // Update everything
+    updateStats();
+    syncEditorToStructure();
+    renderSlides();
+    saveStructure();
+    console.log('✅ Converted to Normal Text');
+}
+
+function updateBlockStyle(block, level, type) {
+    block.className = `text-block text-level-${level} text-${type}`;
+    block.dataset.level = level;
+    block.dataset.type = type;
+
+    updateStats();
+    syncEditorToStructure();
+    renderSlides();
+    saveStructure();
+    console.log(`✅ Updated: Level ${level}, Type ${type}`);
+}
+
+function createFormattedBlock(level, type) {
+    const selection = window.getSelection();
+    if (!selection.rangeCount) return;
+    const range = selection.getRangeAt(0);
     const nodeId = generateNodeId();
 
     try {
-        const range = selection.getRangeAt(0);
+        // Create wrapper
+        const wrapper = document.createElement('span');
+        wrapper.className = `text-block text-level-${level} text-${type}`;
+        wrapper.dataset.level = level;
+        wrapper.dataset.type = type;
+        wrapper.dataset.nodeId = nodeId;
 
-        // Check if selection is inside an existing text-block
-        const existingBlock = range.commonAncestorContainer.closest?.('.text-block')
-            || range.commonAncestorContainer.parentElement?.closest('.text-block');
+        // Extract contents
+        const contents = range.extractContents();
 
-        if (existingBlock) {
-            // Update existing block
-            existingBlock.className = `text-block text-level-${level} text-${type}`;
-            existingBlock.dataset.level = level;
-            existingBlock.dataset.type = type;
-        } else {
-            // Create new formatted block
-            const wrapper = document.createElement('span');
-            wrapper.className = `text-block text-level-${level} text-${type}`;
-            wrapper.dataset.level = level;
-            wrapper.dataset.type = type;
-            wrapper.dataset.nodeId = nodeId;
+        // Add handle
+        const handle = document.createElement('span');
+        handle.className = 'drag-handle';
+        handle.contentEditable = 'false';
+        handle.innerHTML = '<i class="bi bi-grip-vertical"></i>';
+        wrapper.appendChild(handle);
 
-            // Extract contents and wrap
-            const contents = range.extractContents();
-            wrapper.appendChild(contents);
-            range.insertNode(wrapper);
+        wrapper.appendChild(contents);
+        range.insertNode(wrapper);
 
-            // Add line break after for better editing
-            const br = document.createElement('br');
-            wrapper.after(br);
-        }
+        // Add break
+        const br = document.createElement('br');
+        wrapper.after(br);
 
         // Clear selection
         selection.removeAllRanges();
@@ -236,39 +394,15 @@ function applyFormatting() {
         syncEditorToStructure();
         renderSlides();
         saveStructure();
-
-        console.log(`✅ Applied: Level ${level}, Type ${type}`);
+        console.log(`✅ Created: Level ${level}, Type ${type}`);
 
     } catch (error) {
         console.error('Error applying formatting:', error);
-        showAlert('Could not apply formatting. Please try selecting again.');
+        showAlert('Could not apply formatting.');
     }
 }
 
-// Remove formatting from selected block
-function removeFormatting() {
-    const selectedBlock = document.querySelector('.text-block.selected');
 
-    if (!selectedBlock) {
-        showAlert('Please click on a formatted block to select it first!');
-        return;
-    }
-
-    // Get text content
-    const text = selectedBlock.textContent;
-
-    // Replace block with plain text
-    const textNode = document.createTextNode(text + '\n');
-    selectedBlock.replaceWith(textNode);
-
-    // Update everything
-    updateStats();
-    syncEditorToStructure();
-    renderSlides();
-    saveStructure();
-
-    console.log('✅ Removed formatting');
-}
 
 // Handle content changes
 function handleContentChange() {
@@ -288,7 +422,12 @@ function syncEditorToStructure() {
     // Build flat list of blocks (filter empty ones)
     const flatBlocks = [];
     blocks.forEach(block => {
-        const text = block.textContent.trim();
+        // Clone block to get text without handle text (if any)
+        const clone = block.cloneNode(true);
+        const handle = clone.querySelector('.drag-handle');
+        if (handle) handle.remove();
+
+        const text = clone.textContent.trim();
         // Skip blocks with empty text
         if (!text) return;
 
@@ -596,7 +735,9 @@ function saveIntroSlide() {
     introBlock.dataset.level = '0';
     introBlock.dataset.type = 'title';
     introBlock.dataset.nodeId = 'intro_slide_0';
-    introBlock.textContent = content;
+    introBlock.dataset.type = 'title';
+    introBlock.dataset.nodeId = 'intro_slide_0';
+    introBlock.innerHTML = `<span class="drag-handle" contenteditable="false"><i class="bi bi-grip-vertical"></i></span>${escapeHtml(content)}`;
 
     // Insert at beginning
     const firstChild = editor.firstChild;
@@ -799,7 +940,7 @@ function addTransitionBlockToEditor(transitionNode, beforeNodeId) {
         transitionBlock.dataset.type = 'title';
         transitionBlock.dataset.nodeId = transitionNode.node_id;
         transitionBlock.dataset.transition = 'true';
-        transitionBlock.textContent = transitionNode.title;
+        transitionBlock.innerHTML = `<span class="drag-handle" contenteditable="false"><i class="bi bi-grip-vertical"></i></span>${escapeHtml(transitionNode.title)}`;
         transitionBlock.style.borderColor = '#0dcaf0';
         transitionBlock.style.background = 'rgba(13, 202, 240, 0.15)';
 
@@ -813,7 +954,8 @@ function addTransitionBlockToEditor(transitionNode, beforeNodeId) {
             contentBlock.dataset.type = 'content';
             contentBlock.dataset.nodeId = transitionNode.node_id + '_c';
             contentBlock.dataset.transition = 'true';
-            contentBlock.textContent = transitionNode.content;
+            contentBlock.dataset.transition = 'true';
+            contentBlock.innerHTML = `<span class="drag-handle" contenteditable="false"><i class="bi bi-grip-vertical"></i></span>${escapeHtml(transitionNode.content)}`;
             contentBlock.style.borderColor = '#0dcaf0';
             contentBlock.style.background = 'rgba(13, 202, 240, 0.1)';
 
@@ -912,7 +1054,7 @@ function addDragListenersToBlocks() {
         if (block.getAttribute('draggable') === 'true') return; // Already setup
 
         block.setAttribute('draggable', 'true');
-        block.style.cursor = 'grab';
+        // block.style.cursor = 'grab'; // Removed: handled by CSS (handle has grab, block has text)
 
         block.addEventListener('dragstart', handleBlockDragStart);
         block.addEventListener('dragend', handleBlockDragEnd);
@@ -923,16 +1065,34 @@ function addDragListenersToBlocks() {
 }
 
 function handleBlockDragStart(e) {
-    draggedBlock = e.target;
-    e.target.style.opacity = '0.5';
-    e.target.style.cursor = 'grabbing';
+    // Only allow drag if using the handle
+    if (!e.target.closest('.drag-handle')) {
+        e.preventDefault();
+        return;
+    }
+
+    const block = e.target.closest('.text-block');
+    if (!block) return;
+
+    draggedBlock = block;
+    block.style.opacity = '0.5';
+    // block.style.cursor = 'grabbing'; 
     e.dataTransfer.effectAllowed = 'move';
-    e.dataTransfer.setData('text/plain', e.target.dataset.nodeId);
+    e.dataTransfer.setData('text/plain', block.dataset.nodeId);
 }
 
 function handleBlockDragEnd(e) {
-    e.target.style.opacity = '1';
-    e.target.style.cursor = 'grab';
+    if (draggedBlock) {
+        draggedBlock.style.opacity = '1';
+        // draggedBlock.style.cursor = 'grab'; // Removing cursor reset as handled by CSS
+    }
+
+    // Fallback if draggedBlock is null (though shouldn't be)
+    const block = e.target.closest('.text-block');
+    if (block) {
+        block.style.opacity = '1';
+    }
+
     draggedBlock = null;
 
     // Remove all drop indicators
@@ -946,34 +1106,42 @@ function handleBlockDragOver(e) {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
 
-    if (e.target.classList.contains('text-block') && e.target !== draggedBlock) {
+    const targetBlock = e.target.closest('.text-block');
+
+    if (targetBlock && targetBlock !== draggedBlock) {
         // Show drop indicator
-        const rect = e.target.getBoundingClientRect();
+        const rect = targetBlock.getBoundingClientRect();
         const midY = rect.top + rect.height / 2;
 
         // Reset borders
-        e.target.style.borderTop = '';
-        e.target.style.borderBottom = '';
+        targetBlock.style.borderTop = '';
+        targetBlock.style.borderBottom = '';
 
         if (e.clientY < midY) {
-            e.target.style.borderTop = '3px solid #667eea';
+            targetBlock.style.borderTop = '3px solid #667eea';
         } else {
-            e.target.style.borderBottom = '3px solid #667eea';
+            targetBlock.style.borderBottom = '3px solid #667eea';
         }
     }
 }
 
 function handleBlockDragLeave(e) {
-    if (e.target.classList.contains('text-block')) {
-        e.target.style.borderTop = '';
-        e.target.style.borderBottom = '';
+    const targetBlock = e.target.closest('.text-block');
+    if (targetBlock) {
+        targetBlock.style.borderTop = '';
+        targetBlock.style.borderBottom = '';
     }
 }
 
 function handleBlockDrop(e) {
     e.preventDefault();
 
-    if (!draggedBlock || e.target === draggedBlock) return;
+    if (!draggedBlock) return;
+
+    // Ensure opacity is reset even on drop
+    draggedBlock.style.opacity = '1';
+
+    if (e.target === draggedBlock || e.target.closest('.text-block') === draggedBlock) return;
 
     const targetBlock = e.target.closest('.text-block');
     if (!targetBlock) return;
@@ -1007,4 +1175,6 @@ function handleBlockDrop(e) {
     syncEditorToStructure();
     renderSlides();
     saveStructure();
+
+    draggedBlock = null; // Clear dragged block reference
 }

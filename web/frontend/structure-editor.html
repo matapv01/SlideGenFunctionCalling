@@ -132,11 +132,48 @@
         /* Text Block Styles - Level Indentation */
         .text-block {
             display: block;
-            padding: 8px 12px;
+            padding: 8px 12px 8px 30px;
+            /* Increased left padding for handle */
             margin: 4px 0;
             border-radius: 4px;
             position: relative;
             transition: all 0.2s ease;
+            user-select: text;
+            padding-right: 70px;
+            cursor: text;
+        }
+
+        .drag-handle {
+            position: absolute;
+            left: 5px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: grab;
+            color: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            transition: all 0.2s;
+            user-select: none;
+            -webkit-user-drag: element;
+            /* Allow handle to be dragged */
+        }
+
+        .text-block:hover .drag-handle {
+            color: rgba(0, 0, 0, 0.6);
+            background: rgba(0, 0, 0, 0.05);
+        }
+
+        .drag-handle:active {
+            cursor: grabbing;
+        }
+
+        .text-block::before,
+        .text-block::after {
+            pointer-events: none;
         }
 
         .text-block:hover {
@@ -262,6 +299,14 @@
             content: 'L5';
         }
 
+        .text-level-6::after {
+            content: 'L6';
+        }
+
+        .text-level-7::after {
+            content: 'L7';
+        }
+
         /* Intro Slide Special Style */
         .text-block.text-level-0.text-title {
             background: linear-gradient(135deg, rgba(255, 107, 107, 0.15), rgba(254, 202, 87, 0.15));
@@ -370,42 +415,202 @@
                 <div class="panel-container" style="padding: 1rem;">
                     <!-- Toolbar -->
                     <div class="editor-toolbar">
-                        <div class="toolbar-group">
-                            <span class="toolbar-label">Level</span>
-                            <select class="toolbar-select" id="toolbarLevel">
-                                <option value="1" selected>L1 - Slide</option>
-                                <option value="2">L2 - Bullet</option>
-                                <option value="3">L3 - Sub</option>
-                                <option value="4">L4</option>
-                                <option value="5">L5</option>
-                            </select>
+
+                        <!-- Level Group -->
+                        <div class="style-group">
+                            <div class="group-label">Level</div>
+                            <div class="style-row">
+                                <button class="style-card style-normal" onclick="applyFormatting('normal', null)"
+                                    title="Normal Text">
+                                    <span class="style-preview">Aa</span>
+                                    <span class="style-name">Normal</span>
+                                </button>
+                                <button class="style-card style-intro" onclick="applyFormatting(0, null)"
+                                    title="Intro Slide">
+                                    <span class="style-preview">Intro</span>
+                                    <span class="style-name">L0</span>
+                                </button>
+                                <button class="style-card style-l1" onclick="applyFormatting(1, null)"
+                                    title="Slide (L1)">
+                                    <span class="style-preview" style="color:#4dabf7; font-weight:700;">1</span>
+                                    <span class="style-name">Slide</span>
+                                </button>
+                                <button class="style-card style-l2" onclick="applyFormatting(2, null)"
+                                    title="Bullet (L2)">
+                                    <span class="style-preview" style="color:#748ffc;">2</span>
+                                    <span class="style-name">Bullet</span>
+                                </button>
+                                <button class="style-card style-l3" onclick="applyFormatting(3, null)"
+                                    title="Sub-Point (L3)">
+                                    <span class="style-preview" style="font-size: 12px; color:#91a7ff;">3</span>
+                                    <span class="style-name">Sub</span>
+                                </button>
+                                <button class="style-card style-l4" onclick="applyFormatting(4, null)" title="Level 4">
+                                    <span class="style-preview" style="font-size: 11px; color:#fab005;">4</span>
+                                    <span class="style-name">L4</span>
+                                </button>
+                                <button class="style-card style-l5" onclick="applyFormatting(5, null)" title="Level 5">
+                                    <span class="style-preview" style="font-size: 11px; color:#20c997;">5</span>
+                                    <span class="style-name">L5</span>
+                                </button>
+                                <button class="style-card style-l6" onclick="applyFormatting(6, null)" title="Level 6">
+                                    <span class="style-preview" style="font-size: 11px; color:#868e96;">6</span>
+                                    <span class="style-name">L6</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="toolbar-group">
-                            <span class="toolbar-label">Type</span>
-                            <select class="toolbar-select" id="toolbarType">
-                                <option value="title">Title</option>
-                                <option value="content">Content</option>
-                            </select>
+                        <div class="style-separator-group"></div>
+
+                        <!-- Type Group -->
+                        <div class="style-group">
+                            <div class="group-label">Type</div>
+                            <div class="style-row">
+                                <button class="style-card style-type-title" onclick="applyFormatting(null, 'title')"
+                                    title="Title">
+                                    <span class="style-preview"><i class="bi bi-type-h1"></i></span>
+                                    <span class="style-name">Title</span>
+                                </button>
+                                <button class="style-card style-type-content" onclick="applyFormatting(null, 'content')"
+                                    title="Content/Text">
+                                    <span class="style-preview"><i class="bi bi-text-paragraph"></i></span>
+                                    <span class="style-name">Content</span>
+                                </button>
+                            </div>
                         </div>
 
-                        <div class="toolbar-group">
-                            <button class="toolbar-btn toolbar-btn-apply" onclick="applyFormatting()"
-                                title="Apply formatting to selected text">
-                                <i class="bi bi-check2-circle"></i> Apply
-                            </button>
-                            <button class="toolbar-btn toolbar-btn-remove" onclick="removeFormatting()"
-                                title="Remove formatting from selected block">
-                                <i class="bi bi-x-circle"></i> Remove
-                            </button>
-                        </div>
-
-                        <div class="toolbar-group" style="border-right: none;">
-                            <button class="btn btn-sm btn-info" onclick="openIntroSlideModal()" title="Add Intro Slide">
-                                <i class="bi bi-plus-lg"></i> Intro Slide
-                            </button>
-                        </div>
                     </div>
+
+                    <style>
+                        /* Main Toolbar Layout */
+                        .editor-toolbar {
+                            display: flex;
+                            align-items: center;
+                            gap: 12px;
+                            overflow-x: auto;
+                            padding-bottom: 5px;
+                            scrollbar-width: thin;
+                        }
+
+                        .style-group {
+                            display: flex;
+                            flex-direction: column;
+                            gap: 2px;
+                        }
+
+                        .group-label {
+                            font-size: 9px;
+                            font-weight: 700;
+                            color: #94a3b8;
+                            text-transform: uppercase;
+                            letter-spacing: 0.5px;
+                            padding-left: 1px;
+                            margin-bottom: 2px;
+                        }
+
+                        .style-row {
+                            display: flex;
+                            gap: 4px;
+                        }
+
+                        /* Compact Card Styles */
+                        .style-card {
+                            display: flex;
+                            flex-direction: column;
+                            align-items: center;
+                            justify-content: center;
+                            min-width: 45px;
+                            height: 48px;
+                            border: 1px solid #e2e8f0;
+                            border-radius: 5px;
+                            background: white;
+                            cursor: pointer;
+                            transition: all 0.1s;
+                            padding: 2px;
+                        }
+
+                        .style-card:hover {
+                            background: #f8fafc;
+                            border-color: #cbd5e1;
+                            transform: translateY(-1px);
+                            box-shadow: 0 2px 3px rgba(0, 0, 0, 0.05);
+                        }
+
+                        .style-card:active {
+                            transform: translateY(0);
+                            background: #e2e8f0;
+                        }
+
+                        .style-preview {
+                            font-size: 11px;
+                            font-weight: 600;
+                            color: #334155;
+                            margin-bottom: 1px;
+                            line-height: 1.2;
+                        }
+
+                        .style-name {
+                            font-size: 8px;
+                            color: #64748b;
+                            text-transform: uppercase;
+                            font-weight: 500;
+                        }
+
+                        /* Separator */
+                        .style-separator-group {
+                            width: 1px;
+                            height: 40px;
+                            background: #e2e8f0;
+                            margin-top: 10px;
+                        }
+
+                        /* Color overrides for visual distinction */
+                        .style-intro .style-preview {
+                            color: #ff6b6b;
+                        }
+
+                        .style-l1 .style-preview {
+                            color: #4dabf7;
+                            font-size: 12px;
+                        }
+
+                        .style-l2 .style-preview {
+                            color: #748ffc;
+                        }
+
+                        .style-l3 .style-preview {
+                            color: #91a7ff;
+                        }
+
+                        .style-l4 .style-preview {
+                            color: #fab005;
+                        }
+
+                        .style-l5 .style-preview {
+                            color: #20c997;
+                        }
+
+                        .style-l6 .style-preview {
+                            color: #868e96;
+                        }
+
+                        .style-type-title .style-preview {
+                            font-size: 14px;
+                            color: #1e293b;
+                        }
+
+                        .style-type-content .style-preview {
+                            font-size: 14px;
+                            color: #1e293b;
+                        }
+
+                        /* Active/Selected state */
+                        .style-card.active {
+                            border-color: #4dabf7;
+                            background: #e7f5ff;
+                            box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.2);
+                        }
+                    </style>
 
                     <!-- Selection Info Bar -->
                     <div class="selection-info" id="selectionInfo">
