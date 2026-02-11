@@ -20868,3 +20868,2316 @@ def generate_thank_you_farm_slide(
     </body>
     </html>"""
     return html_code
+
+
+#------------------------------SLIDES GRAPH-----------------------------------------------
+
+#-------BAR CHART SLIDES------------------------------------------------------------------
+
+def generate_bar_chart_slide_1(
+        main_title: str, 
+        subtitle: str, 
+        insight: str, 
+        chart_options: dict, 
+        data_input: dict,
+        font_family: str = "Inter, sans-serif",
+        accent_color: str = "#FF6B35",
+        main_title_color: str = "#1B2559",
+        subtitle_color: str = "#6B7280",
+        insight_text_color: str = "#374151",
+        main_title_font_size: str = "64px",
+        subtitle_font_size: str = "28px",
+        insight_font_size: str = "26px"
+    ) -> str:
+    """
+    Generates a generic HTML slide with a Grouped Bar Chart using the "Logistic Company" theme.
+    """
+
+    # ===== 1. LẤY THÔNG TIN =====
+    title = main_title
+    sub = subtitle
+    insight_text = insight
+
+    # Data handling for Bar Chart
+    # Expected data_input schema: { "categories": ["Q1", "Q2"...], "series": [{"name": "Import", "data": [10, 20]}, ...] }
+    categories = data_input.get("categories", [])
+    series = data_input.get("series", [])
+    
+    options = chart_options
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", True)
+    show_legend = options.get("show_legend", True)
+    
+    # Theme Defaults (Logistic Style)
+    default_colors = ["#1B2559", "#FF6B35", "#4B5563", "#9CA3AF"] # Navy, Orange, Grey, Light Grey
+    colors = options.get("colors", default_colors)
+    if not colors:
+        colors = default_colors
+
+    y_axis_label = options.get("y_axis", "")
+    x_axis_label = options.get("x_axis", "")
+
+    # ===== STYLE CONFIG =====
+    # Override defaults if not provided, leaning towards the image theme
+    f_family = font_family if font_family else "Arial, sans-serif"
+    c_accent = accent_color if accent_color else "#FF6B35"
+    c_title = main_title_color if main_title_color else "#1B2559"
+    c_sub = subtitle_color if subtitle_color else "#6B7280"
+    c_insight = insight_text_color if insight_text_color else "#374151"
+
+    fs_title = main_title_font_size
+    fs_sub = subtitle_font_size
+    fs_insight = insight_font_size
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1150, 650
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 50
+
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH TOÁN DATA =====
+    # Find max value for Y scaling
+    all_values = []
+    for s in series:
+        all_values.extend(s.get("data", []))
+    
+    val_max = options.get("y_axis_max")
+    if val_max is None:
+        val_max = max(all_values) if all_values else 100
+        val_max = val_max * 1.1 # Add top padding
+
+    val_min = options.get("y_axis_min", 0)
+    
+    if val_max == val_min:
+        val_max += 10
+
+    # Grid calculations
+    num_grid_lines = 5
+    
+    # Bar calculations
+    num_cats = len(categories) if categories else 1
+    num_series = len(series) if series else 1
+    
+    # Calculate widths
+    # Slot width = space allocated for one category
+    slot_width = chart_w / num_cats
+    padding_group = slot_width * 0.2 # 20% padding between groups
+    group_width = slot_width - padding_group
+    bar_width = group_width / num_series
+
+    # ===== 4. VẼ CHART =====
+    chart_elements = ""
+
+    # -- Background Grid --
+    for i in range(num_grid_lines + 1):
+        y_ratio = i / num_grid_lines
+        y_pos = svg_h - margin_bottom - (y_ratio * chart_h)
+        value_label = val_min + (val_max - val_min) * y_ratio
+        
+        # Grid line
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_pos}" x2="{svg_w - margin_right}" y2="{y_pos}" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        '''
+        # Y-Axis Label
+        chart_elements += f'''
+        <text x="{margin_left - 15}" y="{y_pos + 5}" font-family="{f_family}" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">{int(value_label) if value_label % 1 == 0 else f"{value_label:.1f}"}</text>
+        '''
+
+    # -- Bars --
+    for i, cat in enumerate(categories):
+        # Center X of the category slot
+        slot_x_start = margin_left + (i * slot_width) + (padding_group / 2)
+        
+        for j, s in enumerate(series):
+            data_val = s["data"][i] if i < len(s["data"]) else 0
+            
+            # Height calculation
+            bar_height = ((data_val - val_min) / (val_max - val_min)) * chart_h
+            if bar_height < 0: bar_height = 0
+            
+            x_pos = slot_x_start + (j * bar_width)
+            y_pos = svg_h - margin_bottom - bar_height
+            
+            color = colors[j % len(colors)]
+            
+            # Rect
+            chart_elements += f'''
+            <rect x="{x_pos}" y="{y_pos}" width="{bar_width * 0.85}" height="{bar_height}" 
+                  fill="{color}" rx="4" ry="4" />
+            '''
+            
+            # Value Label (on top of bar)
+            if show_value:
+                chart_elements += f'''
+                <text x="{x_pos + (bar_width * 0.85)/2}" y="{y_pos - 8}" 
+                      font-family="{f_family}" font-size="14" fill="{color}" font-weight="bold" text-anchor="middle">
+                    {data_val}{unit}
+                </text>
+                '''
+
+        # Category Label (X-axis)
+        cat_x_center = margin_left + (i * slot_width) + (slot_width / 2)
+        chart_elements += f'''
+        <text x="{cat_x_center}" y="{svg_h - margin_bottom + 30}" 
+              font-family="{f_family}" font-size="18" fill="{c_title}" font-weight="bold" text-anchor="middle">
+            {cat}
+        </text>
+        '''
+
+    # -- Axis Titles --
+    if y_axis_label:
+        chart_elements += f'''
+        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" 
+              font-family="{f_family}" font-size="18" fill="{c_sub}" text-anchor="middle">
+            {y_axis_label}
+        </text>
+        '''
+
+    # ===== LEGEND (HTML side) =====
+    legend_html = ""
+    if show_legend:
+        legend_html += '<div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:30px;">'
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+                <span style="display:flex; align-items:center; gap:8px;">
+                    <span style="width:16px; height:16px; background-color:{color}; border-radius:4px; display:inline-block;"></span>
+                    <span style="font-family:{f_family}; font-size:18px; color:{c_title}; font-weight:500;">{s.get("name", "Series")}</span>
+                </span>
+            '''
+        legend_html += '</div>'
+
+    # ===== INSIGHT =====
+    insight_html = f"""
+    <div style="
+        font-family: {f_family};
+        font-size: {fs_insight};
+        color: {c_insight};
+        line-height: 1.6;
+        background: #F3F4F6;
+        padding: 30px;
+        border-left: 6px solid {c_accent};
+        border-radius: 0 12px 12px 0;
+        margin-bottom: 20px;">
+        {insight_text}
+    </div>
+    """
+
+    # ===== 5. HTML RENDER =====
+    # Logistic Theme: White BG, Navy/Orange accents, clean layout
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: {f_family};
+        background-color: #FFFFFF;
+        position: relative;
+    }}
+    
+    /* Decorative Background Elements based on reference */
+    .bg-shape-top {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 400px;
+        height: 150px;
+        background: {c_title}; /* Navy */
+        clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+        z-index: 0;
+    }}
+    .bg-shape-accent {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 150px;
+        height: 150px;
+        background: {c_accent}; /* Orange */
+        clip-path: polygon(0 0, 80% 0, 0 80%);
+        z-index: 1;
+    }}
+    .bg-shape-bottom {{
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 600px;
+        height: 120px;
+        background: {c_title};
+        clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+        z-index: 0;
+    }}
+    
+    .container {{
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 60px 80px 40px 80px;
+        box-sizing: border-box;
+    }}
+    
+    .header {{
+        margin-bottom: 40px;
+        padding-left: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }}
+    
+    .title-group h1 {{
+        font-size: {fs_title};
+        color: {c_accent}; /* Orange Title like 'Logistic' */
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+    
+    .title-group h1 span {{
+        color: {c_title}; /* Navy part like 'Company' */
+    }}
+    
+    .subtitle {{
+        font-size: {fs_sub};
+        color: {c_sub};
+        margin-top: 10px;
+        font-weight: 400;
+    }}
+
+    .main-content {{
+        display: flex;
+        flex: 1;
+        gap: 60px;
+        align-items: center;
+    }}
+    
+    .left-panel {{
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }}
+    
+    .right-panel {{
+        flex: 2;
+        background: #FFFFFF;
+        border: 1px solid #E5E7EB;
+        border-radius: 20px;
+        padding: 20px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }}
+    
+    .footer-mark {{
+        position: absolute;
+        bottom: 30px;
+        right: 40px;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        z-index: 10;
+    }}
+
+    </style>
+    </head>
+    <body>
+
+    <div class="bg-shape-top"></div>
+    <div class="bg-shape-accent"></div>
+    <div class="bg-shape-bottom"></div>
+    <div class="footer-mark">www.reallygreatsite.com</div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-group">
+                <h1>{title}</h1>
+                <div class="subtitle">{sub}</div>
+            </div>
+            <div style="font-size: 24px; color: {c_title}; font-weight: bold; opacity: 0.5;">2024 REPORT</div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <h3 style="color:{c_title}; font-size:32px; margin-bottom:20px; border-bottom: 2px solid {c_accent}; display:inline-block; padding-bottom:10px;">Analysis</h3>
+                {insight_html}
+                {legend_html}
+            </div>
+
+            <div class="right-panel">
+                <div>
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+    </html>
+    """
+    return html_code
+
+
+def generate_bar_chart_slide_2(
+    main_title: str, 
+    subtitle: str, 
+    insight: str, 
+    chart_options: dict, 
+    data_input: dict,
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#A67C52",
+    main_title_color: str = "#3D4E5D",
+    subtitle_color: str = "#6B7280",
+    insight_text_color: str = "#374151",
+    main_title_font_size: str = "60px",
+    subtitle_font_size: str = "26px",
+    insight_font_size: str = "28px"
+) -> str:
+    """
+    Generates an Ocean-themed Bubble Chart slide based on the provided data and style.
+    """
+
+    # ===== 1. LẤY THÔNG TIN & XỬ LÝ DỮ LIỆU =====
+    # Gán biến cơ bản
+    title = main_title
+    sub = subtitle
+    ins = insight
+    
+    # Xử lý data series - GROUPED BAR CHART FORMAT
+    data = data_input
+    categories = data.get("categories", [])
+    series = data.get("series", [])
+
+    # Xử lý options
+    options = chart_options or {}
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    
+    # Palette lấy cảm hứng từ ảnh "Ocean Beauty" (Xanh ngọc, Xanh biển sâu, Trắng bọt biển)
+    ocean_palette = ["#00695C", "#26A69A", "#4DD0E1", "#0277BD", "#00838F"]
+    colors = options.get("colors", ocean_palette)
+
+    x_axis_label = options.get("x_axis", "")
+    y_axis_label = options.get("y_axis", "")
+
+    # ===== STYLE CONFIG (OCEAN THEME) =====
+    # Override defaults if not provided to match the image theme
+    bg_color = "#E0F7FA" # Light Cyan background like the water
+    
+    # Sử dụng font tròn nếu có thể
+    font_family = font_family if font_family != "Inter, sans-serif" else "'Quicksand', 'Varela Round', 'Verdana', sans-serif"
+    
+    # Màu sắc mặc định theo theme nếu user không truyền
+    accent = accent_color if accent_color != "#A67C52" else "#00897B" # Teal accent
+    title_col = main_title_color if main_title_color != "#3D4E5D" else "#104c64" # Deep blue text
+    sub_col = subtitle_color if subtitle_color != "#6B7280" else "#457b8c" # Muted blue
+    ins_col = insight_text_color if insight_text_color != "#374151" else "#2c5f70"
+
+    # Font sizes
+    title_fs = main_title_font_size
+    sub_fs = subtitle_font_size
+    ins_fs = insight_font_size
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1100, 700
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 60
+
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH TOÁN MIN/MAX =====
+    # Lấy tất cả giá trị từ các series
+    all_values = []
+    for s in series:
+        all_values.extend(s.get("values", []))
+    
+    if not all_values:
+        all_values = [0]
+
+    # Lấy min/max từ option hoặc tự tính
+    y_min_opt = options.get("y_axis_min")
+    y_max_opt = options.get("y_axis_max")
+
+    y_min = y_min_opt if y_min_opt is not None else 0
+    y_max = y_max_opt if y_max_opt is not None else max(all_values)
+
+    # Padding nhẹ cho trục Y
+    if y_max_opt is None:
+        y_max = y_max * 1.1  # Thêm 10% padding
+
+    # 🛡 Tránh chia cho 0
+    if y_max <= y_min:
+        y_max = y_min + 10
+
+    # ===== 4. VẼ CHART (SVG GENERATION) =====
+    chart_elements = ""
+
+    # -- Background Chart Decor --
+    chart_elements += f'''
+    <rect x="{margin_left}" y="{margin_top}" width="{chart_w}" height="{chart_h}" 
+          fill="white" fill-opacity="0.3" rx="20" ry="20" />
+    '''
+
+    # -- Grid Lines (Nét đứt mềm mại) --
+    num_ticks = 5
+    for i in range(num_ticks + 1):
+        # Grid ngang (Y-axis)
+        val_y = y_min + (y_max - y_min) * (i / num_ticks)
+        pos_y = svg_h - margin_bottom - (i / num_ticks) * chart_h
+        
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{pos_y}" x2="{svg_w - margin_right}" y2="{pos_y}" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        '''
+        # Label Y
+        chart_elements += f'''
+        <text x="{margin_left - 15}" y="{pos_y + 5}" font-family="{font_family}" 
+              font-size="16" fill="{sub_col}" text-anchor="end">{int(val_y) if val_y == int(val_y) else f"{val_y:.1f}"}</text>
+        '''
+
+    # -- Axis Labels --
+    # X Label
+    if x_axis_label:
+        chart_elements += f'''
+        <text x="{margin_left + chart_w/2}" y="{svg_h - 20}" font-family="{font_family}" 
+              font-size="20" fill="{title_col}" font-weight="bold" text-anchor="middle">{x_axis_label}</text>
+        '''
+    # Y Label
+    if y_axis_label:
+        chart_elements += f'''
+        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-family="{font_family}" 
+              font-size="20" fill="{title_col}" font-weight="bold" text-anchor="middle">{y_axis_label}</text>
+        '''
+
+    # -- Grouped Bar Chart --
+    num_categories = len(categories)
+    num_series = len(series)
+    
+    if num_categories > 0 and num_series > 0:
+        # Tính toán kích thước và khoảng cách
+        group_width = chart_w / num_categories * 0.8  # 80% của không gian dành cho mỗi nhóm
+        bar_width = group_width / num_series * 0.85   # 85% của không gian nhóm chia đều cho các cột
+        group_spacing = chart_w / num_categories
+        
+        for cat_idx, category in enumerate(categories):
+            # Vị trí trung tâm của nhóm cột
+            group_center_x = margin_left + (cat_idx + 0.5) * group_spacing
+            
+            # Vẽ các cột trong nhóm
+            for series_idx, s in enumerate(series):
+                values = s.get("values", [])
+                if cat_idx < len(values):
+                    value = values[cat_idx]
+                    color = colors[series_idx % len(colors)]
+                    
+                    # Tính toán vị trí và chiều cao của cột
+                    bar_height = (value - y_min) / (y_max - y_min) * chart_h
+                    bar_x = group_center_x - group_width/2 + series_idx * (group_width / num_series) + (group_width / num_series - bar_width) / 2
+                    bar_y = svg_h - margin_bottom - bar_height
+                    
+                    # Vẽ cột với bo góc
+                    chart_elements += f'''
+                    <rect x="{bar_x}" y="{bar_y}" width="{bar_width}" height="{bar_height}" 
+                          fill="{color}" rx="5" ry="5"/>
+                    '''
+                    
+                    # Hiển thị giá trị trên cột (nếu bật)
+                    if show_value:
+                        chart_elements += f'''
+                        <text x="{bar_x + bar_width/2}" y="{bar_y - 8}" font-family="{font_family}" 
+                              font-size="14" fill="{title_col}" text-anchor="middle" font-weight="bold">{value}{unit}</text>
+                        '''
+            
+            # Nhãn danh mục (category) trên trục X
+            chart_elements += f'''
+            <text x="{group_center_x}" y="{svg_h - margin_bottom + 25}" font-family="{font_family}" 
+                  font-size="16" fill="{title_col}" text-anchor="middle">{category}</text>
+            '''
+
+    # ===== LEGEND (HTML) =====
+    legend_html = ""
+    if show_legend:
+        legend_html = '<div class="legend-container">'
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div class="legend-item">
+                <div class="legend-dot" style="background-color:{color}; box-shadow: 0 0 0 1px {color};"></div>
+                <div class="legend-label">{s.get("name", "Series")}</span>
+            </div>
+            '''
+        legend_html += '</div>'
+
+    # ===== INSIGHT (HTML) =====
+    insight_html = ins
+
+    # ===== 5. HTML RENDER =====
+    # Cấu trúc: Header + 2 Cột (Left: Insight/Legend - Right: Chart)
+    # Background có thêm vài bong bóng trang trí bằng CSS thuần (border-radius)
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        html, body {{
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: {font_family};
+            background-color: {bg_color};
+            /* Hiệu ứng gradient nhẹ giống nước */
+            background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
+        }}
+
+        /* Bong bóng trang trí nền */
+        .bubble-bg {{
+            position: absolute;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.4);
+            z-index: 0;
+        }}
+
+        .container {{
+            position: relative;
+            z-index: 1;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-sizing: border-box;
+        }}
+
+        .header {{
+            margin-bottom: 40px;
+        }}
+
+        h1 {{
+            font-size: {title_fs};
+            color: {title_col};
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }}
+
+        .subtitle {{
+            font-size: {sub_fs};
+            color: {sub_col};
+            margin-top: 15px;
+            font-weight: 500;
+        }}
+
+        .content-flex {{
+            display: flex;
+            flex: 1;
+            gap: 60px;
+            align-items: center; 
+        }}
+
+        .left-col {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+
+        .right-col {{
+            flex: 1.6;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 137, 123, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }}
+        
+        .insight-box {{
+            font-size: {ins_fs};
+            color: {ins_col};
+            font-family: {font_family};
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 30px;
+            border-radius: 20px;
+            border-left: 6px solid {accent};
+        }}
+        
+        .legend-container {{
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 40px;
+        }}
+        
+        .legend-item {{
+            display: flex;
+            align-items: center;
+        }}
+        
+        .legend-dot {{
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            margin-right: 8px;
+            border: 2px solid white;
+        }}
+        
+        .legend-label {{
+            font-size: 20px;
+            color: {title_col};
+            font-family: {font_family};
+        }}
+
+    </style>
+    </head>
+    <body>
+        <div class="bubble-bg" style="width: 300px; height: 300px; top: -50px; left: -50px;"></div>
+        <div class="bubble-bg" style="width: 150px; height: 150px; bottom: 100px; right: 200px;"></div>
+        <div class="bubble-bg" style="width: 80px; height: 80px; top: 100px; right: 40%;"></div>
+
+        <div class="container">
+            <div class="header">
+                <h1>{title}</h1>
+                {f'<div class="subtitle">{sub}</div>' if sub else ""}
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">{ins}</div>
+                    {legend_html}
+                </div>
+
+                <div class="right-col">
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+
+def generate_bar_chart_slide_3(
+    main_title: str, 
+    subtitle: str, 
+    insight: str, 
+    chart_options: dict, 
+    data_input: dict,
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#7B8FB3",
+    main_title_color: str = "#4A5E7B",
+    subtitle_color: str = "#8E97A4",
+    insight_text_color: str = "#4A5E7B",
+    main_title_font_size: str = "65px",
+    subtitle_font_size: str = "28px",
+    insight_font_size: str = "30px"
+) -> str:
+    """
+    Tạo slide biểu đồ cột (Grouped Bar Chart) với phong cách giáo dục, 
+    lấy cảm hứng từ theme 'My Family'.
+    """
+
+    # ===== 1. LẤY THÔNG TIN DỮ LIỆU =====
+    categories = data_input.get("categories", [])
+    series = data_input.get("series", [])
+    options = chart_options 
+    
+    show_value = options.get("show_value", True)
+    show_legend = options.get("show_legend", True)
+    unit = options.get("unit", "")
+    
+    # Màu sắc lấy cảm hứng từ hình ảnh (hồng, xanh navy nhạt, vàng kem, cam nhạt)
+    colors = options.get("colors", ["#4A5E7B", "#D59494", "#A67C52", "#B5B191"])
+    
+    x_axis_label = options.get("x_axis", "")
+    y_axis_label = options.get("y_axis", "")
+
+    # ===== 2. SVG CONFIG & TÍNH TOÁN =====
+    svg_w, svg_h = 1100, 600
+    margin_t, margin_b, margin_l, margin_r = 60, 80, 100, 40
+    chart_w = svg_w - margin_l - margin_r
+    chart_h = svg_h - margin_t - margin_b
+
+    all_values = [v for s in series for v in s.get("values", [])]
+    y_min = options.get("y_axis_min", 0)
+    y_max = options.get("y_axis_max", max(all_values) * 1.1 if all_values else 100)
+    if y_max == y_min: y_max += 1
+
+    # ===== 3. VẼ BIỂU ĐỒ (SVG ELEMENTS) =====
+    chart_elements = ""
+
+    # Grid lines & Y-axis labels
+    steps = 5
+    for i in range(steps + 1):
+        y_pos = margin_t + (chart_h / steps) * i
+        val = y_max - (y_max - y_min) / steps * i
+        chart_elements += f'''
+        <line x1="{margin_l}" y1="{y_pos}" x2="{svg_w - margin_r}" y2="{y_pos}" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="{margin_l - 15}" y="{y_pos + 6}" font-size="18" text-anchor="end" fill="{subtitle_color}">{val:.0f}</text>
+        '''
+
+    # Grouped Bars logic
+    num_cats = len(categories)
+    num_series = len(series)
+    
+    if num_cats > 0:
+        cat_width = chart_w / num_cats
+        # Chiều rộng mỗi cột (bar), chừa khoảng cách giữa các nhóm
+        gap_between_groups = 0.2 
+        available_bar_space = cat_width * (1 - gap_between_groups)
+        bar_width = available_bar_space / num_series
+
+        for c_idx, cat in enumerate(categories):
+            x_group_start = margin_l + c_idx * cat_width + (cat_width * gap_between_groups / 2)
+            
+            # X-axis labels
+            chart_elements += f'<text x="{x_group_start + available_bar_space/2}" y="{svg_h - margin_b + 40}" font-size="20" text-anchor="middle" fill="{main_title_color}" font-weight="bold">{cat}</text>'
+            
+            for s_idx, s in enumerate(series):
+                val = s.get("values", [])[c_idx] if c_idx < len(s.get("values", [])) else 0
+                color = colors[s_idx % len(colors)]
+                
+                h = ((val - y_min) / (y_max - y_min)) * chart_h
+                x_bar = x_group_start + s_idx * bar_width
+                y_bar = svg_h - margin_b - h
+                
+                # Vẽ cột với bo góc phía trên (rx)
+                chart_elements += f'''
+                <rect x="{x_bar + 5}" y="{y_bar}" width="{max(bar_width - 10, 5)}" height="{h}" fill="{color}" rx="8" />
+                '''
+                
+                if show_value:
+                    label = options.get("data_label_format", "{value}").replace("{value}", str(val))
+                    chart_elements += f'<text x="{x_bar + bar_width/2}" y="{y_bar - 10}" font-size="16" text-anchor="middle" fill="{main_title_color}" font-weight="bold">{label}</text>'
+
+    # Axis Title
+    chart_elements += f'<text x="{svg_w/2 + margin_l/2}" y="{svg_h - 10}" font-size="22" text-anchor="middle" fill="{main_title_color}" font-weight="600">{x_axis_label}</text>'
+    chart_elements += f'<text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-size="22" text-anchor="middle" fill="{main_title_color}" font-weight="600">{y_axis_label}</text>'
+
+    # ===== 4. CẤU TRÚC LEGEND & INSIGHT =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            legend_html += f'''
+            <div style="display:flex; align-items:center; margin-bottom:15px;">
+                <div style="width:24px; height:24px; background:{colors[i % len(colors)]}; border-radius:6px; margin-right:12px;"></div>
+                <span style="font-size:24px; color:{main_title_color}; font-weight:500;">{s.get("name")}</span>
+            </div>
+            '''
+
+    # ===== 5. GENERATE FINAL HTML =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                background-color: #D59494; /* Nền hồng đất từ ảnh */
+                font-family: {font_family};
+                display: flex; flex-direction: column;
+                overflow: hidden;
+            }}
+            .top-bar {{
+                padding: 60px 100px 20px 100px;
+            }}
+            .title-box {{
+                background: white;
+                display: inline-block;
+                padding: 20px 60px;
+                border-radius: 100px; /* Bo tròn mạnh như nút 1st Grade */
+                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+            }}
+            h1 {{ margin: 0; font-size: {main_title_font_size}; color: {main_title_color}; text-transform: capitalize; }}
+            .subtitle {{ font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; padding-left: 20px; }}
+            
+            .content-area {{
+                display: flex;
+                flex: 1;
+                padding: 0 80px 60px 80px;
+                gap: 40px;
+            }}
+            .insight-panel {{
+                flex: 1;
+                display: flex; flex-direction: column;
+                justify-content: center;
+            }}
+            .insight-card {{
+                background: #FFF9E5; /* Màu kem từ ảnh */
+                padding: 50px;
+                border-radius: 40px;
+                color: {insight_text_color};
+                font-size: {insight_font_size};
+                line-height: 1.5;
+                margin-bottom: 40px;
+                border: 4px dashed {accent_color}; /* Nét đứt trang trí */
+            }}
+            .chart-panel {{
+                flex: 2;
+                background: white;
+                border-radius: 40px;
+                padding: 30px;
+                display: flex; align-items: center; justify-content: center;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }}
+            .decoration-star {{
+                position: absolute; color: white; font-size: 40px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="decoration-star" style="top:40px; left:40px;">✦</div>
+        <div class="decoration-star" style="top:100px; left:80px;">✦</div>
+        
+        <div class="top-bar">
+            <div class="title-box">
+                <h1>{main_title}</h1>
+            </div>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+
+        <div class="content-area">
+            <div class="insight-panel">
+                <div class="insight-card">
+                    {insight}
+                </div>
+                <div class="legend-container" style="padding-left: 20px;">
+                    {legend_html}
+                </div>
+            </div>
+
+            <div class="chart-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+
+#-------SCATTER PLOT CHART SLIDES---------------------------------------------------------
+
+def generate_scatter_plot_chart_slide_1(
+        main_title: str, 
+        subtitle: str, 
+        insight: str, 
+        chart_options: dict, 
+        data_input: dict,
+        font_family: str = "Inter, sans-serif",
+        accent_color: str = "#A67C52",
+        main_title_color: str = "#3D4E5D",
+        subtitle_color: str = "#6B7280",
+        insight_text_color: str = "#374151",
+        main_title_font_size: str = "60px",
+        subtitle_font_size: str = "26px",
+        insight_font_size: str = "28px"
+    ) -> str:
+
+    # ===== 1. GET INFORMATION =====
+    main_title = main_title
+    subtitle = subtitle
+    insight = insight
+
+    data = data_input
+    series = data.get("series", [])
+
+    options = chart_options 
+
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+
+    colors = options.get(
+        "colors",
+        ["#3D4E5D", "#A67C52", "#B5B191", "#D6C5B0"]
+    )
+
+    x_axis_label = options.get("x_axis", "")
+    y_axis_label = options.get("y_axis", "")
+
+    # ===== STYLE CONFIG =====
+    font_family = font_family
+    accent_color = accent_color
+    main_title_color = main_title_color
+    subtitle_color = subtitle_color
+    insight_color = insight_text_color
+
+    main_title_font_size = main_title_font_size
+    subtitle_font_size = subtitle_font_size
+    insight_font_size = insight_font_size
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1200, 650
+    margin_top, margin_bottom = 80, 100
+    margin_left, margin_right = 120, 60
+
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. CALCULATE MIN MAX =====
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min = options.get("x_axis_min", min(all_x) if all_x else 0)
+    x_max = options.get("x_axis_max", max(all_x) if all_x else 10)
+
+    y_min = options.get("y_axis_min", min(all_y) if all_y else 0)
+    y_max = options.get("y_axis_max", max(all_y) if all_y else 100)
+
+    # 🛡 prevent from deviding by 0
+    if x_max == x_min:
+        x_max += 1
+    if y_max == y_min:
+        y_max += 1
+
+    # ===== 4. present CHART =====
+    chart_elements = ""
+
+    # Grid Y
+    for i in range(5):
+        y_val = margin_top + (chart_h / 4) * i
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_val}" x2="{svg_w - margin_right}" y2="{y_val}"
+        stroke="#D1D5DB" stroke-dasharray="4"/>
+        '''
+
+    # Axis lines
+    chart_elements += f'''
+    <line x1="{margin_left}" y1="{svg_h-margin_bottom}" 
+          x2="{svg_w-margin_right}" y2="{svg_h-margin_bottom}" stroke="{main_title_color}"/>
+
+    <line x1="{margin_left}" y1="{margin_top}" 
+          x2="{margin_left}" y2="{svg_h-margin_bottom}" stroke="{main_title_color}"/>
+    '''
+
+    # Scatter points
+    for i, s in enumerate(series):
+
+        color = colors[i % len(colors)]
+
+        for p in s.get("points", []):
+
+            x_val = p["x"]
+            y_val = p["y"]
+
+            x = margin_left + (x_val - x_min) / (x_max - x_min) * chart_w
+            y = svg_h - margin_bottom - (y_val - y_min) / (y_max - y_min) * chart_h
+
+            chart_elements += f'''
+            <circle cx="{x}" cy="{y}" r="9" fill="{color}" opacity="0.85"/>
+            '''
+
+            if show_value:
+                chart_elements += f'''
+                <text x="{x}" y="{y-15}" font-size="18" text-anchor="middle"
+                fill="{main_title_color}">{y_val}{unit}</text>
+                '''
+
+    # Axis labels
+    chart_elements += f'''
+    <text x="{svg_w/2}" y="{svg_h-20}" font-size="24" text-anchor="middle"
+    fill="{main_title_color}">{x_axis_label}</text>
+
+    <text transform="rotate(-90)" x="{-svg_h/2}" y="30"
+    font-size="24" text-anchor="middle" fill="{main_title_color}">{y_axis_label}</text>
+    '''
+
+    # ===== LEGEND =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div style="display:flex;align-items:center;margin-bottom:15px;">
+                <div style="width:18px;height:18px;background:{color};
+                border-radius:4px;margin-right:12px;"></div>
+                <span style="font-size:22px;color:{main_title_color};">{s.get("name","Series")}</span>
+            </div>
+            '''
+
+    # ===== INSIGHT =====
+    insight_html = f"""
+    <div style="font-size:{insight_font_size};color:{insight_color};line-height:1.4;">
+        {insight}
+    </div>
+    """
+
+    # ===== 5. HTML RENDER =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+      width:1920px;
+      height:1080px;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      font-family:{font_family};
+      background-color:#F5EFE6;
+    }}
+
+    .main-flex {{
+      display:flex;
+      height:75vh;
+      gap:50px;
+      padding:80px 100px;
+    }}
+
+    .left-panel {{
+      flex:1;
+    }}
+
+    .right-panel {{
+      flex:1.4;
+      background:rgba(255,255,255,0.4);
+      border-radius:30px;
+      padding:40px;
+      box-shadow:0 20px 40px rgba(0,0,0,0.05);
+    }}
+
+    .header {{
+      margin-bottom:40px;
+      border-left:8px solid {accent_color};
+      padding-left:30px;
+    }}
+
+    h1 {{
+      font-size:{main_title_font_size};
+      color:{main_title_color};
+      margin:0;
+    }}
+
+    .subtitle {{
+      font-size:{subtitle_font_size};
+      color:{subtitle_color};
+      margin-top:10px;
+    }}
+
+    </style>
+    </head>
+
+    <body>
+
+    <div class="header">
+      <h1>{main_title}</h1>
+      {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+    </div>
+
+    <div class="main-flex">
+
+      <div class="left-panel">
+        {insight_html}
+        <div style="margin-top:30px;">
+            {legend_html}
+        </div>
+      </div>
+
+      <div class="right-panel">
+        <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+          {chart_elements}
+        </svg>
+      </div>
+
+    </div>
+
+    </body>
+    </html>
+    """
+
+
+
+
+
+def generate_scatter_plot_chart_slide_2(
+    main_title: str,
+    subtitle: str,
+    insight: str,
+    chart_options: dict,
+    data_input: dict,
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#008080",
+    main_title_color: str = "#005F5F",
+    subtitle_color: str = "#556B2F",
+    insight_text_color: str = "#2C3E50",
+    main_title_font_size: str = "72px",
+    subtitle_font_size: str = "32px",
+    insight_font_size: str = "28px"
+) -> str:
+    """
+    Sinh HTML cho slide biểu đồ phân tán với phong cách 'Travel Plan'.
+    Phân tích mối tương quan giữa các biến dựa trên tọa độ X và Y.
+    """
+
+    # ===== 1. LẤY THÔNG TIN VÀ XỬ LÝ DỮ LIỆU =====
+    data = data_input
+    series = data.get("series", [])
+    options = chart_options or {}
+
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    
+    x_axis_label = options.get("x_axis", "X Axis")
+    y_axis_label = options.get("y_axis", "Y Axis")
+
+    colors = options.get("colors", ["#008080", "#A2C367", "#FFB347", "#D44D5C", "#4A90E2"])
+
+    # ===== 2. TÍNH TOÁN MIN MAX VÀ SCALE =====
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else (min(all_x) if all_x else 0)
+    x_max = options.get("x_axis_max") if options.get("x_axis_max") is not None else (max(all_x) if all_x else 100)
+    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else (min(all_y) if all_y else 0)
+    y_max = options.get("y_axis_max") if options.get("y_axis_max") is not None else (max(all_y) if all_y else 100)
+
+    # Đảm bảo không chia cho 0
+    if x_max == x_min: x_max += 1
+    if y_max == y_min: y_max += 1
+
+    # ===== 3. SVG CONFIG =====
+    svg_w, svg_h = 1100, 700
+    margin = {"top": 60, "bottom": 100, "left": 120, "right": 40}
+    
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    chart_elements = ""
+
+    # Vẽ Grid Y và Label Trục Y
+    steps = 5
+    for i in range(steps + 1):
+        y_val_raw = y_min + (y_max - y_min) * (i / steps)
+        y_pos = svg_h - margin["bottom"] - (i / steps) * chart_h
+        
+        # Grid line
+        chart_elements += f'<line x1="{margin["left"]}" y1="{y_pos}" x2="{svg_w - margin["right"]}" y2="{y_pos}" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" />'
+        # Label
+        chart_elements += f'<text x="{margin["left"] - 15}" y="{y_pos + 8}" font-size="20" text-anchor="end" fill="{subtitle_color}">{y_val_raw:g}</text>'
+
+    # Vẽ Trục X (Labels)
+    for i in range(steps + 1):
+        x_val_raw = x_min + (x_max - x_min) * (i / steps)
+        x_pos = margin["left"] + (i / steps) * chart_w
+        chart_elements += f'<text x="{x_pos}" y="{svg_h - margin["bottom"] + 40}" font-size="20" text-anchor="middle" fill="{subtitle_color}">{x_val_raw:g}</text>'
+
+    # Vẽ Trục chính
+    chart_elements += f'''
+        <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
+        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
+    '''
+
+    # Vẽ Scatter Points
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            px = margin["left"] + ((p["x"] - x_min) / (x_max - x_min)) * chart_w
+            py = svg_h - margin["bottom"] - ((p["y"] - y_min) / (y_max - y_min)) * chart_h
+            
+            # Point với hiệu ứng viền trắng để nổi bật
+            chart_elements += f'<circle cx="{px}" cy="{py}" r="12" fill="{color}" stroke="white" stroke-width="3" opacity="0.9" />'
+            
+            if show_value:
+                chart_elements += f'<text x="{px}" y="{py - 20}" font-size="16" text-anchor="middle" fill="{insight_text_color}" font-weight="bold">{p["y"]}{unit}</text>'
+
+    # Axis Labels
+    chart_elements += f'''
+        <text x="{margin["left"] + chart_w/2}" y="{svg_h - 20}" font-size="26" text-anchor="middle" font-weight="600" fill="{main_title_color}">{x_axis_label}</text>
+        <text transform="rotate(-90)" x="{-margin["top"] - chart_h/2}" y="35" font-size="26" text-anchor="middle" font-weight="600" fill="{main_title_color}">{y_axis_label}</text>
+    '''
+
+    # ===== 4. LEGEND & INSIGHT =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <p style="display:flex; align-items:center; margin:0 0 15px 0;">
+                <span style="display:inline-block; width:24px; height:24px; border-radius:50%; background:{color}; border:3px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:15px;"></span>
+                <span style="font-size:24px; font-weight:500; color:{insight_text_color};">{s.get("name", "Series")}</span>
+            </p>
+            '''
+
+    # ===== 5. FINAL HTML RENDER =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: {font_family}; background-color: #FEF9E1; color: {insight_text_color};
+                display: grid; 
+                grid-template-rows: 220px 1fr;
+                grid-template-columns: 1fr;
+                overflow: hidden;
+            }}
+            .header-section {{
+                padding: 60px 100px 0 100px;
+            }}
+            h1 {{
+                font-size: {main_title_font_size}; color: {main_title_color}; margin: 0; font-weight: 800; 
+                text-transform: uppercase; letter-spacing: -1px;
+                border-left: 12px solid {accent_color}; padding-left: 35px;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size}; color: {subtitle_color}; margin: 10px 0 0 47px; font-weight: 400;
+            }}
+            .content-area {{
+                display: grid; 
+                grid-template-columns: 500px 1fr;
+                gap: 80px;
+                padding: 0 100px 60px 100px;
+            }}
+            .left-panel {{
+                display: grid;
+                grid-template-rows: auto auto;
+                gap: 40px;
+                align-content: start;
+            }}
+            .insight-box {{
+                background: white; padding: 40px; border-radius: 30px; 
+                box-shadow: 15px 15px 0px rgba(0, 128, 128, 0.1);
+                border: 3px solid {accent_color}; font-size: {insight_font_size}; line-height: 1.5;
+            }}
+            .legend-area {{
+                padding-left: 10px;
+            }}
+            .right-panel {{
+                display: flex; align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.5); border-radius: 40px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header-section">
+            <h1>{main_title}</h1>
+            <div class="subtitle">{subtitle if subtitle else ""}</div>
+        </div>
+        <div class="content-area">
+            <div class="left-panel">
+                <div class="insight-box">
+                    {insight}
+                </div>
+                <div class="legend-area">
+                    {legend_items}
+                </div>
+            </div>
+            <div class="right-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html> 
+    """
+    return html_code
+
+def generate_scatter_plot_chart_slide_3(
+    main_title: str,
+    subtitle: str,
+    insight: str,
+    chart_options: dict,
+    data_input: dict,
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#7B8FB3",
+    main_title_color: str = "#4A5E7B",
+    subtitle_color: str = "#8E97A4",
+    insight_text_color: str = "#4A5E7B",
+    main_title_font_size: str = "65px",
+    subtitle_font_size: str = "28px",
+    insight_font_size: str = "30px"
+) -> str:
+    """
+    Generates a professional scatter plot chart slide with a clean, 
+    modern aesthetic inspired by educational and organic themes.
+    """
+
+    # ===== 1. DATA PREPARATION =====
+    series = data_input.get("series", [])
+    options = chart_options or {}
+    
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    
+    # Custom color palette from the reference image
+    default_colors = ["#3D5A80", "#EE6C4D", "#98C1D9", "#293241", "#5FAD56"]
+    colors = options.get("colors", default_colors)
+
+    x_label = options.get("x_axis", "X Axis")
+    y_label = options.get("y_axis", "Y Axis")
+
+    # ===== 2. SVG CALCULATIONS =====
+    svg_w, svg_h = 1100, 700
+    margin = {"top": 60, "right": 60, "bottom": 100, "left": 120}
+    
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    # Calculate Data Boundaries
+    all_points = [p for s in series for p in s.get("points", [])]
+    all_x = [p["x"] for p in all_points] or [0]
+    all_y = [p["y"] for p in all_points] or [0]
+
+    x_min = options.get("x_axis_min", min(all_x))
+    x_max = options.get("x_axis_max", max(all_x))
+    y_min = options.get("y_axis_min", min(all_y))
+    y_max = options.get("y_axis_max", max(all_y))
+
+    # Add padding to boundaries if auto-calculated
+    if x_max == x_min: x_max += 1
+    if y_max == y_min: y_max += 1
+    
+    # Range buffers
+    x_range = (x_max - x_min) * 1.1 if (x_max - x_min) != 0 else 1
+    y_range = (y_max - y_min) * 1.1 if (y_max - y_min) != 0 else 1
+
+    # ===== 3. RENDER SVG ELEMENTS =====
+    chart_elements = ""
+
+    # Grid lines (Horizontal)
+    for i in range(6):
+        y_tick = margin["top"] + (chart_h / 5) * i
+        val = y_max - (i * (y_max - y_min) / 5)
+        chart_elements += f'''
+        <line x1="{margin["left"]}" y1="{y_tick}" x2="{svg_w - margin["right"]}" y2="{y_tick}" stroke="#E5E7EB" stroke-width="1" />
+        <text x="{margin["left"] - 15}" y="{y_tick + 5}" font-size="18" text-anchor="end" fill="{subtitle_color}">{val:g}</text>
+        '''
+
+    # Axis lines
+    chart_elements += f'''
+    <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="{main_title_color}" stroke-width="2"/>
+    <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="{main_title_color}" stroke-width="2"/>
+    '''
+
+    # Data Points
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            # Scale coordinates
+            cx = margin["left"] + ((p["x"] - x_min) / (x_max - x_min) * chart_w)
+            cy = svg_h - margin["bottom"] - ((p["y"] - y_min) / (y_max - y_min) * chart_h)
+            
+            chart_elements += f'''
+            <circle cx="{cx}" cy="{cy}" r="10" fill="{color}" stroke="white" stroke-width="2" opacity="0.9" />
+            '''
+            if show_value:
+                chart_elements += f'''
+                <text x="{cx}" y="{cy - 15}" font-size="16" text-anchor="middle" fill="{insight_text_color}">{p["y"]}{unit}</text>
+                '''
+
+    # Axis Labels
+    chart_elements += f'''
+    <text x="{margin["left"] + chart_w/2}" y="{svg_h - 30}" font-size="24" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{x_label}</text>
+    <text transform="rotate(-90)" x="{-margin["top"] - chart_h/2}" y="40" font-size="24" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
+    '''
+
+    # ===== 4. LEGEND & INSIGHT HTML =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <div style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; border-radius:50%; background:{color}; margin-right:12px; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+                <div style="font-size:22px; color:{main_title_color};">{s.get("name", "Series")}</div>
+            </div>
+            '''
+
+    # ===== 5. FINAL HTML ASSEMBLY =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px;
+                height: 1080px;
+                margin: 0;
+                padding: 60px 80px;
+                overflow: hidden;
+                font-family: {font_family};
+                background-color: #E8F5E9; /* Light green from theme */
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            }}
+            .header {{
+                margin-bottom: 50px;
+                border-left: 12px solid {accent_color};
+                padding-left: 30px;
+            }}
+            h1 {{
+                font-size: {main_title_font_size};
+                color: {main_title_color};
+                margin: 0;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                color: {subtitle_color};
+                margin-top: 5px;
+            }}
+            .main-content {{
+                display: flex;
+                gap: 60px;
+                align-items: flex-start;
+            }}
+            .left-panel {{
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 40px;
+            }}
+            .insight-card {{
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 10px 10px 0px {accent_color}22;
+                border: 2px solid {accent_color}44;
+                font-size: {insight_font_size};
+                color: {insight_text_color};
+                line-height: 1.6;
+            }}
+            .right-panel {{
+                flex: 1.8;
+                background: white;
+                border-radius: 30px;
+                padding: 30px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>{main_title}</h1>
+            {f'<p class="subtitle">{subtitle}</p>' if subtitle else ""}
+        </div>
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="insight-card">
+                    {insight}
+                </div>
+                <div class="legend-container">
+                    {legend_items}
+                </div>
+            </div>
+            <div class="right-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def generate_scatter_plot_chart_slide_4(
+    main_title: str,
+    subtitle: str,
+    insight: str,
+    chart_options: dict,
+    data_input: dict,
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#FFB347",
+    main_title_color: str = "#333333",
+    subtitle_color: str = "#666666",
+    insight_text_color: str = "#444444",
+    main_title_font_size: str = "64px",
+    subtitle_font_size: str = "28px",
+    insight_font_size: str = "30px"
+) -> str:
+    """
+    Generates a professional scatter plot chart slide with a creative layout.
+    The slide features a header section, an insight/legend panel on the left, 
+    and a clean SVG scatter plot on the right.
+    """
+
+    # ===== 1. DATA PROCESSING =====
+    data = data_input
+    series = data.get("series", [])
+    options = chart_options or {}
+
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    x_label = options.get("x_axis", "X Axis")
+    y_label = options.get("y_axis", "Y Axis")
+
+    colors = options.get("colors", ["#FFB347", "#77DD77", "#AEC6CF", "#F49AC2", "#B39EB5"])
+
+    # ===== 2. SVG & CHART CALCULATIONS =====
+    svg_w, svg_h = 1100, 700
+    margin = {"top": 60, "right": 60, "bottom": 100, "left": 100}
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    # Calculate Min/Max for Scaling
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else (min(all_x) if all_x else 0)
+    x_max = options.get("x_axis_max") if options.get("x_axis_max") is not None else (max(all_x) if all_x else 100)
+    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else (min(all_y) if all_y else 0)
+    y_max = options.get("y_axis_max") if options.get("y_axis_max") is not None else (max(all_y) if all_y else 100)
+
+    # Padding for min/max to prevent points on the edge
+    if x_max == x_min: x_max += 1
+    if y_max == y_min: y_max += 1
+
+    # ===== 3. RENDER SVG ELEMENTS =====
+    chart_elements = ""
+
+    # Background Grid (Y-axis)
+    grid_steps = 5
+    for i in range(grid_steps + 1):
+        y_val_grid = margin["top"] + (chart_h / grid_steps) * i
+        y_display = y_max - (i * (y_max - y_min) / grid_steps)
+        chart_elements += f'''
+        <line x1="{margin["left"]}" y1="{y_val_grid}" x2="{svg_w - margin["right"]}" y2="{y_val_grid}" stroke="#E5E7EB" stroke-width="1" />
+        <text x="{margin["left"] - 15}" y="{y_val_grid + 6}" font-size="18" text-anchor="end" fill="#9CA3AF">{round(y_display, 1)}</text>
+        '''
+
+    # Axes
+    chart_elements += f'''
+    <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="#374151" stroke-width="2"/>
+    <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="#374151" stroke-width="2"/>
+    '''
+
+    # X-Axis Ticks
+    for i in range(grid_steps + 1):
+        x_val_grid = margin["left"] + (chart_w / grid_steps) * i
+        x_display = x_min + (i * (x_max - x_min) / grid_steps)
+        chart_elements += f'''
+        <text x="{x_val_grid}" y="{svg_h - margin["bottom"] + 30}" font-size="18" text-anchor="middle" fill="#9CA3AF">{round(x_display, 1)}</text>
+        '''
+
+    # Scatter Points
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            cx = margin["left"] + (p["x"] - x_min) / (x_max - x_min) * chart_w
+            cy = svg_h - margin["bottom"] - (p["y"] - y_min) / (y_max - y_min) * chart_h
+            
+            chart_elements += f'''
+            <circle cx="{cx}" cy="{cy}" r="12" fill="{color}" fill-opacity="0.7" stroke="{color}" stroke-width="2" />
+            '''
+            if show_value:
+                chart_elements += f'<text x="{cx}" y="{cy - 18}" font-size="14" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{p["y"]}{unit}</text>'
+
+    # Axis Titles
+    chart_elements += f'''
+    <text x="{margin["left"] + chart_w/2}" y="{svg_h - 20}" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{x_label}</text>
+    <text transform="rotate(-90)" x="{-margin["top"] - chart_h/2}" y="30" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
+    '''
+
+    # ===== 4. LEGEND & INSIGHT HTML =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <div style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:{color}; border-radius:50%; margin-right:12px;"></div>
+                <span style="font-size:22px; color:{main_title_color};">{s.get("name", "N/A")}</span>
+            </div>
+            '''
+
+    # ===== 5. FINAL HTML CONSTRUCT =====
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: {font_family}; background-color: #FFFFFF; overflow: hidden;
+            }}
+            .slide-container {{
+                width: 100%; height: 100%; position: relative;
+                background-image: radial-gradient(circle at 20px 20px, #f1f1f1 2px, transparent 0);
+                background-size: 40px 40px;
+            }}
+            .top-section {{
+                padding: 60px 100px 20px 100px;
+                border-bottom: 2px dashed {accent_color};
+            }}
+            .main-content {{
+                display: flex; padding: 40px 100px; gap: 60px;
+            }}
+            .left-column {{
+                flex: 1; display: flex; flex-direction: column;
+            }}
+            .right-column {{
+                flex: 2; background: #FAFAFA; border-radius: 40px; 
+                padding: 30px; box-shadow: 15px 15px 0px {accent_color};
+                border: 3px solid #333;
+            }}
+            .insight-box {{
+                background: #FFF9E6; padding: 35px; border-radius: 20px;
+                border: 2px solid {accent_color}; margin-bottom: 40px;
+                font-size: {insight_font_size}; color: {insight_text_color};
+                line-height: 1.6; position: relative;
+            }}
+            .insight-box::before {{
+                content: "💡 Insight"; position: absolute; top: -20px; left: 20px;
+                background: {accent_color}; color: white; padding: 5px 15px;
+                border-radius: 10px; font-weight: bold; font-size: 20px;
+            }}
+            h1 {{ margin: 0; font-size: {main_title_font_size}; color: {main_title_color}; }}
+            .subtitle {{ font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; }}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="top-section">
+                <h1>{main_title}</h1>
+                <div class="subtitle">{subtitle if subtitle else ""}</div>
+            </div>
+            <div class="main-content">
+                <div class="left-column">
+                    <div class="insight-box">{insight}</div>
+                    <div class="legend-container">{legend_items}</div>
+                </div>
+                <div class="right-column">
+                    <div>
+                        <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                            {chart_elements}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+
+
+
+#-------LINE CHART SLIDES-----------------------------------------------------------------
+
+def generate_line_chart_slide_1(
+    main_title: str,
+    subtitle: str,
+    insight: str,
+    chart_options: dict,
+    data_input: dict,
+    font_family: str = "Arial, sans-serif",
+    accent_color: str = "#FF8C00",
+    main_title_color: str = "#333333",
+    subtitle_color: str = "#666666",
+    insight_text_color: str = "#444444",
+    main_title_font_size: str = "65px",
+    subtitle_font_size: str = "30px",
+    insight_font_size: str = "28px"
+) -> str:
+    """
+    Tạo slide biểu đồ đường với phong cách 'Playful Stamp' vui nhộn, 
+    phù hợp cho các báo cáo giáo dục, trò chơi hoặc kết quả thi đấu.
+    """
+
+    # ===== 1. LẤY THÔNG TIN =====
+    data = data_input.get("data", data_input)  # Hỗ trợ cả 2 cấp độ data
+    series = data.get("series", [])
+    time_points = data.get("time_points", [])
+    
+    options = chart_options
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    colors = options.get("colors", ["#FF8C00", "#4A90E2", "#8ED645", "#FFD700"])
+    
+    x_axis_label = options.get("x_axis", "")
+    y_axis_label = options.get("y_axis", "")
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1100, 600
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 60
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH MIN MAX =====
+    all_values = [v for s in series for v in s.get("values", [])]
+    y_min = options.get("y_axis_min")
+    if y_min is None:
+        y_min = min(all_values) if all_values else 0
+        
+    y_max = options.get("y_axis_max")
+    if y_max is None:
+        y_max = max(all_values) if all_values else 100
+
+    if y_max == y_min:
+        y_max += 10
+
+    # ===== 4. VẼ CHART (SVG ELEMENTS) =====
+    chart_elements = ""
+
+    # Grid Y & Labels
+    steps = 5
+    for i in range(steps + 1):
+        y_pos = margin_top + (chart_h / steps) * i
+        val = y_max - (y_max - y_min) / steps * i
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_pos}" x2="{svg_w - margin_right}" y2="{y_pos}" 
+              stroke="#DDDDDD" stroke-dasharray="5,5" stroke-width="1"/>
+        <text x="{margin_left - 15}" y="{y_pos + 6}" font-size="18" text-anchor="end" 
+              fill="{subtitle_color}" font-weight="bold">{int(val)}</text>
+        '''
+
+    # X-axis Labels
+    if time_points:
+        num_points = len(time_points)
+        for i, label in enumerate(time_points):
+            x_pos = margin_left + (i / max(num_points - 1, 1)) * chart_w
+            chart_elements += f'''
+            <text x="{x_pos}" y="{svg_h - margin_bottom + 40}" font-size="18" 
+                  text-anchor="middle" fill="{subtitle_color}" font-weight="bold">{label}</text>
+            <line x1="{x_pos}" y1="{svg_h - margin_bottom}" x2="{x_pos}" y2="{svg_h - margin_bottom + 10}" 
+                  stroke="#333" stroke-width="2"/>
+            '''
+
+    # Trục tọa độ
+    chart_elements += f'''
+    <line x1="{margin_left}" y1="{svg_h-margin_bottom}" x2="{svg_w-margin_right}" y2="{svg_h-margin_bottom}" stroke="#333" stroke-width="3"/>
+    <line x1="{margin_left}" y1="{margin_top}" x2="{margin_left}" y2="{svg_h-margin_bottom}" stroke="#333" stroke-width="3"/>
+    '''
+
+    # Vẽ đường (Lines)
+    for idx, s in enumerate(series):
+        color = colors[idx % len(colors)]
+        values = s.get("values", [])
+        if not values or not time_points: continue
+        
+        points = []
+        for i, val in enumerate(values):
+            x = margin_left + (i / max(len(time_points) - 1, 1)) * chart_w
+            y = svg_h - margin_bottom - (val - y_min) / (y_max - y_min) * chart_h
+            points.append(f"{x},{y}")
+            
+        # Line Path
+        chart_elements += f'''
+        <polyline points="{' '.join(points)}" fill="none" stroke="{color}" stroke-width="6" stroke-linecap="round" stroke-linejoin="round"/>
+        '''
+        
+        # Points and Labels
+        for i, val in enumerate(values):
+            x = margin_left + (i / max(len(time_points) - 1, 1)) * chart_w
+            y = svg_h - margin_bottom - (val - y_min) / (y_max - y_min) * chart_h
+            chart_elements += f'''
+            <circle cx="{x}" cy="{y}" r="8" fill="white" stroke="{color}" stroke-width="4"/>
+            '''
+            if show_value:
+                chart_elements += f'''
+                <text x="{x}" y="{y-20}" font-size="18" text-anchor="middle" fill="{color}" font-weight="bold">{val}{unit}</text>
+                '''
+
+    # Axis Title
+    chart_elements += f'''
+    <text x="{svg_w/2 + margin_left/2}" y="{svg_h - 10}" font-size="20" text-anchor="middle" fill="{main_title_color}" font-weight="bold">{x_axis_label}</text>
+    <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-size="20" text-anchor="middle" fill="{main_title_color}" font-weight="bold">{y_axis_label}</text>
+    '''
+
+    # ===== LEGEND & INSIGHT HTML =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div style="display:flex; align-items:center; margin-bottom:15px; background:white; padding:10px 20px; border-radius:15px; border:3px solid {color};">
+                <div style="width:20px; height:20px; background:{color}; border-radius:50%; margin-right:15px;"></div>
+                <span style="font-size:22px; font-weight:bold; color:#333;">{s.get("name","")}</span>
+            </div>'''
+
+    # ===== 5. RENDER FINAL HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Chalkboard+SE&family=Inter:weight@700&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                background-color: #8ED645; /* Green background from image */
+                font-family: 'Inter', sans-serif;
+                overflow: hidden;
+                display: flex; flex-direction: column;
+            }}
+            .stamp-container {{
+                position: absolute; top: 50px; left: 50px;
+                width: 1820px; height: 980px;
+                background: white;
+                border-radius: 20px;
+                box-shadow: 20px 20px 0px rgba(0,0,0,0.1);
+                /* Stamp perforated effect */
+                background-image: radial-gradient(circle at 0 50%, transparent 20px, white 21px),
+                                  radial-gradient(circle at 100% 50%, transparent 20px, white 21px),
+                                  radial-gradient(circle at 50% 0, transparent 20px, white 21px),
+                                  radial-gradient(circle at 50% 100%, transparent 20px, white 21px);
+                background-size: 100% 100px, 100% 100px, 100px 100%, 100px 100%;
+                background-repeat: repeat-y, repeat-y, repeat-x, repeat-x;
+            }}
+            .header-box {{
+                position: absolute; top: 100px; left: 150px; width: 1620px;
+            }}
+            .title {{
+                font-size: {main_title_font_size}; color: {main_title_color}; margin: 0;
+                text-transform: uppercase; letter-spacing: 2px;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; font-weight: normal;
+            }}
+            .left-section {{
+                position: absolute; top: 300px; left: 150px; width: 450px;
+            }}
+            .insight-card {{
+                background: #F9F9F9; border: 4px dashed #CCC; border-radius: 20px;
+                padding: 30px; margin-bottom: 40px; font-size: {insight_font_size};
+                color: {insight_text_color}; line-height: 1.5;
+            }}
+            .chart-container {{
+                position: absolute; top: 280px; left: 650px;
+                width: 1150px; height: 650px;
+                background: #FFFFFF; border: 5px solid #333; border-radius: 30px;
+                padding: 20px;
+            }}
+            .decoration-arrow {{
+                position: absolute; bottom: 50px; left: 50px; width: 150px; z-index: 10;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="stamp-container"></div>
+        
+        <div class="header-box">
+            <h1 class="title">{main_title}</h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+
+        <div class="left-section">
+            <div class="insight-card">
+                {insight}
+            </div>
+            <div class="legend-area">
+                {legend_html}
+            </div>
+        </div>
+
+        <div class="chart-container">
+            <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                {chart_elements}
+            </svg>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+
+def generate_line_chart_slide_2(
+    main_title: str,
+    subtitle: str,
+    insight: str,
+    chart_options: Dict[str, Any],
+    data_input: Dict[str, Any],
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#4F46E5",
+    main_title_color: str = "#1F2937",
+    subtitle_color: str = "#4B5563",
+    insight_text_color: str = "#374151",
+    main_title_font_size: str = "64px",
+    subtitle_font_size: str = "30px",
+    insight_font_size: str = "28px",
+) -> str:
+    """
+    Generate a premium line chart HTML slide using the Global Economy theme.
+    Refactored to accept explicit parameters instead of a raw dictionary.
+    """
+
+    # ===== 1. DATA EXTRACTION =====
+    title = main_title
+    subtitle = subtitle or ""
+    insight = insight or ""
+
+    time_points = data_input.get("time_points", [])
+    series = data_input.get("series", [])
+
+    options = chart_options or {}
+    colors = options.get("colors", [accent_color, "#3b82f6"])
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+
+    # ===== 2. CHART CONFIG =====
+    svg_w, svg_h = 1000, 500
+    margin = {"top": 60, "bottom": 60, "left": 80, "right": 40}
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    all_vals = [v for s in series for v in s.get("values", [])]
+    y_max = options.get("y_axis_max") or (max(all_vals) * 1.2 if all_vals else 100)
+    y_min = options.get("y_axis_min", 0)
+
+    def get_x(i):
+        return (
+            margin["left"] + (i * chart_w / (len(time_points) - 1))
+            if len(time_points) > 1
+            else margin["left"] + chart_w / 2
+        )
+
+    def get_y(v):
+        return svg_h - margin["bottom"] - ((v - y_min) / (y_max - y_min) * chart_h)
+
+    # ===== 3. SVG DRAWING =====
+    chart_elements = ""
+
+    # Horizontal grid lines
+    for i in range(5):
+        y_val = svg_h - margin["bottom"] - (i * chart_h / 4)
+        chart_elements += (
+            f'<line x1="{margin["left"]}" y1="{y_val}" '
+            f'x2="{svg_w - margin["right"]}" y2="{y_val}" '
+            f'stroke="#e2e8f0" stroke-width="1" />'
+        )
+
+    # Lines + areas
+    for idx, s in enumerate(series):
+        color = colors[idx % len(colors)]
+        values = s.get("values", [])
+
+        if not values:
+            continue
+
+        d_path = f"M {get_x(0)} {get_y(values[0])}"
+        d_area = f"M {get_x(0)} {svg_h - margin['bottom']} L {get_x(0)} {get_y(values[0])}"
+
+        for i in range(1, len(values)):
+            d_path += f" L {get_x(i)} {get_y(values[i])}"
+            d_area += f" L {get_x(i)} {get_y(values[i])}"
+
+        d_area += f" L {get_x(len(values) - 1)} {svg_h - margin['bottom']} Z"
+
+        chart_elements += f'<path d="{d_area}" fill="{color}" fill-opacity="0.1" />'
+        chart_elements += (
+            f'<path d="{d_path}" fill="none" stroke="{color}" '
+            f'stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />'
+        )
+
+        for i, v in enumerate(values):
+            chart_elements += (
+                f'<circle cx="{get_x(i)}" cy="{get_y(v)}" r="8" '
+                f'fill="white" stroke="{color}" stroke-width="4" />'
+            )
+            if show_value:
+                chart_elements += (
+                    f'<text x="{get_x(i)}" y="{get_y(v) - 25}" '
+                    f'font-size="18" text-anchor="middle" '
+                    f'fill="#1e293b" font-weight="bold">{v}{unit}</text>'
+                )
+
+    # X-axis labels
+    for i, label in enumerate(time_points):
+        chart_elements += (
+            f'<text x="{get_x(i)}" y="{svg_h - 20}" '
+            f'font-size="18" text-anchor="middle" fill="#64748b">{label}</text>'
+        )
+
+    # ===== 4. HTML OUTPUT =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0;
+                font-family: {font_family};
+                background-color: white; overflow: hidden;
+            }}
+            .slide {{ position: relative; width: 100%; height: 100%; }}
+            .left-shape {{
+                position: absolute; width: 1200px; height: 1200px;
+                background-color: #f1fcf4; border-radius: 50%;
+                left: -450px; top: -100px;
+            }}
+            .dot-grid {{
+                position: absolute; top: 80px; left: 350px;
+                display: grid; grid-template-columns: repeat(10, 15px); gap: 15px;
+            }}
+            .dot {{ width: 8px; height: 8px; background-color: #fbbf24; border-radius: 50%; }}
+            .chart-card {{
+                background: white; border-radius: 40px; padding: 40px;
+                box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
+                position: absolute; left: 80px; top: 200px;
+            }}
+            .title {{
+                font-size: {main_title_font_size};
+                font-weight: 800;
+                color: {main_title_color};
+                position: absolute; right: 80px; top: 200px;
+                text-align: right;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                color: {subtitle_color};
+                position: absolute; right: 80px; top: 320px;
+                max-width: 600px; text-align: right;
+            }}
+            .insight {{
+                font-size: {insight_font_size};
+                color: {insight_text_color};
+                position: absolute; right: 80px; top: 420px;
+                max-width: 600px; text-align: right;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="slide">
+            <div class="left-shape"></div>
+            <div class="dot-grid">{''.join('<div class="dot"></div>' for _ in range(30))}</div>
+            <div class="chart-card">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+            <h1 class="title">{title}</h1>
+            <p class="subtitle">{subtitle}</p>
+            <p class="insight">{insight}</p>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+def generate_line_chart_slide_3(
+    main_title: str, 
+    subtitle: str, 
+    insight: str, 
+    chart_options: dict, 
+    data_input: dict,
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#00F2FF",
+    main_title_color: str = "#FFFFFF",
+    subtitle_color: str = "#94A3B8",
+    insight_text_color: str = "#E2E8F0",
+    main_title_font_size: str = "64px",
+    subtitle_font_size: str = "28px",
+    insight_font_size: str = "30px"
+) -> str:
+    # ===== 1. LẤY THÔNG TIN =====
+    data = data_input.get("data", data_input) # Linh hoạt cho cấu trúc data
+    series = data.get("series", [])
+    time_points = data.get("time_points", [])
+    
+    options = chart_options
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    
+    # Màu sắc mặc định theo theme Tech (Cyan, Purple, Pink)
+    colors = options.get("colors", ["#00F2FF", "#8B5CF6", "#EC4899", "#10B981"])
+    
+    x_axis_label = options.get("x_axis", "")
+    y_axis_label = options.get("y_axis", "")
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1100, 600
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 40
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH MIN MAX =====
+    all_values = [v for s in series for v in s.get("values", [])]
+    y_min = options.get("y_axis_min") or (min(all_values) * 0.9 if all_values else 0)
+    y_max = options.get("y_axis_max") or (max(all_values) * 1.1 if all_values else 100)
+    if y_max == y_min: 
+        y_max += 1
+
+    # ===== 4. VẼ CHART ELEMENTS =====
+    chart_elements = ""
+    
+    # Grid lines Y & Labels
+    steps = 5
+    for i in range(steps + 1):
+        y_pos = margin_top + (chart_h / steps) * i
+        val = y_max - (y_max - y_min) / steps * i
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_pos}" x2="{svg_w - margin_right}" y2="{y_pos}" 
+              stroke="#ffffff15" stroke-width="1" stroke-dasharray="5,5"/>
+        <text x="{margin_left - 15}" y="{y_pos + 6}" font-size="16" text-anchor="end" 
+              fill="{subtitle_color}">{val:,.0f}</text>
+        '''
+
+    # X-axis Labels
+    num_points = len(time_points)
+    for i, label in enumerate(time_points):
+        x_pos = margin_left + (i / max(num_points - 1, 1)) * chart_w
+        chart_elements += f'''
+        <text x="{x_pos}" y="{svg_h - margin_bottom + 35}" font-size="16" 
+              text-anchor="middle" fill="{subtitle_color}">{label}</text>
+        <line x1="{x_pos}" y1="{svg_h - margin_bottom}" x2="{x_pos}" y2="{svg_h - margin_bottom + 8}" 
+              stroke="{accent_color}" stroke-width="2"/>
+        '''
+
+    # Draw Lines & Points
+    for idx, s in enumerate(series):
+        color = colors[idx % len(colors)]
+        values = s.get("values", [])
+        if not values: continue
+        
+        path_points = []
+        for i, val in enumerate(values):
+            x = margin_left + (i / max(len(time_points) - 1, 1)) * chart_w
+            y = svg_h - margin_bottom - (val - y_min) / (y_max - y_min) * chart_h
+            path_points.append(f"{x},{y}")
+        
+        # Line Path với Glow Effect
+        points_str = " ".join(path_points)
+        chart_elements += f'''
+        <polyline points="{points_str}" fill="none" stroke="{color}" stroke-width="4" 
+                  stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px {color}66);"/>
+        '''
+        
+        # Points
+        for p in path_points:
+            px, py = p.split(',')
+            chart_elements += f'<circle cx="{px}" cy="{py}" r="6" fill="#0F172A" stroke="{color}" stroke-width="3"/>'
+
+    # ===== 5. LAYOUT COMPONENTS =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div style="display:flex;align-items:center;margin-bottom:12px;background:rgba(255,255,255,0.05);padding:10px 20px;border-radius:10px;border-left:4px solid {color};">
+                <span style="font-size:20px;color:#FFFFFF;font-weight:500;">{s.get("name","Series")}</span>
+            </div>
+            '''
+
+    # ===== 6. FINAL HTML =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                background-color: #020617; color: white;
+                font-family: {font_family}; overflow: hidden;
+                background-image: 
+                    radial-gradient(circle at 20% 20%, #1e1b4b 0%, transparent 40%),
+                    radial-gradient(circle at 80% 80%, #312e81 0%, transparent 40%),
+                    linear-gradient(#0f172a 1px, transparent 1px),
+                    linear-gradient(90deg, #0f172a 1px, transparent 1px);
+                background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+            }}
+            .header-container {{
+                padding: 80px 100px 40px 100px;
+                background: linear-gradient(to bottom, rgba(15,23,42,0.8), transparent);
+            }}
+            .main-title {{
+                font-family: 'Orbitron', sans-serif;
+                font-size: {main_title_font_size};
+                color: {main_title_color};
+                text-transform: uppercase; letter-spacing: 4px; margin: 0;
+            }}
+            .main-title span {{ color: {accent_color}; }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                color: {subtitle_color}; margin-top: 15px;
+            }}
+            .content-grid {{
+                display: flex; padding: 0 100px; gap: 60px; height: 700px;
+            }}
+            .chart-area {{
+                flex: 2; background: rgba(15, 23, 42, 0.6);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 24px; padding: 20px;
+                backdrop-filter: blur(10px);
+                display: flex; align-items: center; justify-content: center;
+            }}
+            .insight-area {{
+                flex: 1; display: flex; flex-direction: column; justify-content: flex-start;
+            }}
+            .insight-box {{
+                background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 20px; padding: 35px; margin-bottom: 30px;
+                font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.6;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header-container">
+            <h1 class="main-title">{main_title.split(' ')[0]} <span>{' '.join(main_title.split(' ')[1:])}</span></h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+        <div class="content-grid">
+            <div class="chart-area">
+                <div>
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                        <text x="{svg_w/2}" y="{svg_h-10}" font-size="20" text-anchor="middle" fill="{accent_color}" font-weight="bold">{x_axis_label}</text>
+                        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-size="20" text-anchor="middle" fill="{accent_color}" font-weight="bold">{y_axis_label}</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="insight-area">
+                <div class="insight-box">{insight}</div>
+                <div>{legend_html}</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+
+    
+
+#-------PIE CHART SLIDES------------------------------------------------------------------

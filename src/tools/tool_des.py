@@ -1,7 +1,7 @@
 # Auto-generated from tools.py preserving all original parameter schemas
 # This conversion maintains the exact parameter definitions from the source
 
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Any
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 
@@ -128,6 +128,16 @@ from src.tools.html_tool import (
     generate_brand_collaboration_closing_slide, # slide cảm ơn (mhung)
     generate_military_thank_you_slide, # slide cảm ơn (mhung)
     generate_thank_you_farm_slide, # slide cảm ơn (mhung)
+
+    generate_bar_chart_slide_1, # slide biểu đồ cột (mhung) 
+    generate_bar_chart_slide_2, # slide biểu đồ cột (mhung)
+    generate_bar_chart_slide_3, # slide biểu đồ cột (mhung)
+    generate_scatter_plot_chart_slide_1, # slide biểu đồ phân tán (mhung)
+    generate_scatter_plot_chart_slide_2, # slide biểu đồ phân tán (mhung)
+    generate_scatter_plot_chart_slide_3, # slide biểu đồ phân tán (mhung)    
+    generate_line_chart_slide_1, # slide biểu đồ đường (mhung)
+    generate_line_chart_slide_2, # slide biểu đồ đường (mhung)
+    generate_line_chart_slide_3, # slide biểu đồ đường (mhung)
 )
 
 # ===========================================================================================
@@ -1605,6 +1615,1360 @@ class GenerateThankYouFarmSlideInput(BaseModel):
     show_windmill: Optional[bool] = Field(default=True, description="Toggle windmill illustration.")
     show_kite: Optional[bool] = Field(default=True, description="Toggle kite illustration.")
 
+############################ GRAPH SLIDES ################################################################################
+#---BAR CHART SLIDES-------------------------------------------------------------------------    
+
+class GenerateBarChartSlide1(BaseModel):
+    """Input schema for generate_grouped_bar_chart_slide."""
+    main_title: str = Field(description="Main title of the chart (10–60 characters). Example: Quarterly Shipment Volume",)
+    subtitle: str = Field(description="Subtitle, unit, or data source. Example: Units: Thousand Metric Tons",)
+    insight: str = Field(description="Description or main insight of the slide")
+    chart_options: Dict[str, Any] = Field(
+        description="""
+            # Chart options define how the bar chart is displayed and styled.
+            # 'colors' should match the Logistic theme (e.g., Navy, Orange).
+            
+            "chart_options": {
+                "x_axis": "string",
+                "y_axis": "string",
+                "unit": "string | null",
+                "show_value": boolean,
+                "show_legend": boolean,
+                "y_axis_min": "number | null",
+                "y_axis_max": "number | null",
+                "colors": ["string"] 
+            }
+        """
+    )
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Grouped Bar Chart Data Schema.
+            # 'categories' are labels on X-axis (e.g., Quarters, Regions).
+            # 'series' are the groups of bars (e.g., 2023 vs 2024, or Import vs Export).
+            
+            {
+                "categories": ["North", "South", "East", "West"],
+                "series": [
+                    { "name": "2023", "data": [120, 132, 101, 134] },
+                    { "name": "2024", "data": [220, 182, 191, 234] }
+                ]
+            }
+            """
+    )
+    font_family: str = Field(default="Inter, sans-serif", description="main font")
+    accent_color: str = Field(default="#FF6B35", description="CSS accent color for decorative elements (Orange).")
+    main_title_color: str = Field(default="#1B2559", description="CSS color for the main title (Navy Blue).")
+    subtitle_color: str = Field(default="#6B7280", description="CSS color for subtitle.")
+    insight_text_color: str = Field(default="#374151", description="CSS color for insight text.")
+    main_title_font_size: str = Field(default="64px",description="CSS font size for the main title.")
+    subtitle_font_size: str = Field(default="28px",description="CSS font size for the subtitle.")
+    insight_font_size: str = Field(default="26px", description="CSS font size for insight text.")
+
+class GenerateBarChartSlide2(BaseModel):
+    """Input schema for generate_grouped_bar_chart_slide."""
+    
+    main_title: str = Field(
+        description="Main title of the chart (10–60 characters). Example: Ocean Temperature vs. Depth Analysis"
+    )
+    
+    subtitle: str = Field(
+        description="Subtitle, unit, or data source. Example: Data Source: Marine Institute 2025"
+    )
+    
+    insight: str = Field(
+        description="Description or main insight of the slide"
+    )
+
+    chart_options: Dict[str, Any] = Field(
+        description="""
+        Display and styling options for the grouped bar chart.
+        Defines axis labels, value formatting, legend visibility, axis range,
+        and color mapping for each series.
+
+        {
+            "x_axis": "string",
+            "y_axis": "string",
+            "unit": "string | null",
+            "show_value": boolean,
+            "show_legend": boolean,
+            "y_axis_min": number,
+            "y_axis_max": "number | null",
+            "data_label_format": "string | null",
+            "colors": ["string"]   # one color per series
+        }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+        Data for a grouped bar chart comparing multiple series across the same categories.
+
+        - categories: Labels on the X-axis.
+        - series: Each series represents one group of bars.
+        - values length must match categories length.
+
+        {
+            "categories": ["string", "string", "..."],
+            "series": [
+                { "name": "string", "values": [number, number, "..."] }
+            ]
+        }
+        """
+    )
+
+    font_family: str = Field(
+        default="Inter, sans-serif",
+        description="Main font family"
+    )
+    
+    accent_color: str = Field(
+        default="#A67C52",
+        description="CSS accent color for decorative elements."
+    )
+    
+    main_title_color: str = Field(
+        default="#3D4E5D",
+        description="CSS color for the main title."
+    )
+    
+    subtitle_color: str = Field(
+        default="#6B7280",
+        description="CSS color for subtitle."
+    )
+    
+    insight_text_color: str = Field(
+        default="#374151",
+        description="CSS color for insight text."
+    )
+    
+    main_title_font_size: str = Field(
+        default="60px",
+        description="CSS font size for the main title."
+    )
+    
+    subtitle_font_size: str = Field(
+        default="26px",
+        description="CSS font size for the subtitle."
+    )
+    
+    insight_font_size: str = Field(
+        default="28px",
+        description="CSS font size for insight text."
+    )
+
+class GenerateBarChartSlide3(BaseModel):
+    """
+    Schema for a bar chart slide designed under the "My Family" theme.
+    This schema is optimized for categorical comparison,
+    highlighting differences between family members,
+    and extracting meaningful household insights.
+    """
+
+    main_title: str = Field(
+        description=(
+            "Primary headline summarizing the core comparison presented "
+            "in the bar chart (10–60 characters). "
+            "The title should communicate an insight about differences or imbalance, "
+            "rather than merely naming the dataset. "
+            "Example: Weekly Household Responsibilities Distribution"
+        )
+    )
+
+    subtitle: str = Field(
+        description=(
+            "Contextual information that clarifies the measurement setting, "
+            "time period, or data source related to family activities. "
+            "This helps the audience understand how the categorical data "
+            "was collected or structured. "
+            "Example: Average Hours Spent on Chores per Week (2026 Survey)"
+        )
+    )
+
+    insight: str = Field(
+        description=(
+            "A short analytical takeaway derived from comparing bar heights. "
+            "This should highlight imbalance, dominance, equality, or surprising gaps "
+            "between family members. "
+            "Instead of repeating numbers, explain what the comparison implies "
+            "about workload distribution or family dynamics."
+        )
+    )
+
+    chart_options: Dict[str, Any] = Field(
+        description="""
+        Controls visual behavior of the bar chart. The agent should interpret
+        category semantics and numeric distribution before selecting settings.
+
+        - x_axis: Label describing categorical dimension
+          (e.g., Family Member, Household Role).
+        - y_axis: Label describing numeric measurement
+          (e.g., Hours per Week, Tasks Completed).
+        - unit: Optional value suffix (e.g., hours, %, tasks).
+        - show_value: Display numeric labels above each bar.
+        - show_legend: Display legend if multiple series exist.
+        - y_axis_min/max: Optional numeric bounds to emphasize variation.
+        - bar_border_radius: Optional rounding style for softer visual theme.
+        - colors: Bar colors aligned with family-themed aesthetic.
+
+        Expected schema:
+        {
+            "x_axis": "string",
+            "y_axis": "string",
+            "unit": "string | null",
+            "show_value": boolean,
+            "show_legend": boolean,
+            "y_axis_min": "number | null",
+            "y_axis_max": "number | null",
+            "bar_border_radius": "number | null",
+            "colors": ["string"]
+        }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+        Categorical comparison data representing measurable differences
+        between family members or defined household roles.
+
+        - categories: Discrete comparison labels
+          (e.g., ['Father', 'Mother', 'Older Sister', 'Younger Brother']).
+        - series: One or more measurable metrics associated with each category.
+          Values must match the length of categories.
+
+        The agent should use this structure to:
+        - Detect which member contributes most or least
+        - Compare relative workload proportions
+        - Identify fairness or imbalance patterns
+
+        Required schema:
+        {
+            "categories": ["string", "string", "..."],
+            "series": [
+                {
+                    "name": "string",
+                    "values": ["number", "number", "..."]
+                }
+            ]
+        }
+        """
+    )
+
+    font_family: str = Field(
+        default="Inter, sans-serif",
+        description=(
+            "Font family applied consistently across the slide "
+            "to maintain a clean and friendly family-themed aesthetic."
+        )
+    )
+
+    accent_color: str = Field(
+        default="#7B8FB3",
+        description=(
+            "Primary accent color used for highlights or decorative elements "
+            "within the 'My Family' visual theme. "
+            "This should harmonize with bar colors and background tones."
+        )
+    )
+
+    main_title_color: str = Field(
+        default="#4A5E7B",
+        description=(
+            "Text color for the main title, chosen to establish visual hierarchy "
+            "while remaining warm and approachable."
+        )
+    )
+
+    subtitle_color: str = Field(
+        default="#8E97A4",
+        description=(
+            "Softer text color for subtitle, providing contextual support "
+            "without overpowering the main headline."
+        )
+    )
+
+    insight_text_color: str = Field(
+        default="#4A5E7B",
+        description=(
+            "Color applied to the analytical insight section, "
+            "optimized for readability and emotional warmth."
+        )
+    )
+
+    main_title_font_size: str = Field(
+        default="65px",
+        description=(
+            "CSS font size for the main title. "
+            "Large enough to clearly communicate the central comparison at a glance."
+        )
+    )
+
+    subtitle_font_size: str = Field(
+        default="28px",
+        description=(
+            "CSS font size for subtitle text, ensuring separation "
+            "from the main title while remaining clearly legible."
+        )
+    )
+
+    insight_font_size: str = Field(
+        default="30px",
+        description=(
+            "CSS font size for the insight commentary. "
+            "Balanced to explain the comparison without visually competing "
+            "with the chart itself."
+        )
+    )
+
+#---SCATTER PLOT CHART SLIDES-------------------------------------------------------------------------    
+
+class GenerateScatterPlotChartSlide1(BaseModel):
+    """Input schema for generate_grouped_bar_chart_slide."""
+    main_title: str = Field(description="Main title of the chart (10–60 characters). Example: Relationship Between Study Time and Exam Score",)
+    subtitle: str = Field(description="Subtitle, unit, or data source. Example: Source: Student Survey 2024",)
+    insight: str = Field(description="Description or main insight of the slide")
+    chart_options: Dict[str, Any] = Field(
+        description="""
+            # Chart options define how the scatter plot is displayed and styled.
+
+            # The x_axis and y_axis fields define axis labels, while unit specifies an optional measurement unit. 
+            show_value and show_legend control the visibility of data labels and the legend. 
+            Axis range fields (x_axis_min, x_axis_max, y_axis_min, y_axis_max) optionally constrain the visible axis domain. 
+            data_label_format defines how values are formatted on data points, and colors specifies the color scheme for the data series.
+
+            # Here is the schema to follow:
+            "chart_options": {
+                "x_axis": "string",
+                "y_axis": "string",
+                "unit": "string | null",
+
+                "show_value": boolean,
+                "show_legend": boolean,
+
+                "x_axis_min": "number | null",
+                "x_axis_max": "number | null",
+                "y_axis_min": "number | null",
+                "y_axis_max": "number | null",
+
+                "data_label_format": "string | null",
+                "colors": ["string"]
+            }
+        """
+    )
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # This scatter plot data describes the relationship between study time (X-axis) and exam score (Y-axis).
+            # Each data point represents a student, where x denotes study time and y denotes the corresponding exam score.
+            # The agent should use this semantic meaning to automatically infer appropriate chart options
+            # (e.g., axis labels, units, ranges, legend visibility) and to generate concise analytical insights
+            # such as correlation trends, patterns, and potential outliers.
+            # Scatter plot data containing series and points. Here is the schema to follow:" \
+            {
+                "series": [
+                    {
+                    "name": "string",
+                    "points": [
+                        { "x": "number", "y": "number" },
+                        { "x": "number", "y": "number" },
+                        { "x": "number", "y": "number" },
+                        { "x": "number", "y": "number" },
+                        { "x": "number", "y": "number" },
+                        { "x": "number", "y": "number" },
+                        { "x": "number", "y": "number" },
+                        { "x": "number", "y": "number" }
+                    ]
+                    }
+                ]
+            }
+            """
+    )
+    font_family: str = Field(default="Inter, sans-serif", description="main font")
+    accent_color: str = Field(default="#A67C52", description="CSS accent color for decorative elements.")
+    main_title_color: str = Field(default="#3D4E5D", description="CSS color for the main title.")
+    subtitle_color: str = Field(default="#6B7280", description="CSS color for subtitle.")
+    insight_text_color: str = Field(default="#374151", description="CSS color for insight text.")
+    main_title_font_size: str = Field(default="60px",description="CSS font size for the main title.")
+    subtitle_font_size: str = Field(default="26px",description="CSS font size for the subtitle.")
+    insight_font_size: str = Field(default="28px", description="CSS font size for insight text.")
+
+class GenerateScatterPlotChartSlide2(BaseModel):
+    """
+    Schema for a Travel-themed scatter plot slide.
+    Designed to visualize relationships between quantitative variables in a travel context,
+    while enabling the agent to automatically infer chart configuration and analytical insights.
+    """
+
+    main_title: str = Field(
+        description=(
+            "Main title of the slide, summarizing the core message of the scatter plot "
+            "within a travel context (10–60 characters). "
+            "Example: Relationship Between Travel Distance and Spending"
+        )
+    )
+
+    subtitle: Optional[str] = Field(
+        description=(
+            "Subtitle or supplementary information such as data source, survey scope, "
+            "or collection period. "
+            "Example: Source: Tourist Behavior Survey 2024"
+        )
+    )
+
+    insight: Optional[str] = Field(
+        description=(
+            "A concise analytical statement derived from the chart, highlighting key trends, "
+            "correlations, or notable outliers in travel behavior."
+        )
+    )
+
+    chart_options: Optional[Dict[str, Any]] = Field(
+        description="""
+            # Chart options define the visual presentation and styling of the scatter plot
+            # in a Travel context.
+
+            # The agent should infer these options from the semantic meaning of the data,
+            # rather than copying values from examples.
+
+            # - x_axis, y_axis: Axis labels that clearly describe the travel-related variables
+            #   being visualized (e.g., Travel Distance, Travel Spending).
+            # - unit: Optional measurement unit (km, USD, nights, etc.), used only when
+            #   the data semantics clearly indicate one.
+            # - show_value: Controls whether individual data point values are displayed.
+            # - show_legend: Enabled when multiple series exist or when group differentiation
+            #   adds interpretive value.
+            # - x_axis_min/max, y_axis_min/max: Optional axis boundaries to emphasize
+            #   a meaningful data range.
+            # - data_label_format: Formatting rule for values (integers, decimals, currency).
+            # - colors: Color palette for data series, aligned with the Travel theme.
+
+            # Expected schema:
+            "chart_options": {
+                "x_axis": "string",
+                "y_axis": "string",
+                "unit": "string | null",
+
+                "show_value": boolean,
+                "show_legend": boolean,
+
+                "x_axis_min": "number | null",
+                "x_axis_max": "number | null",
+                "y_axis_min": "number | null",
+                "y_axis_max": "number | null",
+
+                "data_label_format": "string | null",
+                "colors": ["string"]
+            }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Scatter plot data describing the relationship between travel distance (X-axis)
+            # and total travel spending (Y-axis).
+
+            # Each data point represents a single trip:
+            # - x: total distance traveled (e.g., kilometers)
+            # - y: total spending during the trip (e.g., USD)
+
+            # The agent should use this semantic context to:
+            # - Infer appropriate axis labels and units
+            # - Identify trends (e.g., whether spending increases with distance)
+            # - Detect behavioral clusters or potential outlier trips
+
+            # The data structure consists of one or more series, where each series may
+            # represent a traveler segment (e.g., domestic vs. international travelers).
+
+            # Required schema:
+            {
+                "series": [
+                    {
+                        "name": "string",
+                        "points": [
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" }
+                        ]
+                    }
+                ]
+            }
+        """
+    )
+
+    font_family: str = Field(
+        default="Inter, sans-serif",
+        description="Primary font used across the slide, optimized for readability and a modern look."
+    )
+
+    accent_color: str = Field(
+        default="#008080",
+        description="Primary accent color (CSS value) used for decorative and emphasis elements."
+    )
+
+    main_title_color: str = Field(
+        default="#005F5F",
+        description="Text color for the main title, designed to stand out against the slide background."
+    )
+
+    subtitle_color: str = Field(
+        default="#556B2F",
+        description="Text color for the subtitle or data source information."
+    )
+
+    insight_text_color: str = Field(
+        default="#2C3E50",
+        description="Text color for the insight section, ensuring clarity and neutral tone."
+    )
+
+    main_title_font_size: str = Field(
+        default="72px",
+        description="CSS font size for the main title, providing strong visual emphasis."
+    )
+
+    subtitle_font_size: str = Field(
+        default="32px",
+        description="CSS font size for the subtitle."
+    )
+
+    insight_font_size: str = Field(
+        default="28px",
+        description="CSS font size for the analytical insight text."
+    )
+
+class GenerateScatterPlotChartSlide3(BaseModel):
+    """
+    Schema for an Education-focused scatter plot slide.
+    This schema is designed to visualize the relationship between quantitative learning variables,
+    enabling the agent to infer chart configuration, axis semantics, and meaningful insights
+    without relying on hardcoded examples.
+    """
+
+    main_title: str = Field(
+        description=(
+            "Primary title of the slide that concisely communicates the central message "
+            "of the scatter plot in an educational context (10–60 characters). "
+            "The title should clearly reflect the relationship being analyzed. "
+            "Example theme: Study Effort vs Academic Performance"
+        )
+    )
+
+    subtitle: Optional[str] = Field(
+        description=(
+            "Supporting subtitle providing contextual details such as data origin, "
+            "student group, academic level, or time frame. "
+            "This text helps the viewer interpret the scope of the data. "
+            "Example: Data collected from high school students, Semester 1"
+        )
+    )
+
+    insight: Optional[str] = Field(
+        description=(
+            "A brief analytical takeaway inferred from the scatter plot. "
+            "It should summarize observable patterns such as correlations, clusters, "
+            "or anomalies in learning behavior and outcomes."
+        )
+    )
+
+    chart_options: Optional[Dict[str, Any]] = Field(
+        description="""
+            # Chart options define how the scatter plot should be presented visually
+            # within an education analytics context.
+
+            # The agent is expected to infer appropriate settings from the meaning of the data,
+            # not by copying from predefined templates.
+
+            # - x_axis, y_axis:
+            #   Labels describing the educational variables being compared
+            #   (e.g., Weekly Study Hours, Exam Score).
+            #
+            # - unit:
+            #   Optional unit of measurement (hours, points, %, etc.),
+            #   included only when it adds semantic clarity.
+            #
+            # - show_value:
+            #   Determines whether numeric values are displayed next to data points.
+            #
+            # - show_legend:
+            #   Enabled when multiple student groups or categories are present
+            #   (e.g., different grade levels or study methods).
+            #
+            # - x_axis_min/max, y_axis_min/max:
+            #   Optional axis bounds to focus attention on a meaningful academic range.
+            #
+            # - data_label_format:
+            #   Formatting rule for numbers (integer scores, percentages, decimals).
+            #
+            # - colors:
+            #   Color palette for series, chosen to maintain clarity and a professional,
+            #   education-oriented aesthetic.
+
+            # Expected schema:
+            "chart_options": {
+                "x_axis": "string",
+                "y_axis": "string",
+                "unit": "string | null",
+
+                "show_value": boolean,
+                "show_legend": boolean,
+
+                "x_axis_min": "number | null",
+                "x_axis_max": "number | null",
+                "y_axis_min": "number | null",
+                "y_axis_max": "number | null",
+
+                "data_label_format": "string | null",
+                "colors": ["string"]
+            }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Scatter plot data representing the relationship between learning effort
+            # and academic results.
+
+            # Each point corresponds to an individual student:
+            # - x: amount of time spent studying independently (e.g., hours per week)
+            # - y: academic outcome such as test score or final grade
+
+            # The agent should leverage this semantic meaning to:
+            # - Automatically determine suitable axis labels and units
+            # - Detect correlations (e.g., whether increased study time aligns with higher scores)
+            # - Identify clusters of similar learning behaviors
+            # - Spot potential outliers, such as high effort with low performance
+
+            # Data may include one or multiple series, where each series can represent
+            # a distinct student group (e.g., different classes or learning strategies).
+
+            # Required schema:
+            {
+                "series": [
+                    {
+                        "name": "string",
+                        "points": [
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" }
+                        ]
+                    }
+                ]
+            }
+        """
+    )
+
+    font_family: str = Field(
+        default="Inter, sans-serif",
+        description=(
+            "Base font family applied across the slide, chosen to ensure readability "
+            "and a clean, academic-friendly appearance."
+        )
+    )
+
+    accent_color: str = Field(
+        default="#EE6C4D",
+        description=(
+            "Accent color used for highlights, markers, or emphasis elements in the chart. "
+            "The color should contrast well with the background while remaining visually balanced."
+        )
+    )
+
+    main_title_color: str = Field(
+        default="#293241",
+        description=(
+            "Text color for the main title, intended to establish visual hierarchy "
+            "and draw immediate attention."
+        )
+    )
+
+    subtitle_color: str = Field(
+        default="#546E7A",
+        description=(
+            "Color applied to the subtitle text, typically more subdued than the title "
+            "to maintain a clear typographic hierarchy."
+        )
+    )
+
+    insight_text_color: str = Field(
+        default="#374151",
+        description=(
+            "Text color for the insight section, optimized for comfortable reading "
+            "and neutral analytical tone."
+        )
+    )
+
+    main_title_font_size: str = Field(
+        default="64px",
+        description=(
+            "CSS font size for the main title, providing strong visual prominence "
+            "without overwhelming the slide layout."
+        )
+    )
+
+    subtitle_font_size: str = Field(
+        default="28px",
+        description=(
+            "CSS font size for the subtitle text, ensuring clarity while supporting the title."
+        )
+    )
+
+    insight_font_size: str = Field(
+        default="30px",
+        description=(
+            "CSS font size for the insight text, balanced to remain readable "
+            "while not competing with the main title."
+        )
+    )
+
+class GenerateScatterPlotChartSlide4(BaseModel):
+    """
+    Schema for an Education-themed scatter plot slide.
+    Designed to illustrate relationships between learning behaviors and performance outcomes,
+    """
+
+    main_title: str = Field(
+        description=(
+            "Main headline of the slide, capturing the central relationship shown in the scatter plot "
+            "within an education or learning context (10–60 characters). "
+            "The title should be insight-oriented rather than purely descriptive. "
+            "Example: Study Time vs Skill Assessment Score"
+        )
+    )
+
+    subtitle: Optional[str] = Field(
+        description=(
+            "Secondary text providing contextual details such as data source, learner group, "
+            "platform name, or evaluation period. "
+            "Example: Data from Online Learning Platform – 2024"
+        )
+    )
+
+    insight: Optional[str] = Field(
+        description=(
+            "A short analytical takeaway derived from the data, highlighting correlations, "
+            "performance patterns, clusters of learners, or exceptional cases. "
+            "The insight should help educators or analysts quickly grasp the key message."
+        )
+    )
+
+    chart_options: Optional[Dict[str, Any]] = Field(
+        description="""
+            # Chart options control how the scatter plot is interpreted and visually presented
+            # in an education analytics context.
+
+            # The agent is expected to infer appropriate settings based on data semantics,
+            # not blindly reuse predefined values.
+
+            # - x_axis, y_axis: Labels describing learning-related quantitative variables
+            #   (e.g., Weekly Study Hours, Skill Test Score).
+            # - unit: Optional unit of measurement (hours, points, percentage),
+            #   included only when clearly implied by the data.
+            # - show_value: Whether numeric values are displayed next to individual learners.
+            # - show_legend: Useful when multiple learner groups or cohorts are present.
+            # - x_axis_min/max, y_axis_min/max: Optional bounds to focus on a meaningful range
+            #   and reduce visual noise.
+            # - data_label_format: Formatting rules (integer scores, decimal hours, percentages).
+            # - colors: Color palette for series, aligned with an educational or academic tone.
+
+            # Expected schema:
+            "chart_options": {
+                "x_axis": "string",
+                "y_axis": "string",
+                "unit": "string | null",
+
+                "show_value": boolean,
+                "show_legend": boolean,
+
+                "x_axis_min": "number | null",
+                "x_axis_max": "number | null",
+                "y_axis_min": "number | null",
+                "y_axis_max": "number | null",
+
+                "data_label_format": "string | null",
+                "colors": ["string"]
+            }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Scatter plot data representing the relationship between learning effort
+            # and learning outcomes.
+
+            # Each point corresponds to one learner:
+            # - x: amount of learning effort (e.g., weekly study hours)
+            # - y: performance outcome (e.g., skill assessment score)
+
+            # The agent should use this context to:
+            # - Infer suitable axis labels and units
+            # - Detect correlations between effort and performance
+            # - Identify learner clusters (e.g., high effort–high score)
+            # - Highlight potential outliers (e.g., low effort–high score learners)
+
+            # The structure supports multiple series, where each series may represent
+            # a learner segment such as beginner vs advanced or self-paced vs instructor-led.
+
+            # Required schema:
+            {
+                "series": [
+                    {
+                        "name": "string",
+                        "points": [
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" },
+                            { "x": "number", "y": "number" }
+                        ]
+                    }
+                ]
+            }
+        """
+    )
+
+    font_family: str = Field(
+        default="Inter, sans-serif",
+        description=(
+            "Typeface applied across the slide to ensure clarity, readability, "
+            "and a modern educational presentation style."
+        )
+    )
+
+    accent_color: str = Field(
+        default="#FFB347",
+        description=(
+            "Primary highlight color (CSS format) used for emphasis elements, "
+            "such as key data points or decorative accents."
+        )
+    )
+
+    main_title_color: str = Field(
+        default="#333333",
+        description=(
+            "Text color for the main title, chosen to provide strong contrast "
+            "and immediate visual hierarchy."
+        )
+    )
+
+    subtitle_color: str = Field(
+        default="#666666",
+        description=(
+            "Text color for subtitle or contextual information, "
+            "kept visually softer than the main title."
+        )
+    )
+
+    insight_text_color: str = Field(
+        default="#444444",
+        description=(
+            "Text color for the insight section, ensuring neutral tone "
+            "and comfortable reading for analytical content."
+        )
+    )
+
+    main_title_font_size: str = Field(
+        default="64px",
+        description=(
+            "CSS font size for the main title, designed to dominate the slide "
+            "and clearly communicate the core message."
+        )
+    )
+
+    subtitle_font_size: str = Field(
+        default="28px",
+        description=(
+            "CSS font size for the subtitle, maintaining clear separation "
+            "from the main title while remaining readable."
+        )
+    )
+
+    insight_font_size: str = Field(
+        default="30px",
+        description=(
+            "CSS font size for the analytical insight text, balanced for clarity "
+            "without competing with the main title."
+        )
+    )
+
+#---LINE CHART SLIDES-------------------------------------------------------------------------    
+
+class GenerateLineChartSlide1(BaseModel):
+    """
+    Schema for an Environment & Sustainability–themed line chart slide.
+    """
+    main_title: str = Field(
+        description=(
+            "Primary headline of the slide, summarizing the key trend or evolution "
+            "depicted by the line chart over time (10–60 characters). "
+            "The title should emphasize insight or direction, not just the metric name. "
+            "Example: Growth of Renewable Energy Usage Over Time"
+        )
+    )
+
+    subtitle: Optional[str] = Field(
+        description=(
+            "Supporting context for the chart, such as geographic scope, data source, "
+            "measurement period, or organization name. "
+            "This text helps anchor the time-series data in a real-world setting. "
+            "Example: Global Energy Report – 2015 to 2024"
+        )
+    )
+
+    insight: Optional[str] = Field(
+        description=(
+            "A concise analytical takeaway highlighting notable trends in the data, "
+            "such as steady growth, sudden acceleration, plateaus, or fluctuations. "
+            "The insight should help decision-makers quickly grasp what changed and why it matters."
+        )
+    )
+
+    chart_options: Dict[str, Any] = Field(
+        description="""
+            # Configuration controlling how the line chart is interpreted and rendered.
+
+            # The agent should derive suitable options based on the time-series semantics,
+            # rather than copying values mechanically.
+
+            # - x_axis: Label describing the time dimension
+            #   (e.g., Year, Quarter, Month).
+            # - y_axis: Label describing the measured variable
+            #   (e.g., Energy Consumption, Percentage of Renewables).
+            # - unit: Optional measurement unit appended to values
+            #   (e.g., %, TWh, GW), used only when clearly implied.
+            # - show_value: Whether numeric values appear at each data point.
+            # - show_legend: Whether series names are displayed, especially useful
+            #   when comparing multiple energy sources or regions.
+            # - y_axis_min/max: Optional bounds to focus attention on a meaningful range
+            #   and avoid misleading scale effects.
+            # - colors: List of line colors, preferably aligned with an environmental theme.
+
+            # Expected schema:
+            {
+                "x_axis": "string",
+                "y_axis": "string",
+                "unit": "string | null",
+                "show_value": boolean,
+                "show_legend": boolean,
+                "y_axis_min": "number | null",
+                "y_axis_max": "number | null",
+                "data_label_format": "string | null",
+                "colors": ["string"]
+            }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Time-series data illustrating how sustainability metrics
+            # change across consecutive time points.
+
+            # - time_points: Ordered labels representing time intervals
+            #   (e.g., ['2019', '2020', '2021', '2022', '2023']).
+            # - series: One or more lines, each representing a distinct but comparable metric
+            #   such as solar energy, wind energy, or total renewable share.
+
+            # The agent should use this structure to:
+            # - Detect upward or downward trends
+            # - Compare growth rates between series
+            # - Identify inflection points or periods of rapid change
+
+            # Required schema:
+            {
+                "time_points": ["string", "string", "string", "..."],
+                "series": [
+                    {
+                        "name": "string",
+                        "values": ["number", "number", "number", "..."]
+                    }
+                ]
+            }
+        """
+    )
+
+    font_family: str = Field(
+        default="Arial, sans-serif",
+        description=(
+            "Font family applied consistently across the slide to ensure readability "
+            "and a clean, professional presentation suitable for reports or dashboards."
+        )
+    )
+
+    accent_color: str = Field(
+        default="#FF8C00",
+        description=(
+            "Highlight color used for key UI elements, markers, or emphasis details. "
+            "This color should contrast well with the background without overpowering the data."
+        )
+    )
+
+    main_title_color: str = Field(
+        default="#333333",
+        description=(
+            "Text color for the main title, selected to establish strong visual hierarchy "
+            "and immediately draw attention to the chart’s core message."
+        )
+    )
+
+    subtitle_color: str = Field(
+        default="#666666",
+        description=(
+            "Color for subtitle text, intentionally softer than the main title "
+            "to support context without competing for attention."
+        )
+    )
+
+    insight_text_color: str = Field(
+        default="#444444",
+        description=(
+            "Color applied to the insight section, optimized for comfortable reading "
+            "of analytical commentary beneath the chart."
+        )
+    )
+
+    main_title_font_size: str = Field(
+        default="65px",
+        description=(
+            "CSS font size for the main title, designed to dominate the slide "
+            "and clearly communicate the overall trend at a glance."
+        )
+    )
+
+    subtitle_font_size: str = Field(
+        default="30px",
+        description=(
+            "CSS font size for subtitle text, ensuring a clear distinction "
+            "from the main title while remaining legible."
+        )
+    )
+
+    insight_font_size: str = Field(
+        default="28px",
+        description=(
+            "CSS font size for the insight text, balanced to convey analysis clearly "
+            "without visually overpowering the chart itself."
+        )
+    )
+
+class GenerateLineChartSlide2(BaseModel):
+    """
+    Schema for a line chart slide illustrating how a metric evolves over time.
+    This schema is optimized for trend detection, comparison across series,
+    and analytical storytelling.
+    """
+    main_title: str = Field(
+        description=(
+            "Primary headline of the slide describing the overall evolution or trend "
+            "displayed in the line chart (10–60 characters). "
+            "The title should communicate insight or direction, not just restate the metric name. "
+            "Example: Improvement of Model Accuracy During Training"
+        ),
+    )
+    subtitle: Optional[str] = Field(
+        description=(
+            "Contextual information that frames the chart, such as model type, dataset, "
+            "training duration, or experimental setting. "
+            "This helps the audience understand where and how the time-series data was produced. "
+            "Example: CNN trained on Image Classification Dataset (50 Epochs)"
+        )
+    )
+    insight: Optional[str] = Field(
+        description=(
+            "A short analytical takeaway highlighting key patterns in the data, "
+            "such as convergence speed, stabilization, divergence between series, "
+            "or signs of overfitting. "
+            "This field should explain why the trend matters rather than repeating values."
+        )
+    )
+    chart_options: Dict[str, Any] = Field(
+        description="""
+        Controls line chart rendering. Agent should infer settings from data semantics.
+        - x_axis: Time dimension label (e.g., Epoch, Step)
+        - y_axis: Metric label (e.g., Accuracy, Loss)
+        - unit: Optional suffix (e.g., %, none for loss)
+        - show_value: Display numeric labels at points
+        - show_legend: Show series names when multiple lines exist
+        - y_axis_min/max: Optional bounds to focus on meaningful range
+        - data_label_format: Point label formatting
+        - colors: Line colors for series distinction
+
+        Expected schema:
+        {
+            "x_axis": "string",
+            "y_axis": "string",
+            "unit": "string | null",
+            "show_value": boolean,
+            "show_legend": boolean,
+            "y_axis_min": "number | null",
+            "y_axis_max": "number | null",
+            "data_label_format": "string | null",
+            "colors": ["string"]
+        }
+        """
+    )
+    data_input: Dict[str, Any] = Field(
+        description="""
+        Time-series data representing how one or more metrics change
+        across sequential training steps or time points.
+
+        - time_points: Ordered labels indicating progression
+          (e.g., ['Epoch 1', 'Epoch 5', 'Epoch 10', ...]).
+        - series: One or more comparable sequences, such as
+          training loss vs validation loss, or train accuracy vs val accuracy.
+
+        The agent should use this structure to:
+        - Identify convergence or divergence patterns
+        - Compare stability between series
+        - Detect inflection points or diminishing returns
+
+        Required schema:
+        {
+            "time_points": ["string", "string", "..."],
+            "series": [
+                {
+                    "name": "string",
+                    "values": ["number", "number", "..."]
+                }
+            ]
+        }
+        """
+    )
+    font_family: str = Field(
+        default="Inter, sans-serif", 
+        description=(
+            "Font family applied consistently across the slide to ensure "
+            "clarity and readability in technical or analytical presentations."
+        )
+    )
+    accent_color: str = Field(
+        default="#4F46E5",
+        description=(
+            "Primary accent color used for highlights, markers, or emphasis elements. "
+            "This color should complement the line colors while maintaining visual balance."
+        )
+    )
+    main_title_color: str = Field(
+        default="#1F2937",
+        description=(
+            "Text color for the main title, chosen to create strong visual hierarchy "
+            "and immediately communicate the slide’s key message."
+        )
+    )
+    subtitle_color: str = Field(
+        default="#4B5563",
+        description=(
+            "Color applied to subtitle text, intentionally softer than the main title "
+            "to provide context without competing for attention."
+        )
+    )
+    insight_text_color: str = Field(
+        default="#374151",
+        description=(
+            "Color used for the insight section, optimized for comfortable reading "
+            "of analytical commentary beneath the chart."
+        )
+    )
+    main_title_font_size: str = Field(
+        default="64px",
+        description=(
+            "CSS font size for the main title, designed to dominate the slide "
+            "and convey the overall trend at a glance."
+        )
+    )
+    subtitle_font_size: str = Field(
+        default="30px",
+        description=(
+            "CSS font size for subtitle text, ensuring clear separation "
+            "from the main title while remaining legible."
+        )
+    )
+
+    insight_font_size: str = Field(
+        default="28px",
+        description=(
+            "CSS font size for the insight text, balanced to communicate analysis "
+            "clearly without overpowering the chart itself."
+        )
+    )
+
+
+class GenerateLineChartSlide3(BaseModel):
+    """
+    Schema for a line chart slide visualizing multi-series performance
+    over sequential time intervals. This structure supports temporal comparison,
+    growth analysis, and competitive trend evaluation.
+
+    Example theme: Monthly Electric Vehicle Sales by Brand (2026)
+    """
+
+    main_title: str = Field(
+        description=(
+            "Main headline communicating the overall direction or competitive "
+            "movement shown in the chart (10–60 characters). "
+            "The title should reflect a meaningful observation rather than "
+            "simply naming the metric. "
+            "Example: EV Sales Momentum Accelerates Across Major Brands"
+        ),
+    )
+
+    subtitle: Optional[str] = Field(
+        description=(
+            "Supporting context that clarifies the scope of the dataset, "
+            "such as geographic market, reporting period, or data source. "
+            "This helps viewers interpret the time-series correctly. "
+            "Example: Southeast Asia Market – January to December 2026"
+        )
+    )
+
+    insight: str = Field(
+        description=(
+            "Concise analytical commentary summarizing the most important "
+            "patterns observed in the chart. "
+            "This may highlight acceleration, seasonal peaks, widening gaps "
+            "between brands, or emerging leaders. "
+            "The explanation should focus on interpretation and implications, "
+            "not just restating numeric values."
+        )
+    )
+
+    chart_options: Dict[str, Any] = Field(
+        description="""
+        Configuration controlling how the line chart is rendered.
+        The system should determine suitable settings based on the data meaning.
+
+        - x_axis: Label describing the temporal dimension 
+                  (e.g., Month, Quarter, Reporting Period)
+        - y_axis: Metric being measured 
+                  (e.g., Units Sold, Revenue, Market Share)
+        - unit: Optional value suffix (e.g., units, %, $)
+        - show_value: Whether to display numeric labels on each point
+        - show_legend: Whether to show series names for comparison
+        - y_axis_min: Optional lower bound to control visual scaling
+        - y_axis_max: Optional upper bound to limit chart range
+        - data_label_format: Formatting rule for numbers
+                             (e.g., '{value}K', '{value}%')
+        - colors: List of color codes used to differentiate series
+
+        Expected structure:
+        {
+            "x_axis": "string",
+            "y_axis": "string",
+            "unit": "string | null",
+            "show_value": boolean,
+            "show_legend": boolean,
+            "y_axis_min": number | null,
+            "y_axis_max": number | null,
+            "data_label_format": "string | null",
+            "colors": ["string"]
+        }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+        Sequential time-based data used to build the multi-line chart.
+
+        - time_points: Ordered labels representing time progression
+          (e.g., ['Jan', 'Feb', 'Mar', ..., 'Dec']).
+
+        - series: A list of comparable entities, each containing:
+            • name: Series identifier (e.g., Tesla, BYD, VinFast)
+            • values: Numeric measurements corresponding to each time point.
+
+        This structure enables:
+        - Cross-brand growth comparison
+        - Identification of peak sales months
+        - Detection of trend reversals
+        - Competitive performance tracking
+
+        Required format:
+        {
+            "time_points": ["string", "string", "..."],
+            "series": [
+                {
+                    "name": "string",
+                    "values": ["number", "number", "..."]
+                }
+            ]
+        }
+        """
+    )
+
+    font_family: str = Field(
+        default="Inter, sans-serif",
+        description=(
+            "Font family applied consistently across titles, labels, "
+            "and insight text to maintain stylistic coherence "
+            "in a modern technical presentation."
+        )
+    )
+
+    accent_color: str = Field(
+        default="#00F2FF",
+        description=(
+            "Primary highlight color used for decorative elements, "
+            "emphasis accents, or active markers. "
+            "It should align with the dark-tech theme of the slide."
+        )
+    )
+
+    main_title_color: str = Field(
+        default="#FFFFFF",
+        description=(
+            "Text color of the main title. "
+            "Designed to provide strong contrast against a dark background "
+            "and immediately draw viewer attention."
+        )
+    )
+
+    subtitle_color: str = Field(
+        default="#94A3B8",
+        description=(
+            "Secondary text color used for contextual information. "
+            "It should be visually softer than the main title "
+            "while remaining clearly legible."
+        )
+    )
+
+    insight_text_color: str = Field(
+        default="#E2E8F0",
+        description=(
+            "Color applied to the analytical insight section. "
+            "Optimized for readability in longer explanatory text "
+            "under dark presentation themes."
+        )
+    )
+
+    main_title_font_size: str = Field(
+        default="64px",
+        description=(
+            "Font size of the primary headline. "
+            "Large enough to dominate the slide hierarchy "
+            "and communicate the chart’s key message instantly."
+        )
+    )
+
+    subtitle_font_size: str = Field(
+        default="28px",
+        description=(
+            "Font size of the subtitle or context line. "
+            "Smaller than the main title but clearly visible "
+            "for supporting information."
+        )
+    )
+
+    insight_font_size: str = Field(
+        default="30px",
+        description=(
+            "Font size of the insight paragraph. "
+            "Balanced to ensure analytical commentary is easy to read "
+            "without overpowering the visualization."
+        )
+    )
+
+
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
     StructuredTool.from_function(
@@ -2263,14 +3627,188 @@ THANK_YOU_TOOLS = [
     )
 ]
 
-# All available slide generation tools with complete parameter schemas
-ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS
+GRAPH_TOOLS = [
+#---BAR CHART SLIDES-------------------------------------------------------------------------    
+    
+    StructuredTool.from_function(
+        func=generate_bar_chart_slide_1,
+        name="generate_bar_chart_slide_1",
+        description=(
+            "Generates a professional Bar Chart slide tailored for Logistic/Corporate presentations.\n"
+            "Features a Navy Blue and Orange theme derived from the 'Logistic Company' style.\n"
+            
+            "Layout:\n"
+            "- Upper section: Title (Orange/Navy) and Subtitle.\n"
+            "- Left section: Insight text box with accent border and Legend.\n"
+            "- Right section: Large SVG Bar Chart within a card-style container.\n"
+            "Best for comparing categories (e.g., Regions) across series (e.g., Years, Service Types)."
+        ),
+        args_schema=GenerateBarChartSlide1
+    ),
+    StructuredTool.from_function(
+        func=generate_bar_chart_slide_2,
+        name="generate_bar_chart_slide_2",
+        description=(
+            "Generates a clean and modern Bar Chart slide with a refined, presentation-ready aesthetic.\n"
+            "Visual style emphasizes clarity and balance, using soft accent colors and readable typography.\n"
+            
+            "Layout:\n"
+            "- Upper section: Prominent main title with optional subtitle for context or units.\n"
+            "- Left section: Insight section highlighting key observations, accompanied by a clear legend.\n"
+            "- Right section: Structured SVG Grouped Bar Chart displayed inside a neat container.\n"
+            "Best suited for comparing multiple data series across shared categories in reports or business reviews."
+        ),
+        args_schema=GenerateBarChartSlide2
+    ),
+    
+    StructuredTool.from_function(
+        func=generate_bar_chart_slide_3,
+        name="generate_bar_chart_slide_3",
+        description=(
+            "Generates a warm and family-themed Bar Chart slide designed for household comparisons.\n"
+            "Visual style focuses on emotional clarity and friendly balance, using soft tones and approachable typography.\n"
+            "The slide is crafted to highlight differences between family members while maintaining a cohesive, home-oriented aesthetic.\n"
+            
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: reserved for the main title and subtitle of the slide.\n"
+            "- Left section: reserved for explanatory text, including insights, comments, or interpretation of the categorical comparison.\n"
+            "- Right section: reserved for displaying the bar chart along with its visual configuration options.\n\n"
+            "The layout is designed to present categorical comparisons clearly, combining structured analysis with visual emphasis."
+        ),
+        args_schema=GenerateBarChartSlide3
+    ),
 
-TOOLS_DICT = {'INTRO_TOOLS': INTRO_TOOLS,
-               'TRANSITION_TOOLS': TRANSITION_TOOLS,
-               'CONTENT_TOOLS': CONTENT_TOOLS,
-               'TEAM_TOOLS': TEAM_TOOLS,
-               'THANK_YOU_TOOLS': THANK_YOU_TOOLS}
+#---SCATTER PLOT CHART SLIDES-------------------------------------------------------------------------    
+
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_1,
+        name="generate_scatter_plot_chart_slide1",
+        description=(
+            "Generates a clean and modern Scatter Plot slide with a professional, presentation-ready layout.\n"
+            "The visual style emphasizes analytical clarity, highlighting relationships and correlations between variables "
+            "through well-structured data points and balanced typography.\n"
+
+            "The slide layout is divided into two main sections:\n"
+            "- Upper section: reserved for main title and subtitle for the slide"
+            "- Left section: reserved for chart description, which includes textual content such as comments, insights, or interpretation.\n"
+            "- Right section: reserved for displaying a scatter plot chart and chart options.\n\n"
+            "The layout is designed to present visual data alongside supporting explanatory text in a clear and balanced manner."
+        ),
+        args_schema=GenerateScatterPlotChartSlide1
+    ),
+
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_2,
+        name="generate_scatter_plot_chart_slide_2",
+        description=(
+            "Generates a travel-themed Scatter Plot slide with a polished, presentation-ready design.\n"
+            "The visual style blends analytical clarity with a subtle travel-inspired aesthetic, "
+            "using refined accent colors, soft shadows, and clean typography to enhance interpretability.\n"
+
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: Reserved for the main title and subtitle, featuring a strong accent border.\n"
+            "- Left section: Reserved for the analytical insight box and data legend, styled with a travel-themed shadow effect.\n"
+            "- Right section: Reserved for a large SVG scatter plot chart inside a soft-background container.\n"
+            "The layout is designed to highlight correlations between variables with a clean, hand-crafted aesthetic."
+        ),
+        args_schema=GenerateScatterPlotChartSlide2
+    ),
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_3,
+        name="generate_scatter_plot_chart_slide_3",
+        description=(
+            "Generates an education-focused Scatter Plot slide with a structured, presentation-ready academic aesthetic.\n"
+            "The visual design prioritizes analytical clarity, using balanced typography, subtle accent highlights, "
+            "and clean spacing to support data-driven interpretation in a learning context.\n"
+
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: reserved for main title and subtitle for the slide.\n"
+            "- Left section: reserved for chart description, which includes textual content such as legend, comments, insights, or interpretation.\n"
+        "- Right section: reserved for displaying a scatter plot chart and chart options.\n\n"
+        "The layout is designed to present visual data alongside supporting explanatory text in a clear and balanced manner."
+    ),
+    args_schema=GenerateScatterPlotChartSlide3
+    ),
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_4,
+        name="generate_scatter_plot_chart_slide_4",
+        description=(
+            "Generates an education-themed Scatter Plot slide with a clean, insight-driven presentation style.\n"
+            "The visual approach emphasizes analytical clarity, combining structured layout, academic-friendly typography, "
+            "and subtle highlight accents to support data interpretation.\n"
+
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: reserved for main title and subtitle for the slide.\n"
+            "- Left section: reserved for chart description, which includes textual content such as legend and insights.\n"
+            "- Right section: reserved for displaying the SVG scatter plot chart.\n\n"
+            "The layout is designed to present visual data trends alongside clear interpretation."
+        ),
+        args_schema=GenerateScatterPlotChartSlide4  
+    ),
+
+#---LINE CHART SLIDES-------------------------------------------------------------------------    
+
+    StructuredTool.from_function(
+        func=generate_line_chart_slide_1,
+        name="generate_line_chart_slide_1",
+        description=(
+            "Generates an Environment & Sustainability–themed Line Chart slide with a vibrant, presentation-ready design.\n"
+            "The visual style combines analytical clarity with a playful stamp-inspired aesthetic, "
+            "using a bright green backdrop, bold typography, and clean line visuals to communicate time-based trends effectively.\n"
+
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: contains a large, playful main title and subtitle inside a stamp-styled white container.\n"
+            "- Left section: contains a dashed insight card for textual analysis and a list of stylized legends.\n"
+            "- Right section: features a framed line chart area with a clean SVG visualization of trends.\n\n"
+            "The layout uses a bright green background and a white 'stamp' aesthetic to present data in a fun, engaging way."
+        ),
+        args_schema=GenerateLineChartSlide1
+    ),
+    StructuredTool.from_function(
+        func=generate_line_chart_slide_2,
+        name="generate_line_chart_slide_2",
+        description=(
+            "Generates a modern, data-driven Line Chart slide with a refined Global Economy aesthetic.\n"
+            "The visual style emphasizes structured analytical storytelling, combining clean typography, "
+            "geometric decorative elements, and balanced composition to communicate metric evolution clearly over time.\n"
+
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: reserved for main title and subtitle positioned on the right side.\n"
+            "- Left section: reserved for the line chart display with decorative circular shape and dot grid pattern.\n"
+            "- Right section: reserved for chart description, including textual content such as insights and interpretation.\n\n"
+            "The layout is designed to present visual data trends alongside supporting explanatory text in a modern Global Economy style."
+        ),
+        args_schema=GenerateLineChartSlide2
+    ),
+    StructuredTool.from_function(
+    func=generate_line_chart_slide_3,
+        name="generate_line_chart_slide_3",
+        description=(
+            "Generates a premium dark-mode Line Chart slide with a futuristic, high-contrast aesthetic.\n"
+            "The visual style blends glowing accents, sharp typography, and grid-based structures "
+            "to deliver a bold technical presentation of multi-series performance over time.\n"
+
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: contains a futuristic high-contrast title with accent colors and a descriptive subtitle.\n"
+            "- Left section (Large): displays a glowing SVG line chart with grid patterns and tech-styled axes.\n"
+            "- Right section (Sidebar): contains a frosted-glass insight box and dynamic legend components.\n"
+            "The layout is designed to present technical data trends with a premium dark-mode aesthetic."
+        ),
+        args_schema=GenerateLineChartSlide3
+    )
+]
+
+# All available slide generation tools with complete parameter schemas
+ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + GRAPH_TOOLS
+
+TOOLS_DICT = {
+    'INTRO_TOOLS': INTRO_TOOLS,
+    'TRANSITION_TOOLS': TRANSITION_TOOLS,
+    'CONTENT_TOOLS': CONTENT_TOOLS,
+    'TEAM_TOOLS': TEAM_TOOLS,
+    'THANK_YOU_TOOLS': THANK_YOU_TOOLS,
+    'GRAPH_TOOLS': GRAPH_TOOLS
+}
 
 # Tool utilities
 TOOL_MAP = {tool.name: tool for tool in ALL_TOOLS}
