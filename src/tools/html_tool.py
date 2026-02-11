@@ -12670,318 +12670,318 @@ def generate_corporate_grid_slide(
 
 
 
-def generate_business_overview_slide(
-    main_title="BUSINESS OVERVIEW",
-    sections=[
-        {
-            "icon": "chart-analysis",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-            "icon": "innovation",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-            "icon": "growth",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        }
-    ],
-    left_bg_color="#1a4b8c",
-    right_bg_color="#f8f9fa",
-    title_color="#FFFFFF",
-    icon_bg_color="#2a3f6b",
-    icon_color="#FFFFFF",
-    content_bg_color="#FFFFFF",
-    content_text_color="#1a4b8c",
-    font_family="'Inter', sans-serif",
-    show_border=False,
-    border_opacity=0.25,
-    section_spacing="30px",
-    icon_size="110px",
-    custom_css=""
-):
-    """
-    Generate a professional business overview slide with icon-content sections layout.
+# def generate_business_overview_slide(
+#     main_title="BUSINESS OVERVIEW",
+#     sections=[
+#         {
+#             "icon": "chart-analysis",
+#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+#         },
+#         {
+#             "icon": "innovation",
+#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+#         },
+#         {
+#             "icon": "growth",
+#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+#         }
+#     ],
+#     left_bg_color="#1a4b8c",
+#     right_bg_color="#f8f9fa",
+#     title_color="#FFFFFF",
+#     icon_bg_color="#2a3f6b",
+#     icon_color="#FFFFFF",
+#     content_bg_color="#FFFFFF",
+#     content_text_color="#1a4b8c",
+#     font_family="'Inter', sans-serif",
+#     show_border=False,
+#     border_opacity=0.25,
+#     section_spacing="30px",
+#     icon_size="110px",
+#     custom_css=""
+# ):
+#     """
+#     Generate a professional business overview slide with icon-content sections layout.
 
-    :param main_title: Main title text (10-25 characters), displayed on the left side
-    :param sections: List of dictionaries with icon and content for each section,
-                    or list of lists where first element is content and second is icon
-    :param left_bg_color: Background color for the left title section (hex code)
-    :param right_bg_color: Background color for the right content area (hex code)
-    :param title_color: Color of the main title text (hex code)
-    :param icon_bg_color: Background color for icon containers (hex code)
-    :param icon_color: Color of the icons (hex code)
-    :param content_bg_color: Background color for content text areas (hex code)
-    :param content_text_color: Text color for content sections (hex code)
-    :param title_font_size: Font size for the main title
-    :param content_font_size: Font size for section content text
-    :param font_family: Font family for all text elements
-    :param show_border: Whether to show the dashed border frame
-    :param border_opacity: Opacity of the border frame (0.0 to 1.0)
-    :param section_spacing: Vertical spacing between content sections
-    :param icon_size: Size of the icon containers
-    :param custom_css: Additional custom CSS to be included
-    :return: A string containing the HTML code for the slide
-    """
+#     :param main_title: Main title text (10-25 characters), displayed on the left side
+#     :param sections: List of dictionaries with icon and content for each section,
+#                     or list of lists where first element is content and second is icon
+#     :param left_bg_color: Background color for the left title section (hex code)
+#     :param right_bg_color: Background color for the right content area (hex code)
+#     :param title_color: Color of the main title text (hex code)
+#     :param icon_bg_color: Background color for icon containers (hex code)
+#     :param icon_color: Color of the icons (hex code)
+#     :param content_bg_color: Background color for content text areas (hex code)
+#     :param content_text_color: Text color for content sections (hex code)
+#     :param title_font_size: Font size for the main title
+#     :param content_font_size: Font size for section content text
+#     :param font_family: Font family for all text elements
+#     :param show_border: Whether to show the dashed border frame
+#     :param border_opacity: Opacity of the border frame (0.0 to 1.0)
+#     :param section_spacing: Vertical spacing between content sections
+#     :param icon_size: Size of the icon containers
+#     :param custom_css: Additional custom CSS to be included
+#     :return: A string containing the HTML code for the slide
+#     """
 
-    # Icon SVG definitions
-    icons = {
-        "chart-analysis": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
-            <path d="M3 3v18h18v-2H5V3H3zm4 14h2V9H7v8zm4 0h2V7h-2v10zm4 0h2v-4h-2v4zm3-12l-3 3-3-3-4 4-1.5-1.5L9 10l3-3 3 3 4-4z"/>
-        </svg>''',
-        "innovation": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
-            <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
-            <circle cx="12" cy="9" r="1"/>
-            <path d="M12 6v2m0 4v2m-3-3h2m4 0h2"/>
-        </svg>''',
-        "growth": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
-            <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/>
-            <path d="M5 19h2v2H5zm4 0h2v2H9zm4 0h2v2h-2z"/>
-        </svg>'''
-    }
+#     # Icon SVG definitions
+#     icons = {
+#         "chart-analysis": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
+#             <path d="M3 3v18h18v-2H5V3H3zm4 14h2V9H7v8zm4 0h2V7h-2v10zm4 0h2v-4h-2v4zm3-12l-3 3-3-3-4 4-1.5-1.5L9 10l3-3 3 3 4-4z"/>
+#         </svg>''',
+#         "innovation": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
+#             <path d="M9 21c0 .55.45 1 1 1h4c.55 0 1-.45 1-1v-1H9v1zm3-19C8.14 2 5 5.14 5 9c0 2.38 1.19 4.47 3 5.74V17c0 .55.45 1 1 1h6c.55 0 1-.45 1-1v-2.26c1.81-1.27 3-3.36 3-5.74 0-3.86-3.14-7-7-7zm2.85 11.1l-.85.6V16h-4v-2.3l-.85-.6C7.8 12.16 7 10.63 7 9c0-2.76 2.24-5 5-5s5 2.24 5 5c0 1.63-.8 3.16-2.15 4.1z"/>
+#             <circle cx="12" cy="9" r="1"/>
+#             <path d="M12 6v2m0 4v2m-3-3h2m4 0h2"/>
+#         </svg>''',
+#         "growth": '''<svg viewBox="0 0 24 24" fill="currentColor" width="55" height="55">
+#             <path d="M16 6l2.29 2.29-4.88 4.88-4-4L2 16.59 3.41 18l6-6 4 4 6.3-6.29L22 12V6h-6z"/>
+#             <path d="M5 19h2v2H5zm4 0h2v2H9zm4 0h2v2h-2z"/>
+#         </svg>'''
+#     }
 
-    # Generate sections HTML
-    sections_html = ""
-    for i, section in enumerate(sections):
-        # Mới: Kiểm tra section có phải là list hay không và xử lý tương ứng
-        if isinstance(section, list):
-            # Giả định dữ liệu dạng [content, icon]
-            content = section[0] if len(section) > 0 else ""
-            icon_name = section[1] if len(section) > 1 else "chart-analysis"
-            icon_svg = icons.get(icon_name, icons["chart-analysis"])
-        else:
-            # Định dạng dictionary gốc
-            content = section.get("content", "")
-            icon_name = section.get("icon", "chart-analysis")
-            icon_svg = icons.get(icon_name, icons["chart-analysis"])
+#     # Generate sections HTML
+#     sections_html = ""
+#     for i, section in enumerate(sections):
+#         # Mới: Kiểm tra section có phải là list hay không và xử lý tương ứng
+#         if isinstance(section, list):
+#             # Giả định dữ liệu dạng [content, icon]
+#             content = section[0] if len(section) > 0 else ""
+#             icon_name = section[1] if len(section) > 1 else "chart-analysis"
+#             icon_svg = icons.get(icon_name, icons["chart-analysis"])
+#         else:
+#             # Định dạng dictionary gốc
+#             content = section.get("content", "")
+#             icon_name = section.get("icon", "chart-analysis")
+#             icon_svg = icons.get(icon_name, icons["chart-analysis"])
         
-        sections_html += f'''
-        <div class="content-section">
-            <div class="icon-container">
-                {icon_svg}
-            </div>
-            <div class="text-container">
-                {content}
-            </div>
-        </div>
-        '''
+#         sections_html += f'''
+#         <div class="content-section">
+#             <div class="icon-container">
+#                 {icon_svg}
+#             </div>
+#             <div class="text-container">
+#                 {content}
+#             </div>
+#         </div>
+#         '''
 
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            font-family: {font_family};
-            overflow: hidden;
-        }}
+#     html_code = f"""<!DOCTYPE html>
+# <html lang="en">
+# <head>
+#     <meta charset="UTF-8">
+#     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+#     <title>{main_title}</title>
+#     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+#     <style>
+#         body, html {{
+#             margin: 0;
+#             padding: 0;
+#             height: 100%;
+#             width: 100%;
+#             font-family: {font_family};
+#             overflow: hidden;
+#         }}
         
-        .slide-container {{
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            position: relative;
-            background: linear-gradient(135deg, {right_bg_color} 0%, #e9ecef 100%);
-        }}
+#         .slide-container {{
+#             width: 100%;
+#             height: 100vh;
+#             display: flex;
+#             position: relative;
+#             background: linear-gradient(135deg, {right_bg_color} 0%, #e9ecef 100%);
+#         }}
         
-        .slide-border {{
-            position: absolute;
-            top: 45px;
-            left: 45px;
-            right: 45px;
-            bottom: 45px;
-            border: {("3px dashed rgba(26, 75, 140, " + str(border_opacity) + ")" if show_border else "none")};
-            border-radius: 12px;
-            pointer-events: none;
-            z-index: 5;
-        }}
+#         .slide-border {{
+#             position: absolute;
+#             top: 45px;
+#             left: 45px;
+#             right: 45px;
+#             bottom: 45px;
+#             border: {("3px dashed rgba(26, 75, 140, " + str(border_opacity) + ")" if show_border else "none")};
+#             border-radius: 12px;
+#             pointer-events: none;
+#             z-index: 5;
+#         }}
         
-        .left-section {{
-            width: 40%;
-            background: linear-gradient(135deg, {left_bg_color} 0%, #0d2d5e 100%);
-            color: {title_color};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 100px 60px;
-            position: relative;
-            z-index: 10;
-            box-shadow: 8px 0 30px rgba(0, 0, 0, 0.2);
-        }}
+#         .left-section {{
+#             width: 40%;
+#             background: linear-gradient(135deg, {left_bg_color} 0%, #0d2d5e 100%);
+#             color: {title_color};
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#             padding: 100px 60px;
+#             position: relative;
+#             z-index: 10;
+#             box-shadow: 8px 0 30px rgba(0, 0, 0, 0.2);
+#         }}
         
-        .title {{
-            font-size: 6rem;
-            font-weight: 900;
-            line-height: 1.1;
-            text-align: center;
-            letter-spacing: 0.1em;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
-            text-transform: uppercase;
-        }}
+#         .title {{
+#             font-size: 6rem;
+#             font-weight: 900;
+#             line-height: 1.1;
+#             text-align: center;
+#             letter-spacing: 0.1em;
+#             text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+#             text-transform: uppercase;
+#         }}
         
-        .right-section {{
-            width: 60%;
-            padding: 100px 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 45px;
-            position: relative;
-            z-index: 10;
-        }}
+#         .right-section {{
+#             width: 60%;
+#             padding: 100px 80px;
+#             display: flex;
+#             flex-direction: column;
+#             justify-content: center;
+#             gap: 45px;
+#             position: relative;
+#             z-index: 10;
+#         }}
         
-        .content-section {{
-            display: flex;
-            align-items: stretch;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
-            border-radius: 16px;
-            overflow: hidden;
-            min-height: 140px;
-        }}
+#         .content-section {{
+#             display: flex;
+#             align-items: stretch;
+#             box-shadow: 0 6px 20px rgba(0, 0, 0, 0.1);
+#             border-radius: 16px;
+#             overflow: hidden;
+#             min-height: 140px;
+#         }}
         
-        .icon-container {{
-            width: {icon_size};
-            min-width: {icon_size};
-            background: linear-gradient(135deg, {icon_bg_color} 0%, #1a2942 100%);
-            color: {icon_color};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 30px;
-        }}
+#         .icon-container {{
+#             width: {icon_size};
+#             min-width: {icon_size};
+#             background: linear-gradient(135deg, {icon_bg_color} 0%, #1a2942 100%);
+#             color: {icon_color};
+#             display: flex;
+#             align-items: center;
+#             justify-content: center;
+#             padding: 30px;
+#         }}
         
-        .icon-container svg {{
-            filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
-        }}
+#         .icon-container svg {{
+#             filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.25));
+#         }}
         
-        .text-container {{
-            flex: 1;
-            background: linear-gradient(135deg, {content_bg_color} 0%, #fafbfc 100%);
-            color: {content_text_color};
-            padding: 35px 45px;
-            font-size: 2.5rem;
-            line-height: 1.7;
-            display: flex;
-            align-items: center;
-            font-weight: 500;
-        }}
+#         .text-container {{
+#             flex: 1;
+#             background: linear-gradient(135deg, {content_bg_color} 0%, #fafbfc 100%);
+#             color: {content_text_color};
+#             padding: 35px 45px;
+#             font-size: 2.5rem;
+#             line-height: 1.7;
+#             display: flex;
+#             align-items: center;
+#             font-weight: 500;
+#         }}
         
-        /* Decorative elements */
-        .left-section::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            right: -35px;
-            width: 70px;
-            height: 100%;
-            background: linear-gradient(90deg, transparent 0%, {left_bg_color} 50%, transparent 100%);
-            z-index: -1;
-            opacity: 0.6;
-        }}
+#         /* Decorative elements */
+#         .left-section::before {{
+#             content: '';
+#             position: absolute;
+#             top: 0;
+#             right: -35px;
+#             width: 70px;
+#             height: 100%;
+#             background: linear-gradient(90deg, transparent 0%, {left_bg_color} 50%, transparent 100%);
+#             z-index: -1;
+#             opacity: 0.6;
+#         }}
         
-        .left-section::after {{
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 130%;
-            height: 130%;
-            background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
-            pointer-events: none;
-        }}
+#         .left-section::after {{
+#             content: '';
+#             position: absolute;
+#             top: 50%;
+#             left: 50%;
+#             transform: translate(-50%, -50%);
+#             width: 130%;
+#             height: 130%;
+#             background: radial-gradient(circle, rgba(255,255,255,0.12) 0%, transparent 70%);
+#             pointer-events: none;
+#         }}
         
-        @media (max-width: 768px) {{
-            .slide-container {{
-                flex-direction: column;
-            }}
+#         @media (max-width: 768px) {{
+#             .slide-container {{
+#                 flex-direction: column;
+#             }}
             
-            .left-section, .right-section {{
-                width: 100%;
-            }}
+#             .left-section, .right-section {{
+#                 width: 100%;
+#             }}
             
-            .left-section {{
-                height: 30%;
-                padding: 30px 20px;
-            }}
+#             .left-section {{
+#                 height: 30%;
+#                 padding: 30px 20px;
+#             }}
             
-            .right-section {{
-                height: 70%;
-                padding: 30px 20px;
-            }}
+#             .right-section {{
+#                 height: 70%;
+#                 padding: 30px 20px;
+#             }}
             
-            .title {{
-                font-size: 2.5rem;
-            }}
+#             .title {{
+#                 font-size: 2.5rem;
+#             }}
             
-            .content-section {{
-                margin-bottom: 10px !important;
-            }}
+#             .content-section {{
+#                 margin-bottom: 10px !important;
+#             }}
             
-            .icon-container {{
-                width: 60px;
-                min-width: 60px;
-                padding: 15px;
-            }}
+#             .icon-container {{
+#                 width: 60px;
+#                 min-width: 60px;
+#                 padding: 15px;
+#             }}
             
-            .icon-container svg {{
-                width: 30px;
-                height: 30px;
-            }}
+#             .icon-container svg {{
+#                 width: 30px;
+#                 height: 30px;
+#             }}
             
-            .text-container {{
-                padding: 15px 20px;
-                font-size: 0.85rem;
-            }}
-        }}
+#             .text-container {{
+#                 padding: 15px 20px;
+#                 font-size: 0.85rem;
+#             }}
+#         }}
         
-        @media (max-width: 480px) {{
-            .slide-border {{
-                top: 15px;
-                left: 15px;
-                right: 15px;
-                bottom: 15px;
-            }}
+#         @media (max-width: 480px) {{
+#             .slide-border {{
+#                 top: 15px;
+#                 left: 15px;
+#                 right: 15px;
+#                 bottom: 15px;
+#             }}
             
-            .title {{
-                font-size: 2rem;
-            }}
+#             .title {{
+#                 font-size: 2rem;
+#             }}
             
-            .text-container {{
-                font-size: 0.8rem;
-                padding: 12px 15px;
-            }}
-        }}
+#             .text-container {{
+#                 font-size: 0.8rem;
+#                 padding: 12px 15px;
+#             }}
+#         }}
         
-        {custom_css}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <!-- Border frame -->
-        <div class="slide-border"></div>
+#         {custom_css}
+#     </style>
+# </head>
+# <body>
+#     <div class="slide-container">
+#         <!-- Border frame -->
+#         <div class="slide-border"></div>
         
-        <!-- Left section with title -->
-        <div class="left-section">
-            <h1 class="title">{main_title}</h1>
-        </div>
+#         <!-- Left section with title -->
+#         <div class="left-section">
+#             <h1 class="title">{main_title}</h1>
+#         </div>
         
-        <!-- Right section with content -->
-        <div class="right-section">
-            {sections_html}
-        </div>
-    </div>
-</body>
-</html>"""
+#         <!-- Right section with content -->
+#         <div class="right-section">
+#             {sections_html}
+#         </div>
+#     </div>
+# </body>
+# </html>"""
 
-    return html_code
+#     return html_code
 
 
 
@@ -13340,290 +13340,290 @@ def generate_vision_mission_slide(
     return html_code
 
 
-# def generate_strategic_goals_slide(
-#     main_title="STRATEGIC GOALS",
-#     goals=[
-#         {
-#             "number": "01",
-#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-#         },
-#         {
-#             "number": "02",
-#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-#         },
-#         {
-#             "number": "03",
-#             "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-#         }
-#     ],
-#     bg_image="skyscrapers.jpg",
-#     bg_overlay_color="rgba(26, 75, 140, 0.85)",
-#     title_color="#FFFFFF",
-#     number_bg_color="#1a4b8c",
-#     number_text_color="#FFFFFF",
-#     content_bg_color="#FFFFFF",
-#     content_text_color="#1a4b8c",
-#     font_family="'Inter', sans-serif",
-#     show_border=True,
-#     border_opacity=0.4,
-#     number_circle_size="80px",
-#     content_padding="20px",
-#     custom_css=""
-# ):
-#     """
-#     Generate a professional strategic goals slide with numbered points and background image.
+def generate_strategic_goals_slide(
+    main_title="STRATEGIC GOALS",
+    goals=[
+        {
+            "number": "01",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+            "number": "02",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        },
+        {
+            "number": "03",
+            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
+        }
+    ],
+    bg_image="skyscrapers.jpg",
+    bg_overlay_color="rgba(26, 75, 140, 0.85)",
+    title_color="#FFFFFF",
+    number_bg_color="#1a4b8c",
+    number_text_color="#FFFFFF",
+    content_bg_color="#FFFFFF",
+    content_text_color="#1a4b8c",
+    font_family="'Inter', sans-serif",
+    show_border=True,
+    border_opacity=0.4,
+    number_circle_size="80px",
+    content_padding="20px",
+    custom_css=""
+):
+    """
+    Generate a professional strategic goals slide with numbered points and background image.
 
-#     :param main_title: Main title text (10-25 characters), displayed on the left side
-#     :param goals: List of dictionaries with number and content for each strategic goal,
-#                  or list of lists where first element is content and second is number
-#     :param bg_image: Background image URL or path (skyscraper/city image recommended)
-#     :param bg_overlay_color: Color overlay for the background image (rgba with transparency)
-#     :param title_color: Color of the main title text (hex code)
-#     :param number_bg_color: Background color for the number circles (hex code)
-#     :param number_text_color: Text color for the numbers (hex code)
-#     :param content_bg_color: Background color for content text boxes (hex code)
-#     :param content_text_color: Text color for content (hex code)
-#     :param title_font_size: Font size for the main title
-#     :param number_font_size: Font size for the numbers
-#     :param content_font_size: Font size for content text
-#     :param font_family: Font family for all text elements
-#     :param show_border: Whether to show the dashed border frame
-#     :param border_opacity: Opacity of the border frame (0.0 to 1.0)
-#     :param number_circle_size: Size of the circular number containers
-#     :param content_padding: Padding inside content boxes
-#     :param custom_css: Additional custom CSS to be included
-#     :return: A string containing the HTML code for the slide
-#     """
+    :param main_title: Main title text (10-25 characters), displayed on the left side
+    :param goals: List of dictionaries with number and content for each strategic goal,
+                 or list of lists where first element is content and second is number
+    :param bg_image: Background image URL or path (skyscraper/city image recommended)
+    :param bg_overlay_color: Color overlay for the background image (rgba with transparency)
+    :param title_color: Color of the main title text (hex code)
+    :param number_bg_color: Background color for the number circles (hex code)
+    :param number_text_color: Text color for the numbers (hex code)
+    :param content_bg_color: Background color for content text boxes (hex code)
+    :param content_text_color: Text color for content (hex code)
+    :param title_font_size: Font size for the main title
+    :param number_font_size: Font size for the numbers
+    :param content_font_size: Font size for content text
+    :param font_family: Font family for all text elements
+    :param show_border: Whether to show the dashed border frame
+    :param border_opacity: Opacity of the border frame (0.0 to 1.0)
+    :param number_circle_size: Size of the circular number containers
+    :param content_padding: Padding inside content boxes
+    :param custom_css: Additional custom CSS to be included
+    :return: A string containing the HTML code for the slide
+    """
 
-#     # Generate goals HTML
-#     goals_html = ""
-#     for i, goal in enumerate(goals):
-#         # Xử lý goal dạng list hoặc dictionary
-#         if isinstance(goal, list):
-#             # Nếu goal là list thì giả định [content, number]
-#             if len(goal) >= 2:
-#                 # Kiểm tra loại dữ liệu của phần tử đầu tiên
-#                 if isinstance(goal[0], str) and not goal[0].isdigit():
-#                     content = goal[0]
-#                     number = goal[1] if len(goal) > 1 and goal[1] else f"{i+1:02d}"
-#                 else:
-#                     number = goal[0] if goal[0] else f"{i+1:02d}"
-#                     content = goal[1] if len(goal) > 1 else ""
-#             else:
-#                 content = goal[0] if len(goal) > 0 else ""
-#                 number = f"{i+1:02d}"
-#         else:
-#             # Đối với dictionary, sử dụng get() như trước
-#             number = goal.get("number", f"{i+1:02d}")
-#             content = goal.get("content", "")
+    # Generate goals HTML
+    goals_html = ""
+    for i, goal in enumerate(goals):
+        # Xử lý goal dạng list hoặc dictionary
+        if isinstance(goal, list):
+            # Nếu goal là list thì giả định [content, number]
+            if len(goal) >= 2:
+                # Kiểm tra loại dữ liệu của phần tử đầu tiên
+                if isinstance(goal[0], str) and not goal[0].isdigit():
+                    content = goal[0]
+                    number = goal[1] if len(goal) > 1 and goal[1] else f"{i+1:02d}"
+                else:
+                    number = goal[0] if goal[0] else f"{i+1:02d}"
+                    content = goal[1] if len(goal) > 1 else ""
+            else:
+                content = goal[0] if len(goal) > 0 else ""
+                number = f"{i+1:02d}"
+        else:
+            # Đối với dictionary, sử dụng get() như trước
+            number = goal.get("number", f"{i+1:02d}")
+            content = goal.get("content", "")
         
-#         goals_html += f'''
-#         <div class="goal-item">
-#             <div class="number-circle">
-#                 <span>{number}</span>
-#             </div>
-#             <div class="content-box">
-#                 <div class="content-text">{content}</div>
-#             </div>
-#         </div>
-#         '''
+        goals_html += f'''
+        <div class="goal-item">
+            <div class="number-circle">
+                <span>{number}</span>
+            </div>
+            <div class="content-box">
+                <div class="content-text">{content}</div>
+            </div>
+        </div>
+        '''
 
-#     html_code = f"""<!DOCTYPE html>
-# <html lang="en">
-# <head>
-#     <meta charset="UTF-8">
-#     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-#     <title>{main_title}</title>
-#     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-#     <style>
-#         body, html {{
-#             margin: 0;
-#             padding: 0;
-#             height: 100%;
-#             width: 100%;
-#             font-family: {font_family};
-#             overflow: hidden;
-#         }}
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {{
+            margin: 0;
+            padding: 0;
+            height: 100%;
+            width: 100%;
+            font-family: {font_family};
+            overflow: hidden;
+        }}
         
-#         .slide-container {{
-#             width: 100%;
-#             height: 100vh;
-#             position: relative;
-#             background-image: url('{bg_image}');
-#             background-size: cover;
-#             background-position: center;
-#             padding: 40px;
-#             box-sizing: border-box;
-#         }}
+        .slide-container {{
+            width: 100%;
+            height: 100vh;
+            position: relative;
+            background-image: url('{bg_image}');
+            background-size: cover;
+            background-position: center;
+            padding: 40px;
+            box-sizing: border-box;
+        }}
         
-#         .bg-overlay {{
-#             position: absolute;
-#             top: 0;
-#             left: 0;
-#             width: 100%;
-#             height: 100%;
-#             background-color: {bg_overlay_color};
-#             z-index: 1;
-#         }}
+        .bg-overlay {{
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: {bg_overlay_color};
+            z-index: 1;
+        }}
         
-#         .slide-border {{
-#             position: absolute;
-#             top: 20px;
-#             left: 20px;
-#             right: 20px;
-#             bottom: 20px;
-#             border: {("2px dashed rgba(255, 255, 255, " + str(border_opacity) + ")" if show_border else "none")};
-#             pointer-events: none;
-#             z-index: 5;
-#         }}
+        .slide-border {{
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            right: 20px;
+            bottom: 20px;
+            border: {("2px dashed rgba(255, 255, 255, " + str(border_opacity) + ")" if show_border else "none")};
+            pointer-events: none;
+            z-index: 5;
+        }}
         
-#         .content-wrapper {{
-#             position: relative;
-#             z-index: 10;
-#             display: flex;
-#             height: 100%;
-#         }}
+        .content-wrapper {{
+            position: relative;
+            z-index: 10;
+            display: flex;
+            height: 100%;
+        }}
         
-#         .title-section {{
-#             width: 40%;
-#             display: flex;
-#             align-items: center;
-#             justify-content: center;
-#         }}
+        .title-section {{
+            width: 40%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
         
-#         .main-title {{
-#             font-size: 4.5rem;
-#             font-weight: 700;
-#             color: {title_color};
-#             line-height: 1.1;
-#             text-transform: uppercase;
-#             letter-spacing: 0.05em;
-#             text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-#         }}
+        .main-title {{
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: {title_color};
+            line-height: 1.1;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }}
         
-#         .goals-section {{
-#             width: 60%;
-#             display: flex;
-#             flex-direction: column;
-#             justify-content: center;
-#             gap: 20px;
-#         }}
+        .goals-section {{
+            width: 60%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 20px;
+        }}
         
-#         .goal-item {{
-#             display: flex;
-#             align-items: center;
-#         }}
+        .goal-item {{
+            display: flex;
+            align-items: center;
+        }}
         
-#         .number-circle {{
-#             width: {number_circle_size};
-#             height: {number_circle_size};
-#             min-width: {number_circle_size};
-#             background-color: {number_bg_color};
-#             border-radius: 50%;
-#             display: flex;
-#             align-items: center;
-#             justify-content: center;
-#             margin-right: 20px;
-#             z-index: 20;
-#             position: relative;
-#             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-#         }}
+        .number-circle {{
+            width: {number_circle_size};
+            height: {number_circle_size};
+            min-width: {number_circle_size};
+            background-color: {number_bg_color};
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-right: 20px;
+            z-index: 20;
+            position: relative;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        }}
         
-#         .number-circle span {{
-#             color: {number_text_color};
-#             font-size: 2.5rem;
-#             font-weight: 700;
-#         }}
+        .number-circle span {{
+            color: {number_text_color};
+            font-size: 2.5rem;
+            font-weight: 700;
+        }}
         
-#         .content-box {{
-#             flex: 1;
-#             background-color: {content_bg_color};
-#             border-radius: 8px;
-#             padding: {content_padding};
-#             padding-left: {content_padding};
-#             box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-#             z-index: 10;
-#             position: relative;
-#         }}
+        .content-box {{
+            flex: 1;
+            background-color: {content_bg_color};
+            border-radius: 8px;
+            padding: {content_padding};
+            padding-left: {content_padding};
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            z-index: 10;
+            position: relative;
+        }}
         
-#         .content-text {{
-#             color: {content_text_color};
-#             font-size: 0.9rem;
-#             line-height: 1.5;
-#         }}
+        .content-text {{
+            color: {content_text_color};
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }}
         
-#         @media (max-width: 768px) {{
-#             .content-wrapper {{
-#                 flex-direction: column;
-#             }}
+        @media (max-width: 768px) {{
+            .content-wrapper {{
+                flex-direction: column;
+            }}
             
-#             .title-section, .goals-section {{
-#                 width: 100%;
-#             }}
+            .title-section, .goals-section {{
+                width: 100%;
+            }}
             
-#             .title-section {{
-#                 height: 30%;
-#                 align-items: flex-start;
-#                 justify-content: center;
-#             }}
+            .title-section {{
+                height: 30%;
+                align-items: flex-start;
+                justify-content: center;
+            }}
             
-#             .goals-section {{
-#                 height: 70%;
-#             }}
+            .goals-section {{
+                height: 70%;
+            }}
             
-#             .main-title {{
-#                 font-size: 2.5rem;
-#                 text-align: center;
-#                 margin-top: 20px;
-#             }}
+            .main-title {{
+                font-size: 2.5rem;
+                text-align: center;
+                margin-top: 20px;
+            }}
             
-#             .number-circle {{
-#                 width: 60px;
-#                 height: 60px;
-#                 min-width: 60px;
-#                 margin-right: 15px;
-#             }}
+            .number-circle {{
+                width: 60px;
+                height: 60px;
+                min-width: 60px;
+                margin-right: 15px;
+            }}
             
-#             .number-circle span {{
-#                 font-size: 1.8rem;
-#             }}
+            .number-circle span {{
+                font-size: 1.8rem;
+            }}
             
-#             .content-box {{
-#                 padding: 15px;
-#             }}
+            .content-box {{
+                padding: 15px;
+            }}
             
-#             .content-text {{
-#                 font-size: 0.8rem;
-#             }}
-#         }}
+            .content-text {{
+                font-size: 0.8rem;
+            }}
+        }}
         
-#         {custom_css}
-#     </style>
-# </head>
-# <body>
-#     <div class="slide-container">
-#         <!-- Background overlay -->
-#         <div class="bg-overlay"></div>
+        {custom_css}
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <!-- Background overlay -->
+        <div class="bg-overlay"></div>
         
-#         <!-- Border frame -->
-#         <div class="slide-border"></div>
+        <!-- Border frame -->
+        <div class="slide-border"></div>
         
-#         <!-- Content -->
-#         <div class="content-wrapper">
-#             <!-- Title section -->
-#             <div class="title-section">
-#                 <h1 class="main-title">{main_title}</h1>
-#             </div>
+        <!-- Content -->
+        <div class="content-wrapper">
+            <!-- Title section -->
+            <div class="title-section">
+                <h1 class="main-title">{main_title}</h1>
+            </div>
             
-#             <!-- Goals section -->
-#             <div class="goals-section">
-#                 {goals_html}
-#             </div>
-#         </div>
-#     </div>
-# </body>
-# </html>"""
-#     return html_code
+            <!-- Goals section -->
+            <div class="goals-section">
+                {goals_html}
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
 
 
 
