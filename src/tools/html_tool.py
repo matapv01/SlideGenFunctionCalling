@@ -20875,11 +20875,32 @@ def generate_thank_you_farm_slide(
 #-------BAR CHART SLIDES------------------------------------------------------------------
 
 def generate_bar_chart_slide_1(
-        main_title: str, 
-        subtitle: str, 
-        insight: str, 
-        chart_options: dict, 
-        data_input: dict,
+        main_title: "Regional Shipment Performance", 
+        subtitle: "Units: Thousand Containers", 
+        insight: "Shipment volume increased significantly in all regions in 2024 compared to 2023.", 
+        chart_options: {
+            "x_axis": "Region",
+            "y_axis": "Shipment Volume (Thousand Containers)",
+            "unit": "K",
+            "show_value": True,
+            "show_legend": True,
+            "y_axis_min": 0,
+            "y_axis_max": None,
+            "colors": ["#1B2559", "#FF6B35"]  # Navy (2023), Orange (2024)
+        },   
+        data_input: {
+            "categories": ["North", "South", "East", "West"],
+            "series": [
+                {
+                    "name": "2023",
+                    "data": [120, 132, 101, 134]
+                },
+                {
+                    "name": "2024",
+                    "data": [220, 182, 191, 234]
+                }
+            ]
+        },   
         font_family: str = "Inter, sans-serif",
         accent_color: str = "#FF6B35",
         main_title_color: str = "#1B2559",
@@ -21233,11 +21254,37 @@ def generate_bar_chart_slide_1(
 
 
 def generate_bar_chart_slide_2(
-    main_title: str, 
-    subtitle: str, 
-    insight: str, 
-    chart_options: dict, 
-    data_input: dict,
+    main_title: str = "Ocean Temperature Variation by Depth", 
+    subtitle: str = "Unit: °C | Data Source: Marine Research Institute 2025", 
+    insight: str = (
+        "Surface temperature remains significantly higher compared to deeper layers. "
+        "The sharp decline between 50m and 200m depth indicates the thermocline zone, "
+        "where temperature changes rapidly due to limited sunlight penetration."
+    ), 
+    chart_options: dict ={
+        "x_axis": "Ocean Depth (meters)",
+        "y_axis": "Average Temperature (°C)",
+        "unit": "°C",
+        "show_value": True,
+        "show_legend": True,
+        "y_axis_min": 0,
+        "y_axis_max": None,
+        "data_label_format": None,
+        "colors": ["#00695C", "#26A69A"]  # Deep Teal & Aqua
+    },
+    data_input: dict = {
+        "categories": ["Surface", "50m", "100m", "200m", "500m"],
+        "series": [
+            {
+                "name": "Pacific Ocean",
+                "values": [28, 22, 18, 12, 5]
+            },
+            {
+                "name": "Atlantic Ocean",
+                "values": [26, 21, 17, 11, 4]
+            }
+        ]
+    },
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#A67C52",
     main_title_color: str = "#3D4E5D",
@@ -21581,11 +21628,32 @@ def generate_bar_chart_slide_2(
 
 
 def generate_bar_chart_slide_3(
-    main_title: str, 
-    subtitle: str, 
-    insight: str, 
-    chart_options: dict, 
-    data_input: dict,
+    main_title: str = "Uneven Distribution of Weekly Household Chores", 
+    subtitle: str = "Average Hours Spent on Chores per Week (Family Survey 2026)",
+    insight: str = (
+        "Mother contributes significantly more hours to household chores compared "
+        "to other family members, indicating an imbalance in workload distribution. "
+    ),
+    chart_options: dict = {
+        "x_axis": "Family Member",
+        "y_axis": "Hours per Week",
+        "unit": "hours",
+        "show_value": True,
+        "show_legend": True,
+        "y_axis_min": 0,
+        "y_axis_max": None,
+        "bar_border_radius": 8,
+        "colors": ["#4A5E7B", "#D59494"]  # Navy & Soft Pink family theme
+    }, 
+    data_input: dict = {
+        "categories": ["Father", "Mother", "Older Sister", "Younger Brother"],
+        "series": [
+            {
+                "name": "Chore Hours",
+                "values": [5, 14, 8, 6]
+            }
+        ]
+    },
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#7B8FB3",
     main_title_color: str = "#4A5E7B",
@@ -21786,19 +21854,49 @@ def generate_bar_chart_slide_3(
 #-------SCATTER PLOT CHART SLIDES---------------------------------------------------------
 
 def generate_scatter_plot_chart_slide_1(
-        main_title: str, 
-        subtitle: str, 
-        insight: str, 
-        chart_options: dict, 
-        data_input: dict,
-        font_family: str = "Inter, sans-serif",
-        accent_color: str = "#A67C52",
-        main_title_color: str = "#3D4E5D",
-        subtitle_color: str = "#6B7280",
-        insight_text_color: str = "#374151",
-        main_title_font_size: str = "60px",
-        subtitle_font_size: str = "26px",
-        insight_font_size: str = "28px"
+    main_title: str = "Relationship Between Study Time and Exam Score", 
+    subtitle: str = "Source: Student Survey 2024 | Unit: Hours & Score (%)", 
+    insight: str = ("The scatter plot shows a clear positive correlation between study time "
+                    "and exam performance. Students who studied more than 6 hours generally "
+                    "achieved scores above 75%."),
+    chart_options: dict = {
+        "x_axis": "Study Time (Hours)",
+        "y_axis": "Exam Score (%)",
+        "unit": "%",
+        "show_value": False,
+        "show_legend": False,
+        "x_axis_min": 0,
+        "x_axis_max": 10,
+        "y_axis_min": 40,
+        "y_axis_max": 100,
+        "data_label_format": None,
+        "colors": ["#3D4E5D"]
+    }, 
+    data_input: dict = {
+        "series": [
+            {
+                "name": "Students",
+                "points": [
+                    {"x": 1, "y": 50},
+                    {"x": 2, "y": 55},
+                    {"x": 3, "y": 60},
+                    {"x": 4, "y": 65},
+                    {"x": 5, "y": 72},
+                    {"x": 6, "y": 78},
+                    {"x": 7, "y": 85},
+                    {"x": 8, "y": 68}  # outlier
+                ]
+            }
+        ]
+    },
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#A67C52",
+    main_title_color: str = "#3D4E5D",
+    subtitle_color: str = "#6B7280",
+    insight_text_color: str = "#374151",
+    main_title_font_size: str = "60px",
+    subtitle_font_size: str = "26px",
+    insight_font_size: str = "28px"
     ) -> str:
 
     # ===== 1. GET INFORMATION =====
@@ -22020,11 +22118,51 @@ def generate_scatter_plot_chart_slide_1(
 
 
 def generate_scatter_plot_chart_slide_2(
-    main_title: str,
-    subtitle: str,
-    insight: str,
-    chart_options: dict,
-    data_input: dict,
+    main_title: str = "Relationship Between Travel Distance and Spending",
+    subtitle: str = "Source: Tourist Behavior Survey 2024 | Sample: 200 Trips",
+    insight: str = (
+        "The scatter plot indicates a strong positive correlation between travel distance "
+        "and total spending."
+    ),
+    chart_options: dict = {
+        "x_axis": "Travel Distance (km)",
+        "y_axis": "Total Travel Spending (USD)",
+        "unit": "USD",
+        "show_value": False,
+        "show_legend": True,
+        "x_axis_min": 0,
+        "x_axis_max": 12000,
+        "y_axis_min": 0,
+        "y_axis_max": 6000,
+        "data_label_format": None,
+        "colors": ["#008080", "#FFB347"]
+    },
+    data_input: dict = {
+        "series": [
+            {
+                "name": "Domestic Travelers",
+                "points": [
+                    {"x": 150, "y": 300},
+                    {"x": 300, "y": 450},
+                    {"x": 500, "y": 700},
+                    {"x": 800, "y": 900},
+                    {"x": 1200, "y": 1100},
+                    {"x": 2000, "y": 1500}
+                ]
+            },
+            {
+                "name": "International Travelers",
+                "points": [
+                    {"x": 3000, "y": 2500},
+                    {"x": 5000, "y": 3200},
+                    {"x": 7000, "y": 4000},
+                    {"x": 9000, "y": 4800},
+                    {"x": 11000, "y": 5500},
+                    {"x": 2500, "y": 5000}  # outlier
+                ]
+            }
+        ]
+    },
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#008080",
     main_title_color: str = "#005F5F",
@@ -22208,11 +22346,54 @@ def generate_scatter_plot_chart_slide_2(
     return html_code
 
 def generate_scatter_plot_chart_slide_3(
-    main_title: str,
-    subtitle: str,
-    insight: str,
-    chart_options: dict,
-    data_input: dict,
+    main_title: str = "Study Time and Exam Performance Trend",
+    subtitle: str = "Study Time and Exam Performance Trend",
+    insight: str = (
+        "The scatter plot demonstrates a clear positive correlation between weekly "
+        "self-study hours and final exam scores. Students participating in guided "
+        "revision sessions consistently achieve higher scores at comparable effort "
+        "levels."
+    ),
+    chart_options: dict = {
+        "x_axis": "Weekly Self-Study Hours",
+        "y_axis": "Final Exam Score",
+        "unit": " points",
+
+        "show_value": False,
+        "show_legend": True,
+
+        "x_axis_min": 0,
+        "x_axis_max": 20,
+        "y_axis_min": 50,
+        "y_axis_max": 100,
+
+        "data_label_format": None,
+        "colors": ["#3D5A80", "#EE6C4D"]
+    },
+    data_input: dict = {
+        "series": [
+            {
+                "name": "Independent Study Group",
+                "points": [
+                    {"x": 3, "y": 58},
+                    {"x": 5, "y": 65},
+                    {"x": 7, "y": 72},
+                    {"x": 10, "y": 78},
+                    {"x": 14, "y": 82}
+                ]
+            },
+            {
+                "name": "Guided Revision Group",
+                "points": [
+                    {"x": 4, "y": 68},
+                    {"x": 6, "y": 75},
+                    {"x": 9, "y": 85},
+                    {"x": 12, "y": 90},
+                    {"x": 15, "y": 94}
+                ]
+            }
+        ]
+    },
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#7B8FB3",
     main_title_color: str = "#4A5E7B",
@@ -22410,11 +22591,52 @@ def generate_scatter_plot_chart_slide_3(
     """
 
 def generate_scatter_plot_chart_slide_4(
-    main_title: str,
-    subtitle: str,
-    insight: str,
-    chart_options: dict,
-    data_input: dict,
+    main_title: str = "Study Effort Drives Skill Mastery",
+    subtitle: str = "Data from Online Python Course – Q4 2024 Cohort",
+    insight: str = ("The scatter plot shows a strong positive relationship between weekly study hours "
+        "and final skill assessment scores"),
+    chart_options: dict = {
+        "x_axis": "Weekly Study Hours",
+        "y_axis": "Final Skill Assessment Score",
+        "unit": " points",
+
+        "show_value": False,
+        "show_legend": True,
+
+        "x_axis_min": 0,
+        "x_axis_max": 25,
+        "y_axis_min": 40,
+        "y_axis_max": 100,
+
+        "data_label_format": None,
+        "colors": ["#4F46E5", "#F59E0B"]
+    },
+    data_input: dict = {
+        "series": [
+            {
+                "name": "Self-Paced Learners",
+                "points": [
+                    {"x": 4, "y": 55},
+                    {"x": 6, "y": 60},
+                    {"x": 8, "y": 68},
+                    {"x": 10, "y": 72},
+                    {"x": 14, "y": 82},
+                    {"x": 5, "y": 88}   # high score with lower effort (efficient learner)
+                ]
+            },
+            {
+                "name": "Instructor-Led Learners",
+                "points": [
+                    {"x": 6, "y": 70},
+                    {"x": 9, "y": 78},
+                    {"x": 12, "y": 85},
+                    {"x": 15, "y": 90},
+                    {"x": 18, "y": 95},
+                    {"x": 20, "y": 97}
+                ]
+            }
+        ]
+    },
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#FFB347",
     main_title_color: str = "#333333",
@@ -22599,11 +22821,39 @@ def generate_scatter_plot_chart_slide_4(
 #-------LINE CHART SLIDES-----------------------------------------------------------------
 
 def generate_line_chart_slide_1(
-    main_title: str,
-    subtitle: str,
-    insight: str,
-    chart_options: dict,
-    data_input: dict,
+    main_title: str = "Accelerating Growth of Renewable Energy Capacity",
+    subtitle: str = "Global Renewable Energy Report – 2019 to 2024",
+    insight: str = (
+        "Both solar and wind energy capacity show steady growth from 2019 to 2021, "
+        "followed by a noticeable acceleration after 2022."
+    ),
+    chart_options: dict = {
+        "x_axis": "Year",
+        "y_axis": "Installed Capacity",
+        "unit": " GW",
+
+        "show_value": False,
+        "show_legend": True,
+
+        "y_axis_min": 50,
+        "y_axis_max": 260,
+
+        "data_label_format": None,
+        "colors": ["#FF8C00", "#4A90E2"]
+    },
+    data_input: dict = {
+        "time_points": ["2019", "2020", "2021", "2022", "2023", "2024"],
+        "series": [
+            {
+                "name": "Solar Energy",
+                "values": [80, 95, 110, 150, 200, 250]
+            },
+            {
+                "name": "Wind Energy",
+                "values": [70, 85, 100, 120, 150, 180]
+            }
+        ]
+    },
     font_family: str = "Arial, sans-serif",
     accent_color: str = "#FF8C00",
     main_title_color: str = "#333333",
@@ -22817,11 +23067,41 @@ def generate_line_chart_slide_1(
 
 
 def generate_line_chart_slide_2(
-    main_title: str,
-    subtitle: str,
-    insight: str,
-    chart_options: Dict[str, Any],
-    data_input: Dict[str, Any],
+    main_title: str = "Model Accuracy Converges with Minor Overfitting",
+    subtitle: str = "ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)", 
+    insight: str = (
+        "Training and validation accuracy both increase steadily during the first 15 epochs, "
+        "indicating effective learning and rapid convergence. After epoch 20, training accuracy "
+        "continues to improve while validation accuracy plateaus, suggesting mild overfitting. "
+        "The gap remains controlled, implying overall stable generalization performance."
+    ),
+    chart_options: dict = {
+        "x_axis": "Epoch",
+        "y_axis": "Accuracy",
+        "unit": "%",
+        "show_value": False,
+        "show_legend": True,
+        "y_axis_min": 40,
+        "y_axis_max": 100,
+        "data_label_format": None,
+        "colors": ["#4F46E5", "#22C55E"]
+    },
+    data_input: dict = {
+        "time_points": [
+            "Epoch 1", "Epoch 5", "Epoch 10",
+            "Epoch 15", "Epoch 20", "Epoch 25", "Epoch 30"
+        ],
+        "series": [
+            {
+                "name": "Training Accuracy",
+                "values": [45, 62, 75, 84, 90, 94, 97]
+            },
+            {
+                "name": "Validation Accuracy",
+                "values": [43, 60, 73, 82, 87, 88, 88]
+            }
+        ]
+    },
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#4F46E5",
     main_title_color: str = "#1F2937",
@@ -22992,11 +23272,43 @@ def generate_line_chart_slide_2(
 
 
 def generate_line_chart_slide_3(
-    main_title: str, 
-    subtitle: str, 
-    insight: str, 
-    chart_options: dict, 
-    data_input: dict,
+    main_title: str = "EV Market Leaders Expand the Gap", 
+    subtitle: str = "Southeast Asia EV Sales – Jan to Dec 2026", 
+    insight: str = (
+        "Tesla and BYD maintain strong upward momentum throughout the year, "
+        "with Tesla accelerating sharply in Q3 following new model releases. "
+    ), 
+    chart_options: dict = {
+        "x_axis": "Month",
+        "y_axis": "Units Sold",
+        "unit": "K",
+        "show_value": False,
+        "show_legend": True,
+        "y_axis_min": 20,
+        "y_axis_max": 140,
+        "data_label_format": "{value}K",
+        "colors": ["#00F2FF", "#8B5CF6", "#EC4899"]
+    }, 
+    data_input: dict = {
+        "time_points": [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+        ],
+        "series": [
+            {
+                "name": "Tesla",
+                "values": [45, 50, 55, 60, 68, 75, 90, 105, 115, 120, 125, 130]
+            },
+            {
+                "name": "BYD",
+                "values": [40, 48, 52, 58, 63, 70, 85, 95, 105, 110, 118, 122]
+            },
+            {
+                "name": "VinFast",
+                "values": [30, 35, 40, 44, 50, 55, 60, 66, 70, 72, 74, 76]
+            }
+        ]
+    },
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#00F2FF",
     main_title_color: str = "#FFFFFF",

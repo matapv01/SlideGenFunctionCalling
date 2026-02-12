@@ -134,7 +134,8 @@ from src.tools.html_tool import (
     generate_bar_chart_slide_3, # slide biểu đồ cột (mhung)
     generate_scatter_plot_chart_slide_1, # slide biểu đồ phân tán (mhung)
     generate_scatter_plot_chart_slide_2, # slide biểu đồ phân tán (mhung)
-    generate_scatter_plot_chart_slide_3, # slide biểu đồ phân tán (mhung)    
+    generate_scatter_plot_chart_slide_3, # slide biểu đồ phân tán (mhung)   
+    generate_scatter_plot_chart_slide_4, # slide biểu đồ phân tán (mhung)
     generate_line_chart_slide_1, # slide biểu đồ đường (mhung)
     generate_line_chart_slide_2, # slide biểu đồ đường (mhung)
     generate_line_chart_slide_3, # slide biểu đồ đường (mhung)
@@ -1619,12 +1620,17 @@ class GenerateThankYouFarmSlideInput(BaseModel):
 #---BAR CHART SLIDES-------------------------------------------------------------------------    
 
 class GenerateBarChartSlide1(BaseModel):
-    """Input schema for generate_grouped_bar_chart_slide."""
-    main_title: str = Field(description="Main title of the chart (10–60 characters). Example: Quarterly Shipment Volume",)
-    subtitle: str = Field(description="Subtitle, unit, or data source. Example: Units: Thousand Metric Tons",)
-    insight: str = Field(description="Description or main insight of the slide")
-    chart_options: Dict[str, Any] = Field(
-        description="""
+    """Input schema for generate_bar_chart_slide_1"""
+    main_title: str = Field(..., description="""
+        Main title of the chart (10–60 characters). Example: Quarterly Shipment Volume
+        """)
+    subtitle: str = Field(..., description="""
+        Subtitle, unit, or data source. Example: Units: Thousand Metric Tons
+        """)
+    insight: str = Field(..., description="""
+        Description or main insight of the slide
+        """)
+    chart_options: Dict[str, Any] = Field(..., description="""
             # Chart options define how the bar chart is displayed and styled.
             # 'colors' should match the Logistic theme (e.g., Navy, Orange).
             
@@ -1640,8 +1646,7 @@ class GenerateBarChartSlide1(BaseModel):
             }
         """
     )
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
             # Grouped Bar Chart Data Schema.
             # 'categories' are labels on X-axis (e.g., Quarters, Regions).
             # 'series' are the groups of bars (e.g., 2023 vs 2024, or Import vs Export).
@@ -1665,22 +1670,17 @@ class GenerateBarChartSlide1(BaseModel):
     insight_font_size: str = Field(default="26px", description="CSS font size for insight text.")
 
 class GenerateBarChartSlide2(BaseModel):
-    """Input schema for generate_grouped_bar_chart_slide."""
-    
-    main_title: str = Field(
-        description="Main title of the chart (10–60 characters). Example: Ocean Temperature vs. Depth Analysis"
-    )
-    
-    subtitle: str = Field(
-        description="Subtitle, unit, or data source. Example: Data Source: Marine Institute 2025"
-    )
-    
-    insight: str = Field(
-        description="Description or main insight of the slide"
-    )
-
-    chart_options: Dict[str, Any] = Field(
-        description="""
+    """Input schema for generate_bar_chart_slide_2."""
+    main_title: str = Field(..., description="""
+        Main title of the chart (10–60 characters). Example: Ocean Temperature vs. Depth Analysis
+        """)
+    subtitle: str = Field(..., description="""
+        Subtitle, unit, or data source. Example: Data Source: Marine Institute 2025
+        """)
+    insight: str = Field(..., description="""
+        Description or main insight of the slide
+        """)
+    chart_options: Dict[str, Any] = Field(..., description="""
         Display and styling options for the grouped bar chart.
         Defines axis labels, value formatting, legend visibility, axis range,
         and color mapping for each series.
@@ -1698,9 +1698,7 @@ class GenerateBarChartSlide2(BaseModel):
         }
         """
     )
-
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
         Data for a grouped bar chart comparing multiple series across the same categories.
 
         - categories: Labels on the X-axis.
@@ -1758,44 +1756,36 @@ class GenerateBarChartSlide2(BaseModel):
 
 class GenerateBarChartSlide3(BaseModel):
     """
-    Schema for a bar chart slide designed under the "My Family" theme.
-    This schema is optimized for categorical comparison,
-    highlighting differences between family members,
-    and extracting meaningful household insights.
+    Input schema for generate_bar_chart_slide_3.
     """
-
-    main_title: str = Field(
-        description=(
+    main_title: str = Field(..., description="""
             "Primary headline summarizing the core comparison presented "
             "in the bar chart (10–60 characters). "
             "The title should communicate an insight about differences or imbalance, "
             "rather than merely naming the dataset. "
             "Example: Weekly Household Responsibilities Distribution"
-        )
+            """
     )
 
-    subtitle: str = Field(
-        description=(
+    subtitle: str = Field(..., description="""
             "Contextual information that clarifies the measurement setting, "
             "time period, or data source related to family activities. "
             "This helps the audience understand how the categorical data "
             "was collected or structured. "
             "Example: Average Hours Spent on Chores per Week (2026 Survey)"
-        )
+            """
     )
 
-    insight: str = Field(
-        description=(
+    insight: str = Field(..., description="""
             "A short analytical takeaway derived from comparing bar heights. "
             "This should highlight imbalance, dominance, equality, or surprising gaps "
             "between family members. "
             "Instead of repeating numbers, explain what the comparison implies "
             "about workload distribution or family dynamics."
-        )
+            """
     )
 
-    chart_options: Dict[str, Any] = Field(
-        description="""
+    chart_options: Dict[str, Any] = Field(..., description="""
         Controls visual behavior of the bar chart. The agent should interpret
         category semantics and numeric distribution before selecting settings.
 
@@ -1825,8 +1815,7 @@ class GenerateBarChartSlide3(BaseModel):
         """
     )
 
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
         Categorical comparison data representing measurable differences
         between family members or defined household roles.
 
@@ -1922,11 +1911,12 @@ class GenerateBarChartSlide3(BaseModel):
 #---SCATTER PLOT CHART SLIDES-------------------------------------------------------------------------    
 
 class GenerateScatterPlotChartSlide1(BaseModel):
-    """Input schema for generate_grouped_bar_chart_slide."""
-    main_title: str = Field(description="Main title of the chart (10–60 characters). Example: Relationship Between Study Time and Exam Score",)
-    subtitle: str = Field(description="Subtitle, unit, or data source. Example: Source: Student Survey 2024",)
-    insight: str = Field(description="Description or main insight of the slide")
+    """Input schema for generate_scatter_plot_chart_slide_1"""
+    main_title: str = Field(..., description="Main title of the chart (10–60 characters). Example: Relationship Between Study Time and Exam Score",)
+    subtitle: str = Field(..., description="Subtitle, unit, or data source. Example: Source: Student Survey 2024",)
+    insight: str = Field(..., description="Description or main insight of the slide")
     chart_options: Dict[str, Any] = Field(
+        ...,
         description="""
             # Chart options define how the scatter plot is displayed and styled.
 
@@ -1955,6 +1945,7 @@ class GenerateScatterPlotChartSlide1(BaseModel):
         """
     )
     data_input: Dict[str, Any] = Field(
+        ...,
         description="""
             # This scatter plot data describes the relationship between study time (X-axis) and exam score (Y-axis).
             # Each data point represents a student, where x denotes study time and y denotes the corresponding exam score.
@@ -1991,37 +1982,22 @@ class GenerateScatterPlotChartSlide1(BaseModel):
     insight_font_size: str = Field(default="28px", description="CSS font size for insight text.")
 
 class GenerateScatterPlotChartSlide2(BaseModel):
-    """
-    Schema for a Travel-themed scatter plot slide.
-    Designed to visualize relationships between quantitative variables in a travel context,
-    while enabling the agent to automatically infer chart configuration and analytical insights.
-    """
-
-    main_title: str = Field(
-        description=(
+    """Input schema for generate_scatter_plot_chart_slide_2"""
+    main_title: str = Field(..., description="""
             "Main title of the slide, summarizing the core message of the scatter plot "
             "within a travel context (10–60 characters). "
-            "Example: Relationship Between Travel Distance and Spending"
+            "Example: Relationship Between Travel Distance and Spending"""
         )
-    )
-
-    subtitle: Optional[str] = Field(
-        description=(
+    subtitle: Optional[str] = Field(..., description="""
             "Subtitle or supplementary information such as data source, survey scope, "
             "or collection period. "
             "Example: Source: Tourist Behavior Survey 2024"
-        )
-    )
-
-    insight: Optional[str] = Field(
-        description=(
+        """)
+    insight: Optional[str] = Field(..., description="""
             "A concise analytical statement derived from the chart, highlighting key trends, "
             "correlations, or notable outliers in travel behavior."
-        )
-    )
-
-    chart_options: Optional[Dict[str, Any]] = Field(
-        description="""
+        """)
+    chart_options: Optional[Dict[str, Any]] = Field(..., description="""
             # Chart options define the visual presentation and styling of the scatter plot
             # in a Travel context.
 
@@ -2059,9 +2035,7 @@ class GenerateScatterPlotChartSlide2(BaseModel):
             }
         """
     )
-
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
             # Scatter plot data describing the relationship between travel distance (X-axis)
             # and total travel spending (Y-axis).
 
@@ -2095,83 +2069,63 @@ class GenerateScatterPlotChartSlide2(BaseModel):
             }
         """
     )
-
     font_family: str = Field(
         default="Inter, sans-serif",
         description="Primary font used across the slide, optimized for readability and a modern look."
     )
-
     accent_color: str = Field(
         default="#008080",
         description="Primary accent color (CSS value) used for decorative and emphasis elements."
     )
-
     main_title_color: str = Field(
         default="#005F5F",
         description="Text color for the main title, designed to stand out against the slide background."
     )
-
     subtitle_color: str = Field(
         default="#556B2F",
         description="Text color for the subtitle or data source information."
     )
-
     insight_text_color: str = Field(
         default="#2C3E50",
         description="Text color for the insight section, ensuring clarity and neutral tone."
     )
-
     main_title_font_size: str = Field(
         default="72px",
         description="CSS font size for the main title, providing strong visual emphasis."
     )
-
     subtitle_font_size: str = Field(
         default="32px",
         description="CSS font size for the subtitle."
     )
-
     insight_font_size: str = Field(
         default="28px",
         description="CSS font size for the analytical insight text."
     )
 
-class GenerateScatterPlotChartSlide3(BaseModel):
-    """
-    Schema for an Education-focused scatter plot slide.
-    This schema is designed to visualize the relationship between quantitative learning variables,
-    enabling the agent to infer chart configuration, axis semantics, and meaningful insights
-    without relying on hardcoded examples.
-    """
 
-    main_title: str = Field(
-        description=(
+class GenerateScatterPlotChartSlide3(BaseModel):
+    """Schema for generate_scatter_plot_chart_slide_3"""
+    main_title: str = Field(..., description=(
             "Primary title of the slide that concisely communicates the central message "
             "of the scatter plot in an educational context (10–60 characters). "
             "The title should clearly reflect the relationship being analyzed. "
             "Example theme: Study Effort vs Academic Performance"
         )
     )
-
-    subtitle: Optional[str] = Field(
-        description=(
+    subtitle: Optional[str] = Field(..., description=(
             "Supporting subtitle providing contextual details such as data origin, "
             "student group, academic level, or time frame. "
             "This text helps the viewer interpret the scope of the data. "
             "Example: Data collected from high school students, Semester 1"
         )
     )
-
-    insight: Optional[str] = Field(
-        description=(
+    insight: Optional[str] = Field(..., description=(
             "A brief analytical takeaway inferred from the scatter plot. "
             "It should summarize observable patterns such as correlations, clusters, "
             "or anomalies in learning behavior and outcomes."
         )
     )
-
-    chart_options: Optional[Dict[str, Any]] = Field(
-        description="""
+    chart_options: Optional[Dict[str, Any]] = Field(...,description="""
             # Chart options define how the scatter plot should be presented visually
             # within an education analytics context.
 
@@ -2222,9 +2176,7 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             }
         """
     )
-
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
             # Scatter plot data representing the relationship between learning effort
             # and academic results.
 
@@ -2258,7 +2210,6 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             }
         """
     )
-
     font_family: str = Field(
         default="Inter, sans-serif",
         description=(
@@ -2266,7 +2217,6 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             "and a clean, academic-friendly appearance."
         )
     )
-
     accent_color: str = Field(
         default="#EE6C4D",
         description=(
@@ -2274,7 +2224,6 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             "The color should contrast well with the background while remaining visually balanced."
         )
     )
-
     main_title_color: str = Field(
         default="#293241",
         description=(
@@ -2282,7 +2231,6 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             "and draw immediate attention."
         )
     )
-
     subtitle_color: str = Field(
         default="#546E7A",
         description=(
@@ -2290,7 +2238,6 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             "to maintain a clear typographic hierarchy."
         )
     )
-
     insight_text_color: str = Field(
         default="#374151",
         description=(
@@ -2298,7 +2245,6 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             "and neutral analytical tone."
         )
     )
-
     main_title_font_size: str = Field(
         default="64px",
         description=(
@@ -2306,14 +2252,12 @@ class GenerateScatterPlotChartSlide3(BaseModel):
             "without overwhelming the slide layout."
         )
     )
-
     subtitle_font_size: str = Field(
         default="28px",
         description=(
             "CSS font size for the subtitle text, ensuring clarity while supporting the title."
         )
     )
-
     insight_font_size: str = Field(
         default="30px",
         description=(
@@ -2323,38 +2267,27 @@ class GenerateScatterPlotChartSlide3(BaseModel):
     )
 
 class GenerateScatterPlotChartSlide4(BaseModel):
-    """
-    Schema for an Education-themed scatter plot slide.
-    Designed to illustrate relationships between learning behaviors and performance outcomes,
-    """
-
-    main_title: str = Field(
-        description=(
+    """Schema for generate_scatter_plot_chart_slide_4"""
+    main_title: str = Field(..., description=(
             "Main headline of the slide, capturing the central relationship shown in the scatter plot "
             "within an education or learning context (10–60 characters). "
             "The title should be insight-oriented rather than purely descriptive. "
             "Example: Study Time vs Skill Assessment Score"
         )
     )
-
-    subtitle: Optional[str] = Field(
-        description=(
+    subtitle: Optional[str] = Field(..., description=(
             "Secondary text providing contextual details such as data source, learner group, "
             "platform name, or evaluation period. "
             "Example: Data from Online Learning Platform – 2024"
         )
     )
-
-    insight: Optional[str] = Field(
-        description=(
+    insight: Optional[str] = Field(..., description=(
             "A short analytical takeaway derived from the data, highlighting correlations, "
             "performance patterns, clusters of learners, or exceptional cases. "
             "The insight should help educators or analysts quickly grasp the key message."
         )
     )
-
-    chart_options: Optional[Dict[str, Any]] = Field(
-        description="""
+    chart_options: Optional[Dict[str, Any]] = Field(..., description="""
             # Chart options control how the scatter plot is interpreted and visually presented
             # in an education analytics context.
 
@@ -2391,9 +2324,7 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             }
         """
     )
-
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
             # Scatter plot data representing the relationship between learning effort
             # and learning outcomes.
 
@@ -2428,7 +2359,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             }
         """
     )
-
     font_family: str = Field(
         default="Inter, sans-serif",
         description=(
@@ -2436,7 +2366,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             "and a modern educational presentation style."
         )
     )
-
     accent_color: str = Field(
         default="#FFB347",
         description=(
@@ -2444,7 +2373,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             "such as key data points or decorative accents."
         )
     )
-
     main_title_color: str = Field(
         default="#333333",
         description=(
@@ -2452,7 +2380,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             "and immediate visual hierarchy."
         )
     )
-
     subtitle_color: str = Field(
         default="#666666",
         description=(
@@ -2460,7 +2387,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             "kept visually softer than the main title."
         )
     )
-
     insight_text_color: str = Field(
         default="#444444",
         description=(
@@ -2468,7 +2394,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             "and comfortable reading for analytical content."
         )
     )
-
     main_title_font_size: str = Field(
         default="64px",
         description=(
@@ -2476,7 +2401,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             "and clearly communicate the core message."
         )
     )
-
     subtitle_font_size: str = Field(
         default="28px",
         description=(
@@ -2484,7 +2408,6 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             "from the main title while remaining readable."
         )
     )
-
     insight_font_size: str = Field(
         default="30px",
         description=(
@@ -2496,11 +2419,8 @@ class GenerateScatterPlotChartSlide4(BaseModel):
 #---LINE CHART SLIDES-------------------------------------------------------------------------    
 
 class GenerateLineChartSlide1(BaseModel):
-    """
-    Schema for an Environment & Sustainability–themed line chart slide.
-    """
-    main_title: str = Field(
-        description=(
+    """Schema for generate_line_chart_slide_1"""
+    main_title: str = Field(..., description=(
             "Primary headline of the slide, summarizing the key trend or evolution "
             "depicted by the line chart over time (10–60 characters). "
             "The title should emphasize insight or direction, not just the metric name. "
@@ -2508,8 +2428,7 @@ class GenerateLineChartSlide1(BaseModel):
         )
     )
 
-    subtitle: Optional[str] = Field(
-        description=(
+    subtitle: Optional[str] = Field(..., description=(
             "Supporting context for the chart, such as geographic scope, data source, "
             "measurement period, or organization name. "
             "This text helps anchor the time-series data in a real-world setting. "
@@ -2517,16 +2436,14 @@ class GenerateLineChartSlide1(BaseModel):
         )
     )
 
-    insight: Optional[str] = Field(
-        description=(
+    insight: Optional[str] = Field(..., description=(
             "A concise analytical takeaway highlighting notable trends in the data, "
             "such as steady growth, sudden acceleration, plateaus, or fluctuations. "
             "The insight should help decision-makers quickly grasp what changed and why it matters."
         )
     )
 
-    chart_options: Dict[str, Any] = Field(
-        description="""
+    chart_options: Dict[str, Any] = Field(..., description="""
             # Configuration controlling how the line chart is interpreted and rendered.
 
             # The agent should derive suitable options based on the time-series semantics,
@@ -2560,8 +2477,7 @@ class GenerateLineChartSlide1(BaseModel):
         """
     )
 
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
             # Time-series data illustrating how sustainability metrics
             # change across consecutive time points.
 
@@ -2587,7 +2503,6 @@ class GenerateLineChartSlide1(BaseModel):
             }
         """
     )
-
     font_family: str = Field(
         default="Arial, sans-serif",
         description=(
@@ -2595,7 +2510,6 @@ class GenerateLineChartSlide1(BaseModel):
             "and a clean, professional presentation suitable for reports or dashboards."
         )
     )
-
     accent_color: str = Field(
         default="#FF8C00",
         description=(
@@ -2603,7 +2517,6 @@ class GenerateLineChartSlide1(BaseModel):
             "This color should contrast well with the background without overpowering the data."
         )
     )
-
     main_title_color: str = Field(
         default="#333333",
         description=(
@@ -2611,7 +2524,6 @@ class GenerateLineChartSlide1(BaseModel):
             "and immediately draw attention to the chart’s core message."
         )
     )
-
     subtitle_color: str = Field(
         default="#666666",
         description=(
@@ -2619,7 +2531,6 @@ class GenerateLineChartSlide1(BaseModel):
             "to support context without competing for attention."
         )
     )
-
     insight_text_color: str = Field(
         default="#444444",
         description=(
@@ -2627,7 +2538,6 @@ class GenerateLineChartSlide1(BaseModel):
             "of analytical commentary beneath the chart."
         )
     )
-
     main_title_font_size: str = Field(
         default="65px",
         description=(
@@ -2635,7 +2545,6 @@ class GenerateLineChartSlide1(BaseModel):
             "and clearly communicate the overall trend at a glance."
         )
     )
-
     subtitle_font_size: str = Field(
         default="30px",
         description=(
@@ -2643,7 +2552,6 @@ class GenerateLineChartSlide1(BaseModel):
             "from the main title while remaining legible."
         )
     )
-
     insight_font_size: str = Field(
         default="28px",
         description=(
@@ -2653,37 +2561,29 @@ class GenerateLineChartSlide1(BaseModel):
     )
 
 class GenerateLineChartSlide2(BaseModel):
-    """
-    Schema for a line chart slide illustrating how a metric evolves over time.
-    This schema is optimized for trend detection, comparison across series,
-    and analytical storytelling.
-    """
-    main_title: str = Field(
-        description=(
+    """Schema for generate_line_chart_slide_2"""
+    main_title: str = Field(..., description=(  
             "Primary headline of the slide describing the overall evolution or trend "
             "displayed in the line chart (10–60 characters). "
             "The title should communicate insight or direction, not just restate the metric name. "
             "Example: Improvement of Model Accuracy During Training"
         ),
     )
-    subtitle: Optional[str] = Field(
-        description=(
+    subtitle: Optional[str] = Field(..., description=(
             "Contextual information that frames the chart, such as model type, dataset, "
             "training duration, or experimental setting. "
             "This helps the audience understand where and how the time-series data was produced. "
             "Example: CNN trained on Image Classification Dataset (50 Epochs)"
         )
     )
-    insight: Optional[str] = Field(
-        description=(
+    insight: Optional[str] = Field(..., description=(
             "A short analytical takeaway highlighting key patterns in the data, "
             "such as convergence speed, stabilization, divergence between series, "
             "or signs of overfitting. "
             "This field should explain why the trend matters rather than repeating values."
         )
     )
-    chart_options: Dict[str, Any] = Field(
-        description="""
+    chart_options: Dict[str, Any] = Field(..., description="""
         Controls line chart rendering. Agent should infer settings from data semantics.
         - x_axis: Time dimension label (e.g., Epoch, Step)
         - y_axis: Metric label (e.g., Accuracy, Loss)
@@ -2708,8 +2608,7 @@ class GenerateLineChartSlide2(BaseModel):
         }
         """
     )
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description="""
         Time-series data representing how one or more metrics change
         across sequential training steps or time points.
 
@@ -2795,16 +2694,8 @@ class GenerateLineChartSlide2(BaseModel):
 
 
 class GenerateLineChartSlide3(BaseModel):
-    """
-    Schema for a line chart slide visualizing multi-series performance
-    over sequential time intervals. This structure supports temporal comparison,
-    growth analysis, and competitive trend evaluation.
-
-    Example theme: Monthly Electric Vehicle Sales by Brand (2026)
-    """
-
-    main_title: str = Field(
-        description=(
+    """Schema for generate_line_chart_slide_3"""
+    main_title: str = Field(..., description=(
             "Main headline communicating the overall direction or competitive "
             "movement shown in the chart (10–60 characters). "
             "The title should reflect a meaningful observation rather than "
@@ -2813,8 +2704,7 @@ class GenerateLineChartSlide3(BaseModel):
         ),
     )
 
-    subtitle: Optional[str] = Field(
-        description=(
+    subtitle: Optional[str] = Field(..., description=(
             "Supporting context that clarifies the scope of the dataset, "
             "such as geographic market, reporting period, or data source. "
             "This helps viewers interpret the time-series correctly. "
@@ -2822,8 +2712,7 @@ class GenerateLineChartSlide3(BaseModel):
         )
     )
 
-    insight: str = Field(
-        description=(
+    insight: str = Field(..., description=(
             "Concise analytical commentary summarizing the most important "
             "patterns observed in the chart. "
             "This may highlight acceleration, seasonal peaks, widening gaps "
@@ -2833,8 +2722,7 @@ class GenerateLineChartSlide3(BaseModel):
         )
     )
 
-    chart_options: Dict[str, Any] = Field(
-        description="""
+    chart_options: Dict[str, Any] = Field(..., description="""
         Configuration controlling how the line chart is rendered.
         The system should determine suitable settings based on the data meaning.
 
@@ -2866,8 +2754,7 @@ class GenerateLineChartSlide3(BaseModel):
         """
     )
 
-    data_input: Dict[str, Any] = Field(
-        description="""
+    data_input: Dict[str, Any] = Field(..., description=""" 
         Sequential time-based data used to build the multi-line chart.
 
         - time_points: Ordered labels representing time progression
