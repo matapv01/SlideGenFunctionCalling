@@ -9,6 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     <script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
     <script src="https://unpkg.com/jspdf@2.5.1/dist/jspdf.umd.min.js"></script>
+    <script src="//unpkg.com/mathlive"></script>
     <!-- PDFKit for high-quality vector PDF generation -->
     <script src="https://cdn.jsdelivr.net/npm/pdfkit@0.13.0/js/pdfkit.standalone.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/blob-stream@0.1.3/blob-stream.js"></script>
@@ -43,6 +44,10 @@
     <link rel="stylesheet" href="css/components/elements/editing.css">
     <link rel="stylesheet" href="css/components/controls.css">
     <style>
+        math-field::part(virtual-keyboard-toggle), 
+        math-field::part(menu-toggle) {
+            display: none !important;
+        }
         #saveIndicator {
             display: inline-flex !important;
             align-items: center;
@@ -58,6 +63,18 @@
         #saveIndicator .icon {
             vertical-align: middle !important;
             margin-right: 4px;
+        }
+        body {
+            --keyboard-zindex: 3000; /* Cao hơn left panel */
+        }
+        /* Ép buộc vị trí khung chứa bàn phím */
+        .ML__keyboard, math-virtual-keyboard {
+            position: fixed !important;
+            left: 479px !important;
+            bottom: 0 !important;
+            width: calc(100% - 479px - 320px) !important; /* Trừ đi Left Panel (300) và Right Panel (320) */
+            z-index: 3000 !important;
+            right: auto !important;
         }
     </style>
 </head>
@@ -396,6 +413,16 @@
                 <p style="font-size: 13px; color: #718096; margin-top: 5px;">Click để thêm biểu tượng vào slide</p>
             </div>
             <div class="elements-content">
+                <!-- Math & Equations -->
+                <div class="element-category">
+                    <div class="category-title">∑ Math</div>
+                    <div class="element-grid">
+                        <div class="element-item" data-element="equation">
+                            <div class="element-icon" style="font-size: 20px;">∑</div>
+                            <div class="element-label">Công thức</div>
+                        </div>
+                    </div>
+                </div>
                 <!-- Basic Shapes -->
                 <div class="element-category">
                     <div class="category-title">🔷 Hình Cơ bản</div>

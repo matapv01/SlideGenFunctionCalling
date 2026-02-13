@@ -1844,7 +1844,43 @@ export class SlideEditor {
         const newElement = element.cloneNode(true);
         element.parentNode.replaceChild(newElement, element);
         this.addResizeHandles(newElement);
+        if (element.dataset.type === 'equation') {
+            const mathField = newElement.querySelector('math-field');
+                if (mathField) {
+                    // Force styles again for loaded elements
+                    mathField.style.pointerEvents = 'auto';
+                    mathField.style.position = 'relative';
+                    mathField.style.zIndex = '10';
+                    mathField.style.width = '100%'; 
+                    mathField.style.height = '100%';
+                    mathField.style.userSelect = 'text';        // ESSENTIAL for cursor placement
+                    mathField.style.touchAction = 'none';       // Prevent browser handling touch interactions
+                    
+                    // IMPORTANT: use capture: true to catch event before MathLive's shadow DOM might stop it
+                    // We attach to the wrapper (newElement) to catch events bubbling/capturing through it
+                    const captureHandler = (e) => {
+                        const targetTag = e.target.tagName ? e.target.tagName.toLowerCase() : '';
+                        if (targetTag === 'math-field' || e.target.closest('math-field')) {
+                            console.log(`🖱️ MathField Wrapper Capture ${e.type} triggered`, 'Button:', e.button);
+                            // Always trigger full selection logic
+                            this.selectElement(newElement);
+                        }
+                    };
 
+                    newElement.addEventListener('mousedown', captureHandler, { capture: true });
+                    newElement.addEventListener('pointerdown', captureHandler, { capture: true });
+
+                    const updateSize = () => {
+                    newElement.style.width = 'auto';
+                    newElement.style.height = 'auto';
+                };
+                // Đồng bộ nội dung khi gõ (nếu cần xử lý save state)
+                mathField.addEventListener('input', () => {
+                    // Có thể thêm logic lưu state ở đây nếu muốn Undo/Redo từng ký tự
+                    updateSize();
+                });
+            }
+        }
         newElement.addEventListener('mousedown', (e) => this.handleMouseDown(e, newElement));
 
         // Detect hover near edges for cursor change
@@ -1858,7 +1894,8 @@ export class SlideEditor {
             }
 
             const isTextElement = newElement.hasAttribute('contenteditable') ||
-                newElement.querySelector('[contenteditable="true"]');
+                newElement.querySelector('[contenteditable="true"]') ||
+                newElement.dataset.type === 'equation';
 
             // Lấy rect của element chính (không phải contenteditable bên trong)
             const rect = newElement.getBoundingClientRect();
@@ -1979,6 +2016,8 @@ export class SlideEditor {
         if (newElement.classList.contains('group-container')) {
             newElement.querySelectorAll('.element').forEach(child => this.makeElementInteractive(child));
         }
+
+        return newElement;
     }
 
     addResizeHandles(element) {
@@ -1989,8 +2028,8 @@ export class SlideEditor {
         <div class="resize-handle bl"></div> <div class="resize-handle br"></div>
     `;
 
-        // Add drag handle for text elements
-        if (element.dataset.type === 'text' || element.hasAttribute('contenteditable')) {
+        // Add drag handle for text elements and equations
+        if (element.dataset.type === 'text' || element.dataset.type === 'equation' || element.hasAttribute('contenteditable')) {
             handlesHTML += `<div class="drag-handle" title="Drag to move">⠿</div>`;
         }
 
@@ -2164,6 +2203,20 @@ export class SlideEditor {
     }
 
     handleMouseDown(e, element) {
+        // 1. Allow MathLive interaction (Check shadow DOM host or children)
+        // If clicking on math-field, we WANT to select the element (show panel),
+        // BUT we must allow the event to propagate so MathLive can set the cursor.
+        if (e.target.tagName && e.target.tagName.toLowerCase() === 'math-field') {
+             console.log('🖱️ handleMouseDown: Clicked strictly on math-field');
+             if (!this.selectedElements.includes(element)) {
+                console.log('Selecting math-field element via handleMouseDown');
+                this.selectElement(element);
+            }
+            // IMPORTANT: Do NOT preventDefault() or stopPropagation() here.
+            // Let the event bubble so MathLive internals can handle the caret.
+            return;
+        }
+
         // Check if clicking on drag handle
         const isDragHandle = e.target.classList.contains('drag-handle');
 
@@ -2302,6 +2355,74 @@ export class SlideEditor {
         this.updateProperties();
     }
 
+    // NEW: Function to toggle MathLive menu
+    toggleMathMenu() {
+        if (this.selectedElements.length > 0) {
+            const el = this.selectedElements[0];
+            
+            // 1. Try to use system context menu (showContextMenu)
+            if (typeof this.showContextMenu === 'function') {
+                const rect = el.getBoundingClientRect();
+                // Create a fake event centered on the element
+                const fakeEvent = {
+                    preventDefault: () => {},
+                    stopPropagation: () => {},
+                    clientX: rect.left + rect.width / 2,
+                    clientY: rect.top + rect.height / 2,
+                    target: el
+                };
+                
+                console.log('☰ Opening System Context Menu for Math Element');
+                this.showContextMenu(fakeEvent, el);
+            } else {
+                console.warn('showContextMenu not found, falling back to MathLive menu');
+                // Fallback to old behavior
+                const mathField = el.querySelector('math-field');
+                if (mathField && mathField.executeCommand) {
+                    mathField.executeCommand('toggle-menu');
+                }
+            }
+        }
+    }
+
+    // NEW: Render helper for Math Categories
+    renderMathCategory(title, icon, items) {
+        // Generate unique ID for category
+        const id = 'math-cat-' + title.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return `
+        <div class="math-category">
+            <div class="math-category-header" onclick="window.slideEditor.toggleMathCategory(this)">
+                <div style="display: flex; align-items: center; gap: 8px;">
+                    <span style="font-family: 'Cambria Math', serif; font-size: 16px; min-width: 24px;">${icon}</span>
+                    <span>${title}</span>
+                </div>
+            </div>
+            <div class="math-category-content">
+                ${items.map(item => `
+                    <button class="math-template-btn" 
+                            onclick="window.slideEditor.insertMathCmd('${item.cmd}')" 
+                            title="${item.label}">
+                        <span>${item.label}</span>
+                    </button>
+                `).join('')}
+            </div>
+        </div>
+        `;
+    }
+
+    // NEW: Toggle handler for Math Categories
+    toggleMathCategory(header) {
+        const category = header.parentElement;
+        // Close other categories (optional - creates accordion effect)
+        const allCategories = document.querySelectorAll('.math-category');
+        allCategories.forEach(cat => {
+            if (cat !== category) cat.classList.remove('active');
+        });
+        
+        // Toggle current
+        category.classList.toggle('active');
+    }
+
     updateProperties() {
         if (this.selectedElements.length === 0) {
             this.propertiesContent.innerHTML = `<div style="text-align: center; margin-top: 50px; color: #718096;"><div style="font-size: 48px; margin-bottom: 15px;">🎨</div><h3 style="margin-bottom: 10px; color: #4a5568;">No Element Selected</h3><p>Select an element to edit its properties</p></div>`;
@@ -2398,6 +2519,122 @@ export class SlideEditor {
                 </div>
             </div>
         `;
+        }
+        if (el.dataset.type === 'equation') {
+            const mathField = el.querySelector('math-field');
+            const keyboardMode = 'manual';
+            // NEW: Define variable to prevent crash
+            const isKeyboardVisible = window.mathVirtualKeyboard ? window.mathVirtualKeyboard.visible : false;
+            
+            html += `
+            <div class="property-group">
+                <h3>∑ Math Options</h3>
+                
+                <!-- 1. Font Style (Kế thừa) -->
+                <!-- 1. Font Style (Improved Design) -->
+                <div class="property-row">
+                    <div class="property-col">
+                        <label class="property-label">Size (px)</label>
+                         <div class="spacing-input-group">
+                            <input type="number" class="property-input" data-style="fontSize" 
+                                value="${parseInt(style.fontSize)}" step="2" min="12" max="100" 
+                                style="text-align: center; font-weight: 500;">
+                        </div>
+                    </div>
+                    <div class="property-col">
+                        <label class="property-label">Color</label>
+                        <div class="color-input-container" style="margin-bottom: 0;">
+                            <input type="color" class="property-color-input" data-style="color" 
+                                   value="${this.rgbToHex(style.color) || '#000000'}" 
+                                   style="width: 100%; height: 42px; padding: 4px; border-radius: 8px; border: 1px solid var(--border-color); cursor: pointer;">
+                        </div>
+                    </div>
+                </div>
+                <!-- 2. Virtual Keyboard -->
+                <!-- 2. Math Controls (Keyboard & Menu) -->
+                <label class="property-label" style="margin-top:15px;">Controls</label>
+                <div class="button-group">
+                    <button class="style-btn ${isKeyboardVisible ? 'active' : ''}" 
+                            onclick="window.slideEditor.toggleMathKeyboard(!window.mathVirtualKeyboard.visible)" 
+                            title="Toggle Virtual Keyboard">
+                        ⌨️ Keyboard
+                    </button>
+                    <button class="style-btn" 
+                            onclick="window.slideEditor.toggleMathMenu()" 
+                            title="Open Math Menu">
+                        ☰ Menu
+                    </button>
+                </div>
+                <!-- 3. Math Templates (Word-like) -->
+                <label class="property-label" style="margin-top:15px;">Insert Math</label>
+                <div class="math-template-section">
+                    ${this.renderMathCategory('Phân số', '÷', [
+                        { label: 'x/y', cmd: '\\\\frac{#0}{#?}' },
+                        { label: 'dy/dx', cmd: '\\\\frac{d}{dx}' },
+                        { label: '∂/∂x', cmd: '\\\\frac{\\\\partial}{\\\\partial x}' },
+                        { label: 'π/2', cmd: '\\\\frac{\\\\pi}{2}' }
+                    ])}
+                    
+                    ${this.renderMathCategory('Chỉ số', 'x²', [
+                        { label: 'x²', cmd: '^{2}' },
+                        { label: 'xⁿ', cmd: '^{#?}' },
+                        { label: 'xᵢ', cmd: '_{#?}' },
+                        { label: 'xₙ', cmd: '_{n}' }
+                    ])}
+
+                    ${this.renderMathCategory('Căn thức', '√', [
+                        { label: '√x', cmd: '\\\\sqrt{#0}' },
+                        { label: '∛x', cmd: '\\\\sqrt[3]{#0}' },
+                        { label: 'ⁿ√x', cmd: '\\\\sqrt[#?]{#0}' },
+                        { label: '√a²+b²', cmd: '\\\\sqrt{a^2+b^2}' }
+                    ])}
+
+                    ${this.renderMathCategory('Tích phân', '∫', [
+                        { label: '∫', cmd: '\\\\int' },
+                        { label: '∫ab', cmd: '\\\\int_{a}^{b}' },
+                        { label: '∬', cmd: '\\\\iint' },
+                        { label: '∮', cmd: '\\\\oint' }
+                    ])}
+
+                    ${this.renderMathCategory('Toán tử lớn', '∑', [
+                        { label: '∑', cmd: '\\\\sum' },
+                        { label: '∑in', cmd: '\\\\sum_{i=0}^{n}' },
+                        { label: '∏', cmd: '\\\\prod' },
+                        { label: '⋃', cmd: '\\\\bigcup' }
+                    ])}
+
+                    ${this.renderMathCategory('Giới hạn & Log', 'lim', [
+                        { label: 'lim', cmd: '\\\\lim_{x \\\\to \\\\infty}' },
+                        { label: 'ln', cmd: '\\\\ln' },
+                        { label: 'log', cmd: '\\\\log' },
+                        { label: 'min', cmd: '\\\\min' },
+                        { label: 'max', cmd: '\\\\max' }
+                    ])}
+
+                    ${this.renderMathCategory('Ngoặc', '( )', [
+                        { label: '( )', cmd: '(#0)' },
+                        { label: '[ ]', cmd: '[#0]' },
+                        { label: '{ }', cmd: '\\\\{#0\\\\}' },
+                        { label: '| |', cmd: '|#0|' }
+                    ])}
+                    
+                    ${this.renderMathCategory('Lượng giác', 'sin', [
+                        { label: 'sin', cmd: '\\\\sin' },
+                        { label: 'cos', cmd: '\\\\cos' },
+                        { label: 'tan', cmd: '\\\\tan' },
+                        { label: 'θ', cmd: '\\\\theta' }
+                    ])}
+
+                    ${this.renderMathCategory('Ma trận', '⊞', [
+                        { label: '[2x2]', cmd: '\\\\begin{pmatrix} a & b \\\\\\\\ c & d \\\\end{pmatrix}' },
+                        { label: '[3x3]', cmd: '\\\\begin{pmatrix} 1 & 0 & 0 \\\\\\\\ 0 & 1 & 0 \\\\\\\\ 0 & 0 & 1 \\\\end{pmatrix}' },
+                        { label: '(Vec)', cmd: '\\\\begin{pmatrix} x \\\\\\\\ y \\\\end{pmatrix}' },
+                        { label: 'Cases', cmd: '\\\\begin{cases} x & \\\\text{if } x > 0 \\\\\\\\ 0 & \\\\text{otherwise} \\\\end{cases}' }
+                    ])}
+                </div>
+            </div>
+            `;
+
         }
 
         html += `
@@ -2754,6 +2991,30 @@ export class SlideEditor {
         el.style.zIndex = this.zIndexCounter++;
 
         switch (type) {
+            case 'equation':
+                el.style.width = '300px';
+                el.style.height = '100px';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.justifyContent = 'center';
+                el.style.fontSize = '50px'; // NEW: Default font size 50px as requested
+
+                // MathLive element
+                const mathField = document.createElement('math-field');
+                mathField.innerHTML = 'f(x) = x^2'; // Giá trị mặc định
+
+                mathField.mathVirtualKeyboardPolicy = "manual"; 
+                mathField.style.width = '100%';
+                mathField.style.display = 'block';
+                mathField.style.background = 'transparent'; // Mathfield trong suốt
+                mathField.style.fontSize = 'inherit';       // Kế thừa cỡ chữ
+                mathField.style.color = 'inherit';          // Kế thừa màu chữ
+                mathField.style.outline = 'none';           // Bỏ viền mặc định khi focus
+                mathField.style.border = 'none';  
+                // Đảm bảo math-field kế thừa style từ cha
+                mathField.style.backgroundColor = 'transparent'; 
+                el.appendChild(mathField);
+                break;
             case 'rectangle':
                 el.style.width = '300px'; el.style.height = '200px';
                 el.style.background = 'linear-gradient(135deg, #667eea, #764ba2)';
@@ -3415,8 +3676,8 @@ export class SlideEditor {
         }
 
         this.canvas.appendChild(el);
-        this.makeElementInteractive(el);
-        this.selectElement(el);
+        const interactiveEl = this.makeElementInteractive(el) || el;
+        this.selectElement(interactiveEl);
         this.saveState();
         this.markAsChanged(); // Mark as changed for reset functionality
 
@@ -3464,8 +3725,8 @@ export class SlideEditor {
                 el.appendChild(imgElement);
 
                 this.canvas.appendChild(el);
-                this.makeElementInteractive(el);
-                this.selectElement(el);
+                const interactiveEl = this.makeElementInteractive(el) || el;
+                this.selectElement(interactiveEl);
                 this.saveState();
 
                 // Auto zoom to fit the new image
@@ -3503,8 +3764,8 @@ export class SlideEditor {
             el.appendChild(video);
 
             this.canvas.appendChild(el);
-            this.makeElementInteractive(el);
-            this.selectElement(el);
+            const interactiveEl = this.makeElementInteractive(el) || el;
+            this.selectElement(interactiveEl);
             this.saveState();
 
             // Auto zoom to fit the new video
@@ -3962,6 +4223,14 @@ export class SlideEditor {
             } else {
                 return; // Block other keyboard events while typing
             }
+        }
+
+        // 1. Fix for MathField Deletion
+        // If focusing a math-field, let MathLive handle Backspace/Delete (delete character), 
+        // do NOT delete the element.
+        if (document.activeElement && document.activeElement.tagName && document.activeElement.tagName.toLowerCase() === 'math-field') {
+            // Allow event to propagate to MathLive
+            return;
         }
 
         if (this.selectedElements.length > 0 && (e.key === 'Delete' || e.key === 'Backspace')) {
@@ -6233,12 +6502,23 @@ export class SlideEditor {
 
         leftPanels.classList.toggle('collapsed');
         container.classList.toggle('left-collapsed');
-
+        
         // Cập nhật icon nút dựa trên trạng thái
+        // const isCollapsed = leftPanels.classList.contains('collapsed');
+        // if (toggleBtn) {
+        //     toggleBtn.title = isCollapsed ? 'Mở rộng Slides' : 'Thu gọn Slides';
+        //     toggleBtn.setAttribute('aria-pressed', (!isCollapsed).toString());
+        // }
         const isCollapsed = leftPanels.classList.contains('collapsed');
-        if (toggleBtn) {
-            toggleBtn.title = isCollapsed ? 'Mở rộng Slides' : 'Thu gọn Slides';
-            toggleBtn.setAttribute('aria-pressed', (!isCollapsed).toString());
+        const mkb = document.querySelector('math-virtual-keyboard');
+        if (mkb) {
+            if (isCollapsed) {
+                mkb.style.setProperty('left', '70px', 'important'); // Hoặc 0px tùy giao diện lúc đóng
+                mkb.style.setProperty('width', 'calc(100% - 70px - 320px)', 'important');
+            } else {
+                mkb.style.setProperty('left', '300px', 'important');
+                mkb.style.setProperty('width', 'calc(100% - 300px - 320px)', 'important');
+            }
         }
     }
 
@@ -7924,7 +8204,32 @@ ${slide.content}
     // === END DEBUG FUNCTIONALITY ===
 
     // === END RESET FUNCTIONALITY ===
+    toggleMathKeyboard(show) {
+        if (window.mathVirtualKeyboard) {
+            window.mathVirtualKeyboard.visible = show;
+            // Update properties panel to reflect new state (button color)
+            this.updateProperties();
 
+            if (show) {
+                // Focus vào element đang chọn để gõ luôn
+                const el = this.selectedElements[0];
+                if (el && el.querySelector('math-field')) {
+                    el.querySelector('math-field').focus();
+                }
+            }
+        }
+    }
+    insertMathCmd(latex) {
+        const el = this.selectedElements[0];
+        if (el && el.dataset.type === 'equation') {
+            const mf = el.querySelector('math-field');
+            if (mf) {
+                mf.focus();
+                // Chèn Latex vào vị trí con trỏ hiện tại
+                mf.executeCommand(['insert', latex]);
+            }
+        }
+    }
 }
 
 // Apply mixins to SlideEditor prototype
