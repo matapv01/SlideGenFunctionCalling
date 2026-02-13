@@ -20875,10 +20875,10 @@ def generate_thank_you_farm_slide(
 #-------BAR CHART SLIDES------------------------------------------------------------------
 
 def generate_bar_chart_slide_1(
-        main_title: "Regional Shipment Performance", 
-        subtitle: "Units: Thousand Containers", 
-        insight: "Shipment volume increased significantly in all regions in 2024 compared to 2023.", 
-        chart_options: {
+        main_title: str = "Regional Shipment Performance", 
+        subtitle: str = "Units: Thousand Containers", 
+        insight: str = "Shipment volume increased significantly in all regions in 2024 compared to 2023.", 
+        chart_options: dict = {
             "x_axis": "Region",
             "y_axis": "Shipment Volume (Thousand Containers)",
             "unit": "K",
@@ -20888,7 +20888,7 @@ def generate_bar_chart_slide_1(
             "y_axis_max": None,
             "colors": ["#1B2559", "#FF6B35"]  # Navy (2023), Orange (2024)
         },   
-        data_input: {
+        data_input: dict = {
             "categories": ["North", "South", "East", "West"],
             "series": [
                 {
@@ -21657,7 +21657,7 @@ def generate_bar_chart_slide_3(
     font_family: str = "Inter, sans-serif",
     accent_color: str = "#7B8FB3",
     main_title_color: str = "#4A5E7B",
-    subtitle_color: str = "#8E97A4",
+    subtitle_color: str = "#2D3748",
     insight_text_color: str = "#4A5E7B",
     main_title_font_size: str = "65px",
     subtitle_font_size: str = "28px",
@@ -21690,8 +21690,11 @@ def generate_bar_chart_slide_3(
     chart_h = svg_h - margin_t - margin_b
 
     all_values = [v for s in series for v in s.get("values", [])]
-    y_min = options.get("y_axis_min", 0)
-    y_max = options.get("y_axis_max", max(all_values) * 1.1 if all_values else 100)
+    y_min_opt = options.get("y_axis_min")
+    y_max_opt = options.get("y_axis_max")
+    
+    y_min = y_min_opt if y_min_opt is not None else 0
+    y_max = y_max_opt if y_max_opt is not None else (max(all_values) * 1.1 if all_values else 100)
     if y_max == y_min: y_max += 1
 
     # ===== 3. VẼ BIỂU ĐỒ (SVG ELEMENTS) =====
@@ -21764,91 +21767,120 @@ def generate_bar_chart_slide_3(
         <meta charset="UTF-8">
         <style>
             body {{
-                width: 1920px; height: 1080px; margin: 0; padding: 0;
-                background-color: #D59494; /* Nền hồng đất từ ảnh */
+                width: 1920px; 
+                height: 1080px; 
+                margin: 0; 
+                padding: 80px 100px;
+                background-color: #D59494;
                 font-family: {font_family};
-                display: flex; flex-direction: column;
-                overflow: hidden;
-            }}
-            .top-bar {{
-                padding: 60px 100px 20px 100px;
-            }}
-            .title-box {{
-                background: white;
-                display: inline-block;
-                padding: 20px 60px;
-                border-radius: 100px; /* Bo tròn mạnh như nút 1st Grade */
-                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
-            }}
-            h1 {{ margin: 0; font-size: {main_title_font_size}; color: {main_title_color}; text-transform: capitalize; }}
-            .subtitle {{ font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; padding-left: 20px; }}
-            
-            .content-area {{
-                display: flex;
-                flex: 1;
-                padding: 0 80px 60px 80px;
+                display: grid;
+                grid-template-columns: 1fr 1.8fr;
+                grid-template-rows: auto auto 1fr;
                 gap: 40px;
+                overflow: hidden;
+                box-sizing: border-box;
             }}
-            .insight-panel {{
-                flex: 1;
-                display: flex; flex-direction: column;
-                justify-content: center;
+            
+            /* Decorative stars */
+            .star {{
+                position: absolute;
+                color: white;
+                font-size: 40px;
             }}
-            .insight-card {{
-                background: #FFF9E5; /* Màu kem từ ảnh */
+            
+            /* Title spans both columns */
+            h1 {{
+                grid-column: 1 / -1;
+                margin: 0;
+                padding: 20px 60px;
+                font-size: {main_title_font_size};
+                color: {main_title_color};
+                text-transform: capitalize;
+                background: white;
+                border-radius: 100px;
+                box-shadow: 0 10px 20px rgba(0,0,0,0.05);
+                width: fit-content;
+            }}
+            
+            /* Subtitle spans both columns */
+            .subtitle {{
+                grid-column: 1 / -1;
+                margin: -30px 0 0 20px;
+                font-size: {subtitle_font_size};
+                color: {subtitle_color};
+            }}
+            
+            /* Insight + Legend column (left) */
+            .insight {{
+                background: #FFF9E5;
                 padding: 50px;
                 border-radius: 40px;
                 color: {insight_text_color};
                 font-size: {insight_font_size};
                 line-height: 1.5;
-                margin-bottom: 40px;
-                border: 4px dashed {accent_color}; /* Nét đứt trang trí */
+                border: 4px dashed {accent_color};
+                align-self: start;
             }}
-            .chart-panel {{
-                flex: 2;
+            
+            /* Legend inside insight box */
+            .legend {{
+                margin-top: 30px;
+            }}
+            
+            .legend-item {{
+                display: inline-flex;
+                align-items: center;
+                margin-right: 25px;
+                margin-bottom: 15px;
+            }}
+            
+            .legend-dot {{
+                width: 24px;
+                height: 24px;
+                border-radius: 6px;
+                margin-right: 12px;
+            }}
+            
+            .legend-label {{
+                font-size: 24px;
+                color: {main_title_color};
+                font-weight: 500;
+            }}
+            
+            /* Chart column (right) */
+            .chart {{
                 background: white;
                 border-radius: 40px;
                 padding: 30px;
-                display: flex; align-items: center; justify-content: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
                 box-shadow: 0 20px 40px rgba(0,0,0,0.1);
-            }}
-            .decoration-star {{
-                position: absolute; color: white; font-size: 40px;
             }}
         </style>
     </head>
     <body>
-        <div class="decoration-star" style="top:40px; left:40px;">✦</div>
-        <div class="decoration-star" style="top:100px; left:80px;">✦</div>
+        <span class="star" style="top:40px; left:40px;">✦</span>
+        <span class="star" style="top:100px; left:80px;">✦</span>
         
-        <div class="top-bar">
-            <div class="title-box">
-                <h1>{main_title}</h1>
+        {f'<h1>{main_title}</h1>' if main_title else ''}
+        {f'<span class="subtitle">{subtitle}</span>' if subtitle else ''}
+        
+        <div class="insight">
+            {insight}
+            <div class="legend">
+                {legend_html.replace('<div style="display:flex; align-items:center; margin-bottom:15px;">', '<span class="legend-item">').replace('</div>', '</span>').replace('<div style="width:24px; height:24px; background:', '<span class="legend-dot" style="background:').replace('border-radius:6px; margin-right:12px;"></div>', '"></span>').replace('<span style="font-size:24px; color:', '<span class="legend-label" style="color:').replace('font-weight:500;">', '">')}
             </div>
-            <div class="subtitle">{subtitle}</div>
         </div>
-
-        <div class="content-area">
-            <div class="insight-panel">
-                <div class="insight-card">
-                    {insight}
-                </div>
-                <div class="legend-container" style="padding-left: 20px;">
-                    {legend_html}
-                </div>
-            </div>
-
-            <div class="chart-panel">
-                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
-                    {chart_elements}
-                </svg>
-            </div>
+        
+        <div class="chart">
+            <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                {chart_elements}
+            </svg>
         </div>
     </body>
     </html>
     """
-
-
 
 
 #-------SCATTER PLOT CHART SLIDES---------------------------------------------------------
@@ -22113,10 +22145,6 @@ def generate_scatter_plot_chart_slide_1(
     </html>
     """
 
-
-
-
-
 def generate_scatter_plot_chart_slide_2(
     main_title: str = "Relationship Between Travel Distance and Spending",
     subtitle: str = "Source: Tourist Behavior Survey 2024 | Sample: 200 Trips",
@@ -22277,14 +22305,14 @@ def generate_scatter_plot_chart_slide_2(
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
             body {{
                 width: 1920px; height: 1080px; margin: 0; padding: 0;
-                font-family: {font_family}; background-color: #FEF9E1; color: {insight_text_color};
+                font-family: {font_family}, sans-serif; background-color: #FEF9E1; color: {insight_text_color};
                 display: grid; 
                 grid-template-rows: 220px 1fr;
                 grid-template-columns: 1fr;
                 overflow: hidden;
             }}
             .header-section {{
-                padding: 60px 100px 0 100px;
+                padding: 20px 100px 20px 100px;
             }}
             h1 {{
                 font-size: {main_title_font_size}; color: {main_title_color}; margin: 0; font-weight: 800; 
@@ -22298,16 +22326,17 @@ def generate_scatter_plot_chart_slide_2(
                 display: grid; 
                 grid-template-columns: 500px 1fr;
                 gap: 80px;
-                padding: 0 100px 60px 100px;
+                padding: 30px 100px 60px 100px;
+                position: center;
             }}
             .left-panel {{
                 display: grid;
                 grid-template-rows: auto auto;
                 gap: 40px;
-                align-content: start;
+                align-content: space-around;
             }}
             .insight-box {{
-                background: white; padding: 40px; border-radius: 30px; 
+                background: white; padding: 30px; border-radius: 30px; 
                 box-shadow: 15px 15px 0px rgba(0, 128, 128, 0.1);
                 border: 3px solid {accent_color}; font-size: {insight_font_size}; line-height: 1.5;
             }}
@@ -23211,59 +23240,116 @@ def generate_line_chart_slide_2(
         <meta charset="UTF-8">
         <style>
             html, body {{
-                width: 1920px; height: 1080px; margin: 0;
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
                 font-family: {font_family};
                 background-color: white; overflow: hidden;
             }}
-            .slide {{ position: relative; width: 100%; height: 100%; }}
+            
+            /* Decorative Elements */
             .left-shape {{
-                position: absolute; width: 1200px; height: 1200px;
-                background-color: #f1fcf4; border-radius: 50%;
-                left: -450px; top: -100px;
+                position: absolute;
+                width: 1200px;
+                height: 1200px;
+                background-color: #f1fcf4;
+                border-radius: 50%;
+                left: -450px;
+                top: -100px;
+                z-index: 0;
             }}
             .dot-grid {{
-                position: absolute; top: 80px; left: 350px;
-                display: grid; grid-template-columns: repeat(10, 15px); gap: 15px;
+                position: absolute;
+                top: 80px;
+                left: 350px;
+                display: grid;
+                grid-template-columns: repeat(10, 15px);
+                gap: 15px;
+                z-index: 1;
             }}
-            .dot {{ width: 8px; height: 8px; background-color: #fbbf24; border-radius: 50%; }}
-            .chart-card {{
-                background: white; border-radius: 40px; padding: 40px;
-                box-shadow: 0 25px 50px -12px rgba(0,0,0,0.1);
-                position: absolute; left: 80px; top: 200px;
+            .dot {{
+                width: 8px;
+                height: 8px;
+                background-color: #fbbf24;
+                border-radius: 50%;
             }}
-            .title {{
+            
+            /* Header */
+            .header {{
+                margin-bottom: 40px;
+                padding: 80px 100px 0 100px;
+                position: relative;
+                z-index: 2;
+            }}
+            h1 {{
                 font-size: {main_title_font_size};
                 font-weight: 800;
                 color: {main_title_color};
-                position: absolute; right: 80px; top: 200px;
-                text-align: right;
+                margin: 0;
             }}
             .subtitle {{
                 font-size: {subtitle_font_size};
                 color: {subtitle_color};
-                position: absolute; right: 80px; top: 320px;
-                max-width: 600px; text-align: right;
+                margin-top: 15px;
+            }}
+            
+            /* Main Content Flex */
+            .main-flex {{
+                display: flex;
+                height: calc(100vh - 300px);
+                gap: 60px;
+                padding: 0 100px 80px 100px;
+                position: relative;
+                z-index: 2;
+            }}
+            .left-panel {{
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+            }}
+            .right-panel {{
+                flex: 1.5;
+                background: rgba(255, 255, 255, 0.6);
+                border-radius: 40px;
+                padding: 40px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                display: flex;
+                align-items: center;
+                justify-content: center;
             }}
             .insight {{
                 font-size: {insight_font_size};
                 color: {insight_text_color};
-                position: absolute; right: 80px; top: 420px;
-                max-width: 600px; text-align: right;
+                line-height: 1.7;
+                background: #f8fafc;
+                border-left: 5px solid {accent_color};
+                padding: 35px 40px;
+                border-radius: 16px;
             }}
         </style>
     </head>
     <body>
-        <div class="slide">
-            <div class="left-shape"></div>
-            <div class="dot-grid">{''.join('<div class="dot"></div>' for _ in range(30))}</div>
-            <div class="chart-card">
+        <!-- Decorative Background Elements -->
+        <div class="left-shape"></div>
+        <div class="dot-grid">
+            {''.join('<div class="dot"></div>' for _ in range(30))}
+        </div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>{title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-flex">
+            <div class="left-panel">
+                <div class="insight">{insight}</div>
+            </div>
+            <div class="right-panel">
                 <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
                     {chart_elements}
                 </svg>
             </div>
-            <h1 class="title">{title}</h1>
-            <p class="subtitle">{subtitle}</p>
-            <p class="insight">{insight}</p>
         </div>
     </body>
     </html>
