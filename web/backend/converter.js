@@ -216,6 +216,84 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                     }
                 }
                 
+                // ✅ SPECIAL: Equation elements – treat as atomic leaf node
+                if (el.getAttribute('data-type') === 'equation') {
+                    const eqRect = el.getBoundingClientRect();
+                    if (eqRect.width > 0 && eqRect.height > 0) {
+                        let eqStyle = getVisualStyles(el);
+                        
+                        // Inherit font-size from previous sibling (the auto-closed parent tag)
+                        // because browser auto-close <p>/<h1> strips the intended CSS context
+                        const prevSibling = el.previousElementSibling;
+                        if (prevSibling) {
+                            const prevStyle = window.getComputedStyle(prevSibling);
+                            const prevFontSize = parseFloat(prevStyle.fontSize);
+                            const eqFontSize = parseFloat(window.getComputedStyle(el).fontSize);
+                            // If equation has default body font-size, use parent's font-size
+                            if (eqFontSize <= 16 && prevFontSize > eqFontSize) {
+                                eqStyle = eqStyle.replace(
+                                    /font-size:\s*[\d.]+px/,
+                                    `font-size: ${prevFontSize}px`
+                                );
+                            }
+                        }
+                        
+                        elementsData.push({
+                            tagName: 'div',
+                            rect: { width: eqRect.width, height: eqRect.height },
+                            style: eqStyle,
+                            attributes: getImportantAttributes(el),  // preserves data-type
+                            content: el.textContent,  // raw LaTeX text
+                            index,
+                            relativeX: eqRect.left - containerRect.left,
+                            relativeY: eqRect.top - containerRect.top,
+                            zIndex: 100 + index
+                        });
+                        el.querySelectorAll('*').forEach(child => processedElements.add(child));
+                        processedElements.add(el);
+
+                        // ✅ Capture orphan text nodes after equation div
+                        // When browser auto-closes <p> for a <div>, text after the div
+                        // becomes an orphan text node (not wrapped in any element).
+                        let nextSibling = el.nextSibling;
+                        while (nextSibling) {
+                            if (nextSibling.nodeType === Node.TEXT_NODE) {
+                                const text = nextSibling.textContent.trim();
+                                if (text) {
+                                    // Find the previous sibling element to inherit styles from
+                                    let styleDonor = el.previousElementSibling || el.parentElement;
+                                    const donorStyle = styleDonor ? getVisualStyles(styleDonor) : getVisualStyles(el);
+                                    
+                                    // Position right below the equation div (don't trust browser-rendered
+                                    // position since flex layout pushes orphan text to bottom)
+                                    const useWidth = eqRect.width;
+                                    const useHeight = 50;
+                                    const useX = eqRect.left - containerRect.left;
+                                    const useY = eqRect.top - containerRect.top + eqRect.height + 10;
+
+                                    elementsData.push({
+                                        tagName: 'p',
+                                        rect: { width: useWidth, height: useHeight },
+                                        style: donorStyle,
+                                        attributes: {},
+                                        content: helperFunctions.escapeHtml(text),
+                                        index: index + 0.5,
+                                        relativeX: useX,
+                                        relativeY: useY,
+                                        zIndex: 100 + index + 1
+                                    });
+                                }
+                            } else if (nextSibling.nodeType === Node.ELEMENT_NODE) {
+                                break; // Stop at the next element
+                            }
+                            nextSibling = nextSibling.nextSibling;
+                        }
+
+                        return;
+                    }
+                }
+
+
                 const isComplexBlock = ['ul', 'ol', 'table', 'figure'].includes(tagName);
                 let content = '';
 

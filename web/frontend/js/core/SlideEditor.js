@@ -6984,6 +6984,10 @@ ${slide.content}
     }
 
     _determineElementType(node) {
+        // Priority: use existing data-type if present (e.g. from converter output)
+        const existingType = node.getAttribute('data-type');
+        if (existingType) return existingType;
+
         const tag = node.tagName.toUpperCase();
         const textTags = ['P', 'H1', 'H2', 'H3', 'H4', 'H5', 'H6', 'BLOCKQUOTE', 'UL', 'OL', 'LI', 'PRE'];
         if (['IMG', 'PICTURE'].includes(tag)) return 'image';
@@ -7016,12 +7020,126 @@ ${slide.content}
 
         if (type === 'text') {
             newEl.setAttribute('contenteditable', 'true');
+        } else if (type === 'equation') {
+            // Standalone equation: wrap LaTeX text in math-field for MathLive
+            const latex = newEl.textContent.trim();
+            newEl.innerHTML = '';
+            newEl.style.display = 'flex';
+            newEl.style.alignItems = 'center';
+            newEl.style.justifyContent = 'center';
+            // Inherit font-size from nearby text siblings instead of hardcoding
+            const currentFontSize = parseFloat(newEl.style.fontSize) || 16;
+            if (currentFontSize < 24) {
+                // Find font-size from the NEAREST preceding sibling (by position)
+                const eqY = parseFloat(newEl.style.top) || 0;
+                const siblings = Array.from(targetParent.querySelectorAll('.element'));
+                let closestSib = null;
+                let closestDist = Infinity;
+                siblings.forEach(sib => {
+                    if (sib === newEl) return;
+                    const sibFs = parseFloat(sib.style.fontSize) || 0;
+                    if (sibFs < 14 || sibFs > 200) return;  // skip invalid
+                    const sibY = parseFloat(sib.style.top) || 0;
+                    const dist = Math.abs(eqY - sibY);
+                    if (dist < closestDist) {
+                        closestDist = dist;
+                        closestSib = sib;
+                    }
+                });
+                const inheritFs = closestSib ? parseFloat(closestSib.style.fontSize) : 0;
+                newEl.style.fontSize = (inheritFs > 20 ? inheritFs : 40) + 'px';
+            }
+            // Ensure minimum height for equation box
+            const currentHeight = parseFloat(newEl.style.height) || 0;
+            if (currentHeight < 40) {
+                newEl.style.height = 'auto';
+                newEl.style.minHeight = '50px';
+            }
+            // Clamp position: if equation is pushed to bottom of slide, reposition it
+            const eqTop = parseFloat(newEl.style.top) || 0;
+            if (eqTop > 980) {
+                // Find previous sibling element to position below
+                const siblings = Array.from(targetParent.querySelectorAll('.element'));
+                const lastSibling = siblings.length > 0 ? siblings[siblings.length - 1] : null;
+                if (lastSibling && lastSibling !== newEl) {
+                    const sibTop = parseFloat(lastSibling.style.top) || 0;
+                    const sibHeight = parseFloat(lastSibling.style.height) || 50;
+                    // Cap effective height at 100px to handle flex-stretched containers
+                    const effectiveHeight = Math.min(sibHeight, 100);
+                    newEl.style.top = (sibTop + effectiveHeight + 20) + 'px';
+                } else {
+                    newEl.style.top = '500px'; // fallback to center of slide
+                }
+            }
+            const mathField = document.createElement('math-field');
+            mathField.textContent = latex;
+            mathField.mathVirtualKeyboardPolicy = 'manual';
+            mathField.style.cssText = 'width:100%;display:block;background:transparent;font-size:inherit;color:inherit;outline:none;border:none;';
+            newEl.appendChild(mathField);
         } else {
             newEl.removeAttribute('contenteditable');
         }
 
         newEl.style.zIndex = this.zIndexCounter++;
         targetParent.appendChild(newEl);
+
+        // General position clamping: if any element is pushed beyond slide bounds, reposition it
+        const elTop = parseFloat(newEl.style.top) || 0;
+        if (elTop > 980) {
+            const siblings = Array.from(targetParent.querySelectorAll('.element'));
+            // Find the previous sibling (exclude self)
+            const prevSiblings = siblings.filter(s => s !== newEl && (parseFloat(s.style.top) || 0) <= 980);
+            const lastVisible = prevSiblings.length > 0 ? prevSiblings[prevSiblings.length - 1] : null;
+            if (lastVisible) {
+                const sibTop = parseFloat(lastVisible.style.top) || 0;
+                const sibHeight = parseFloat(lastVisible.style.height) || 50;
+                const effectiveHeight = Math.min(sibHeight, 100);
+                newEl.style.top = (sibTop + effectiveHeight + 20) + 'px';
+            } else {
+                newEl.style.top = '500px';
+            }
+        }
+
+        // Extract nested equation divs from text/shape elements (e.g. <h1><div data-type="equation">...</div></h1>)
+        if (type !== 'equation') {
+            const nestedEqs = newEl.querySelectorAll('[data-type="equation"]');
+            nestedEqs.forEach(eqEl => {
+                const latex = eqEl.textContent.trim();
+                if (!latex) return;
+
+                // Create a new standalone equation element
+                const eqBox = document.createElement('div');
+                eqBox.classList.add('element');
+                eqBox.dataset.type = 'equation';
+
+                // Position it near the parent element
+                const parentLeft = parseFloat(newEl.style.left) || 0;
+                const parentTop = parseFloat(newEl.style.top) || 0;
+                const parentHeight = parseFloat(newEl.style.height) || 50;
+                eqBox.style.position = 'absolute';
+                eqBox.style.left = parentLeft + 'px';
+                eqBox.style.top = (parentTop + parentHeight + 10) + 'px';
+                eqBox.style.width = newEl.style.width || '400px';
+                eqBox.style.height = 'auto';
+                eqBox.style.minHeight = '50px';
+                eqBox.style.display = 'flex';
+                eqBox.style.alignItems = 'center';
+                eqBox.style.justifyContent = 'center';
+                eqBox.style.fontSize = newEl.style.fontSize || '40px';
+                eqBox.style.color = newEl.style.color || 'inherit';
+                eqBox.style.zIndex = this.zIndexCounter++;
+
+                const mathField = document.createElement('math-field');
+                mathField.textContent = latex;
+                mathField.mathVirtualKeyboardPolicy = 'manual';
+                mathField.style.cssText = 'width:100%;display:block;background:transparent;font-size:inherit;color:inherit;outline:none;border:none;';
+                eqBox.appendChild(mathField);
+                targetParent.appendChild(eqBox);
+
+                // Remove the nested equation from the text element
+                eqEl.remove();
+            });
+        }
 
         // Đảm bảo SVG elements được xử lý đúng cách
         if (sourceNode.tagName && sourceNode.tagName.toLowerCase() === 'svg') {
