@@ -67,8 +67,10 @@ class SqliteUserRepository(UserRepository):
                 (user.email, user.username, user.hashed_password, user.is_active)
             )
             conn.commit()
-            user.id = cursor.lastrowid
-            return user
+            user_id = cursor.lastrowid
+            # Fetch back to get created_at from database
+            cursor.execute("SELECT * FROM users WHERE id = ?", (user_id,))
+            return self._map_user(cursor.fetchone())
 
 
     def update_password(self, user_id: int, new_hashed_password: str) -> None:

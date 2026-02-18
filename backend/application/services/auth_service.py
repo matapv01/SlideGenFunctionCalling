@@ -61,13 +61,19 @@ class AuthService:
             raise HTTPException(status_code=400, detail="Email đã được đăng ký")
             
         hashed_password = self.get_password_hash(password)
-        user_id = self.user_repo.create(email, username, hashed_password)
         
-        # Fetch lại để trả về data đầy đủ
-        user = self.user_repo.get_by_id(user_id)
-        if not user:
-            raise HTTPException(status_code=500, detail="Không thể tạo người dùng")
-        return user
+        # Create User object to pass to repository
+        new_user = User(
+            id=None,
+            email=email,
+            username=username,
+            hashed_password=hashed_password,
+            is_active=True,
+            created_at=None
+        )
+        created_user = self.user_repo.create(new_user)
+        
+        return created_user
 
     def change_password(self, user_id: int, current_password: str, new_password: str, user_hashed_password: str) -> None:
         if not self.verify_password(current_password, user_hashed_password):

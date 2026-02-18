@@ -19,8 +19,8 @@ async def register(
     user_data: UserCreate,
     auth_service: AuthService = Depends(get_auth_service)
 ):
-    user_dict = auth_service.register_user(user_data.email, user_data.username, user_data.password)
-    return UserResponse(**user_dict)
+    user = auth_service.register_user(user_data.email, user_data.username, user_data.password)
+    return UserResponse.model_validate(user)
 
 
 @router.post("/login", response_model=Token)
