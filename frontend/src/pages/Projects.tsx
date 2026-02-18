@@ -105,7 +105,7 @@ const Projects = () => {
         ) : viewMode === "grid" ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
             {filtered.map((project) => (
-              <Card key={project.id} className="glass transition-all hover:shadow-lg hover:-translate-y-0.5">
+              <Card key={project.id} className="glass transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer" onClick={() => navigate(`/view/${project.id}`)}>
                 <CardHeader className="flex flex-row items-start justify-between">
                   <div>
                     <CardTitle className="text-base">{project.name}</CardTitle>
@@ -115,7 +115,7 @@ const Projects = () => {
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
                         <MoreVertical className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -147,16 +147,15 @@ const Projects = () => {
         ) : (
           <div className="space-y-2">
             {filtered.map((project) => (
-              <Card key={project.id} className="glass">
+              <Card key={project.id} className="glass cursor-pointer hover:shadow-md" onClick={() => navigate(`/view/${project.id}`)}>
                 <CardContent className="flex items-center justify-between p-4">
                   <div>
                     <p className="font-medium">{project.name}</p>
                     <p className="text-xs text-muted-foreground">{project.slideCount || 0} slides</p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/view/${project.id}`)}>View</Button>
-                    <Button variant="ghost" size="sm" onClick={() => navigate(`/editor/${project.id}`)}>Edit</Button>
-                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={() => setDeleteId(project.id)}>
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${project.id}`); }}>Edit</Button>
+                    <Button variant="ghost" size="icon" className="h-8 w-8 text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(project.id); }}>
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
