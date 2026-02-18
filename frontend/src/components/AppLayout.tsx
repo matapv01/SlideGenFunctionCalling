@@ -13,7 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 
 const navItems = [
-  { label: "Home", path: "/", icon: Home },
+  { label: "SlideGen", path: "/slidegen", icon: Home },
   { label: "Projects", path: "/projects", icon: FolderOpen },
   { label: "Guide", path: "/guide", icon: BookOpen },
 ];
