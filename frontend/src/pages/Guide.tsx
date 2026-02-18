@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { AppLayout } from "@/components/AppLayout";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
@@ -14,8 +14,12 @@ const sections = [
 
 const Guide = () => {
   const [activeSection, setActiveSection] = useState("overview");
+  const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
+    const container = contentRef.current;
+    if (!container) return;
+
     const observer = new IntersectionObserver(
       (entries) => {
         for (const entry of entries) {
@@ -24,7 +28,7 @@ const Guide = () => {
           }
         }
       },
-      { rootMargin: "-20% 0% -60% 0%" }
+      { root: container, rootMargin: "-20% 0% -60% 0%" }
     );
 
     sections.forEach((s) => {
@@ -35,30 +39,37 @@ const Guide = () => {
     return () => observer.disconnect();
   }, []);
 
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el && contentRef.current) {
+      el.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  };
+
   return (
     <AppLayout>
-      <div className="flex">
-        {/* Sidebar nav */}
-        <nav className="hidden w-48 flex-shrink-0 border-r border-border p-4 lg:block">
+      <div className="flex h-[calc(100vh-4rem)]">
+        {/* Sidebar nav - sticky */}
+        <nav className="hidden w-48 flex-shrink-0 border-r border-border p-4 lg:block overflow-y-auto">
           <h3 className="mb-3 text-sm font-semibold text-muted-foreground">Contents</h3>
           <div className="space-y-1">
             {sections.map((s) => (
-              <a
+              <button
                 key={s.id}
-                href={`#${s.id}`}
+                onClick={() => scrollToSection(s.id)}
                 className={cn(
-                  "block rounded-md px-3 py-1.5 text-sm transition-colors",
+                  "block w-full text-left rounded-md px-3 py-1.5 text-sm transition-colors",
                   activeSection === s.id ? "bg-primary/10 text-primary font-medium" : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {s.title}
-              </a>
+              </button>
             ))}
           </div>
         </nav>
 
-        {/* Content */}
-        <div className="flex-1 overflow-auto px-4 py-8 lg:px-12">
+        {/* Content - scrollable */}
+        <div ref={contentRef} className="flex-1 overflow-y-auto px-4 py-8 lg:px-12">
           <h1 className="mb-8 text-3xl font-bold">
             <span className="gradient-text">SlideGen Guide</span>
           </h1>
