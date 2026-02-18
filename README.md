@@ -1,5 +1,8 @@
 # 1. Cài dependencies
+// backend
 uv sync
+// frontend
+cd frontend
 npm install
 
 ## Tạo file .env (root project)
@@ -14,5 +17,6 @@ uv run backend/main.py
 → Backend: http://localhost:12008
 
 ## Chạy Frontend (Terminal 2)
-python -m http.server 8000 --directory frontend
-→ Frontend: http://localhost:8000/index.html
+cd frontend
+npm run dev
+→ Frontend: http://localhost:8080
