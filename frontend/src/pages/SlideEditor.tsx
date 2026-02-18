@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useSearchParams } from "react-router-dom";
 import {
   Plus, Copy, Trash2, ChevronLeft, ChevronRight, ZoomIn, ZoomOut,
   Undo2, Redo2, Save, Download, FileText, Upload, Play, Type,
@@ -39,6 +39,7 @@ interface Slide {
 
 const SlideEditor = () => {
   const { projectId } = useParams();
+  const [searchParams] = useSearchParams();
   const navigate = useNavigate();
   const { toast } = useToast();
   const canvasRef = useRef<HTMLDivElement>(null);
@@ -91,6 +92,14 @@ const SlideEditor = () => {
           elements: s.design_settings?.elements || [],
           html: s.html_content
         })));
+        // Set initial slide from query param
+        const slideParam = searchParams.get('slide');
+        if (slideParam) {
+          const slideIndex = parseInt(slideParam, 10);
+          if (!isNaN(slideIndex) && slideIndex >= 0 && slideIndex < res.slides.length) {
+            setCurrentSlide(slideIndex);
+          }
+        }
       }
     } catch { /* use defaults */ }
   };
@@ -341,10 +350,12 @@ const SlideEditor = () => {
           >
             {/* Render HTML if present */}
             {currentSlideData?.html && (
-              <div
-                className="absolute inset-0"
+              <iframe
+                srcDoc={currentSlideData.html}
+                className="absolute inset-0 w-full h-full border-0"
                 style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top left" }}
-                dangerouslySetInnerHTML={{ __html: currentSlideData.html }}
+                title="Slide preview"
+                sandbox="allow-same-origin"
               />
             )}
 

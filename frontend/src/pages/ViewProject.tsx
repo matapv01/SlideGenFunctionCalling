@@ -117,16 +117,19 @@ const ViewProject = () => {
                 <CardContent className="p-4">
                   <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-3">
                     {slide.html ? (
-                      <div className="h-full w-full scale-[0.25] origin-top-left" style={{ width: "400%" }}>
-                        <div dangerouslySetInnerHTML={{ __html: slide.html }} />
-                      </div>
+                      <iframe
+                        srcDoc={slide.html}
+                        className="w-full h-full border-0 pointer-events-none"
+                        title={`Slide ${i + 1} preview`}
+                        sandbox="allow-same-origin"
+                      />
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground text-sm">No content</div>
                     )}
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Slide {i + 1}</span>
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setEditSlide(slide); setEditHtml(slide.html || ""); }}>
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${projectId}?slide=${i}`); }}>
                       <Edit className="mr-1 h-3 w-3" /> Edit
                     </Button>
                   </div>
@@ -151,8 +154,13 @@ const ViewProject = () => {
                 onChange={(e) => setEditHtml(e.target.value)}
               />
             </div>
-            <div className="rounded-lg bg-muted p-4 overflow-auto h-64">
-              <div dangerouslySetInnerHTML={{ __html: editHtml }} />
+            <div className="rounded-lg bg-muted overflow-hidden h-64">
+              <iframe
+                srcDoc={editHtml}
+                className="w-full h-full border-0"
+                title="Slide preview"
+                sandbox="allow-same-origin"
+              />
             </div>
           </div>
           <DialogFooter>
@@ -181,9 +189,11 @@ const ViewProject = () => {
           <div className="flex-1 flex items-center justify-center p-8">
             <div className="w-full h-full max-w-7xl max-h-[80vh] bg-white rounded-lg shadow-2xl overflow-hidden">
               {slides[currentSlideIndex]?.html ? (
-                <div 
-                  className="w-full h-full overflow-auto"
-                  dangerouslySetInnerHTML={{ __html: slides[currentSlideIndex].html }} 
+                <iframe
+                  srcDoc={slides[currentSlideIndex].html}
+                  className="w-full h-full border-0"
+                  title={`Slide ${currentSlideIndex + 1}`}
+                  sandbox="allow-same-origin"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">

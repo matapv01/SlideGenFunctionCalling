@@ -82,7 +82,13 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
         <nav className={cn("flex-1 space-y-1 p-3", sidebarCollapsed && "px-2")}>
           <TooltipProvider delayDuration={0}>
             {navItems.map((item) => {
-              const isActive = location.pathname === item.path;
+              // Check if current path matches or is a related sub-route
+              const isActive = location.pathname === item.path || 
+                (item.path === "/projects" && (
+                  location.pathname.startsWith("/view/") || 
+                  location.pathname.startsWith("/editor/") ||
+                  location.pathname.startsWith("/streaming/")
+                ));
               const linkContent = (
                 <Link
                   key={item.path}

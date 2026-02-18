@@ -82,7 +82,12 @@ const PresentationMode = () => {
       {/* Slide content */}
       <div className="relative h-full w-full flex items-center justify-center">
         {currentSlideData?.html ? (
-          <div className="max-h-full max-w-full" dangerouslySetInnerHTML={{ __html: currentSlideData.html }} />
+          <iframe
+            srcDoc={currentSlideData.html}
+            className="w-full h-full max-h-full max-w-full border-0"
+            title={`Slide ${currentSlide + 1}`}
+            sandbox="allow-same-origin"
+          />
         ) : (
           <div className="text-center text-muted-foreground">
             <p className="text-2xl font-bold">Slide {currentSlide + 1}</p>

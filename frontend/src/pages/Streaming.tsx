@@ -195,9 +195,12 @@ const Streaming = () => {
                 >
                   <CardContent className="p-3">
                     <div className="aspect-video overflow-hidden rounded bg-muted">
-                      <div className="h-full w-full scale-[0.25] origin-top-left" style={{ width: "400%" }}>
-                        <div dangerouslySetInnerHTML={{ __html: slide.html }} />
-                      </div>
+                      <iframe
+                        srcDoc={slide.html}
+                        className="w-full h-full border-0 pointer-events-none"
+                        title={`Slide ${slide.index + 1} preview`}
+                        sandbox="allow-same-origin"
+                      />
                     </div>
                     <p className="mt-2 truncate text-xs text-muted-foreground">
                       Slide {slide.index + 1}{slide.title ? `: ${slide.title}` : ""}
@@ -228,8 +231,15 @@ const Streaming = () => {
           <DialogHeader>
             <DialogTitle>Slide {previewSlide ? previewSlide.index + 1 : ""}</DialogTitle>
           </DialogHeader>
-          <div className="aspect-video overflow-auto rounded-lg bg-muted p-4">
-            {previewSlide && <div dangerouslySetInnerHTML={{ __html: previewSlide.html }} />}
+          <div className="aspect-video overflow-hidden rounded-lg bg-muted">
+            {previewSlide && (
+              <iframe
+                srcDoc={previewSlide.html}
+                className="w-full h-full border-0"
+                title={`Slide ${previewSlide.index + 1}`}
+                sandbox="allow-same-origin"
+              />
+            )}
           </div>
         </DialogContent>
       </Dialog>

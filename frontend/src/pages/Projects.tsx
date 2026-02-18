@@ -113,28 +113,29 @@ const Projects = () => {
                       {project.slideCount || 0} slides • {project.updatedAt ? new Date(project.updatedAt).toLocaleDateString() : ""}
                     </p>
                   </div>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
-                        <MoreVertical className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => { setRenameId(project.id); setRenameName(project.name); }}>
-                        <Edit className="mr-2 h-4 w-4" /> Rename
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/view/${project.id}`)}>
-                        <Eye className="mr-2 h-4 w-4" /> View
-                      </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => navigate(`/editor/${project.id}`)}>
-                        <Edit className="mr-2 h-4 w-4" /> Edit
-                      </DropdownMenuItem>
-                      {/* Download/Export removed - use capture service via editor */}
-                      <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(project.id)}>
-                        <Trash2 className="mr-2 h-4 w-4" /> Delete
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
+                  <div className="flex items-center gap-1">
+                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${project.id}`); }}>
+                      <Edit className="mr-1 h-3 w-3" /> Edit
+                    </Button>
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8" onClick={(e) => e.stopPropagation()}>
+                          <MoreVertical className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => { setRenameId(project.id); setRenameName(project.name); }}>
+                          <Edit className="mr-2 h-4 w-4" /> Rename
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => navigate(`/view/${project.id}`)}>
+                          <Eye className="mr-2 h-4 w-4" /> View
+                        </DropdownMenuItem>
+                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(project.id)}>
+                          <Trash2 className="mr-2 h-4 w-4" /> Delete
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
                 </CardHeader>
                 <CardContent>
                   <div className="flex h-24 items-center justify-center rounded-lg bg-muted">
