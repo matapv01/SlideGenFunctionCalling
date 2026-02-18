@@ -1,6 +1,6 @@
 # File: src/nodes/finalize_slide.py
 
-from src.graph.stage import State
+from backend.workflows.slidegen_workflow.graph.stage import State
 from langchain_core.runnables import RunnableConfig
 import time
 

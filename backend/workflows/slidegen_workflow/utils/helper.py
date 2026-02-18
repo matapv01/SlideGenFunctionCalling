@@ -1,7 +1,6 @@
-from typing import Dict, List, Any, Tuple
+from typing import Dict, List
 import logging
 import base64
-import re
 
 
 def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> List[Dict]:
@@ -27,56 +26,6 @@ def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> 
 
         new_nodes.append(new_node)
     return new_nodes
-
-
-def parse_markdown_to_hierarchical_json(markdown_text: str) -> Tuple[str, List[Dict[str, Any]]]:
-    """
-    Parses a Markdown string into a hierarchical JSON structure.
-    **IMPROVEMENT**: This version now strips pre-existing numbering from titles.
-    """
-    lines = markdown_text.strip().split('\n')
-    root_nodes, ancestry_stack, preamble_lines = [], [], []
-    first_heading_found = False
-
-    for line in lines:
-        line = line.strip()
-        if not line:
-            continue
-        heading_match = re.match(r'^(#+)\s+(.*)', line)
-
-        if heading_match:
-            first_heading_found = True
-            level = len(heading_match.group(1))
-            raw_title = heading_match.group(2).strip().replace('**', '')
-
-            # --- KEY IMPROVEMENT: Strip leading numbers like "1.", "3.1", etc. ---
-            clean_title = re.sub(r'^\s*(\d+(\.\d+)*)\.?\s*', '', raw_title).strip()
-
-            new_node = {"level": level, "title": clean_title, "content": [], "children": []}
-
-            while ancestry_stack and ancestry_stack[-1]['level'] >= level:
-                ancestry_stack.pop()
-            if not ancestry_stack:
-                root_nodes.append(new_node)
-            else:
-                ancestry_stack[-1]['children'].append(new_node)
-            ancestry_stack.append(new_node)
-        else:
-            if not first_heading_found:
-                preamble_lines.append(line.replace('**', ''))
-            elif ancestry_stack:
-                ancestry_stack[-1]['content'].append(line)
-
-    def _join_content_recursively(node):
-        node['content'] = "\n".join(node.get('content', [])).strip()
-        for child in node.get('children', []):
-            _join_content_recursively(child)
-
-    for root_node in root_nodes:
-        _join_content_recursively(root_node)
-
-    preamble_content = "\n".join(preamble_lines).strip()
-    return preamble_content, root_nodes
 
 
 def image_to_base64(image_path: str) -> str:

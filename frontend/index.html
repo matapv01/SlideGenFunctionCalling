@@ -2470,7 +2470,7 @@
                 <span>SlideGen</span>
             </div>
         </div>
-
+        
         <!-- User Info in Sidebar -->
         <div class="sidebar-user-info">
             <i class="bi bi-person-circle"></i>
@@ -2479,13 +2479,13 @@
                 <div class="sidebar-user-email" id="sidebarUserEmail">email@example.com</div>
             </div>
         </div>
-
+        
         <div class="sidebar-menu">
-            <a href="index.html" class="sidebar-item active">
+            <a href="index.html" class="sidebar-item">
                 <i class="bi bi-plus-circle"></i>
                 <span>Tạo Slide Mới</span>
             </a>
-            <a href="projects.html" class="sidebar-item">
+            <a href="projects.html" class="sidebar-item active">
                 <i class="bi bi-folder"></i>
                 <span>Quản Lý Dự Án</span>
             </a>
@@ -2516,12 +2516,12 @@
     <div class="modal-overlay" id="profileModal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2 class="modal-title">Thông tin cá nhân</h2>
+                <h3 class="modal-title">Thông tin cá nhân</h3>
                 <button class="modal-close" onclick="closeProfileModal()">&times;</button>
             </div>
-            <form onsubmit="saveProfile(event)">
+            <form id="profileForm" onsubmit="saveProfile(event)">
                 <div class="form-group">
-                    <label class="form-label">Username</label>
+                    <label class="form-label">Tên đăng nhập</label>
                     <input type="text" class="form-input" id="profileUsername" readonly>
                 </div>
                 <div class="form-group">
@@ -2534,16 +2534,16 @@
                 </div>
                 <div class="form-group">
                     <label class="form-label">Avatar URL</label>
-                    <input type="url" class="form-input" id="profileAvatar"
-                        placeholder="https://example.com/avatar.jpg">
+                    <input type="text" class="form-input" id="profileAvatarUrl" placeholder="URL ảnh đại diện">
                 </div>
                 <div class="form-group">
-                    <label class="form-label">Bio</label>
-                    <textarea class="form-input" id="profileBio" rows="3"
-                        placeholder="Giới thiệu về bản thân"></textarea>
+                    <label class="form-label">Giới thiệu</label>
+                    <textarea class="form-input" id="profileBio" rows="3" placeholder="Giới thiệu về bản thân"></textarea>
                 </div>
-                <button type="submit" class="btn-primary">Lưu thông tin</button>
-                <button type="button" class="btn-secondary" onclick="closeProfileModal()">Hủy</button>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn-secondary" onclick="closeProfileModal()">Hủy</button>
+                    <button type="submit" class="btn-primary">Lưu</button>
+                </div>
             </form>
         </div>
     </div>
@@ -3015,10 +3015,14 @@
 
                 if (response.ok) {
                     const profile = await response.json();
-                    document.getElementById('profileUsername').value = window.currentUser.username;
-                    document.getElementById('profileEmail').value = window.currentUser.email;
+                    // Điền thông tin vào form
+                    // Lưu ý: username/email lấy từ user hiện tại (Auth), còn lại lấy từ Profile
+                    document.getElementById('profileUsername').value = window.currentUser?.username || '';
+                    document.getElementById('profileEmail').value = window.currentUser?.email || '';
+                    
+                    // Map đúng trường trả về từ UserProfileResponse
                     document.getElementById('profileFullName').value = profile.full_name || '';
-                    document.getElementById('profileAvatar').value = profile.avatar_url || '';
+                    document.getElementById('profileAvatarUrl').value = profile.avatar_url || ''; // 🟢 Thống nhất ID này
                     document.getElementById('profileBio').value = profile.bio || '';
                 }
 
@@ -3054,6 +3058,13 @@
 
                 if (response.ok) {
                     alert('Cập nhật thông tin thành công!');
+            
+                    // Cập nhật lại UI hiển thị ngay lập tức (nếu có sidebar avatar)
+                    if (profileData.avatar_url) {
+                        const userAvatar = document.querySelector('.user-avatar');
+                        if (userAvatar) userAvatar.src = profileData.avatar_url;
+                    }
+                    
                     closeProfileModal();
                 } else {
                     throw new Error('Failed to update profile');
@@ -3194,8 +3205,8 @@
 
                 // Call backend API
                 const apiUrl = window.SLIDEGEN_CONFIG?.API_BASE_URL
-                    ? `${window.SLIDEGEN_CONFIG.API_BASE_URL}/generate-from-idea`
-                    : 'http://localhost:12008/api/v1/generate-from-idea';
+                    ? `${window.SLIDEGEN_CONFIG.API_BASE_URL}/api/v1/generate/from-idea`
+                    : 'http://localhost:12008/api/v1/generate/from-idea';
                 console.log('📡 Calling API:', apiUrl);
                 const response = await fetch(apiUrl, {
                     method: 'POST',
@@ -3464,7 +3475,7 @@
 
                 if (response.ok) {
                     const data = await response.json();
-                    const projectId = data.project_id || data.id; // Handle both response formats
+                    const projectId = data.project_id; // Handle both response formats
                     console.log('✅ Project created with ID:', projectId);
 
                     // Create first slide in database

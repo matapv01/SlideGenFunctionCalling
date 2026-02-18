@@ -1,14 +1,14 @@
 # builder.py
-from src.nodes.document_converter import convert_document
-from src.nodes.content_splitter import split_content
-from src.nodes.chunk_organizer import organize_chunks
-from src.nodes.slide_planner import planning_slide
-from src.nodes.next_slide_provider import provide_next_slide
-from src.nodes.slide_generator import generate_slide
-from src.nodes.slide_evaluator import slide_evaluator
-from src.nodes.finalize_slide import finalize_slide
-from src.nodes.html_renderer import render_html
-from src.graph.stage import State
+from backend.workflows.slidegen_workflow.nodes.document_converter import convert_document
+from backend.workflows.slidegen_workflow.nodes.content_splitter import split_content
+from backend.workflows.slidegen_workflow.nodes.chunk_organizer import organize_chunks
+from backend.workflows.slidegen_workflow.nodes.slide_planner import planning_slide
+from backend.workflows.slidegen_workflow.nodes.next_slide_provider import provide_next_slide
+from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
+from backend.workflows.slidegen_workflow.nodes.slide_evaluator import slide_evaluator
+from backend.workflows.slidegen_workflow.nodes.finalize_slide import finalize_slide
+from backend.workflows.slidegen_workflow.nodes.html_renderer import render_html
+from backend.workflows.slidegen_workflow.graph.stage import State
 from langgraph.graph import StateGraph
 from langgraph.graph import END
 

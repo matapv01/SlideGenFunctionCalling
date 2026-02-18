@@ -1,11 +1,10 @@
-"""
-Slide Service - Handle slide operations
-"""
+# File: backend/application/services/slide_service.py
+
 import re
 import logging
 from pathlib import Path
 from typing import List, Dict, Any
-from web.backend.app.config import (
+from backend.config import (
     STATIC_DIR, IMAGE_DIR,
 )
 
@@ -117,5 +116,4 @@ class SlideService:
             logger.warning(f"Error extracting metadata from {filename}: {e}")
 
         return metadata
-    
-slide_service = SlideService(STATIC_DIR, IMAGE_DIR)
+

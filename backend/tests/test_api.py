@@ -26,7 +26,7 @@ def test_health_check():
 def test_upload_docx_invalid_file():
     """Test DOCX upload with invalid file type"""
     files = {"file": ("test.txt", b"test content", "text/plain")}
-    response = client.post("/api/v1/upload/docx", files=files)
+    response = client.post("/api/v1/generate/docx", files=files)
     assert response.status_code == 400
     assert "DOCX" in response.json()["detail"]
 

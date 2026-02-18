@@ -1,14 +1,14 @@
-# File: src/nodes/content_splitter.py
+# File: backend/workflows/slidegen_workflow/nodes/content_splitter.py
 
 import json
 from typing import Dict, Any, List
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.output_parsers import StrOutputParser
-from src.graph.stage import State
+from backend.workflows.slidegen_workflow.graph.stage import State
 from langchain_core.runnables import RunnableConfig
-from src.utils.config import CONTENT_CHAR_LIMIT_FOR_SPLIT
-from src.utils.helper import _convert_llm_tree_to_nodes
-from src.utils.prompts import CONTENT_SPLITTER_SYSTEM_PROMPT, CONTENT_SPLITTER_USER_PROMPT
+from backend.config import CONTENT_CHAR_LIMIT_FOR_SPLIT
+from backend.workflows.slidegen_workflow.utils.helper import _convert_llm_tree_to_nodes
+from backend.workflows.slidegen_workflow.utils.prompts import CONTENT_SPLITTER_SYSTEM_PROMPT, CONTENT_SPLITTER_USER_PROMPT
 import time
 
 
@@ -53,7 +53,7 @@ def split_content(state: State, config: RunnableConfig) -> State:
     ])
 
     # Note: Using the raw .llm attribute if your LLM class wraps it
-    chain = prompt | llm.llm | StrOutputParser()
+    chain = prompt | llm | StrOutputParser()
 
     def _process_node(node: Dict[str, Any], parent_headings: List[str]):
         """Recursively checks and splits content for a node and its children."""

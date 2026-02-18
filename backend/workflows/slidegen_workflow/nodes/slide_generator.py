@@ -1,35 +1,50 @@
-# File: src/nodes/slide_generator.py
+# File: backend/workflows/slidegen_workflow/nodes/slide_generator.py
 
-from src.graph.stage import State
-from langchain_core.prompts import ChatPromptTemplate
-from src.tools.tool_des import execute_tool
 import json
+from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
-from src.utils.config import TOOL_RETRIEVER_TOP_K, MAX_REMAKE
-from src.utils.prompts import (
+
+from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
+from backend.config import TOOL_RETRIEVER_TOP_K, MAX_REMAKE
+from backend.workflows.slidegen_workflow.utils.prompts import (
     CONTENT_PROMPT,
     TRANSITION_PROMPT,
     SLIDE_TYPE_PROMPTS,
     HUMAN_PROMPT_TEMPLATE
 )
 
+from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 
 def generate_slide(state: State, config: RunnableConfig) -> State:
     """
-    Node for slide generation: Uses an LLM to generate a tool call based on a plan.
+    Node: Slide Generator
+    Responsibility: 
+    1. Retrieve best tools using ToolRetrieveProvider.
+    2. Use LLM to generate function call.
+    3. Execute the tool to generate HTML.
     """
     print("\n---------------- Executing Node: slide_generator ----------------")
 
+    # 1. Get Dependencies from Config (Dependency Injection)
     configurable = config["configurable"]
-    llm = configurable.get('llm')
-    tool_retriever = configurable.get('tool_retriever')
+    
+    # 'llm' ở đây là LangChain Runnable object (được lấy từ GeminiLLMProvider.llm_client trong main.py)
+    llm = configurable.get('llm') 
+    
+    # 'tool_retriever' ở đây là GeminiToolRetrieveProvider instance
+    tool_retriever: ToolRetrieveProvider = configurable.get('tool_retriever')
+    
     all_tools_dict = configurable.get('tools_dict', {})
+
     if not llm:
         raise ValueError("LLM instance not found in config.")
+    if not tool_retriever:
+        raise ValueError("Tool Retrieve Provider not found in config.")
 
-    # --- GET DYNAMIC DATA FROM STATE ---
+    # 2. Get Dynamic Data from State
     idx = state['current_slide_index']
-    current_text = state.get("current_slide_text", "")
+    current_text = state.get("current_slide_text", "Default slide content")
     previous_function_call = state.get('current_tool_call', {})
     previous_evaluation = state.get('vlm_feedback', "No evaluation yet.")
     length_slide_chunks = state.get('length_slide_chunks', 0)
@@ -39,121 +54,61 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
 
     print(f"--- Generating slide {idx + 1}/{length_slide_chunks} ---")
 
-    if not current_text:
-        print("WARNING: No slide text provided. Using default.")
-        current_text = "Default slide content"
-
+    # Validation
     if not slide_plans or idx >= len(slide_plans):
         raise ValueError(f"Missing slide plan for slide index {idx}.")
 
-    if not slide_context_maps or idx >= len(slide_context_maps):
-        raise ValueError(f"Missing slide context map for slide index {idx}.")
-
-    # Get the plan for the current slide
     current_plan = slide_plans[idx]
-    current_context_map = slide_context_maps[idx]
+    current_context_map = slide_context_maps[idx] if idx < len(slide_context_maps) else ""
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
     creative_thought = current_plan.get('thought', '')
 
-    print(f"  -> Using plan with action: '{tool_category}'")
-    print(f"  -> Creative thought (query): '{creative_thought[:200]}...'")
+    print(f"  -> Plan Action: '{tool_category}'")
+    print(f"  -> Thought: '{creative_thought[:100]}...'")
 
-    # SPECIAL HANDLING FOR TRANSITION SLIDES: Reuse the same tool for consistency
+    # 3. Tool Retrieval Strategy
+    my_tools = []
+    
+    # A. Special Handling for Transition Slides (Consistency Check)
     if tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
-        # Get the tool that was used for the previous transition
-        prev_transition_tool_name = state['previous_transition_tool_call'].get('name')
-        if prev_transition_tool_name:
-            # Find the exact same tool from the dict
-            all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
-            matching_tool = next((t for t in all_transition_tools if t.name == prev_transition_tool_name), None)
+        prev_tool_name = state['previous_transition_tool_call'].get('name')
+        # Tìm tool cũ trong danh sách tất cả tool
+        all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
+        matching_tool = next((t for t in all_transition_tools if t.name == prev_tool_name), None)
 
-            if matching_tool:
-                my_tools = [matching_tool]  # Use ONLY this tool
-                print(f"  -> 🔄 REUSING previous transition tool for consistency: {prev_transition_tool_name}")
-            else:
-                print(f"  -> ⚠️ Previous transition tool '{prev_transition_tool_name}' not found. Falling back to retrieval.")
-                retrieved_tools = tool_retriever.get_relevant_tools(
-                    category=tool_category,
-                    query=creative_thought,
-                    top_k=TOOL_RETRIEVER_TOP_K
-                )
-                my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
+        if matching_tool:
+            my_tools = [matching_tool]
+            print(f"  -> 🔄 REUSING previous transition tool: {prev_tool_name}")
         else:
-            # No tool name found, use retrieval
-            retrieved_tools = tool_retriever.get_relevant_tools(
-                category=tool_category,
-                query=creative_thought,
-                top_k=TOOL_RETRIEVER_TOP_K
-            )
-            my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
-    else:
-        # Normal retrieval for non-transition slides or first transition
+            print(f"  -> ⚠️ Previous tool '{prev_tool_name}' not found. Fallback to retrieval.")
+
+    # B. Standard Retrieval (If tools not yet selected)
+    if not my_tools:
+        # 🟢 GỌI INFRASTRUCTURE: Retrieve tools
         retrieved_tools = tool_retriever.get_relevant_tools(
             category=tool_category,
             query=creative_thought,
             top_k=TOOL_RETRIEVER_TOP_K
         )
-
-        if not retrieved_tools:
-            print(f"  -> WARNING: Could not retrieve any tools. Falling back to all tools in category '{tool_category}'.")
-            my_tools = all_tools_dict.get(tool_category, [])
-        else:
+        
+        if retrieved_tools:
             my_tools = retrieved_tools
-            print(f"  -> Retrieved {len(my_tools)} relevant tools: {[tool.name for tool in my_tools]}")
+            print(f"  -> Retrieved {len(my_tools)} tools: {[t.name for t in my_tools]}")
+        else:
+            print(f"  -> WARNING: No relevant tools found. Fallback to ALL tools in category '{tool_category}'.")
+            my_tools = all_tools_dict.get(tool_category, [])
 
+    # C. Critical Fallback
     if not my_tools:
-        # Final fallback if category is empty
-        print(f"  -> CRITICAL WARNING: No tools found for category '{tool_category}'. Using default content tools.")
+        print(f"  -> CRITICAL: Category '{tool_category}' is empty. Using CONTENT_TOOLS default.")
         my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
 
+    # 4. Bind Tools to LLM
     llm_with_tools = llm.bind_tools(my_tools)
 
-    # Get slide type and corresponding prompt
-    slide_type = current_plan.get('action', 'CONTENT_TOOLS')
-
-    # Prepare system prompt based on slide type
-    if slide_type == 'CONTENT_TOOLS':
-        # Handle highlight color for content slides
-        if 'highlight_color' in state:
-            # Already have a color - instruct to use it
-            highlight_instruction = f"- MUST use this color: {state['highlight_color']} (maintain consistency!)"
-        else:
-            # First content slide - let LLM choose
-            highlight_instruction = "- This is the FIRST content slide - choose ONE color from the list and use it consistently"
-
-        system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
-
-    elif slide_type == 'TRANSITION_TOOLS':
-        # Handle previous transition context
-        previous_transition = state.get('previous_transition_tool_call', {})
-        if previous_transition:
-            prev_tool_name = previous_transition.get('name', 'unknown')
-            prev_args = previous_transition.get('arguments', {})
-
-            # Format arguments as readable text (avoiding JSON braces that confuse LangChain)
-            args_text = "\n".join([f"    - {key}: {value}" for key, value in prev_args.items()])
-
-            # Extract key styling info from previous transition
-            transition_context = f"""* PREVIOUS TRANSITION details:
-  - Tool used: {prev_tool_name}
-  - Parameters used:
-{args_text}
-
-* YOU MUST match these parameters EXACTLY:
-  - Same font sizes, colors, background
-  - Same text formatting style (numbered/unnumbered)
-  - Same visual elements and layout
-  - If previous had "1." then use "2.", "3." etc. in sequence
-  - If previous had no numbers, don't add numbers
-* ONLY change the text content to match the new section heading"""
-        else:
-            transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-
-        system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
-
-    else:
-        system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, CONTENT_PROMPT)
-
+    # 5. Prepare Prompt
+    system_prompt = _get_system_prompt(tool_category, state)
+    
     slidegen_prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
         ("human", HUMAN_PROMPT_TEMPLATE)
@@ -161,75 +116,99 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
 
     slide_generator_runnable = slidegen_prompt | llm_with_tools
 
+    # 6. Generation Loop (Retry Logic)
     retry_feedback = ""
-
     for attempt in range(1, MAX_REMAKE + 1):
-        print(f"🔁 Function-call generation attempt {attempt}/{MAX_REMAKE}")
+        print(f"🔁 Attempt {attempt}/{MAX_REMAKE}")
 
-        print("-" * 100)
-        print("Current slide content:")
-        print(current_text)
-        print("-" * 100)
+        try:
+            response = slide_generator_runnable.invoke({
+                "slide_context_map": current_context_map,
+                "previous_slide_function_call": json.dumps(previous_slide_function_call, indent=2),
+                "slide_plan": json.dumps(current_plan, indent=2),
+                "slide_content": current_text,
+                "previous_function_call": json.dumps(previous_function_call, indent=2),
+                "previous_evaluation": previous_evaluation + retry_feedback,
+                "slide_index": idx + 1,
+                "length_slide_chunks": length_slide_chunks,
+            })
+        except Exception as e:
+            print(f"❌ LLM Invocation Failed: {e}")
+            retry_feedback += f"\n❌ LLM Error: {e}"
+            continue
 
-        response = slide_generator_runnable.invoke({
-            "slide_context_map": current_context_map,
-            "previous_slide_function_call": json.dumps(previous_slide_function_call, indent=2),
-            "slide_plan": json.dumps(current_plan, indent=2),
-            "slide_content": current_text,
-            "previous_function_call": json.dumps(previous_function_call, indent=2),
-            "previous_evaluation": previous_evaluation + retry_feedback,
-            "slide_index": idx + 1,
-            "length_slide_chunks": length_slide_chunks,
-        })
-
-        # ❌ 1. No tool call
+        # Check Output
         if not hasattr(response, "tool_calls") or not response.tool_calls:
-            error_msg = "You did NOT generate any function call."
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
+            print("❌ No function call generated.")
+            retry_feedback += "\n❌ Error: You must call a tool to generate the slide."
             continue
 
         tool_call = response.tool_calls[0]
         tool_name = tool_call.get("name")
         tool_args = tool_call.get("args", {})
+        
+        # Validate Tool Existence
+        available_tool_names = {t.name for t in my_tools}
+        if tool_name not in available_tool_names:
+             # Fallback check in all tools dict just in case hallucination picked a valid tool but not in retrieved list
+            all_known_tools = {t.name for cat in all_tools_dict.values() for t in cat}
+            if tool_name in all_known_tools:
+                 print(f"⚠️ LLM picked '{tool_name}' which wasn't in retrieved list but exists. Allowing it.")
+            else:
+                print(f"❌ Invalid Tool: '{tool_name}'")
+                retry_feedback += f"\n❌ Error: Tool '{tool_name}' does not exist. Please use one of: {list(available_tool_names)}"
+                continue
 
-        tool_lookup = {t.name: t for t in my_tools}
-
-        # ❌ 2. Tool not callable
-        if tool_name not in tool_lookup:
-            error_msg = f"Tool '{tool_name}' is NOT AVAILABLE. Valid tools are: {list(tool_lookup.keys())}"
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
-            continue
-
-        tool_call_dict = {
-            "name": tool_name,
-            "arguments": tool_args
-        }
-
-        # ❌ 3. Execution failure
+        # Execute Tool
+        tool_call_dict = {"name": tool_name, "arguments": tool_args}
         try:
+            # Note: execute_tool is currently an application utility, not strict infra, so direct call is acceptable
             html_content = execute_tool(tool_call_dict)
+            
+            if not html_content:
+                raise ValueError("Tool returned empty output")
+
+            print(f"✅ Tool '{tool_name}' executed successfully")
+            
+            # Update State
+            state["current_tool_call"] = tool_call_dict
+            state["current_html_content"] = html_content
+            
+            if tool_category == "TRANSITION_TOOLS":
+                state["previous_transition_tool_call"] = tool_call_dict
+
+            return state
+
         except Exception as e:
-            error_msg = f"Tool '{tool_name}' CRASHED during execution: {e}"
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
+            print(f"❌ Tool Execution Failed: {e}")
+            retry_feedback += f"\n❌ Tool Error: {e}"
             continue
 
-        # ❌ 4. Empty output
-        if not html_content:
-            error_msg = f"Tool '{tool_name}' returned EMPTY output."
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
-            continue
+    # If all retries fail
+    print("❌ All generation attempts failed.")
+    return state
 
-        # ✅ SUCCESS
-        print(f"✅ Tool '{tool_name}' executed successfully")
 
-        state["current_tool_call"] = tool_call_dict
-        state["current_html_content"] = html_content
+def _get_system_prompt(slide_type: str, state: State) -> str:
+    """Helper to select and format the correct system prompt."""
+    
+    if slide_type == 'CONTENT_TOOLS':
+        color = state.get('highlight_color')
+        instruction = f"- MUST use this color: {color}" if color else "- This is the FIRST content slide - choose ONE color and use it consistently."
+        return CONTENT_PROMPT.format(highlight_instruction=instruction)
 
-        if slide_type == "TRANSITION_TOOLS":
-            state["previous_transition_tool_call"] = tool_call_dict
+    elif slide_type == 'TRANSITION_TOOLS':
+        prev = state.get('previous_transition_tool_call', {})
+        if prev:
+            args_text = "\n".join([f"    - {k}: {v}" for k, v in prev.get('arguments', {}).items()])
+            context = f"""* PREVIOUS TRANSITION details:
+  - Tool used: {prev.get('name')}
+  - Parameters:
+{args_text}
+* YOU MUST match these parameters EXACTLY (fonts, colors, layout). ONLY change text."""
+        else:
+            context = "* This is the FIRST transition slide - establish a strong style."
+        return TRANSITION_PROMPT.format(previous_transition_context=context)
 
-        return state
+    else:
+        return SLIDE_TYPE_PROMPTS.get(slide_type, CONTENT_PROMPT)

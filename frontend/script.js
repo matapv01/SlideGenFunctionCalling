@@ -147,7 +147,7 @@ async function handleDocxImport() {
             formData.append('workflow_mode', 'manual');
 
             // Upload file and get document structure
-            const response = await fetch(config.BACKEND_URL + '/api/v1/upload/docx-for-manual', {
+            const response = await fetch(config.BACKEND_URL + '/api/v1/generate/docx/manual-session', {
                 method: 'POST',
                 body: formData
             });
@@ -195,13 +195,13 @@ async function handleDocxImport() {
         formData.append('enable_transition_slides', enableTransitionSlides.toString());
         formData.append('enable_thank_you_slide', enableThankYouSlide.toString());
 
-        console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/v1/upload/docx-for-stream');
+        console.log('Uploading DOCX file to', config.BACKEND_URL + '/api/v1/generate/docx/prepare-stream');
         console.log('Options (boolean):', { enableTransitionSlides, enableThankYouSlide });
         console.log('Options (string):', {
             enable_transition_slides: enableTransitionSlides.toString(),
             enable_thank_you_slide: enableThankYouSlide.toString()
         });
-        const response = await fetch(config.BACKEND_URL + '/api/v1/upload/docx-for-stream', {
+        const response = await fetch(config.BACKEND_URL + '/api/v1/generate/docx/prepare-stream', {
             method: 'POST',
             headers: getAuthHeaders(),
             body: formData
@@ -635,7 +635,7 @@ window.generateFromIdea = async function() {
         showLoading("Đang tạo slide từ ý tưởng của bạn...");
 
         // Call backend API
-        const apiUrl = `${config.API_BASE_URL}/generate-from-idea`;
+        const apiUrl = `${config.API_BASE_URL}/api/v1/generate/idea/structure`;
         console.log('📡 Calling API:', apiUrl);
         const response = await fetch(apiUrl, {
             method: 'POST',

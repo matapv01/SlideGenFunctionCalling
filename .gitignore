@@ -6,13 +6,10 @@ __pycache__/
 .venv/
 .env
 
-web/static/capures/
-web/static/output/
-web/static/temp/
-web/static/uploads/
+static/
 
 node_modules/
-web/node_modules/
-web/backend/node_modules/
+node_modules/
+backend/node_modules/
 
 *.db

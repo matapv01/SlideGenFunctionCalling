@@ -816,10 +816,14 @@
                 
                 if (response.ok) {
                     const profile = await response.json();
-                    document.getElementById('profileUsername').value = window.currentUser.username;
-                    document.getElementById('profileEmail').value = window.currentUser.email;
+                    // Điền thông tin vào form
+                    // Lưu ý: username/email lấy từ user hiện tại (Auth), còn lại lấy từ Profile
+                    document.getElementById('profileUsername').value = window.currentUser?.username || '';
+                    document.getElementById('profileEmail').value = window.currentUser?.email || '';
+                    
+                    // Map đúng trường trả về từ UserProfileResponse
                     document.getElementById('profileFullName').value = profile.full_name || '';
-                    document.getElementById('profileAvatarUrl').value = profile.avatar_url || '';
+                    document.getElementById('profileAvatarUrl').value = profile.avatar_url || ''; // 🟢 Thống nhất ID này
                     document.getElementById('profileBio').value = profile.bio || '';
                 }
                 
@@ -856,6 +860,13 @@
                 
                 if (response.ok) {
                     alert('Cập nhật thông tin thành công!');
+            
+                    // Cập nhật lại UI hiển thị ngay lập tức (nếu có sidebar avatar)
+                    if (profileData.avatar_url) {
+                        const userAvatar = document.querySelector('.user-avatar');
+                        if (userAvatar) userAvatar.src = profileData.avatar_url;
+                    }
+                    
                     closeProfileModal();
                 } else {
                     alert('Không thể cập nhật thông tin');

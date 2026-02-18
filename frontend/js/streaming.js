@@ -122,7 +122,7 @@ function startStreaming(filename) {
         return;
     }
 
-    const url = `${config.BACKEND_URL}/api/v1/upload/docx-stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}`;
+    const url = `${config.BACKEND_URL}/api/v1/generate/docx/stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);
 
@@ -192,7 +192,7 @@ function startStreamingFromIdea(session_id) {
         return;
     }
 
-    const url = `${config.BACKEND_URL}/api/v1/generate/from-idea-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
+    const url = `${config.BACKEND_URL}/api/v1/generate/idea/stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to:', url);
     eventSource = new EventSource(url);
 
@@ -241,7 +241,7 @@ function startStreamingFromManualStructure(session_id) {
 
     // Create EventSource for manual structure SSE with auth token
     const token = localStorage.getItem('access_token');
-    const url = `${config.BACKEND_URL}/api/v1/generate/from-manual-structure-stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
+    const url = `${config.BACKEND_URL}/api/v1/generate/manual/stream?session_id=${encodeURIComponent(session_id)}&token=${encodeURIComponent(token)}`;
     console.log('Connecting to manual structure endpoint:', url);
     eventSource = new EventSource(url);
 

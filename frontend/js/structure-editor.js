@@ -8,7 +8,7 @@ let sessionId = null;
 let currentSelection = null;
 let introSlide = null;  // Intro slide (Level 0)
 let draggedNodeId = null;  // Drag & drop state
-const API_BASE_URL = 'http://localhost:3000';
+const API_BASE_URL = 'http://localhost:12008';
 
 // Initialize
 document.addEventListener('DOMContentLoaded', function () {
@@ -80,7 +80,7 @@ async function loadDocumentData() {
         }
     } catch (error) {
         console.error('Error loading document:', error);
-        alert('Failed to load document. Please try again.');
+        // alert('Failed to load document. Please try again.');
         goBack();
     }
 }

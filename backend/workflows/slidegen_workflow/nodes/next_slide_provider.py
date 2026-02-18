@@ -1,6 +1,6 @@
 # File: src/nodes/next_slide_provider.py
 
-from src.graph.stage import State
+from backend.workflows.slidegen_workflow.graph.stage import State
 import time
 
 

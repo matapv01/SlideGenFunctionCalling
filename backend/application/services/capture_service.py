@@ -1,6 +1,5 @@
-"""
-Capture Service - Handle slide capture and PDF export
-"""
+# File: backend/application/services/capture_service.py
+
 import os
 import logging
 import zipfile
@@ -9,19 +8,21 @@ from pathlib import Path
 from datetime import datetime
 from io import BytesIO
 from typing import List, Dict, Any
-from web.backend.app.config import (
+from backend.config import (
     PROJECT_DIR, CAPTURES_DIR
 )
 import sys
-from web.backend.capture import SlideCapture
+from domain.ports.capture_provider import CaptureProvider
 
 logger = logging.getLogger(__name__)
 
 
 class CaptureService:
-    """Service for slide capture operations"""
-
-    def __init__(self, captures_dir: Path, slide_capture=None):
+    """
+    Service quản lý việc chụp ảnh và xuất file.
+    Sử dụng CaptureProvider để thực hiện tác vụ nặng.
+    """
+    def __init__(self, captures_dir: Path, slide_capture: CaptureProvider):
         self.captures_dir = captures_dir
         self.slide_capture = slide_capture
         self.captures_dir.mkdir(parents=True, exist_ok=True)
@@ -32,21 +33,16 @@ class CaptureService:
 
     async def capture_single_slide(self, html_content: str, slide_name: str) -> Dict[str, Any]:
         """Capture single slide from HTML content"""
-        if not self.is_available():
-            raise Exception("Slide capture system not available")
+        if not self.is_available(): raise Exception("Slide capture system not available")
+        if not html_content: raise ValueError("No HTML content provided")
 
-        if not html_content:
-            raise ValueError("No HTML content provided")
-        # Generate unique filename
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         filename = f"{slide_name}_{timestamp}_{uuid.uuid4().hex[:8]}.png"
         output_path = self.captures_dir / filename
 
-        # Generate slide image
         logger.info(f"📸 Capturing slide: {slide_name}")
         await self.slide_capture.generate_slide_from_html(html_content, str(output_path))
 
-        # Return relative path
         relative_path = output_path.relative_to(self.captures_dir.parent)
 
         return {
@@ -58,50 +54,38 @@ class CaptureService:
         }
 
     async def capture_multiple_slides(self, slides_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Capture multiple slides and return as ZIP"""
-        if not self.is_available():
-            raise Exception("Slide capture system not available")
+        """Tạo file ZIP chứa ảnh các slide"""
+        if not self.is_available(): raise Exception("Slide capture system not available")
+        if not slides_data: raise ValueError("No slides data provided")
 
-        if not slides_data:
-            raise ValueError("No slides data provided")
-
-        # Create ZIP file in memory
         zip_buffer = BytesIO()
+        successful_slides = []
 
         with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
-            successful_slides = []
-
             for i, slide_data in enumerate(slides_data):
                 html_content = slide_data.get('html_content')
                 slide_name = slide_data.get('slide_name', f'slide_{i+1}')
 
-                if html_content:
-                    # Create temporary file
-                    temp_filename = f"temp_{uuid.uuid4().hex[:8]}.png"
-                    temp_path = self.captures_dir / temp_filename
+                if not html_content: continue
 
-                    try:
-                        logger.info(f"📸 Capturing slide {i+1}/{len(slides_data)}: {slide_name}")
-                        await self.slide_capture.generate_slide_from_html(html_content, str(temp_path))
+                temp_filename = f"temp_{uuid.uuid4().hex[:8]}.png"
+                temp_path = self.captures_dir / temp_filename
 
-                        # Add to ZIP
-                        zip_filename = f"{slide_name.replace(' ', '_')}.png"
-                        zip_file.write(str(temp_path), zip_filename)
-                        successful_slides.append(slide_name)
+                try:
+                    await self.slide_capture.generate_slide_from_html(html_content, str(temp_path))
+                    # Add to ZIP
+                    zip_name = f"{slide_name.replace(' ', '_')}.png"
+                    zip_file.write(str(temp_path), zip_name)
+                    successful_slides.append(slide_name)
+                    # Clean up temp file
+                    temp_path.unlink()
 
-                        # Clean up temp file
-                        temp_path.unlink()
+                except Exception as e:
+                    logger.error(f"Error capturing slide {i+1}: {e}")
 
-                    except Exception as e:
-                        logger.error(f"Error capturing slide {i+1}: {e}")
-                        continue
-
-        if not successful_slides:
-            raise Exception("No slides could be captured")
+        if not successful_slides: raise Exception("No slides could be captured")
 
         zip_buffer.seek(0)
-
-        # Save ZIP file
         timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
         zip_filename = f"slides_capture_{timestamp}.zip"
         zip_path = self.captures_dir / zip_filename
@@ -109,14 +93,12 @@ class CaptureService:
         with open(zip_path, 'wb') as f:
             f.write(zip_buffer.getvalue())
 
-        logger.info(f"✅ Successfully captured {len(successful_slides)} slides to ZIP")
-
         return {
             'success': True,
             'download_url': f'/api/download-capture/{zip_filename}',
-            'message': f'Captured {len(successful_slides)} slides successfully',
             'filename': zip_filename,
-            'captured_slides': successful_slides
+            'captured_slides': successful_slides,
+            'message': f'Captured {len(successful_slides)} slides successfully',
         }
 
     async def export_slide_to_pdf(self, html_content: str, slide_name: str) -> Dict[str, Any]:
@@ -211,8 +193,3 @@ class CaptureService:
             "details": health_status,
             "message": "Capture system is ready" if all_ok else "Capture system has issues"
         }
-
-
-sys.path.insert(0, str(PROJECT_DIR))
-slide_capture = SlideCapture()
-capture_service = CaptureService(CAPTURES_DIR, slide_capture)

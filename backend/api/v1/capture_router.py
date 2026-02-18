@@ -1,46 +1,38 @@
-from fastapi import APIRouter, HTTPException
+# File: backend/api/v1/capture_router.py
+
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import FileResponse, JSONResponse
-from web.backend.app.schemas import (
-    CaptureMultipleSlidesRequest
+from backend.schemas.capture_schema import (
+    CaptureMultipleSlidesRequest, 
+    BatchCaptureResponse
 )
-from web.backend.app.application.capture_service import capture_service
+from backend.api.dependencies import get_capture_service
+from backend.application.services.capture_service import CaptureService
 import logging
 
 router = APIRouter(prefix="/capture", tags=["CAPTURE"])
 logger = logging.getLogger("SlideGen-Capture")
 
-@router.post("/capture-slides-batch")
-async def capture_slides_batch(request: CaptureMultipleSlidesRequest):
-    """Capture multiple slides and return as ZIP"""
-    if capture_service is None or not capture_service.is_available():
-        raise HTTPException(status_code=503, detail="Capture service not available")
-    
+@router.post("/capture-slides-batch", response_model=BatchCaptureResponse)
+async def capture_slides_batch(
+    request: CaptureMultipleSlidesRequest,
+    service: CaptureService = Depends(get_capture_service)
+):
+    if not service.is_available():
+        raise HTTPException(503, "Dịch vụ chụp không khả dụng")
     try:
-        result = await capture_service.capture_multiple_slides(request.slides)
-        return JSONResponse(content=result)
+        result = await service.capture_multiple_slides(request.slides)
+        return JSONResponse(result)
     except Exception as e:
-        logger.error(f"Batch capture error: {e}")
-        return JSONResponse(
-            content={'success': False, 'error': str(e)},
-            status_code=500
-        )
-
+        logger.error(f"Error: {e}")
+        return JSONResponse({'success': False, 'error': str(e)}, status_code=500)
 
 @router.get("/download-capture/{filename}")
-async def download_capture(filename: str):
-    """Download captured slide or ZIP file"""
+async def download_capture(
+    filename: str,
+    service: CaptureService = Depends(get_capture_service)
+):
     try:
-        if capture_service is None:
-            raise HTTPException(status_code=503, detail="Capture service not available")
-        
-        file_path = capture_service.get_capture_file(filename)
-        return FileResponse(
-            file_path,
-            filename=filename,
-            media_type='application/octet-stream'
-        )
+        return FileResponse(service.get_capture_file(filename))
     except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="File not found")
-    except Exception as e:
-        logger.error(f"Download error: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
+        raise HTTPException(404, "Không tìm thấy tệp")

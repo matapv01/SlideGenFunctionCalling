@@ -1,14 +1,12 @@
+# File: backend/api/app.py
+
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
-from .router import create_router
+from backend.api.router import create_router
 import logging
-from web.backend.app.config import STATIC_DIR, FRONTEND_DIR, CORS_ORIGINS, LOG_LEVEL
-from web.backend.app.application.conversion_service import conversion_service
-from web.backend.app.application.capture_service import capture_service
-from web.backend.app.application.workflow_service import workflow_service
-from web.backend.app.resource.database import init_db
+from backend.config import STATIC_DIR, FRONTEND_DIR, CORS_ORIGINS, LOG_LEVEL
+from backend.infrastructure.database.connection import init_db
 
 # Setup logging
 logging.basicConfig(level=getattr(logging, LOG_LEVEL))
@@ -57,18 +55,6 @@ def create_app():
             },
             "frontend": "http://localhost:8000"
         }
-    
-    @app.get("/health")
-    async def health_check():
-        """Overall system health check"""
-        return JSONResponse(content={
-            "status": "healthy",
-            "services": {
-                "conversion": conversion_service is not None and conversion_service.is_available(),
-                "capture": capture_service is not None and capture_service.is_available(),
-                "workflow": workflow_service is not None and workflow_service.is_available(),
-            }
-        })
 
     return app
 

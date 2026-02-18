@@ -1,7 +1,6 @@
 # src/graph/stage.py
 from typing import List, Dict, TypedDict, Any, Literal
 from pydantic import BaseModel, Field
-from src.utils.slide_context import slide_context
 
 # Define the allowed tool categories based on your TOOLS_DICT keys
 ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS']
@@ -24,6 +23,11 @@ class SlidePlan(BaseModel):
         description="The single, most appropriate category of tools to use for generating this slide."
     )
 
+class slide_context(TypedDict):
+    """Lưu trữ context của slide trước đó."""
+    content: str
+    function_call: Dict
+    image_path: str
 
 class State(TypedDict, total=False):
     """

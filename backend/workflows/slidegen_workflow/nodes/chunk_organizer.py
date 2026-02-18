@@ -1,8 +1,8 @@
 # File: src/nodes/chunk_organizer.py
 
-from src.graph.stage import State
+from backend.workflows.slidegen_workflow.graph.stage import State
 import time
-from src.utils.config import THRESHOLD_CHAR_LIMIT
+from backend.config import THRESHOLD_CHAR_LIMIT
 
 
 def organize_chunks(state: State) -> State:

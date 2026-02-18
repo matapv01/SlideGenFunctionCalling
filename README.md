@@ -1,35 +1,18 @@
-# 1. Cài Python dependencies
+# 1. Cài dependencies
 uv sync
-
-# 2. Cài browsers cho conversion
-python -m playwright install chromium
-cd web\backend
 npm install
-npm uninstall puppeteer-core
-npm install puppeteer
-npx puppeteer browsers install chrome
-
 
 ## Tạo file .env (root project)
-
-env
 GEMINI_API_KEY=your_key_here
-DISABLE_CONVERTER=0
-LOG_LEVEL=INFO
+TAVILY_API_KEY1=your_key_here
+TAVILY_API_KEY2=your_key_here
+TAVILY_API_KEY3=your_key_here
 
 
 ## Chạy Backend (Terminal 1)
-
-uv run ./web/backend/run.py
-
-
-
-→ Backend: http://localhost:3000
+uv run backend/main.py
+→ Backend: http://localhost:12008
 
 ## Chạy Frontend (Terminal 2)
-
-
-python -m http.server 8000 --directory web/frontend
-
-
+python -m http.server 8000 --directory frontend
 → Frontend: http://localhost:8000/index.html

@@ -3,9 +3,9 @@
 import json
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
-from src.utils.helper import image_to_base64
-from src.graph.stage import State, Evaluation
-from src.utils.prompts import EVALUATION_PROMPT
+from backend.workflows.slidegen_workflow.utils.helper import image_to_base64
+from backend.workflows.slidegen_workflow.graph.stage import State, Evaluation
+from backend.workflows.slidegen_workflow.utils.prompts import EVALUATION_PROMPT
 
 
 def slide_evaluator(state: State) -> State:

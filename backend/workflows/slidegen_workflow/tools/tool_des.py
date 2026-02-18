@@ -7,7 +7,7 @@ from langchain_core.tools import StructuredTool
 
 
 # Import all slide generation functions from html_tool
-from src.tools.html_tool import (
+from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_title_slide,   # slide intro
     generate_introduction_slide, # slide intro
     generate_intro_slide1, # slide intro

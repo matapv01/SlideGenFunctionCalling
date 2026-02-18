@@ -1,25 +1,32 @@
-"""
-Run script for SlideGen Backend
-"""
-import uvicorn
+# File: backend/main.py
+
 import sys
+import uvicorn
 from pathlib import Path
 from dotenv import load_dotenv
-from web.backend.app.api.app import app
-from web.backend.app.config import API_HOST, API_PORT
 
+# --- QUAN TRỌNG: Cấu hình sys.path TRƯỚC khi import các module trong backend ---
 
-# Load .env from root project directory
-root_dir = Path(__file__).parent.parent.parent  # SlideGenFunctionCalling/
-env_file = root_dir / ".env"
+# Lấy đường dẫn tuyệt đối của file hiện tại
+current_file = Path(__file__).resolve()
+
+# Lấy thư mục gốc dự án: D:\Projects\TeamProject\SlideGenFunctionCalling
+project_root = current_file.parent.parent 
+
+# Thêm thư mục gốc vào sys.path để Python hiểu "backend" là một package
+sys.path.insert(0, str(project_root))
+
+# --- Bây giờ mới được import các module bên trong backend ---
+from backend.api.app import app
+from backend.config import API_HOST, API_PORT
+
+# Load .env
+env_file = project_root / ".env"
 if env_file.exists():
     load_dotenv(env_file)
     print(f"✅ Loaded .env from: {env_file}")
 else:
     print(f"⚠️  No .env file found at: {env_file}")
-
-# Add parent directory to path
-sys.path.insert(0, str(Path(__file__).parent))
 
 if __name__ == "__main__":
     print("=" * 60)
@@ -31,9 +38,9 @@ if __name__ == "__main__":
     print("=" * 60)
 
     uvicorn.run(
-        app,  # Pass app object directly instead of string when using sys.path manipulation
+        app,  # Pass app object directly
         host=API_HOST,
         port=API_PORT,
-        reload=False,  # Disable reload to avoid sys.path issues
+        reload=False, 
         log_level="info"
     )

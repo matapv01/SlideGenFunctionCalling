@@ -1,0 +1,207 @@
+# File: backend/api/dependencies.py
+
+from backend.config import (
+    setup_environment,
+    CAPTURES_DIR, PROJECT_DIR, STATIC_DIR, IMAGE_DIR,
+    LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
+    IDEA_STRUCTURE_LLM_MODEL, IDEA_STRUCTURE_LLM_TEMPERATURE, IDEA_STRUCTURE_LLM_MAX_TOKENS
+)
+from fastapi import Depends, HTTPException, status, Query
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+import os
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+
+# --- 1. Imports Interfaces (Ports) ---
+from backend.domain.ports.user_repository import UserRepository
+from backend.domain.ports.project_repository import ProjectRepository
+from backend.domain.ports.llm_provider import LLMProvider
+from backend.domain.ports.capture_provider import CaptureProvider
+from backend.domain.ports.convert_provider import ConvertProvider
+from backend.domain.ports.parser_provider import ParserProvider
+from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
+
+# --- 2. Imports Implementation (Infrastructure) ---
+from backend.infrastructure.llm.gemini_provider import GeminiLLMProvider
+from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
+from backend.infrastructure.database.repositories.sqlite_project_repo import SqliteProjectRepository
+from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
+from backend.infrastructure.converter.nodejs_provider import NodeJsConvertProvider
+from backend.infrastructure.parser.markitdown_parser import MarkItDownParser
+from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
+
+# --- 3. Imports Services (Application) ---
+from backend.application.services.auth_service import AuthService
+from backend.application.services.user_service import UserService
+from backend.application.services.project_service import ProjectService
+from backend.application.services.idea_service import IdeaService
+from backend.application.services.capture_service import CaptureService
+from backend.application.services.conversion_service import ConversionService
+from backend.application.services.structure_service import StructureService
+from backend.application.services.slide_service import SlideService
+from backend.application.services.idea_workflow_service import IdeaWorkflowService
+from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
+
+from backend.schemas.auth_schema import UserResponse
+
+security = HTTPBearer()
+
+# ===== SINGLETON INFRASTRUCTURE INSTANCES =====
+# Khởi tạo 1 lần duy nhất khi Server start
+
+# 1. Load Env
+env_keys = setup_environment()
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+
+# 2. Infrastructure Global Instances
+_capture_infra = PlaywrightCaptureProvider()
+_converter_infra = NodeJsConvertProvider()
+_parser_infra = MarkItDownParser()
+
+_idea_llm = GeminiLLMProvider(
+    api_keys=[GEMINI_API_KEY] if GEMINI_API_KEY else [],
+    model=IDEA_STRUCTURE_LLM_MODEL,
+    base_url=LLM_BASE_URL,
+    temperature=IDEA_STRUCTURE_LLM_TEMPERATURE,
+    max_tokens=IDEA_STRUCTURE_LLM_MAX_TOKENS,
+)
+_slidegen_llm = GeminiLLMProvider(
+    api_keys=[GEMINI_API_KEY] if GEMINI_API_KEY else [],
+    model=LLM_MODEL,
+    base_url=LLM_BASE_URL,
+    temperature=LLM_TEMPERATURE,
+    max_tokens=LLM_MAX_TOKENS,
+    top_p=LLM_TOP_P
+)
+
+_retriever_infra = GeminiToolRetrieveProvider(
+    tools_dict=TOOLS_DICT,
+    index_path="backend/infrastructure/faiss_tool_retriever_index",
+    api_key = GEMINI_API_KEY
+)
+
+# ===== SINGLETON SERVICES =====
+_structure_service = StructureService()
+_slide_service = SlideService(static_dir=STATIC_DIR, image_dir=IMAGE_DIR)
+
+_idea_workflow_service = IdeaWorkflowService(
+    project_dir=str(PROJECT_DIR),
+    llm_provider=_idea_llm
+)
+
+_slidegen_workflow_service = SlideGenWorkflowService(
+    project_dir=str(PROJECT_DIR),
+    llm_provider=_slidegen_llm,
+    capture_provider=_capture_infra,
+    parser_provider=_parser_infra,
+    tool_retriever=_retriever_infra
+)
+
+def get_user_repo() -> UserRepository:
+    return SqliteUserRepository()
+
+
+def get_project_repo() -> ProjectRepository:
+    return SqliteProjectRepository()
+
+
+def get_llm_provider() -> LLMProvider:
+    return _slidegen_llm
+
+
+def get_capture_infra() -> CaptureProvider:
+    return _capture_infra
+
+
+def get_converter_infra() -> ConvertProvider:
+    return _converter_infra
+
+
+def get_auth_service(user_repo: UserRepository = Depends(get_user_repo)) -> AuthService:
+    return AuthService(user_repo)
+
+
+def get_user_service(user_repo: UserRepository = Depends(get_user_repo)) -> UserService:
+    return UserService(user_repo)
+
+
+def get_idea_workflow_service() -> IdeaWorkflowService:
+    return _idea_workflow_service
+
+
+def get_idea_service(
+    workflow_service: IdeaWorkflowService = Depends(get_idea_workflow_service)
+) -> IdeaService:
+    return IdeaService(workflow_service)
+
+
+def get_capture_service(
+    infra: CaptureProvider = Depends(get_capture_infra)
+) -> CaptureService:
+    return CaptureService(captures_dir=CAPTURES_DIR, capturer=infra)
+
+
+def get_conversion_service(
+    infra: ConvertProvider = Depends(get_converter_infra)
+) -> ConversionService:
+    return ConversionService(converter_infra=infra)
+
+
+def get_project_service(
+    project_repo: ProjectRepository = Depends(get_project_repo),
+    conversion_service: ConversionService = Depends(get_conversion_service)
+) -> ProjectService:
+    return ProjectService(project_repo, conversion_service)
+
+
+def get_structure_service() -> StructureService:
+    return _structure_service
+
+
+def get_slide_service() -> SlideService:
+    return _slide_service
+
+
+def get_slidegen_workflow_service() -> SlideGenWorkflowService:
+    return _slidegen_workflow_service
+
+
+async def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(security),
+    auth_service: AuthService = Depends(get_auth_service),
+    user_repo: UserRepository = Depends(get_user_repo)
+) -> UserResponse:
+    
+    token = credentials.credentials
+    email = auth_service.decode_access_token(token)
+    
+    user = user_repo.get_by_email(email)
+    if user is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Không tìm thấy người dùng")
+
+    return UserResponse(
+        id=user.id, email=user.email, username=user.username,
+        created_at=user.created_at, is_active=bool(user.is_active)
+    )
+
+
+async def get_current_active_user(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
+    if not current_user.is_active:
+        raise HTTPException(status_code=400, detail="Người dùng không hoạt động")
+    return current_user
+
+
+async def get_current_user_from_token_param(
+    token: str = Query(...),
+    auth_service: AuthService = Depends(get_auth_service),
+    user_repo: UserRepository = Depends(get_user_repo)
+) -> UserResponse:
+    email = auth_service.decode_access_token(token)
+    user = user_repo.get_by_email(email)
+    
+    if user is None or not user.is_active:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Không tìm thấy người dùng hoặc người dùng không hoạt động")
+
+    return UserResponse(
+        id=user.id, email=user.email, username=user.username,
+        created_at=user.created_at, is_active=bool(user.is_active)
+    )

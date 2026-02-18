@@ -1,47 +1,55 @@
-from fastapi import APIRouter, HTTPException
+# File: backend/api/v1/export_router.py
+
+from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
-from web.backend.app.schemas import (
-    CaptureSlideRequest, CaptureMultipleSlidesRequest,
+from backend.schemas.capture_schema import (
+    CaptureSlideItem, 
+    CaptureMultipleSlidesRequest, 
 )
-from web.backend.app.application.capture_service import capture_service
+from backend.schemas.export_schema import PDFExportResponse
+from backend.api.dependencies import get_capture_service
+from backend.application.services.capture_service import CaptureService
 import logging
 
 router = APIRouter(prefix="/export", tags=["EXPORT"])
 logger = logging.getLogger("SlideGen-export")
 
 
-@router.post("/slide-pdf")
-async def export_slide_pdf(request: CaptureSlideRequest):
-    """Export single slide to PDF"""
-    if capture_service is None or not capture_service.is_available():
-        raise HTTPException(status_code=503, detail="Capture service not available")
-    
+@router.post("/slide-pdf", response_model=PDFExportResponse)
+async def export_slide_pdf(
+    request: CaptureSlideItem,
+    service: CaptureService = Depends(get_capture_service)
+):
+    """Xuất một slide đơn lẻ sang định dạng PDF"""
+    if not service.is_available():
+        raise HTTPException(status_code=503, detail="Dịch vụ PDF không khả dụng")
     try:
-        result = await capture_service.export_slide_to_pdf(
-            request.html_content,
-            request.slide_name
-        )
-        return JSONResponse(content=result)
+        result = await service.export_slide_to_pdf(request.html_content, request.slide_name)
+        return result
     except Exception as e:
-        logger.error(f"PDF export error: {e}")
-        return JSONResponse(
-            content={'success': False, 'error': str(e)},
-            status_code=500
-        )
+        logger.error(f"Lỗi xuất PDF đơn: {e}")
+        return {
+            "success": False, 
+            "message": "Không thể xuất PDF", 
+            "error": str(e)
+        }
 
 
-@router.post("/slides-pdf")
-async def export_slides_pdf(request: CaptureMultipleSlidesRequest):
-    """Export multiple slides to a single PDF"""
-    if capture_service is None or not capture_service.is_available():
-        raise HTTPException(status_code=503, detail="Capture service not available")
-    
+@router.post("/slides-pdf", response_model=PDFExportResponse)
+async def export_slides_pdf(
+    request: CaptureMultipleSlidesRequest,
+    service: CaptureService = Depends(get_capture_service)
+):
+    """Xuất toàn bộ danh sách slide sang một file PDF duy nhất"""
+    if not service.is_available(): raise HTTPException(status_code=503, detail="Dịch vụ PDF không khả dụng")
     try:
-        result = await capture_service.export_slides_to_pdf(request.slides)
-        return JSONResponse(content=result)
+        # Giả sử bạn đã thêm hàm export_slides_to_pdf vào CaptureService
+        result = await service.export_slides_to_pdf(request.slides)
+        return result
     except Exception as e:
-        logger.error(f"PDF export error: {e}")
-        return JSONResponse(
-            content={'success': False, 'error': str(e)},
-            status_code=500
-        )
+        logger.error(f"Lỗi xuất PDF hàng loạt: {e}")
+        return {
+            "success": False, 
+            "message": "Không thể xuất PDF hàng loạt", 
+            "error": str(e)
+        }

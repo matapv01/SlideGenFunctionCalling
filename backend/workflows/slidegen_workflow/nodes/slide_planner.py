@@ -1,10 +1,10 @@
-# File: src/nodes/slide_planner.py
+# File: backend/workflows/slidegen_workflow/nodes/slide_planner.py
 
 from langchain_core.prompts import ChatPromptTemplate
-from src.graph.stage import State, SlidePlan
+from backend.workflows.slidegen_workflow.graph.stage import State, SlidePlan
 from langchain_core.runnables import RunnableConfig
-from src.utils.config import PLANNING_BATCH_SIZE
-from src.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
+from backend.config import PLANNING_BATCH_SIZE
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
 import time
 
 
