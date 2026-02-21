@@ -1,8 +1,8 @@
 # File: backend/api/v1/slide_router.py
 
 from fastapi import APIRouter, Depends
-from backend.schemas.auth_schema import UserResponse
-from backend.schemas.project_schema import SlideResponse, SlideUpdate
+from backend.api.schemas.auth_schema import UserResponse
+from backend.api.schemas.project_schema import SlideResponse, SlideUpdate
 from backend.api.dependencies import get_current_active_user, get_project_service
 from backend.application.services.project_service import ProjectService
 

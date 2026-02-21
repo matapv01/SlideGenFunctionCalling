@@ -2,8 +2,8 @@
 
 from fastapi import APIRouter, Depends
 from fastapi.responses import JSONResponse
-from backend.schemas.auth_schema import UserResponse
-from backend.schemas.project_schema import (
+from backend.api.schemas.auth_schema import UserResponse
+from backend.api.schemas.project_schema import (
     ProjectCreate, ProjectUpdate, 
     ProjectDetailResponse, ProjectListResponse,
     SlideCreate, ViewerProjectResponse, CreateResourceResponse

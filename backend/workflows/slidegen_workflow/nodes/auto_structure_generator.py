@@ -58,9 +58,9 @@ def generate_structure_from_plaintext(state: State, config: RunnableConfig) -> S
     if stream_callback:
         stream_callback('status', {
             'step': 1,
-            'title': 'Phân tích cấu trúc',
-            'description': 'Đang sử dụng AI để tạo cấu trúc tài liệu...',
-            'message': 'AI đang phân tích và tổ chức nội dung'
+            'title': 'Auto-Generating Structure',
+            'description': 'AI analysis in progress',
+            'message': 'Generating document structure from content...'
         })
     
     if not llm:

@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import FileResponse, JSONResponse
-from backend.schemas.capture_schema import (
+from backend.api.schemas.capture_schema import (
     CaptureMultipleSlidesRequest, 
     BatchCaptureResponse
 )

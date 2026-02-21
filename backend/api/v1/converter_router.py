@@ -7,7 +7,7 @@ import logging
 from backend.config import (
     OUTPUT_DIR
 )
-from backend.schemas.converter_schema import (
+from backend.api.schemas.converter_schema import (
     ConvertRequest,
     ConversionResponse,
     ConversionStatusResponse,

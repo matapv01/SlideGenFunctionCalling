@@ -41,7 +41,7 @@ from backend.application.services.slide_service import SlideService
 from backend.application.services.idea_workflow_service import IdeaWorkflowService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
 
-from backend.schemas.auth_schema import UserResponse
+from backend.api.schemas.auth_schema import UserResponse
 
 security = HTTPBearer()
 

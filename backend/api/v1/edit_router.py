@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 import logging
-from backend.schemas.edit_schema import (
+from backend.api.schemas.edit_schema import (
     StructureUpdateRequest, 
     StructureApproveRequest, 
     StructureResponse,

@@ -2,7 +2,7 @@
 
 from typing import Dict
 from backend.domain.ports.user_repository import UserRepository
-from backend.schemas.profile_schema import UserProfileUpdate, UserSettingsUpdate
+from backend.api.schemas.profile_schema import UserProfileUpdate, UserSettingsUpdate
 from backend.domain.entities.user import UserProfile, UserSettings
 
 

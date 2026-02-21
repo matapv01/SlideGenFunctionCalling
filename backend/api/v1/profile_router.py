@@ -1,8 +1,8 @@
 # File: backend/api/v1/profile_router.py
 
 from fastapi import APIRouter, Depends
-from backend.schemas.auth_schema import UserResponse
-from backend.schemas.profile_schema import (
+from backend.api.schemas.auth_schema import UserResponse
+from backend.api.schemas.profile_schema import (
     UserProfileResponse, 
     UserProfileUpdate, 
     UserSettingsResponse, 

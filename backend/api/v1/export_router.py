@@ -2,11 +2,11 @@
 
 from fastapi import APIRouter, HTTPException, Depends
 from fastapi.responses import JSONResponse
-from backend.schemas.capture_schema import (
+from backend.api.schemas.capture_schema import (
     CaptureSlideItem, 
     CaptureMultipleSlidesRequest, 
 )
-from backend.schemas.export_schema import PDFExportResponse
+from backend.api.schemas.export_schema import PDFExportResponse
 from backend.api.dependencies import get_capture_service
 from backend.application.services.capture_service import CaptureService
 import logging

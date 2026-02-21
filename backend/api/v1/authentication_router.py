@@ -1,7 +1,7 @@
 # File: backend/api/v1/authentication_router.py
 
 from fastapi import APIRouter, Depends, HTTPException
-from backend.schemas.auth_schema import (
+from backend.api.schemas.auth_schema import (
     UserCreate, 
     UserLogin, 
     Token, 

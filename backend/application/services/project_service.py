@@ -8,7 +8,7 @@ from fastapi import HTTPException
 from backend.domain.entities.project import Project, Slide
 from backend.domain.ports.project_repository import ProjectRepository
 from backend.application.services.conversion_service import ConversionService
-from backend.schemas.project_schema import ProjectCreate, ProjectUpdate, SlideCreate, SlideUpdate
+from backend.api.schemas.project_schema import ProjectCreate, ProjectUpdate, SlideCreate, SlideUpdate
 import logging
 
 logger = logging.getLogger(__name__)

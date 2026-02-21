@@ -8,11 +8,11 @@ import asyncio
 from typing import AsyncGenerator, Optional
 from pathlib import Path
 from datetime import datetime
-from backend.schemas.generate_schema import (
+from backend.api.schemas.generate_schema import (
     IdeaStructureRequest, IdeaStructureResponse, 
     DocxPrepareResponse, ManualSessionResponse
 )
-from backend.schemas.auth_schema import UserResponse
+from backend.api.schemas.auth_schema import UserResponse
 from fastapi import APIRouter, UploadFile, File, Form, Depends, HTTPException, Query
 from fastapi.responses import JSONResponse, StreamingResponse
 
