@@ -1,3 +1,5 @@
+// File: frontend/src/lib/SlideLogicCore.js
+
 function rgbToHex(color) {
     if (!color || color === 'transparent') return '#000000';
     if (color.startsWith('#')) return color;
@@ -38,6 +40,7 @@ export class SlideEditorLogic {
         this.history = [];
         this.historyIndex = -1;
         this.currentScale = 1;
+        this.isEditingText = false;
         // Khởi tạo
         this.init();
     }
@@ -47,6 +50,7 @@ export class SlideEditorLogic {
         
         // Gắn sự kiện vào root thay vì document
         this.root.addEventListener('mousedown', (e) => this.handleMouseDown(e), true);
+        this.root.addEventListener('dblclick', (e) => this.handleDoubleClick(e), true);
         
         // Mouse move/up cần gắn window để kéo thả mượt mà khi trượt ra ngoài khung
         this.boundMouseMove = (e) => this.handleMouseMove(e);
@@ -92,22 +96,11 @@ export class SlideEditorLogic {
                 el.style.cursor = 'move';
                 el.setAttribute('data-selectable', 'true');
                 
-                // Enable contentEditable cho text elements
+                // Enable contentEditable cho text elements (chỉ khi double-click)
                 const isTextElement = ['H1', 'H2', 'H3', 'P', 'SPAN', 'DIV'].includes(el.tagName);
                 if (isTextElement && !el.querySelector('img')) {
                     el.setAttribute('contenteditable', 'true');
-                    
-                    // Prevent drag khi đang edit text
-                    el.addEventListener('focus', (e) => {
-                        this.isEditingText = true;
-                        el.style.cursor = 'text';
-                    });
-                    
-                    el.addEventListener('blur', (e) => {
-                        this.isEditingText = false;
-                        el.style.cursor = 'move';
-                        this.saveHistory();
-                    });
+                    el.style.outline = 'none'; // Remove outline khi focus
                 }
             }
         });
@@ -118,12 +111,63 @@ export class SlideEditorLogic {
         console.log('[SlideLogicCore] Scale updated:', this.currentScale);
     }
 
+    handleDoubleClick(e) {
+        const target = e.target;
+        
+        // Tìm element text có thể edit
+        let textElement = target;
+        while (textElement && textElement !== this.root) {
+            if (textElement.hasAttribute('contenteditable')) {
+                break;
+            }
+            textElement = textElement.parentElement;
+        }
+        
+        if (textElement && textElement !== this.root && textElement.hasAttribute('contenteditable')) {
+            // Vào chế độ edit text
+            this.isEditingText = true;
+            textElement.style.cursor = 'text';
+            textElement.focus();
+            
+            // Ẩn bounding box khi đang edit
+            this.hideSelectionUI();
+            
+            // Đặt con trỏ ở cuối text (không select all)
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(textElement);
+            range.collapse(false); // false = collapse to end
+            selection.removeAllRanges();
+            selection.addRange(range);
+            
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    }
+
     handleMouseDown(e) {
         const target = e.target;
         
-        // Bỏ qua nếu đang edit text
+        // Bỏ qua nếu đang edit text - cho phép click trong text để di chuyển cursor
         if (this.isEditingText) {
-            return;
+            // Kiểm tra nếu click ra ngoài element đang edit thì thoát edit mode
+            let clickedElement = target;
+            let isClickingEditableElement = false;
+            while (clickedElement && clickedElement !== this.root) {
+                if (clickedElement.hasAttribute('contenteditable') && this.selectedElements.includes(clickedElement)) {
+                    isClickingEditableElement = true;
+                    break;
+                }
+                clickedElement = clickedElement.parentElement;
+            }
+            
+            if (isClickingEditableElement) {
+                // Cho phép click trong element đang edit text
+                return;
+            } else {
+                // Thoát edit mode khi click ra ngoài
+                this.exitEditMode();
+            }
         }
         
         // Kiểm tra nếu click vào resize handle
@@ -446,6 +490,11 @@ export class SlideEditorLogic {
     }
 
     deselectAll() {
+        // Thoát edit mode nếu đang edit
+        if (this.isEditingText) {
+            this.exitEditMode();
+        }
+        
         this.selectedElements = [];
         
         // Xóa các UI overlay (resize handles...)
@@ -525,6 +574,41 @@ export class SlideEditorLogic {
         
         const el = this.selectedElements[0];
         this.highlightElement(el);
+    }
+
+    hideSelectionUI() {
+        // Ẩn khung selection khi đang edit text
+        const existingOverlay = this.root.querySelector('.editor-overlay');
+        if (existingOverlay) {
+            existingOverlay.style.display = 'none';
+        }
+    }
+
+    exitEditMode() {
+        if (!this.isEditingText) return;
+        
+        this.isEditingText = false;
+        
+        // Reset cursor của element đang edit
+        if (this.selectedElements.length > 0) {
+            const el = this.selectedElements[0];
+            if (el.hasAttribute('contenteditable')) {
+                el.style.cursor = 'move';
+                el.blur();
+            }
+        }
+        
+        // Hiện lại selection UI
+        const existingOverlay = this.root.querySelector('.editor-overlay');
+        if (existingOverlay) {
+            existingOverlay.style.display = 'block';
+        }
+        
+        // Clear text selection
+        window.getSelection()?.removeAllRanges();
+        
+        // Save history sau khi edit xong
+        this.saveHistory();
     }
 
     // --- API để React gọi ngược vào ---

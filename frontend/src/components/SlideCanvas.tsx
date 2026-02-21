@@ -1,3 +1,5 @@
+// File: frontend/src/components/SlideCanvas.tsx
+
 import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState, useLayoutEffect } from 'react';
 import { SlideEditorLogic } from '@/lib/SlideLogicCore';
 
@@ -64,6 +66,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     redo: () => logicInstanceRef.current?.redo()
   }));
 
+  // Trong file SlideCanvas.tsx
+
   const processHTML = (rawHTML: string): string => {
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHTML, 'text/html');
@@ -107,6 +111,9 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         width: 100%;
         height: 100%;
         position: relative;
+        
+        /* ĐÃ XÓA background-color: white ở đây để không ghi đè màu user */
+        
         margin: 0 !important;
         padding: 0 !important; 
         overflow: hidden !important; 
