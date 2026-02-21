@@ -1,0 +1,1 @@
+export { useSlideEditor } from "./useSlideEditor";

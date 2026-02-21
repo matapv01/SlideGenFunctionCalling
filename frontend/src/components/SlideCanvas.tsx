@@ -1,3 +1,5 @@
+// File: frontend/src/components/SlideCanvas.tsx
+
 import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState, useLayoutEffect } from 'react';
 import { SlideEditorLogic } from '@/lib/SlideLogicCore';
 

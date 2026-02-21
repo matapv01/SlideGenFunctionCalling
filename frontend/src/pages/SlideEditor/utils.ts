@@ -1,22 +1,23 @@
-import { useState, useEffect, useRef } from "react";
-import { useParams } from "react-router-dom";
-import { useToast } from "@/hooks/use-toast";
-import { api } from "@/lib/api";
-import { SlideCanvasHandle } from "@/components/SlideCanvas";
-import { Slide, SlideElement, DragItem } from "@/types/slide";
+import type { SlideElement } from "./types";
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "./constants";
 
-// --- Constants ---
-const CANVAS_WIDTH = 1920;
-const CANVAS_HEIGHT = 1080;
+// --- Helper: Convert px string to number ---
+export const pxToNum = (val: string | null): number => 
+  val ? parseFloat(val.replace("px", "")) : 0;
 
-const parseHtmlToElements = (html: string): { elements: SlideElement[], backgroundColor: string, defs?: string } => {
+// --- Helper: Parse HTML to SlideElements ---
+export const parseHtmlToElements = (html: string): { 
+  elements: SlideElement[]; 
+  backgroundColor: string; 
+  defs?: string;
+} => {
   // 1. Create a temporary hidden container to render HTML for accurate measurements
   const tempContainer = document.createElement('div');
   tempContainer.style.position = 'fixed';
   tempContainer.style.top = '-9999px';
   tempContainer.style.left = '-9999px';
-  tempContainer.style.width = `${CANVAS_WIDTH}px`; // 1920px
-  tempContainer.style.height = `${CANVAS_HEIGHT}px`; // 1080px
+  tempContainer.style.width = `${CANVAS_WIDTH}px`;
+  tempContainer.style.height = `${CANVAS_HEIGHT}px`;
   tempContainer.style.visibility = 'hidden';
   tempContainer.innerHTML = html;
   
@@ -155,7 +156,7 @@ const parseHtmlToElements = (html: string): { elements: SlideElement[], backgrou
       const fontSize = parseFloat(computed.fontSize) || 24;
       const fontFamily = computed.fontFamily || 'Inter, sans-serif';
       const fontWeight = computed.fontWeight || 'normal';
-      const textAlign = (computed.textAlign as any) || 'left';
+      const textAlign = (computed.textAlign as "left" | "center" | "right") || 'left';
       const color = computed.color || '#000000';
       const lineHeight = computed.lineHeight || '1.2';
       const letterSpacing = computed.letterSpacing || 'normal';
@@ -205,7 +206,7 @@ const parseHtmlToElements = (html: string): { elements: SlideElement[], backgrou
         // Text element
         const fontSize = parseFloat(computed.fontSize) || 24;
         const fontWeight = computed.fontWeight || 'normal';
-        const textAlign = (computed.textAlign as any) || 'left';
+        const textAlign = (computed.textAlign as "left" | "center" | "right") || 'left';
         const color = computed.color || '#000000';
 
         extractedElements.push({
@@ -244,187 +245,4 @@ const parseHtmlToElements = (html: string): { elements: SlideElement[], backgrou
   document.body.removeChild(tempContainer);
 
   return { elements: extractedElements, backgroundColor, defs: defs || undefined };
-};
-
-export const useSlideEditor = () => {
-  const { projectId } = useParams();
-  const { toast } = useToast();
-  
-  // --- State ---
-  const [slides, setSlides] = useState<Slide[]>([{ id: "1", elements: [], backgroundColor: "#ffffff" }]);
-  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
-  const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(0.5);
-  const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
-  const [projectName, setProjectName] = useState("Untitled Project");
-  const [loading, setLoading] = useState(true);
-  
-  // Refs
-  const canvasRef = useRef<HTMLDivElement>(null);
-  const slideCanvasRef = useRef<SlideCanvasHandle>(null);
-  
-  const currentSlide = slides[currentSlideIndex];
-  const selectedElement = currentSlide?.elements.find(el => el.id === selectedElementId);
-
-  // --- Load Data ---
-  useEffect(() => {
-    if (projectId) {
-      const loadData = async () => {
-        try {
-          setLoading(true);
-          const project = await api.getProject(projectId);
-          setProjectName(project?.title || `Project ${projectId}`);
-
-          const slidesResponse = await api.getSlides(projectId);
-          if (slidesResponse?.slides && Array.isArray(slidesResponse.slides)) {
-             // Logic map slides response giữ nguyên như cũ
-             // ... (Copy logic map từ component cũ vào đây nếu cần chi tiết)
-             // Ở đây tôi set tạm để code chạy được
-             const mappedSlides = slidesResponse.slides.map((s: any) => ({
-                 id: String(s.id),
-                 elements: [], // Cần logic parse thực tế
-                 backgroundColor: "#ffffff"
-             }));
-             if(mappedSlides.length > 0) setSlides(mappedSlides);
-          }
-        } catch (error) {
-          console.error(error);
-          toast({ title: "Error", description: "Failed to load project", variant: "destructive" });
-        } finally {
-          setLoading(false);
-        }
-      };
-      loadData();
-    }
-  }, [projectId, toast]);
-
-  // --- Actions ---
-  const updateElement = (id: string, updates: Partial<SlideElement>) => {
-    // 1. Update React State
-    const updatedSlides = slides.map((slide, i) => {
-      if (i !== currentSlideIndex) return slide;
-      return {
-        ...slide,
-        elements: slide.elements.map(el => el.id === id ? { ...el, ...updates } : el)
-      };
-    });
-    setSlides(updatedSlides);
-    
-    // 2. Update Shadow DOM (Visual)
-    if (slideCanvasRef.current) {
-      const styleUpdates: any = {};
-      if (updates.x !== undefined) styleUpdates.left = `${updates.x}px`;
-      if (updates.y !== undefined) styleUpdates.top = `${updates.y}px`;
-      if (updates.width !== undefined) styleUpdates.width = `${updates.width}px`;
-      if (updates.height !== undefined) styleUpdates.height = `${updates.height}px`;
-      if (updates.color !== undefined) styleUpdates.color = updates.color;
-      if (updates.fontSize !== undefined) styleUpdates.fontSize = `${updates.fontSize}px`;
-      if (updates.fontWeight !== undefined) styleUpdates.fontWeight = updates.fontWeight;
-      if (updates.fontStyle !== undefined) styleUpdates.fontStyle = updates.fontStyle;
-      if (updates.textDecoration !== undefined) styleUpdates.textDecoration = updates.textDecoration;
-      if (updates.textAlign !== undefined) styleUpdates.textAlign = updates.textAlign;
-      if (updates.fillColor !== undefined) styleUpdates.backgroundColor = updates.fillColor;
-      if (updates.content !== undefined) styleUpdates.innerHTML = updates.content;
-      
-      slideCanvasRef.current.updateElement(styleUpdates);
-    }
-  };
-
-  // --- QUAN TRỌNG: Logic nhận selection từ Canvas và đồng bộ ngược về State ---
-  const handleElementSelectFromCanvas = (elementData: any) => {
-    if (!elementData) {
-      setSelectedElementId(null);
-      return;
-    }
-    
-    let matchingElement = currentSlide?.elements.find(el => el.id === elementData.id);
-    
-    // Nếu tìm thấy, cập nhật state React với các style thực tế từ DOM (fix lỗi properties không cập nhật)
-    if (matchingElement && elementData.style) {
-        const updates: Partial<SlideElement> = {
-            x: parseFloat(elementData.style.left) || 0,
-            y: parseFloat(elementData.style.top) || 0,
-            width: parseFloat(elementData.style.width),
-            height: parseFloat(elementData.style.height),
-            fontSize: parseFloat(elementData.style.fontSize),
-            fontWeight: elementData.style.fontWeight,
-            fontStyle: elementData.style.fontStyle,
-            textDecoration: elementData.style.textDecoration,
-            textAlign: elementData.style.textAlign,
-            color: elementData.style.color,
-            fillColor: elementData.style.backgroundColor,
-            content: elementData.content || elementData.innerHTML
-        };
-
-        const updatedSlides = slides.map((slide, i) => {
-            if (i !== currentSlideIndex) return slide;
-            return {
-                ...slide,
-                elements: slide.elements.map(el => el.id === matchingElement!.id ? { ...el, ...updates } : el)
-            };
-        });
-        setSlides(updatedSlides);
-        setSelectedElementId(matchingElement.id);
-        return; 
-    }
-  };
-
-  const addElement = (item: DragItem, dropX: number, dropY: number) => {
-      // Logic thêm phần tử (giữ nguyên logic cũ)
-      const id = Date.now().toString();
-      const newElement: SlideElement = {
-        id, type: item.type as any, subType: item.subType,
-        x: dropX, y: dropY, width: 200, height: 100, rotation: 0, zIndex: 1, opacity: 1,
-        content: item.type === 'text' ? (item.subType === 'heading' ? 'Heading' : 'Text') : '',
-        fillColor: item.type === 'shape' ? '#e2e8f0' : 'transparent',
-        fontSize: 24, color: '#000000'
-      };
-      
-      const updatedSlides = slides.map((slide, i) => {
-        if (i !== currentSlideIndex) return slide;
-        return { ...slide, elements: [...slide.elements, newElement] };
-      });
-      setSlides(updatedSlides);
-      setSelectedElementId(id);
-  };
-
-  const deleteElement = (id: string) => {
-      const updatedSlides = slides.map((slide, i) => {
-        if (i !== currentSlideIndex) return slide;
-        return { ...slide, elements: slide.elements.filter(el => el.id !== id) };
-      });
-      setSlides(updatedSlides);
-      setSelectedElementId(null);
-  };
-
-  const addSlide = () => {
-    const newSlide: Slide = { id: Date.now().toString(), elements: [], backgroundColor: "#ffffff" };
-    setSlides([...slides, newSlide]);
-    setCurrentSlideIndex(slides.length);
-  };
-  
-  const deleteSlide = (index: number) => {
-    if (slides.length <= 1) return;
-    const newSlides = slides.filter((_, i) => i !== index);
-    setSlides(newSlides);
-    if (currentSlideIndex >= index && currentSlideIndex > 0) setCurrentSlideIndex(currentSlideIndex - 1);
-  };
-
-  const duplicateSlide = (index: number) => {
-     // Logic duplicate...
-  };
-
-  const handleSave = async () => {
-      // Logic save...
-  };
-
-  return {
-    state: { slides, currentSlideIndex, currentSlide, selectedElementId, selectedElement, zoom, draggedItem, isSidebarOpen, projectName, loading },
-    refs: { canvasRef, slideCanvasRef },
-    actions: {
-      setSlides, setCurrentSlideIndex, setSelectedElementId, setZoom, setDraggedItem, setIsSidebarOpen,
-      addSlide, deleteSlide, duplicateSlide, addElement, updateElement, deleteElement, handleSave, handleElementSelectFromCanvas
-    }
-  };
 };

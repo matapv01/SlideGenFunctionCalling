@@ -1,3 +1,5 @@
+// SlideEditor Types
+
 export interface SlideElement {
   id: string;
   type: "text" | "image" | "shape" | "icon" | "video";
@@ -23,9 +25,9 @@ export interface SlideElement {
   // Typography
   fontSize?: number;
   fontFamily?: string;
-  fontWeight?: string;
-  fontStyle?: string;
-  textDecoration?: string;
+  fontWeight?: string; // 'bold' | 'normal'
+  fontStyle?: string; // 'italic' | 'normal'
+  textDecoration?: string; // 'underline' | 'none'
   textAlign?: "left" | "center" | "right";
   lineHeight?: string;
   letterSpacing?: string;
@@ -44,5 +46,22 @@ export interface Slide {
 export interface DragItem {
   type: string;
   subType?: string;
-  content?: string;
+  content?: string; // Default content or SRC
+}
+
+export interface ElementCategory {
+  name: string;
+  items: {
+    id: string;
+    icon: React.ComponentType<{ className?: string }>;
+    label: string;
+    type: string;
+    subType: string;
+  }[];
+}
+
+export interface Template {
+  id: string;
+  name: string;
+  layout: string;
 }
