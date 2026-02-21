@@ -124,13 +124,13 @@ const Projects = () => {
                         </Button>
                       </DropdownMenuTrigger>
                       <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => { setRenameId(project.id); setRenameName(project.name); }}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameId(project.id); setRenameName(project.name); }}>
                           <Edit className="mr-2 h-4 w-4" /> Rename
                         </DropdownMenuItem>
-                        <DropdownMenuItem onClick={() => navigate(`/view/${project.id}`)}>
+                        <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/view/${project.id}`); }}>
                           <Eye className="mr-2 h-4 w-4" /> View
                         </DropdownMenuItem>
-                        <DropdownMenuItem className="text-destructive" onClick={() => setDeleteId(project.id)}>
+                        <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(project.id); }}>
                           <Trash2 className="mr-2 h-4 w-4" /> Delete
                         </DropdownMenuItem>
                       </DropdownMenuContent>
