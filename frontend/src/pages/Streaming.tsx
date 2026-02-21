@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
-import { CheckCircle2, Loader2, AlertCircle, RefreshCw, Home, Eye, FileText, Sparkles, PenTool, ExternalLink } from "lucide-react";
+import { CheckCircle2, Loader2, AlertCircle, RefreshCw, Home, Eye, FileText, Sparkles, PenTool, ExternalLink, Presentation, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Card, CardContent } from "@/components/ui/card";
@@ -36,6 +36,8 @@ const Streaming = () => {
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
   const [previewSlide, setPreviewSlide] = useState<SlideThumb | null>(null);
+  const [isPresentMode, setIsPresentMode] = useState(false);
+  const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -185,7 +187,74 @@ const Streaming = () => {
     return () => eventSourceRef.current?.close();
   }, []);
 
+  // Keyboard navigation for presentation mode
+  useEffect(() => {
+    if (!isPresentMode) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      switch (e.key) {
+        case "ArrowRight":
+        case " ":
+          e.preventDefault();
+          setCurrentSlideIndex((prev) => Math.min(prev + 1, slides.length - 1));
+          break;
+        case "ArrowLeft":
+          e.preventDefault();
+          setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
+          break;
+        case "Escape":
+          exitPresentation();
+          break;
+        case "Home":
+          e.preventDefault();
+          setCurrentSlideIndex(0);
+          break;
+        case "End":
+          e.preventDefault();
+          setCurrentSlideIndex(slides.length - 1);
+          break;
+      }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isPresentMode, slides.length]);
+
+  // Listen for fullscreen exit
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && isPresentMode) {
+        setIsPresentMode(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, [isPresentMode]);
+
   const finalProjectId = (window as any).__streamProjectId || projectId;
+
+  const startPresentation = async (startIndex: number = 0) => {
+    setCurrentSlideIndex(startIndex);
+    setIsPresentMode(true);
+    // Request fullscreen
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (err) {
+      // Fullscreen not supported or denied
+    }
+  };
+
+  const exitPresentation = async () => {
+    setIsPresentMode(false);
+    // Exit fullscreen if active
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch (err) {
+        // Ignore errors
+      }
+    }
+  };
 
   // Get status label for stage
   const getStageStatus = (stageIndex: number) => {
@@ -432,6 +501,13 @@ const Streaming = () => {
             </Button>
             <Button 
               size="lg"
+              onClick={() => startPresentation(0)}
+              className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
+            >
+              <Presentation className="mr-2 h-4 w-4" /> Present
+            </Button>
+            <Button 
+              size="lg"
               onClick={() => navigate("/slidegen")}
               className="border-2 border-violet-500 !text-violet-700 dark:!text-violet-300 bg-white dark:bg-gray-900 hover:bg-white dark:hover:bg-violet-950/50 hover:border-violet-500 transition-all hover:scale-105 shadow-md font-medium hover:!text-violet-700 dark:hover:!text-violet-300"
             >
@@ -514,6 +590,80 @@ const Streaming = () => {
           animation: fade-in 0.5s ease-out;
         }
       `}</style>
+
+      {/* Presentation Mode Overlay */}
+      {isPresentMode && slides.length > 0 && (
+        <div className="fixed inset-0 z-50 bg-black flex flex-col">
+          {/* Top bar */}
+          <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
+            <span className="text-white text-sm">
+              Slide {currentSlideIndex + 1} / {slides.length}
+            </span>
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => exitPresentation()}>
+              <X className="h-6 w-6" />
+            </Button>
+          </div>
+
+          {/* Slide content - Full screen */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full h-full bg-white overflow-hidden relative">
+              {slides[currentSlideIndex]?.html ? (
+                <ScaledSlidePreview
+                  html={slides[currentSlideIndex].html}
+                  title={`Slide ${currentSlideIndex + 1}`}
+                  className="absolute inset-0"
+                />
+              ) : (
+                <div className="flex h-full items-center justify-center text-gray-400">
+                  No content
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Navigation buttons */}
+          <div className="absolute left-4 top-1/2 -translate-y-1/2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-12 w-12 text-white hover:bg-white/20 disabled:opacity-30"
+              disabled={currentSlideIndex === 0}
+              onClick={() => setCurrentSlideIndex((prev) => prev - 1)}
+            >
+              <ChevronLeft className="h-8 w-8" />
+            </Button>
+          </div>
+          <div className="absolute right-4 top-1/2 -translate-y-1/2">
+            <Button
+              variant="ghost"
+              size="icon"
+              className="h-12 w-12 text-white hover:bg-white/20 disabled:opacity-30"
+              disabled={currentSlideIndex === slides.length - 1}
+              onClick={() => setCurrentSlideIndex((prev) => prev + 1)}
+            >
+              <ChevronRight className="h-8 w-8" />
+            </Button>
+          </div>
+
+          {/* Bottom progress bar */}
+          <div className="absolute bottom-0 left-0 right-0 p-4 bg-gradient-to-t from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
+            <div className="flex justify-center gap-2">
+              {slides.map((_, i) => (
+                <button
+                  key={i}
+                  className={`h-2 rounded-full transition-all ${
+                    i === currentSlideIndex ? "w-8 bg-white" : "w-2 bg-white/50 hover:bg-white/80"
+                  }`}
+                  onClick={() => setCurrentSlideIndex(i)}
+                />
+              ))}
+            </div>
+            <p className="text-center text-white/60 text-xs mt-2">
+              Use ← → or Space to navigate, ESC to exit
+            </p>
+          </div>
+        </div>
+      )}
     </AppLayout>
   );
 };
