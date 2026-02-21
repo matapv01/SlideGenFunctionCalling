@@ -24,61 +24,6 @@ import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
 import { SlideCanvas, SlideCanvasHandle } from "@/components/SlideCanvas";
 
-// --- Types ---
-
-interface SlideElement {
-  id: string;
-  type: "text" | "image" | "shape" | "icon" | "video";
-  subType?: string;
-  content?: string;
-  src?: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
-  rotation: number;
-  zIndex: number;
-  opacity: number;
-  
-  // Appearance
-  fillColor?: string;
-  strokeColor?: string;
-  strokeWidth?: number;
-  borderRadius?: number;
-  shadow?: string;
-  clipPath?: string;
-
-  // Typography
-  fontSize?: number;
-  fontFamily?: string;
-  fontWeight?: string; // 'bold' | 'normal'
-  fontStyle?: string; // 'italic' | 'normal'
-  textDecoration?: string; // 'underline' | 'none'
-  textAlign?: "left" | "center" | "right";
-  lineHeight?: string;
-  letterSpacing?: string;
-  color?: string;
-}
-
-interface Slide {
-  id: string;
-  elements: SlideElement[];
-  backgroundColor?: string;
-  backgroundImage?: string;
-  notes?: string;
-  defs?: string;
-}
-
-interface DragItem {
-  type: string;
-  subType?: string;
-  content?: string; // Default content or SRC
-}
-
-// --- Constants ---
-const CANVAS_WIDTH = 1920;
-const CANVAS_HEIGHT = 1080;
-
 // --- Helper: HTML Parsing ---
 const pxToNum = (val: string | null) => val ? parseFloat(val.replace("px", "")) : 0;
 
