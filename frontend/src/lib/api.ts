@@ -307,7 +307,12 @@ export const api = {
     enable_transition_slides?: boolean;
     enable_thank_you_slide?: boolean;
   }) =>
-    request<any>("/generate/idea/structure", {
+    request<{
+      session_id: string;
+      filename: string;
+      slide_count: number;
+      is_from_idea: boolean;
+    }>("/generate/idea/structure", {
       method: "POST",
       body: JSON.stringify(data),
     }),

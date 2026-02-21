@@ -38,6 +38,8 @@ const Streaming = () => {
   const [previewSlide, setPreviewSlide] = useState<SlideThumb | null>(null);
   const [isPresentMode, setIsPresentMode] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [ideaSessionId, setIdeaSessionId] = useState<string | null>(null);
+  const [isPreparingIdea, setIsPreparingIdea] = useState(false);
 
   const eventSourceRef = useRef<EventSource | null>(null);
 
@@ -49,19 +51,27 @@ const Streaming = () => {
     setSlides([]);
     setActivity("Connecting...");
 
-    // Get filename from location state (passed from upload page)
+    // Get parameters from location state
     const filename = location.state?.filename;
-    const sessionId = location.state?.sessionId;
+    const sessionId = location.state?.sessionId || ideaSessionId;
     
     if (!filename && !sessionId) {
       setError("No file or session specified for streaming. Please upload a file first.");
       return;
     }
 
-    // Use either manual structure stream or docx stream based on what we have
-    const url = sessionId 
-      ? api.manualStreamUrl(sessionId)
-      : api.streamUrl(filename);
+    // Determine which stream URL to use
+    let url: string;
+    if (ideaSessionId) {
+      // Idea workflow
+      url = api.ideaStreamUrl(ideaSessionId);
+    } else if (sessionId) {
+      // Manual structure workflow
+      url = api.manualStreamUrl(sessionId);
+    } else {
+      // DOCX workflow
+      url = api.streamUrl(filename);
+    }
 
     const es = new EventSource(url);
     eventSourceRef.current = es;
@@ -173,19 +183,64 @@ const Streaming = () => {
     };
   };
 
+  // Handle idea workflow - prepare structure first
+  useEffect(() => {
+    const title = location.state?.title;
+    const description = location.state?.description;
+    const enableTransitions = location.state?.enableTransitions ?? true;
+    const enableThankYou = location.state?.enableThankYou ?? true;
+    const contentLength = location.state?.contentLength || "standard";
+
+    // Check if this is an idea workflow
+    if (title && description) {
+      setIsPreparingIdea(true);
+      setActivity("Preparing your idea...");
+      
+      api.generateIdeaStructure({
+        title: title,
+        prompt: description,
+        content_length: contentLength,
+        enable_transition_slides: enableTransitions,
+        enable_thank_you_slide: enableThankYou,
+      })
+        .then((response) => {
+          setIdeaSessionId(response.session_id);
+          setIsPreparingIdea(false);
+          toast({ title: "Structure ready", description: "Starting slide generation..." });
+        })
+        .catch((err) => {
+          setError(err.message || "Failed to prepare idea structure");
+          setIsPreparingIdea(false);
+          toast({ title: "Failed to prepare", description: err.message, variant: "destructive" });
+        });
+      return;
+    }
+  }, []);
+
+  // Start streaming when we have the necessary data
   useEffect(() => {
     const filename = location.state?.filename;
     const sessionId = location.state?.sessionId;
+    const title = location.state?.title;
     
     // No state means user navigated back - redirect to slidegen
-    if (!filename && !sessionId) {
+    if (!filename && !sessionId && !title && !ideaSessionId) {
       navigate("/slidegen", { replace: true });
       return;
     }
     
-    startStreaming();
+    // For idea workflow, wait until we have the session ID
+    if (title && !ideaSessionId) {
+      return; // Still preparing
+    }
+    
+    // Start streaming for all workflows
+    if (filename || sessionId || ideaSessionId) {
+      startStreaming();
+    }
+    
     return () => eventSourceRef.current?.close();
-  }, []);
+  }, [ideaSessionId]);
 
   // Keyboard navigation for presentation mode
   useEffect(() => {
@@ -281,7 +336,7 @@ const Streaming = () => {
             </h1>
           </div>
           <p className="text-muted-foreground animate-fade-in">
-            {completed ? "🎉 Completed!" : "Creating your presentation..."}
+            {completed ? "🎉 Completed!" : isPreparingIdea ? "💡 Preparing your idea..." : "Creating your presentation..."}
           </p>
         </div>
 
