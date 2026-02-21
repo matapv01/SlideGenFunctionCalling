@@ -4,6 +4,7 @@ import { ChevronLeft, ChevronRight, X, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
+import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
 
 const PresentationMode = () => {
   const { projectId } = useParams();
@@ -82,11 +83,10 @@ const PresentationMode = () => {
       {/* Slide content */}
       <div className="relative h-full w-full flex items-center justify-center">
         {currentSlideData?.html ? (
-          <iframe
-            srcDoc={currentSlideData.html}
-            className="w-full h-full max-h-full max-w-full border-0"
+          <ScaledSlidePreview
+            html={currentSlideData.html}
             title={`Slide ${currentSlide + 1}`}
-            sandbox="allow-same-origin"
+            className="w-full h-full"
           />
         ) : (
           <div className="text-center text-muted-foreground">

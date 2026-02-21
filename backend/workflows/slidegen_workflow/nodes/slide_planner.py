@@ -24,9 +24,9 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     if stream_callback:
         stream_callback('status', {
             'step': 3,
-            'title': 'Thiết kế slide',
-            'description': 'Đang lập kế hoạch thiết kế cho các slide...',
-            'message': 'Đang phân tích nội dung để thiết kế slide'
+            'title': 'Design Slides',
+            'description': 'Planning slide design...',
+            'message': 'Analyzing content to design slides'
         })
 
     if not llm:

@@ -35,9 +35,9 @@ def split_content(state: State, config: RunnableConfig) -> State:
     if stream_callback:
         stream_callback('status', {
             'step': 2,
-            'title': 'Chuẩn bị nội dung',
-            'description': 'Đang phân tích và tổ chức nội dung...',
-            'message': 'Đang xử lý cấu trúc tài liệu'
+            'title': 'Prepare Content',
+            'description': 'Analyzing and organizing content...',
+            'message': 'Processing document structure'
         })
 
     if not llm:
