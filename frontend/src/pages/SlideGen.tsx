@@ -199,7 +199,7 @@ const SlideGen = () => {
           </Card>
 
           {/* Nav links */}
-          <div className="mt-8 flex justify-center gap-4">
+          {/* <div className="mt-8 flex justify-center gap-4">
             <Button variant="outline" onClick={() => navigate("/")}>
               <Home className="mr-2 h-4 w-4" /> Back to Home
             </Button>
@@ -209,7 +209,7 @@ const SlideGen = () => {
             <Button variant="outline" onClick={() => navigate("/login")}>
               Sign In
             </Button>
-          </div>
+          </div> */}
         </section>
       </div>
     </AppLayout>

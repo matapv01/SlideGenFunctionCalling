@@ -35,9 +35,9 @@ def convert_document(state: State, config: Optional[RunnableConfig] = None) -> S
     if stream_callback:
         stream_callback('status', {
             'step': 1,
-            'title': 'Phân tích nội dung',
-            'description': 'Đang đọc và chuyển đổi tài liệu...',
-            'message': f'Đang xử lý file: {os.path.basename(docx_file) if docx_file else "Unknown"}'
+            'title': 'Analyze Content',
+            'description': 'Reading and converting document...',
+            'message': f'Processing file: {os.path.basename(docx_file) if docx_file else "Unknown"}'
         })
 
     # 4. Validation

@@ -55,8 +55,8 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
             'current': len(state['final_slides']),
             'total': total_slides,
             'percentage': percentage,
-            'title': 'Đang tạo slide',
-            'message': f'Đã hoàn thành {len(state["final_slides"])}/{total_slides} slide'
+            'title': 'Creating slides',
+            'message': f'Completed {len(state["final_slides"])}/{total_slides} slides'
         })
     print(f"Đã thêm slide {idx + 1} vào danh sách final_slides (tổng: {len(state['final_slides'])})")
 

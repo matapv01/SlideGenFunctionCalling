@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Save, ArrowLeft, Play, X, ChevronLeft, ChevronRight } from "lucide-react";
+import { Edit, Save, ArrowLeft, Play, X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
+import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
 
 const ViewProject = () => {
   const { projectId } = useParams();
@@ -14,13 +15,16 @@ const ViewProject = () => {
   const { toast } = useToast();
   const [slides, setSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
+  const [projectName, setProjectName] = useState<string>("");
   const [editSlide, setEditSlide] = useState<any>(null);
   const [editHtml, setEditHtml] = useState("");
   const [isPresentMode, setIsPresentMode] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
+  const [deleteSlideId, setDeleteSlideId] = useState<string | null>(null);
 
   useEffect(() => {
     loadSlides();
+    loadProject();
   }, [projectId]);
 
   // Keyboard navigation for presentation mode
@@ -39,7 +43,7 @@ const ViewProject = () => {
           setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
           break;
         case "Escape":
-          setIsPresentMode(false);
+          exitPresentation();
           break;
         case "Home":
           e.preventDefault();
@@ -56,9 +60,47 @@ const ViewProject = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPresentMode, slides.length]);
 
-  const startPresentation = (startIndex: number = 0) => {
+  const startPresentation = async (startIndex: number = 0) => {
     setCurrentSlideIndex(startIndex);
     setIsPresentMode(true);
+    // Request fullscreen
+    try {
+      await document.documentElement.requestFullscreen();
+    } catch (err) {
+      // Fullscreen not supported or denied
+    }
+  };
+
+  const exitPresentation = async () => {
+    setIsPresentMode(false);
+    // Exit fullscreen if active
+    if (document.fullscreenElement) {
+      try {
+        await document.exitFullscreen();
+      } catch (err) {
+        // Ignore errors
+      }
+    }
+  };
+
+  // Listen for fullscreen exit (e.g., user presses Escape in browser)
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      if (!document.fullscreenElement && isPresentMode) {
+        setIsPresentMode(false);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
+  }, [isPresentMode]);
+
+  const loadProject = async () => {
+    try {
+      const res = await api.getProject(projectId!);
+      setProjectName(res.title || res.name || "Untitled Project");
+    } catch (err: any) {
+      // Ignore errors, fallback to default name
+    }
   };
 
   const loadSlides = async () => {
@@ -89,6 +131,18 @@ const ViewProject = () => {
     }
   };
 
+  const handleDeleteSlide = async () => {
+    if (!deleteSlideId) return;
+    try {
+      await api.deleteSlide(deleteSlideId);
+      setSlides((prev) => prev.filter((s) => s.id !== deleteSlideId));
+      toast({ title: "Slide deleted" });
+    } catch (err: any) {
+      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+    }
+    setDeleteSlideId(null);
+  };
+
   return (
     <AppLayout>
       <div className="p-4 lg:p-6">
@@ -97,7 +151,7 @@ const ViewProject = () => {
             <Button variant="ghost" size="icon" onClick={() => navigate("/projects")}>
               <ArrowLeft className="h-5 w-5" />
             </Button>
-            <h1 className="text-2xl font-bold">View Project</h1>
+            <h1 className="text-2xl font-bold">{projectName}</h1>
           </div>
           {slides.length > 0 && (
             <Button onClick={() => startPresentation(0)}>
@@ -115,13 +169,12 @@ const ViewProject = () => {
             {slides.map((slide, i) => (
               <Card key={slide.id || i} className="glass transition-all hover:shadow-lg cursor-pointer" onClick={() => startPresentation(i)}>
                 <CardContent className="p-4">
-                  <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-3">
+                  <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-3 relative">
                     {slide.html ? (
-                      <iframe
-                        srcDoc={slide.html}
-                        className="w-full h-full border-0 pointer-events-none"
+                      <ScaledSlidePreview
+                        html={slide.html}
                         title={`Slide ${i + 1} preview`}
-                        sandbox="allow-same-origin"
+                        className="absolute inset-0"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground text-sm">No content</div>
@@ -129,9 +182,14 @@ const ViewProject = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">Slide {i + 1}</span>
-                    <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${projectId}?slide=${i}`); }}>
-                      <Edit className="mr-1 h-3 w-3" /> Edit
-                    </Button>
+                    <div className="flex items-center gap-1">
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${projectId}?slide=${i}`); }}>
+                        <Edit className="mr-1 h-3 w-3" /> Edit
+                      </Button>
+                      <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteSlideId(slide.id); }}>
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
@@ -154,12 +212,11 @@ const ViewProject = () => {
                 onChange={(e) => setEditHtml(e.target.value)}
               />
             </div>
-            <div className="rounded-lg bg-muted overflow-hidden h-64">
-              <iframe
-                srcDoc={editHtml}
-                className="w-full h-full border-0"
+            <div className="rounded-lg bg-muted overflow-hidden h-64 relative">
+              <ScaledSlidePreview
+                html={editHtml}
                 title="Slide preview"
-                sandbox="allow-same-origin"
+                className="absolute inset-0"
               />
             </div>
           </div>
@@ -172,6 +229,20 @@ const ViewProject = () => {
         </DialogContent>
       </Dialog>
 
+      {/* Delete slide confirmation dialog */}
+      <Dialog open={!!deleteSlideId} onOpenChange={() => setDeleteSlideId(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Slide</DialogTitle>
+            <DialogDescription>This action cannot be undone. Are you sure you want to delete this slide?</DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteSlideId(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={handleDeleteSlide}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Presentation Mode Overlay */}
       {isPresentMode && slides.length > 0 && (
         <div className="fixed inset-0 z-50 bg-black flex flex-col">
@@ -180,20 +251,19 @@ const ViewProject = () => {
             <span className="text-white text-sm">
               Slide {currentSlideIndex + 1} / {slides.length}
             </span>
-            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => setIsPresentMode(false)}>
+            <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => exitPresentation()}>
               <X className="h-6 w-6" />
             </Button>
           </div>
 
-          {/* Slide content */}
-          <div className="flex-1 flex items-center justify-center p-8">
-            <div className="w-full h-full max-w-7xl max-h-[80vh] bg-white rounded-lg shadow-2xl overflow-hidden">
+          {/* Slide content - Full screen */}
+          <div className="flex-1 flex items-center justify-center">
+            <div className="w-full h-full bg-white overflow-hidden relative">
               {slides[currentSlideIndex]?.html ? (
-                <iframe
-                  srcDoc={slides[currentSlideIndex].html}
-                  className="w-full h-full border-0"
+                <ScaledSlidePreview
+                  html={slides[currentSlideIndex].html}
                   title={`Slide ${currentSlideIndex + 1}`}
-                  sandbox="allow-same-origin"
+                  className="absolute inset-0"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">
