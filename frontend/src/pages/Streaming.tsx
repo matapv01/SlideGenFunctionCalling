@@ -431,10 +431,9 @@ const Streaming = () => {
               <ExternalLink className="mr-2 h-4 w-4" /> Go to Editor
             </Button>
             <Button 
-              variant="outline" 
               size="lg"
               onClick={() => navigate("/slidegen")}
-              className="border-2 border-violet-400 text-violet-600 dark:text-violet-300 bg-white/80 dark:bg-gray-900/80 hover:bg-violet-50 dark:hover:bg-violet-950/50 hover:border-violet-500 transition-all hover:scale-105 shadow-md"
+              className="border-2 border-violet-500 !text-violet-700 dark:!text-violet-300 bg-white dark:bg-gray-900 hover:bg-white dark:hover:bg-violet-950/50 hover:border-violet-500 transition-all hover:scale-105 shadow-md font-medium hover:!text-violet-700 dark:hover:!text-violet-300"
             >
               <Home className="mr-2 h-4 w-4" /> Back to SlideGen
             </Button>
