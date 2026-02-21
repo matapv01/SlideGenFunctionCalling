@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
+import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
 
 const ViewProject = () => {
   const { projectId } = useParams();
@@ -115,13 +116,12 @@ const ViewProject = () => {
             {slides.map((slide, i) => (
               <Card key={slide.id || i} className="glass transition-all hover:shadow-lg cursor-pointer" onClick={() => startPresentation(i)}>
                 <CardContent className="p-4">
-                  <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-3">
+                  <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-3 relative">
                     {slide.html ? (
-                      <iframe
-                        srcDoc={slide.html}
-                        className="w-full h-full border-0 pointer-events-none"
+                      <ScaledSlidePreview
+                        html={slide.html}
                         title={`Slide ${i + 1} preview`}
-                        sandbox="allow-same-origin"
+                        className="absolute inset-0"
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center text-muted-foreground text-sm">No content</div>
@@ -154,12 +154,11 @@ const ViewProject = () => {
                 onChange={(e) => setEditHtml(e.target.value)}
               />
             </div>
-            <div className="rounded-lg bg-muted overflow-hidden h-64">
-              <iframe
-                srcDoc={editHtml}
-                className="w-full h-full border-0"
+            <div className="rounded-lg bg-muted overflow-hidden h-64 relative">
+              <ScaledSlidePreview
+                html={editHtml}
                 title="Slide preview"
-                sandbox="allow-same-origin"
+                className="absolute inset-0"
               />
             </div>
           </div>
@@ -187,13 +186,12 @@ const ViewProject = () => {
 
           {/* Slide content */}
           <div className="flex-1 flex items-center justify-center p-8">
-            <div className="w-full h-full max-w-7xl max-h-[80vh] bg-white rounded-lg shadow-2xl overflow-hidden">
+            <div className="w-full h-full max-w-7xl max-h-[80vh] aspect-video bg-white rounded-lg shadow-2xl overflow-hidden relative">
               {slides[currentSlideIndex]?.html ? (
-                <iframe
-                  srcDoc={slides[currentSlideIndex].html}
-                  className="w-full h-full border-0"
+                <ScaledSlidePreview
+                  html={slides[currentSlideIndex].html}
                   title={`Slide ${currentSlideIndex + 1}`}
-                  sandbox="allow-same-origin"
+                  className="absolute inset-0"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">

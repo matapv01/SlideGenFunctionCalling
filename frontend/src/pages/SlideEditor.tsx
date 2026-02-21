@@ -15,6 +15,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { useNavigate } from "react-router-dom";
+import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
 
 interface SlideElement {
   id: string;
@@ -350,12 +351,10 @@ const SlideEditor = () => {
           >
             {/* Render HTML if present */}
             {currentSlideData?.html && (
-              <iframe
-                srcDoc={currentSlideData.html}
-                className="absolute inset-0 w-full h-full border-0"
-                style={{ transform: `scale(${zoom / 100})`, transformOrigin: "top left" }}
+              <ScaledSlidePreview
+                html={currentSlideData.html}
                 title="Slide preview"
-                sandbox="allow-same-origin"
+                className="absolute inset-0"
               />
             )}
 

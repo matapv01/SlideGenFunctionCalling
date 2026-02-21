@@ -74,7 +74,7 @@ async def main_workflow(
     slide_options: Optional[Dict[str, bool]] = None
 ):
     output_dir, output_debug_dir = _setup_output_dirs(output_folder)
-    _emit_event(callback, 'status', {'step': 1, 'title': 'Khởi động', 'message': 'Hệ thống đã sẵn sàng'})
+    _emit_event(callback, 'status', {'step': 1, 'title': 'Starting', 'message': 'System ready'})
 
     try:
         # 1. 🟢 LẤY CÁC INSTANCE ĐÃ CÓ SẴN (KHÔNG KHỞI TẠO MỚI)
@@ -143,7 +143,7 @@ async def main_workflow_from_chunks(
     output_dir, output_debug_dir = _setup_output_dirs(output_folder)
     
     _emit_event(callback, 'status', {
-        'step': 1, 'title': 'Khởi động', 'description': 'Đang khởi tạo Infrastructure...', 'message': 'Booting System'
+        'step': 1, 'title': 'Starting', 'description': 'Initializing Infrastructure...', 'message': 'Booting System'
     })
 
     try:
@@ -195,7 +195,7 @@ async def main_workflow_from_chunks(
         start_time = time.time()
 
         _emit_event(callback, 'status', {
-            'step': 2, 'title': 'Tạo slides', 'description': f'Đang tạo {len(slide_chunks)} slides...', 'message': 'Generating Slides'
+            'step': 2, 'title': 'Creating Slides', 'description': f'Generating {len(slide_chunks)} slides...', 'message': 'Generating Slides'
         })
 
         final_state = await app.ainvoke(initial_input, config=graph_config)
@@ -204,12 +204,12 @@ async def main_workflow_from_chunks(
 
         # --- FINALIZE ---
         if not final_state or not final_state.get('final_slides'):
-            _emit_event(callback, 'error', {'message': 'Không có slide nào được tạo'})
+            _emit_event(callback, 'error', {'message': 'No slides were created'})
             return None
 
         _emit_event(callback, 'status', {
-            'step': 3, 'title': 'Hoàn tất', 'description': 'Đang đóng gói...', 
-            'message': f'Đã tạo {len(final_state.get("final_slides", []))} slide'
+            'step': 3, 'title': 'Completed', 'description': 'Packaging...', 
+            'message': f'Created {len(final_state.get("final_slides", []))} slides'
         })
 
         zip_path = _package_output(output_folder, final_state)
