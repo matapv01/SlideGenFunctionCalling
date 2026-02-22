@@ -1,6 +1,6 @@
-const puppeteer = require('puppeteer');
-const fs = require('fs/promises');
-const path = require('path');
+import puppeteer from 'puppeteer';
+import fs from 'fs/promises';
+import path from 'path';
 
 async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
     console.log('[JS] 🚀 Starting advanced conversion process v2 (Block-aware)...');
@@ -421,9 +421,43 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
             const svgDefsHtml = document.querySelector('svg[width="0"][height="0"]')?.outerHTML || '';
 
             const bodyStyle = window.getComputedStyle(document.body);
-            const bg = (bodyStyle.backgroundImage && bodyStyle.backgroundImage !== 'none') ? bodyStyle.background : bodyStyle.backgroundColor;
+            
+            // ✅ FIX: Build background từ các properties riêng lẻ thay vì dùng shorthand
+            // Điều này tránh việc mất background-color khi computed style trả về rgba(0,0,0,0)
+            const bgColor = bodyStyle.backgroundColor;
+            const bgImage = bodyStyle.backgroundImage;
+            const bgSize = bodyStyle.backgroundSize;
+            const bgPosition = bodyStyle.backgroundPosition;
+            const bgRepeat = bodyStyle.backgroundRepeat;
+            const bgAttachment = bodyStyle.backgroundAttachment;
+            const bgClip = bodyStyle.backgroundClip;
+            
+            let bg = '';
+            const hasImage = bgImage && bgImage !== 'none';
+            const hasColor = bgColor && bgColor !== 'rgba(0, 0, 0, 0)' && bgColor !== 'transparent';
+            
+            if (hasImage && hasColor) {
+                // Có cả image và color: build full shorthand
+                bg = `${bgImage} ${bgRepeat} ${bgPosition} / ${bgSize} ${bgAttachment} ${bgClip}, ${bgColor}`;
+            } else if (hasImage) {
+                // Chỉ có image
+                bg = `${bgImage} ${bgRepeat} ${bgPosition} / ${bgSize} ${bgAttachment} ${bgClip}`;
+            } else if (hasColor) {
+                // Chỉ có color
+                bg = bgColor;
+            } else {
+                // Không có gì, fallback: thử lấy từ html element
+                const htmlStyle = window.getComputedStyle(document.documentElement);
+                const htmlBgColor = htmlStyle.backgroundColor;
+                
+                if (htmlBgColor && htmlBgColor !== 'rgba(0, 0, 0, 0)' && htmlBgColor !== 'transparent') {
+                    bg = htmlBgColor;
+                } else {
+                    bg = 'transparent';
+                }
+            }
 
-            // THÊM svgDefsHtml VÀ containerStyles VÀO ĐỐI TƯỢNG TRẢ VỀ
+            // THÊM svgDefsHtml VÀO ĐỐI TƯỢNG TRẢ VỀ
             return {
                 svgDefsHtml: svgDefsHtml,
                 bodyBg: bg,
@@ -443,7 +477,12 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
         console.log(`[JS] ✅ Browser-side processing complete. Analyzed ${pageData.elements.length} final elements.`);
 
         // ✅ Áp dụng background từ container (nếu có) vào body
-        const finalBodyBg = pageData.containerStyles.background || pageData.bodyBg;
+        // Check if container background is transparent
+        const containerBg = pageData.containerStyles.background;
+        const isContainerTransparent = !containerBg || 
+                                       containerBg === 'rgba(0, 0, 0, 0)' || 
+                                       containerBg === 'transparent';
+        const finalBodyBg = isContainerTransparent ? pageData.bodyBg : containerBg;
         const bodyPadding = pageData.containerStyles.padding;
         const bodyBorderRadius = pageData.containerStyles.borderRadius;
         const bodyBoxShadow = pageData.containerStyles.boxShadow;

@@ -137,7 +137,7 @@ def get_idea_service(
 def get_capture_service(
     infra: CaptureProvider = Depends(get_capture_infra)
 ) -> CaptureService:
-    return CaptureService(captures_dir=CAPTURES_DIR, capturer=infra)
+    return CaptureService(captures_dir=CAPTURES_DIR, slide_capture=infra)
 
 
 def get_conversion_service(

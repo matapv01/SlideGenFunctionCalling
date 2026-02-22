@@ -1,11 +1,10 @@
-// File: frontend/src/components/SlideCanvas.tsx
-
-import React, { useRef, useEffect, useImperativeHandle, forwardRef, useState, useLayoutEffect } from 'react';
+import React, { useRef, useEffect, useImperativeHandle, forwardRef } from 'react';
 import { SlideEditorLogic } from '@/lib/SlideLogicCore';
 
 interface SlideCanvasProps {
   htmlContent: string;
   onElementSelect: (data: any) => void;
+  zoom?: number;
 }
 
 export interface SlideCanvasHandle {
@@ -15,196 +14,198 @@ export interface SlideCanvasHandle {
   redo: () => void;
 }
 
-// Kích thước chuẩn thiết kế (Cố định)
-const SLIDE_WIDTH = 1920;
-const SLIDE_HEIGHT = 1080;
-
 export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((props, ref) => {
-  const wrapperRef = useRef<HTMLDivElement>(null); // Khung bao ngoài (Responsive)
-  const shadowHostRef = useRef<HTMLDivElement>(null); // Nơi chứa Shadow DOM
+  const containerRef = useRef<HTMLDivElement>(null);
+  const shadowRootRef = useRef<ShadowRoot | null>(null);
   const logicInstanceRef = useRef<SlideEditorLogic | null>(null);
-  
-  const [scale, setScale] = useState(1);
 
-  // --- 1. LOGIC TÍNH SCALE TỰ ĐỘNG ---
-  useLayoutEffect(() => {
-    const handleResize = () => {
-      if (!wrapperRef.current) return;
-      
-      const parentW = wrapperRef.current.clientWidth;
-      const parentH = wrapperRef.current.clientHeight;
-      const padding = 40; // Khoảng cách đệm
-
-      // Tính tỷ lệ co giãn
-      const scaleX = (parentW - padding) / SLIDE_WIDTH;
-      const scaleY = (parentH - padding) / SLIDE_HEIGHT;
-      
-      // Chọn tỷ lệ nhỏ hơn để slide nằm lọt thỏm trong màn hình
-      const newScale = Math.min(scaleX, scaleY); 
-      setScale(newScale);
-    };
-
-    // Observer để bắt sự kiện resize div cha
-    const ro = new ResizeObserver(handleResize);
-    if (wrapperRef.current) ro.observe(wrapperRef.current);
-
-    return () => ro.disconnect();
-  }, []);
-
-  // Cập nhật scale xuống Logic Core khi scale thay đổi
-  useEffect(() => {
-    if (logicInstanceRef.current && logicInstanceRef.current.setScale) {
-        logicInstanceRef.current.setScale(scale);
-    }
-  }, [scale]);
-
-  // Expose các method
+  // Expose các method cho component cha (SlideEditor.tsx) gọi
   useImperativeHandle(ref, () => ({
-    updateElement: (styles: any) => logicInstanceRef.current?.updateSelectedElementStyle(styles),
-    getHTML: () => logicInstanceRef.current?.getHTML() || '',
-    undo: () => logicInstanceRef.current?.undo(),
-    redo: () => logicInstanceRef.current?.redo()
+    updateElement: (styles: any) => {
+      logicInstanceRef.current?.updateSelectedElementStyle(styles);
+    },
+    getHTML: () => {
+      return logicInstanceRef.current?.getHTML() || '';
+    },
+    undo: () => {
+      logicInstanceRef.current?.undo();
+    },
+    redo: () => {
+      logicInstanceRef.current?.redo();
+    }
   }));
 
-  // Trong file SlideCanvas.tsx
-
+  // Xử lý HTML & CSS Isolation
   const processHTML = (rawHTML: string): string => {
+    console.log('[SlideCanvas] Processing HTML...');
+    
+    // Parse HTML
     const parser = new DOMParser();
     const doc = parser.parseFromString(rawHTML, 'text/html');
-
-    // 1. Xóa script cũ
-    const scripts = doc.querySelectorAll('script');
-    scripts.forEach(script => script.remove());
-
-    // 2. Xử lý CSS
+    
+    // --- 1. Thu thập tất cả CSS ---
     const styleElements = Array.from(doc.querySelectorAll('style'));
     let collectedCSS = styleElements.map(s => s.textContent || '').join('\n');
     
-    // Scope lại CSS
+    // Regex đổi scope CSS để nó chạy đúng trong Shadow DOM
+    // Đổi 'body' -> '.slide-bg-wrapper' (class bao ngoài)
+    // Đổi 'html' -> ':host'
     collectedCSS = collectedCSS
-        .replace(/\bbody\s*\{/g, '.slide-bg-wrapper {')
-        .replace(/\bhtml\s*\{/g, ':host {')
-        .replace(/\bbody\s+/g, '.slide-bg-wrapper ') // Thêm dòng này để bắt trường hợp "body, html"
-        .replace(/\bhtml\s+/g, ':host ')             // Thêm dòng này để bắt trường hợp "body, html"
-        .replace(/\.outer-wrapper\s*\{/g, '.slide-inner-wrapper {');
-
-    // 3. Lấy nội dung
-    const contentWrapper = doc.querySelector('.content-wrapper');
-    let innerContent = '';
-    if (contentWrapper) {
-        innerContent = contentWrapper.innerHTML;
-    } else {
-        innerContent = doc.body.innerHTML;
+      .replace(/\bbody\s*\{/g, '.slide-bg-wrapper {')
+      .replace(/\bhtml\s*\{/g, ':host {')
+      .replace(/\bbody\s+/g, '.slide-bg-wrapper ') // body selector với combinator
+      .replace(/\bhtml\s+/g, ':host ');
+    
+    // --- 2. Xóa các thẻ style khỏi body để tránh duplicate ---
+    styleElements.forEach(s => s.remove());
+    
+    // --- 3. Lấy nội dung body ---
+    let bodyContent = doc.body.innerHTML;
+    
+    // Nếu không có gì trong body, fallback
+    if (!bodyContent.trim()) {
+      bodyContent = '<div class="slide-container" style="width: 100%; height: 100%; min-height: 1080px;"><p>Empty slide</p></div>';
     }
-
-    // 4. CSS Reset & Fix (ĐÃ CẬP NHẬT ĐỂ KHÔNG MẤT MÀU NỀN)
+    
+    // --- 4. Thêm CSS base cho Shadow DOM ---
     const baseShadowCSS = `
-      :host { 
-        display: block; 
-        width: 1920px; 
-        height: 1080px; 
-        overflow: hidden;
-        background-color: white; /* Mặc định là trắng nếu user không set màu */
+      :host {
+        display: block;
+        width: 100%;
+        height: 100%;
+        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       }
       
       .slide-bg-wrapper {
         width: 100%;
         height: 100%;
+        min-height: 1080px;
         position: relative;
-        
-        /* ĐÃ XÓA background-color: white ở đây để không ghi đè màu user */
-        
-        margin: 0 !important;
-        padding: 0 !important; 
-        overflow: hidden !important; 
-        box-sizing: border-box !important;
-      }
-
-      .content-wrapper {
-        width: 1920px;
-        height: 1080px;
-        position: absolute;
-        top: 50%; left: 50%;
-        transform: translate(-50%, -50%) !important;
-        overflow: visible;
+        overflow: hidden;
       }
       
-      ::-webkit-scrollbar { display: none; }
+      .slide-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+      
+      /* Selection UI Styles */
+      .editor-overlay {
+        box-sizing: border-box;
+      }
+      
+      .resize-handle {
+        pointer-events: auto !important;
+      }
+      
+      .smart-guide {
+        opacity: 0.7;
+      }
+      
+      /* Đảm bảo các element có thể interact */
+      [data-selectable="true"] {
+        cursor: move;
+      }
+      
+      /* ContentEditable Styles */
+      [contenteditable="true"]:focus {
+        outline: 2px dashed #3b82f6;
+        outline-offset: 2px;
+        cursor: text !important;
+      }
+      
+      [contenteditable="true"]:empty:before {
+        content: attr(data-placeholder);
+        color: #999;
+      }
     `;
-
+    
+    // --- 5. Tạo HTML hoàn chỉnh ---
     return `
       <style>
-        ${collectedCSS} 
-        ${baseShadowCSS} 
+        ${baseShadowCSS}
+        ${collectedCSS}
       </style>
       <div class="slide-bg-wrapper">
-         <div class="content-wrapper">
-            ${innerContent}
-         </div>
+        ${bodyContent}
       </div>
     `;
   };
 
-  // Mount & Attach Shadow DOM
   useEffect(() => {
-    if (!shadowHostRef.current) return;
+    if (!containerRef.current) return;
+
+    console.log('[SlideCanvas] Mounting with content:', props.htmlContent.substring(0, 100) + '...');
 
     // Attach Shadow DOM (chỉ 1 lần)
-    let shadowRoot = shadowHostRef.current.shadowRoot;
-    if (!shadowRoot) {
-        shadowRoot = shadowHostRef.current.attachShadow({ mode: 'open' });
+    if (!shadowRootRef.current) {
+      try {
+        shadowRootRef.current = containerRef.current.attachShadow({ mode: 'open' });
+        console.log('[SlideCanvas] Shadow DOM attached');
+      } catch (e) {
+        console.error('[SlideCanvas] Failed to attach shadow DOM:', e);
+        return;
+      }
     }
 
-    // Inject HTML
-    shadowRoot.innerHTML = processHTML(props.htmlContent);
+    // Inject Content đã xử lý
+    try {
+      const processedHTML = processHTML(props.htmlContent);
+      shadowRootRef.current.innerHTML = processedHTML;
+      console.log('[SlideCanvas] HTML injected into Shadow DOM');
+    } catch (e) {
+      console.error('[SlideCanvas] Failed to process/inject HTML:', e);
+      return;
+    }
 
-    // Init Logic Core
+    // Đợi một tick để DOM render xong
     setTimeout(() => {
-      if (logicInstanceRef.current) logicInstanceRef.current.destroy();
+      // Khởi tạo Logic Core (Cắm logic JS cũ vào môi trường Shadow DOM)
+      if (logicInstanceRef.current) {
+        logicInstanceRef.current.destroy();
+      }
       
       try {
-        logicInstanceRef.current = new SlideEditorLogic(shadowRoot, props.onElementSelect);
-        
-        // QUAN TRỌNG: Set scale ngay lập tức sau khi init
-        if (logicInstanceRef.current.setScale) {
-            logicInstanceRef.current.setScale(scale);
-        }
+        logicInstanceRef.current = new SlideEditorLogic(
+          shadowRootRef.current!, 
+          props.onElementSelect
+        );
+        console.log('[SlideCanvas] Logic Core initialized');
       } catch (e) {
-        console.error('Logic Init Failed', e);
+        console.error('[SlideCanvas] Failed to initialize Logic Core:', e);
       }
     }, 10);
 
-  }, [props.htmlContent]);
+    return () => {
+      if (logicInstanceRef.current) {
+        logicInstanceRef.current.destroy();
+        logicInstanceRef.current = null;
+      }
+    };
+  }, [props.htmlContent]); // Re-init khi đổi slide khác
+
+  // Update zoom nếu có
+  useEffect(() => {
+    if (containerRef.current && props.zoom !== undefined) {
+      containerRef.current.style.transform = `scale(${props.zoom})`;
+      containerRef.current.style.transformOrigin = 'top left';
+    }
+  }, [props.zoom]);
 
   return (
-    // 1. WRAPPER: Giới hạn vùng nhìn, cắt bỏ phần thừa
     <div 
-      ref={wrapperRef} 
-      className="w-full h-full bg-gray-100 flex items-center justify-center overflow-hidden relative"
-    >
-      {/* 2. STAGE: Kích thước thật (1920x1080) nhưng được Scale nhỏ lại */}
-      <div 
-        style={{
-          width: SLIDE_WIDTH,
-          height: SLIDE_HEIGHT,
-          transform: `scale(${scale})`, // PHÉP THUẬT NẰM Ở ĐÂY
-          transformOrigin: 'center center',
-          boxShadow: '0 0 20px rgba(0,0,0,0.1)',
-          flexShrink: 0
-        }}
-      >
-        {/* 3. HOST: Nơi chứa Shadow DOM */}
-        <div 
-            ref={shadowHostRef}
-            style={{ width: '100%', height: '100%' }}
-        />
-      </div>
-
-      {/* Hiển thị % Zoom */}
-      <div className="absolute bottom-4 right-4 bg-black/50 text-white px-2 py-1 rounded text-xs">
-        {Math.round(scale * 100)}%
-      </div>
-    </div>
+      ref={containerRef} 
+      className="w-full h-full bg-white shadow-2xl"
+      style={{ 
+        isolation: 'isolate', // CSS property giúp tăng cường isolation
+        width: '1920px',
+        height: '1080px',
+        minWidth: '1920px',
+        minHeight: '1080px',
+        position: 'relative'
+      }}
+    />
   );
 });
 

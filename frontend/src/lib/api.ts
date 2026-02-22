@@ -13,7 +13,10 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
   const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
   if (!res.ok) {
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    throw new Error(err.detail || err.message || res.statusText);
+    const errMsg = typeof err.detail === 'string' 
+      ? err.detail 
+      : (err.detail ? JSON.stringify(err.detail) : (err.message || res.statusText));
+    throw new Error(errMsg);
   }
   return res.json();
 }

@@ -31,36 +31,47 @@ class NodeJsConvertProvider(ConvertProvider):
 
 
     def run_conversion_command(self, input_path: str, output_path: str) -> subprocess.CompletedProcess:
-        """Chạy lệnh convert cho 1 file"""
-        cmd = ['node', self.converter_js, input_path, output_path]
-        
-        TIMEOUT_SECONDS = 200 # 200 giây, có thể điều chỉnh tùy theo độ phức tạp của slide
+        """Chạy lệnh convert cho 1 file với debug logging đầy đủ"""
 
-        # Thử với UTF-8
+        cmd = ['node', self.converter_js, input_path, output_path]
+        TIMEOUT_SECONDS = 200
+
+        logger.info("=== NodeJsConvertProvider.run_conversion_command ===")
+        logger.info(f"PROJECT_DIR: {self.project_dir}")
+        logger.info(f"converter_js exists: {os.path.exists(self.converter_js)}")
+        logger.info(f"input_path exists: {os.path.exists(input_path)}")
+        logger.info(f"output_path (will create): {output_path}")
+        logger.info(f"Command: {' '.join(cmd)}")
+        logger.info(f"CWD: {self.project_dir}")
+
         try:
-            return subprocess.run(
-                cmd, cwd=self.project_dir, capture_output=True, 
-                text=True, timeout=TIMEOUT_SECONDS, encoding='utf-8', errors='ignore'
+            process = subprocess.run(
+                cmd,
+                cwd=self.project_dir,
+                capture_output=True,
+                text=True,
+                timeout=TIMEOUT_SECONDS,
+                encoding='utf-8',
+                errors='ignore'
             )
-        except UnicodeDecodeError:
-            # Fallback sang cp1252 nếu lỗi font/encoding
-            try:
-                process = subprocess.run(
-                    cmd, cwd=self.project_dir, capture_output=True, 
-                    text=True, timeout=TIMEOUT_SECONDS, encoding='cp1252', errors='ignore'
-                )
-                return process
-            except UnicodeDecodeError:
-                # Nếu vẫn lỗi, dùng bytes mode
-                process = subprocess.run(
-                    cmd,
-                    cwd=self.project_dir,
-                    capture_output=True,
-                    timeout=TIMEOUT_SECONDS
-                )
-                # Convert bytes to string nếu cần
-                if hasattr(process, 'stdout') and isinstance(process.stdout, bytes):
-                    process.stdout = process.stdout.decode('utf-8', errors='ignore')
-                if hasattr(process, 'stderr') and isinstance(process.stderr, bytes):
-                    process.stderr = process.stderr.decode('utf-8', errors='ignore')
-                return process
+
+            logger.info(f"Return code: {process.returncode}")
+            logger.info(f"STDOUT:\n{process.stdout}")
+            logger.info(f"STDERR:\n{process.stderr}")
+
+            if process.returncode != 0:
+                logger.error("Conversion failed!")
+            else:
+                logger.info("Conversion succeeded!")
+
+            return process
+
+        except subprocess.TimeoutExpired as e:
+            logger.error("Conversion timeout!")
+            logger.error(f"Command: {' '.join(cmd)}")
+            logger.error(f"Timeout: {TIMEOUT_SECONDS}s")
+            raise
+
+        except Exception as e:
+            logger.exception("Unexpected error during conversion")
+            raise
