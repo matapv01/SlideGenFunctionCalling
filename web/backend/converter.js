@@ -167,7 +167,11 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                 const rect = el.getBoundingClientRect();
                 if (rect.width === 0 && rect.height === 0) return;
 
+                // Skip empty text elements (ghost <p> tags from browser auto-closing)
                 const tagName = el.tagName.toLowerCase();
+                if (['p', 'h1', 'h2', 'h3', 'h4', 'h5', 'h6'].includes(tagName)) {
+                    if (rect.height === 0 && !el.textContent.trim()) return;
+                }
                 
                 // ✅ SPECIAL: Capture divs containing SVG (chỉ div trực tiếp chứa SVG, không phải container lớn)
                 if (tagName === 'div') {
