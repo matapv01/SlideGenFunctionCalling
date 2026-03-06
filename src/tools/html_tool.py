@@ -20545,6 +20545,349 @@ def generate_content_big_number(
 </body>
 </html>"""
     return html_code
+
+def generate_academic_title_slide(
+    main_title="Research Presentation",
+    subtitle="An in-depth analysis of the core framework",
+    author="Author Name",
+    institute="University of Science",
+    date="October 2026",
+    theme_color="#003366",
+    bg_color="#F8F9FA",
+    text_color="#222222",
+    font_family="'Georgia', serif",
+    bg_svg_decoration="""<svg width="400" height="400" viewBox="0 0 400 400" fill="none" xmlns="http://www.w3.org/2000/svg" style="position: absolute; right: -100px; bottom: 50px; opacity: 0.05; z-index: 1;"><circle cx="200" cy="200" r="200" fill="#003366"/></svg>"""
+):
+    """
+    Generates an academic title slide with a structured, centered layout and a classic 3-part footer.
+    Optimized for stability in HTML-to-Image converters.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{main_title}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{ height: 1080px; width: 1920px; font-family: {font_family}; background-color: {bg_color}; color: {text_color}; overflow: hidden; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; position: relative; overflow: hidden; }}
+        .content-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1920px; height: 1080px; background: inherit; }}
+        .slide-container {{ width: 1920px; height: 1080px; position: relative; background-color: {bg_color}; z-index: 2; }}
+        
+        .title-box {{ position: absolute; top: 250px; left: 260px; width: 1400px; padding: 60px; background-color: #FFFFFF; border-top: 8px solid {theme_color}; box-shadow: 0 10px 30px rgba(0,0,0,0.08); text-align: center; z-index: 10; }}
+        .main-title {{ font-size: 4.5rem; color: {theme_color}; font-weight: bold; margin-bottom: 20px; line-height: 1.2; }}
+        .subtitle {{ font-size: 2.2rem; color: #555555; }}
+        
+        .meta-box {{ position: absolute; top: 650px; left: 260px; width: 1400px; text-align: center; z-index: 10; }}
+        .author {{ font-size: 2.2rem; font-weight: bold; margin-bottom: 10px; }}
+        .institute {{ font-size: 1.8rem; color: #666666; margin-bottom: 30px; font-style: italic; }}
+        .date {{ font-size: 1.5rem; color: #777777; }}
+        
+        /* Explicit Footer Blocks */
+        .footer-left {{ position: absolute; bottom: 0; left: 0; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-center {{ position: absolute; bottom: 0; left: 640px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-right {{ position: absolute; bottom: 0; left: 1280px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; z-index: 20; }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                {bg_svg_decoration}
+                
+                <div class="title-box">
+                    <h1 class="main-title">{main_title}</h1>
+                    <div class="subtitle">{subtitle}</div>
+                </div>
+                
+                <div class="meta-box">
+                    <div class="author">{author}</div>
+                    <div class="institute">{institute}</div>
+                    <div class="date">{date}</div>
+                </div>
+                
+                <div class="footer-left">{author}</div>
+                <div class="footer-center">{main_title}</div>
+                <div class="footer-right">{date}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_academic_main_text_slide(
+    slide_title="Introduction and Objectives",
+    content_html="<ul><li>First major objective of the study.</li><li>Second point demonstrating the theoretical background.</li><li>Third point detailing the expected outcomes.</li></ul>",
+    author="Author Name",
+    short_title="Research Overview",
+    slide_number="2 / 10",
+    theme_color="#003366",
+    bg_color="#FFFFFF",
+    font_family="'Georgia', serif"
+):
+    """
+    Generates a standard text/bullet-point slide with an academic top header and bottom footer.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{slide_title}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{ height: 1080px; width: 1920px; font-family: {font_family}; background-color: {bg_color}; color: #222; overflow: hidden; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; position: relative; overflow: hidden; }}
+        .content-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1920px; height: 1080px; background: inherit; }}
+        .slide-container {{ width: 1920px; height: 1080px; position: relative; background-color: {bg_color}; z-index: 2; }}
+        
+        /* Explicit Header */
+        .header-bar {{ position: absolute; top: 0; left: 0; width: 1920px; height: 120px; background-color: {theme_color}; display: flex; align-items: center; padding-left: 80px; z-index: 10; }}
+        .header-title {{ color: #FFFFFF; font-size: 3rem; font-weight: bold; }}
+        
+        /* Content Area */
+        .content-area {{ position: absolute; top: 180px; left: 100px; width: 1720px; height: 800px; font-size: 2.2rem; line-height: 1.8; z-index: 5; }}
+        .content-area ul {{ padding-left: 50px; margin-bottom: 20px; }}
+        .content-area li {{ margin-bottom: 25px; }}
+        .content-area p {{ margin-bottom: 25px; }}
+        
+        /* Explicit Footer Blocks */
+        .footer-left {{ position: absolute; bottom: 0; left: 0; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-center {{ position: absolute; bottom: 0; left: 640px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-right {{ position: absolute; bottom: 0; left: 1280px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; z-index: 20; }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="header-bar">
+                    <h2 class="header-title">{slide_title}</h2>
+                </div>
+                
+                <div class="content-area">
+                    {content_html}
+                </div>
+                
+                <div class="footer-left">{author}</div>
+                <div class="footer-center">{short_title}</div>
+                <div class="footer-right">{slide_number}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_academic_two_block_slide(
+    slide_title="Core Theorems",
+    block_1_title="Theorem 1 (Primary Condition)",
+    block_1_content="<p>This is the description of the first important theorem or concept.</p>",
+    block_2_title="Definition 1 (Secondary Variable)",
+    block_2_content="<p>This block explains the supporting definitions related to the theorem.</p>",
+    author="Author Name",
+    short_title="Research Overview",
+    slide_number="3 / 10",
+    theme_color="#003366",
+    block_1_color="#004080",
+    block_2_color="#1E7A44",
+    font_family="'Georgia', serif"
+):
+    """
+    Generates a slide with two distinct conceptual blocks, typically used for Theorems, Proofs, or Definitions.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{slide_title}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{ height: 1080px; width: 1920px; font-family: {font_family}; background-color: #FFFFFF; color: #222; overflow: hidden; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; position: relative; overflow: hidden; }}
+        .content-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1920px; height: 1080px; background: inherit; }}
+        .slide-container {{ width: 1920px; height: 1080px; position: relative; background-color: #FFFFFF; z-index: 2; }}
+        
+        .header-bar {{ position: absolute; top: 0; left: 0; width: 1920px; height: 120px; background-color: {theme_color}; display: flex; align-items: center; padding-left: 80px; z-index: 10; }}
+        .header-title {{ color: #FFFFFF; font-size: 3rem; font-weight: bold; }}
+        
+        /* Fixed Position Blocks to avoid flexbox converter issues */
+        .block-1 {{ position: absolute; top: 180px; left: 100px; width: 1720px; border: 1px solid #E0E0E0; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 5; }}
+        .block-1-header {{ background-color: {block_1_color}; color: #FFFFFF; padding: 15px 30px; font-size: 2rem; font-weight: bold; }}
+        .block-1-body {{ background-color: #F4F6F9; padding: 30px; font-size: 2rem; line-height: 1.6; color: #111; }}
+        
+        .block-2 {{ position: absolute; top: 520px; left: 100px; width: 1720px; border: 1px solid #E0E0E0; border-radius: 4px; overflow: hidden; box-shadow: 0 4px 10px rgba(0,0,0,0.05); z-index: 5; }}
+        .block-2-header {{ background-color: {block_2_color}; color: #FFFFFF; padding: 15px 30px; font-size: 2rem; font-weight: bold; }}
+        .block-2-body {{ background-color: #F4F9F6; padding: 30px; font-size: 2rem; line-height: 1.6; color: #111; }}
+        
+        .footer-left {{ position: absolute; bottom: 0; left: 0; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-center {{ position: absolute; bottom: 0; left: 640px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-right {{ position: absolute; bottom: 0; left: 1280px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; z-index: 20; }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="header-bar">
+                    <h2 class="header-title">{slide_title}</h2>
+                </div>
+                
+                <div class="block-1">
+                    <div class="block-1-header">{block_1_title}</div>
+                    <div class="block-1-body">{block_1_content}</div>
+                </div>
+                
+                <div class="block-2">
+                    <div class="block-2-header">{block_2_title}</div>
+                    <div class="block-2-body">{block_2_content}</div>
+                </div>
+                
+                <div class="footer-left">{author}</div>
+                <div class="footer-center">{short_title}</div>
+                <div class="footer-right">{slide_number}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_academic_split_layout_slide(
+    slide_title="System Architecture",
+    left_content_html="<ul><li>Component A interacts directly with the database.</li><li>Component B handles external API calls.</li><li>The modular design ensures scalability.</li></ul>",
+    right_svg="""<svg viewBox="0 0 300 300" style="width: 100%; height: 100%;"><rect x="50" y="50" width="80" height="80" fill="#003366"/><rect x="170" y="170" width="80" height="80" fill="#1E7A44"/><path d="M90 130 L90 210 L170 210" fill="none" stroke="#222" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/></svg>""",
+    author="Author Name",
+    short_title="Research Overview",
+    slide_number="4 / 10",
+    theme_color="#003366",
+    font_family="'Georgia', serif"
+):
+    """
+    Generates a two-column split layout: Left side for text descriptions, Right side for a diagram or SVG.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{slide_title}</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{ height: 1080px; width: 1920px; font-family: {font_family}; background-color: #FFFFFF; color: #222; overflow: hidden; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; position: relative; overflow: hidden; }}
+        .content-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1920px; height: 1080px; background: inherit; }}
+        .slide-container {{ width: 1920px; height: 1080px; position: relative; background-color: #FFFFFF; z-index: 2; }}
+        
+        .header-bar {{ position: absolute; top: 0; left: 0; width: 1920px; height: 120px; background-color: {theme_color}; display: flex; align-items: center; padding-left: 80px; z-index: 10; }}
+        .header-title {{ color: #FFFFFF; font-size: 3rem; font-weight: bold; }}
+        
+        /* Explicit split blocks */
+        .left-panel {{ position: absolute; top: 180px; left: 100px; width: 800px; height: 800px; font-size: 2.2rem; line-height: 1.8; z-index: 5; }}
+        .left-panel ul {{ padding-left: 40px; }}
+        .left-panel li {{ margin-bottom: 25px; }}
+        
+        .right-panel {{ position: absolute; top: 180px; left: 960px; width: 860px; height: 800px; display: flex; align-items: center; justify-content: center; background-color: #F8F9FA; border: 1px solid #EEE; border-radius: 8px; padding: 40px; z-index: 5; }}
+        
+        .footer-left {{ position: absolute; bottom: 0; left: 0; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-center {{ position: absolute; bottom: 0; left: 640px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; border-right: 1px solid rgba(255,255,255,0.2); z-index: 20; }}
+        .footer-right {{ position: absolute; bottom: 0; left: 1280px; width: 640px; height: 60px; background-color: {theme_color}; display: flex; align-items: center; justify-content: center; color: #FFF; font-size: 1.2rem; z-index: 20; }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="header-bar">
+                    <h2 class="header-title">{slide_title}</h2>
+                </div>
+                
+                <div class="left-panel">
+                    {left_content_html}
+                </div>
+                
+                <div class="right-panel">
+                    {right_svg}
+                </div>
+                
+                <div class="footer-left">{author}</div>
+                <div class="footer-center">{short_title}</div>
+                <div class="footer-right">{slide_number}</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
+
+def generate_academic_conclusion_slide(
+    main_text="Thank You for Your Attention",
+    sub_text="Questions and Discussion",
+    contact_info="Email: author@university.edu",
+    theme_color="#003366",
+    font_family="'Georgia', serif",
+    center_svg="""<svg width="120" height="120" viewBox="0 0 24 24" fill="none" stroke="#003366" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="margin-bottom: 30px;"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>"""
+):
+    """
+    Generates a clean, centered conclusion/Q&A slide for the end of an academic presentation.
+    """
+    html_code = f"""<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Conclusion</title>
+    <style>
+        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
+        html {{ font-size: 16px; width: 1920px; height: 1080px; }}
+        body, html {{ height: 1080px; width: 1920px; font-family: {font_family}; background-color: #FFFFFF; color: #222; overflow: hidden; }}
+        
+        .outer-wrapper {{ width: 1920px; height: 1080px; position: relative; overflow: hidden; }}
+        .content-wrapper {{ position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 1920px; height: 1080px; background: inherit; }}
+        .slide-container {{ width: 1920px; height: 1080px; position: relative; background-color: #FFFFFF; z-index: 2; }}
+        
+        /* Top and Bottom Accent Borders */
+        .top-accent {{ position: absolute; top: 0; left: 0; width: 1920px; height: 20px; background-color: {theme_color}; z-index: 10; }}
+        .bottom-accent {{ position: absolute; bottom: 0; left: 0; width: 1920px; height: 20px; background-color: {theme_color}; z-index: 10; }}
+        
+        /* Centered Box */
+        .center-box {{ position: absolute; top: 300px; left: 460px; width: 1000px; text-align: center; z-index: 5; display: flex; flex-direction: column; align-items: center; justify-content: center; }}
+        .main-text {{ font-size: 5rem; color: {theme_color}; font-weight: bold; margin-bottom: 20px; line-height: 1.2; }}
+        .sub-text {{ font-size: 2.5rem; color: #555555; margin-bottom: 40px; }}
+        .contact-info {{ font-size: 1.8rem; color: #777777; background-color: #F8F9FA; padding: 15px 40px; border-radius: 40px; border: 1px solid #E0E0E0; }}
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="top-accent"></div>
+                
+                <div class="center-box">
+                    {center_svg}
+                    <h1 class="main-text">{main_text}</h1>
+                    <div class="sub-text">{sub_text}</div>
+                    <div class="contact-info">{contact_info}</div>
+                </div>
+                
+                <div class="bottom-accent"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>"""
+    return html_code
 #------------------------ SLIDE THANK YOU
 
 
