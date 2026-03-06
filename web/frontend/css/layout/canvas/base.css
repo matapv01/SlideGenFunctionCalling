@@ -8,11 +8,30 @@
     top: 65px;
     left: 300px;
     right: 0;
-    bottom: 0;
-    overflow: auto;
+    bottom: 130px;
+    /* Space for bottom slide bar */
+    overflow: hidden;
+    /* Hide overflow to keep canvas centered */
     background: var(--bg-canvas);
-    padding: 30px;
-    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1), right 0.4s cubic-bezier(0.4, 0, 0.2, 1), bottom 0.4s ease;
+    /* Flexbox centering */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Wrapper for canvas - shrink-wraps canvas and centers in parent */
+.canvas-wrapper {
+    position: relative;
+    /* Provides positioning context for .element children */
+    display: inline-block;
+    /* Shrink-wrap to canvas size for proper centering */
+    flex-shrink: 0;
+}
+
+/* Adjust bottom spacing when slides bar is compact */
+.canvas-container.slides-compact {
+    bottom: 80px;
 }
 
 /* Wide panel (480px) for Elements/Icons tabs */
@@ -21,8 +40,9 @@
 }
 
 .canvas-container.left-collapsed {
-    left: 12%;
-    right: -10%;
+    left: 60px;
+    /* Match .left-panels.collapsed width to avoid off-center canvas */
+    right: 0;
 }
 
 /* Center canvas when both side panels are closed */
@@ -31,21 +51,19 @@
     right: 0;
 }
 
-.canvas-container.properties-open {
-    right: 320px;
-}
+/* Properties panel removed - no longer affects canvas positioning */
 
 .canvas {
     position: relative;
     width: 1920px;
     height: 1080px;
-    background: white;
-    margin: 0 auto;
+    /* background: white; */
+    /* Removed - background set via JS for each slide */
+    flex-shrink: 0;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-    transform-origin: top left;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-    overflow: hidden;
+    overflow: visible;
+    /* Centering managed by parent flexbox */
 }
 
 .canvas-drag-over {
@@ -96,4 +114,9 @@
 .group-container {
     border: 2px dashed #a0aec0 !important;
     border-radius: 8px;
+}
+
+/* Reserve space when properties panel is visible so it never overlays preview */
+.canvas-container.properties-open {
+    right: 340px;
 }

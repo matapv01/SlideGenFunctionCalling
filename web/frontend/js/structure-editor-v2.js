@@ -127,8 +127,8 @@ async function loadDocumentData() {
             if (data.document_structure && data.document_structure.length > 0) {
                 renderExistingStructure(data.document_structure);
             } else {
-                // Plain text
-                editor.innerHTML = escapeHtml(documentText);
+                // Plain text - preserve line breaks from the original document
+                editor.innerHTML = escapeHtmlPreserveLineBreaks(documentText);
             }
 
             // Setup listeners AFTER content is loaded
@@ -243,22 +243,68 @@ function applyFormatting(newLevel, newType) {
             || range.commonAncestorContainer.parentElement?.closest('.text-block');
     }
 
-    // CASE 1: EDITING EXISTING BLOCK (Immediate Effect)
-    if (existingBlock) {
+    // CASE 1: EDITING EXISTING BLOCK(S) (Immediate Effect)
+    // Find all blocks within the selection range
+    let selectedBlocks = [];
+    if (selection.rangeCount > 0) {
+        const range = selection.getRangeAt(0);
+
+        // If selection spans multiple elements, find all .text-block elements inside
+        const container = range.commonAncestorContainer;
+        const containerElement = container.nodeType === 3 ? container.parentElement : container;
+
+        // Get all text blocks in the editor
+        const allBlocks = Array.from(document.getElementById('wordEditor').querySelectorAll('.text-block'));
+
+        // Filter blocks that intersect with the selection range
+        selectedBlocks = allBlocks.filter(block => {
+            return selection.containsNode(block, true);
+        });
+
+        // If no blocks found via containsNode but we have an existing block from common ancestor
+        if (selectedBlocks.length === 0 && existingBlock) {
+            selectedBlocks = [existingBlock];
+        }
+    }
+
+    if (selectedBlocks.length > 0) {
         // If Normal/Unformat requested
         if (newLevel === 'normal') {
-            unformatBlock(existingBlock);
+            selectedBlocks.forEach(block => unformatBlock(block, true));
+
+            // Sync everything once after all blocks are unformatted
+            updateStats();
+            syncEditorToStructure();
+            renderSlides();
+            saveStructure();
+
             clearPendingState();
             return;
         }
 
-        // Apply partial updates immediately
-        const level = newLevel !== null ? newLevel : existingBlock.dataset.level;
-        const type = newType !== null ? newType : existingBlock.dataset.type;
+        // Apply partial updates immediately to all selected blocks
+        selectedBlocks.forEach(block => {
+            const level = newLevel !== null ? newLevel : block.dataset.level;
+            const type = newType !== null ? newType : block.dataset.type;
 
-        updateBlockStyle(existingBlock, level, type);
+            // Only update CSS class and dataset directly here to avoid triggering
+            // syncEditorToStructure multiple times for each block
+            block.className = `text-block text-level-${level} text-${type}`;
+            block.dataset.level = level;
+            block.dataset.type = type;
+        });
+
+        // Sync everything once after all blocks are updated
+        updateStats();
+        syncEditorToStructure();
+        renderSlides();
+        saveStructure();
+
         clearPendingState(); // Clear any pending state to avoid confusion
-        updateToolbarVisuals(level, type);
+
+        // Update toolbar visuals based on the first selected block
+        const firstBlock = selectedBlocks[0];
+        updateToolbarVisuals(firstBlock.dataset.level, firstBlock.dataset.type);
         return;
     }
 
@@ -318,13 +364,8 @@ function updateToolbarVisuals(level, type) {
     }
 }
 
-function unformatBlock(block) {
-    // Clone block to get clean text without handle
-    const clone = block.cloneNode(true);
-    const handle = clone.querySelector('.drag-handle');
-    if (handle) handle.remove();
-
-    const text = clone.textContent; // Keep original spacing/newlines
+function unformatBlock(block, skipSync = false) {
+    const text = extractTextSafely(block); // Keep original spacing/newlines
     const textNode = document.createTextNode(text);
 
     // Check if next sibling is a <br> (added by us) and remove it
@@ -335,12 +376,14 @@ function unformatBlock(block) {
     block.replaceWith(textNode);
     if (textNode.parentElement) textNode.parentElement.normalize();
 
-    // Update everything
-    updateStats();
-    syncEditorToStructure();
-    renderSlides();
-    saveStructure();
-    console.log('✅ Converted to Normal Text');
+    // Update everything if not skipping sync
+    if (!skipSync) {
+        updateStats();
+        syncEditorToStructure();
+        renderSlides();
+        saveStructure();
+        console.log('✅ Converted to Normal Text');
+    }
 }
 
 function updateBlockStyle(block, level, type) {
@@ -422,12 +465,7 @@ function syncEditorToStructure() {
     // Build flat list of blocks (filter empty ones)
     const flatBlocks = [];
     blocks.forEach(block => {
-        // Clone block to get text without handle text (if any)
-        const clone = block.cloneNode(true);
-        const handle = clone.querySelector('.drag-handle');
-        if (handle) handle.remove();
-
-        const text = clone.textContent.trim();
+        const text = extractTextSafely(block).trim();
         // Skip blocks with empty text
         if (!text) return;
 
@@ -806,11 +844,11 @@ function resetStructure() {
     showConfirm('Reset all formatting? This will convert everything back to plain text.', () => {
         const editor = document.getElementById('wordEditor');
 
-        // Get all text content
-        const plainText = editor.textContent;
+        // Get all text content, prefer innerText to preserve line breaks
+        const plainText = editor.innerText || editor.textContent;
 
-        // Reset to plain text
-        editor.innerHTML = escapeHtml(plainText);
+        // Reset to plain text, preserving line breaks
+        editor.innerHTML = escapeHtmlPreserveLineBreaks(plainText);
 
         // Reset state
         documentStructure = [];
@@ -836,6 +874,14 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
+// Escape HTML AND convert newlines to <br> to preserve paragraph structure
+// from the original Word document when loaded as plain text
+function escapeHtmlPreserveLineBreaks(text) {
+    const escaped = escapeHtml(text);
+    // Replace \n with <br> so each paragraph/line appears on a separate line
+    return escaped.replace(/\n/g, '<br>');
+}
+
 function updateStats() {
     const editor = document.getElementById('wordEditor');
     const blocks = editor.querySelectorAll('.text-block');
@@ -852,6 +898,16 @@ function updateSlideCount(count) {
     if (element) {
         element.textContent = count + ' slide' + (count !== 1 ? 's' : '');
     }
+}
+
+// Safely extract text from a node, converting <br> to \n so words don't get fused
+function extractTextSafely(node) {
+    const clone = node.cloneNode(true);
+    const handle = clone.querySelector('.drag-handle');
+    if (handle) handle.remove();
+    // Replace <br> with \n before extracting textContent
+    clone.innerHTML = clone.innerHTML.replace(/<br\s*[\/]?>/gi, '\n');
+    return clone.textContent;
 }
 
 function goBack() {

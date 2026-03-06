@@ -12,6 +12,7 @@ import zipfile
 import json
 import re
 import asyncio
+import uuid
 from pathlib import Path
 from datetime import datetime
 from typing import AsyncGenerator
@@ -1625,6 +1626,52 @@ async def convert_slides(data: dict):
     except Exception as e:
         logger.error(f"Conversion error: {e}")
         raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
+
+
+@app.post("/api/convert-html-content")
+async def convert_html_content(data: dict):
+    """Convert a single HTML content string to converter.js absolute format."""
+    if conversion_service is None:
+        raise HTTPException(status_code=503, detail="Converter not available")
+
+    html_content = data.get("html_content", "")
+    if not html_content or not str(html_content).strip():
+        raise HTTPException(status_code=400, detail="Missing html_content")
+
+    temp_job_dir = TEMP_DIR / f"convert_runtime_{uuid.uuid4().hex}"
+    input_folder = temp_job_dir / "html"
+    output_folder = temp_job_dir / "converted"
+
+    try:
+        input_folder.mkdir(parents=True, exist_ok=True)
+        output_folder.mkdir(parents=True, exist_ok=True)
+
+        input_file = input_folder / "input.html"
+        input_file.write_text(str(html_content), encoding="utf-8")
+
+        conversion_result = conversion_service.convert_slides_batch(input_folder, output_folder)
+
+        converted_file = output_folder / "converted_input.html"
+        if converted_file.exists():
+            converted_html = converted_file.read_text(encoding="utf-8")
+            return JSONResponse(content={
+                "success": True,
+                "converted_html": converted_html,
+                "conversion_result": conversion_result
+            })
+
+        raise HTTPException(status_code=422, detail="Conversion produced no output")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Single HTML conversion error: {e}")
+        raise HTTPException(status_code=500, detail=f"Conversion failed: {str(e)}")
+    finally:
+        try:
+            if temp_job_dir.exists():
+                shutil.rmtree(temp_job_dir)
+        except Exception as cleanup_error:
+            logger.warning(f"Could not cleanup temp conversion dir {temp_job_dir}: {cleanup_error}")
 
 
 @app.get("/api/conversion-status/{project_name}")

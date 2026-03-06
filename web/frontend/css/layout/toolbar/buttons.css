@@ -183,7 +183,8 @@
             top: 65px;
             left: 0;
             width: 300px;
-            height: calc(100vh - 65px);
+            height: calc(100vh - 65px - 130px);
+            /* Subtract toolbar and bottom slides bar */
             display: flex;
             flex-direction: column;
             background: var(--bg-panel);
@@ -191,7 +192,51 @@
             border-right: 1px solid var(--border-color);
             box-shadow: 2px 0 20px rgba(0, 0, 0, 0.05);
             z-index: 999;
-            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1), height 0.4s ease;
+        }
+
+        /* Sidebar collapse button - positioned on the right edge */
+        .sidebar-collapse-btn {
+            position: absolute;
+            right: -14px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 28px;
+            height: 28px;
+            background: white;
+            border: 1px solid #e2e8f0;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1002;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .sidebar-collapse-btn:hover {
+            background: #f7fafc;
+            border-color: #667eea;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.25);
+        }
+
+        .sidebar-collapse-btn .collapse-arrow {
+            font-size: 16px;
+            font-weight: bold;
+            color: #4a5568;
+            transition: transform 0.3s ease;
+        }
+
+        /* Rotate arrow when collapsed */
+        .left-panels.collapsed .sidebar-collapse-btn .collapse-arrow {
+            transform: rotate(180deg);
+        }
+
+        /* Adjust height when slides bar is compact */
+        .left-panels.slides-compact {
+            height: calc(100vh - 65px - 80px);
+            /* Smaller bottom bar height */
         }
 
         /* Expanded width for elements and icons panels */
@@ -318,8 +363,15 @@
         }
 
         @keyframes tabIconBounce {
-            0%, 100% { transform: scale(1.2); }
-            50% { transform: scale(1.35); }
+
+            0%,
+            100% {
+                transform: scale(1.2);
+            }
+
+            50% {
+                transform: scale(1.35);
+            }
         }
 
         .left-panel-content {
@@ -377,4 +429,3 @@
             transform: translateY(-1px);
             box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
         }
-

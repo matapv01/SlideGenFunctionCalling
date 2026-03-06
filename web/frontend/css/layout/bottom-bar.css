@@ -1,0 +1,221 @@
+/* Bottom Slides Bar Styles */
+.bottom-slides-bar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 130px;
+    /* Canva-style filmstrip display */
+    background: #ffffff;
+    border-top: 1px solid var(--border-color);
+    z-index: 1001;
+    /* Higher than other elements */
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 -4px 12px rgba(0, 0, 0, 0.08);
+    transition: height 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Compact mode when properties panel is open */
+.bottom-slides-bar.compact {
+    height: 80px;
+    /* Smaller height like Canva */
+}
+
+.bottom-slides-bar .bar-controls {
+    height: 38px;
+    padding: 0 15px;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid var(--border-color);
+    gap: 10px;
+    background: #f7fafc;
+    transition: height 0.4s ease;
+}
+
+/* Compact controls */
+.bottom-slides-bar.compact .bar-controls {
+    height: 35px;
+    padding: 0 12px;
+}
+
+.bottom-slides-bar .bar-controls button {
+    padding: 5px 12px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 600;
+    transition: all 0.2s ease;
+}
+
+/* Compact buttons */
+.bottom-slides-bar.compact .bar-controls button {
+    padding: 4px 10px;
+    font-size: 11px;
+}
+
+.bottom-slides-bar .bar-controls button:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 8px rgba(102, 126, 234, 0.3);
+}
+
+.bottom-slides-bar .slides-scroll-container {
+    flex: 1;
+    min-height: 0;
+    max-height: 91px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    padding: 6px 15px;
+    background: #fafafa;
+    transition: padding 0.4s ease;
+    box-sizing: border-box;
+}
+
+.bottom-slides-bar .slides-list#slidesList {
+    display: flex !important;
+    flex-direction: row !important;
+    gap: 10px;
+    height: 100%;
+    max-height: 100%;
+    padding: 0 !important;
+    align-items: center;
+    /* Remove any inherited padding */
+}
+
+/* Override slide item for horizontal layout */
+.bottom-slides-bar .slide-item {
+    width: 120px;
+    /* Aspect ratio 16:9 like Canva */
+    height: 72px;
+    max-height: 72px;
+    min-width: 120px;
+    flex-shrink: 0;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    padding: 3px;
+    background: #fff;
+    border: 2px solid #e2e8f0;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    box-sizing: border-box;
+    overflow: hidden;
+}
+
+/* Compact slide items when properties panel is open */
+.bottom-slides-bar.compact .slide-item {
+    width: 100px;
+    height: 56px;
+    min-width: 100px;
+    padding: 3px;
+}
+
+.bottom-slides-bar .slide-item:hover {
+    border-color: #667eea;
+    transform: translateY(-3px);
+    box-shadow: 0 6px 12px rgba(102, 126, 234, 0.2);
+}
+
+.bottom-slides-bar .slide-item.active {
+    border-color: #667eea;
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.08), rgba(118, 75, 162, 0.08));
+    box-shadow: 0 4px 10px rgba(102, 126, 234, 0.25);
+}
+
+.bottom-slides-bar .slide-thumbnail {
+    flex: 1;
+    background: #f7fafc;
+    border-radius: 4px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+    position: relative;
+}
+
+.bottom-slides-bar .slide-thumbnail>div {
+    position: absolute;
+    bottom: 2px;
+    left: 2px;
+    background: rgba(255, 255, 255, 0.9);
+    padding: 2px 6px;
+    border-radius: 3px;
+    font-size: 10px;
+    font-weight: 600;
+    color: #4a5568;
+    transition: all 0.2s ease;
+}
+
+/* Compact slide number */
+.bottom-slides-bar.compact .slide-thumbnail>div {
+    font-size: 8px;
+    padding: 1px 4px;
+}
+
+.bottom-slides-bar .slide-info {
+    display: none;
+    /* Hide detailed info in filmstrip */
+}
+
+.bottom-slides-bar .slide-actions {
+    display: none;
+    /* Hidden by default */
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    gap: 4px;
+}
+
+.bottom-slides-bar .slide-item:hover .slide-actions {
+    display: flex;
+}
+
+.bottom-slides-bar .slide-action-btn {
+    background: rgba(255, 255, 255, 0.95);
+    border: 1px solid #cbd5e0;
+    border-radius: 4px;
+    padding: 3px 6px;
+    cursor: pointer;
+    font-size: 11px;
+    transition: all 0.15s ease;
+}
+
+/* Smaller action buttons in compact mode */
+.bottom-slides-bar.compact .slide-action-btn {
+    padding: 2px 4px;
+    font-size: 9px;
+    border-radius: 3px;
+}
+
+.bottom-slides-bar .slide-action-btn:hover {
+    background: #fff;
+    border-color: #667eea;
+    transform: scale(1.05);
+}
+
+/* Scrollbar styling for slide bar */
+.bottom-slides-bar .slides-scroll-container::-webkit-scrollbar {
+    height: 8px;
+}
+
+.bottom-slides-bar .slides-scroll-container::-webkit-scrollbar-track {
+    background: #edf2f7;
+    border-radius: 4px;
+}
+
+.bottom-slides-bar .slides-scroll-container::-webkit-scrollbar-thumb {
+    background: #cbd5e0;
+    border-radius: 4px;
+}
+
+.bottom-slides-bar .slides-scroll-container::-webkit-scrollbar-thumb:hover {
+    background: #a0aec0;
+}

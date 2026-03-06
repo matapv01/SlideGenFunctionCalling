@@ -10,6 +10,7 @@ export class SlideEditor {
         this.canvas = document.getElementById('canvas');
         this.canvasContainer = document.getElementById('canvasContainer');
         this.propertiesContent = document.getElementById('propertiesContent');
+        this.propertiesPanel = document.getElementById('propertiesPanel');
         this.slidesList = document.getElementById('slidesList');
 
         this.verticalGuide = document.getElementById('vertical-guide');
@@ -78,7 +79,11 @@ export class SlideEditor {
         this.createFirstSlide();
         this.bindEvents();
         this.initializeSmartGuides();
-        this.fitToScreen();
+        // Set default zoom to 50% after a short delay to ensure layout is ready
+        setTimeout(() => {
+            this.zoom(0.50);
+            document.getElementById('zoomLevel').textContent = '50%';
+        }, 50);
         this.updateProperties();
         this.renderSlidesList();
         this.updateUndoRedoButtons(); // Initialize undo/redo button states
@@ -1326,6 +1331,16 @@ export class SlideEditor {
 
         console.log('🎨 Applied DIRECT background:', slide.backgroundColor, 'for slide', index);
 
+        // Force verify background was applied
+        setTimeout(() => {
+            const actualBg = window.getComputedStyle(this.canvas).backgroundColor;
+            console.log('✅ Verified background after 50ms:', actualBg, 'expected:', slide.backgroundColor);
+            if (actualBg !== slide.backgroundColor && actualBg === 'rgb(255, 255, 255)') {
+                console.warn('⚠️ Background not applied! Forcing re-apply...');
+                this.canvas.style.setProperty('background-color', slide.backgroundColor, 'important');
+            }
+        }, 50);
+
         this.zIndexCounter = slide.zIndexCounter || 1;
         this.initElements();
 
@@ -1338,87 +1353,48 @@ export class SlideEditor {
     applyDirectBackground(backgroundColor) {
         console.log('🔧 Applying direct background:', backgroundColor);
 
-        // Method 1: BRUTE FORCE - Override everything possible (ONLY for canvas)
         const canvas = this.canvas;
 
-        // Clear all conflicting styles
-        canvas.style.background = '';
-        canvas.style.backgroundColor = '';
-        canvas.removeAttribute('class');
+        // Store current transform to preserve it
+        const currentTransform = canvas.style.transform || `scale(${this.zoomLevel || 1})`;
 
-        // Apply with MAXIMUM specificity (ONLY for canvas)
+        // Apply background with !important to prevent override
         canvas.setAttribute('id', 'canvas');
         canvas.setAttribute('data-bg', backgroundColor);
-        canvas.style.cssText = `
-        position: relative !important;
-        width: 1920px !important;
-        height: 1080px !important;
-        background: ${backgroundColor} !important;
-        background-color: ${backgroundColor} !important;
-        margin: 0 auto !important;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
-        border-radius: 8px !important;
-        transform-origin: top left !important;
-        transition: transform 0.3s ease !important;
-        overflow: hidden !important;
-        transform: scale(${this.zoomLevel || 1}) !important;
-    `;
 
-        // Method 2: Create PERSISTENT style tag với timestamp (ONLY for canvas)
-        const timestamp = Date.now();
-        const styleId = `bg-${timestamp}`;
+        // Force apply background with maximum priority - MULTIPLE TIMES
+        canvas.style.setProperty('width', '1920px', 'important');
+        canvas.style.setProperty('height', '1080px', 'important');
+        canvas.style.setProperty('background', backgroundColor, 'important');
+        canvas.style.setProperty('background-color', backgroundColor, 'important');
+        canvas.style.setProperty('transform', currentTransform, 'important');
+        canvas.style.setProperty('transform-origin', 'center center', 'important');
 
-        // Remove any old background style tags
-        document.querySelectorAll('style[id^="bg-"]').forEach(style => {
+        console.log('✅ Background applied with !important:', backgroundColor, currentTransform);
+
+        // Add persistent CSS rule for this background
+        const styleId = `bg-canvas-${Date.now()}`;
+
+        // Remove old background style tags
+        document.querySelectorAll('style[id^="bg-canvas-"]').forEach(style => {
             style.remove();
         });
 
         const style = document.createElement('style');
         style.id = styleId;
         style.textContent = `
-        #canvas[data-bg="${backgroundColor}"] {
-            background: ${backgroundColor} !important;
-            background-color: ${backgroundColor} !important;
-        }
-        /* Ensure body background is protected */
-        body {
-            background: var(--bg-canvas) !important;
-        }
-    `;
+            #canvas[data-bg="${backgroundColor}"] {
+                background: ${backgroundColor} !important;
+                background-color: ${backgroundColor} !important;
+            }
+        `;
         document.head.appendChild(style);
 
-        // Method 3: AGGRESSIVE monitoring - check mỗi 100ms (ONLY for canvas)
-        if (this.aggressiveMonitor) clearInterval(this.aggressiveMonitor);
-        this.aggressiveMonitor = setInterval(() => {
-            const currentBg = window.getComputedStyle(canvas).backgroundColor;
-            const expectedBg = backgroundColor;
-
-            // Check if background color changed ONLY for canvas
-            if (currentBg !== expectedBg && currentBg !== 'transparent') {
-                canvas.style.setProperty('background', expectedBg, 'important');
-                canvas.style.setProperty('background-color', expectedBg, 'important');
-
-                // Also update slide object immediately
-                if (this.slides && this.slides[this.currentSlideIndex]) {
-                    this.slides[this.currentSlideIndex].backgroundColor = expectedBg;
-                }
-            }
-
-            // Ensure body background is protected
-            const body = document.body;
-            const currentBodyBg = window.getComputedStyle(body).backgroundColor;
-            const expectedBodyBg = getComputedStyle(document.documentElement).getPropertyValue('--bg-canvas').trim();
-            if (currentBodyBg !== expectedBodyBg && !currentBodyBg.includes('240, 244, 248')) {
-                body.style.setProperty('background', 'var(--bg-canvas)', 'important');
-            }
-        }, 100);
-
-        // Method 4: Force reapply in next tick (ONLY for canvas)
+        // Force reapply in next frame to override any CSS
         requestAnimationFrame(() => {
-            canvas.style.setProperty('background', backgroundColor, 'important');
             canvas.style.setProperty('background-color', backgroundColor, 'important');
+            console.log('🔄 Force re-applied background in RAF:', backgroundColor);
         });
-
     }
 
     startDOMBackgroundMonitoring(backgroundColor) {
@@ -1514,16 +1490,54 @@ export class SlideEditor {
         }
     }
 
+    // Create thumbnail preview for slide (Canva-style)
+    createSlideThumbnailPreview(slide) {
+        if (!slide || !slide.content) {
+            console.log('⚠️ No slide content for thumbnail');
+            return '';
+        }
+
+        // Parse slide content
+        const tempDiv = document.createElement('div');
+        tempDiv.innerHTML = slide.content;
+
+        // Extract styles (keep them for rendering fonts, colors, etc.)
+        const styles = Array.from(tempDiv.querySelectorAll('style')).map(s => s.outerHTML).join('');
+
+        // Get only visual elements (skip style, script, etc.)
+        const visualElements = Array.from(tempDiv.children).filter(el => {
+            const tag = el.tagName?.toLowerCase();
+            return !['style', 'script', 'link', 'meta', 'svg'].includes(tag);
+        });
+
+        // Create preview HTML with styles + elements
+        const elementsHTML = visualElements.map(el => el.outerHTML).join('');
+
+        console.log(`🖼️ Thumbnail preview: ${styles.length} chars styles, ${elementsHTML.length} chars elements`);
+
+        return styles + elementsHTML;
+    }
+
     renderSlidesList() {
+        // IMPORTANT: Save current slide first để thumbnail hiển thị nội dung mới nhất
+        this.saveCurrentSlide();
+
         this.slidesList.innerHTML = '';
         this.slides.forEach((slide, index) => {
             const slideElement = document.createElement('div');
             slideElement.className = `slide-item ${index === this.currentSlideIndex ? 'active' : ''}`;
             slideElement.draggable = true;
             slideElement.dataset.slideIndex = index;
+
+            // Create mini preview of slide content
+            const previewHTML = this.createSlideThumbnailPreview(slide);
+
             slideElement.innerHTML = `
             <div class="slide-thumbnail">
-                <div style="font-size: 8px; padding: 2px; color: #718096; font-weight: 600;">${index + 1}</div>
+                <div class="slide-thumbnail-number">${index + 1}</div>
+                <div class="slide-thumbnail-preview" style="background: ${slide.backgroundColor || 'white'};">
+                    ${previewHTML}
+                </div>
             </div>
             <div class="slide-info">
                 <div class="slide-name">Slide ${index + 1}</div>
@@ -2000,11 +2014,25 @@ export class SlideEditor {
     bindEvents() {
         document.getElementById('selectBtn').addEventListener('click', () => this.setMode('select'));
         document.getElementById('textBtn').addEventListener('click', () => this.setMode('text'));
-        document.getElementById('propertiesBtn').addEventListener('click', () => this.toggleProperties());
+        // Properties button removed
         document.getElementById('toggleSlidesBtn').addEventListener('click', () => this.toggleSlides());
+
+        // Properties panel toggle button (safe check)
+        const togglePropertiesBtn = document.getElementById('togglePropertiesBtn');
+        if (togglePropertiesBtn) {
+            togglePropertiesBtn.addEventListener('click', () => this.togglePropertiesPanel());
+        }
+
         document.getElementById('resetViewBtn').addEventListener('click', () => this.fitToScreen());
         document.getElementById('undoBtn').addEventListener('click', () => this.undo());
         document.getElementById('redoBtn').addEventListener('click', () => this.redo());
+
+        // Properties panel close button
+        const closePropertiesBtn = document.getElementById('closePropertiesBtn');
+        if (closePropertiesBtn) {
+            closePropertiesBtn.addEventListener('click', () => this.closePropertiesPanel());
+        }
+
         // document.getElementById('exportBtn').addEventListener('click', () => this.showExportOptions());
 
         // Capture buttons
@@ -2047,6 +2075,19 @@ export class SlideEditor {
         document.getElementById('newSlideBtn').addEventListener('click', () => this.createNewSlide());
         document.getElementById('duplicateSlideBtn').addEventListener('click', () => this.duplicateCurrentSlide());
 
+        // Sidebar collapse toggle
+        const sidebarCollapseBtn = document.getElementById('sidebarCollapseBtn');
+        if (sidebarCollapseBtn) {
+            sidebarCollapseBtn.addEventListener('click', () => this.toggleSidebar());
+        }
+        // Keyboard shortcut Ctrl+/ for sidebar collapse
+        document.addEventListener('keydown', (e) => {
+            if (e.ctrlKey && e.key === '/') {
+                e.preventDefault();
+                this.toggleSidebar();
+            }
+        });
+
         document.getElementById('importBtn').addEventListener('click', () => document.getElementById('importFile').click());
         document.getElementById('importFile').addEventListener('change', (e) => this.importSlides(e));
 
@@ -2075,7 +2116,7 @@ export class SlideEditor {
                 else if (elementType === 'video') document.getElementById('videoFile').click();
                 else this.createElement(elementType);
             });
-            
+
             // Drag and drop handlers for elements
             const elementType = item.dataset.element;
             if (elementType && elementType !== 'image' && elementType !== 'video') {
@@ -2102,12 +2143,20 @@ export class SlideEditor {
         document.getElementById('imageFile').addEventListener('change', (e) => this.handleImageUpload(e));
         document.getElementById('videoFile').addEventListener('change', (e) => this.handleVideoUpload(e));
 
+        // Add Text Box button in sidebar
+        const addTextBoxBtn = document.getElementById('addTextBoxBtn');
+        if (addTextBoxBtn) {
+            addTextBoxBtn.addEventListener('click', () => {
+                this.addTextAtCenter();
+            });
+        }
+
         document.querySelectorAll('.left-panel-tab').forEach(tab => {
             tab.addEventListener('click', () => {
                 // Nếu panel đang collapsed, mở rộng nó ra
                 const leftPanels = document.querySelector('.left-panels');
                 const canvasContainer = document.querySelector('.canvas-container');
-                
+
                 if (leftPanels && leftPanels.classList.contains('collapsed')) {
                     leftPanels.classList.remove('collapsed');
                     const toggleBtn = document.getElementById('toggleSlidesBtn');
@@ -2284,10 +2333,34 @@ export class SlideEditor {
         }
 
         if (this.selectedElements.length > 0) {
-            document.getElementById('propertiesPanel').classList.add('open');
-            document.getElementById('canvasContainer').classList.add('properties-open');
+            // Open properties panel when element is selected
+            this.openPropertiesPanel();
+        } else {
+            // Close properties panel when no element selected
+            this.closePropertiesPanel();
         }
         this.updateProperties();
+    }
+
+    openPropertiesPanel() {
+        if (this.propertiesPanel) {
+            this.propertiesPanel.classList.add('open');
+            this.canvasContainer?.classList.add('properties-open');
+        }
+    }
+
+    closePropertiesPanel() {
+        if (this.propertiesPanel) {
+            this.propertiesPanel.classList.remove('open');
+            this.canvasContainer?.classList.remove('properties-open');
+        }
+    }
+
+    togglePropertiesPanel() {
+        if (this.propertiesPanel) {
+            this.propertiesPanel.classList.toggle('open');
+            this.canvasContainer?.classList.toggle('properties-open', this.propertiesPanel.classList.contains('open'));
+        }
     }
 
     toggleSelection(element) {
@@ -2336,14 +2409,14 @@ export class SlideEditor {
         <div class="property-group">
             <h3>📍 Position & Transform</h3>
             <div class="property-row">
-                <div class="property-col"><label class="property-label">X Position</label><input type="number" class="property-input" data-style="left" value="${parseInt(el.style.left) || 0}" step="1"></div>
-                <div class="property-col"><label class="property-label">Y Position</label><input type="number" class="property-input" data-style="top" value="${parseInt(el.style.top) || 0}" step="1"></div>
+                <div class="property-col"><label class="property-label">↔️ X Position</label><input type="number" class="property-input" data-style="left" value="${parseInt(el.style.left) || 0}" step="1"></div>
+                <div class="property-col"><label class="property-label">↕️ Y Position</label><input type="number" class="property-input" data-style="top" value="${parseInt(el.style.top) || 0}" step="1"></div>
             </div>
             <div class="property-row">
-                <div class="property-col"><label class="property-label">Width</label><input type="number" class="property-input" data-style="width" value="${parseInt(el.style.width) || el.offsetWidth}" step="1"></div>
-                <div class="property-col"><label class="property-label">Height</label><input type="number" class="property-input" data-style="height" value="${parseInt(el.style.height) || el.offsetHeight}" step="1"></div>
+                <div class="property-col"><label class="property-label">↔️ Width</label><input type="number" class="property-input" data-style="width" value="${parseInt(el.style.width) || el.offsetWidth}" step="1"></div>
+                <div class="property-col"><label class="property-label">↕️ Height</label><input type="number" class="property-input" data-style="height" value="${parseInt(el.style.height) || el.offsetHeight}" step="1"></div>
             </div>
-            <label class="property-label">Rotation (degrees)</label>
+            <label class="property-label">🔄 Rotation (degrees)</label>
             <div class="range-container"><input type="range" class="property-range" data-style="rotation" min="-180" max="180" value="0" step="1"><span class="range-value">0°</span></div>
         </div>
     `;
@@ -2352,7 +2425,7 @@ export class SlideEditor {
             html += `
             <div class="property-group">
                 <h3>✍️ Typography (Entire Element)</h3>
-                <label class="property-label">Font Family</label>
+                <label class="property-label">🔤 Font Family</label>
                 <select class="property-input" data-style="fontFamily">
                     <option value="Inter, sans-serif" ${style.fontFamily.includes('Inter') ? 'selected' : ''}>Inter</option>
                     <option value="Arial, sans-serif" ${style.fontFamily.includes('Arial') ? 'selected' : ''}>Arial</option>
@@ -2361,16 +2434,16 @@ export class SlideEditor {
                     <option value="'Times New Roman', serif" ${style.fontFamily.includes('Times') ? 'selected' : ''}>Times New Roman</option>
                 </select>
                 <div class="property-row">
-                    <div class="property-col"><label class="property-label">Font Size</label><input type="number" class="property-input" data-style="fontSize" value="${parseInt(style.fontSize)}" step="2" min="12" max="500"></div>
-                    <div class="property-col"><label class="property-label">Line Height</label><input type="number" class="property-input" data-style="lineHeight" value="${parseFloat(style.lineHeight) || 1.4}" step="0.1" min="0.5" max="3"></div>
+                    <div class="property-col"><label class="property-label">📏 Font Size</label><input type="number" class="property-input" data-style="fontSize" value="${parseInt(style.fontSize)}" step="2" min="12" max="500"></div>
+                    <div class="property-col"><label class="property-label">📊 Line Height</label><input type="number" class="property-input" data-style="lineHeight" value="${parseFloat(style.lineHeight) || 1.4}" step="0.1" min="0.5" max="3"></div>
                 </div>
-                <label class="property-label">Font Weight</label>
+                <label class="property-label">💪 Font Weight</label>
                 <select class="property-input" data-style="fontWeight">
                     <option value="100" ${style.fontWeight == '100' ? 'selected' : ''}>Thin</option> <option value="200" ${style.fontWeight == '200' ? 'selected' : ''}>Extra Light</option> <option value="300" ${style.fontWeight == '300' ? 'selected' : ''}>Light</option> <option value="400" ${style.fontWeight == '400' ? 'selected' : ''}>Regular</option> <option value="500" ${style.fontWeight == '500' ? 'selected' : ''}>Medium</option> <option value="600" ${style.fontWeight == '600' ? 'selected' : ''}>Semi Bold</option> <option value="700" ${style.fontWeight == '700' ? 'selected' : ''}>Bold</option> <option value="800" ${style.fontWeight == '800' ? 'selected' : ''}>Extra Bold</option> <option value="900" ${style.fontWeight == '900' ? 'selected' : ''}>Black</option>
                 </select>
-                <label class="property-label">Text Align</label>
+                <label class="property-label">⬌ Text Align</label>
                 <div class="button-group">
-                    <button class="style-btn ${style.textAlign === 'left' ? 'active' : ''}" data-style="textAlign" data-value="left">◀</button> <button class="style-btn ${style.textAlign === 'center' ? 'active' : ''}" data-style="textAlign" data-value="center">▣</button> <button class="style-btn ${style.textAlign === 'right' ? 'active' : ''}" data-style="textAlign" data-value="right">▶</button> <button class="style-btn ${style.textAlign === 'justify' ? 'active' : ''}" data-style="textAlign" data-value="justify">▦</button>
+                    <button class="style-btn ${style.textAlign === 'left' ? 'active' : ''}" data-style="textAlign" data-value="left" title="Align Left">◀</button> <button class="style-btn ${style.textAlign === 'center' ? 'active' : ''}" data-style="textAlign" data-value="center" title="Align Center">▣</button> <button class="style-btn ${style.textAlign === 'right' ? 'active' : ''}" data-style="textAlign" data-value="right" title="Align Right">▶</button> <button class="style-btn ${style.textAlign === 'justify' ? 'active' : ''}" data-style="textAlign" data-value="justify" title="Justify">▦</button>
                 </div>
             </div>
             <div class="property-group">
@@ -2381,18 +2454,39 @@ export class SlideEditor {
                 </div>
                 <div class="property-row">
                     <div class="property-col">
-                        <label class="property-label">Font Size</label>
+                        <label class="property-label">📏 Font Size</label>
                         <input type="number" class="property-input" data-format-size="fontSize" value="${parseInt(style.fontSize)}" step="1" min="8" max="200" placeholder="Mixed">
                     </div>
                 </div>
                 <div class="property-row">
-                    <div class="property-col"><label class="property-label">Highlight Color</label><input type="color" data-format-color="backColor" class="property-color-input" value="#ffff00" style="height: 40px;"></div>
-                    <div class="property-col"><label class="property-label">Text Color</label><input type="color" data-format-color="foreColor" class="property-color-input" value="${this.rgbToHex(style.color)}" style="height: 40px;"></div>
+                    <div class="property-col">
+                        <label class="property-label">
+                            <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                <span style="font-weight: bold; background: linear-gradient(to bottom, transparent 50%, #ffeb3b 50%); padding: 2px 4px;">A</span>
+                                Highlight
+                            </span>
+                        </label>
+                        <input type="color" data-format-color="backColor" class="property-color-input" value="#ffff00" style="height: 40px;">
+                    </div>
+                    <div class="property-col">
+                        <label class="property-label">
+                            <span style="display: inline-flex; align-items: center; gap: 4px;">
+                                <span style="font-weight: bold; color: #667eea; font-size: 16px;">A</span>
+                                Text Color
+                            </span>
+                        </label>
+                        <input type="color" data-format-color="foreColor" class="property-color-input" value="${this.rgbToHex(style.color)}" style="height: 40px;">
+                    </div>
                 </div>
             </div>
             <div class="property-group">
                 <h3>🎨 Text Colors (Entire Element)</h3>
-                <label class="property-label">Text Color</label>
+                <label class="property-label">
+                    <span style="display: inline-flex; align-items: center; gap: 6px;">
+                        <span style="font-weight: bold; color: #667eea; font-size: 18px;">A</span>
+                        Text Color
+                    </span>
+                </label>
                 <div class="color-input-container">
                     <input type="color" class="property-color-input" data-style="color" value="${this.rgbToHex(style.color)}"><input type="text" class="color-text-input" data-style="color" value="${this.rgbToHex(style.color)}" placeholder="#000000">
                 </div>
@@ -2403,37 +2497,91 @@ export class SlideEditor {
         html += `
         <div class="property-group">
             <h3>🎭 Appearance</h3>
-            <label class="property-label">Background Color</label>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    🎨 Background Color
+                </span>
+            </label>
             <div class="color-input-container"><input type="color" class="property-color-input" data-style="backgroundColor" value="${this.rgbToHex(style.backgroundColor)}"><input type="text" class="color-text-input" data-style="backgroundColor" value="${this.rgbToHex(style.backgroundColor)}" placeholder="#ffffff"></div>
-            <label class="property-label">Border</label>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    ⬜ Border
+                </span>
+            </label>
             <div class="property-row">
                 <div class="property-col"><input type="number" class="property-input" data-style="borderWidth" value="${parseInt(style.borderWidth) || 0}" step="1" min="0" placeholder="Width"></div>
                 <div class="property-col"><select class="property-input" data-style="borderStyle"><option value="none" ${style.borderStyle === 'none' ? 'selected' : ''}>None</option><option value="solid" ${style.borderStyle === 'solid' ? 'selected' : ''}>Solid</option><option value="dashed" ${style.borderStyle === 'dashed' ? 'selected' : ''}>Dashed</option><option value="dotted" ${style.borderStyle === 'dotted' ? 'selected' : ''}>Dotted</option></select></div>
             </div>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    🎨 Border Color
+                </span>
+            </label>
             <input type="color" class="property-color-input" data-style="borderColor" value="${this.rgbToHex(style.borderColor)}">
-            <label class="property-label">Border Radius</label>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    ⬭ Border Radius
+                </span>
+            </label>
             <div class="range-container"><input type="range" class="property-range" data-style="borderRadius" min="0" max="100" value="${parseInt(style.borderRadius) || 0}" step="1"><span class="range-value">${parseInt(style.borderRadius) || 0}px</span></div>
-            <label class="property-label">Box Shadow</label>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    🌑 Box Shadow
+                </span>
+            </label>
             <div class="shadow-controls"><div class="property-row"><div class="property-col"><input type="number" class="property-input" data-style="shadowX" value="0" step="1" placeholder="X"></div><div class="property-col"><input type="number" class="property-input" data-style="shadowY" value="0" step="1" placeholder="Y"></div></div><input type="range" class="property-range" data-style="shadowBlur" min="0" max="50" value="0" step="1"><span class="range-label">Blur: <span class="range-value">0px</span></span></div>
         </div>
         <div class="property-group">
             <h3>✨ Effects</h3>
-            <label class="property-label">Opacity</label><div class="range-container"><input type="range" class="property-range" data-style="opacity" min="0" max="1" step="0.05" value="${style.opacity || 1}"><span class="range-value">${Math.round((style.opacity || 1) * 100)}%</span></div>
-            <label class="property-label">Blur</label><div class="range-container"><input type="range" class="property-range" data-style="filter-blur" min="0" max="20" value="0" step="0.5"><span class="range-value">0px</span></div>
-            <label class="property-label">Brightness</label><div class="range-container"><input type="range" class="property-range" data-style="filter-brightness" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
-            <label class="property-label">Saturation</label><div class="range-container"><input type="range" class="property-range" data-style="filter-saturate" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    ◐ Opacity
+                </span>
+            </label>
+            <div class="range-container"><input type="range" class="property-range" data-style="opacity" min="0" max="1" step="0.05" value="${style.opacity || 1}"><span class="range-value">${Math.round((style.opacity || 1) * 100)}%</span></div>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    🌫️ Blur
+                </span>
+            </label>
+            <div class="range-container"><input type="range" class="property-range" data-style="filter-blur" min="0" max="20" value="0" step="0.5"><span class="range-value">0px</span></div>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    ☀️ Brightness
+                </span>
+            </label>
+            <div class="range-container"><input type="range" class="property-range" data-style="filter-brightness" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    🎨 Saturation
+                </span>
+            </label>
+            <div class="range-container"><input type="range" class="property-range" data-style="filter-saturate" min="0" max="200" value="100" step="5"><span class="range-value">100%</span></div>
         </div>
         <div class="property-group">
             <h3>📐 Layout</h3>
-            <label class="property-label">Z-Index (Layer Order)</label><div class="z-index-controls"><button class="control-btn" onclick="window.slideEditor.changeZIndex(-1)">Send Back</button><input type="number" class="property-input" data-style="zIndex" value="${style.zIndex === 'auto' ? 0 : style.zIndex}" style="width: 80px; text-align: center;"><button class="control-btn" onclick="window.slideEditor.changeZIndex(1)">Bring Front</button></div>
-            <label class="property-label">Padding</label>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    📚 Z-Index (Layer Order)
+                </span>
+            </label>
+            <div class="z-index-controls"><button class="control-btn" onclick="window.slideEditor.changeZIndex(-1)">⬇ Send Back</button><input type="number" class="property-input" data-style="zIndex" value="${style.zIndex === 'auto' ? 0 : style.zIndex}" style="width: 80px; text-align: center;"><button class="control-btn" onclick="window.slideEditor.changeZIndex(1)">⬆ Bring Front</button></div>
+            <label class="property-label">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    📦 Padding
+                </span>
+            </label>
             <div class="spacing-controls">
                  <div class="spacing-input-group"><span class="spacing-input-label">T</span><input type="number" class="spacing-input" data-style="paddingTop" value="${parseInt(style.paddingTop) || 0}"></div>
                  <div class="spacing-input-group"><span class="spacing-input-label">R</span><input type="number" class="spacing-input" data-style="paddingRight" value="${parseInt(style.paddingRight) || 0}"></div>
                  <div class="spacing-input-group"><span class="spacing-input-label">B</span><input type="number" class="spacing-input" data-style="paddingBottom" value="${parseInt(style.paddingBottom) || 0}"></div>
                  <div class="spacing-input-group"><span class="spacing-input-label">L</span><input type="number" class="spacing-input" data-style="paddingLeft" value="${parseInt(style.paddingLeft) || 0}"></div>
             </div>
-            <label class="property-label" style="margin-top: 15px;">Margin</label>
+            <label class="property-label" style="margin-top: 15px;">
+                <span style="display: inline-flex; align-items: center; gap: 6px;">
+                    📏 Margin
+                </span>
+            </label>
             <div class="spacing-controls">
                <div class="spacing-input-group"><span class="spacing-input-label">T</span><input type="number" class="spacing-input" data-style="marginTop" value="${parseInt(style.marginTop) || 0}"></div>
                <div class="spacing-input-group"><span class="spacing-input-label">R</span><input type="number" class="spacing-input" data-style="marginRight" value="${parseInt(style.marginRight) || 0}"></div>
@@ -2741,7 +2889,7 @@ export class SlideEditor {
         el.dataset.type = type;
         el.id = `element_${type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         el.style.position = 'absolute';
-        
+
         // Use pending position from drag drop if available, otherwise default position
         if (this.pendingElementPosition) {
             el.style.left = `${this.pendingElementPosition.x}px`;
@@ -2750,7 +2898,7 @@ export class SlideEditor {
             el.style.left = '200px';
             el.style.top = '200px';
         }
-        
+
         el.style.zIndex = this.zIndexCounter++;
 
         switch (type) {
@@ -3618,19 +3766,19 @@ export class SlideEditor {
                 const canvasRect = this.canvas.getBoundingClientRect();
                 const dropX = (e.clientX - canvasRect.left) / this.zoomLevel;
                 const dropY = (e.clientY - canvasRect.top) / this.zoomLevel;
-                
+
                 console.log('Creating image from URL:', imageUrl);
                 this.createImageElementFromURL(imageUrl, dropX, dropY);
                 return false;
             }
         }
-        
+
         // Handle template, element, or fallback image URL drop
         if (e.dataTransfer.types.includes('text/plain')) {
             const data = e.dataTransfer.getData('text/plain');
-            
+
             console.log('Text/plain data:', data);
-            
+
             // Template drop (creates new slide)
             if (data && data.startsWith('layout-')) {
                 const templateType = data.replace('layout-', '');
@@ -3643,7 +3791,7 @@ export class SlideEditor {
                 const canvasRect = this.canvas.getBoundingClientRect();
                 const dropX = (e.clientX - canvasRect.left) / this.zoomLevel;
                 const dropY = (e.clientY - canvasRect.top) / this.zoomLevel;
-                
+
                 this.createElementAtPosition(elementType, dropX, dropY);
                 return false;
             }
@@ -3652,7 +3800,7 @@ export class SlideEditor {
                 const canvasRect = this.canvas.getBoundingClientRect();
                 const dropX = (e.clientX - canvasRect.left) / this.zoomLevel;
                 const dropY = (e.clientY - canvasRect.top) / this.zoomLevel;
-                
+
                 console.log('Creating image from text/plain URL:', data);
                 this.createImageElementFromURL(data, dropX, dropY);
                 return false;
@@ -3896,6 +4044,17 @@ export class SlideEditor {
         const x = (e.clientX - rect.left) / this.zoomLevel;
         const y = (e.clientY - rect.top) / this.zoomLevel;
 
+        this.addTextAtPosition(x, y);
+    }
+
+    addTextAtCenter() {
+        // Thêm text box ở giữa canvas (1920x1080)
+        const x = 660; // (1920 - 600) / 2 = 660
+        const y = 400; // Roughly center vertically
+        this.addTextAtPosition(x, y);
+    }
+
+    addTextAtPosition(x, y) {
         const el = document.createElement('div');
         el.className = 'element';
         el.dataset.type = 'text';
@@ -3967,6 +4126,12 @@ export class SlideEditor {
         if (this.selectedElements.length > 0 && (e.key === 'Delete' || e.key === 'Backspace')) {
             e.preventDefault();
             this.deleteSelected();
+        } else if (e.key === 'ArrowLeft' && this.selectedElements.length === 0) {
+            e.preventDefault();
+            if (this.currentSlideIndex > 0) this.switchToSlide(this.currentSlideIndex - 1);
+        } else if (e.key === 'ArrowRight' && this.selectedElements.length === 0) {
+            e.preventDefault();
+            if (this.currentSlideIndex < this.slides.length - 1) this.switchToSlide(this.currentSlideIndex + 1);
         } else if (e.ctrlKey || e.metaKey) {
             switch (e.key.toLowerCase()) {
                 case 'z': e.preventDefault(); this.undo(); break;
@@ -6201,20 +6366,42 @@ export class SlideEditor {
     }
 
     toggleProperties() {
-        const panel = document.getElementById('propertiesPanel');
-        const container = document.getElementById('canvasContainer');
-        const leftPanels = document.querySelector('.left-panels');
-
-        panel.classList.toggle('open');
-        container.classList.toggle('properties-open');
+        // Properties panel has been removed
+        return;
 
         // Tự động thu gọn/mở rộng left panel khi properties panel mở/đóng
         if (panel.classList.contains('open')) {
             leftPanels.classList.add('collapsed');
             container.classList.add('left-collapsed');
+            // Co lại thanh slides phía dưới khi properties mở
+            if (bottomBar) {
+                bottomBar.classList.add('compact');
+                container.classList.add('slides-compact');
+            }
+            // Adjust zoom controls position
+            if (zoomControls) {
+                zoomControls.classList.add('slides-compact');
+            }
+            // Adjust properties panel height
+            panel.classList.add('slides-compact');
+            // Adjust left panels height
+            leftPanels.classList.add('slides-compact');
         } else {
             leftPanels.classList.remove('collapsed');
             container.classList.remove('left-collapsed');
+            // Mở rộng lại thanh slides khi properties đóng
+            if (bottomBar) {
+                bottomBar.classList.remove('compact');
+                container.classList.remove('slides-compact');
+            }
+            // Reset zoom controls position
+            if (zoomControls) {
+                zoomControls.classList.remove('slides-compact');
+            }
+            // Reset properties panel height
+            panel.classList.remove('slides-compact');
+            // Reset left panels height
+            leftPanels.classList.remove('slides-compact');
         }
 
         // Cập nhật trạng thái nút toggle để đồng bộ với panel trái
@@ -6223,6 +6410,23 @@ export class SlideEditor {
             const isCollapsed = leftPanels.classList.contains('collapsed');
             toggleBtn.title = isCollapsed ? 'Mở rộng Slides' : 'Thu gọn Slides';
             toggleBtn.setAttribute('aria-pressed', (!isCollapsed).toString());
+        }
+    }
+
+    toggleSidebar() {
+        const leftPanels = document.getElementById('leftPanels') || document.querySelector('.left-panels');
+        const canvasContainer = document.getElementById('canvasContainer');
+
+        if (!leftPanels) return;
+
+        leftPanels.classList.toggle('collapsed');
+        canvasContainer.classList.toggle('left-collapsed');
+
+        // Update toggle button in toolbar if exists
+        const toggleBtn = document.getElementById('toggleSlidesBtn');
+        if (toggleBtn) {
+            const isCollapsed = leftPanels.classList.contains('collapsed');
+            toggleBtn.title = isCollapsed ? 'Mở rộng Sidebar' : 'Thu gọn Sidebar';
         }
     }
 
@@ -6245,43 +6449,35 @@ export class SlideEditor {
     zoom(level) {
         this.zoomLevel = Math.max(0.1, Math.min(5, level));
 
-        // Apply zoom với background persistence
-        const currentBg = this.canvas.style.backgroundColor || 'white';
+        // Preserve current background
+        const currentBg = this.canvas.style.backgroundColor ||
+            (this.slides[this.currentSlideIndex]?.backgroundColor) ||
+            'white';
 
-        this.canvas.style.cssText = `
-        position: relative !important;
-        width: 1920px !important;
-        height: 1080px !important;
-        background: ${currentBg} !important;
-        background-color: ${currentBg} !important;
-        margin: 0 auto !important;
-        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1) !important;
-        border-radius: 8px !important;
-        transform-origin: top left !important;
-        transition: transform 0.3s ease !important;
-        overflow: hidden !important;
-        transform: scale(${this.zoomLevel}) !important;
-    `;
+        // Apply zoom transform with !important to prevent override
+        this.canvas.style.setProperty('transform', `scale(${this.zoomLevel})`, 'important');
+        this.canvas.style.setProperty('transform-origin', 'center center', 'important');
+        this.canvas.style.setProperty('background-color', currentBg, 'important');
+        this.canvas.style.transition = 'transform 0.3s ease';
 
         this.updateBackgroundWrapperZoom(); // For compatibility
         document.getElementById('zoomLevel').textContent = `${Math.round(this.zoomLevel * 100)}%`;
 
-        console.log('🔍 Zoom applied with background preserved:', this.zoomLevel, currentBg);
+        console.log('🔍 Zoom applied - flexbox centered:', this.zoomLevel, currentBg);
     }
 
     fitToScreen() {
-        const scale = Math.min(
-            (this.canvasContainer.offsetWidth - 60) / this.canvas.offsetWidth,
-            (this.canvasContainer.offsetHeight - 60) / this.canvas.offsetHeight
-        );
-        this.zoom(scale);
-        document.getElementById('zoomLevel').textContent = 'Fit';
+        // Default to 50% zoom - canvas auto-centered by flexbox
+        this.zoom(0.50);
+        document.getElementById('zoomLevel').textContent = '50%';
 
         // Smooth zoom animation
         this.canvas.style.transition = 'transform 0.3s ease-in-out';
         setTimeout(() => {
             this.canvas.style.transition = '';
         }, 300);
+
+        console.log('📐 Canvas fitted to screen at 50% zoom - centered by flexbox');
     }
 
     saveState() {
@@ -6609,13 +6805,13 @@ ${slide.content}
                 if (bodyBgGeneralMatch) {
                     const bgValue = bodyBgGeneralMatch[1].trim();
                     console.log('🎨 Found BODY background (general) from CSS:', bgValue);
-                    
+
                     // Check if it's a gradient - return full value
                     if (bgValue.includes('gradient') || bgValue.includes('url(')) {
                         console.log('🎨 Returning gradient/url background:', bgValue);
                         return bgValue;
                     }
-                    
+
                     // For solid colors, extract the color part
                     const colorMatch = bgValue.match(/rgb\([^)]+\)|rgba\([^)]+\)|#[a-fA-F0-9]{3,8}|[a-zA-Z]+/);
                     if (colorMatch) {
@@ -6661,14 +6857,14 @@ ${slide.content}
         // METHOD 3: Check iframe content có thể có background trong HTML inline style
         if (doc && doc.documentElement) {
             const htmlContent = doc.documentElement.outerHTML;
-            
+
             // Try to match background with gradient (can contain parentheses)
             const bodyBgGradientMatch = htmlContent.match(/body[^>]*style="[^"]*background:\s*((?:linear|radial)-gradient\([^)]+\))/i);
             if (bodyBgGradientMatch) {
                 console.log('🎨 Found BODY gradient background from HTML:', bodyBgGradientMatch[1]);
                 return bodyBgGradientMatch[1].trim();
             }
-            
+
             // Fallback to simple background match
             const bodyBgMatch = htmlContent.match(/body[^>]*style="[^"]*background[^:]*:\s*([^;"]+)/i);
             if (bodyBgMatch) {
@@ -6683,7 +6879,7 @@ ${slide.content}
 
     applyCanvasBackground(sourceElement, sourceWindow, targetCanvas) {
         const bgValue = this.findSolidBackgroundColor(sourceElement, sourceWindow);
-        
+
         // Apply background - use 'background' for gradients, 'backgroundColor' for solid colors
         if (bgValue.includes('gradient') || bgValue.includes('url(')) {
             targetCanvas.style.background = bgValue;
@@ -6692,7 +6888,7 @@ ${slide.content}
             targetCanvas.style.backgroundColor = bgValue;
             targetCanvas.setAttribute('data-bg', bgValue);
         }
-        
+
         const beforeStyle = sourceWindow.getComputedStyle(sourceElement, '::before');
         if (beforeStyle.content !== 'none' && beforeStyle.backgroundImage !== 'none') {
             const pseudoBgLayer = document.createElement('div');
@@ -6953,10 +7149,10 @@ ${slide.content}
 
         // Temporarily store the position for createElement
         this.pendingElementPosition = { x, y };
-        
+
         // Use existing createElement method
         this.createElement(elementType);
-        
+
         // Clear pending position
         delete this.pendingElementPosition;
     }
