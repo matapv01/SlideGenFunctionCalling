@@ -200,9 +200,37 @@ export const PresentationMixin = {
      * @returns {string} Complete HTML document
      */
     createPresentationSlideHtml(slide) {
-        // Clean up content before rendering
+        // Sync math-field values from the live DOM before serializing
+        // (in case the user edited equations without triggering a save)
+        const liveCanvas = document.getElementById('slideCanvas');
+        if (liveCanvas) {
+            liveCanvas.querySelectorAll('[data-type="equation"] math-field').forEach(mf => {
+                try {
+                    const latex = mf.getValue ? mf.getValue() : (mf.value || mf.textContent);
+                    if (latex) {
+                        mf.textContent = latex;
+                        mf.setAttribute('data-latex', latex);
+                    }
+                } catch(e) {}
+            });
+        }
+
+        // Use LIVE canvas content for current slide (slide.content may be stale
+        // because saveCurrentSlide has a 50ms setTimeout delay)
         const tempDiv = document.createElement('div');
-        tempDiv.innerHTML = slide.content;
+        const isCurrentSlide = this.slides[this.currentSlideIndex] === slide;
+        if (isCurrentSlide && liveCanvas) {
+            tempDiv.innerHTML = liveCanvas.innerHTML;
+        } else {
+            tempDiv.innerHTML = slide.content;
+            // Restore math-field textContent from data-latex if present
+            tempDiv.querySelectorAll('[data-type="equation"]').forEach(eqEl => {
+                const mf = eqEl.querySelector('math-field');
+                if (mf && mf.getAttribute('data-latex')) {
+                    mf.textContent = mf.getAttribute('data-latex');
+                }
+            });
+        }
 
         // Remove ALL editor-specific elements and UI controls
         tempDiv.querySelectorAll('.resize-handle').forEach(el => el.remove());
@@ -225,6 +253,30 @@ export const PresentationMixin = {
             el.style.border = el.dataset.originalBorder || el.style.border;
         });
 
+        // Replace math-field elements with MathJax-compatible $$LaTeX$$ spans
+        // MathJax SVG (loaded in iframe) will auto-render these as clean SVG
+        tempDiv.querySelectorAll('[data-type="equation"]').forEach(eqEl => {
+            const mf = eqEl.querySelector('math-field');
+            if (!mf) return;
+
+            const latex = (mf.getAttribute('data-latex') || mf.textContent).trim();
+            if (!latex) {
+                mf.remove();
+                return;
+            }
+
+            const fontSize = eqEl.style.fontSize || '40px';
+            const color = eqEl.style.color || 'inherit';
+
+            // Replace math-field with a styled span containing $$ delimiters for MathJax
+            const mjSpan = document.createElement('span');
+            mjSpan.className = 'mathjax-equation';
+            mjSpan.style.cssText = `font-size:${fontSize};color:${color};display:block;`;
+            mjSpan.textContent = `$$${latex}$$`;
+            mf.replaceWith(mjSpan);
+        });
+
+
         const cleanContent = tempDiv.innerHTML;
         const backgroundColor = slide.backgroundColor || 'white';
 
@@ -244,6 +296,15 @@ export const PresentationMixin = {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- MathJax SVG for clean equation rendering -->
+    <script>
+    window.MathJax = {
+        tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+        svg: { fontCache: 'local' },
+        options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+    };
+    <\/script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"><\/script>
     <style>
         * {
             margin: 0;
@@ -257,6 +318,20 @@ export const PresentationMixin = {
             position: relative;
             overflow: hidden;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .mathjax-equation {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .mathjax-equation mjx-container {
+            font-size: inherit !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        mjx-container[jax="SVG"][display="true"] {
+            margin: 0 !important;
+            display: inline !important;
         }
     </style>
 </head>

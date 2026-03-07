@@ -1198,6 +1198,18 @@ export class SlideEditor {
             console.log('💾 saveCurrentSlide triggered');
 
             const currentSlide = this.slides[this.currentSlideIndex];
+
+            // Sync math-field values before serializing (user edits may not be in textContent yet)
+            this.canvas.querySelectorAll('[data-type="equation"] math-field').forEach(mf => {
+                try {
+                    const latex = mf.getValue ? mf.getValue() : (mf.value || '');
+                    if (latex) {
+                        mf.textContent = latex;
+                        mf.setAttribute('data-latex', latex); // store as attribute too
+                    }
+                } catch(e) { /* math-field may not be initialized yet */ }
+            });
+
             currentSlide.content = this.canvas.innerHTML;
 
             // IMPROVED: Lấy background từ multiple sources
@@ -1847,12 +1859,11 @@ export class SlideEditor {
         if (element.dataset.type === 'equation') {
             const mathField = newElement.querySelector('math-field');
                 if (mathField) {
-                    // Force styles again for loaded elements
                     mathField.style.pointerEvents = 'auto';
                     mathField.style.position = 'relative';
                     mathField.style.zIndex = '10';
-                    mathField.style.width = '100%'; 
-                    mathField.style.height = '100%';
+                    mathField.style.width = 'auto';
+                    mathField.style.height = 'auto';
                     mathField.style.userSelect = 'text';        // ESSENTIAL for cursor placement
                     mathField.style.touchAction = 'none';       // Prevent browser handling touch interactions
                     
@@ -1871,14 +1882,17 @@ export class SlideEditor {
                     newElement.addEventListener('pointerdown', captureHandler, { capture: true });
 
                     const updateSize = () => {
-                    newElement.style.width = 'auto';
-                    newElement.style.height = 'auto';
+                    newElement.style.width = 'fit-content';
+                    newElement.style.height = 'fit-content';
                 };
                 // Đồng bộ nội dung khi gõ (nếu cần xử lý save state)
                 mathField.addEventListener('input', () => {
                     // Có thể thêm logic lưu state ở đây nếu muốn Undo/Redo từng ký tự
                     updateSize();
                 });
+                // Initial shrink after MathLive renders (handles newly imported elements)
+                mathField.addEventListener('mount', updateSize, { once: true });
+                setTimeout(() => requestAnimationFrame(updateSize), 0);
             }
         }
         newElement.addEventListener('mousedown', (e) => this.handleMouseDown(e, newElement));
@@ -7074,8 +7088,20 @@ ${slide.content}
             const mathField = document.createElement('math-field');
             mathField.textContent = latex;
             mathField.mathVirtualKeyboardPolicy = 'manual';
-            mathField.style.cssText = 'width:100%;display:block;background:transparent;font-size:inherit;color:inherit;outline:none;border:none;';
+            mathField.style.cssText = 'width:auto;display:block;background:transparent;font-size:inherit;color:inherit;outline:none;border:none;';
             newEl.appendChild(mathField);
+
+            // Auto-shrink eq box to fit formula once MathLive finishes rendering.
+            // `fit-content` (not `auto`) is required for absolutely-positioned elements.
+            const shrinkToFit = () => {
+                newEl.style.width = 'fit-content';
+                newEl.style.height = 'fit-content';
+            };
+
+            // MathLive fires 'mount' after it fully renders into the shadow DOM
+            mathField.addEventListener('mount', shrinkToFit, { once: true });
+            // Fallback: setTimeout 0 + rAF to ensure layout is complete after custom element upgrades
+            setTimeout(() => requestAnimationFrame(shrinkToFit), 0);
         } else {
             newEl.removeAttribute('contenteditable');
         }
@@ -7132,9 +7158,17 @@ ${slide.content}
                 const mathField = document.createElement('math-field');
                 mathField.textContent = latex;
                 mathField.mathVirtualKeyboardPolicy = 'manual';
-                mathField.style.cssText = 'width:100%;display:block;background:transparent;font-size:inherit;color:inherit;outline:none;border:none;';
+                mathField.style.cssText = 'width:auto;display:block;background:transparent;font-size:inherit;color:inherit;outline:none;border:none;';
                 eqBox.appendChild(mathField);
                 targetParent.appendChild(eqBox);
+
+                // Auto-shrink to fit formula after MathLive renders
+                const shrinkNestedEq = () => {
+                    eqBox.style.width = 'fit-content';
+                    eqBox.style.height = 'fit-content';
+                };
+                mathField.addEventListener('mount', shrinkNestedEq, { once: true });
+                setTimeout(() => requestAnimationFrame(shrinkNestedEq), 0);
 
                 // Remove the nested equation from the text element
                 eqEl.remove();
@@ -7927,13 +7961,57 @@ ${slide.content}
                 throw new Error('Không có slide để xuất');
             }
 
+            const rawContent = this.cleanSlideContentForExport(currentSlide.content);
+            const fullHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] },
+            svg: { fontCache: 'global' },
+            startup: { typeset: true }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: ${currentSlide.backgroundColor || 'white'}; font-family: 'Inter', sans-serif; }
+        .slide-container { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: ${currentSlide.backgroundColor || 'white'}; }
+        .element { position: absolute; user-select: none; }
+        .element img, .element video { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+        .mathjax-equation {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .mathjax-equation mjx-container {
+            font-size: inherit !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        mjx-container[jax="SVG"][display="true"] {
+            margin: 0 !important;
+            display: inline !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        ${rawContent}
+    </div>
+</body>
+</html>`;
+
             const response = await fetch(config.endpoints.exportSlidePdf, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
                 },
                 body: JSON.stringify({
-                    html_content: currentSlide.html || currentSlide.content,
+                    html_content: fullHtml,
                     slide_name: currentSlide.title || `slide_${this.currentSlideIndex + 1}`
                 })
             });
@@ -7968,21 +8046,86 @@ ${slide.content}
             el.removeAttribute('contenteditable');
         });
 
+        // Convert equations for PDF export (using MathJax $$ delimiters)
+        tempDiv.querySelectorAll('[data-type="equation"]').forEach(eqEl => {
+            const mf = eqEl.querySelector('math-field');
+            if (!mf) return;
+
+            const latex = (mf.getAttribute('data-latex') || mf.textContent).trim();
+            if (!latex) {
+                mf.remove();
+                return;
+            }
+
+            const fontSize = eqEl.style.fontSize || '40px';
+            const color = eqEl.style.color || 'inherit';
+
+            const mjSpan = document.createElement('span');
+            mjSpan.className = 'mathjax-equation';
+            mjSpan.style.cssText = `font-size:${fontSize};color:${color};display:block;`;
+            mjSpan.textContent = `$$${latex}$$`;
+            mf.replaceWith(mjSpan);
+        });
+
         return tempDiv.innerHTML;
     }
 
     async exportAllSlidesToPdf() {
         try {
             this.showSuccessMessage('📄 Đang xuất tất cả slides thành PDF...');
-
             if (this.slides.length === 0) {
                 throw new Error('Không có slide để xuất');
             }
 
-            const slidesData = this.slides.map((slide, index) => ({
-                html_content: this.cleanSlideContentForExport(slide.content),
-                slide_name: slide.title || `slide_${index + 1}`
-            }));
+            const slidesData = this.slides.map((slide, index) => {
+                const rawContent = this.cleanSlideContentForExport(slide.content);
+                const fullHtml = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <script>
+        MathJax = {
+            tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] },
+            svg: { fontCache: 'global' },
+            startup: { typeset: true }
+        };
+    </script>
+    <script src="https://polyfill.io/v3/polyfill.min.js?features=es6"></script>
+    <script id="MathJax-script" async src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"></script>
+    <style>
+        body { margin: 0; display: flex; justify-content: center; align-items: center; min-height: 100vh; background: ${slide.backgroundColor || 'white'}; font-family: 'Inter', sans-serif; }
+        .slide-container { position: relative; width: 1920px; height: 1080px; overflow: hidden; background: ${slide.backgroundColor || 'white'}; }
+        .element { position: absolute; user-select: none; }
+        .element img, .element video { width: 100%; height: 100%; object-fit: cover; border-radius: inherit; }
+        .mathjax-equation {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .mathjax-equation mjx-container {
+            font-size: inherit !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        mjx-container[jax="SVG"][display="true"] {
+            margin: 0 !important;
+            display: inline !important;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        ${rawContent}
+    </div>
+</body>
+</html>`;
+                return {
+                    html_content: fullHtml,
+                    slide_name: slide.title || `slide_${index + 1}`
+                };
+            });
 
             const response = await fetch(config.endpoints.exportSlidesPdf, {
                 method: 'POST',
