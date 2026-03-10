@@ -1,4 +1,4 @@
-# File: backend/application/services/capture_service.py
+﻿# File: backend/application/services/capture_service.py
 
 import os
 import logging
@@ -19,8 +19,8 @@ logger = logging.getLogger(__name__)
 
 class CaptureService:
     """
-    Service quản lý việc chụp ảnh và xuất file.
-    Sử dụng CaptureProvider để thực hiện tác vụ nặng.
+    Service quáº£n lÃ½ viá»‡c chá»¥p áº£nh vÃ  xuáº¥t file.
+    Sá»­ dá»¥ng CaptureProvider Ä‘á»ƒ thá»±c hiá»‡n tÃ¡c vá»¥ náº·ng.
     """
     def __init__(self, captures_dir: Path, slide_capture: CaptureProvider):
         self.captures_dir = captures_dir
@@ -40,7 +40,7 @@ class CaptureService:
         filename = f"{slide_name}_{timestamp}_{uuid.uuid4().hex[:8]}.png"
         output_path = self.captures_dir / filename
 
-        logger.info(f"📸 Capturing slide: {slide_name}")
+        logger.info(f"ðŸ“¸ Capturing slide: {slide_name}")
         await self.slide_capture.generate_slide_from_html(html_content, str(output_path))
 
         relative_path = output_path.relative_to(self.captures_dir.parent)
@@ -48,13 +48,13 @@ class CaptureService:
         return {
             'success': True,
             'image_url': f'/static/{relative_path.as_posix()}',
-            'download_url': f'/api/download-capture/{filename}',
+            'download_url': f'/capture/download-capture/{filename}',
             'message': f'Slide "{slide_name}" captured successfully',
             'filename': filename
         }
 
     async def capture_multiple_slides(self, slides_data: List[Dict[str, Any]]) -> Dict[str, Any]:
-        """Tạo file ZIP chứa ảnh các slide"""
+        """Táº¡o file ZIP chá»©a áº£nh cÃ¡c slide"""
         if not self.is_available(): raise Exception("Slide capture system not available")
         if not slides_data: raise ValueError("No slides data provided")
 
@@ -95,7 +95,7 @@ class CaptureService:
 
         return {
             'success': True,
-            'download_url': f'/api/download-capture/{zip_filename}',
+            'download_url': f'/capture/download-capture/{zip_filename}',
             'filename': zip_filename,
             'captured_slides': successful_slides,
             'message': f'Captured {len(successful_slides)} slides successfully',
@@ -115,12 +115,12 @@ class CaptureService:
         output_path = self.captures_dir / filename
 
         # Generate slide PDF
-        logger.info(f"📄 Exporting slide to PDF: {slide_name}")
+        logger.info(f"ðŸ“„ Exporting slide to PDF: {slide_name}")
         await self.slide_capture.capture_and_export_pdf(html_content, str(output_path))
 
         return {
             'success': True,
-            'download_url': f'/api/download-capture/{filename}',
+            'download_url': f'/capture/download-capture/{filename}',
             'message': f'Slide "{slide_name}" exported to PDF successfully',
             'filename': filename
         }
@@ -139,14 +139,14 @@ class CaptureService:
         output_path = self.captures_dir / filename
 
         # Export slides to PDF
-        logger.info(f"📄 Exporting {len(slides_data)} slides to PDF")
+        logger.info(f"ðŸ“„ Exporting {len(slides_data)} slides to PDF")
         await self.slide_capture.capture_slides_and_export_pdf(slides_data, str(output_path))
 
-        logger.info(f"✅ Successfully exported {len(slides_data)} slides to PDF")
+        logger.info(f"âœ… Successfully exported {len(slides_data)} slides to PDF")
 
         return {
             'success': True,
-            'download_url': f'/api/download-capture/{filename}',
+            'download_url': f'/capture/download-capture/{filename}',
             'message': f'Exported {len(slides_data)} slides to PDF successfully',
             'filename': filename
         }
@@ -193,3 +193,4 @@ class CaptureService:
             "details": health_status,
             "message": "Capture system is ready" if all_ok else "Capture system has issues"
         }
+

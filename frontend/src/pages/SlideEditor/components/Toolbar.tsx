@@ -17,6 +17,7 @@ interface ToolbarProps {
   onSetDraggedItem: (item: { type: string; subType: string }) => void;
   onSave: () => void;
   onResetZoom: () => void;
+  onExport: () => void;
 }
 
 export const Toolbar = ({
@@ -30,6 +31,7 @@ export const Toolbar = ({
   onSetDraggedItem,
   onSave,
   onResetZoom,
+  onExport,
 }: ToolbarProps) => {
   return (
     <div className="h-14 border-b bg-background flex items-center justify-between px-4 sticky top-0 z-50">
@@ -66,7 +68,7 @@ export const Toolbar = ({
         >
           <Type className="h-4 w-4 mr-2" /> Text
         </Button>
-        <Button variant="ghost" size="sm">
+        <Button variant="ghost" size="sm" onClick={onExport}>
           <Download className="h-4 w-4 mr-2" /> Export
         </Button>
         <Button variant="ghost" size="sm" className="text-blue-600 bg-blue-50/50 hover:bg-blue-100">

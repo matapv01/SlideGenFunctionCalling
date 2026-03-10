@@ -1,0 +1,74 @@
+        .resize-handle {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            background: white;
+            border: 2px solid var(--primary-color);
+            border-radius: 50%;
+            display: none;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            z-index: 100;
+            pointer-events: auto;
+        }
+
+        .resize-handle:hover {
+            transform: scale(1.2);
+            background: var(--primary-color);
+            border-color: white;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        .resize-handle.tl {
+            top: -8px;
+            left: -8px;
+            cursor: nwse-resize;
+        }
+
+        .resize-handle.tr {
+            top: -8px;
+            right: -8px;
+            cursor: nesw-resize;
+        }
+
+        .resize-handle.bl {
+            bottom: -8px;
+            left: -8px;
+            cursor: nesw-resize;
+        }
+
+        .resize-handle.br {
+            bottom: -8px;
+            right: -8px;
+            cursor: nwse-resize;
+        }
+
+        .drag-handle {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 32px;
+            height: 24px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 6px 6px 0 0;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            cursor: move !important;
+            font-size: 14px;
+            font-weight: bold;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.2s ease;
+            z-index: 101;
+            user-select: none;
+            pointer-events: auto;
+        }
+
+        .drag-handle:hover {
+            background: var(--secondary-color);
+            transform: translateX(-50%) scale(1.1);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+

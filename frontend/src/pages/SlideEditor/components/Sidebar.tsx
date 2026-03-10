@@ -4,6 +4,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { Slide, DragItem, ElementCategory, Template } from "../types";
 import { TEMPLATES, ELEMENTS_CATEGORIES } from "../constants";
+import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ export const EditorSidebar = ({
 }: SidebarProps) => {
   return (
     <div className={cn(
-      "w-80 border-r bg-background flex flex-col transition-all duration-300",
+      "w-56 border-r bg-background flex flex-col transition-all duration-300",
       !isOpen && "w-0 overflow-hidden border-none"
     )}>
       <Tabs defaultValue="slides" className="flex-1 flex flex-col h-full">
@@ -54,47 +55,61 @@ export const EditorSidebar = ({
         </TabsList>
 
         {/* Slides Tab */}
-        <TabsContent value="slides" className="flex-1 overflow-y-auto p-4 space-y-4">
-          <div className="grid gap-4">
-            {slides.map((slide, idx) => (
-              <div 
-                key={slide.id}
-                className={cn(
-                  "group relative aspect-video bg-white border-2 rounded-lg cursor-pointer hover:border-primary/50 transition-all",
-                  currentSlideIndex === idx ? "border-primary shadow-md" : "border-border"
-                )}
-                onClick={() => onSlideSelect(idx)}
-              >
-                <div className="absolute top-2 left-2 bg-black/50 text-white text-xs px-2 py-0.5 rounded-full z-10">
-                  {idx + 1}
+        <TabsContent value="slides" className="flex-1 overflow-y-auto p-2 space-y-2">
+          <div className="grid gap-2">
+            {slides.map((slide, idx) => {
+              const rawHtml = slide.elements[0]?.content || '';
+              const previewHtml = slide.backgroundColor
+                ? `<div style="width:1920px;height:1080px;background:${slide.backgroundColor};position:relative;overflow:hidden;">${rawHtml}</div>`
+                : rawHtml;
+              return (
+                <div 
+                  key={slide.id}
+                  className={cn(
+                    "group relative aspect-video border-2 rounded-md cursor-pointer hover:border-primary/50 transition-all overflow-hidden",
+                    currentSlideIndex === idx ? "border-primary shadow-md" : "border-border"
+                  )}
+                  onClick={() => onSlideSelect(idx)}
+                >
+                  <div className="absolute top-1 left-1 bg-black/50 text-white text-[10px] px-1.5 py-0.5 rounded-full z-10">
+                    {idx + 1}
+                  </div>
+                  {rawHtml ? (
+                    <ScaledSlidePreview
+                      html={previewHtml}
+                      title={`Slide ${idx + 1}`}
+                      className="absolute inset-0"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-muted-foreground/20 text-2xl font-bold bg-neutral-50">
+                      {idx + 1}
+                    </div>
+                  )}
+                  
+                  {/* Hover Actions */}
+                  <div className="absolute bottom-1 right-1 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity bg-background/80 rounded shadow z-10">
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-5 w-5" 
+                      onClick={(e) => { e.stopPropagation(); onDuplicateSlide(idx); }}
+                    >
+                      <Copy className="h-2.5 w-2.5" />
+                    </Button>
+                    <Button 
+                      size="icon" 
+                      variant="ghost" 
+                      className="h-5 w-5 text-destructive" 
+                      onClick={(e) => { e.stopPropagation(); onDeleteSlide(idx); }}
+                    >
+                      <Trash2 className="h-2.5 w-2.5" />
+                    </Button>
+                  </div>
                 </div>
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground/20 text-4xl font-bold bg-neutral-50">
-                  {idx + 1}
-                </div>
-                
-                {/* Hover Actions */}
-                <div className="absolute bottom-2 right-2 opacity-0 group-hover:opacity-100 flex gap-1 transition-opacity bg-background/80 rounded shadow z-10">
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-6 w-6" 
-                    onClick={(e) => { e.stopPropagation(); onDuplicateSlide(idx); }}
-                  >
-                    <Copy className="h-3 w-3" />
-                  </Button>
-                  <Button 
-                    size="icon" 
-                    variant="ghost" 
-                    className="h-6 w-6 text-destructive" 
-                    onClick={(e) => { e.stopPropagation(); onDeleteSlide(idx); }}
-                  >
-                    <Trash2 className="h-3 w-3" />
-                  </Button>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-          <Button variant="outline" className="w-full h-12 border-dashed mt-4" onClick={onAddSlide}>
+          <Button variant="outline" className="w-full h-10 border-dashed mt-2" onClick={onAddSlide}>
             <Plus className="h-4 w-4 mr-2" /> New Slide
           </Button>
         </TabsContent>

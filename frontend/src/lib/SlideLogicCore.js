@@ -17,10 +17,11 @@ function rgbToHex(color) {
 }
 
 export class SlideEditorLogic {
-    constructor(rootElement, onElementSelect) {
+    constructor(rootElement, onElementSelect, onChange) {
         // Core Logic: Scope lại phạm vi hoạt động vào Shadow DOM
         this.root = rootElement; 
-        this.onElementSelect = onElementSelect; // Callback gọi về React
+        this.onElementSelect = onElementSelect; // Callback gọi về React khi select element
+        this.onChange = onChange; // Callback gọi về React khi có thay đổi content
 
         // Thay vì document.getElementById, ta tìm trong root (ShadowDOM)
         this.canvas = this.root.querySelector('.slide-container') || 
@@ -84,7 +85,8 @@ export class SlideEditorLogic {
         
         let idCounter = 1;
         selectableElements.forEach(el => {
-            if (!el.classList.contains('editor-overlay') && 
+            if (!el.classList.contains('resize-handle') &&
+                !el.classList.contains('drag-handle') && 
                 !el.classList.contains('slide-bg-wrapper') &&
                 !el.classList.contains('slide-container')) {
                 
@@ -205,9 +207,10 @@ export class SlideEditorLogic {
             return;
         }
         
-        // Bỏ qua nếu click vào overlay hoặc vùng background
+        // Bỏ qua nếu click vào resize/drag handles hoặc vùng background
         if (target.classList && (
-            target.classList.contains('editor-overlay') ||
+            target.classList.contains('resize-handle') ||
+            target.classList.contains('drag-handle') ||
             target.classList.contains('slide-bg-wrapper') ||
             target.classList.contains('slide-container')
         )) {
@@ -495,78 +498,64 @@ export class SlideEditorLogic {
             this.exitEditMode();
         }
         
-        this.selectedElements = [];
+        // Remove .selected class và xóa handles
+        const oldSelected = this.root.querySelectorAll('.selected');
+        oldSelected.forEach(el => {
+            el.classList.remove('selected');
+            const handles = el.querySelectorAll('.resize-handle, .drag-handle');
+            handles.forEach(h => h.remove());
+        });
         
-        // Xóa các UI overlay (resize handles...)
-        const overlays = this.root.querySelectorAll('.editor-overlay, .resize-handle');
-        overlays.forEach(el => el.remove());
+        this.selectedElements = [];
         
         // Báo về React là không chọn gì cả
         if (this.onElementSelect) this.onElementSelect(null);
     }
 
     highlightElement(el) {
-        // Xóa overlay cũ
-        const oldOverlays = this.root.querySelectorAll('.editor-overlay, .resize-handle');
-        oldOverlays.forEach(o => o.remove());
-        
-        // Sử dụng position từ computed style (cho elements đã absolute)
-        const computedStyle = window.getComputedStyle(el);
-        
-        let left, top, width, height;
-        
-        if (computedStyle.position === 'absolute') {
-            // Lấy trực tiếp từ style
-            left = parseFloat(computedStyle.left) || 0;
-            top = parseFloat(computedStyle.top) || 0;
-            width = parseFloat(computedStyle.width) || el.offsetWidth;
-            height = parseFloat(computedStyle.height) || el.offsetHeight;
-        } else {
-            // Tính từ bounding rect (cho elements chưa absolute)
-            const elRect = el.getBoundingClientRect();
-            const canvasRect = this.canvas.getBoundingClientRect();
-            left = elRect.left - canvasRect.left;
-            top = elRect.top - canvasRect.top;
-            width = elRect.width;
-            height = elRect.height;
-        }
-        
-        console.log('[highlightElement]', { 
-            element: el.tagName,
-            id: el.id,
-            position: computedStyle.position,
-            left, top, width, height
+        // Xóa .selected class từ các element cũ
+        const oldSelected = this.root.querySelectorAll('.selected');
+        oldSelected.forEach(old => {
+            old.classList.remove('selected');
+            // Xóa resize handles cũ
+            const oldHandles = old.querySelectorAll('.resize-handle, .drag-handle');
+            oldHandles.forEach(h => h.remove());
         });
         
-        // Tạo overlay border
-        const overlay = document.createElement('div');
-        overlay.className = 'editor-overlay';
-        overlay.style.position = 'absolute';
-        overlay.style.left = `${left}px`;
-        overlay.style.top = `${top}px`;
-        overlay.style.width = `${width}px`;
-        overlay.style.height = `${height}px`;
-        overlay.style.border = '2px solid #3b82f6';
-        overlay.style.pointerEvents = 'none';
-        overlay.style.zIndex = '9999';
-        overlay.style.boxSizing = 'border-box';
+        // Đảm bảo element có class .element (CSS selector cần .element.selected)
+        if (!el.classList.contains('element')) {
+            el.classList.add('element');
+        }
         
-        this.canvas.appendChild(overlay);
+        // Add .selected class (CSS sẽ tự động tạo outline + animation)
+        el.classList.add('selected');
         
-        // Thêm resize handles đơn giản (SE only demo)
-        const handle = document.createElement('div');
-        handle.className = 'resize-handle';
-        handle.dataset.handle = 'se';
-        handle.style.position = 'absolute';
-        handle.style.right = '-5px';
-        handle.style.bottom = '-5px';
-        handle.style.width = '10px';
-        handle.style.height = '10px';
-        handle.style.background = 'white';
-        handle.style.border = '1px solid #3b82f6';
-        handle.style.cursor = 'se-resize';
-        handle.style.pointerEvents = 'auto'; // Quan trọng để bắt event
-        overlay.appendChild(handle);
+        console.log('[highlightElement] Selected:', el.tagName, el.id, 'classes:', el.className);
+        
+        // Thêm resize handles trực tiếp vào element (như Legacy version)
+        this.addResizeHandles(el);
+    }
+
+    addResizeHandles(element) {
+        // Nếu đã có handles hoặc là group container thì skip
+        if (element.classList.contains('group-container') || 
+            element.querySelector('.resize-handle')) {
+            return;
+        }
+
+        let handlesHTML = `
+            <div class="resize-handle tl"></div>
+            <div class="resize-handle tr"></div>
+            <div class="resize-handle bl"></div>
+            <div class="resize-handle br"></div>
+        `;
+
+        // Thêm drag handle cho text elements
+        if (element.dataset.type === 'text' || element.hasAttribute('contenteditable')) {
+            handlesHTML += `<div class="drag-handle" title="Drag to move">⠿</div>`;
+        }
+
+        element.insertAdjacentHTML('beforeend', handlesHTML);
     }
 
     updateSelectionUI() {
@@ -577,10 +566,12 @@ export class SlideEditorLogic {
     }
 
     hideSelectionUI() {
-        // Ẩn khung selection khi đang edit text
-        const existingOverlay = this.root.querySelector('.editor-overlay');
-        if (existingOverlay) {
-            existingOverlay.style.display = 'none';
+        // Ẩn khung selection và handles khi đang edit text
+        const selected = this.root.querySelector('.selected');
+        if (selected) {
+            // Tạm ẩn resize handles
+            const handles = selected.querySelectorAll('.resize-handle, .drag-handle');
+            handles.forEach(h => h.style.display = 'none');
         }
     }
 
@@ -599,9 +590,10 @@ export class SlideEditorLogic {
         }
         
         // Hiện lại selection UI
-        const existingOverlay = this.root.querySelector('.editor-overlay');
-        if (existingOverlay) {
-            existingOverlay.style.display = 'block';
+        const selected = this.root.querySelector('.selected');
+        if (selected) {
+            const handles = selected.querySelectorAll('.resize-handle, .drag-handle');
+            handles.forEach(h => h.style.display = '');
         }
         
         // Clear text selection
@@ -652,6 +644,17 @@ export class SlideEditorLogic {
         this.saveHistory();
     }
 
+    execFormat(command, value = null) {
+        document.execCommand(command, false, value);
+        this.saveHistory();
+    }
+
+    getSelectedZIndex() {
+        const el = this.selectedElements[0];
+        if (!el) return 0;
+        return parseInt(el.style.zIndex) || 0;
+    }
+
     getSelectedElement() {
         return this.selectedElements.length > 0 ? this.selectedElements[0] : null;
     }
@@ -671,6 +674,11 @@ export class SlideEditorLogic {
         if (this.history.length > 50) {
             this.history.shift();
             this.historyIndex--;
+        }
+        
+        // Notify React about changes
+        if (this.onChange) {
+            this.onChange();
         }
     }
 

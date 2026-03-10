@@ -10,6 +10,7 @@ interface CanvasAreaProps {
   onDragOver: (e: React.DragEvent) => void;
   onDrop: (e: React.DragEvent) => void;
   onElementSelect: (elementData: any) => void;
+  onChange?: () => void;
   onZoomIn: () => void;
   onZoomOut: () => void;
 }
@@ -22,6 +23,7 @@ export const CanvasArea = ({
   onDragOver,
   onDrop,
   onElementSelect,
+  onChange,
   onZoomIn,
   onZoomOut,
 }: CanvasAreaProps) => {
@@ -40,10 +42,13 @@ export const CanvasArea = ({
         {currentSlide && currentSlide.elements.length > 0 && (
           <SlideCanvas
             ref={slideCanvasRef}
+            slideId={currentSlide.id}
             htmlContent={
               currentSlide.elements[0]?.content || 
               '<div class="slide-container"><p>Empty slide</p></div>'
             }
+            backgroundColor={currentSlide.backgroundColor}
+            onChange={onChange}
             onElementSelect={onElementSelect}
           />
         )}

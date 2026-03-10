@@ -6,6 +6,24 @@ import type { Slide, SlideElement, DragItem } from "../types";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../constants";
 import { parseHtmlToElements } from "../utils";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
+import { useAutoSave } from "./useAutoSave";
+
+// Debounce utility
+function useDebounce<T>(value: T, delay: number): T {
+  const [debouncedValue, setDebouncedValue] = useState<T>(value);
+
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+}
 
 export const useSlideEditor = () => {
   const { projectId } = useParams();
@@ -31,6 +49,13 @@ export const useSlideEditor = () => {
   // --- Computed ---
   const currentSlide = slides[currentSlideIndex];
   const selectedElement = currentSlide?.elements.find(el => el.id === selectedElementId);
+
+  // Debug: Log when currentSlide.backgroundColor changes
+  useEffect(() => {
+    if (currentSlide) {
+      console.log('🔵 [currentSlide] backgroundColor:', currentSlide.backgroundColor);
+    }
+  }, [currentSlide?.backgroundColor]);
 
   // --- Load Data Effect ---
   useEffect(() => {
@@ -64,10 +89,13 @@ export const useSlideEditor = () => {
 
               // Handle design_settings
               if (s.design_settings) {
+                console.log('🔍 [Load] Raw design_settings:', s.design_settings);
                 try {
                   const ds = typeof s.design_settings === 'string' 
                     ? JSON.parse(s.design_settings) 
                     : s.design_settings;
+                  
+                  console.log('🔍 [Load] Parsed design_settings:', ds);
                   
                   if (ds && typeof ds === 'object') {
                     if (Array.isArray(ds.elements)) {
@@ -75,8 +103,14 @@ export const useSlideEditor = () => {
                         ...el,
                         id: String(el.id || Date.now().toString() + Math.random())
                       }));
+                      console.log('✅ [Load] Loaded elements from design_settings:', elements.length);
                     }
-                    if (ds.backgroundColor) backgroundColor = ds.backgroundColor;
+                    if (ds.backgroundColor) {
+                      backgroundColor = ds.backgroundColor;
+                      console.log(`🎨 [Load] Slide ${s.id} backgroundColor from design_settings:`, backgroundColor);
+                    } else {
+                      console.warn(`⚠️ [Load] Slide ${s.id} has NO backgroundColor in design_settings`);
+                    }
                     if (ds.backgroundImage) backgroundImage = ds.backgroundImage;
                     if (ds.defs) defs = ds.defs;
                   }
@@ -87,17 +121,34 @@ export const useSlideEditor = () => {
 
               // If no elements, create from HTML content
               if (elements.length === 0) {
+                console.log('⚠️ [Load] No elements in design_settings, parsing HTML...');
                 if (s.html_content) {
+                  console.log('🔍 [Load] HTML content preview:', s.html_content.substring(0, 500));
                   try {
                     const parsed = parseHtmlToElements(s.html_content);
                     if (parsed.elements.length > 0) {
                       elements = parsed.elements;
-                      if (parsed.backgroundColor) backgroundColor = parsed.backgroundColor;
+                      console.log('✅ [Load] Parsed elements from HTML:', elements.length);
+                      // DON'T override backgroundColor from design_settings with parsed value
+                      // Background is stored separately (Legacy pattern)
+                      // Only use parsed background if we don't have one from design_settings
+                      console.log('🔍 [Load] Before override check - backgroundColor:', backgroundColor);
+                      console.log('🔍 [Load] Parsed backgroundColor from HTML:', parsed.backgroundColor);
+                      if (!backgroundColor || backgroundColor === "#ffffff") {
+                        if (parsed.backgroundColor) {
+                          console.log('⚠️ [Load] Overriding backgroundColor with parsed value:', parsed.backgroundColor);
+                          backgroundColor = parsed.backgroundColor;
+                        }
+                      } else {
+                        console.log('✅ [Load] Keeping backgroundColor from design_settings (not using parsed)');
+                      }
                       if (parsed.defs) defs = parsed.defs;
                     }
                   } catch (e) {
                     console.error("Failed to parse HTML content for slide", s.id, e);
                   }
+                } else {
+                  console.log('⚠️ [Load] No HTML content to parse');
                 }
 
                 // Fallback
@@ -123,6 +174,8 @@ export const useSlideEditor = () => {
                 }
               }
 
+              console.log(`✅ [Load] Final slide ${s.id} backgroundColor:`, backgroundColor);
+              
               return {
                 id: String(s.id),
                 elements,
@@ -138,7 +191,7 @@ export const useSlideEditor = () => {
             }
           }
         } catch (error) {
-          console.error("Failed to load project data", error);
+           console.error("Failed to load project data", error);
           toast({
             title: "Error",
             description: "Failed to load slides. Please try again.",
@@ -153,18 +206,12 @@ export const useSlideEditor = () => {
     }
   }, [projectId, toast]);
 
-  // --- Keyboard Shortcuts ---
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === "Delete" || e.key === "Backspace") {
-        if (selectedElementId) {
-          deleteElement(selectedElementId);
-        }
-      }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [selectedElementId]);
+  // --- Auto-save (real-time, 1s debounce) ---
+  const { handleSave, handleCanvasChange, hasUnsavedChanges } = useAutoSave({
+    currentSlide,
+    setSlides,
+    slideCanvasRef,
+  });
 
   // --- Slide Actions ---
   const addSlide = useCallback(() => {
@@ -268,15 +315,43 @@ export const useSlideEditor = () => {
       if (updates.y !== undefined) styleUpdates.top = `${updates.y}px`;
       if (updates.width !== undefined) styleUpdates.width = `${updates.width}px`;
       if (updates.height !== undefined) styleUpdates.height = `${updates.height}px`;
+      if (updates.rotation !== undefined) styleUpdates.transform = `rotate(${updates.rotation}deg)`;
+      if (updates.opacity !== undefined) styleUpdates.opacity = `${updates.opacity}`;
+      if (updates.zIndex !== undefined) styleUpdates.zIndex = `${updates.zIndex}`;
+      
       if (updates.color !== undefined) styleUpdates.color = updates.color;
       if (updates.fontSize !== undefined) styleUpdates.fontSize = `${updates.fontSize}px`;
       if (updates.fontWeight !== undefined) styleUpdates.fontWeight = updates.fontWeight;
       if (updates.fontStyle !== undefined) styleUpdates.fontStyle = updates.fontStyle;
       if (updates.textDecoration !== undefined) styleUpdates.textDecoration = updates.textDecoration;
       if (updates.textAlign !== undefined) styleUpdates.textAlign = updates.textAlign;
-      if (updates.fillColor !== undefined) styleUpdates.backgroundColor = updates.fillColor;
       if (updates.fontFamily !== undefined) styleUpdates.fontFamily = updates.fontFamily;
+      if (updates.lineHeight !== undefined) styleUpdates.lineHeight = updates.lineHeight;
+      if (updates.letterSpacing !== undefined) styleUpdates.letterSpacing = updates.letterSpacing ?? '';
+      
+      if (updates.fillColor !== undefined) styleUpdates.backgroundColor = updates.fillColor;
+      if (updates.strokeColor !== undefined) styleUpdates.borderColor = updates.strokeColor;
+      if (updates.strokeWidth !== undefined) styleUpdates.borderWidth = `${updates.strokeWidth}px`;
+      if (updates.strokeStyle !== undefined) styleUpdates.borderStyle = updates.strokeStyle;
+      if (updates.borderRadius !== undefined) styleUpdates.borderRadius = `${updates.borderRadius}px`;
+      if (updates.shadow !== undefined) styleUpdates.boxShadow = updates.shadow;
+      
+      if (updates.paddingTop !== undefined) styleUpdates.paddingTop = `${updates.paddingTop}px`;
+      if (updates.paddingRight !== undefined) styleUpdates.paddingRight = `${updates.paddingRight}px`;
+      if (updates.paddingBottom !== undefined) styleUpdates.paddingBottom = `${updates.paddingBottom}px`;
+      if (updates.paddingLeft !== undefined) styleUpdates.paddingLeft = `${updates.paddingLeft}px`;
+      
       if (updates.content !== undefined) styleUpdates.innerHTML = updates.content;
+      
+      // Build CSS filter string when any filter value changes
+      if (updates.blur !== undefined || updates.brightness !== undefined || updates.saturation !== undefined) {
+        // These will be merged into state, read from the element state
+        // The filter string is built in PropertiesPanel and NOT passed here
+        // So we handle it via the _filter key if present
+      }
+      if ((updates as any)._filter !== undefined) {
+        styleUpdates.filter = (updates as any)._filter;
+      }
       
       slideCanvasRef.current.updateElement(styleUpdates);
     }
@@ -290,13 +365,52 @@ export const useSlideEditor = () => {
     setSelectedElementId(null);
   }, [currentSlideIndex]);
 
+  const duplicateElement = useCallback((id: string) => {
+    setSlides(prev => prev.map((slide, i) => {
+      if (i !== currentSlideIndex) return slide;
+      const el = slide.elements.find(e => e.id === id);
+      if (!el) return slide;
+      const clone: SlideElement = {
+        ...el,
+        id: `element-${Date.now()}`,
+        x: el.x + 20,
+        y: el.y + 20,
+      };
+      return { ...slide, elements: [...slide.elements, clone] };
+    }));
+  }, [currentSlideIndex]);
+
   const bringForward = useCallback((id: string) => {
-    // TODO: Implement z-index increase
-  }, []);
+    setSlides(prev => prev.map((slide, i) => {
+      if (i !== currentSlideIndex) return slide;
+      return {
+        ...slide,
+        elements: slide.elements.map(el =>
+          el.id === id ? { ...el, zIndex: (el.zIndex || 0) + 1 } : el
+        )
+      };
+    }));
+    if (slideCanvasRef.current) {
+      const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 0;
+      slideCanvasRef.current.updateElement({ zIndex: `${current + 1}` });
+    }
+  }, [currentSlideIndex]);
 
   const sendBackward = useCallback((id: string) => {
-    // TODO: Implement z-index decrease
-  }, []);
+    setSlides(prev => prev.map((slide, i) => {
+      if (i !== currentSlideIndex) return slide;
+      return {
+        ...slide,
+        elements: slide.elements.map(el =>
+          el.id === id ? { ...el, zIndex: Math.max(0, (el.zIndex || 0) - 1) } : el
+        )
+      };
+    }));
+    if (slideCanvasRef.current) {
+      const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 1;
+      slideCanvasRef.current.updateElement({ zIndex: `${Math.max(0, current - 1)}` });
+    }
+  }, [currentSlideIndex]);
 
   // --- Drop Handler ---
   const handleDrop = useCallback((e: React.DragEvent) => {
@@ -311,51 +425,20 @@ export const useSlideEditor = () => {
     setDraggedItem(null);
   }, [draggedItem, zoom, addElement]);
 
-  // --- Save Handler ---
-  const handleSave = useCallback(async () => {
-    if (!currentSlide) return;
-    
-    let updatedHTML = currentSlide.elements[0]?.content || '';
-    if (slideCanvasRef.current) {
-      try {
-        updatedHTML = slideCanvasRef.current.getHTML();
-      } catch (e) {
-        console.error("Failed to get HTML from SlideCanvas", e);
+  // --- Keyboard Shortcuts ---
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Delete/Backspace
+      if (e.key === "Delete" || e.key === "Backspace") {
+        if (selectedElementId && document.activeElement?.getAttribute('contenteditable') !== 'true') {
+          deleteElement(selectedElementId);
+        }
       }
-    }
-    
-    const titleElement = currentSlide.elements.find(el => 
-      el.type === 'text' && (el.fontSize && el.fontSize > 30)
-    );
-    const contentText = titleElement?.content || "Slide Content";
-
-    try {
-      const designSettings = {
-        elements: currentSlide.elements,
-        backgroundColor: currentSlide.backgroundColor,
-        backgroundImage: currentSlide.backgroundImage,
-        defs: currentSlide.defs,
-      };
-
-      await api.updateSlide(currentSlide.id, {
-        design_settings: JSON.stringify(designSettings),
-        html_content: updatedHTML,
-        content_text: contentText,
-      });
       
-      toast({
-        title: "Saved",
-        description: "Slide changes saved successfully."
-      });
-    } catch (error) {
-      console.error("Failed to save slide", error);
-      toast({
-        title: "Error",
-        description: "Failed to save slide changes.",
-        variant: "destructive"
-      });
-    }
-  }, [currentSlide, toast]);
+    };
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [selectedElementId]);
 
   // --- Canvas Selection Handler ---
   const handleElementSelectFromCanvas = useCallback((elementData: any) => {
@@ -466,10 +549,12 @@ export const useSlideEditor = () => {
     addElement,
     updateElement,
     deleteElement,
+    duplicateElement,
     bringForward,
     sendBackward,
     handleDrop,
     handleSave,
     handleElementSelectFromCanvas,
+    handleCanvasChange,
   };
 };

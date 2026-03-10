@@ -1,0 +1,124 @@
+        /* Styles for alignment guides */
+        .guide-line {
+            position: absolute;
+            background-color: #117fc9;
+            /* Màu xanh */
+            display: none;
+            z-index: 9999;
+            transform-origin: top left;
+        }
+
+        .guide-line.vertical {
+            width: 1px;
+        }
+
+        .guide-line.horizontal {
+            height: 1px;
+        }
+
+        /* NEW: Styles for distance measurement guides */
+        #distance-guides-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            /* Important to not block mouse events */
+            z-index: 9998;
+        }
+
+        .distance-line {
+            position: absolute;
+            background-color: var(--guide-color);
+            display: none;
+        }
+
+        .distance-label {
+            position: absolute;
+            background-color: var(--guide-label-bg);
+            color: var(--guide-label-text);
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 5px;
+            border-radius: 4px;
+            display: none;
+            font-family: 'Inter', sans-serif;
+            transform: translate(-50%, -50%);
+        }
+
+        /* Canva-style Smart Guides and Visual Feedback */
+        .smart-guide {
+            position: absolute;
+            background: #ff6b9d;
+            pointer-events: none;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .smart-guide.visible {
+            opacity: 1;
+        }
+
+        .smart-guide-vertical {
+            width: 1px;
+            box-shadow: 0 0 0 0.5px #ff6b9d;
+        }
+
+        .smart-guide-horizontal {
+            height: 1px;
+            box-shadow: 0 0 0 0.5px #ff6b9d;
+        }
+
+        /* Distance indicators */
+        .distance-indicator {
+            position: absolute;
+            background: #ff6b9d;
+            color: white;
+            font-size: 11px;
+            font-weight: 600;
+            padding: 2px 6px;
+            border-radius: 3px;
+            pointer-events: none;
+            z-index: 10001;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+            white-space: nowrap;
+        }
+
+        .distance-indicator.visible {
+            opacity: 1;
+        }
+
+        .distance-line {
+            position: absolute;
+            background: #ff6b9d;
+            pointer-events: none;
+            z-index: 10000;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .distance-line.visible {
+            opacity: 1;
+        }
+
+        /* Drag visual feedback */
+        /* Snap zone indicators */
+        .snap-zone {
+            position: absolute;
+            border: 1px dashed #ff6b9d;
+            background: rgba(255, 107, 157, 0.05);
+            pointer-events: none;
+            z-index: 9997;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .snap-zone.active {
+            opacity: 1;
+            background: rgba(255, 107, 157, 0.1);
+        }
+
+        /* Canvas grid overlay */

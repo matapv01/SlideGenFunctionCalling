@@ -1,0 +1,128 @@
+import { useCallback } from "react";
+import type { Slide, SlideElement, DragItem } from "../types";
+
+interface UseCanvasInteractionParams {
+  currentSlide: Slide | undefined;
+  currentSlideIndex: number;
+  setSlides: React.Dispatch<React.SetStateAction<Slide[]>>;
+  setSelectedElementId: React.Dispatch<React.SetStateAction<string | null>>;
+  draggedItem: DragItem | null;
+  setDraggedItem: React.Dispatch<React.SetStateAction<DragItem | null>>;
+  zoom: number;
+  addElement: (item: DragItem, dropX: number, dropY: number) => void;
+  canvasRef: React.RefObject<HTMLDivElement>;
+}
+
+interface UseCanvasInteractionReturn {
+  handleElementSelectFromCanvas: (elementData: any) => void;
+  handleDrop: (e: React.DragEvent) => void;
+}
+
+/**
+ * Hook để quản lý canvas interactions: selection, drag & drop
+ */
+export const useCanvasInteraction = ({
+  currentSlide,
+  currentSlideIndex,
+  setSlides,
+  setSelectedElementId,
+  draggedItem,
+  setDraggedItem,
+  zoom,
+  addElement,
+  canvasRef
+}: UseCanvasInteractionParams): UseCanvasInteractionReturn => {
+  
+  const handleElementSelectFromCanvas = useCallback((elementData: any) => {
+    console.log('[SlideEditor] Element selected from canvas:', elementData);
+    
+    if (!elementData) {
+      setSelectedElementId(null);
+      return;
+    }
+    
+    let matchingElement = currentSlide?.elements.find(el => el.id === elementData.id);
+
+    // Update React state with latest data from Canvas
+    if (matchingElement && elementData.style) {
+      const updates: Partial<SlideElement> = {
+        x: elementData.style.left,
+        y: elementData.style.top,
+        width: elementData.style.width,
+        height: elementData.style.height,
+        fontSize: elementData.style.fontSize,
+        fontFamily: elementData.style.fontFamily,
+        fontWeight: elementData.style.fontWeight,
+        fontStyle: elementData.style.fontStyle,
+        textDecoration: elementData.style.textDecoration,
+        textAlign: elementData.style.textAlign,
+        color: elementData.style.color,
+        fillColor: elementData.style.backgroundColor,
+        content: elementData.content || elementData.innerHTML
+      };
+
+      setSlides(prev => prev.map((slide, i) => {
+        if (i !== currentSlideIndex) return slide;
+        return {
+          ...slide,
+          elements: slide.elements.map(el => 
+            el.id === matchingElement!.id ? { ...el, ...updates } : el
+          )
+        };
+      }));
+      setSelectedElementId(matchingElement.id);
+      return;
+    }
+    
+    // Create new element if not found
+    if (!matchingElement && elementData.style) {
+      const newElement: SlideElement = {
+        id: elementData.id,
+        type: 'text',
+        content: elementData.content || elementData.innerHTML || elementData.textContent || "New Text",
+        x: parseFloat(elementData.style.left) || 0,
+        y: parseFloat(elementData.style.top) || 0,
+        width: parseFloat(elementData.style.width) || 100,
+        height: parseFloat(elementData.style.height) || 100,
+        rotation: 0,
+        zIndex: 1,
+        opacity: 1,
+        fontSize: parseFloat(elementData.style.fontSize) || 16,
+        fontFamily: elementData.style.fontFamily || 'Inter',
+        fontWeight: elementData.style.fontWeight || 'normal',
+        fontStyle: elementData.style.fontStyle || 'normal',
+        textDecoration: elementData.style.textDecoration || 'none',
+        textAlign: elementData.style.textAlign as "left" | "center" | "right" || 'left',
+        color: elementData.style.color || '#000000',
+        fillColor: elementData.style.backgroundColor || 'transparent'
+      };
+      
+      setSlides(prev => prev.map((slide, i) => {
+        if (i !== currentSlideIndex) return slide;
+        return { ...slide, elements: [...slide.elements, newElement] };
+      }));
+      matchingElement = newElement;
+    }
+    
+    if (matchingElement) {
+      setSelectedElementId(matchingElement.id);
+    }
+  }, [currentSlide, currentSlideIndex, setSlides, setSelectedElementId]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    if (!draggedItem || !canvasRef.current) return;
+
+    const rect = canvasRef.current.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / zoom;
+    const y = (e.clientY - rect.top) / zoom;
+
+    addElement(draggedItem, x, y);
+    setDraggedItem(null);
+  }, [draggedItem, zoom, addElement, canvasRef, setDraggedItem]);
+
+  return {
+    handleElementSelectFromCanvas,
+    handleDrop
+  };
+};

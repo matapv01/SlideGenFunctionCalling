@@ -1,7 +1,10 @@
+import { useState } from "react";
 import { useSlideEditor } from "./hooks";
-import { Toolbar, EditorSidebar, PropertiesPanel, CanvasArea } from "./components";
+import { Toolbar, EditorSidebar, PropertiesPanel, CanvasArea, ExportModal } from "./components";
 
 const SlideEditor = () => {
+  const [isExportModalOpen, setIsExportModalOpen] = useState(false);
+  
   const {
     // State
     slides,
@@ -31,10 +34,16 @@ const SlideEditor = () => {
     deleteSlide,
     duplicateSlide,
     updateElement,
+    deleteElement,
+    duplicateElement,
+    bringForward,
+    sendBackward,
     handleDrop,
     handleSave,
     handleElementSelectFromCanvas,
+    handleCanvasChange,
   } = useSlideEditor();
+
 
   // --- Loading State ---
   if (loading) {
@@ -59,7 +68,9 @@ const SlideEditor = () => {
         onSetDraggedItem={setDraggedItem}
         onSave={handleSave}
         onResetZoom={() => setZoom(0.5)}
+        onExport={() => setIsExportModalOpen(true)}
       />
+
 
       <div className="flex flex-1 overflow-hidden">
         {/* Left Sidebar */}
@@ -83,6 +94,7 @@ const SlideEditor = () => {
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
           onElementSelect={handleElementSelectFromCanvas}
+          onChange={handleCanvasChange}
           onZoomIn={() => setZoom(Math.min(2, zoom + 0.1))}
           onZoomOut={() => setZoom(Math.max(0.1, zoom - 0.1))}
         />
@@ -91,8 +103,21 @@ const SlideEditor = () => {
         <PropertiesPanel
           selectedElement={selectedElement}
           onUpdateElement={updateElement}
+          slideCanvasRef={slideCanvasRef}
+          onDeleteElement={selectedElementId ? () => deleteElement(selectedElementId) : undefined}
+          onDuplicateElement={selectedElementId ? () => duplicateElement(selectedElementId) : undefined}
+          onBringForward={selectedElementId ? () => bringForward(selectedElementId) : undefined}
+          onSendBackward={selectedElementId ? () => sendBackward(selectedElementId) : undefined}
         />
       </div>
+      <ExportModal
+        isOpen={isExportModalOpen}
+        onClose={() => setIsExportModalOpen(false)}
+        slides={slides}
+        currentSlideIndex={currentSlideIndex}
+        slideCanvasRef={slideCanvasRef}
+        projectName={projectName}
+      />
     </div>
   );
 };

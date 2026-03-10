@@ -56,7 +56,12 @@ const Projects = () => {
             const slidesRes = await api.getSlides(project.id);
             countsMap[project.id] = slidesRes.slides?.length || 0;
             if (slidesRes.slides && slidesRes.slides.length > 0) {
-              slidesMap[project.id] = slidesRes.slides[0].html_content || slidesRes.slides[0].html;
+              const slide = slidesRes.slides[0];
+              const rawHtml = slide.html_content || slide.html || '';
+              const bgColor = slide.design_settings?.backgroundColor;
+              slidesMap[project.id] = bgColor
+                ? `<div style="width:1920px;height:1080px;background:${bgColor};position:relative;overflow:hidden;">${rawHtml}</div>`
+                : rawHtml;
             }
           } catch {
             // Ignore errors for individual projects
