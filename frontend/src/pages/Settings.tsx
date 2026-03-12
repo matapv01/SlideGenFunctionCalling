@@ -1,7 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
 import {
-  ArrowLeft,
   User,
   Mail,
   Lock,
@@ -30,9 +28,9 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { api } from "@/lib/api";
+import { AppLayout } from "@/components/AppLayout";
 
 const Settings = () => {
-  const navigate = useNavigate();
   const { user } = useAuth();
   const { theme, toggleTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
@@ -128,21 +126,13 @@ const Settings = () => {
   const initials = user?.username?.slice(0, 2).toUpperCase() ?? "U";
 
   return (
-    <div className="min-h-screen bg-background">
-      {/* Header */}
-      <div className="border-b bg-card/50 backdrop-blur-sm sticky top-0 z-10">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
-          <Button variant="ghost" size="icon" onClick={() => navigate(-1)}>
-            <ArrowLeft className="h-5 w-5" />
-          </Button>
-          <div>
-            <h1 className="text-lg font-semibold">{t.settings_title}</h1>
-            <p className="text-xs text-muted-foreground hidden sm:block">{t.settings_subtitle}</p>
-          </div>
-        </div>
-      </div>
-
+    <AppLayout>
       <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Page title */}
+        <div className="mb-6">
+          <h1 className="text-2xl font-semibold">{t.settings_title}</h1>
+          <p className="text-sm text-muted-foreground mt-1">{t.settings_subtitle}</p>
+        </div>
         {/* User summary card */}
         <Card className="mb-6">
           <CardContent className="flex items-center gap-4 pt-5 pb-5">
@@ -490,7 +480,7 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </div>
-    </div>
+    </AppLayout>
   );
 };
 
