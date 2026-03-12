@@ -5,6 +5,11 @@ uv sync
 cd frontend
 npm install
 
+
+
+cd frontend
+npm install jszip @types/jszip --legacy-peer-deps
+
 ## Tạo file .env (root project)
 GEMINI_API_KEY=your_key_here
 TAVILY_API_KEY1=your_key_here

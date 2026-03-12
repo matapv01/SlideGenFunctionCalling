@@ -1,8 +1,10 @@
 import { useState } from "react";
+import { useParams } from "react-router-dom";
 import { useSlideEditor } from "./hooks";
 import { Toolbar, EditorSidebar, PropertiesPanel, CanvasArea, ExportModal } from "./components";
 
 const SlideEditor = () => {
+  const { projectId } = useParams();
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   
   const {
@@ -31,6 +33,8 @@ const SlideEditor = () => {
     // Actions
     navigate,
     addSlide,
+    addSlideFromTemplate,
+    addElement,
     deleteSlide,
     duplicateSlide,
     updateElement,
@@ -42,6 +46,7 @@ const SlideEditor = () => {
     handleSave,
     handleElementSelectFromCanvas,
     handleCanvasChange,
+    selectSlide,
   } = useSlideEditor();
 
 
@@ -67,6 +72,7 @@ const SlideEditor = () => {
         onDeselectElement={() => setSelectedElementId(null)}
         onSetDraggedItem={setDraggedItem}
         onSave={handleSave}
+        onPresent={() => navigate(`/present/${projectId}`)}
         onResetZoom={() => setZoom(0.5)}
         onExport={() => setIsExportModalOpen(true)}
       />
@@ -78,11 +84,13 @@ const SlideEditor = () => {
           isOpen={isSidebarOpen}
           slides={slides}
           currentSlideIndex={currentSlideIndex}
-          onSlideSelect={setCurrentSlideIndex}
+          onSlideSelect={selectSlide}
           onAddSlide={addSlide}
+          onAddSlideFromTemplate={addSlideFromTemplate}
           onDeleteSlide={deleteSlide}
           onDuplicateSlide={duplicateSlide}
           onSetDraggedItem={setDraggedItem}
+          onAddElement={(type, subType) => addElement({ type, subType }, 760, 440)}
         />
 
         {/* Canvas Area */}

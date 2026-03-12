@@ -5,9 +5,11 @@ interface SlideCanvasProps {
   slideId: string;
   htmlContent: string;
   backgroundColor?: string;
-  onElementSelect: (data: any) => void;
+  onElementSelect?: (data: any) => void;
   onChange?: () => void;
   zoom?: number;
+  /** When true, only renders the slide — no drag/resize/edit logic is initialized */
+  readOnly?: boolean;
 }
 
 export interface SlideCanvasHandle {
@@ -17,19 +19,25 @@ export interface SlideCanvasHandle {
   redo: () => void;
   execFormat: (command: string, value?: string) => void;
   getSelectedZIndex: () => number;
+  getMaxZIndex: () => number;
+  injectElement: (html: string) => void;
 }
 
 export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((props, ref) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const shadowRootRef = useRef<ShadowRoot | null>(null);
   const logicInstanceRef = useRef<SlideEditorLogic | null>(null);
+  // Store slide-specific CSS so it can be round-tripped when saving
+  const slideCSSRef = useRef<string>('');
 
   // Use refs so SlideEditorLogic always calls the latest callbacks without needing re-init
   const onElementSelectRef = useRef<(data: any) => void>(props.onElementSelect);
   const onChangeRef = useRef<(() => void) | undefined>(props.onChange);
+  const zoomRef = useRef<number>(props.zoom ?? 1);
   // Update refs on every render (no deps needed — this is intentional)
   onElementSelectRef.current = props.onElementSelect;
   onChangeRef.current = props.onChange;
+  zoomRef.current = props.zoom ?? 1;
   
   // Apply background to container (like Legacy: applyDirectBackground)
   useEffect(() => {
@@ -51,7 +59,20 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       logicInstanceRef.current?.updateSelectedElementStyle(styles);
     },
     getHTML: () => {
-      return logicInstanceRef.current?.getHTML() || '';
+      const canvasHTML = logicInstanceRef.current?.getHTML() || '';
+      // Prepend slide-specific CSS so it survives save/reload cycles.
+      // Re-remap Shadow DOM selectors back to standard CSS selectors so the
+      // stored html_content works correctly in a normal iframe/browser context.
+      const css = slideCSSRef.current;
+      if (css && css.trim()) {
+        const standardCSS = css
+          .replace(/\.slide-bg-wrapper\s*\{/g, 'body {')
+          .replace(/\.slide-bg-wrapper\b/g, 'body')
+          .replace(/:host\s*\{/g, 'html {')
+          .replace(/:host\b/g, 'html');
+        return `<style>${standardCSS}</style>\n${canvasHTML}`;
+      }
+      return canvasHTML;
     },
     undo: () => {
       logicInstanceRef.current?.undo();
@@ -65,10 +86,16 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     getSelectedZIndex: () => {
       return logicInstanceRef.current?.getSelectedZIndex() ?? 0;
     },
+    getMaxZIndex: () => {
+      return logicInstanceRef.current?.getMaxZIndex() ?? 0;
+    },
+    injectElement: (html: string) => {
+      logicInstanceRef.current?.injectElement(html);
+    },
   }));
 
   // Xử lý HTML & CSS Isolation
-  const processHTML = (rawHTML: string): string => {
+  const processHTML = (rawHTML: string, isReadOnly = false): string => {
     console.log('[SlideCanvas] Processing HTML...');
     
     // Parse HTML
@@ -87,6 +114,9 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       .replace(/\bhtml\s*\{/g, ':host {')
       .replace(/\bbody\s+/g, '.slide-bg-wrapper ') // body selector với combinator
       .replace(/\bhtml\s+/g, ':host ');
+    
+    // Persist CSS so getHTML() can prepend it when saving
+    slideCSSRef.current = collectedCSS;
     
     // --- 2. Xóa các thẻ style khỏi body để tránh duplicate ---
     styleElements.forEach(s => s.remove());
@@ -175,7 +205,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     
     // Nếu không có gì trong body, fallback
     if (!bodyContent.trim()) {
-      bodyContent = '<div class="slide-container" style="width: 100%; height: 100%; min-height: 1080px;"><p>Empty slide</p></div>';
+      bodyContent = '<div style="width: 100%; height: 100%; min-height: 1080px; position: relative;"></div>';
     }
     
     // --- 4. Thêm CSS base cho Shadow DOM ---
@@ -202,6 +232,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       }
       
       /* Selection UI Styles (Legacy-style with animation) */
+      ${isReadOnly ? '' : `
       .element.selected {
         outline: 3px solid #3b82f6 !important;
         outline-offset: 2px;
@@ -303,12 +334,14 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         background: #2563eb;
         transform: translateX(-50%) scale(1.05);
       }
+      `}
       
       .smart-guide {
         opacity: 0.7;
       }
       
       /* Đảm bảo các element có thể interact */
+      ${isReadOnly ? '' : `
       [data-selectable="true"] {
         cursor: move;
       }
@@ -324,6 +357,11 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         content: attr(data-placeholder);
         color: #999;
       }
+      `}
+      ${isReadOnly ? `
+      /* Read-only: disable all pointer interactions */
+      * { pointer-events: none !important; cursor: default !important; }
+      ` : ''}
     `;
     
     // --- 5. Tạo HTML hoàn chỉnh ---
@@ -356,13 +394,16 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
     // Inject Content đã xử lý
     try {
-      const processedHTML = processHTML(props.htmlContent);
+      const processedHTML = processHTML(props.htmlContent, props.readOnly);
       shadowRootRef.current.innerHTML = processedHTML;
       console.log('[SlideCanvas] HTML injected into Shadow DOM');
     } catch (e) {
       console.error('[SlideCanvas] Failed to process/inject HTML:', e);
       return;
     }
+
+    // Skip editor logic in read-only mode — just render the HTML
+    if (props.readOnly) return;
 
     // Đợi một tick để DOM render xong
     setTimeout(() => {
@@ -375,9 +416,11 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         logicInstanceRef.current = new SlideEditorLogic(
           shadowRootRef.current!,
           // Stable lambdas — always call the latest callback via ref
-          (data: any) => onElementSelectRef.current(data),
+          (data: any) => onElementSelectRef.current?.(data),
           () => onChangeRef.current?.()
         );
+        // Apply current zoom immediately so drag/resize scale is correct from the start
+        logicInstanceRef.current.setScale(zoomRef.current);
         console.log('[SlideCanvas] Logic Core initialized');
       } catch (e) {
         console.error('[SlideCanvas] Failed to initialize Logic Core:', e);
@@ -390,13 +433,21 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         logicInstanceRef.current = null;
       }
     };
-  }, [props.slideId]); // Re-init only when switching to a different slide
+  }, [props.slideId, props.readOnly]); // Re-init only when switching to a different slide
 
-  // Update zoom nếu có
+  // For readOnly instances (thumbnails/previews): re-inject when htmlContent changes.
+  // The editor (readOnly=false) must NOT do this — it would overwrite live user edits.
   useEffect(() => {
-    if (containerRef.current && props.zoom !== undefined) {
-      containerRef.current.style.transform = `scale(${props.zoom})`;
-      containerRef.current.style.transformOrigin = 'top left';
+    if (!props.readOnly || !shadowRootRef.current) return;
+    shadowRootRef.current.innerHTML = processHTML(props.htmlContent, true);
+  }, [props.htmlContent]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Sync zoom to logic instance so drag/resize deltas are correctly scaled.
+  // (The outer CanvasArea wrapper already applies the CSS transform — we must
+  // NOT apply it again here or the canvas would be double-scaled.)
+  useEffect(() => {
+    if (props.zoom !== undefined) {
+      logicInstanceRef.current?.setScale(props.zoom);
     }
   }, [props.zoom]);
 
@@ -405,7 +456,6 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       ref={containerRef} 
       className="w-full h-full bg-white shadow-2xl"
       style={{ 
-        isolation: 'isolate', // CSS property giúp tăng cường isolation
         width: '1920px',
         height: '1080px',
         minWidth: '1920px',

@@ -33,53 +33,65 @@ export const useElementActions = ({
 
   const addElement = useCallback((item: DragItem, dropX: number, dropY: number) => {
     if (!currentSlide) return;
-    const id = Date.now().toString();
-    const maxZ = currentSlide.elements.length > 0
-      ? Math.max(...currentSlide.elements.map(e => e.zIndex || 0))
-      : 0;
 
-    const defaults: Partial<SlideElement> = {
-      id,
-      x: dropX,
-      y: dropY,
-      width: 200,
-      height: 100,
-      rotation: 0,
-      zIndex: maxZ + 1,
-      opacity: 1,
-      fillColor: item.type === "shape" ? "#e2e8f0" : "transparent",
-      strokeColor: "transparent",
-      strokeWidth: 0,
-    };
+    const id = `el_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+    const x = Math.round(dropX);
+    const y = Math.round(dropY);
 
-    if (item.type === "text") {
-      defaults.type = "text";
-      defaults.content = item.subType === "heading" ? "Heading" : "Text block";
-      defaults.fontSize = item.subType === "heading" ? 48 : 24;
-      defaults.width = 400;
-      defaults.height = item.subType === "heading" ? 60 : 40;
-      defaults.color = "#000000";
-    } else if (item.type === "shape") {
-      defaults.type = "shape";
-      if (item.subType === "circle") {
-        defaults.borderRadius = 1000;
-        defaults.width = 100;
-        defaults.height = 100;
+    // ── Build the HTML fragment that will be injected into the canvas ──────
+    // injectElement() will compute maxZIndex from the live canvas and apply +1
+    let html = '';
+
+    if (item.type === 'text') {
+      let fontSize = 28, fontWeight = 'normal', content = 'Click to edit';
+      let width = 500, height = 48, color = '#222222';
+      if (item.subType === 'heading') {
+        fontSize = 64; fontWeight = 'bold'; content = 'Heading'; width = 600; height = 80; color = '#111111';
+      } else if (item.subType === 'subheading') {
+        fontSize = 40; fontWeight = '600'; content = 'Subheading'; width = 500; height = 60; color = '#333333';
+      } else if (item.subType === 'label') {
+        fontSize = 20; fontWeight = '600'; content = 'Label'; width = 200; height = 32; color = '#555555';
       }
-    } else if (item.type === "image") {
-      defaults.type = "image";
-      defaults.src = "/placeholder.svg";
-      defaults.width = 300;
-      defaults.height = 200;
+      html = `<div id="${id}" class="element" data-type="text" data-selectable="true" contenteditable="true"
+        style="position:absolute;left:${x}px;top:${y}px;width:${width}px;height:${height}px;font-size:${fontSize}px;font-weight:${fontWeight};color:${color};cursor:move;user-select:none;"
+        >${content}</div>`;
+
+    } else if (item.type === 'shape') {
+      let width = 200, height = 120, bg = '#e2e8f0', extra = '';
+      if (item.subType === 'circle') {
+        width = 150; height = 150; extra = 'border-radius:50%;';
+      } else if (item.subType === 'triangle') {
+        width = 150; height = 150; extra = 'clip-path:polygon(50% 0%,0% 100%,100% 100%);';
+      } else if (item.subType === 'star') {
+        width = 150; height = 150; extra = 'clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%);';
+      } else if (item.subType === 'diamond') {
+        width = 120; height = 120; extra = 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);';
+      } else if (item.subType === 'line') {
+        width = 300; height = 4; bg = '#555555'; extra = 'border-radius:2px;';
+      }
+      html = `<div id="${id}" class="element" data-type="shape" data-selectable="true"
+        style="position:absolute;left:${x}px;top:${y}px;width:${width}px;height:${height}px;background:${bg};${extra}cursor:move;"
+        ></div>`;
+
+    } else if (item.type === 'image') {
+      html = `<img id="${id}" class="element" data-type="image" data-selectable="true"
+        style="position:absolute;left:${x}px;top:${y}px;width:400px;height:280px;object-fit:cover;cursor:move;"
+        src="/placeholder.svg" alt="Image" />`;
+
+    } else if (item.type === 'video') {
+      html = `<div id="${id}" class="element" data-type="video" data-selectable="true"
+        style="position:absolute;left:${x}px;top:${y}px;width:480px;height:270px;background:#000;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;"
+        >Video</div>`;
     }
 
-    const newElement = { ...defaults } as SlideElement;
-    setSlides(prev => prev.map((slide, i) => {
-      if (i !== currentSlideIndex) return slide;
-      return { ...slide, elements: [...slide.elements, newElement] };
-    }));
+    if (!html) return;
+
+    // ── Inject into live canvas (handles maxZ+1 z-index automatically) ──────
+    slideCanvasRef.current?.injectElement(html);
+    // canvas's selectElement → onElementSelect → handleElementSelectFromCanvas
+    // will create the React state entry — just pre-select the id here
     setSelectedElementId(id);
-  }, [currentSlide, currentSlideIndex, setSlides, setSelectedElementId]);
+  }, [currentSlide, slideCanvasRef, setSelectedElementId]);
 
   const updateElement = useCallback((id: string, updates: Partial<SlideElement> & { _filter?: string }) => {
     // Sync React state

@@ -7,7 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogD
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
-import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
+import { ReadOnlySlide } from "@/components/ReadOnlySlide";
 
 const ViewProject = () => {
   const { projectId } = useParams();
@@ -107,10 +107,19 @@ const ViewProject = () => {
     try {
       const res = await api.getSlides(projectId!);
       // Map backend fields to frontend expected fields
-      const mappedSlides = res.slides.map((s: any) => ({
-        ...s,
-        html: s.html_content,
-      }));
+      const mappedSlides = res.slides.map((s: any) => {
+        let backgroundColor = '#ffffff';
+        let backgroundImage: string | undefined;
+        if (s.design_settings) {
+          try {
+            const ds = typeof s.design_settings === 'string' ? JSON.parse(s.design_settings) : s.design_settings;
+            if (ds?.backgroundColor) backgroundColor = ds.backgroundColor;
+            if (ds?.backgroundImage) backgroundImage = ds.backgroundImage;
+          } catch { /* ignore */ }
+        }
+        const html = s.html_content || '';
+        return { ...s, html, backgroundColor, backgroundImage };
+      });
       setSlides(mappedSlides);
     } catch (err: any) {
       toast({ title: "Failed to load slides", description: err.message, variant: "destructive" });
@@ -171,9 +180,10 @@ const ViewProject = () => {
                 <CardContent className="p-4">
                   <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-3 relative">
                     {slide.html ? (
-                      <ScaledSlidePreview
-                        html={slide.html}
-                        title={`Slide ${i + 1} preview`}
+                      <ReadOnlySlide
+                        slideId={`thumb-${slide.id || i}`}
+                        htmlContent={slide.html}
+                        backgroundColor={slide.backgroundColor}
                         className="absolute inset-0"
                       />
                     ) : (
@@ -213,9 +223,9 @@ const ViewProject = () => {
               />
             </div>
             <div className="rounded-lg bg-muted overflow-hidden h-64 relative">
-              <ScaledSlidePreview
-                html={editHtml}
-                title="Slide preview"
+              <ReadOnlySlide
+                slideId={`edit-preview-${editSlide?.id}`}
+                htmlContent={editHtml}
                 className="absolute inset-0"
               />
             </div>
@@ -260,9 +270,10 @@ const ViewProject = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full h-full bg-white overflow-hidden relative">
               {slides[currentSlideIndex]?.html ? (
-                <ScaledSlidePreview
-                  html={slides[currentSlideIndex].html}
-                  title={`Slide ${currentSlideIndex + 1}`}
+                <ReadOnlySlide
+                  slideId={`present-view-${currentSlideIndex}`}
+                  htmlContent={slides[currentSlideIndex].html}
+                  backgroundColor={slides[currentSlideIndex].backgroundColor}
                   className="absolute inset-0"
                 />
               ) : (

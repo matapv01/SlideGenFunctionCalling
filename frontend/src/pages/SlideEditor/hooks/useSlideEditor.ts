@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useCallback } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import type { DragItem } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
@@ -42,11 +42,12 @@ export const useSlideEditor = () => {
   const selectedElement = currentSlide?.elements.find(el => el.id === selectedElementId);
 
   // ── Slide CRUD ────────────────────────────────────────────────────────
-  const { addSlide, deleteSlide, duplicateSlide } = useSlideActions({
+  const { addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide } = useSlideActions({
     slides,
     setSlides,
     currentSlideIndex,
     setCurrentSlideIndex,
+    projectId,
   });
 
   // ── Element CRUD ──────────────────────────────────────────────────────
@@ -60,11 +61,18 @@ export const useSlideEditor = () => {
     });
 
   // ── Auto-save ─────────────────────────────────────────────────────────
-  const { handleSave, handleCanvasChange } = useAutoSave({
+  const { handleSave, handleCanvasChange, flushSave } = useAutoSave({
     currentSlide,
     setSlides,
     slideCanvasRef,
   });
+
+  // ── Slide selection — flush pending save before switching ─────────────
+  const selectSlide = useCallback(async (index: number) => {
+    if (index === currentSlideIndex) return;
+    await flushSave();
+    setCurrentSlideIndex(index);
+  }, [currentSlideIndex, flushSave, setCurrentSlideIndex]);
 
   // ── Canvas interaction ────────────────────────────────────────────────
   const { handleElementSelectFromCanvas, handleDrop } = useCanvasInteraction({
@@ -95,8 +103,8 @@ export const useSlideEditor = () => {
 
     // Actions
     navigate,
-    addSlide, deleteSlide, duplicateSlide,
+    addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide,
     addElement, updateElement, deleteElement, duplicateElement, bringForward, sendBackward,
-    handleDrop, handleSave, handleElementSelectFromCanvas, handleCanvasChange,
+    handleDrop, handleSave, handleElementSelectFromCanvas, handleCanvasChange, selectSlide,
   };
 };

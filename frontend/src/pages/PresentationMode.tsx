@@ -4,7 +4,7 @@ import { ChevronLeft, ChevronRight, X, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
-import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
+import { ReadOnlySlide } from "@/components/ReadOnlySlide";
 
 const PresentationMode = () => {
   const { projectId } = useParams();
@@ -23,7 +23,19 @@ const PresentationMode = () => {
   const loadSlides = async () => {
     try {
       const data = await api.getSlides(projectId!);
-      setSlides(data);
+      const mapped = (data?.slides ?? []).map((s: any) => {
+        let backgroundColor = '#ffffff';
+        let backgroundImage: string | undefined;
+        if (s.design_settings) {
+          try {
+            const ds = typeof s.design_settings === 'string' ? JSON.parse(s.design_settings) : s.design_settings;
+            if (ds?.backgroundColor) backgroundColor = ds.backgroundColor;
+            if (ds?.backgroundImage) backgroundImage = ds.backgroundImage;
+          } catch { /* ignore */ }
+        }
+        return { ...s, backgroundColor, backgroundImage, html: s.html_content || '' };
+      });
+      setSlides(mapped);
     } catch { /* fallback */ }
   };
 
@@ -72,6 +84,7 @@ const PresentationMode = () => {
   }, []);
 
   const currentSlideData = slides[currentSlide];
+  const html = currentSlideData?.html || '';
 
   return (
     <div
@@ -82,10 +95,11 @@ const PresentationMode = () => {
     >
       {/* Slide content */}
       <div className="relative h-full w-full flex items-center justify-center">
-        {currentSlideData?.html ? (
-          <ScaledSlidePreview
-            html={currentSlideData.html}
-            title={`Slide ${currentSlide + 1}`}
+        {html ? (
+          <ReadOnlySlide
+            slideId={`present-${currentSlide}`}
+            htmlContent={html}
+            backgroundColor={currentSlideData?.backgroundColor}
             className="w-full h-full"
           />
         ) : (

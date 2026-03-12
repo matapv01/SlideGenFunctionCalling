@@ -24,8 +24,10 @@ export class SlideEditorLogic {
         this.onChange = onChange; // Callback gọi về React khi có thay đổi content
 
         // Thay vì document.getElementById, ta tìm trong root (ShadowDOM)
-        this.canvas = this.root.querySelector('.slide-container') || 
-                      this.root.querySelector('.slide-bg-wrapper') ||
+        // Prefer .slide-bg-wrapper (stable outer wrapper from processHTML) to avoid
+        // the .slide-container fallback text leaking into saved HTML
+        this.canvas = this.root.querySelector('.slide-bg-wrapper') ||
+                      this.root.querySelector('.slide-container') ||
                       this.root;
         
         // State nội bộ (giữ nguyên logic của edit.js)
@@ -34,9 +36,11 @@ export class SlideEditorLogic {
         this.snapThreshold = 5;
         this.isDragging = false;
         this.isResizing = false;
-        this.dragStartX = 0;
-        this.dragStartY = 0;
-        this.elementStartPos = { x: 0, y: 0 };
+        this.isPreparedForDrag = false;   // true after mousedown, becomes isDragging after 5px (like webfix)
+        this.pendingSelectElement = null; // element to select on mouseup if no drag happened
+        this.draggedElement = null;
+        this.dragStart = null;            // { x, y } of mousedown position
+        this.elementsStartPos = new Map(); // Map<element, {x,y,width,height}> like webfix
         this.resizeHandle = null;
         this.history = [];
         this.historyIndex = -1;
@@ -149,10 +153,9 @@ export class SlideEditorLogic {
 
     handleMouseDown(e) {
         const target = e.target;
-        
-        // Bỏ qua nếu đang edit text - cho phép click trong text để di chuyển cursor
+
+        // Allow text editing interactions — only exit when clicking outside
         if (this.isEditingText) {
-            // Kiểm tra nếu click ra ngoài element đang edit thì thoát edit mode
             let clickedElement = target;
             let isClickingEditableElement = false;
             while (clickedElement && clickedElement !== this.root) {
@@ -162,55 +165,15 @@ export class SlideEditorLogic {
                 }
                 clickedElement = clickedElement.parentElement;
             }
-            
-            if (isClickingEditableElement) {
-                // Cho phép click trong element đang edit text
-                return;
-            } else {
-                // Thoát edit mode khi click ra ngoài
-                this.exitEditMode();
-            }
+            if (isClickingEditableElement) return;
+            this.exitEditMode();
         }
-        
-        // Kiểm tra nếu click vào resize handle
-        if (target.classList && target.classList.contains('resize-handle')) {
-            this.isResizing = true;
-            this.resizeHandle = target.dataset.handle;
-            this.dragStartX = e.clientX;
-            this.dragStartY = e.clientY;
-            
-            if (this.selectedElements.length > 0) {
-                const el = this.selectedElements[0];
-                
-                // Đảm bảo element đã có position absolute
-                const computedStyle = window.getComputedStyle(el);
-                if (computedStyle.position !== 'absolute') {
-                    const rect = el.getBoundingClientRect();
-                    const canvasRect = this.canvas.getBoundingClientRect();
-                    el.style.position = 'absolute';
-                    el.style.left = `${(rect.left - canvasRect.left) / this.currentScale}px`; // Fix scale khi convert
-                    el.style.top = `${(rect.top - canvasRect.top) / this.currentScale}px`;
-                    el.style.width = `${rect.width / this.currentScale}px`;
-                }
-                
-                // Lấy kích thước hiện tại
-                const finalStyle = window.getComputedStyle(el);
-                this.elementStartPos = {
-                    x: parseFloat(finalStyle.left) || 0,
-                    y: parseFloat(finalStyle.top) || 0,
-                    width: parseFloat(finalStyle.width),
-                    height: parseFloat(finalStyle.height)
-                };
-            }
-            e.preventDefault();
-            e.stopPropagation();
-            return;
-        }
-        
-        // Bỏ qua nếu click vào resize/drag handles hoặc vùng background
-        if (target.classList && (
-            target.classList.contains('resize-handle') ||
-            target.classList.contains('drag-handle') ||
+
+        const isDragHandle = target.classList && target.classList.contains('drag-handle');
+        const isResizeHandle = target.classList && target.classList.contains('resize-handle');
+
+        // Click on canvas background → deselect
+        if (!isResizeHandle && !isDragHandle && target.classList && (
             target.classList.contains('slide-bg-wrapper') ||
             target.classList.contains('slide-container')
         )) {
@@ -218,143 +181,198 @@ export class SlideEditorLogic {
             return;
         }
 
-        // Tìm element có thể select gần nhất
-        let selectableElement = target;
-        while (selectableElement && selectableElement !== this.root) {
-            if (selectableElement.hasAttribute('data-selectable') ||
-                ['H1', 'H2', 'H3', 'P', 'IMG', 'DIV'].includes(selectableElement.tagName)) {
+        // Find closest selectable ancestor (or stop at handle)
+        let targetElement = target;
+        while (targetElement && targetElement !== this.root) {
+            if (targetElement.hasAttribute('data-selectable') ||
+                targetElement.classList.contains('element') ||
+                targetElement.classList.contains('resize-handle') ||
+                targetElement.classList.contains('drag-handle')) {
                 break;
             }
-            selectableElement = selectableElement.parentElement;
+            targetElement = targetElement.parentElement;
         }
 
-        if (selectableElement && selectableElement !== this.root) {
-            // Chọn element
-            this.selectElement(selectableElement);
-            
-            // Bắt đầu logic Drag (setup tọa độ ban đầu)
-            this.isDragging = true;
-            this.dragStartX = e.clientX;
-            this.dragStartY = e.clientY;
-            
-            // QUAN TRỌNG: Nếu element chưa có position absolute, convert ngay
-            const computedStyle = window.getComputedStyle(selectableElement);
-            if (computedStyle.position !== 'absolute') {
-                const rect = selectableElement.getBoundingClientRect();
-                const canvasRect = this.canvas.getBoundingClientRect();
-                
-                selectableElement.style.position = 'absolute';
-                selectableElement.style.left = `${rect.left - canvasRect.left}px`;
-                selectableElement.style.top = `${rect.top - canvasRect.top}px`;
-                selectableElement.style.width = `${rect.width}px`;
-                selectableElement.style.height = `${rect.height}px`;
-            }
-            
-            // Lấy vị trí sau khi đã convert
-            const finalStyle = window.getComputedStyle(selectableElement);
-            this.elementStartPos = {
-                x: parseFloat(finalStyle.left) || 0,
-                y: parseFloat(finalStyle.top) || 0
-            };
+        if (!targetElement || targetElement === this.root) {
+            this.deselectAll();
+            return;
+        }
 
+        // Resolve handle clicks to their parent .element
+        if (isResizeHandle || isDragHandle) {
+            const parentEl = target.closest('.element, [data-selectable]');
+            if (parentEl) targetElement = parentEl;
+        }
+
+        // RESIZE — like webfix: read handle class directly ('tl','tr','bl','br')
+        if (isResizeHandle && this.selectedElements.length > 0) {
+            const el = this.selectedElements[0];
+            this.isResizing = true;
+            this.resizeHandle = target.classList[1]; // 'tl', 'tr', 'bl', 'br'
+            this.dragStart = { x: e.clientX, y: e.clientY };
+            if (el.style.position !== 'absolute') {
+                el.style.position = 'absolute';
+                el.style.left = `${el.offsetLeft}px`;
+                el.style.top = `${el.offsetTop}px`;
+                el.style.width = `${el.offsetWidth}px`;
+            }
+            this.elementsStartPos.clear();
+            this.elementsStartPos.set(el, { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
             e.preventDefault();
             e.stopPropagation();
-        } else {
-            this.deselectAll();
+            return;
         }
+
+        const isAlreadySelected = this.selectedElements.includes(targetElement);
+
+        // Not yet selected → pending select (confirmed on mouseup if no drag, like webfix)
+        // No stopPropagation here — allows contenteditable cursor positioning naturally
+        if (!isAlreadySelected && !isDragHandle) {
+            this.pendingSelectElement = targetElement;
+            this.dragStart = { x: e.clientX, y: e.clientY };
+            return;
+        }
+
+        // Already selected or drag handle → prepare for drag
+        if (isDragHandle) {
+            this.selectElement(targetElement);
+        }
+
+        this.isPreparedForDrag = true;
+        this.draggedElement = targetElement;
+        this.dragStart = { x: e.clientX, y: e.clientY };
+
+        this.elementsStartPos.clear();
+        this.selectedElements.forEach(el => {
+            if (el.style.position !== 'absolute') {
+                el.style.position = 'absolute';
+                el.style.left = `${el.offsetLeft}px`;
+                el.style.top = `${el.offsetTop}px`;
+            }
+            this.elementsStartPos.set(el, { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+        });
     }
 
     handleMouseMove(e) {
+        // Activation threshold: only start drag after 5px movement (like webfix)
+        if (this.isPreparedForDrag && !this.isDragging && this.dragStart) {
+            const distanceMoved = Math.sqrt(
+                Math.pow(e.clientX - this.dragStart.x, 2) +
+                Math.pow(e.clientY - this.dragStart.y, 2)
+            );
+            if (distanceMoved > 5) {
+                this.isDragging = true;
+                this.isPreparedForDrag = false;
+            } else {
+                return;
+            }
+        }
+
+        // RESIZE — like webfix: use includes() on handle class letters ('t','b','l','r')
         if (this.isResizing && this.selectedElements.length > 0) {
             e.preventDefault();
             const el = this.selectedElements[0];
-            
-            // [SỬA LẠI] Chia delta chuột cho scale
-            const dx = (e.clientX - this.dragStartX) / this.currentScale;
-            const dy = (e.clientY - this.dragStartY) / this.currentScale;
-            
-            let newWidth = this.elementStartPos.width;
-            let newHeight = this.elementStartPos.height;
-            let newX = this.elementStartPos.x;
-            let newY = this.elementStartPos.y;
-            
-            switch(this.resizeHandle) {
-                case 'se': // bottom-right
-                    newWidth = Math.max(20, this.elementStartPos.width + dx);
-                    newHeight = Math.max(20, this.elementStartPos.height + dy);
-                    break;
-                case 'sw': // bottom-left
-                    newWidth = Math.max(20, this.elementStartPos.width - dx);
-                    newHeight = Math.max(20, this.elementStartPos.height + dy);
-                    newX = this.elementStartPos.x + dx;
-                    break;
-                case 'ne': // top-right
-                    newWidth = Math.max(20, this.elementStartPos.width + dx);
-                    newHeight = Math.max(20, this.elementStartPos.height - dy);
-                    newY = this.elementStartPos.y + dy;
-                    break;
-                case 'nw': // top-left
-                    newWidth = Math.max(20, this.elementStartPos.width - dx);
-                    newHeight = Math.max(20, this.elementStartPos.height - dy);
-                    newX = this.elementStartPos.x + dx;
-                    newY = this.elementStartPos.y + dy;
-                    break;
+            const startRect = this.elementsStartPos.get(el);
+            if (!startRect) return;
+
+            const dx = (e.clientX - this.dragStart.x) / this.currentScale;
+            const dy = (e.clientY - this.dragStart.y) / this.currentScale;
+            const { x, y, width, height } = startRect;
+
+            if (this.resizeHandle.includes('r')) {
+                el.style.width = `${Math.max(20, width + dx)}px`;
             }
-            
-            el.style.width = `${newWidth}px`;
-            el.style.height = `${newHeight}px`;
-            el.style.left = `${newX}px`;
-            el.style.top = `${newY}px`;
-            
+            if (this.resizeHandle.includes('l')) {
+                el.style.width = `${Math.max(20, width - dx)}px`;
+                el.style.left = `${x + dx}px`;
+            }
+            if (this.resizeHandle.includes('b')) {
+                el.style.height = `${Math.max(20, height + dy)}px`;
+            }
+            if (this.resizeHandle.includes('t')) {
+                el.style.height = `${Math.max(20, height - dy)}px`;
+                el.style.top = `${y + dy}px`;
+            }
+
             this.updateSelectionUI();
             return;
         }
-        
+
         if (!this.isDragging || !this.selectedElements.length) return;
-        
         e.preventDefault();
-        
-        const el = this.selectedElements[0];
-        
-        // Tính toán vị trí mới
-        const dx = (e.clientX - this.dragStartX) / this.currentScale;
-        const dy = (e.clientY - this.dragStartY) / this.currentScale;
-        
-        let newX = this.elementStartPos.x + dx;
-        let newY = this.elementStartPos.y + dy;
-        
-        // Snap to guides (optional, có thể bật/tắt)
-        const snapped = this.snapToGuides(el, newX, newY);
-        newX = snapped.x;
-        newY = snapped.y;
-        
-        // Update position
-        el.style.position = 'absolute';
-        el.style.left = `${newX}px`;
-        el.style.top = `${newY}px`;
-        
-        // Update selection UI
+
+        const primaryElement = this.selectedElements[0];
+        const startPos = this.elementsStartPos.get(primaryElement);
+        if (!startPos) return;
+
+        let finalDx = (e.clientX - this.dragStart.x) / this.currentScale;
+        let finalDy = (e.clientY - this.dragStart.y) / this.currentScale;
+
+        // Snap
+        const snapped = this.snapToGuides(primaryElement, startPos.x + finalDx, startPos.y + finalDy);
+        finalDx = snapped.x - startPos.x;
+        finalDy = snapped.y - startPos.y;
+
+        // Move all selected elements (supports multi-select drag like webfix)
+        this.selectedElements.forEach(el => {
+            const elStartPos = this.elementsStartPos.get(el);
+            if (elStartPos) {
+                el.style.left = `${elStartPos.x + finalDx}px`;
+                el.style.top = `${elStartPos.y + finalDy}px`;
+            }
+        });
+
         this.updateSelectionUI();
-        
-        // Draw smart guides
         this.drawSmartGuides(snapped.guides);
     }
 
     handleMouseUp(e) {
-        if (this.isDragging || this.isResizing) {
-            // Save to history
-            this.saveHistory();
+        // Pending select: confirm selection if mouse barely moved (it was a click, not a drag)
+        if (this.pendingSelectElement) {
+            let shouldSelect = true;
+            if (this.dragStart && e) {
+                const distanceMoved = Math.sqrt(
+                    Math.pow(e.clientX - this.dragStart.x, 2) +
+                    Math.pow(e.clientY - this.dragStart.y, 2)
+                );
+                shouldSelect = distanceMoved <= 2;
+            }
+            if (shouldSelect) {
+                this.selectElement(this.pendingSelectElement);
+            }
+            this.pendingSelectElement = null;
+            this.dragStart = null;
+            return;
         }
-        
+
+        if (this.isDragging || this.isResizing) {
+            // Only save history if there was actual movement (like webfix: > 3px threshold)
+            let hasActualChange = false;
+            if (this.dragStart && e) {
+                const distanceMoved = Math.sqrt(
+                    Math.pow(e.clientX - this.dragStart.x, 2) +
+                    Math.pow(e.clientY - this.dragStart.y, 2)
+                );
+                hasActualChange = distanceMoved > 3;
+            }
+            if (hasActualChange) {
+                this.saveHistory();
+            }
+        }
+
         this.isDragging = false;
         this.isResizing = false;
+        this.isPreparedForDrag = false;
         this.resizeHandle = null;
+        this.pendingSelectElement = null;
+        this.draggedElement = null;
+        this.elementsStartPos.clear();
+        this.dragStart = null;
         this.clearSmartGuides();
     }
 
     snapToGuides(el, x, y) {
         const guides = [];
-        const canvasRect = this.canvas.getBoundingClientRect();
         
         // Snap to canvas edges
         if (Math.abs(x) < this.snapThreshold) {
@@ -366,19 +384,20 @@ export class SlideEditorLogic {
             guides.push({ type: 'horizontal', pos: 0 });
         }
         
-        // Snap to center
-        const elRect = el.getBoundingClientRect();
-        const centerX = canvasRect.width / 2;
-        const centerY = canvasRect.height / 2;
-        const elCenterX = x + elRect.width / 2;
-        const elCenterY = y + elRect.height / 2;
+        // Snap to center — use offset* to avoid broken getBoundingClientRect under CSS transforms
+        const elW = el.offsetWidth;
+        const elH = el.offsetHeight;
+        const centerX = this.canvas.offsetWidth / 2;
+        const centerY = this.canvas.offsetHeight / 2;
+        const elCenterX = x + elW / 2;
+        const elCenterY = y + elH / 2;
         
         if (Math.abs(elCenterX - centerX) < this.snapThreshold) {
-            x = centerX - elRect.width / 2;
+            x = centerX - elW / 2;
             guides.push({ type: 'vertical', pos: centerX });
         }
         if (Math.abs(elCenterY - centerY) < this.snapThreshold) {
-            y = centerY - elRect.height / 2;
+            y = centerY - elH / 2;
             guides.push({ type: 'horizontal', pos: centerY });
         }
         
@@ -420,6 +439,7 @@ export class SlideEditorLogic {
     }
 
     selectElement(el) {
+        if (!el) { this.deselectAll(); return; }
         console.log('[SlideLogicCore] Selecting element:', el);
         
         this.deselectAll();
@@ -464,6 +484,7 @@ export class SlideEditorLogic {
             this.onElementSelect({
                 id: el.id, 
                 tagName: el.tagName,
+                dataType: el.dataset.type || 'shape',
                 innerHTML: el.innerHTML,
                 textContent: el.textContent,
                 content: el.textContent || el.innerHTML,
@@ -653,6 +674,49 @@ export class SlideEditorLogic {
         const el = this.selectedElements[0];
         if (!el) return 0;
         return parseInt(el.style.zIndex) || 0;
+    }
+
+    getMaxZIndex() {
+        let max = 0;
+        const elements = this.canvas.querySelectorAll('[data-selectable="true"], .element');
+        elements.forEach(el => {
+            if (el.classList.contains('resize-handle') ||
+                el.classList.contains('drag-handle') ||
+                el.classList.contains('smart-guide')) return;
+            const z = parseInt(el.style.zIndex) || 0;
+            if (z > max) max = z;
+        });
+        return max;
+    }
+
+    injectElement(html) {
+        const temp = document.createElement('div');
+        temp.innerHTML = html.trim();
+        const el = temp.firstElementChild;
+        if (!el || !(el instanceof HTMLElement)) return;
+
+        // Always put new element on top
+        const maxZ = this.getMaxZIndex();
+        el.style.zIndex = String(maxZ + 1);
+
+        // Ensure it has an ID
+        if (!el.id) {
+            el.id = `el_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+        }
+
+        // Ensure selectable
+        if (!el.hasAttribute('data-selectable')) el.setAttribute('data-selectable', 'true');
+        el.style.cursor = 'move';
+        if (!el.classList.contains('element')) el.classList.add('element');
+
+        // Append to canvas
+        this.canvas.appendChild(el);
+
+        // Select it immediately so user can drag/edit
+        this.selectElement(el);
+
+        // Save to undo history
+        this.saveHistory();
     }
 
     getSelectedElement() {

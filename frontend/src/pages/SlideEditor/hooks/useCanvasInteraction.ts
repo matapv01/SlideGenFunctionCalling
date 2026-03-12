@@ -76,9 +76,10 @@ export const useCanvasInteraction = ({
     
     // Create new element if not found
     if (!matchingElement && elementData.style) {
+      const elType = (elementData.dataType || 'shape') as SlideElement['type'];
       const newElement: SlideElement = {
         id: elementData.id,
-        type: 'text',
+        type: elType,
         content: elementData.content || elementData.innerHTML || elementData.textContent || "New Text",
         x: parseFloat(elementData.style.left) || 0,
         y: parseFloat(elementData.style.top) || 0,

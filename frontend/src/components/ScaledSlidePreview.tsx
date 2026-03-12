@@ -80,19 +80,33 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
           margin: 0 !important;
           padding: 0 !important;
           overflow: hidden !important;
+          background: transparent;
         }
       </style>
     `;
     
+    // Case 1: full HTML document — inject base styles into existing <head>
     if (processed.includes('</head>')) {
-      processed = processed.replace('</head>', `${baseStyles}</head>`);
-    } else if (processed.includes('<body')) {
-      processed = processed.replace('<body', `${baseStyles}<body`);
-    } else {
-      processed = `<!DOCTYPE html><html><head>${baseStyles}</head><body>${processed}</body></html>`;
+      return processed.replace('</head>', `${baseStyles}</head>`);
     }
-    
-    return processed;
+
+    // Case 2: fragment that starts with <body — inject before body tag
+    if (processed.includes('<body')) {
+      return processed.replace('<body', `${baseStyles}<body`);
+    }
+
+    // Case 3: fragment with <style> tags (CSS-preserved format from SlideCanvas.getHTML)
+    // Move style tags to <head> so they scope the full document properly
+    const styleTagRegex = /<style[^>]*>[\s\S]*?<\/style>/gi;
+    const styleTags = processed.match(styleTagRegex) ?? [];
+    if (styleTags.length > 0) {
+      const bodyContent = processed.replace(styleTagRegex, '').trim();
+      const extractedStyles = styleTags.join('\n');
+      return `<!DOCTYPE html><html><head>${baseStyles}${extractedStyles}</head><body>${bodyContent}</body></html>`;
+    }
+
+    // Case 4: plain fragment — wrap in full doc
+    return `<!DOCTYPE html><html><head>${baseStyles}</head><body>${processed}</body></html>`;
   };
 
   const processedHtml = processHtml(html);

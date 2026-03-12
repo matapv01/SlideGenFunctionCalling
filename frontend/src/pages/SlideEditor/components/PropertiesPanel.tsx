@@ -99,9 +99,14 @@ export const PropertiesPanel = ({
 
   if (!el) {
     return (
-      <div className="w-72 border-l bg-background p-6 flex flex-col items-center justify-center text-muted-foreground">
-        <MousePointer className="h-12 w-12 mb-4 opacity-20" />
-        <p className="text-sm text-center">Select an element to edit its properties</p>
+      <div className="w-72 border-l bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground px-8">
+        <div className="rounded-2xl bg-muted/60 p-5 flex items-center justify-center">
+          <MousePointer className="h-7 w-7 opacity-30" />
+        </div>
+        <div className="text-center space-y-1.5">
+          <p className="text-sm font-medium text-foreground/70">No element selected</p>
+          <p className="text-xs text-muted-foreground/70 leading-relaxed">Click an element on the canvas to edit its properties</p>
+        </div>
       </div>
     );
   }
