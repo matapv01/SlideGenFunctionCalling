@@ -11,7 +11,41 @@ export async function loadGeneratedSlidesIfAvailable() {
     if (projectName && source === 'generated') {
         console.log('📥 Loading converted slides from database API for project:', projectName);
         try {
-            const response = await fetch(`${window.config?.BACKEND_URL || 'http://localhost:3000'}/api/projects/by-name/${projectName}/slides`);
+            const token = localStorage.getItem('access_token');
+            const apiUrl = window.config?.BACKEND_URL || 'http://localhost:3000';
+            const response = await fetch(`${apiUrl}/api/projects/by-name/${encodeURIComponent(projectName)}/slides`, {
+                headers: token ? { 'Authorization': `Bearer ${token}` } : {}
+            });
+
+            if (response.status === 404 && token) {
+                console.warn('⚠️ by-name returned 404, trying to resolve project ID from /api/projects...');
+
+                const listResp = await fetch(`${apiUrl}/api/projects?limit=200&offset=0`, {
+                    headers: { 'Authorization': `Bearer ${token}` }
+                });
+
+                if (listResp.ok) {
+                    const listData = await listResp.json();
+                    const projects = Array.isArray(listData) ? listData : (listData.projects || []);
+
+                    const normalize = (v) => String(v || '').trim().toLowerCase();
+                    const target = normalize(projectName);
+
+                    const matched = projects.find(p => normalize(p?.title) === target)
+                        || projects.find(p => normalize(p?.title).includes(target));
+
+                    if (matched?.id) {
+                        console.log('✅ Resolved project id from title:', matched.id, matched.title);
+                        const newUrl = new URL(window.location.href);
+                        newUrl.searchParams.set('id', matched.id);
+                        newUrl.searchParams.set('source', 'generated');
+                        newUrl.searchParams.delete('project');
+                        window.location.replace(newUrl.toString());
+                        return;
+                    }
+                }
+            }
+
             if (!response.ok) {
                 throw new Error(`API error: ${response.status}`);
             }

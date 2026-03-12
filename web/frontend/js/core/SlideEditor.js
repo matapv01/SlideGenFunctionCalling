@@ -2093,6 +2093,17 @@ export class SlideEditor {
 
         document.getElementById('zoomIn').addEventListener('click', () => this.zoom(this.zoomLevel * 1.2));
         document.getElementById('zoomOut').addEventListener('click', () => this.zoom(this.zoomLevel / 1.2));
+
+        const zoomSlider = document.getElementById('zoomSlider');
+        if (zoomSlider) {
+            zoomSlider.addEventListener('input', (e) => {
+                const value = Number(e.target.value);
+                if (!Number.isNaN(value)) {
+                    this.zoom(value / 100);
+                }
+            });
+        }
+
         window.addEventListener('resize', () => this.fitToScreen());
         document.addEventListener('mousemove', (e) => this.handleMouseMove(e));
         document.addEventListener('mouseup', (e) => this.handleMouseUp(e));
@@ -2159,6 +2170,7 @@ export class SlideEditor {
 
                 if (leftPanels && leftPanels.classList.contains('collapsed')) {
                     leftPanels.classList.remove('collapsed');
+                    canvasContainer?.classList.remove('left-collapsed');
                     const toggleBtn = document.getElementById('toggleSlidesBtn');
                     if (toggleBtn) {
                         toggleBtn.title = 'Thu gọn Slides';
@@ -2183,6 +2195,9 @@ export class SlideEditor {
 
                 tab.classList.add('active');
                 document.getElementById(tab.dataset.target).classList.add('active');
+
+                // Re-fit after layout class changes (wide/collapsed) settle.
+                this.scheduleFitToScreen();
             });
         });
         window.addEventListener('blur', () => {
@@ -2346,6 +2361,7 @@ export class SlideEditor {
         if (this.propertiesPanel) {
             this.propertiesPanel.classList.add('open');
             this.canvasContainer?.classList.add('properties-open');
+            this.scheduleFitToScreen();
         }
     }
 
@@ -2353,6 +2369,7 @@ export class SlideEditor {
         if (this.propertiesPanel) {
             this.propertiesPanel.classList.remove('open');
             this.canvasContainer?.classList.remove('properties-open');
+            this.scheduleFitToScreen();
         }
     }
 
@@ -2360,6 +2377,7 @@ export class SlideEditor {
         if (this.propertiesPanel) {
             this.propertiesPanel.classList.toggle('open');
             this.canvasContainer?.classList.toggle('properties-open', this.propertiesPanel.classList.contains('open'));
+            this.scheduleFitToScreen();
         }
     }
 
@@ -6428,6 +6446,8 @@ export class SlideEditor {
             const isCollapsed = leftPanels.classList.contains('collapsed');
             toggleBtn.title = isCollapsed ? 'Mở rộng Sidebar' : 'Thu gọn Sidebar';
         }
+
+        this.scheduleFitToScreen();
     }
 
     toggleSlides() {
@@ -6444,10 +6464,17 @@ export class SlideEditor {
             toggleBtn.title = isCollapsed ? 'Mở rộng Slides' : 'Thu gọn Slides';
             toggleBtn.setAttribute('aria-pressed', (!isCollapsed).toString());
         }
+
+        this.scheduleFitToScreen();
+    }
+
+    scheduleFitToScreen() {
+        clearTimeout(this._fitTimeout);
+        this._fitTimeout = setTimeout(() => this.fitToScreen(), 420);
     }
 
     zoom(level) {
-        this.zoomLevel = Math.max(0.1, Math.min(5, level));
+        this.zoomLevel = Math.max(0.1, Math.min(2, level));
 
         // Preserve current background
         const currentBg = this.canvas.style.backgroundColor ||
@@ -6461,15 +6488,30 @@ export class SlideEditor {
         this.canvas.style.transition = 'transform 0.3s ease';
 
         this.updateBackgroundWrapperZoom(); // For compatibility
-        document.getElementById('zoomLevel').textContent = `${Math.round(this.zoomLevel * 100)}%`;
+        const zoomPercent = Math.round(this.zoomLevel * 100);
+        const zoomLevelEl = document.getElementById('zoomLevel');
+        if (zoomLevelEl) zoomLevelEl.textContent = `${zoomPercent}%`;
+
+        const zoomSliderEl = document.getElementById('zoomSlider');
+        if (zoomSliderEl) zoomSliderEl.value = String(zoomPercent);
 
         console.log('🔍 Zoom applied - flexbox centered:', this.zoomLevel, currentBg);
     }
 
     fitToScreen() {
-        // Default to 50% zoom - canvas auto-centered by flexbox
-        this.zoom(0.50);
-        document.getElementById('zoomLevel').textContent = '50%';
+        if (!this.canvasContainer) return;
+
+        // Calculate best-fit zoom for current available workspace.
+        const containerRect = this.canvasContainer.getBoundingClientRect();
+        const safePadding = 32;
+        const availableWidth = Math.max(200, containerRect.width - safePadding);
+        const availableHeight = Math.max(200, containerRect.height - safePadding);
+        const scaleX = availableWidth / 1920;
+        const scaleY = availableHeight / 1080;
+        const targetZoom = Math.max(0.1, Math.min(1, Math.min(scaleX, scaleY)));
+
+        this.zoom(targetZoom);
+        document.getElementById('zoomLevel').textContent = `${Math.round(targetZoom * 100)}%`;
 
         // Smooth zoom animation
         this.canvas.style.transition = 'transform 0.3s ease-in-out';
@@ -6477,7 +6519,7 @@ export class SlideEditor {
             this.canvas.style.transition = '';
         }, 300);
 
-        console.log('📐 Canvas fitted to screen at 50% zoom - centered by flexbox');
+        console.log('📐 Canvas fitted to screen with adaptive zoom:', targetZoom);
     }
 
     saveState() {

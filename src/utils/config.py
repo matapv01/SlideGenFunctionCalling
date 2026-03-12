@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 import re
 from PIL import Image
 import io
-
+import torch
 # ============================================================================
 # HYPERPARAMETERS - Tùy chỉnh để điều chỉnh hành vi của hệ thống
 # ============================================================================
@@ -67,7 +67,8 @@ EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Device cho embedding model: 'cpu', 'cuda', 'mps' (Apple Silicon)
 # Set 'cuda' nếu có GPU để tăng tốc embedding calculations
-EMBEDDING_DEVICE = "cuda"
+device = "cuda" if torch.cuda.is_available() else "cpu"
+EMBEDDING_DEVICE = device
 
 # Normalize embeddings để cosine similarity hoạt động tốt hơn
 # Recommend: True cho các model sentence-transformers

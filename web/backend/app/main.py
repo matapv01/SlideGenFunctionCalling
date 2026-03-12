@@ -236,68 +236,94 @@ def save_workflow_to_database(
             generation_params={}
         )
         
-        # Convert HTML slides to absolute positioning before saving
+        # Convert HTML slides to absolute positioning before saving.
+        # Be resilient to ZIP structures where HTML may not land strictly under output/html.
         html_folder = output_folder / "html"
         converted_folder = output_folder / "converted"
-        
-        if html_folder.exists():
-            # Convert HTML slides using converter.js
-            logger.info(f"🔄 Converting HTML slides to absolute positioning...")
-            conversion_result = conversion_service.convert_slides_batch(html_folder, converted_folder)
-            
-            if conversion_result['success']:
-                logger.info(f"✅ Successfully converted {len(conversion_result['success'])} slides")
-            if conversion_result['failed']:
-                logger.warning(f"⚠️ Failed to convert {len(conversion_result['failed'])} slides")
-            
-            # Read and save converted slides (prioritize converted, fallback to original)
+
+        html_files = sorted(
+            html_folder.glob("*.html") if html_folder.exists() else [],
+            key=extract_slide_index
+        )
+
+        if not html_files:
+            logger.warning("⚠️ No HTML found in output/html, scanning output folder recursively...")
             html_files = sorted(
-                html_folder.glob("*.html"),
+                [
+                    p for p in output_folder.rglob("*.html")
+                    if "converted_" not in p.name.lower() and "temp_debug" not in str(p).lower()
+                ],
                 key=extract_slide_index
             )
-            
-            for idx, html_file in enumerate(html_files):
-                # Try to read converted HTML first
-                converted_file = converted_folder / f"converted_{html_file.name}"
-                if converted_file.exists():
-                    logger.info(f"📄 Reading converted HTML: {converted_file.name}")
-                    with open(converted_file, 'r', encoding='utf-8') as f:
-                        html_content = f.read()
-                else:
-                    # Fallback to original HTML if conversion failed
-                    logger.warning(f"⚠️ Using original HTML (conversion failed): {html_file.name}")
-                    with open(html_file, 'r', encoding='utf-8') as f:
-                        html_content = f.read()
-                
-                # Extract slide type from filename
-                slide_name = html_file.stem
-                slide_type = 'content'  # Default
-                
-                if 'intro' in slide_name.lower() or idx == 0:
-                    slide_type = 'intro'
-                elif 'transition' in slide_name.lower():
-                    slide_type = 'transition'
-                elif 'thank' in slide_name.lower():
-                    slide_type = 'thank_you'
-                
-                # Create slide in database with converted HTML
-                create_slide(
-                    project_id=project_id,
-                    slide_index=idx,
-                    slide_type=slide_type,
-                    title=f"Slide {idx + 1}",
-                    html_content=html_content,
-                    design_settings={}
-                )
-            
-            # Update project slide count and status
-            update_project(
+            logger.info(f"🔎 Recursive HTML scan found {len(html_files)} file(s)")
+
+        # Snapshot converter reference to avoid race/mutation on global conversion_service.
+        converter = conversion_service
+        conversion_enabled = bool(
+            converter
+            and hasattr(converter, "convert_slides_batch")
+            and hasattr(converter, "is_available")
+            and converter.is_available()
+            and html_folder.exists()
+        )
+        if conversion_enabled:
+            logger.info("🔄 Converting HTML slides to absolute positioning...")
+            try:
+                conversion_result = converter.convert_slides_batch(html_folder, converted_folder)
+
+                if conversion_result.get('success'):
+                    logger.info(f"✅ Successfully converted {len(conversion_result['success'])} slides")
+                if conversion_result.get('failed'):
+                    logger.warning(f"⚠️ Failed to convert {len(conversion_result['failed'])} slides")
+            except Exception as conv_err:
+                logger.warning(f"⚠️ Converter error, fallback to original HTML: {conv_err}")
+                conversion_enabled = False
+        else:
+            logger.warning("⚠️ Converter unavailable or html folder missing - saving original HTML")
+
+        for idx, html_file in enumerate(html_files):
+            html_content = ""
+
+            # Prioritize converted HTML only when converter ran and a converted file exists.
+            converted_file = converted_folder / f"converted_{html_file.name}"
+            if conversion_enabled and converted_file.exists():
+                logger.info(f"📄 Reading converted HTML: {converted_file.name}")
+                with open(converted_file, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+            else:
+                if conversion_enabled:
+                    logger.warning(f"⚠️ Converted file missing, fallback to original: {html_file.name}")
+                with open(html_file, 'r', encoding='utf-8') as f:
+                    html_content = f.read()
+
+            # Extract slide type from filename
+            slide_name = html_file.stem
+            slide_type = 'content'
+
+            if 'intro' in slide_name.lower() or idx == 0:
+                slide_type = 'intro'
+            elif 'transition' in slide_name.lower():
+                slide_type = 'transition'
+            elif 'thank' in slide_name.lower():
+                slide_type = 'thank_you'
+
+            create_slide(
                 project_id=project_id,
-                slide_count=len(html_files),
-                status='completed'
+                slide_index=idx,
+                slide_type=slide_type,
+                title=f"Slide {idx + 1}",
+                html_content=html_content,
+                design_settings={}
             )
-            
-            logger.info(f"✅ Saved project {project_id} with {len(html_files)} slides to database")
+
+        # Update project slide count and status
+        update_project(
+            project_id=project_id,
+            slide_count=len(html_files),
+            status='completed' if html_files else 'processing'
+        )
+
+        logger.info(f"✅ Saved project {project_id} with {len(html_files)} slides to database")
         
         return project_id
         
@@ -1540,10 +1566,20 @@ async def get_project_slides_by_name(project_name: str):
     """Get slides for a project by name - uses converted HTML from database (public access)"""
     logger.info(f"🔓 Public API: Loading slides for project name: {project_name}")
     try:
-        # Find project by title/name
+        # Find project by title/name (case-insensitive, tolerant matching)
         from .database import get_all_projects
         projects = get_all_projects()
-        project = next((p for p in projects if p["title"] == project_name), None)
+        requested = str(project_name or "").strip().lower()
+
+        def _norm(value: str) -> str:
+            return str(value or "").strip().lower()
+
+        # 1) Exact normalized match
+        project = next((p for p in projects if _norm(p.get("title")) == requested), None)
+
+        # 2) Fallback: substring match for tolerant lookup
+        if not project and requested:
+            project = next((p for p in projects if requested in _norm(p.get("title"))), None)
         
         if not project:
             logger.warning(f"Project not found by name: {project_name}")

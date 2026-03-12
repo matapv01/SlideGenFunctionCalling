@@ -1,18 +1,18 @@
         .zoom-controls {
             position: fixed;
-            bottom: 190px;
-            /* Above bottom slides bar (170px + 20px margin) */
-            right: 30px;
+            bottom: 86px;
+            /* Align with top controls row of 130px bottom bar */
+            right: 15px;
             display: flex;
             gap: 12px;
-            z-index: 999;
+            z-index: 1002;
             transition: bottom 0.4s ease;
         }
 
         /* Adjust position when slides bar is compact */
         .zoom-controls.slides-compact {
-            bottom: 100px;
-            /* Above compact slides bar (80px + 20px margin) */
+            bottom: 72px;
+            /* Align with top controls row of compact 80px bottom bar */
         }
 
         .zoom-btn {
@@ -49,6 +49,16 @@
             min-width: 80px;
             justify-content: center;
             border: 1px solid var(--border-color);
+        }
+
+        .zoom-slider {
+            width: 150px;
+            accent-color: #667eea;
+            cursor: pointer;
+        }
+
+        .zoom-slider:focus {
+            outline: none;
         }
 
         .context-menu {
