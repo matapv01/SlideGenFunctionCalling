@@ -1,0 +1,241 @@
+// Mixin: mouse event handlers (mousedown, mousemove, mouseup, dblclick)
+export const EventHandlersMixin = {
+
+    handleDoubleClick(e) {
+        const target = e.target;
+
+        let textElement = target;
+        while (textElement && textElement !== this.root) {
+            if (textElement.hasAttribute('contenteditable')) break;
+            textElement = textElement.parentElement;
+        }
+
+        if (textElement && textElement !== this.root && textElement.hasAttribute('contenteditable')) {
+            this.isEditingText = true;
+            textElement.style.cursor = 'text';
+            textElement.focus();
+
+            this.hideSelectionUI();
+
+            const selection = window.getSelection();
+            const range = document.createRange();
+            range.selectNodeContents(textElement);
+            range.collapse(false);
+            selection.removeAllRanges();
+            selection.addRange(range);
+
+            e.preventDefault();
+            e.stopPropagation();
+        }
+    },
+
+    handleMouseDown(e) {
+        const target = e.target;
+
+        // If guides are lingering from a previous drag, clear them immediately
+        if (this._guideTimeout) { clearTimeout(this._guideTimeout); this._guideTimeout = null; }
+        this.clearSmartGuides();
+
+        // Allow ongoing text editing to continue unless clicking outside
+        if (this.isEditingText) {
+            let clickedElement = target;
+            let isClickingEditableElement = false;
+            while (clickedElement && clickedElement !== this.root) {
+                if (clickedElement.hasAttribute('contenteditable') && this.selectedElements.includes(clickedElement)) {
+                    isClickingEditableElement = true;
+                    break;
+                }
+                clickedElement = clickedElement.parentElement;
+            }
+            if (isClickingEditableElement) return;
+            this.exitEditMode();
+        }
+
+        const isDragHandle  = target.classList && target.classList.contains('drag-handle');
+        const isResizeHandle = target.classList && target.classList.contains('resize-handle');
+
+        // Click on canvas background → deselect
+        if (!isResizeHandle && !isDragHandle && target.classList && (
+            target.classList.contains('slide-bg-wrapper') ||
+            target.classList.contains('slide-container')
+        )) {
+            this.deselectAll();
+            return;
+        }
+
+        // Walk up to find the closest selectable ancestor
+        let targetElement = target;
+        while (targetElement && targetElement !== this.root) {
+            if (targetElement.hasAttribute('data-selectable') ||
+                targetElement.classList.contains('element') ||
+                targetElement.classList.contains('resize-handle') ||
+                targetElement.classList.contains('drag-handle')) {
+                break;
+            }
+            targetElement = targetElement.parentElement;
+        }
+
+        if (!targetElement || targetElement === this.root) {
+            this.deselectAll();
+            return;
+        }
+
+        // Resolve handle clicks to their parent selectable element
+        if (isResizeHandle || isDragHandle) {
+            const parentEl = target.closest('.element, [data-selectable]');
+            if (parentEl) targetElement = parentEl;
+        }
+
+        // RESIZE: grab handle info and prepare
+        if (isResizeHandle && this.selectedElements.length > 0) {
+            const el = this.selectedElements[0];
+            this.isResizing = true;
+            this.resizeHandle = target.classList[1]; // e.g. 'tl', 'tr', 'bl', 'br'
+            this.dragStart = { x: e.clientX, y: e.clientY };
+            if (el.style.position !== 'absolute') {
+                el.style.position = 'absolute';
+                el.style.left  = `${el.offsetLeft}px`;
+                el.style.top   = `${el.offsetTop}px`;
+                el.style.width = `${el.offsetWidth}px`;
+            }
+            this.elementsStartPos.clear();
+            this.elementsStartPos.set(el, { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
+        const isAlreadySelected = this.selectedElements.includes(targetElement);
+
+        // Not yet selected → defer selection to mouseup (cancel if drag happens)
+        if (!isAlreadySelected && !isDragHandle) {
+            this.pendingSelectElement = targetElement;
+            this.dragStart = { x: e.clientX, y: e.clientY };
+            return;
+        }
+
+        // Already selected or drag handle → prepare for drag
+        if (isDragHandle) {
+            this.selectElement(targetElement);
+        }
+
+        this.isPreparedForDrag = true;
+        this.draggedElement    = targetElement;
+        this.dragStart         = { x: e.clientX, y: e.clientY };
+
+        this.elementsStartPos.clear();
+        this.selectedElements.forEach(el => {
+            if (el.style.position !== 'absolute') {
+                el.style.position = 'absolute';
+                el.style.left = `${el.offsetLeft}px`;
+                el.style.top  = `${el.offsetTop}px`;
+            }
+            this.elementsStartPos.set(el, { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+        });
+    },
+
+    handleMouseMove(e) {
+        // Only start real drag after moving > 5px (prevents accidental drags)
+        if (this.isPreparedForDrag && !this.isDragging && this.dragStart) {
+            const dist = Math.sqrt(
+                Math.pow(e.clientX - this.dragStart.x, 2) +
+                Math.pow(e.clientY - this.dragStart.y, 2)
+            );
+            if (dist > 5) {
+                this.isDragging      = true;
+                this.isPreparedForDrag = false;
+            } else {
+                return;
+            }
+        }
+
+        // RESIZE
+        if (this.isResizing && this.selectedElements.length > 0) {
+            e.preventDefault();
+            const el        = this.selectedElements[0];
+            const startRect = this.elementsStartPos.get(el);
+            if (!startRect) return;
+
+            const dx = (e.clientX - this.dragStart.x) / this.currentScale;
+            const dy = (e.clientY - this.dragStart.y) / this.currentScale;
+            const { x, y, width, height } = startRect;
+
+            if (this.resizeHandle.includes('r')) el.style.width  = `${Math.max(20, width  + dx)}px`;
+            if (this.resizeHandle.includes('l')) { el.style.width  = `${Math.max(20, width  - dx)}px`; el.style.left = `${x + dx}px`; }
+            if (this.resizeHandle.includes('b')) el.style.height = `${Math.max(20, height + dy)}px`;
+            if (this.resizeHandle.includes('t')) { el.style.height = `${Math.max(20, height - dy)}px`; el.style.top  = `${y + dy}px`; }
+
+            this.updateSelectionUI();
+            return;
+        }
+
+        if (!this.isDragging || !this.selectedElements.length) return;
+        e.preventDefault();
+
+        const primaryElement = this.selectedElements[0];
+        const startPos       = this.elementsStartPos.get(primaryElement);
+        if (!startPos) return;
+
+        let finalDx = (e.clientX - this.dragStart.x) / this.currentScale;
+        let finalDy = (e.clientY - this.dragStart.y) / this.currentScale;
+
+        // Snap & guide lines
+        const snapped = this.snapToGuides(primaryElement, startPos.x + finalDx, startPos.y + finalDy);
+        finalDx = snapped.x - startPos.x;
+        finalDy = snapped.y - startPos.y;
+
+        // Move all selected elements (multi-select support)
+        this.selectedElements.forEach(el => {
+            const elStartPos = this.elementsStartPos.get(el);
+            if (elStartPos) {
+                el.style.left = `${elStartPos.x + finalDx}px`;
+                el.style.top  = `${elStartPos.y + finalDy}px`;
+            }
+        });
+
+        this.updateSelectionUI();
+        this.drawSmartGuides(snapped.guides);
+    },
+
+    handleMouseUp(e) {
+        // Confirm pending selection if the mouse barely moved (it was a click, not a drag)
+        if (this.pendingSelectElement) {
+            let shouldSelect = true;
+            if (this.dragStart && e) {
+                const dist = Math.sqrt(
+                    Math.pow(e.clientX - this.dragStart.x, 2) +
+                    Math.pow(e.clientY - this.dragStart.y, 2)
+                );
+                shouldSelect = dist <= 2;
+            }
+            if (shouldSelect) this.selectElement(this.pendingSelectElement);
+            this.pendingSelectElement = null;
+            this.dragStart            = null;
+            return;
+        }
+
+        if (this.isDragging || this.isResizing) {
+            let hasActualChange = false;
+            if (this.dragStart && e) {
+                const dist = Math.sqrt(
+                    Math.pow(e.clientX - this.dragStart.x, 2) +
+                    Math.pow(e.clientY - this.dragStart.y, 2)
+                );
+                hasActualChange = dist > 3;
+            }
+            if (hasActualChange) this.saveHistory();
+        }
+
+        this.isDragging         = false;
+        this.isResizing         = false;
+        this.isPreparedForDrag  = false;
+        this.resizeHandle       = null;
+        this.pendingSelectElement = null;
+        this.draggedElement     = null;
+        this.elementsStartPos.clear();
+        this.dragStart          = null;
+        // Keep guides visible briefly after release so user can confirm alignment
+        if (this._guideTimeout) clearTimeout(this._guideTimeout);
+        this._guideTimeout = setTimeout(() => this.clearSmartGuides(), 400);
+    },
+};

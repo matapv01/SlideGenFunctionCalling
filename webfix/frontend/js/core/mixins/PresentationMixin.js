@@ -26,6 +26,9 @@ export const PresentationMixin = {
         presentationMode.classList.add('active');
         this.presentationMode = true;
 
+        // Clean up any visible snap guides before entering presentation
+        this.hideSmartGuides();
+
         // Hide scrollbars
         document.body.style.overflow = 'hidden';
 

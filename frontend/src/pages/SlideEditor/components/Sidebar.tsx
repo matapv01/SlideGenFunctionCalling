@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { Plus, Trash2, Copy } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -15,6 +16,7 @@ interface SidebarProps {
   onAddSlideFromTemplate: (layout: string) => void;
   onDeleteSlide: (index: number) => void;
   onDuplicateSlide: (index: number) => void;
+  onReorderSlides: (fromIndex: number, toIndex: number) => void;
   onSetDraggedItem: (item: DragItem) => void;
   onAddElement: (type: string, subType: string) => void;
 }
@@ -96,9 +98,49 @@ export const EditorSidebar = ({
   onAddSlideFromTemplate,
   onDeleteSlide,
   onDuplicateSlide,
+  onReorderSlides,
   onSetDraggedItem,
   onAddElement,
 }: SidebarProps) => {
+  // Drag-reorder state
+  const dragIndexRef = useRef<number | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ index: number; position: 'before' | 'after' } | null>(null);
+
+  const handleSlideDragStart = (e: React.DragEvent, index: number) => {
+    dragIndexRef.current = index;
+    e.dataTransfer.effectAllowed = 'move';
+    // Prevent element-drag from sidebar interfering
+    e.dataTransfer.setData('slide-reorder', String(index));
+  };
+
+  const handleSlideDragOver = (e: React.DragEvent, index: number) => {
+    if (!e.dataTransfer.types.includes('slide-reorder')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    setDropTarget({ index, position: e.clientY < midY ? 'before' : 'after' });
+  };
+
+  const handleSlideDrop = (e: React.DragEvent, index: number) => {
+    e.preventDefault();
+    if (dragIndexRef.current === null) return;
+    const from = dragIndexRef.current;
+    const rect = (e.currentTarget as HTMLElement).getBoundingClientRect();
+    const midY = rect.top + rect.height / 2;
+    let to = e.clientY < midY ? index : index + 1;
+    // Adjust for removal of source item
+    if (from < to) to -= 1;
+    dragIndexRef.current = null;
+    setDropTarget(null);
+    onReorderSlides(from, to);
+  };
+
+  const handleSlideDragEnd = () => {
+    dragIndexRef.current = null;
+    setDropTarget(null);
+  };
+
   return (
     <div className={cn(
       "border-r bg-background flex transition-[width] duration-300 ease-in-out overflow-hidden shrink-0",
@@ -172,22 +214,35 @@ export const EditorSidebar = ({
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="slides" className="flex-1 overflow-y-auto p-2 space-y-1.5 mt-0">
-            <div className="grid gap-1.5">
+          <TabsContent value="slides" className="flex-1 overflow-y-auto p-2 space-y-0 mt-0">
+            <div className="grid gap-0">
               {slides.map((slide, idx) => {
                 const rawHtml = slide.elements[0]?.content || '';
+                const isDragging = dragIndexRef.current === idx;
+                const isDropBefore = dropTarget?.index === idx && dropTarget.position === 'before';
+                const isDropAfter  = dropTarget?.index === idx && dropTarget.position === 'after';
                 return (
-                  <div 
-                    key={slide.id}
-                    className={cn(
-                      "group relative aspect-video rounded-lg cursor-pointer transition-all duration-150 overflow-hidden border-2",
-                      currentSlideIndex === idx
-                        ? "border-primary ring-2 ring-primary/20 shadow-md shadow-primary/10"
-                        : "border-transparent hover:border-border/70 hover:shadow-sm"
+                  <div key={slide.id} className="relative">
+                    {/* Drop indicator — before */}
+                    {isDropBefore && (
+                      <div className="h-0.5 rounded-full bg-primary mx-1 mb-1 shadow-[0_0_6px_2px] shadow-primary/50" />
                     )}
-                    onClick={() => onSlideSelect(idx)}
-                  >
-                    <div className="absolute top-1.5 left-1.5 bg-black/55 backdrop-blur-sm text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md z-10 tabular-nums leading-tight">
+                    <div
+                      draggable
+                      onDragStart={(e) => handleSlideDragStart(e, idx)}
+                      onDragOver={(e) => handleSlideDragOver(e, idx)}
+                      onDrop={(e) => handleSlideDrop(e, idx)}
+                      onDragEnd={handleSlideDragEnd}
+                      className={cn(
+                        "group relative aspect-video rounded-lg cursor-grab active:cursor-grabbing transition-all duration-150 overflow-hidden border-2 mb-1.5",
+                        isDragging && "opacity-40 scale-95",
+                        currentSlideIndex === idx
+                          ? "border-primary ring-2 ring-primary/20 shadow-md shadow-primary/10"
+                          : "border-transparent hover:border-border/70 hover:shadow-sm"
+                      )}
+                      onClick={() => onSlideSelect(idx)}
+                    >
+                      <div className="absolute top-1.5 left-1.5 bg-black/55 backdrop-blur-sm text-white text-[9px] font-semibold px-1.5 py-0.5 rounded-md z-10 tabular-nums leading-tight">
                       {idx + 1}
                     </div>
                     {rawHtml ? (
@@ -222,6 +277,11 @@ export const EditorSidebar = ({
                         <Trash2 className="h-2.5 w-2.5" />
                       </Button>
                     </div>
+                    </div>
+                    {/* Drop indicator — after */}
+                    {isDropAfter && (
+                      <div className="h-0.5 rounded-full bg-primary mx-1 mt-0.5 mb-1 shadow-[0_0_6px_2px] shadow-primary/50" />
+                    )}
                   </div>
                 );
               })}

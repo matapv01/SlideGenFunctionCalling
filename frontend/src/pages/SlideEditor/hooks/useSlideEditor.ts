@@ -42,7 +42,7 @@ export const useSlideEditor = () => {
   const selectedElement = currentSlide?.elements.find(el => el.id === selectedElementId);
 
   // ── Slide CRUD ────────────────────────────────────────────────────────
-  const { addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide } = useSlideActions({
+  const { addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide, reorderSlides } = useSlideActions({
     slides,
     setSlides,
     currentSlideIndex,
@@ -88,7 +88,7 @@ export const useSlideEditor = () => {
   });
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────
-  useKeyboardShortcuts({ selectedElementId, deleteElement, handleSave });
+  useKeyboardShortcuts({ selectedElementId, deleteElement, handleSave, slideCanvasRef });
 
   return {
     // State
@@ -103,7 +103,7 @@ export const useSlideEditor = () => {
 
     // Actions
     navigate,
-    addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide,
+    addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide, reorderSlides,
     addElement, updateElement, deleteElement, duplicateElement, bringForward, sendBackward,
     handleDrop, handleSave, handleElementSelectFromCanvas, handleCanvasChange, selectSlide,
   };

@@ -37,6 +37,7 @@ const SlideEditor = () => {
     addElement,
     deleteSlide,
     duplicateSlide,
+    reorderSlides,
     updateElement,
     deleteElement,
     duplicateElement,
@@ -89,6 +90,7 @@ const SlideEditor = () => {
           onAddSlideFromTemplate={addSlideFromTemplate}
           onDeleteSlide={deleteSlide}
           onDuplicateSlide={duplicateSlide}
+          onReorderSlides={reorderSlides}
           onSetDraggedItem={setDraggedItem}
           onAddElement={(type, subType) => addElement({ type, subType }, 760, 440)}
         />
@@ -96,6 +98,8 @@ const SlideEditor = () => {
         {/* Canvas Area */}
         <CanvasArea
           currentSlide={currentSlide}
+          slides={slides}
+          currentSlideIndex={currentSlideIndex}
           zoom={zoom}
           canvasRef={canvasRef}
           slideCanvasRef={slideCanvasRef}
@@ -105,6 +109,8 @@ const SlideEditor = () => {
           onChange={handleCanvasChange}
           onZoomIn={() => setZoom(Math.min(2, zoom + 0.1))}
           onZoomOut={() => setZoom(Math.max(0.1, zoom - 0.1))}
+          onPrevSlide={() => currentSlideIndex > 0 && selectSlide(currentSlideIndex - 1)}
+          onNextSlide={() => currentSlideIndex < slides.length - 1 && selectSlide(currentSlideIndex + 1)}
         />
 
         {/* Properties Panel */}

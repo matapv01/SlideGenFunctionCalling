@@ -14,7 +14,7 @@ export class SlideEditor {
 
         this.verticalGuide = document.getElementById('vertical-guide');
         this.horizontalGuide = document.getElementById('horizontal-guide');
-        this.snapThreshold = 5;
+        this.snapThreshold = 8;
 
         // --- NEW: For Distance Guides ---
         this.isAltDown = false;
@@ -213,6 +213,7 @@ export class SlideEditor {
     }
 
     showSmartGuides(draggedElement, otherElements) {
+        if (this.presentationMode) return;
         this.hideSmartGuides();
 
         const draggedBounds = this.getElementBounds(draggedElement);
@@ -1198,7 +1199,10 @@ export class SlideEditor {
             console.log('💾 saveCurrentSlide triggered');
 
             const currentSlide = this.slides[this.currentSlideIndex];
-            currentSlide.content = this.canvas.innerHTML;
+            // Clone and strip transient UI elements before saving
+            const _clone = this.canvas.cloneNode(true);
+            _clone.querySelectorAll('.smart-guide, .distance-indicator, .distance-line, .canvas-grid').forEach(el => el.remove());
+            currentSlide.content = _clone.innerHTML;
 
             // IMPROVED: Lấy background từ multiple sources
             let backgroundColor = 'white';

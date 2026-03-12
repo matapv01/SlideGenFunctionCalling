@@ -50,11 +50,11 @@
         /* Canva-style Smart Guides and Visual Feedback */
         .smart-guide {
             position: absolute;
-            background: #ff6b9d;
+            background: #ff3d82;
             pointer-events: none;
             z-index: 10000;
             opacity: 0;
-            transition: opacity 0.1s ease;
+            transition: opacity 0.08s ease;
         }
 
         .smart-guide.visible {
@@ -62,13 +62,13 @@
         }
 
         .smart-guide-vertical {
-            width: 1px;
-            box-shadow: 0 0 0 0.5px #ff6b9d;
+            width: 1.5px;
+            box-shadow: 0 0 5px 1px rgba(255, 61, 130, 0.75), 0 0 0 0.5px #ff3d82;
         }
 
         .smart-guide-horizontal {
-            height: 1px;
-            box-shadow: 0 0 0 0.5px #ff6b9d;
+            height: 1.5px;
+            box-shadow: 0 0 5px 1px rgba(255, 61, 130, 0.75), 0 0 0 0.5px #ff3d82;
         }
 
         /* Distance indicators */

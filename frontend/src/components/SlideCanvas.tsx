@@ -21,6 +21,8 @@ export interface SlideCanvasHandle {
   getSelectedZIndex: () => number;
   getMaxZIndex: () => number;
   injectElement: (html: string) => void;
+  saveHistory: (silent?: boolean) => void;
+  reselectById: (id: string) => void;
 }
 
 export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((props, ref) => {
@@ -91,6 +93,12 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     },
     injectElement: (html: string) => {
       logicInstanceRef.current?.injectElement(html);
+    },
+    saveHistory: (silent = false) => {
+      logicInstanceRef.current?.saveHistory(silent);
+    },
+    reselectById: (id: string) => {
+      logicInstanceRef.current?.reselectById(id);
     },
   }));
 
@@ -186,8 +194,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
           console.log('🏷️ [SlideCanvas] Auto-set data-type:', elementType, 'for', tag, `(text: "${textContent.substring(0, 30)}...")`);
         }
         
-        // Add contenteditable ONLY for text elements
-        if (el.dataset.type === 'text' && !el.hasAttribute('contenteditable')) {
+        // Add contenteditable ONLY for text elements (not in read-only/presentation mode)
+        if (!isReadOnly && el.dataset.type === 'text' && !el.hasAttribute('contenteditable')) {
           el.setAttribute('contenteditable', 'true');
           console.log('✏️ [SlideCanvas] Auto-added contenteditable to:', tag);
         }
@@ -200,6 +208,19 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       }
     });
     
+    // In read-only mode (presentation/preview): strip any editor-only artifacts
+    // that may have been baked into previously-saved HTML.
+    if (isReadOnly) {
+      tempContainer.querySelectorAll('.resize-handle, .drag-handle, .smart-guide').forEach(el => el.remove());
+      tempContainer.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
+      tempContainer.querySelectorAll('[contenteditable]').forEach(el => el.removeAttribute('contenteditable'));
+      tempContainer.querySelectorAll('[data-selectable]').forEach(el => el.removeAttribute('data-selectable'));
+      tempContainer.querySelectorAll('[data-guide-key]').forEach(el => el.removeAttribute('data-guide-key'));
+      tempContainer.querySelectorAll<HTMLElement>('*').forEach(el => {
+        if (el.style && el.style.cursor === 'move') el.style.removeProperty('cursor');
+      });
+    }
+
     // Get enhanced body content
     let bodyContent = tempContainer.innerHTML;
     
@@ -302,37 +323,9 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         cursor: nwse-resize;
       }
       
-      /* Drag Handle */
+      /* Drag Handle — hidden, element is draggable directly */
       .drag-handle {
-        position: absolute;
-        top: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        width: 32px;
-        height: 24px;
-        background: #3b82f6;
-        color: white;
-        border-radius: 6px 6px 0 0;
-        display: none;
-        align-items: center;
-        justify-content: center;
-        cursor: move !important;
-        font-size: 14px;
-        font-weight: bold;
-        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-        transition: all 0.2s ease;
-        z-index: 101;
-        user-select: none;
-        pointer-events: auto !important;
-      }
-      
-      .element.selected .drag-handle {
-        display: flex;
-      }
-      
-      .drag-handle:hover {
-        background: #2563eb;
-        transform: translateX(-50%) scale(1.05);
+        display: none !important;
       }
       `}
       

@@ -15,6 +15,7 @@ interface UseSlideActionsReturn {
   addSlideFromTemplate: (layout: string) => Promise<void>;
   deleteSlide: (index: number) => void;
   duplicateSlide: (index: number) => void;
+  reorderSlides: (fromIndex: number, toIndex: number) => void;
 }
 
 function getTemplateHTML(layout: string): string {
@@ -134,11 +135,14 @@ export const useSlideActions = ({
 
   const deleteSlide = useCallback((index: number) => {
     if (slides.length <= 1) return;
+    const slideId = slides[index].id;
+    // Persist deletion to server (fire-and-forget)
+    api.deleteSlide(slideId).catch(e => console.error("❌ [deleteSlide]", e));
     setSlides(prev => prev.filter((_, i) => i !== index));
     if (currentSlideIndex >= index && currentSlideIndex > 0) {
       setCurrentSlideIndex(prev => prev - 1);
     }
-  }, [slides.length, currentSlideIndex, setSlides, setCurrentSlideIndex]);
+  }, [slides, currentSlideIndex, setSlides, setCurrentSlideIndex]);
 
   const duplicateSlide = useCallback((index: number) => {
     const slideToDup = slides[index];
@@ -154,10 +158,27 @@ export const useSlideActions = ({
     });
   }, [slides, setSlides]);
 
+  const reorderSlides = useCallback((fromIndex: number, toIndex: number) => {
+    if (fromIndex === toIndex) return;
+    setSlides(prev => {
+      const next = [...prev];
+      const [moved] = next.splice(fromIndex, 1);
+      next.splice(toIndex, 0, moved);
+      // Persist new slide_index for each slide (fire-and-forget)
+      next.forEach((slide, idx) => {
+        api.updateSlide(slide.id, { slide_index: idx }).catch(() => {});
+      });
+      return next;
+    });
+    // Keep currentSlideIndex tracking the moved slide
+    setCurrentSlideIndex(toIndex);
+  }, [setSlides, setCurrentSlideIndex]);
+
   return {
     addSlide,
     addSlideFromTemplate,
     deleteSlide,
-    duplicateSlide
+    duplicateSlide,
+    reorderSlides,
   };
 };

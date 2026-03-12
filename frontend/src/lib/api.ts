@@ -221,6 +221,7 @@ export const api = {
 
   updateSlide: (slideId: string | number, data: {
     title?: string;
+    slide_index?: number;
     content_text?: string;
     html_content?: string;
     design_settings?: any;

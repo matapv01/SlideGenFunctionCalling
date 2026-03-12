@@ -180,16 +180,16 @@ export const useAutoSave = ({
       defs: currentSlide.defs,
     };
 
-    console.log('🔄 [AUTO-SAVE] Captured HTML for slide:', currentSlide.id, '— scheduling save...');
+    console.log('🔄 [AUTO-SAVE] Captured HTML for slide:', currentSlide.id, '— saving immediately...');
 
-    // Debounce only the API call
+    // Save on the next tick so the DOM has fully settled, but with no noticeable delay
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
     autoSaveTimerRef.current = setTimeout(async () => {
       const data = pendingSaveRef.current;
       if (!data) return;
       pendingSaveRef.current = null;
       await executeSave(data);
-    }, 600);
+    }, 0);
   }, [currentSlide, slideCanvasRef, executeSave]);
 
   return {
