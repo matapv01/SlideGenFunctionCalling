@@ -38,7 +38,7 @@ const App = () => (
               <Route path="/guide" element={<Guide />} />
               <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
               <Route path="/streaming/:projectId" element={<ProtectedRoute><Streaming /></ProtectedRoute>} />
-              <Route path="/structure/:projectId" element={<ProtectedRoute><StructureEditor /></ProtectedRoute>} />
+              <Route path="/structure" element={<ProtectedRoute><StructureEditor /></ProtectedRoute>} />
               <Route path="/editor/:projectId" element={<ProtectedRoute><SlideEditor /></ProtectedRoute>} />
               <Route path="/present/:projectId" element={<ProtectedRoute><PresentationMode /></ProtectedRoute>} />
               <Route path="/view/:projectId" element={<ProtectedRoute><ViewProject /></ProtectedRoute>} />

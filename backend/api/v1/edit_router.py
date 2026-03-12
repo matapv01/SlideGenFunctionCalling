@@ -1,7 +1,11 @@
 # File: backend/api/v1/edit_router.py
 
-from fastapi import APIRouter, HTTPException, Depends
+from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 import logging
+import os
+import uuid
+from pathlib import Path
+
 from backend.api.schemas.edit_schema import (
     StructureUpdateRequest, 
     StructureApproveRequest, 
@@ -10,10 +14,77 @@ from backend.api.schemas.edit_schema import (
 )
 from backend.api.dependencies import get_structure_service
 from backend.application.services.structure_service import StructureService
+from backend.config import TEMP_DIR
 
 router = APIRouter(prefix="/structure", tags=["STRUCTURE"])
 logger = logging.getLogger("SlideGen-Structure")
 
+
+@router.post("/manual-session")
+async def create_manual_session(
+    file: UploadFile = File(...),
+    service: StructureService = Depends(get_structure_service)
+):
+    """Upload DOCX và khởi tạo session cho trình chỉnh sửa thủ công"""
+    filename = file.filename or "document.docx"
+    if not filename.lower().endswith(".docx"):
+        raise HTTPException(status_code=400, detail="Chỉ chấp nhận tệp DOCX")
+
+    TEMP_DIR.mkdir(parents=True, exist_ok=True)
+
+    safe_name = os.path.basename(filename)
+    unique_name = f"{uuid.uuid4().hex}_{safe_name}"
+    temp_path = TEMP_DIR / unique_name
+
+    try:
+        file_bytes = await file.read()
+        temp_path.write_bytes(file_bytes)
+        from docx import Document
+    except ImportError as exc:
+        logger.error("python-docx chưa được cài đặt: %s", exc)
+        raise HTTPException(status_code=500, detail="Thiếu thư viện python-docx")
+    except Exception as exc:
+        logger.error("Không thể lưu tệp DOCX: %s", exc)
+        raise HTTPException(status_code=500, detail="Không thể xử lý tệp tải lên")
+
+    try:
+        doc = Document(temp_path)
+        full_text = ""
+        paragraphs_data = []
+        for idx, para in enumerate(doc.paragraphs):
+            text = para.text.strip()
+            if not text:
+                continue
+            start_pos = len(full_text)
+            full_text += text + "\n\n"
+            paragraphs_data.append({
+                "index": idx,
+                "text": text,
+                "start_pos": start_pos,
+                "end_pos": len(full_text)
+            })
+
+        session_id = service.create_session(
+            filename=safe_name,
+            full_text=full_text,
+            paragraphs=paragraphs_data,
+            docx_path=str(temp_path)
+        )
+
+        logger.info("✅ Manual session created: %s (%s paragraphs)", session_id, len(paragraphs_data))
+
+        return {
+            "success": True,
+            "session_id": session_id,
+            "document_title": Path(safe_name).stem,
+            "text_length": len(full_text),
+            "paragraph_count": len(paragraphs_data)
+        }
+    except HTTPException:
+        raise
+    except Exception as exc:
+        logger.error("Manual session error: %s", exc)
+        raise HTTPException(status_code=500, detail="Không thể phân tích tài liệu")
 
 @router.get("/current", response_model=StructureResponse)
 async def get_current_structure(
