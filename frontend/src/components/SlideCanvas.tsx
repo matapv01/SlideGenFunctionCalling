@@ -17,6 +17,8 @@ export interface SlideCanvasHandle {
   getHTML: () => string;
   undo: () => void;
   redo: () => void;
+  canUndo: () => boolean;
+  canRedo: () => boolean;
   execFormat: (command: string, value?: string) => void;
   getSelectedZIndex: () => number;
   getMaxZIndex: () => number;
@@ -82,6 +84,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     redo: () => {
       logicInstanceRef.current?.redo();
     },
+    canUndo: () => logicInstanceRef.current?.canUndo() ?? false,
+    canRedo: () => logicInstanceRef.current?.canRedo() ?? false,
     execFormat: (command: string, value?: string) => {
       logicInstanceRef.current?.execFormat(command, value ?? null);
     },
@@ -235,6 +239,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         display: block;
         width: 100%;
         height: 100%;
+        overflow: hidden;
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       }
       
@@ -243,7 +248,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         height: 100%;
         min-height: 1080px;
         position: relative;
-        overflow: hidden;
+        overflow: hidden !important;
       }
       
       .slide-container {

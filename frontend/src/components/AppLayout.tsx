@@ -4,6 +4,7 @@ import { Home, FolderOpen, Settings, BookOpen, LogOut, Menu, X, ChevronDown, Use
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useAuth } from "@/contexts/AuthContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,13 +21,15 @@ import { cn } from "@/lib/utils";
 
 const SIDEBAR_COLLAPSED_KEY = "sidebar-collapsed";
 
-const navItems = [
-  { label: "SlideGen", path: "/slidegen", icon: Home },
-  { label: "Projects", path: "/projects", icon: FolderOpen },
-  { label: "Guide", path: "/guide", icon: BookOpen },
+const navItemDefs = [
+  { labelKey: "sidebar_slidegen" as const, path: "/slidegen", icon: Home },
+  { labelKey: "sidebar_projects" as const, path: "/projects", icon: FolderOpen },
+  { labelKey: "sidebar_guide" as const, path: "/guide", icon: BookOpen },
 ];
 
 export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const { t } = useLanguage();
+  const navItems = navItemDefs.map((item) => ({ ...item, label: t[item.labelKey] || item.labelKey }));
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
@@ -137,12 +140,12 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                   ) : (
                     <>
                       <PanelLeftClose className="h-4 w-4 flex-shrink-0" />
-                      <span>Collapse</span>
+                      <span>{t.sidebar_collapse}</span>
                     </>
                   )}
                 </button>
               </TooltipTrigger>
-              {sidebarCollapsed && <TooltipContent side="right">Expand sidebar</TooltipContent>}
+              {sidebarCollapsed && <TooltipContent side="right">{t.sidebar_expand}</TooltipContent>}
             </Tooltip>
           </TooltipProvider>
         </div>
@@ -160,10 +163,10 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                     )}
                   >
                     <LogOut className="h-4 w-4 flex-shrink-0" />
-                    {!sidebarCollapsed && "Logout"}
+                    {!sidebarCollapsed && t.sidebar_logout}
                   </button>
                 </TooltipTrigger>
-                {sidebarCollapsed && <TooltipContent side="right">Logout</TooltipContent>}
+                {sidebarCollapsed && <TooltipContent side="right">{t.sidebar_logout}</TooltipContent>}
               </Tooltip>
             </TooltipProvider>
           </div>
@@ -195,16 +198,16 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
                   <DropdownMenuItem onClick={() => navigate("/settings")}>
-                    <Settings className="mr-2 h-4 w-4" /> Settings
+                    <Settings className="mr-2 h-4 w-4" /> {t.nav_settings}
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" /> Logout
+                    <LogOut className="mr-2 h-4 w-4" /> {t.sidebar_logout}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
               <Button variant="outline" size="sm" onClick={() => navigate("/login")}>
-                <User className="mr-2 h-4 w-4" /> Login
+                <User className="mr-2 h-4 w-4" /> {t.nav_login}
               </Button>
             )}
           </div>

@@ -9,18 +9,20 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
-
-const workflowModes = [
-  { id: "auto_heading", label: "Auto with Heading", desc: "Automatically detect headings for slide breaks" },
-  { id: "auto_no_heading", label: "Auto without Heading", desc: "AI determines optimal slide structure" },
-  { id: "manual", label: "Manual Structure", desc: "Edit document structure before generating" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Index = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const docxRef = useRef<HTMLInputElement>(null);
   const zipRef = useRef<HTMLInputElement>(null);
+
+  const workflowModes = [
+    { id: "auto_heading", label: t.slidegen_workflow_auto_heading, desc: t.slidegen_workflow_auto_heading_desc },
+    { id: "auto_no_heading", label: t.slidegen_workflow_auto_no_heading, desc: t.slidegen_workflow_auto_no_heading_desc },
+    { id: "manual", label: t.slidegen_workflow_manual, desc: t.slidegen_workflow_manual_desc },
+  ];
 
   const [workflowMode, setWorkflowMode] = useState("auto_heading");
   const [enableTransitions, setEnableTransitions] = useState(false);
@@ -37,7 +39,7 @@ const Index = () => {
       if (workflowMode === "manual") {
         // Manual mode: upload for structure editing
         const res = await api.uploadDocxForManual(file);
-        toast({ title: "Upload successful", description: "Opening structure editor..." });
+        toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_opening_structure });
         navigate(`/structure?session=${res.session_id}`);
       } else {
         // Auto modes: upload for streaming workflow
@@ -46,11 +48,11 @@ const Index = () => {
           enable_thank_you_slide: enableThankYou,
           workflow_mode: workflowMode,
         });
-        toast({ title: "Upload successful", description: "Starting slide generation..." });
+        toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_starting });
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
       }
     } catch (err: any) {
-      toast({ title: "Upload failed", description: err.message, variant: "destructive" });
+      toast({ title: t.slidegen_toast_upload_fail, description: err.message, variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -58,12 +60,12 @@ const Index = () => {
 
   // ZIP import not supported - feature removed
   const handleZipUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    toast({ title: "Not available", description: "ZIP import is currently not supported", variant: "destructive" });
+    toast({ title: t.slidegen_toast_not_available, description: t.slidegen_toast_zip_unsupported, variant: "destructive" });
   };
 
   const handleCreateFromIdea = () => {
     if (!ideaTitle.trim()) {
-      toast({ title: "Please enter a title", variant: "destructive" });
+      toast({ title: t.slidegen_toast_no_title, variant: "destructive" });
       return;
     }
     navigate("/streaming/new", { state: { title: ideaTitle, description: ideaDescription, workflowMode, enableTransitions, enableThankYou } });
@@ -81,15 +83,14 @@ const Index = () => {
           <div className="relative mx-auto max-w-4xl text-center">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-border bg-card/50 px-4 py-1.5 text-sm backdrop-blur">
               <Sparkles className="h-4 w-4 text-primary" />
-              AI-Powered Slide Generation
+              {t.slidegen_badge}
             </div>
             <h1 className="mb-6 text-4xl font-extrabold tracking-tight sm:text-5xl lg:text-6xl">
-              Create Stunning Slides <br />
-              <span className="gradient-text">In Seconds</span>
+              {t.slidegen_h1} <br />
+              <span className="gradient-text">{t.slidegen_h1_span}</span>
             </h1>
             <p className="mx-auto mb-10 max-w-2xl text-lg text-muted-foreground">
-              Upload your documents, describe your ideas, or import existing projects.
-              SlideGen transforms your content into beautiful presentations with AI.
+              {t.slidegen_sub}
             </p>
           </div>
         </section>
@@ -103,13 +104,13 @@ const Index = () => {
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
                   <Upload className="h-6 w-6 text-primary-foreground" />
                 </div>
-                <CardTitle>Upload DOCX</CardTitle>
-                <CardDescription>Upload a Word document for automatic slide generation</CardDescription>
+                <CardTitle>{t.slidegen_upload_title}</CardTitle>
+                <CardDescription>{t.slidegen_upload_desc}</CardDescription>
               </CardHeader>
               <CardContent>
                 <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
                 <Button variant="outline" className="w-full" disabled={isUploading}>
-                  {isUploading ? "Uploading..." : "Choose File"} <ArrowRight className="ml-2 h-4 w-4" />
+                  {isUploading ? t.slidegen_uploading : t.slidegen_choose_file} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
@@ -120,13 +121,13 @@ const Index = () => {
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-info">
                   <FileArchive className="h-6 w-6 text-info-foreground" />
                 </div>
-                <CardTitle>Import ZIP</CardTitle>
-                <CardDescription>Import an existing project archive</CardDescription>
+                <CardTitle>{t.slidegen_zip_title}</CardTitle>
+                <CardDescription>{t.slidegen_zip_desc}</CardDescription>
               </CardHeader>
               <CardContent>
                 <input ref={zipRef} type="file" accept=".zip" className="hidden" onChange={handleZipUpload} />
                 <Button variant="outline" className="w-full" disabled={isUploading}>
-                  {isUploading ? "Importing..." : "Choose File"} <ArrowRight className="ml-2 h-4 w-4" />
+                  {isUploading ? t.slidegen_importing : t.slidegen_choose_file} <ArrowRight className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
@@ -137,19 +138,19 @@ const Index = () => {
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-accent">
                   <Lightbulb className="h-6 w-6 text-accent-foreground" />
                 </div>
-                <CardTitle>Create from Idea</CardTitle>
-                <CardDescription>Describe your presentation and let AI build it</CardDescription>
+                <CardTitle>{t.slidegen_idea_title}</CardTitle>
+                <CardDescription>{t.slidegen_idea_desc}</CardDescription>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Input placeholder="Presentation title" value={ideaTitle} onChange={(e) => setIdeaTitle(e.target.value)} />
+                <Input placeholder={t.slidegen_idea_title_ph} value={ideaTitle} onChange={(e) => setIdeaTitle(e.target.value)} />
                 <textarea
-                  placeholder="Describe your presentation..."
+                  placeholder={t.slidegen_idea_desc_ph}
                   value={ideaDescription}
                   onChange={(e) => setIdeaDescription(e.target.value)}
                   className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
                 <Button className="w-full gradient-primary text-primary-foreground" onClick={handleCreateFromIdea}>
-                  Generate <Sparkles className="ml-2 h-4 w-4" />
+                  {t.slidegen_generate} <Sparkles className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
@@ -160,12 +161,12 @@ const Index = () => {
         <section className="mx-auto max-w-4xl px-4 pb-20">
           <Card className="glass">
             <CardHeader>
-              <CardTitle className="text-lg">Generation Options</CardTitle>
+              <CardTitle className="text-lg">{t.slidegen_options}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-6">
               {/* Workflow modes */}
               <div>
-                <Label className="mb-3 block text-sm font-medium">Workflow Mode</Label>
+                <Label className="mb-3 block text-sm font-medium">{t.slidegen_workflow}</Label>
                 <div className="grid gap-3 sm:grid-cols-3">
                   {workflowModes.map((mode) => (
                     <button
@@ -188,11 +189,11 @@ const Index = () => {
               <div className="flex flex-wrap gap-6">
                 <div className="flex items-center gap-2">
                   <Switch id="transitions" checked={enableTransitions} onCheckedChange={setEnableTransitions} />
-                  <Label htmlFor="transitions" className="text-sm">Enable Transition Slides</Label>
+                  <Label htmlFor="transitions" className="text-sm">{t.slidegen_transitions}</Label>
                 </div>
                 <div className="flex items-center gap-2">
                   <Switch id="thankyou" checked={enableThankYou} onCheckedChange={setEnableThankYou} />
-                  <Label htmlFor="thankyou" className="text-sm">Enable Thank You Slide</Label>
+                  <Label htmlFor="thankyou" className="text-sm">{t.slidegen_thankyou}</Label>
                 </div>
               </div>
             </CardContent>
@@ -201,10 +202,10 @@ const Index = () => {
           {/* Nav links */}
           <div className="mt-8 flex justify-center gap-4">
             <Button variant="outline" onClick={() => navigate("/guide")}>
-              <BookOpen className="mr-2 h-4 w-4" /> Read the Guide
+              <BookOpen className="mr-2 h-4 w-4" /> {t.slidegen_read_guide}
             </Button>
             <Button variant="outline" onClick={() => navigate("/login")}>
-              Sign In
+              {t.home_sign_in}
             </Button>
           </div>
         </section>

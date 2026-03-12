@@ -5,10 +5,12 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
 import { cn } from "@/lib/utils";
 import { ReadOnlySlide } from "@/components/ReadOnlySlide";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const PresentationMode = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const { t } = useLanguage();
   const [slides, setSlides] = useState<any[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -104,8 +106,8 @@ const PresentationMode = () => {
           />
         ) : (
           <div className="text-center text-muted-foreground">
-            <p className="text-2xl font-bold">Slide {currentSlide + 1}</p>
-            <p className="text-sm">No content</p>
+            <p className="text-2xl font-bold">{t.present_slide} {currentSlide + 1}</p>
+            <p className="text-sm">{t.present_no_content}</p>
           </div>
         )}
       </div>
@@ -113,6 +115,30 @@ const PresentationMode = () => {
       {/* Click zones */}
       <div className="absolute inset-y-0 left-0 w-1/4 cursor-pointer" onClick={prev} />
       <div className="absolute inset-y-0 right-0 w-1/4 cursor-pointer" onClick={next} />
+
+      {/* Side navigation arrows */}
+      {currentSlide > 0 && (
+        <button
+          onClick={prev}
+          className={cn(
+            "absolute left-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-200 w-12 h-12",
+            showControls ? "opacity-80" : "opacity-0"
+          )}
+        >
+          <ChevronLeft className="h-7 w-7 text-white" />
+        </button>
+      )}
+      {currentSlide < slides.length - 1 && (
+        <button
+          onClick={next}
+          className={cn(
+            "absolute right-4 top-1/2 -translate-y-1/2 z-20 flex items-center justify-center rounded-full bg-black/30 hover:bg-black/50 backdrop-blur-sm transition-all duration-200 w-12 h-12",
+            showControls ? "opacity-80" : "opacity-0"
+          )}
+        >
+          <ChevronRight className="h-7 w-7 text-white" />
+        </button>
+      )}
 
       {/* Controls overlay */}
       <div className={cn(

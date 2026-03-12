@@ -3,6 +3,7 @@ import type { Slide } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
 import { useSlideExport } from "../hooks/useSlideExport";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -23,6 +24,7 @@ export const ExportModal = ({
 }: ExportModalProps) => {
   const { exportAllSlidesToPdf, captureAllSlides, isExporting, exportResult, exportError, resetExport } =
     useSlideExport();
+  const { t } = useLanguage();
 
   const handleExport = async (type: 'pdf' | 'images') => {
     try {
@@ -67,7 +69,7 @@ export const ExportModal = ({
         {exportResult ? (
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 52, marginBottom: 16 }}>✅</div>
-            <h2 style={{ margin: '0 0 8px', color: '#2d3748' }}>Xuất thành công!</h2>
+            <h2 style={{ margin: '0 0 8px', color: '#2d3748' }}>{t.export_success_title}</h2>
             <p style={{ color: '#718096', marginBottom: 24, fontSize: 14 }}>{exportResult.message}</p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
               <a
@@ -80,7 +82,7 @@ export const ExportModal = ({
                   color: 'white', border: 'none', borderRadius: 8, cursor: 'pointer',
                   fontWeight: 600, fontSize: 14,
                 }}>
-                  💾 Tải về
+                  {t.export_download}
                 </button>
               </a>
               <button
@@ -90,7 +92,7 @@ export const ExportModal = ({
                   border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14,
                 }}
               >
-                Đóng
+                {t.export_close}
               </button>
             </div>
           </div>
@@ -99,9 +101,9 @@ export const ExportModal = ({
           /* ── Trạng thái: Đang xử lý ── */
           <div style={{ textAlign: 'center', padding: '20px 0' }}>
             <div style={{ fontSize: 52, marginBottom: 16 }}>⏳</div>
-            <h2 style={{ color: '#2d3748', marginBottom: 8 }}>Đang xuất slides...</h2>
+            <h2 style={{ color: '#2d3748', marginBottom: 8 }}>{t.export_processing_title}</h2>
             <p style={{ color: '#718096', fontSize: 14 }}>
-              Đang xử lý {slides.length} slide{slides.length > 1 ? 's' : ''}
+              {t.export_processing_sub} {slides.length} slide{slides.length > 1 ? 's' : ''}
             </p>
           </div>
 
@@ -109,7 +111,7 @@ export const ExportModal = ({
           /* ── Trạng thái: Lỗi ── */
           <div style={{ textAlign: 'center' }}>
             <div style={{ fontSize: 52, marginBottom: 16 }}>❌</div>
-            <h2 style={{ margin: '0 0 8px', color: '#e53e3e' }}>Xuất thất bại</h2>
+            <h2 style={{ margin: '0 0 8px', color: '#e53e3e' }}>{t.export_error_title}</h2>
             <p style={{ color: '#718096', marginBottom: 24, fontSize: 14 }}>{exportError}</p>
             <div style={{ display: 'flex', gap: 10, justifyContent: 'center' }}>
               <button
@@ -120,7 +122,7 @@ export const ExportModal = ({
                   fontWeight: 600, fontSize: 14,
                 }}
               >
-                Thử lại
+                {t.export_retry}
               </button>
               <button
                 onClick={handleClose}
@@ -129,7 +131,7 @@ export const ExportModal = ({
                   border: 'none', borderRadius: 8, cursor: 'pointer', fontSize: 14,
                 }}
               >
-                Đóng
+                {t.export_close}
               </button>
             </div>
           </div>
@@ -137,9 +139,9 @@ export const ExportModal = ({
         ) : (
           /* ── Trạng thái: Chọn định dạng ── */
           <>
-            <h2 style={{ margin: '0 0 6px', color: '#2d3748' }}>Xuất Slides</h2>
+            <h2 style={{ margin: '0 0 6px', color: '#2d3748' }}>{t.export_title}</h2>
             <p style={{ color: '#718096', marginBottom: 20, fontSize: 14 }}>
-              {slides.length} slide{slides.length > 1 ? 's' : ''} · Chọn định dạng xuất:
+              {slides.length} {t.export_subtitle}
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 20 }}>
@@ -159,8 +161,8 @@ export const ExportModal = ({
                   e.currentTarget.style.background = 'white';
                 }}
               >
-                <div style={{ fontWeight: 600, color: '#2d3748', marginBottom: 4 }}>📄 Xuất PDF</div>
-                <div style={{ fontSize: 13, color: '#718096' }}>Ghép tất cả slides thành một file PDF</div>
+                <div style={{ fontWeight: 600, color: '#2d3748', marginBottom: 4 }}>{t.export_pdf_title}</div>
+                <div style={{ fontSize: 13, color: '#718096' }}>{t.export_pdf_desc}</div>
               </button>
 
               <button
@@ -179,8 +181,8 @@ export const ExportModal = ({
                   e.currentTarget.style.background = 'white';
                 }}
               >
-                <div style={{ fontWeight: 600, color: '#2d3748', marginBottom: 4 }}>🖼️ Xuất hình ảnh</div>
-                <div style={{ fontSize: 13, color: '#718096' }}>Chụp từng slide thành ảnh PNG, tải về dạng ZIP</div>
+                <div style={{ fontWeight: 600, color: '#2d3748', marginBottom: 4 }}>{t.export_images_title}</div>
+                <div style={{ fontSize: 13, color: '#718096' }}>{t.export_images_desc}</div>
               </button>
             </div>
 
@@ -193,7 +195,7 @@ export const ExportModal = ({
                   borderRadius: 6, cursor: 'pointer', fontSize: 14,
                 }}
               >
-                Hủy
+                {t.export_cancel}
               </button>
             </div>
           </>

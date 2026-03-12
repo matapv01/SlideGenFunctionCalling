@@ -5,7 +5,7 @@ import {
   ChevronUp, ChevronDown, Copy, Trash2,
   Move, Maximize2, RotateCw, Type, Eye, Sun, Droplets,
   PaintBucket, Layers, SquareDashed, Blend, Space,
-  BringToFront, SendToBack,
+  BringToFront, SendToBack, Ban,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,6 +16,7 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/comp
 import { cn } from "@/lib/utils";
 import type { SlideElement } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // ─── Tooltip helper ───────────────────────────────────────────────────────────
 const Tip = ({
@@ -186,6 +187,7 @@ export const PropertiesPanel = ({
   onBringForward,
   onSendBackward,
 }: PropertiesPanelProps) => {
+  const { t } = useLanguage();
   const el = selectedElement;
 
   if (!el) {
@@ -195,8 +197,8 @@ export const PropertiesPanel = ({
           <MousePointer className="h-7 w-7 opacity-30" />
         </div>
         <div className="text-center space-y-1.5">
-          <p className="text-sm font-medium text-foreground/70">No element selected</p>
-          <p className="text-xs text-muted-foreground/70 leading-relaxed">Click on an element in the canvas to edit it</p>
+          <p className="text-sm font-medium text-foreground/70">{t.editor_no_element}</p>
+          <p className="text-xs text-muted-foreground/70 leading-relaxed">{t.editor_no_element_desc}</p>
         </div>
       </div>
     );
@@ -220,7 +222,12 @@ export const PropertiesPanel = ({
     slideCanvasRef?.current?.execFormat(command, value);
   };
 
-  const typeLabel: Record<string, string> = { text: 'Text', image: 'Image', shape: 'Shape', video: 'Video' };
+  const typeLabel: Record<string, string> = {
+    text: t.editor_type_text,
+    image: t.editor_type_image,
+    shape: t.editor_type_shape,
+    video: t.editor_type_video,
+  };
 
   return (
     <TooltipProvider>
@@ -232,23 +239,23 @@ export const PropertiesPanel = ({
           {typeLabel[el.type] ?? el.type}
         </span>
         <div className="flex items-center gap-0.5">
-          <Tip label="Send Backward" desc="Other elements will appear on top of this one">
+          <Tip label={t.editor_send_backward} desc={t.editor_send_backward_desc}>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onSendBackward?.()}>
               <SendToBack className="h-3.5 w-3.5" />
             </Button>
           </Tip>
-          <Tip label="Bring Forward" desc="This element will appear on top of others">
+          <Tip label={t.editor_bring_forward} desc={t.editor_bring_forward_desc}>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onBringForward?.()}>
               <BringToFront className="h-3.5 w-3.5" />
             </Button>
           </Tip>
           <Separator orientation="vertical" className="h-4 mx-0.5" />
-          <Tip label="Duplicate" shortcut="Ctrl+D" desc="Create a copy of this element">
+          <Tip label={t.editor_duplicate} shortcut="Ctrl+D" desc={t.editor_duplicate_desc}>
             <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => onDuplicateElement?.()}>
               <Copy className="h-3.5 w-3.5" />
             </Button>
           </Tip>
-          <Tip label="Delete" shortcut="Del" desc="Permanently remove this element from the slide">
+          <Tip label={t.editor_delete} shortcut="Del" desc={t.editor_delete_desc}>
             <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive" onClick={() => onDeleteElement?.()}>
               <Trash2 className="h-3.5 w-3.5" />
             </Button>
@@ -260,24 +267,24 @@ export const PropertiesPanel = ({
 
         {/* ── 1. POSITION & SIZE ── */}
         <div>
-          <SectionLabel icon={Move} label="Transform" />
+          <SectionLabel icon={Move} label={t.editor_section_transform} />
           <div className="grid grid-cols-2 gap-1.5">
-            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">X</span>} title="X position"
+            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">X</span>} title={t.editor_prop_x}
               type="number" value={Math.round(el.x)}
               onChange={e => onUpdateElement(el.id, { x: Number((e.target as HTMLInputElement).value) })} />
-            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">Y</span>} title="Y position"
+            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">Y</span>} title={t.editor_prop_y}
               type="number" value={Math.round(el.y)}
               onChange={e => onUpdateElement(el.id, { y: Number((e.target as HTMLInputElement).value) })} />
-            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">W</span>} title="Width"
+            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">W</span>} title={t.editor_prop_width}
               type="number" value={Math.round(el.width)}
               onChange={e => onUpdateElement(el.id, { width: Number((e.target as HTMLInputElement).value) })} />
-            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">H</span>} title="Height"
+            <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">H</span>} title={t.editor_prop_height}
               type="number" value={Math.round(el.height)}
               onChange={e => onUpdateElement(el.id, { height: Number((e.target as HTMLInputElement).value) })} />
           </div>
           <div className="mt-1.5">
             <IconSlider
-              icon={RotateCw} title="Rotation"
+              icon={RotateCw} title={t.editor_prop_rotation}
               min={-180} max={180} step={1}
               value={el.rotation || 0}
               onValueChange={v => onUpdateElement(el.id, { rotation: v[0] })}
@@ -292,7 +299,7 @@ export const PropertiesPanel = ({
         {el.type === 'text' && (
           <>
             <div>
-              <SectionLabel icon={Type} label="Typography" />
+              <SectionLabel icon={Type} label={t.editor_section_typography} />
 
               {/* Font family */}
               <Select value={matchFontFamily(el.fontFamily)}
@@ -316,21 +323,21 @@ export const PropertiesPanel = ({
                     ))}
                   </SelectContent>
                 </Select>
-                <IconInput icon={() => <span className="text-[9px] font-bold text-muted-foreground">Aa</span>} title="Font size"
+                <IconInput icon={() => <span className="text-[9px] font-bold text-muted-foreground">Aa</span>} title={t.editor_prop_font_size}
                   type="number" value={el.fontSize || 16} min={8} max={500}
                   onChange={e => onUpdateElement(el.id, { fontSize: Number((e.target as HTMLInputElement).value) })} />
-                <IconInput icon={() => <span className="text-[9px] font-bold text-muted-foreground">≡</span>} title="Line height"
+                <IconInput icon={() => <span className="text-[9px] font-bold text-muted-foreground">≡</span>} title={t.editor_prop_line_height}
                   type="number" value={parseFloat(el.lineHeight || '1.4')} min={0.5} max={5} step={0.1}
                   onChange={e => onUpdateElement(el.id, { lineHeight: (e.target as HTMLInputElement).value })} />
               </div>
 
               {/* Letter spacing + Text color */}
               <div className="grid grid-cols-2 gap-1.5 mb-1.5">
-                <IconInput icon={Space} title="Letter spacing"
+                <IconInput icon={Space} title={t.editor_prop_letter_spacing}
                   type="number" value={parseFloat(el.letterSpacing || '0')} step={0.5}
                   onChange={e => onUpdateElement(el.id, { letterSpacing: `${(e.target as HTMLInputElement).value}px` })} />
                 {/* Text color swatch */}
-                <div className="flex items-center gap-1.5 bg-muted/30 rounded-md px-2 h-8 border border-border/50" title="Text color">
+                <div className="flex items-center gap-1.5 bg-muted/30 rounded-md px-2 h-8 border border-border/50" title={t.editor_prop_text_color}>
                   <span className="text-[9px] font-bold text-muted-foreground shrink-0">A</span>
                   <input type="color" value={el.color || '#000000'}
                     onChange={e => onUpdateElement(el.id, { color: e.target.value })}
@@ -341,10 +348,10 @@ export const PropertiesPanel = ({
               {/* Text align */}
               <div className="flex border rounded-md p-0.5 bg-muted/20 gap-0.5 mb-1.5">
                 {([
-                  { value: 'left', Icon: AlignLeft, title: 'Align Left', desc: 'Align text to the left' },
-                  { value: 'center', Icon: AlignCenter, title: 'Align Center', desc: 'Center the text' },
-                  { value: 'right', Icon: AlignRight, title: 'Align Right', desc: 'Align text to the right' },
-                  { value: 'justify', Icon: AlignJustify, title: 'Justify', desc: 'Justify text on both sides' },
+                  { value: 'left', Icon: AlignLeft, title: t.editor_align_left, desc: t.editor_align_left_desc },
+                  { value: 'center', Icon: AlignCenter, title: t.editor_align_center, desc: t.editor_align_center_desc },
+                  { value: 'right', Icon: AlignRight, title: t.editor_align_right, desc: t.editor_align_right_desc },
+                  { value: 'justify', Icon: AlignJustify, title: t.editor_align_justify, desc: t.editor_align_justify_desc },
                 ] as const).map(({ value, Icon, title, desc }) => (
                   <Tip key={value} label={title} desc={desc} side="bottom">
                     <Button
@@ -360,11 +367,11 @@ export const PropertiesPanel = ({
               {/* Format buttons */}
               <div className="flex border rounded-md p-0.5 bg-muted/20 gap-0.5">
                 {[
-                  { cmd: 'bold', title: 'Bold', desc: 'Make selected text bold', Icon: Bold },
-                  { cmd: 'italic', title: 'Italic', desc: 'Make selected text italic', Icon: Italic },
-                  { cmd: 'underline', title: 'Underline', desc: 'Underline selected text', Icon: Underline },
-                  { cmd: 'strikeThrough', title: 'Strikethrough', desc: 'Strike through the text', Icon: Strikethrough },
-                  { cmd: 'removeFormat', title: 'Clear Format', desc: 'Remove all text formatting', Icon: Eraser },
+                  { cmd: 'bold', title: t.editor_fmt_bold, desc: t.editor_fmt_bold_desc, Icon: Bold },
+                  { cmd: 'italic', title: t.editor_fmt_italic, desc: t.editor_fmt_italic_desc, Icon: Italic },
+                  { cmd: 'underline', title: t.editor_fmt_underline, desc: t.editor_fmt_underline_desc, Icon: Underline },
+                  { cmd: 'strikeThrough', title: t.editor_fmt_strikethrough, desc: t.editor_fmt_strikethrough_desc, Icon: Strikethrough },
+                  { cmd: 'removeFormat', title: t.editor_fmt_clear, desc: t.editor_fmt_clear_desc, Icon: Eraser },
                 ].map(({ cmd, title, desc, Icon }) => (
                   <Tip key={cmd} label={title} desc={desc} side="bottom">
                     <Button variant="ghost" size="icon" className="h-7 flex-1"
@@ -382,22 +389,43 @@ export const PropertiesPanel = ({
 
         {/* ── 3. APPEARANCE ── */}
         <div>
-          <SectionLabel icon={PaintBucket} label="Appearance" />
+          <SectionLabel icon={PaintBucket} label={t.editor_section_appearance} />
 
           {/* Fill */}
-          <div className="flex items-center gap-1.5 bg-muted/30 rounded-md px-2 py-1.5 border border-border/50 mb-1.5" title="Fill color">
-            <PaintBucket className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-            <input type="color" value={el.fillColor || '#ffffff'}
-              onChange={e => onUpdateElement(el.id, { fillColor: e.target.value })}
-              className="h-5 w-7 rounded cursor-pointer border-0 outline-none bg-transparent shrink-0" />
-            <input type="text" value={el.fillColor || ''}
-              onChange={e => onUpdateElement(el.id, { fillColor: e.target.value })}
-              className="flex-1 bg-transparent text-xs outline-none font-mono min-w-0" placeholder="#ffffff" />
-          </div>
+          {(() => {
+            const isTransparent = !el.fillColor || el.fillColor === 'transparent' || el.fillColor === 'none';
+            return (
+              <div className="flex items-center gap-1.5 mb-1.5">
+                <div className={cn(
+                  "flex items-center gap-1.5 flex-1 rounded-md px-2 py-1.5 border",
+                  isTransparent
+                    ? "bg-muted/10 border-border/30 opacity-40 pointer-events-none"
+                    : "bg-muted/30 border-border/50"
+                )}>
+                  <PaintBucket className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
+                  <input type="color" value={isTransparent ? '#ffffff' : (el.fillColor || '#ffffff')}
+                    onChange={e => onUpdateElement(el.id, { fillColor: e.target.value })}
+                    className="h-5 w-7 rounded cursor-pointer border-0 outline-none bg-transparent shrink-0" />
+                  <input type="text" value={isTransparent ? '' : (el.fillColor || '')}
+                    onChange={e => onUpdateElement(el.id, { fillColor: e.target.value })}
+                    className="flex-1 bg-transparent text-xs outline-none font-mono min-w-0" placeholder="#ffffff" />
+                </div>
+                <Tip label={t.editor_no_fill} desc={t.editor_no_fill_desc} side="left">
+                  <Button
+                    variant={isTransparent ? 'secondary' : 'ghost'}
+                    size="icon"
+                    className="h-8 w-8 shrink-0"
+                    onClick={() => onUpdateElement(el.id, { fillColor: isTransparent ? '#ffffff' : 'transparent' })}>
+                    <Ban className="h-3.5 w-3.5" />
+                  </Button>
+                </Tip>
+              </div>
+            );
+          })()}
 
           {/* Border – row 1: width + color */}
           <div className="flex items-center gap-1.5 mb-1">
-            <div className="flex items-center gap-1 flex-1 bg-muted/30 rounded-md px-2 h-8 border border-border/50" title="Border width">
+            <div className="flex items-center gap-1 flex-1 bg-muted/30 rounded-md px-2 h-8 border border-border/50" title={t.editor_prop_border_width}>
               <SquareDashed className="h-3 w-3 text-muted-foreground shrink-0" />
               <input type="number" value={el.strokeWidth || 0} min={0}
                 onChange={e => onUpdateElement(el.id, { strokeWidth: Number((e.target as HTMLInputElement).value) })}
@@ -405,7 +433,7 @@ export const PropertiesPanel = ({
             </div>
             <input type="color" value={el.strokeColor || '#000000'}
               onChange={e => onUpdateElement(el.id, { strokeColor: e.target.value })}
-              title="Border color"
+              title={t.editor_prop_border_color}
               className="h-8 w-8 rounded-md cursor-pointer border border-border/50 bg-muted/30 p-0.5 shrink-0" />
           </div>
           {/* Border – row 2: style */}
@@ -419,7 +447,7 @@ export const PropertiesPanel = ({
           </div>
 
           {/* Border radius */}
-          <IconSlider icon={Maximize2} title="Border Radius" desc="0px = sharp corners • increase to round"
+          <IconSlider icon={Maximize2} title={t.editor_prop_border_radius} desc={t.editor_prop_border_radius_desc}
             min={0} max={200} step={1}
             value={el.borderRadius || 0}
             onValueChange={v => onUpdateElement(el.id, { borderRadius: v[0] })}
@@ -427,7 +455,7 @@ export const PropertiesPanel = ({
           />
 
           {/* Shadow */}
-          <div className="flex items-center gap-1.5 bg-muted/30 rounded-md px-2 h-8 border border-border/50 mt-1.5" title="Box shadow">
+          <div className="flex items-center gap-1.5 bg-muted/30 rounded-md px-2 h-8 border border-border/50 mt-1.5" title={t.editor_prop_box_shadow}>
             <Layers className="h-3 w-3 text-muted-foreground shrink-0" />
             <input type="text" value={el.shadow || ''}
               placeholder="2px 4px 12px rgba(0,0,0,.3)"
@@ -440,27 +468,27 @@ export const PropertiesPanel = ({
 
         {/* ── 4. EFFECTS ── */}
         <div>
-          <SectionLabel icon={Blend} label="Effects" />
+          <SectionLabel icon={Blend} label={t.editor_section_effects} />
           <div className="space-y-2.5">
-            <IconSlider icon={Eye} title="Opacity" desc="0% = fully hidden • 100% = fully visible"
+            <IconSlider icon={Eye} title={t.editor_prop_opacity} desc={t.editor_prop_opacity_desc}
               min={0} max={1} step={0.05}
               value={el.opacity ?? 1}
               onValueChange={v => onUpdateElement(el.id, { opacity: v[0] })}
               displayValue={`${Math.round((el.opacity ?? 1) * 100)}%`}
             />
-            <IconSlider icon={Blend} title="Blur" desc="Blur the element edges for a soft effect"
+            <IconSlider icon={Blend} title={t.editor_prop_blur} desc={t.editor_prop_blur_desc}
               min={0} max={20} step={0.5}
               value={el.blur ?? 0}
               onValueChange={v => updateFilter({ blur: v[0] })}
               displayValue={`${el.blur || 0}px`}
             />
-            <IconSlider icon={Sun} title="Brightness" desc="100% = normal • >100% brighter • <100% darker"
+            <IconSlider icon={Sun} title={t.editor_prop_brightness} desc={t.editor_prop_brightness_desc}
               min={0} max={200} step={5}
               value={el.brightness ?? 100}
               onValueChange={v => updateFilter({ brightness: v[0] })}
               displayValue={`${el.brightness ?? 100}%`}
             />
-            <IconSlider icon={Droplets} title="Saturation" desc="0% = grayscale • 100% = normal • >100% more vivid"
+            <IconSlider icon={Droplets} title={t.editor_prop_saturation} desc={t.editor_prop_saturation_desc}
               min={0} max={200} step={5}
               value={el.saturation ?? 100}
               onValueChange={v => updateFilter({ saturation: v[0] })}
@@ -473,9 +501,9 @@ export const PropertiesPanel = ({
 
         {/* ── 5. LAYER ORDER ── */}
         <div>
-          <SectionLabel icon={Layers} label="Layer" />
+          <SectionLabel icon={Layers} label={t.editor_section_layer} />
           <div className="flex items-center gap-1.5">
-            <Tip label="Send Backward" desc="Decrease layer order — other elements will cover this">
+            <Tip label={t.editor_send_backward} desc={t.editor_send_backward_desc}>
               <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => onSendBackward?.()}>
                 <ChevronDown className="h-4 w-4" />
               </Button>
@@ -483,7 +511,7 @@ export const PropertiesPanel = ({
             <input type="number" value={el.zIndex || 0}
               onChange={e => onUpdateElement(el.id, { zIndex: Number((e.target as HTMLInputElement).value) })}
               className="flex-1 h-8 text-center text-xs bg-muted/30 border border-border/50 rounded-md outline-none tabular-nums" />
-            <Tip label="Bring Forward" desc="Increase layer order — this element will cover others">
+            <Tip label={t.editor_bring_forward} desc={t.editor_bring_forward_desc}>
               <Button variant="outline" size="icon" className="h-8 w-8 shrink-0" onClick={() => onBringForward?.()}>
                 <ChevronUp className="h-4 w-4" />
               </Button>
@@ -494,7 +522,7 @@ export const PropertiesPanel = ({
           <div className="mt-3">
             <div className="flex items-center gap-1 mb-1.5">
               <Maximize2 className="h-3 w-3 text-muted-foreground" />
-              <span className="text-[10px] text-muted-foreground">Padding</span>
+              <span className="text-[10px] text-muted-foreground">{t.editor_padding}</span>
             </div>
             <div className="grid grid-cols-4 gap-1">
               {([

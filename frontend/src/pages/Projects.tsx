@@ -11,10 +11,12 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Projects = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [projects, setProjects] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -71,7 +73,7 @@ const Projects = () => {
       setFirstSlides(slidesMap);
       setSlideCounts(countsMap);
     } catch (err: any) {
-      toast({ title: "Failed to load projects", description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_load_fail, description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -82,9 +84,9 @@ const Projects = () => {
     try {
       await api.deleteProject(deleteId);
       setProjects((p) => p.filter((x) => x.id !== deleteId));
-      toast({ title: "Project deleted" });
+      toast({ title: t.projects_toast_deleted });
     } catch (err: any) {
-      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_delete_fail, description: err.message, variant: "destructive" });
     }
     setDeleteId(null);
   };
@@ -94,9 +96,9 @@ const Projects = () => {
     try {
       await api.renameProject(renameId, renameName);
       setProjects((p) => p.map((x) => (x.id === renameId ? { ...x, name: renameName, title: renameName } : x)));
-      toast({ title: "Project renamed" });
+      toast({ title: t.projects_toast_renamed });
     } catch (err: any) {
-      toast({ title: "Rename failed", description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_rename_fail, description: err.message, variant: "destructive" });
     }
     setRenameId(null);
   };
@@ -125,11 +127,11 @@ const Projects = () => {
     try {
       await Promise.all(Array.from(selectedIds).map((id) => api.deleteProject(id)));
       setProjects((p) => p.filter((x) => !selectedIds.has(x.id)));
-      toast({ title: `${selectedIds.size} project(s) deleted` });
+      toast({ title: `${selectedIds.size} ${t.projects_toast_deleted}` });
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (err: any) {
-      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_delete_fail, description: err.message, variant: "destructive" });
     }
     setBulkDeleteOpen(false);
   };
@@ -148,10 +150,10 @@ const Projects = () => {
       <div className="p-4 lg:p-6">
         <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
           <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold">Projects</h1>
+            <h1 className="text-2xl font-bold">{t.projects_title}</h1>
             {selectMode && (
               <span className="text-sm text-muted-foreground">
-                {selectedIds.size} selected
+                {selectedIds.size} {t.projects_select_mode}
               </span>
             )}
           </div>
@@ -160,9 +162,9 @@ const Projects = () => {
               <>
                 <Button variant="outline" size="sm" onClick={selectAll}>
                   {selectedIds.size === filtered.length ? (
-                    <><Square className="mr-1 h-4 w-4" /> Deselect All</>
+                    <><Square className="mr-1 h-4 w-4" /> {t.projects_deselect_all}</>
                   ) : (
-                    <><CheckSquare className="mr-1 h-4 w-4" /> Select All</>
+                    <><CheckSquare className="mr-1 h-4 w-4" /> {t.projects_select_all}</>
                   )}
                 </Button>
                 <Button
@@ -171,19 +173,19 @@ const Projects = () => {
                   disabled={selectedIds.size === 0}
                   onClick={() => setBulkDeleteOpen(true)}
                 >
-                  <Trash2 className="mr-1 h-4 w-4" /> Delete ({selectedIds.size})
+                  <Trash2 className="mr-1 h-4 w-4" /> {t.projects_delete} ({selectedIds.size})
                 </Button>
                 <Button variant="ghost" size="sm" onClick={exitSelectMode}>
-                  Cancel
+                  {t.projects_cancel}
                 </Button>
               </>
             ) : (
               <>
                 <div className="relative flex-1 sm:w-64">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input placeholder="Search projects..." className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
+                  <Input placeholder={t.projects_search} className="pl-9" value={search} onChange={(e) => setSearch(e.target.value)} />
                 </div>
-                <Button variant="outline" size="icon" onClick={() => setSelectMode(true)} title="Select mode">
+                <Button variant="outline" size="icon" onClick={() => setSelectMode(true)} title={t.projects_select_mode}>
                   <CheckSquare className="h-4 w-4" />
                 </Button>
                 <Button variant="outline" size="icon" onClick={() => {
@@ -209,9 +211,9 @@ const Projects = () => {
         ) : filtered.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-20 text-center">
             <FolderOpen className="mb-4 h-12 w-12 text-muted-foreground" />
-            <p className="text-lg font-medium">No projects found</p>
-            <p className="text-sm text-muted-foreground">Create a new project from the home page</p>
-            <Button className="mt-4" onClick={() => navigate("/")}>Go Home</Button>
+            <p className="text-lg font-medium">{t.projects_no_found}</p>
+            <p className="text-sm text-muted-foreground">{t.projects_no_found_hint}</p>
+            <Button className="mt-4" onClick={() => navigate("/")}>{t.projects_go_home}</Button>
           </div>
         ) : viewMode === "grid" ? (
           <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
@@ -234,13 +236,13 @@ const Projects = () => {
                   <div className={selectMode ? "ml-6" : ""}>
                     <CardTitle className="text-base">{project.name}</CardTitle>
                     <p className="mt-1 text-xs text-muted-foreground">
-                      {slideCounts[project.id] ?? project.slideCount ?? 0} slides • {project.updatedAt ? new Date(new Date(project.updatedAt).getTime() + 7 * 60 * 60 * 1000).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ""}
+                      {slideCounts[project.id] ?? project.slideCount ?? 0} {t.projects_slides} • {project.updatedAt ? new Date(new Date(project.updatedAt).getTime() + 7 * 60 * 60 * 1000).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ""}
                     </p>
                   </div>
                   {!selectMode && (
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${project.id}`); }}>
-                        <Edit className="mr-1 h-3 w-3" /> Edit
+                        <Edit className="mr-1 h-3 w-3" /> {t.projects_edit}
                       </Button>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -250,13 +252,13 @@ const Projects = () => {
                         </DropdownMenuTrigger>
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); setRenameId(project.id); setRenameName(project.name); }}>
-                            <Edit className="mr-2 h-4 w-4" /> Rename
+                            <Edit className="mr-2 h-4 w-4" /> {t.projects_rename}
                           </DropdownMenuItem>
                           <DropdownMenuItem onClick={(e) => { e.stopPropagation(); navigate(`/view/${project.id}`); }}>
-                            <Eye className="mr-2 h-4 w-4" /> View
+                            <Eye className="mr-2 h-4 w-4" /> {t.projects_view}
                           </DropdownMenuItem>
                           <DropdownMenuItem className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(project.id); }}>
-                            <Trash2 className="mr-2 h-4 w-4" /> Delete
+                            <Trash2 className="mr-2 h-4 w-4" /> {t.projects_delete}
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -303,23 +305,23 @@ const Projects = () => {
                     <div>
                       <p className="font-medium">{project.name}</p>
                       <p className="text-xs text-muted-foreground">
-                        {slideCounts[project.id] ?? project.slideCount ?? 0} slides • {project.updatedAt ? new Date(new Date(project.updatedAt).getTime() + 7 * 60 * 60 * 1000).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ""}
+                        {slideCounts[project.id] ?? project.slideCount ?? 0} {t.projects_slides} • {project.updatedAt ? new Date(new Date(project.updatedAt).getTime() + 7 * 60 * 60 * 1000).toLocaleString('vi-VN', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit', second: '2-digit' }) : ""}
                       </p>
                     </div>
                   </div>
                   {!selectMode && (
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/view/${project.id}`); }}>
-                        <Eye className="mr-1 h-3 w-3" /> View
+                        <Eye className="mr-1 h-3 w-3" /> {t.projects_view}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${project.id}`); }}>
-                        <Edit className="mr-1 h-3 w-3" /> Edit
+                        <Edit className="mr-1 h-3 w-3" /> {t.projects_edit}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setRenameId(project.id); setRenameName(project.name); }}>
-                        <FileText className="mr-1 h-3 w-3" /> Rename
+                        <FileText className="mr-1 h-3 w-3" /> {t.projects_rename}
                       </Button>
                       <Button variant="ghost" size="sm" className="text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteId(project.id); }}>
-                        <Trash2 className="mr-1 h-3 w-3" /> Delete
+                        <Trash2 className="mr-1 h-3 w-3" /> {t.projects_delete}
                       </Button>
                     </div>
                   )}
@@ -334,12 +336,12 @@ const Projects = () => {
       <Dialog open={!!deleteId} onOpenChange={() => setDeleteId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Project</DialogTitle>
-            <DialogDescription>This action cannot be undone. Are you sure?</DialogDescription>
+            <DialogTitle>{t.projects_delete_title}</DialogTitle>
+            <DialogDescription>{t.projects_delete_desc}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteId(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDelete}>Delete</Button>
+            <Button variant="outline" onClick={() => setDeleteId(null)}>{t.projects_cancel}</Button>
+            <Button variant="destructive" onClick={handleDelete}>{t.projects_delete}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -348,13 +350,13 @@ const Projects = () => {
       <Dialog open={!!renameId} onOpenChange={() => setRenameId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Rename Project</DialogTitle>
-            <DialogDescription>Enter a new name for your project</DialogDescription>
+            <DialogTitle>{t.projects_rename_title}</DialogTitle>
+            <DialogDescription>{t.projects_rename_desc}</DialogDescription>
           </DialogHeader>
-          <Input value={renameName} onChange={(e) => setRenameName(e.target.value)} placeholder="Project name" />
+          <Input value={renameName} onChange={(e) => setRenameName(e.target.value)} placeholder={t.projects_name_placeholder} />
           <DialogFooter>
-            <Button variant="outline" onClick={() => setRenameId(null)}>Cancel</Button>
-            <Button onClick={handleRename}>Save</Button>
+            <Button variant="outline" onClick={() => setRenameId(null)}>{t.projects_cancel}</Button>
+            <Button onClick={handleRename}>{t.projects_save}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -363,14 +365,14 @@ const Projects = () => {
       <Dialog open={bulkDeleteOpen} onOpenChange={() => setBulkDeleteOpen(false)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete {selectedIds.size} Project(s)</DialogTitle>
+            <DialogTitle>{t.projects_delete_title} ({selectedIds.size})</DialogTitle>
             <DialogDescription>
-              This action cannot be undone. Are you sure you want to delete {selectedIds.size} selected project(s)?
+              {t.projects_delete_desc}
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleBulkDelete}>Delete All</Button>
+            <Button variant="outline" onClick={() => setBulkDeleteOpen(false)}>{t.projects_cancel}</Button>
+            <Button variant="destructive" onClick={handleBulkDelete}>{t.projects_delete_all}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

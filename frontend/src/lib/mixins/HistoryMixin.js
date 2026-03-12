@@ -54,4 +54,12 @@ export const HistoryMixin = {
             if (this.onChange) this.onChange();
         }
     },
+
+    canUndo() {
+        return this.historyIndex > 0;
+    },
+
+    canRedo() {
+        return this.historyIndex < this.history.length - 1;
+    },
 };

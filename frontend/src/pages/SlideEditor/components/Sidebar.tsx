@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import type { Slide, DragItem } from "../types";
 import { TEMPLATES, ELEMENTS_CATEGORIES } from "../constants";
 import { ReadOnlySlide } from "@/components/ReadOnlySlide";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -102,6 +103,38 @@ export const EditorSidebar = ({
   onSetDraggedItem,
   onAddElement,
 }: SidebarProps) => {
+  const { t } = useLanguage();
+
+  const tmplLabel: Record<string, string> = {
+    blank: t.editor_tmpl_blank,
+    title: t.editor_tmpl_title,
+    content: t.editor_tmpl_content,
+    "two-col": t.editor_tmpl_two_col,
+    "img-left": t.editor_tmpl_img_text,
+    bullets: t.editor_tmpl_bullets,
+  };
+
+  const catLabel: Record<string, string> = {
+    Text: t.editor_cat_text,
+    Shapes: t.editor_cat_shapes,
+    Media: t.editor_cat_media,
+  };
+
+  const elLabel: Record<string, string> = {
+    heading: t.editor_el_title,
+    subheading: t.editor_el_subtitle,
+    paragraph: t.editor_el_body,
+    label: t.editor_el_label,
+    rect: t.editor_el_rect,
+    circle: t.editor_el_circle,
+    triangle: t.editor_el_triangle,
+    star: t.editor_el_star,
+    diamond: t.editor_el_diamond,
+    line: t.editor_el_line,
+    image: t.editor_el_image,
+    video: t.editor_el_video,
+  };
+
   // Drag-reorder state
   const dragIndexRef = useRef<number | null>(null);
   const [dropTarget, setDropTarget] = useState<{ index: number; position: 'before' | 'after' } | null>(null);
@@ -163,7 +196,7 @@ export const EditorSidebar = ({
                   ? "border-primary shadow-sm shadow-primary/20"
                   : "border-transparent hover:border-border/60"
               )}
-              title={`Slide ${idx + 1}`}
+              title={`${t.editor_slide_n} ${idx + 1}`}
             >
               {rawHtml ? (
                 <ReadOnlySlide
@@ -181,7 +214,7 @@ export const EditorSidebar = ({
         <button
           onClick={onAddSlide}
           className="w-8 h-5 mt-0.5 rounded border border-dashed border-border/50 flex items-center justify-center hover:border-border hover:bg-muted/40 transition-all"
-          title="New Slide"
+          title={t.editor_new_slide}
         >
           <Plus className="h-2.5 w-2.5 text-muted-foreground" />
         </button>
@@ -198,23 +231,23 @@ export const EditorSidebar = ({
               value="slides" 
               className="flex-1 h-full rounded-none text-xs font-medium data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-foreground text-muted-foreground"
             >
-              Slides
+              {t.editor_tab_slides}
             </TabsTrigger>
             <TabsTrigger 
               value="templates" 
               className="flex-1 h-full rounded-none text-xs font-medium data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-foreground text-muted-foreground"
             >
-              Templates
+              {t.editor_tab_templates}
             </TabsTrigger>
             <TabsTrigger 
               value="elements" 
               className="flex-1 h-full rounded-none text-xs font-medium data-[state=active]:bg-transparent data-[state=active]:border-b-2 data-[state=active]:border-primary data-[state=active]:text-foreground text-muted-foreground"
             >
-              Elements
+              {t.editor_tab_elements}
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="slides" className="flex-1 overflow-y-auto p-2 space-y-0 mt-0">
+          <TabsContent value="slides" className="flex-1 overflow-y-auto p-2 space-y-0 mt-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
             <div className="grid gap-0">
               {slides.map((slide, idx) => {
                 const rawHtml = slide.elements[0]?.content || '';
@@ -287,27 +320,27 @@ export const EditorSidebar = ({
               })}
             </div>
             <Button variant="ghost" className="w-full h-9 border border-dashed border-border/50 text-muted-foreground hover:text-foreground hover:border-border mt-1 rounded-lg text-xs" onClick={onAddSlide}>
-              <Plus className="h-3.5 w-3.5 mr-1.5" /> New Slide
+              <Plus className="h-3.5 w-3.5 mr-1.5" /> {t.editor_new_slide}
             </Button>
           </TabsContent>
 
           {/* Templates Tab */}
-          <TabsContent value="templates" className="flex-1 overflow-y-auto mt-0">
+          <TabsContent value="templates" className="flex-1 overflow-y-auto mt-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
             <div className="p-2.5">
-              <p className="text-[10px] text-muted-foreground mb-2 px-0.5">Click a layout to add a new slide</p>
+              <p className="text-[10px] text-muted-foreground mb-2 px-0.5">{t.editor_template_hint}</p>
               <div className="grid grid-cols-2 gap-2">
                 {TEMPLATES.map(tmpl => (
                   <button
                     key={tmpl.id}
                     className="flex flex-col gap-1 group cursor-pointer text-left"
                     onClick={() => onAddSlideFromTemplate(tmpl.layout)}
-                    title={`Add "${tmpl.name}" slide`}
+                    title={`${t.editor_add_slide_prefix}: ${tmplLabel[tmpl.id] || tmpl.name}`}
                   >
                     <div className="w-full aspect-video border-2 border-transparent group-hover:border-primary/60 rounded-md overflow-hidden transition-all duration-150 group-hover:shadow-sm bg-muted/30">
                       <TemplateMockup layout={tmpl.layout} />
                     </div>
                     <span className="text-[10px] text-muted-foreground group-hover:text-foreground font-medium text-center w-full transition-colors truncate px-0.5">
-                      {tmpl.name}
+                      {tmplLabel[tmpl.id] || tmpl.name}
                     </span>
                   </button>
                 ))}
@@ -316,11 +349,11 @@ export const EditorSidebar = ({
           </TabsContent>
 
           {/* Elements Tab */}
-          <TabsContent value="elements" className="flex-1 overflow-y-auto mt-0">
+          <TabsContent value="elements" className="flex-1 overflow-y-auto mt-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
             <div className="p-2.5 space-y-4">
               {ELEMENTS_CATEGORIES.map(cat => (
                 <div key={cat.name}>
-                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 px-0.5">{cat.name}</h3>
+                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 px-0.5">{catLabel[cat.name] || cat.name}</h3>
                   <div className="grid grid-cols-3 gap-1.5">
                     {cat.items.map(item => (
                       <button
@@ -329,10 +362,10 @@ export const EditorSidebar = ({
                         onClick={() => onAddElement(item.type, item.subType)}
                         draggable
                         onDragStart={() => onSetDraggedItem({ type: item.type, subType: item.subType })}
-                        title={`Add ${item.label}`}
+                        title={`${t.editor_add_el_prefix} ${elLabel[item.id] || item.label}`}
                       >
                         <item.icon className="h-5 w-5" />
-                        <span className="text-[9px] leading-tight text-center">{item.label}</span>
+                        <span className="text-[9px] leading-tight text-center">{elLabel[item.id] || item.label}</span>
                       </button>
                     ))}
                   </div>

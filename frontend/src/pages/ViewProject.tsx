@@ -8,11 +8,13 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { ReadOnlySlide } from "@/components/ReadOnlySlide";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const ViewProject = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [slides, setSlides] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [projectName, setProjectName] = useState<string>("");
@@ -122,7 +124,7 @@ const ViewProject = () => {
       });
       setSlides(mappedSlides);
     } catch (err: any) {
-      toast({ title: "Failed to load slides", description: err.message, variant: "destructive" });
+      toast({ title: t.view_toast_load_fail, description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -134,9 +136,9 @@ const ViewProject = () => {
       await api.updateSlide(editSlide.id, { html_content: editHtml });
       setSlides((prev) => prev.map((s) => (s.id === editSlide.id ? { ...s, html: editHtml, html_content: editHtml } : s)));
       setEditSlide(null);
-      toast({ title: "Slide updated" });
+      toast({ title: t.view_toast_updated });
     } catch (err: any) {
-      toast({ title: "Save failed", description: err.message, variant: "destructive" });
+      toast({ title: t.view_toast_save_fail, description: err.message, variant: "destructive" });
     }
   };
 
@@ -145,9 +147,9 @@ const ViewProject = () => {
     try {
       await api.deleteSlide(deleteSlideId);
       setSlides((prev) => prev.filter((s) => s.id !== deleteSlideId));
-      toast({ title: "Slide deleted" });
+      toast({ title: t.view_toast_deleted });
     } catch (err: any) {
-      toast({ title: "Delete failed", description: err.message, variant: "destructive" });
+      toast({ title: t.view_toast_delete_fail, description: err.message, variant: "destructive" });
     }
     setDeleteSlideId(null);
   };
@@ -164,7 +166,7 @@ const ViewProject = () => {
           </div>
           {slides.length > 0 && (
             <Button onClick={() => startPresentation(0)}>
-              <Play className="mr-2 h-4 w-4" /> Present
+              <Play className="mr-2 h-4 w-4" /> {t.view_present}
             </Button>
           )}
         </div>
@@ -187,14 +189,14 @@ const ViewProject = () => {
                         className="absolute inset-0"
                       />
                     ) : (
-                      <div className="flex h-full items-center justify-center text-muted-foreground text-sm">No content</div>
+                      <div className="flex h-full items-center justify-center text-muted-foreground text-sm">{t.view_no_content}</div>
                     )}
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm font-medium">Slide {i + 1}</span>
+                    <span className="text-sm font-medium">{t.view_slide_n} {i + 1}</span>
                     <div className="flex items-center gap-1">
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${projectId}?slide=${i}`); }}>
-                        <Edit className="mr-1 h-3 w-3" /> Edit
+                        <Edit className="mr-1 h-3 w-3" /> {t.view_edit}
                       </Button>
                       <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteSlideId(slide.id); }}>
                         <Trash2 className="h-3 w-3" />
@@ -211,8 +213,8 @@ const ViewProject = () => {
       <Dialog open={!!editSlide} onOpenChange={() => setEditSlide(null)}>
         <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle>Edit Slide HTML</DialogTitle>
-            <DialogDescription>Edit the HTML content and preview your changes</DialogDescription>
+            <DialogTitle>{t.view_edit_slide_title}</DialogTitle>
+            <DialogDescription>{t.view_edit_slide_desc}</DialogDescription>
           </DialogHeader>
           <div className="grid gap-4 md:grid-cols-2">
             <div>
@@ -231,9 +233,9 @@ const ViewProject = () => {
             </div>
           </div>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setEditSlide(null)}>Cancel</Button>
+            <Button variant="outline" onClick={() => setEditSlide(null)}>{t.view_cancel}</Button>
             <Button onClick={handleSave}>
-              <Save className="mr-2 h-4 w-4" /> Save
+              <Save className="mr-2 h-4 w-4" /> {t.view_save}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -243,12 +245,12 @@ const ViewProject = () => {
       <Dialog open={!!deleteSlideId} onOpenChange={() => setDeleteSlideId(null)}>
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Delete Slide</DialogTitle>
-            <DialogDescription>This action cannot be undone. Are you sure you want to delete this slide?</DialogDescription>
+            <DialogTitle>{t.view_delete_slide_title}</DialogTitle>
+            <DialogDescription>{t.view_delete_slide_desc}</DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setDeleteSlideId(null)}>Cancel</Button>
-            <Button variant="destructive" onClick={handleDeleteSlide}>Delete</Button>
+            <Button variant="outline" onClick={() => setDeleteSlideId(null)}>{t.view_cancel}</Button>
+            <Button variant="destructive" onClick={handleDeleteSlide}>{t.view_delete}</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -259,7 +261,7 @@ const ViewProject = () => {
           {/* Top bar */}
           <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
             <span className="text-white text-sm">
-              Slide {currentSlideIndex + 1} / {slides.length}
+              {t.view_slide_n} {currentSlideIndex + 1} / {slides.length}
             </span>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => exitPresentation()}>
               <X className="h-6 w-6" />
@@ -278,7 +280,7 @@ const ViewProject = () => {
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">
-                  No content
+                  {t.view_no_content}
                 </div>
               )}
             </div>

@@ -28,7 +28,7 @@ export const useSlideEditor = () => {
   // ── UI state ────────────────────────────────────────────────────────
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
-  const [zoom, setZoom] = useState(0.5);
+  const [zoom, setZoom] = useState(0.6);
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
 
