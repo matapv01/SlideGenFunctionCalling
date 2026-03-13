@@ -24,10 +24,11 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     if stream_callback:
         stream_callback('status', {
             'step': 3,
-            'title': 'Design Slides',
+            'title': 'Prepare Content',
             'description': 'Planning slide design...',
             'message': 'Analyzing content to design slides'
         })
+        time.sleep(2) # Delay for UX
 
     if not llm:
         raise ValueError("LLM instance not found in config.")
@@ -145,6 +146,15 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         state['slide_plans'] = all_slide_plans
         # Save context maps to state (important for idea workflow)
         state['slide_context_maps'] = slide_context_maps
+
+        # Emit final status to signal Stage 2 (Design Slides)
+        if stream_callback:
+            stream_callback('status', {
+                'step': 3,
+                'title': 'Design Slides',
+                'description': 'Planning complete',
+                'message': 'Starting slide generation'
+            })
 
     except Exception as e:
         print(f"  -> FAILED during batch planning. Error: {e}")

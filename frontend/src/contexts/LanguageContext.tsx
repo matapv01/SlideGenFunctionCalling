@@ -1,4 +1,4 @@
-﻿import React, { createContext, useContext, useState, useCallback } from "react";
+import React, { createContext, useContext, useState, useCallback } from "react";
 
 export type Language = "vi" | "en";
 
@@ -204,10 +204,8 @@ interface Translations {
   slidegen_upload_desc: string;
   slidegen_uploading: string;
   slidegen_choose_file: string;
-  slidegen_zip_title: string;
-  slidegen_zip_desc: string;
-  slidegen_importing: string;
   slidegen_idea_title: string;
+
   slidegen_idea_desc: string;
   slidegen_idea_title_ph: string;
   slidegen_idea_desc_ph: string;
@@ -219,16 +217,29 @@ interface Translations {
   slidegen_workflow_auto_no_heading: string;
   slidegen_workflow_auto_no_heading_desc: string;
   slidegen_workflow_manual: string;
+  streaming_msg_analyzing: string;
+  streaming_msg_processing_struct: string;
+  streaming_msg_generating_struct: string;
+  streaming_msg_booting: string;
+  streaming_msg_initializing_infra: string;
+  streaming_msg_generating_slides: string;
+  streaming_msg_starting_generation: string;
+  streaming_msg_no_slides: string;
+  streaming_msg_ready: string;
   slidegen_workflow_manual_desc: string;
   slidegen_transitions: string;
   slidegen_thankyou: string;
+  slidegen_length_label: string;
+  slidegen_length_brief: string;
+  slidegen_length_standard: string;
+  slidegen_length_detailed: string;
+  slidegen_length_extensive: string;
   slidegen_toast_success: string;
   slidegen_toast_opening_structure: string;
   slidegen_toast_starting: string;
   slidegen_toast_upload_fail: string;
-  slidegen_toast_not_available: string;
-  slidegen_toast_zip_unsupported: string;
   slidegen_toast_no_title: string;
+
   // ─────────── STREAMING ───────────
   streaming_title: string;
   streaming_completed: string;
@@ -580,7 +591,7 @@ const vi: Translations = {
   guide_shortcuts_title: "Phím tắt",
   guide_shortcuts_content: "**Trình soạn thảo:**\n• Ctrl+Z — Hoàn tác\n• Ctrl+Y — Làm lại\n• Delete — Xóa phần tử đã chọn\n\n**Trình chiếu:**\n• → / Space — Slide tiếp theo\n• ← — Slide trước\n• Escape — Thoát trình chiếu\n• Click trái — Slide trước\n• Click phải — Slide tiếp theo",
   guide_faq_title: "Câu hỏi thường gặp",
-  guide_faq_content: "**H: Các định dạng file nào được hỗ trợ?**\nT: DOCX để tải lên tài liệu, ZIP để nhập dự án. Xuất sang PDF và ZIP.\n\n**H: Tôi có thể chỉnh sửa slide sau khi tạo không?**\nT: Có! Trình soạn thảo WYSIWYG cho phép kiểm soát toàn bộ từng phần tử.\n\n**H: Dữ liệu có được lưu tự động không?**\nT: Có, trình soạn thảo tự động lưu thay đổi sau mỗi vài giây.\n\n**H: AI tạo slide hoạt động như thế nào?**\nT: Chúng tôi sử dụng các mô hình AI tiên tiến để phân tích nội dung, cấu trúc thành slide và tạo thiết kế chuyên nghiệp.",
+  guide_faq_content: "**H: Các định dạng file nào được hỗ trợ?**\nT: DOCX để tải lên tài liệu. Xuất sang PDF và hình ảnh.\n\n**H: Tôi có thể chỉnh sửa slide sau khi tạo không?**\nT: Có! Trình soạn thảo WYSIWYG cho phép kiểm soát toàn bộ từng phần tử.\n\n**H: Dữ liệu có được lưu tự động không?**\nT: Có, trình soạn thảo tự động lưu thay đổi sau mỗi vài giây.\n\n**H: AI tạo slide hoạt động như thế nào?**\nT: Chúng tôi sử dụng các mô hình AI tiên tiến để phân tích nội dung, cấu trúc thành slide và tạo thiết kế chuyên nghiệp.",
   // ─────────── LOGIN ───────────
   login_title: "Chào mừng trở lại",
   login_subtitle: "Đăng nhập vào tài khoản SlideGen của bạn",
@@ -643,14 +654,13 @@ const vi: Translations = {
   slidegen_h1: "Tạo Slide Ấn Tượng",
   slidegen_h1_span: "Trong Vài Giây",
   slidegen_sub: "Tải lên tài liệu, mô tả ý tưởng hoặc nhập dự án có sẵn. SlideGen biến nội dung của bạn thành bài thuyết trình đẹp mắt với AI.",
-  slidegen_upload_title: "Tải lên DOCX",
-  slidegen_upload_desc: "Tải lên file Word để tự động tạo slide",
+  slidegen_upload_title: "Tạo từ tài liệu",
+  slidegen_upload_desc: "Tải tài liệu và để AI tự động tạo slide chuyên nghiệp",
   slidegen_uploading: "Đang tải lên...",
-  slidegen_choose_file: "Chọn file",
-  slidegen_zip_title: "Nhập ZIP",
-  slidegen_zip_desc: "Nhập file ZIP của dự án hiện có",
-  slidegen_importing: "Đang nhập...",
+  slidegen_choose_file: "Tải lên DOCX",
+
   slidegen_idea_title: "Tạo từ ý tưởng",
+
   slidegen_idea_desc: "Mô tả bài thuyết trình và để AI xây dựng cho bạn",
   slidegen_idea_title_ph: "Tiêu đề bài thuyết trình",
   slidegen_idea_desc_ph: "Mô tả bài thuyết trình của bạn...",
@@ -665,13 +675,17 @@ const vi: Translations = {
   slidegen_workflow_manual_desc: "Chỉnh sửa cấu trúc tài liệu trước khi tạo",
   slidegen_transitions: "Bật slide chuyển tiếp",
   slidegen_thankyou: "Bật slide cảm ơn",
+  slidegen_length_label: "Số lượng slide",
+  slidegen_length_brief: "Ngắn gọn",
+  slidegen_length_standard: "Chuẩn",
+  slidegen_length_detailed: "Chi tiết",
+  slidegen_length_extensive: "Mở rộng",
   slidegen_toast_success: "Tải lên thành công",
   slidegen_toast_opening_structure: "Đang mở trình chỉnh sửa cấu trúc...",
   slidegen_toast_starting: "Bắt đầu tạo slide...",
   slidegen_toast_upload_fail: "Tải lên thất bại",
-  slidegen_toast_not_available: "Không khả dụng",
-  slidegen_toast_zip_unsupported: "Nhập ZIP hiện chưa được hỗ trợ",
   slidegen_toast_no_title: "Vui lòng nhập tiêu đề",
+
   // ─────────── STREAMING ───────────
   streaming_title: "SlideGen AI",
   streaming_completed: "🎉 Hoàn thành!",
@@ -700,6 +714,15 @@ const vi: Translations = {
   streaming_toast_ready: "Cấu trúc sẵn sàng",
   streaming_toast_starting: "Bắt đầu tạo slide...",
   streaming_toast_failed: "Chuẩn bị thất bại",
+  streaming_msg_analyzing: "Đang phân tích nội dung để thiết kế slide...",
+  streaming_msg_processing_struct: "Đang xử lý cấu trúc tài liệu...",
+  streaming_msg_generating_struct: "Đang tạo cấu trúc tài liệu từ nội dung...",
+  streaming_msg_booting: "Khởi tạo hệ thống...",
+  streaming_msg_initializing_infra: "Đang khởi tạo hạ tầng...",
+  streaming_msg_generating_slides: "Đang tạo slide...",
+  streaming_msg_starting_generation: "Bắt đầu tạo slide...",
+  streaming_msg_no_slides: "Không có slide nào được tạo",
+  streaming_msg_ready: "Hệ thống đã sẵn sàng",
   // ─────────── STRUCTURE EDITOR ───────────
   structure_title: "Trình soạn thảo cấu trúc",
   structure_intro_slide: "Slide giới thiệu",
@@ -1023,7 +1046,7 @@ const en: Translations = {
   guide_shortcuts_title: "Keyboard Shortcuts",
   guide_shortcuts_content: "**Editor:**\n• Ctrl+Z — Undo\n• Ctrl+Y — Redo\n• Delete — Remove selected element\n\n**Presentation:**\n• → / Space — Next slide\n• ← — Previous slide\n• Escape — Exit presentation\n• Click left side — Previous\n• Click right side — Next",
   guide_faq_title: "FAQ",
-  guide_faq_content: "**Q: What file formats are supported?**\nA: DOCX for document upload, ZIP for project import. Export to PDF and ZIP.\n\n**Q: Can I edit slides after generation?**\nA: Yes! The WYSIWYG editor gives you full control over every element.\n\n**Q: Is my data saved automatically?**\nA: Yes, the editor auto-saves your changes every few seconds.\n\n**Q: How does the AI generation work?**\nA: We use advanced AI models to analyze your content, structure it into slides, and generate professional designs.",
+  guide_faq_content: "**Q: What file formats are supported?**\nA: DOCX for document upload. Export to PDF and images.\n\n**Q: Can I edit slides after generation?**\nA: Yes! The WYSIWYG editor gives you full control over every element.\n\n**Q: Is my data saved automatically?**\nA: Yes, the editor auto-saves your changes every few seconds.\n\n**Q: How does the AI generation work?**\nA: We use advanced AI models to analyze your content, structure it into slides, and generate professional designs.",
   // ─────────── LOGIN ───────────
   login_title: "Welcome Back",
   login_subtitle: "Sign in to your SlideGen account",
@@ -1086,14 +1109,13 @@ const en: Translations = {
   slidegen_h1: "Create Stunning Slides",
   slidegen_h1_span: "In Seconds",
   slidegen_sub: "Upload your documents, describe your ideas, or import existing projects. SlideGen transforms your content into beautiful presentations with AI.",
-  slidegen_upload_title: "Upload DOCX",
-  slidegen_upload_desc: "Upload a Word document for automatic slide generation",
+  slidegen_upload_title: "Create from Document",
+  slidegen_upload_desc: "Upload your document and let AI generate professional slides automatically",
   slidegen_uploading: "Uploading...",
-  slidegen_choose_file: "Choose File",
-  slidegen_zip_title: "Import ZIP",
-  slidegen_zip_desc: "Import an existing project archive",
-  slidegen_importing: "Importing...",
+  slidegen_choose_file: "Upload DOCX",
+
   slidegen_idea_title: "Create from Idea",
+
   slidegen_idea_desc: "Describe your presentation and let AI build it",
   slidegen_idea_title_ph: "Presentation title",
   slidegen_idea_desc_ph: "Describe your presentation...",
@@ -1108,13 +1130,17 @@ const en: Translations = {
   slidegen_workflow_manual_desc: "Edit document structure before generating",
   slidegen_transitions: "Enable Transition Slides",
   slidegen_thankyou: "Enable Thank You Slide",
+  slidegen_length_label: "Slide count",
+  slidegen_length_brief: "Brief",
+  slidegen_length_standard: "Standard",
+  slidegen_length_detailed: "Detailed",
+  slidegen_length_extensive: "Extensive",
   slidegen_toast_success: "Upload successful",
   slidegen_toast_opening_structure: "Opening structure editor...",
   slidegen_toast_starting: "Starting slide generation...",
   slidegen_toast_upload_fail: "Upload failed",
-  slidegen_toast_not_available: "Not available",
-  slidegen_toast_zip_unsupported: "ZIP import is currently not supported",
   slidegen_toast_no_title: "Please enter a title",
+
   // ─────────── STREAMING ───────────
   streaming_title: "SlideGen AI",
   streaming_completed: "🎉 Completed!",
@@ -1143,6 +1169,15 @@ const en: Translations = {
   streaming_toast_ready: "Structure ready",
   streaming_toast_starting: "Starting slide generation...",
   streaming_toast_failed: "Failed to prepare",
+  streaming_msg_analyzing: "Analyzing content to design slides...",
+  streaming_msg_processing_struct: "Processing document structure...",
+  streaming_msg_generating_struct: "Generating document structure from content...",
+  streaming_msg_booting: "Booting system...",
+  streaming_msg_initializing_infra: "Initializing infrastructure...",
+  streaming_msg_generating_slides: "Generating slides...",
+  streaming_msg_starting_generation: "Starting slide generation...",
+  streaming_msg_no_slides: "No slides were created",
+  streaming_msg_ready: "System ready",
   // ─────────── STRUCTURE EDITOR ───────────
   structure_title: "Structure Editor",
   structure_intro_slide: "Intro Slide",

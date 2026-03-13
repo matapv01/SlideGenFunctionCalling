@@ -1,6 +1,6 @@
 import { useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, FileArchive, Lightbulb, Sparkles, ArrowRight, BookOpen, Home } from "lucide-react";
+import { Upload, Lightbulb, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -23,14 +23,24 @@ const SlideGen = () => {
   ];
 
   const docxRef = useRef<HTMLInputElement>(null);
-  const zipRef = useRef<HTMLInputElement>(null);
+
 
   const [workflowMode, setWorkflowMode] = useState("auto_heading");
-  const [enableTransitions, setEnableTransitions] = useState(false);
-  const [enableThankYou, setEnableThankYou] = useState(false);
+  const [docxTransitions, setDocxTransitions] = useState(false);
+  const [docxThankYou, setDocxThankYou] = useState(false);
   const [ideaTitle, setIdeaTitle] = useState("");
   const [ideaDescription, setIdeaDescription] = useState("");
+  const [ideaTransitions, setIdeaTransitions] = useState(false);
+  const [ideaThankYou, setIdeaThankYou] = useState(false);
+  const [ideaContentLength, setIdeaContentLength] = useState("standard");
   const [isUploading, setIsUploading] = useState(false);
+
+  const contentLengths = [
+    { id: "brief", label: t.slidegen_length_brief, slides: "5-8" },
+    { id: "standard", label: t.slidegen_length_standard, slides: "8-12" },
+    { id: "detailed", label: t.slidegen_length_detailed, slides: "12-18" },
+    { id: "extensive", label: t.slidegen_length_extensive, slides: "18-25" },
+  ];
 
   const handleDocxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -45,9 +55,8 @@ const SlideGen = () => {
       } else {
         // Auto modes: upload for streaming workflow
         const res = await api.uploadDocxForStream(file, {
-          enable_transition_slides: enableTransitions,
-          enable_thank_you_slide: enableThankYou,
-          workflow_mode: workflowMode,
+          enable_transition_slides: docxTransitions,
+          enable_thank_you_slide: docxThankYou,
         });
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_starting });
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
@@ -59,17 +68,14 @@ const SlideGen = () => {
     }
   };
 
-  // ZIP import not supported - feature removed
-  const handleZipUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    toast({ title: t.slidegen_toast_not_available, description: t.slidegen_toast_zip_unsupported, variant: "destructive" });
-  };
+
 
   const handleCreateFromIdea = () => {
     if (!ideaTitle.trim()) {
       toast({ title: t.slidegen_toast_no_title, variant: "destructive" });
       return;
     }
-    navigate("/streaming/new", { state: { title: ideaTitle, description: ideaDescription, workflowMode, enableTransitions, enableThankYou } });
+    navigate("/streaming/new", { state: { title: ideaTitle, description: ideaDescription, workflowMode, enableTransitions: ideaTransitions, enableThankYou: ideaThankYou, contentLength: ideaContentLength } });
   };
 
   return (
@@ -97,10 +103,10 @@ const SlideGen = () => {
         </section>
 
         {/* Action cards */}
-        <section className="relative mx-auto max-w-6xl px-4 pb-12">
-          <div className="grid gap-6 md:grid-cols-3">
-            {/* Upload DOCX */}
-            <Card className="group glass transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer" onClick={() => docxRef.current?.click()}>
+        <section className="relative mx-auto max-w-6xl px-4 pb-20">
+          <div className="grid gap-6 md:grid-cols-2">
+            {/* Create from Document (DOCX) */}
+            <Card className="group glass transition-all hover:shadow-xl">
               <CardHeader>
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
                   <Upload className="h-6 w-6 text-primary-foreground" />
@@ -108,33 +114,50 @@ const SlideGen = () => {
                 <CardTitle>{t.slidegen_upload_title}</CardTitle>
                 <CardDescription>{t.slidegen_upload_desc}</CardDescription>
               </CardHeader>
-              <CardContent>
-                <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
-                <Button variant="outline" className="w-full" disabled={isUploading}>
-                  {isUploading ? t.slidegen_uploading : t.slidegen_choose_file} <ArrowRight className="ml-2 h-4 w-4" />
-                </Button>
-              </CardContent>
-            </Card>
-
-            {/* Import ZIP */}
-            <Card className="group glass transition-all hover:shadow-xl hover:-translate-y-1 cursor-pointer" onClick={() => zipRef.current?.click()}>
-              <CardHeader>
-                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-info">
-                  <FileArchive className="h-6 w-6 text-info-foreground" />
+              <CardContent className="space-y-5">
+                {/* Workflow modes */}
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">{t.slidegen_workflow}</Label>
+                  <div className="grid gap-2 sm:grid-cols-3">
+                    {workflowModes.map((mode) => (
+                      <button
+                        key={mode.id}
+                        onClick={() => setWorkflowMode(mode.id)}
+                        className={`rounded-lg border p-2.5 text-left transition-all ${
+                          workflowMode === mode.id
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <p className="text-sm font-medium">{mode.label}</p>
+                        <p className="mt-0.5 text-xs text-muted-foreground">{mode.desc}</p>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <CardTitle>{t.slidegen_zip_title}</CardTitle>
-                <CardDescription>{t.slidegen_zip_desc}</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <input ref={zipRef} type="file" accept=".zip" className="hidden" onChange={handleZipUpload} />
-                <Button variant="outline" className="w-full" disabled={isUploading}>
-                  {isUploading ? t.slidegen_importing : t.slidegen_choose_file} <ArrowRight className="ml-2 h-4 w-4" />
+
+                {/* Toggles */}
+                <div className="flex flex-wrap gap-5">
+                  <div className="flex items-center gap-2">
+                    <Switch id="docx-transitions" checked={docxTransitions} onCheckedChange={setDocxTransitions} />
+                    <Label htmlFor="docx-transitions" className="text-sm">{t.slidegen_transitions}</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch id="docx-thankyou" checked={docxThankYou} onCheckedChange={setDocxThankYou} />
+                    <Label htmlFor="docx-thankyou" className="text-sm">{t.slidegen_thankyou}</Label>
+                  </div>
+                </div>
+
+                {/* Upload button */}
+                <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
+                <Button className="w-full gradient-primary text-primary-foreground" disabled={isUploading} onClick={() => docxRef.current?.click()}>
+                  {isUploading ? t.slidegen_uploading : t.slidegen_choose_file} <Upload className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
 
             {/* Create from Idea */}
-            <Card className="group glass transition-all hover:shadow-xl hover:-translate-y-1">
+            <Card className="group glass transition-all hover:shadow-xl">
               <CardHeader>
                 <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl bg-accent">
                   <Lightbulb className="h-6 w-6 text-accent-foreground" />
@@ -142,76 +165,54 @@ const SlideGen = () => {
                 <CardTitle>{t.slidegen_idea_title}</CardTitle>
                 <CardDescription>{t.slidegen_idea_desc}</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-5">
                 <Input placeholder={t.slidegen_idea_title_ph} value={ideaTitle} onChange={(e) => setIdeaTitle(e.target.value)} />
                 <textarea
                   placeholder={t.slidegen_idea_desc_ph}
                   value={ideaDescription}
                   onChange={(e) => setIdeaDescription(e.target.value)}
-                  className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                  className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
+
+                {/* Content Length */}
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">{t.slidegen_length_label}</Label>
+                  <div className="grid grid-cols-4 gap-2">
+                    {contentLengths.map((len) => (
+                      <button
+                        key={len.id}
+                        onClick={() => setIdeaContentLength(len.id)}
+                        className={`rounded-lg border p-2 text-center transition-all ${
+                          ideaContentLength === len.id
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        <p className="text-sm font-medium">{len.label}</p>
+                        <p className="text-xs text-muted-foreground">{len.slides} slides</p>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Toggles */}
+                <div className="flex flex-wrap gap-5">
+                  <div className="flex items-center gap-2">
+                    <Switch id="idea-transitions" checked={ideaTransitions} onCheckedChange={setIdeaTransitions} />
+                    <Label htmlFor="idea-transitions" className="text-sm">{t.slidegen_transitions}</Label>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <Switch id="idea-thankyou" checked={ideaThankYou} onCheckedChange={setIdeaThankYou} />
+                    <Label htmlFor="idea-thankyou" className="text-sm">{t.slidegen_thankyou}</Label>
+                  </div>
+                </div>
+
                 <Button className="w-full gradient-primary text-primary-foreground" onClick={handleCreateFromIdea}>
                   {t.slidegen_generate} <Sparkles className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>
           </div>
-        </section>
-
-        {/* Options */}
-        <section className="mx-auto max-w-4xl px-4 pb-20">
-          <Card className="glass">
-            <CardHeader>
-              <CardTitle className="text-lg">{t.slidegen_options}</CardTitle>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              {/* Workflow modes */}
-              <div>
-                <Label className="mb-3 block text-sm font-medium">{t.slidegen_workflow}</Label>
-                <div className="grid gap-3 sm:grid-cols-3">
-                  {workflowModes.map((mode) => (
-                    <button
-                      key={mode.id}
-                      onClick={() => setWorkflowMode(mode.id)}
-                      className={`rounded-lg border p-3 text-left transition-all ${
-                        workflowMode === mode.id
-                          ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                          : "border-border hover:border-primary/50"
-                      }`}
-                    >
-                      <p className="text-sm font-medium">{mode.label}</p>
-                      <p className="mt-1 text-xs text-muted-foreground">{mode.desc}</p>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Toggles */}
-              <div className="flex flex-wrap gap-6">
-                <div className="flex items-center gap-2">
-                  <Switch id="transitions" checked={enableTransitions} onCheckedChange={setEnableTransitions} />
-                  <Label htmlFor="transitions" className="text-sm">{t.slidegen_transitions}</Label>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Switch id="thankyou" checked={enableThankYou} onCheckedChange={setEnableThankYou} />
-                  <Label htmlFor="thankyou" className="text-sm">{t.slidegen_thankyou}</Label>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Nav links */}
-          {/* <div className="mt-8 flex justify-center gap-4">
-            <Button variant="outline" onClick={() => navigate("/")}>
-              <Home className="mr-2 h-4 w-4" /> Back to Home
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/guide")}>
-              <BookOpen className="mr-2 h-4 w-4" /> Read the Guide
-            </Button>
-            <Button variant="outline" onClick={() => navigate("/login")}>
-              Sign In
-            </Button>
-          </div> */}
         </section>
       </div>
     </AppLayout>

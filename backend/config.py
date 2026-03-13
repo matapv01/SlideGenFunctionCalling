@@ -46,8 +46,8 @@ API_PORT = 12008
 
 # --- LLM Configuration ---
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
-LLM_MODEL = "gemini-2.5-flash"
-#LLM_MODEL = "gemini-3-flash-preview"
+# LLM_MODEL = "gemini-2.5-flash"
+LLM_MODEL = "gemini-3-flash-preview"
 # Base URL cho API endpoint
 LLM_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)

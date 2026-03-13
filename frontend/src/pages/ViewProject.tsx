@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
 import { Edit, Save, ArrowLeft, Play, X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -256,7 +257,7 @@ const ViewProject = () => {
       </Dialog>
 
       {/* Presentation Mode Overlay */}
-      {isPresentMode && slides.length > 0 && (
+      {isPresentMode && slides.length > 0 && createPortal(
         <div className="fixed inset-0 z-50 bg-black flex flex-col">
           {/* Top bar */}
           <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
@@ -327,7 +328,8 @@ const ViewProject = () => {
               Use ← → or Space to navigate, ESC to exit
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </AppLayout>
   );

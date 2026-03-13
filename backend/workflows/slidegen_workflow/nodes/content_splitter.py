@@ -39,6 +39,7 @@ def split_content(state: State, config: RunnableConfig) -> State:
             'description': 'Analyzing and organizing content...',
             'message': 'Processing document structure'
         })
+        time.sleep(2) # Delay for UX
 
     if not llm:
         raise ValueError("LLM is not found in config. Cannot proceed with content splitting.")

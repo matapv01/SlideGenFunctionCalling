@@ -62,6 +62,7 @@ def generate_structure_from_plaintext(state: State, config: RunnableConfig) -> S
             'description': 'AI analysis in progress',
             'message': 'Generating document structure from content...'
         })
+        time.sleep(2) # Delay for UX
     
     if not llm:
         raise ValueError("LLM is not found in config. Cannot generate structure.")

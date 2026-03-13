@@ -212,7 +212,12 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto">{children}</main>
+        <main 
+          key={location.pathname} 
+          className="flex-1 overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-mode-both"
+        >
+          {children}
+        </main>
       </div>
     </div>
   );

@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useBlocker } from "react-router-dom";
 import {
   User,
   Mail,
@@ -24,6 +25,16 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { useTheme } from "@/contexts/ThemeContext";
@@ -44,15 +55,36 @@ const Settings = () => {
   const [profileLoading, setProfileLoading] = useState(false);
   const [profileInitLoading, setProfileInitLoading] = useState(true);
 
-  // Settings state
+  // Settings Draft State
   const [settingsLoading, setSettingsLoading] = useState(false);
-  const [initialSettings, setInitialSettings] = useState({ language, theme, autoTheme });
+  const [draftLanguage, setDraftLanguage] = useState(language);
+  const [draftTheme, setDraftTheme] = useState(theme);
+  const [draftAutoTheme, setDraftAutoTheme] = useState(autoTheme);
   
   // Track if settings have unsaved changes
   const hasUnsavedChanges = 
-    language !== initialSettings.language ||
-    theme !== initialSettings.theme ||
-    autoTheme !== initialSettings.autoTheme;
+    draftLanguage !== language ||
+    draftTheme !== theme ||
+    draftAutoTheme !== autoTheme;
+
+  // React Router v6 blocker for unsaved changes
+  const blocker = useBlocker(
+    ({ currentLocation, nextLocation }) =>
+      hasUnsavedChanges && currentLocation.pathname !== nextLocation.pathname
+  );
+
+  // Browser level beforeunload intercept
+  useEffect(() => {
+    if (!hasUnsavedChanges) return;
+
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -73,8 +105,6 @@ const Settings = () => {
         setFullName(profile.full_name ?? "");
         setAvatarUrl(profile.avatar_url ?? "");
         setBio(profile.bio ?? "");
-        // Set initial settings values for dirty tracking
-        setInitialSettings({ language, theme, autoTheme });
       } catch {
         // Use defaults if API fails
       } finally {
@@ -99,10 +129,19 @@ const Settings = () => {
   const handleSaveSettings = async () => {
     setSettingsLoading(true);
     try {
-      await api.updateSettings({ language, theme });
+      // 1. API Call
+      await api.updateSettings({ language: draftLanguage, theme: draftTheme });
+      
+      // 2. Update Global Context to actually apply the appearance changes
+      setLanguage(draftLanguage);
+      if (draftAutoTheme !== autoTheme) {
+        setAutoTheme(draftAutoTheme);
+      }
+      if (!draftAutoTheme && draftTheme !== theme) {
+        toggleTheme();
+      }
+
       toast({ title: t.toast_settings_success });
-      // Reset dirty tracking after successful save
-      setInitialSettings({ language, theme, autoTheme });
     } catch (err: any) {
       toast({ title: t.toast_settings_error, description: err.message, variant: "destructive" });
     } finally {
@@ -313,9 +352,9 @@ const Settings = () => {
                   <Label>{t.appearance_theme}</Label>
                   <div className="grid grid-cols-3 gap-3">
                     <button
-                      onClick={() => { setAutoTheme(false); if (theme === "dark") toggleTheme(); }}
+                      onClick={() => { setDraftAutoTheme(false); setDraftTheme("light"); }}
                       className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
-                        !autoTheme && theme === "light"
+                        !draftAutoTheme && draftTheme === "light"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border hover:border-border/80 hover:bg-muted"
                       }`}
@@ -324,9 +363,9 @@ const Settings = () => {
                       {t.appearance_theme_light}
                     </button>
                     <button
-                      onClick={() => { setAutoTheme(false); if (theme === "light") toggleTheme(); }}
+                      onClick={() => { setDraftAutoTheme(false); setDraftTheme("dark"); }}
                       className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
-                        !autoTheme && theme === "dark"
+                        !draftAutoTheme && draftTheme === "dark"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border hover:border-border/80 hover:bg-muted"
                       }`}
@@ -335,9 +374,9 @@ const Settings = () => {
                       {t.appearance_theme_dark}
                     </button>
                     <button
-                      onClick={() => setAutoTheme(!autoTheme)}
+                      onClick={() => setDraftAutoTheme(true)}
                       className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
-                        autoTheme
+                        draftAutoTheme
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border hover:border-border/80 hover:bg-muted"
                       }`}
@@ -358,9 +397,9 @@ const Settings = () => {
                   </div>
                   <div className="grid grid-cols-2 gap-3">
                     <button
-                      onClick={() => setLanguage("vi")}
+                      onClick={() => setDraftLanguage("vi")}
                       className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
-                        language === "vi"
+                        draftLanguage === "vi"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border hover:border-border/80 hover:bg-muted"
                       }`}
@@ -369,9 +408,9 @@ const Settings = () => {
                       Tiếng Việt
                     </button>
                     <button
-                      onClick={() => setLanguage("en")}
+                      onClick={() => setDraftLanguage("en")}
                       className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
-                        language === "en"
+                        draftLanguage === "en"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border hover:border-border/80 hover:bg-muted"
                       }`}
@@ -497,6 +536,38 @@ const Settings = () => {
           </TabsContent>
         </Tabs>
       </div>
+      
+      {/* Unsaved Changes Confirmation Dialog */}
+      <AlertDialog
+        open={blocker.state === "blocked"}
+        onOpenChange={(open) => {
+          if (!open && blocker.state === "blocked") {
+            blocker.reset();
+          }
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>{language === "vi" ? "Bạn có chưa lưu thay đổi!" : "Unsaved changes!"}</AlertDialogTitle>
+            <AlertDialogDescription>
+              {language === "vi" 
+                ? "Bạn đã thay đổi một số cài đặt nhưng chưa lưu. Những thay đổi này sẽ bị mất nếu bạn tiếp tục. Bạn có chắc chắn muốn rời đi không?"
+                : "You have unsaved changes that will be lost if you leave this page. Are you sure you want to discard them?"}
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => blocker.state === "blocked" && blocker.reset()}>
+              {language === "vi" ? "Ở lại" : "Stay"}
+            </AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive hover:bg-destructive/90 text-destructive-foreground"
+              onClick={() => blocker.state === "blocked" && blocker.proceed()}
+            >
+              {language === "vi" ? "Vẫn rời đi" : "Leave anyway"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AppLayout>
   );
 };

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
 import { LanguageProvider } from "@/contexts/LanguageContext";
@@ -24,35 +24,47 @@ import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
+// Context Providers Wrapper
+const ProvidersLayout = () => {
+  return (
     <ThemeProvider>
       <LanguageProvider>
-      <AuthProvider>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/slidegen" element={<SlideGen />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
-              <Route path="/guide" element={<Guide />} />
-              <Route path="/projects" element={<ProtectedRoute><Projects /></ProtectedRoute>} />
-              <Route path="/streaming/:projectId" element={<ProtectedRoute><Streaming /></ProtectedRoute>} />
-              <Route path="/structure/:projectId" element={<ProtectedRoute><StructureEditor /></ProtectedRoute>} />
-              <Route path="/editor/:projectId" element={<ProtectedRoute><SlideEditor /></ProtectedRoute>} />
-              <Route path="/present/:projectId" element={<ProtectedRoute><PresentationMode /></ProtectedRoute>} />
-              <Route path="/view/:projectId" element={<ProtectedRoute><ViewProject /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </BrowserRouter>
-        </TooltipProvider>
-      </AuthProvider>
+        <AuthProvider>
+          <TooltipProvider>
+            <Toaster />
+            <Sonner />
+            <Outlet />
+          </TooltipProvider>
+        </AuthProvider>
       </LanguageProvider>
     </ThemeProvider>
+  );
+};
+
+const router = createBrowserRouter([
+  {
+    element: <ProvidersLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/slidegen", element: <SlideGen /> },
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
+      { path: "/guide", element: <Guide /> },
+      { path: "/projects", element: <ProtectedRoute><Projects /></ProtectedRoute> },
+      { path: "/streaming/:projectId", element: <ProtectedRoute><Streaming /></ProtectedRoute> },
+      { path: "/structure/:projectId", element: <ProtectedRoute><StructureEditor /></ProtectedRoute> },
+      { path: "/editor/:projectId", element: <ProtectedRoute><SlideEditor /></ProtectedRoute> },
+      { path: "/present/:projectId", element: <ProtectedRoute><PresentationMode /></ProtectedRoute> },
+      { path: "/view/:projectId", element: <ProtectedRoute><ViewProject /></ProtectedRoute> },
+      { path: "/settings", element: <ProtectedRoute><Settings /></ProtectedRoute> },
+      { path: "*", element: <NotFound /> },
+    ]
+  }
+]);
+
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <RouterProvider router={router} />
   </QueryClientProvider>
 );
 

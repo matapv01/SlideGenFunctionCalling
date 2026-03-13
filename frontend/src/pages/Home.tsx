@@ -31,22 +31,22 @@ const sponsors = [
 
 const testimonials = [
   {
-    name: "Sarah Chen",
-    role: "Marketing Director",
-    content: "SlideGen transformed how we create presentations. What took our team hours now takes minutes!",
-    avatar: "👩‍💼",
+    name: "Minh Pham",
+    role: "student",
+    content: "Slidegen quá tuyệt vời, tôi không thể sống thiếu nó.",
+    avatar: "👨‍🎓",
   },
   {
-    name: "Michael Roberts",
-    role: "Startup Founder",
-    content: "The AI understanding is incredible. It captures exactly what I want to communicate.",
-    avatar: "👨‍💻",
-  },
-  {
-    name: "Emily Davis",
+    name: "Quang Nguyen",
     role: "Professor",
-    content: "My students love the visual quality. SlideGen makes complex topics easy to present.",
-    avatar: "👩‍🏫",
+    content: "Thật tuyệt khi có thể được sử dụng một công cụ hữu ích như này",
+    avatar: "👨‍🏫",
+  },
+  {
+    name: "Tuyen Vu",
+    role: "AI Engineer",
+    content: "Ối dồi ôi công cụ gì mà mạnh quá",
+    avatar: "🤖",
   },
 ];
 
@@ -65,7 +65,7 @@ const Home = () => {
   const stats = [
     { value: "10K+", label: t.home_stat_presentations },
     { value: "99%", label: t.home_stat_satisfaction },
-    { value: "50+", label: t.home_stat_templates },
+    { value: "500K+", label: t.home_stat_templates },
     { value: "24/7", label: t.home_stat_ai },
   ];
 
@@ -74,7 +74,7 @@ const Home = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background overflow-hidden">
+    <div className="min-h-screen bg-background overflow-hidden animate-in fade-in zoom-in-95 duration-500">
       {/* Animated Background */}
       <div className="fixed inset-0 -z-10 overflow-hidden">
         <div className="absolute -top-40 -right-40 h-96 w-96 rounded-full bg-gradient-to-br from-primary/30 to-accent/30 blur-3xl animate-blob" />

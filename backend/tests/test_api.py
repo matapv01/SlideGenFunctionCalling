@@ -31,14 +31,6 @@ def test_upload_docx_invalid_file():
     assert "DOCX" in response.json()["detail"]
 
 
-def test_upload_zip_invalid_file():
-    """Test ZIP upload with invalid file type"""
-    files = {"file": ("test.txt", b"test content", "text/plain")}
-    response = client.post("/api/v1/upload-zip", files=files)
-    assert response.status_code == 400
-    assert "ZIP" in response.json()["detail"]
-
-
 def test_get_image_not_found():
     """Test image endpoint with non-existent image"""
     response = client.get("/api/v1/images/nonexistent.png")

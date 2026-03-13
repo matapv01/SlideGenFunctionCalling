@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle2, Loader2, AlertCircle, RefreshCw, Home, Eye, FileText, Sparkles, PenTool, ExternalLink, Presentation, X, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,8 +43,37 @@ const Streaming = () => {
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [ideaSessionId, setIdeaSessionId] = useState<string | null>(null);
   const [isPreparingIdea, setIsPreparingIdea] = useState(false);
+  const [totalSlides, setTotalSlides] = useState<number | string>('...');
+  
+  const updateStage = (newStage: number) => {
+    setCurrentStage(prev => Math.max(prev, newStage));
+  };
 
   const eventSourceRef = useRef<EventSource | null>(null);
+  
+  const translateBackendMessage = (msg: string | undefined): string => {
+    if (!msg) return "";
+    const lowerMsg = msg.toLowerCase();
+    
+    // Process "Completed X/Y slides" pattern
+    const slideMatch = lowerMsg.match(/completed (\d+)\/(\d+) slides/);
+    if (slideMatch) {
+      const total = slideMatch[2];
+      setTotalSlides(total);
+      return `${t.streaming_slide_completed} ${slideMatch[1]}/${total} ${t.streaming_slides_unit}`;
+    }
+
+    if (lowerMsg.includes("analyzing content")) return t.streaming_msg_analyzing;
+    if (lowerMsg.includes("processing document structure")) return t.streaming_msg_processing_struct;
+    if (lowerMsg.includes("generating document structure")) return t.streaming_msg_generating_struct;
+    if (lowerMsg.includes("booting system")) return t.streaming_msg_booting;
+    if (lowerMsg.includes("initializing infrastructure")) return t.streaming_msg_initializing_infra;
+    if (lowerMsg.includes("starting slide generation")) return t.streaming_msg_starting_generation;
+    if (lowerMsg.includes("generating slides")) return t.streaming_msg_generating_slides;
+    if (lowerMsg.includes("no slides were created")) return t.streaming_msg_no_slides;
+    if (lowerMsg.includes("system ready")) return t.streaming_msg_ready;
+    return msg;
+  };
 
   const startStreaming = () => {
     setError(null);
@@ -80,47 +110,52 @@ const Streaming = () => {
 
     es.addEventListener("status", (e) => {
       const data = JSON.parse(e.data);
-      setActivity(data.message || data.description || data.status);
+      const translatedMsg = translateBackendMessage(data.message);
+      setActivity(translatedMsg || data.description || data.status);
       
       // Map backend messages to frontend stage
       // Stage 0 = Analyze Content, Stage 1 = Prepare Content, Stage 2 = Design Slides
       const message = (data.message || '').toLowerCase();
       const title = (data.title || '').toLowerCase();
       
-      // Check message content first for more accurate mapping
-      if (message.includes('analyzing content') || message.includes('planning slide')) {
-        setCurrentStage(1); // Prepare Content - analyzing to plan
-      } else if (message.includes('processing document') || message.includes('processing file')) {
-        setCurrentStage(0); // Analyze Content - reading document
-      } else if (title.includes('completed') || title.includes('complete')) {
-        setCurrentStage(3); // All completed
-      } else if (title.includes('analyze') || title.includes('starting')) {
-        setCurrentStage(0); // Analyze Content
+      // STRICT Stage mapping logic
+      // Priority 1: Check Step number (most reliable)
+      if (data.step !== undefined) {
+        if (data.step === 1 || data.step === 2) {
+          updateStage(0);
+        } else if (data.step === 3) {
+          // Inside Step 3 (Planner/Generator), only move to Stage 1 after planning confirms design phase
+          if (title.includes('design slides') || title.includes('creating') || title.includes('generation')) {
+            updateStage(1);
+          } else {
+            updateStage(0); // STAY IN STAGE 0 (Analyze) during all analysis & planning
+          }
+        }
+      } 
+      // Priority 2: Title keywords (only if step is missing or for specific markers)
+      else if (title.includes('design slides') || title.includes('creating')) {
+        updateStage(1);
       } else if (title.includes('prepare')) {
-        setCurrentStage(1); // Prepare Content
-      } else if (title.includes('design') || title.includes('creating')) {
-        setCurrentStage(2); // Design Slides
-      } else if (data.step !== undefined) {
-        // Fallback: map step number directly
-        if (data.step === 1) setCurrentStage(0);
-        else if (data.step === 2) setCurrentStage(1); // Prepare
-        else if (data.step === 3) setCurrentStage(3);
-      } else {
-        // Fallback to stage-based mapping
+        updateStage(0);
+      } else if (title.includes('analyze') || title.includes('starting')) {
+        updateStage(0);
+      } 
+      // Priority 3: Fallback to stage field
+      else {
         const stageIdx = stages.findIndex((s) => s.id === data.stage);
-        if (stageIdx >= 0) setCurrentStage(stageIdx);
+        if (stageIdx >= 0) updateStage(stageIdx);
       }
     });
     
     es.addEventListener("progress", (e) => {
       const data = JSON.parse(e.data);
       setProgress(data.progress || data.percentage || 0);
-      if (data.message) setActivity(data.message);
+      if (data.message) setActivity(translateBackendMessage(data.message));
       
       // When we receive progress events about slide completion, we're in Design stage
       const message = (data.message || '').toLowerCase();
       if (message.includes('completed') && message.includes('/')) {
-        setCurrentStage(2); // Design Slides - actively creating slides
+        updateStage(2); // Design Slides - actively creating slides
       }
     });
 
@@ -156,10 +191,12 @@ const Streaming = () => {
 
     es.addEventListener("complete", (e) => {
       const data = JSON.parse(e.data);
+      const total = data.total_slides || slides.length;
       setCompleted(true);
       setProgress(100);
       setCurrentStage(2);
-      setActivity(`${t.streaming_done} ${data.total_slides || 0} ${t.streaming_slides_unit}`);
+      setTotalSlides(total);
+      setActivity(`${t.streaming_done} ${total} ${t.streaming_slides_unit}`);
       es.close();
       // Store project_id for navigation
       if (data.project_id) {
@@ -489,7 +526,7 @@ const Streaming = () => {
                 <FileText className="h-4 w-4 text-white" />
               </div>
               <h2 className="text-lg font-semibold">
-                {t.streaming_slides_header} ({slides.length}/{completed ? slides.length : '...'})
+                {t.streaming_slides_header} {slides.length}/{totalSlides}
               </h2>
             </div>
             
@@ -649,7 +686,7 @@ const Streaming = () => {
       `}</style>
 
       {/* Presentation Mode Overlay */}
-      {isPresentMode && slides.length > 0 && (
+      {isPresentMode && slides.length > 0 && createPortal(
         <div className="fixed inset-0 z-50 bg-black flex flex-col">
           {/* Top bar */}
           <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
@@ -719,7 +756,8 @@ const Streaming = () => {
               Use ← → or Space to navigate, ESC to exit
             </p>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </AppLayout>
   );
