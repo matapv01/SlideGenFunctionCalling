@@ -182,7 +182,6 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           </Button>
           <div className="hidden lg:block" />
           <div className="flex items-center gap-2">
-            <ThemeToggle />
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>

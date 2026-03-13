@@ -6,13 +6,14 @@ import {
   Eye,
   EyeOff,
   Globe,
-  Bell,
   Sun,
   Moon,
+  Clock,
   Save,
   ShieldCheck,
   Palette,
   UserCircle,
+  AlertTriangle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,7 +33,7 @@ import { AppLayout } from "@/components/AppLayout";
 
 const Settings = () => {
   const { user } = useAuth();
-  const { theme, toggleTheme } = useTheme();
+  const { theme, toggleTheme, autoTheme, setAutoTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { toast } = useToast();
 
@@ -44,8 +45,14 @@ const Settings = () => {
   const [profileInitLoading, setProfileInitLoading] = useState(true);
 
   // Settings state
-  const [notificationsEnabled, setNotificationsEnabled] = useState(true);
   const [settingsLoading, setSettingsLoading] = useState(false);
+  const [initialSettings, setInitialSettings] = useState({ language, theme, autoTheme });
+  
+  // Track if settings have unsaved changes
+  const hasUnsavedChanges = 
+    language !== initialSettings.language ||
+    theme !== initialSettings.theme ||
+    autoTheme !== initialSettings.autoTheme;
 
   // Password state
   const [currentPassword, setCurrentPassword] = useState("");
@@ -66,7 +73,8 @@ const Settings = () => {
         setFullName(profile.full_name ?? "");
         setAvatarUrl(profile.avatar_url ?? "");
         setBio(profile.bio ?? "");
-        setNotificationsEnabled(settings.notifications_enabled ?? true);
+        // Set initial settings values for dirty tracking
+        setInitialSettings({ language, theme, autoTheme });
       } catch {
         // Use defaults if API fails
       } finally {
@@ -91,8 +99,10 @@ const Settings = () => {
   const handleSaveSettings = async () => {
     setSettingsLoading(true);
     try {
-      await api.updateSettings({ language, notifications_enabled: notificationsEnabled, theme });
+      await api.updateSettings({ language, theme });
       toast({ title: t.toast_settings_success });
+      // Reset dirty tracking after successful save
+      setInitialSettings({ language, theme, autoTheme });
     } catch (err: any) {
       toast({ title: t.toast_settings_error, description: err.message, variant: "destructive" });
     } finally {
@@ -301,11 +311,11 @@ const Settings = () => {
                 {/* Theme */}
                 <div className="space-y-3">
                   <Label>{t.appearance_theme}</Label>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-3 gap-3">
                     <button
-                      onClick={() => theme === "dark" && toggleTheme()}
+                      onClick={() => { setAutoTheme(false); if (theme === "dark") toggleTheme(); }}
                       className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
-                        theme === "light"
+                        !autoTheme && theme === "light"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border hover:border-border/80 hover:bg-muted"
                       }`}
@@ -314,15 +324,26 @@ const Settings = () => {
                       {t.appearance_theme_light}
                     </button>
                     <button
-                      onClick={() => theme === "light" && toggleTheme()}
+                      onClick={() => { setAutoTheme(false); if (theme === "light") toggleTheme(); }}
                       className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
-                        theme === "dark"
+                        !autoTheme && theme === "dark"
                           ? "border-primary bg-primary/10 text-primary"
                           : "border-border hover:border-border/80 hover:bg-muted"
                       }`}
                     >
                       <Moon className="h-4 w-4" />
                       {t.appearance_theme_dark}
+                    </button>
+                    <button
+                      onClick={() => setAutoTheme(!autoTheme)}
+                      className={`flex items-center justify-center gap-2 rounded-lg border p-4 text-sm font-medium transition-all ${
+                        autoTheme
+                          ? "border-primary bg-primary/10 text-primary"
+                          : "border-border hover:border-border/80 hover:bg-muted"
+                      }`}
+                    >
+                      <Clock className="h-4 w-4" />
+                      {t.appearance_auto_theme}
                     </button>
                   </div>
                 </div>
@@ -363,23 +384,19 @@ const Settings = () => {
 
                 <Separator />
 
-                {/* Notifications */}
-                <div className="flex items-center justify-between">
-                  <div className="space-y-0.5">
-                    <div className="flex items-center gap-2">
-                      <Bell className="h-4 w-4 text-muted-foreground" />
-                      <Label className="text-sm font-medium cursor-pointer">{t.appearance_notifications}</Label>
-                    </div>
-                    <p className="text-xs text-muted-foreground pl-6">{t.appearance_notifications_hint}</p>
+                {hasUnsavedChanges && (
+                  <div className="flex items-center gap-2 rounded-lg border border-yellow-200 bg-yellow-50 p-3 text-yellow-800 dark:border-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-200">
+                    <AlertTriangle className="h-4 w-4" />
+                    <p className="text-sm">{t.appearance_unsaved_warning}</p>
                   </div>
-                  <Switch
-                    checked={notificationsEnabled}
-                    onCheckedChange={setNotificationsEnabled}
-                  />
-                </div>
+                )}
 
                 <Button
-                  className="w-full gradient-primary text-primary-foreground"
+                  className={`w-full text-primary-foreground transition-all ${
+                    hasUnsavedChanges
+                      ? "bg-yellow-500 hover:bg-yellow-600 shadow-lg"
+                      : "gradient-primary"
+                  }`}
                   onClick={handleSaveSettings}
                   disabled={settingsLoading}
                 >
