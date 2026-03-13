@@ -1389,7 +1389,7 @@ const StructureEditor = () => {
       <div className="legacy-structure-page">
         <div className="legacy-aurora" aria-hidden />
         <div className="legacy-particles" aria-hidden>
-          {Array.from({ length: 5 }).map((_, index) => (
+          {Array.from({ length: 10 }).map((_, index) => (
             <span key={index} className={`legacy-particle legacy-particle-${index + 1}`} />
           ))}
         </div>

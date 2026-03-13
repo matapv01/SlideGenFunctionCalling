@@ -931,21 +931,25 @@
   position: relative;
   min-height: calc(100vh - 4rem);
   padding: 1.5rem;
-  background: linear-gradient(-45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
-  background-size: 400% 400%;
-  animation: legacyGradientShift 12s ease infinite;
-  color: #1f1633;
-  --legacy-surface: rgba(255, 255, 255, 0.92);
-  --legacy-surface-strong: rgba(255, 255, 255, 0.98);
-  --legacy-border: rgba(255, 255, 255, 0.35);
+  background: linear-gradient(180deg,
+      hsl(var(--background)) 0%,
+      hsl(var(--muted) / 0.55) 100%);
+  color: hsl(var(--foreground));
+  --legacy-surface: hsl(var(--card) / 0.78);
+  --legacy-surface-strong: hsl(var(--card) / 0.92);
+  --legacy-border: hsl(var(--border) / 0.72);
+  --legacy-hover: hsl(var(--foreground) / 0.08);
+  --legacy-shadow: 0 25px 60px hsl(var(--foreground) / 0.08);
   overflow: hidden;
 }
 
 .dark .legacy-structure-page {
-  color: #f8f7ff;
-  --legacy-surface: rgba(9, 12, 28, 0.65);
-  --legacy-surface-strong: rgba(7, 8, 20, 0.9);
-  --legacy-border: rgba(255, 255, 255, 0.12);
+  color: hsl(var(--foreground));
+  --legacy-surface: hsl(var(--card) / 0.66);
+  --legacy-surface-strong: hsl(var(--card) / 0.88);
+  --legacy-border: hsl(var(--border) / 0.55);
+  --legacy-hover: hsl(var(--foreground) / 0.12);
+  --legacy-shadow: 0 25px 60px hsl(0 0% 0% / 0.35);
 }
 
 @keyframes legacyGradientShift {
@@ -974,7 +978,9 @@
   height: 200%;
   top: -50%;
   left: -50%;
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center,
+      hsl(var(--foreground) / 0.05) 0%,
+      transparent 70%);
   animation: legacyAurora 8s ease-in-out infinite;
 }
 
@@ -992,9 +998,9 @@
 
 .legacy-particle {
   position: absolute;
-  background: rgba(255, 255, 255, 0.15);
+  background: hsl(var(--foreground) / 0.06);
   border-radius: 50%;
-  animation: legacyParticleFloat 20s linear infinite;
+  animation: legacyParticleFloat 14s linear infinite;
 }
 
 .legacy-particle-1 {
@@ -1032,6 +1038,41 @@
   animation-delay: 3s;
 }
 
+.legacy-particle-6 {
+  width: 46px;
+  height: 46px;
+  left: 18%;
+  animation-delay: 1.4s;
+}
+
+.legacy-particle-7 {
+  width: 58px;
+  height: 58px;
+  left: 42%;
+  animation-delay: 2.6s;
+}
+
+.legacy-particle-8 {
+  width: 34px;
+  height: 34px;
+  left: 62%;
+  animation-delay: 0.8s;
+}
+
+.legacy-particle-9 {
+  width: 76px;
+  height: 76px;
+  left: 76%;
+  animation-delay: 3.6s;
+}
+
+.legacy-particle-10 {
+  width: 52px;
+  height: 52px;
+  left: 92%;
+  animation-delay: 2.1s;
+}
+
 @keyframes legacyParticleFloat {
 
   0%,
@@ -1040,14 +1081,14 @@
     opacity: 0;
   }
 
-  10% {
+  8% {
     opacity: 1;
-    transform: translateY(80vh) scale(1);
+    transform: translateY(82vh) scale(1);
   }
 
-  90% {
+  92% {
     opacity: 1;
-    transform: translateY(-80vh) scale(1);
+    transform: translateY(-82vh) scale(1);
   }
 }
 
@@ -1094,13 +1135,13 @@
 }
 
 .legacy-structure-page .btn {
-  border: 1px solid rgba(255, 255, 255, 0.35);
+  border: 1px solid var(--legacy-border);
   border-radius: 8px;
   padding: 0.55rem 1rem;
   font-size: 0.9rem;
   font-weight: 600;
-  color: #fff;
-  background: rgba(255, 255, 255, 0.08);
+  color: hsl(var(--foreground));
+  background: hsl(var(--muted) / 0.55);
   display: inline-flex;
   align-items: center;
   gap: 0.3rem;
@@ -1124,27 +1165,30 @@
 
 .legacy-structure-page .btn-outline-light {
   background: transparent;
-  border-color: rgba(255, 255, 255, 0.6);
+  border-color: var(--legacy-border);
 }
 
 .legacy-structure-page .btn-secondary {
-  background: rgba(100, 116, 139, 0.35);
-  border-color: rgba(100, 116, 139, 0.6);
+  background: hsl(var(--muted));
+  border-color: var(--legacy-border);
 }
 
 .legacy-structure-page .btn-danger {
   background: rgba(255, 107, 107, 0.85);
   border-color: rgba(255, 107, 107, 0.95);
+  color: #fff;
 }
 
 .legacy-structure-page .btn-success {
   background: linear-gradient(135deg, #4caf50, #2fb344);
   border: none;
+  color: #fff;
 }
 
 .legacy-structure-page .btn-info {
   background: linear-gradient(135deg, #667eea, #764ba2);
   border: none;
+  color: #fff;
 }
 
 .legacy-structure-page .badge {
@@ -1186,11 +1230,11 @@
   }
 
   .legacy-structure-page .editor-column {
-    flex: 7;
+    flex: 8;
   }
 
   .legacy-structure-page .preview-column {
-    flex: 5;
+    flex: 4;
   }
 }
 
@@ -1200,7 +1244,7 @@
   padding: 1.25rem 1.5rem;
   backdrop-filter: blur(25px);
   border: 1px solid var(--legacy-border);
-  box-shadow: 0 25px 60px rgba(18, 7, 36, 0.25);
+  box-shadow: var(--legacy-shadow);
   min-height: 0;
   display: flex;
   flex-direction: column;
@@ -1258,7 +1302,7 @@
 
 .legacy-structure-page .style-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 10px 20px rgba(18, 7, 36, 0.15);
+  box-shadow: 0 10px 20px hsl(var(--foreground) / 0.12);
 }
 
 .legacy-structure-page .style-card:disabled {
@@ -1389,7 +1433,7 @@
 
 .legacy-structure-page .slide-thumbnail:hover {
   transform: translateY(-2px);
-  box-shadow: 0 15px 35px rgba(18, 7, 36, 0.25);
+  box-shadow: 0 15px 35px hsl(var(--foreground) / 0.16);
 }
 
 .legacy-structure-page .slide-transition {
@@ -1406,15 +1450,11 @@
   position: absolute;
   top: 10px;
   right: 12px;
-  background: var(--legacy-border);
+  background: hsl(var(--muted));
   padding: 0.2rem 0.75rem;
   border-radius: 999px;
   font-size: 0.75rem;
-  color: #1f1633;
-}
-
-.dark .legacy-structure-page .slide-number {
-  color: #fff;
+  color: hsl(var(--foreground));
 }
 
 .legacy-structure-page .slide-title {
@@ -1453,7 +1493,7 @@
 .legacy-structure-page .slide-bullet::before {
   content: "•";
   margin-right: 0.4rem;
-  color: #667eea;
+  color: hsl(var(--primary));
 }
 
 .legacy-structure-page .slide-bullet.level-2 {
@@ -1572,7 +1612,7 @@
 }
 
 .legacy-structure-page .find-nav-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.12);
+  background: var(--legacy-hover);
 }
 
 .legacy-structure-page .find-case-label {
@@ -1601,7 +1641,7 @@
 
 .legacy-structure-page .find-close-btn:hover {
   opacity: 1;
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--legacy-hover);
 }
 
 .legacy-structure-page .find-action-btn {
@@ -1683,7 +1723,7 @@
 }
 
 .legacy-structure-page .zoom-btn:hover:not(:disabled) {
-  background: rgba(255, 255, 255, 0.1);
+  background: var(--legacy-hover);
 }
 
 .legacy-structure-page .zoom-value {
