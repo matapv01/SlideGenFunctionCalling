@@ -23,7 +23,13 @@ export interface SlideCanvasHandle {
   getSelectedZIndex: () => number;
   getMaxZIndex: () => number;
   injectElement: (html: string) => void;
-  deleteElement: () => void;
+  deleteElement: (id?: string) => void;
+  duplicateElement: (id?: string) => void;
+  copySelectedElement: (id?: string) => boolean;
+  pasteElement: () => void;
+  bringToFront: (id?: string) => void;
+  sendToBack: (id?: string) => void;
+  isTextEditing: () => boolean;
   saveHistory: (silent?: boolean) => void;
   reselectById: (id: string) => void;
 }
@@ -99,8 +105,26 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     injectElement: (html: string) => {
       logicInstanceRef.current?.injectElement(html);
     },
-    deleteElement: () => {
-      logicInstanceRef.current?.deleteElement();
+    deleteElement: (id?: string) => {
+      logicInstanceRef.current?.deleteElement(id ?? null);
+    },
+    duplicateElement: (id?: string) => {
+      logicInstanceRef.current?.duplicateElement(id ?? null);
+    },
+    copySelectedElement: (id?: string) => {
+      return logicInstanceRef.current?.copySelectedElement(id ?? null) ?? false;
+    },
+    pasteElement: () => {
+      logicInstanceRef.current?.pasteElement();
+    },
+    bringToFront: (id?: string) => {
+      logicInstanceRef.current?.bringToFront(id ?? null);
+    },
+    sendToBack: (id?: string) => {
+      logicInstanceRef.current?.sendToBack(id ?? null);
+    },
+    isTextEditing: () => {
+      return !!logicInstanceRef.current?.isEditingText;
     },
     saveHistory: (silent = false) => {
       logicInstanceRef.current?.saveHistory(silent);

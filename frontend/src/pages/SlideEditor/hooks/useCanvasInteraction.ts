@@ -32,6 +32,15 @@ export const useCanvasInteraction = ({
   addElement,
   canvasRef
 }: UseCanvasInteractionParams): UseCanvasInteractionReturn => {
+  const toNumber = (value: unknown, fallback = 0): number => {
+    if (typeof value === "number" && Number.isFinite(value)) return value;
+    if (typeof value === "string") {
+      const n = parseFloat(value);
+      return Number.isFinite(n) ? n : fallback;
+    }
+    return fallback;
+  };
+
   
   const handleElementSelectFromCanvas = useCallback((elementData: any) => {
     console.log('[SlideEditor] Element selected from canvas:', elementData);
@@ -46,19 +55,19 @@ export const useCanvasInteraction = ({
     // Update React state with latest data from Canvas
     if (matchingElement && elementData.style) {
       const updates: Partial<SlideElement> = {
-        x: elementData.style.left,
-        y: elementData.style.top,
-        width: elementData.style.width,
-        height: elementData.style.height,
-        fontSize: elementData.style.fontSize,
-        fontFamily: elementData.style.fontFamily,
-        fontWeight: elementData.style.fontWeight,
-        fontStyle: elementData.style.fontStyle,
-        textDecoration: elementData.style.textDecoration,
-        textAlign: elementData.style.textAlign,
-        color: elementData.style.color,
-        fillColor: elementData.style.backgroundColor,
-        content: elementData.content || elementData.innerHTML
+        x: toNumber(elementData.style.left, matchingElement.x),
+        y: toNumber(elementData.style.top, matchingElement.y),
+        width: toNumber(elementData.style.width, matchingElement.width),
+        height: toNumber(elementData.style.height, matchingElement.height),
+        fontSize: toNumber(elementData.style.fontSize, matchingElement.fontSize),
+        fontFamily: elementData.style.fontFamily || matchingElement.fontFamily,
+        fontWeight: elementData.style.fontWeight || matchingElement.fontWeight,
+        fontStyle: elementData.style.fontStyle || matchingElement.fontStyle,
+        textDecoration: elementData.style.textDecoration || matchingElement.textDecoration,
+        textAlign: (elementData.style.textAlign as "left" | "center" | "right") || matchingElement.textAlign,
+        color: elementData.style.color || matchingElement.color,
+        fillColor: elementData.style.backgroundColor || matchingElement.fillColor,
+        content: elementData.content || elementData.innerHTML || matchingElement.content
       };
 
       setSlides(prev => prev.map((slide, i) => {
@@ -81,14 +90,14 @@ export const useCanvasInteraction = ({
         id: elementData.id,
         type: elType,
         content: elementData.content || elementData.innerHTML || elementData.textContent || "New Text",
-        x: parseFloat(elementData.style.left) || 0,
-        y: parseFloat(elementData.style.top) || 0,
-        width: parseFloat(elementData.style.width) || 100,
-        height: parseFloat(elementData.style.height) || 100,
+        x: toNumber(elementData.style.left, 0),
+        y: toNumber(elementData.style.top, 0),
+        width: toNumber(elementData.style.width, 100),
+        height: toNumber(elementData.style.height, 100),
         rotation: 0,
         zIndex: 1,
         opacity: 1,
-        fontSize: parseFloat(elementData.style.fontSize) || 16,
+        fontSize: toNumber(elementData.style.fontSize, 16),
         fontFamily: elementData.style.fontFamily || 'Inter',
         fontWeight: elementData.style.fontWeight || 'normal',
         fontStyle: elementData.style.fontStyle || 'normal',

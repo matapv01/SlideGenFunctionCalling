@@ -88,7 +88,15 @@ export const useSlideEditor = () => {
   });
 
   // ── Keyboard shortcuts ────────────────────────────────────────────────
-  useKeyboardShortcuts({ selectedElementId, deleteElement, handleSave, slideCanvasRef });
+  useKeyboardShortcuts({
+    selectedElementId,
+    deleteElement,
+    duplicateElement,
+    bringForward,
+    sendBackward,
+    handleSave,
+    slideCanvasRef,
+  });
 
   return {
     // State

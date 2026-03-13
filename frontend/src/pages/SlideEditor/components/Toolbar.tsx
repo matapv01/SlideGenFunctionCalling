@@ -1,6 +1,6 @@
 import { 
   ArrowLeft, MousePointer, Type, Download, Play, 
-  Undo2, Redo2 
+  Undo2, Redo2, Trash2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
@@ -42,6 +42,7 @@ interface ToolbarProps {
   onNavigateBack: () => void;
   onDeselectElement: () => void;
   onSetDraggedItem: (item: { type: string; subType: string }) => void;
+  onDeleteElement?: () => void;
   onPresent: () => void;
   onExport: () => void;
 }
@@ -55,6 +56,7 @@ export const Toolbar = ({
   onNavigateBack,
   onDeselectElement,
   onSetDraggedItem,
+  onDeleteElement,
   onPresent,
   onExport,
 }: ToolbarProps) => {
@@ -136,6 +138,17 @@ export const Toolbar = ({
           </Button>
         </Tip>
         <Separator orientation="vertical" className="h-5 mx-1 opacity-40" />
+        <Tip label={t.editor_delete} shortcut="Del" desc={t.editor_delete_desc} side="bottom">
+          <Button
+            variant="ghost"
+            size="icon"
+            disabled={!selectedElementId}
+            className="h-8 w-8 text-destructive hover:text-destructive disabled:opacity-30"
+            onClick={() => onDeleteElement?.()}
+          >
+            <Trash2 className="h-4 w-4" />
+          </Button>
+        </Tip>
 
       </div>
     </div>

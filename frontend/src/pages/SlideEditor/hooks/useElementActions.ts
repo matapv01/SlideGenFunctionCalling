@@ -152,7 +152,7 @@ export const useElementActions = ({
   const deleteElement = useCallback((id: string) => {
     // Sync Shadow DOM canvas first
     if (slideCanvasRef.current) {
-      slideCanvasRef.current.deleteElement();
+      slideCanvasRef.current.deleteElement(id);
     }
     
     // Sync React state
@@ -164,6 +164,11 @@ export const useElementActions = ({
   }, [currentSlideIndex, setSlides, setSelectedElementId, slideCanvasRef]);
 
   const duplicateElement = useCallback((id: string) => {
+    if (slideCanvasRef.current?.duplicateElement) {
+      slideCanvasRef.current.duplicateElement(id);
+      return;
+    }
+
     setSlides(prev => prev.map((slide, i) => {
       if (i !== currentSlideIndex) return slide;
       const el = slide.elements.find(e => e.id === id);
@@ -171,7 +176,7 @@ export const useElementActions = ({
       const clone: SlideElement = { ...el, id: `element-${Date.now()}`, x: el.x + 20, y: el.y + 20 };
       return { ...slide, elements: [...slide.elements, clone] };
     }));
-  }, [currentSlideIndex, setSlides]);
+  }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
   const bringForward = useCallback((id: string) => {
     setSlides(prev => prev.map((slide, i) => {

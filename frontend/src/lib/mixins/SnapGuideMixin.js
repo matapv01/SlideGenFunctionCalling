@@ -1,10 +1,29 @@
 // Mixin: snap-to-grid / smart alignment guide lines
 export const SnapGuideMixin = {
 
+    getSnapBounds(el) {
+        if (this.getElementBounds) {
+            const b = this.getElementBounds(el);
+            return {
+                left: b.left,
+                top: b.top,
+                width: b.width,
+                height: b.height,
+            };
+        }
+        return {
+            left: el.offsetLeft,
+            top: el.offsetTop,
+            width: el.offsetWidth,
+            height: el.offsetHeight,
+        };
+    },
+
     snapToGuides(el, x, y) {
         const guides = [];
-        const elW     = el.offsetWidth;
-        const elH     = el.offsetHeight;
+        const dragBounds = this.getSnapBounds(el);
+        const elW     = dragBounds.width;
+        const elH     = dragBounds.height;
         const canvasW = this.canvas.offsetWidth;
         const canvasH = this.canvas.offsetHeight;
 
@@ -51,10 +70,11 @@ export const SnapGuideMixin = {
             const dT = y,       dB  = y + elH,     dCY = y + elH / 2;
 
             otherElements.forEach(other => {
-                const oL  = other.offsetLeft;
-                const oT  = other.offsetTop;
-                const oW  = other.offsetWidth;
-                const oH  = other.offsetHeight;
+                const otherBounds = this.getSnapBounds(other);
+                const oL  = otherBounds.left;
+                const oT  = otherBounds.top;
+                const oW  = otherBounds.width;
+                const oH  = otherBounds.height;
                 const oR  = oL + oW;
                 const oB  = oT + oH;
                 const oCX = oL + oW / 2;

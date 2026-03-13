@@ -26,6 +26,7 @@ export class SlideEditorLogic {
         this.isResizing        = false;
         this.isPreparedForDrag = false;
         this.pendingSelectElement = null;
+        this.pendingSelectMode = null;
         this.draggedElement    = null;
         this.dragStart         = null;
         this.elementsStartPos  = new Map();
