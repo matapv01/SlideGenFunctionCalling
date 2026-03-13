@@ -92,18 +92,31 @@ class BaseWorkflowService:
         if not self.workflow_available:
             return None
         
-        os.makedirs(TEMP_DIR, exist_ok=True)
-        safe_prefix = f"slidegen_{prefix}_"
-        temp_workflow_dir = tempfile.mkdtemp(prefix=safe_prefix, dir=str(TEMP_DIR))
+        # Check if output_folder is provided in kwargs
+        output_folder = kwargs.get('output_folder')
+        is_temp = False
+        
+        if output_folder:
+            temp_workflow_dir = output_folder
+        else:
+            os.makedirs(TEMP_DIR, exist_ok=True)
+            safe_prefix = f"slidegen_{prefix}_"
+            temp_workflow_dir = tempfile.mkdtemp(prefix=safe_prefix, dir=str(TEMP_DIR))
+            is_temp = True
+            
         self._create_subdirs(temp_workflow_dir)
         
         try:
+            # remove output_folder from kwargs if it exists to avoid duplicate argument error
+            kwargs.pop('output_folder', None)
+            # pass output_folder to the workflow function
             result = await workflow_func(output_folder=temp_workflow_dir, **kwargs)
             return result, temp_workflow_dir
 
         except Exception as e:
             logger.error(f"❌ Error executing workflow {prefix}: {e}")
-            shutil.rmtree(temp_workflow_dir, ignore_errors=True)
+            if is_temp:
+                shutil.rmtree(temp_workflow_dir, ignore_errors=True)
             return None, None
 
     def check_health(self) -> Dict[str, Any]:

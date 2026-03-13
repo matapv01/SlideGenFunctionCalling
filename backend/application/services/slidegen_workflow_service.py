@@ -22,13 +22,15 @@ class SlideGenWorkflowService(BaseWorkflowService):
         llm_provider: LLMProvider,
         capture_provider: CaptureProvider,
         parser_provider: ParserProvider,
-        tool_retriever: ToolRetrieveProvider
+        tool_retriever: ToolRetrieveProvider,
+        conversion_service=None
     ):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
         self.capture_provider = capture_provider
         self.parser_provider = parser_provider
         self.tool_retriever = tool_retriever
+        self.conversion_service = conversion_service
 
     def _get_providers(self) -> Dict[str, Any]:
         """Gói các providers cần thiết để inject vào workflow"""
@@ -36,7 +38,8 @@ class SlideGenWorkflowService(BaseWorkflowService):
             "llm_provider": self.llm_provider,
             "capture_provider": self.capture_provider,
             "parser_provider": self.parser_provider,
-            "tool_retriever": self.tool_retriever
+            "tool_retriever": self.tool_retriever,
+            "conversion_service": self.conversion_service
         }
 
     async def process_docx(self, docx_path: str, output_folder: str = None, **kwargs) -> Optional[str]:
@@ -54,16 +57,16 @@ class SlideGenWorkflowService(BaseWorkflowService):
                 slide_options=kw.get('slide_options', {})
             )
         
+        if output_folder:
+            kwargs['output_folder'] = output_folder
+            
         raw_result, temp_dir = await self._execute_workflow_logic(run_logic, "docx", **kwargs)
         
-        # Nếu hàm main_workflow trả về zip path hợp lệ thì dùng luôn
-        if raw_result and isinstance(raw_result, str) and raw_result.endswith('.zip'):
+        # Hàm main_workflow giờ trả về folder output thay vì ZIP.
+        if raw_result and isinstance(raw_result, str):
             return raw_result
-            
-        # Nếu không, thử dùng base service để zip lại folder html
-        if temp_dir:
-            return self._create_standardized_zip(temp_dir)
-            
+        elif temp_dir:
+            return str(temp_dir)
         return None
 
     async def process_chunks(self, slide_chunks: list, title: str, output_folder: str = None, **kwargs) -> Optional[str]:
@@ -80,12 +83,13 @@ class SlideGenWorkflowService(BaseWorkflowService):
                 slide_options=kw.get('slide_options', {})
             )
 
+        if output_folder:
+            kwargs['output_folder'] = output_folder
+
         raw_result, temp_dir = await self._execute_workflow_logic(run_logic, "chunk", **kwargs)
         
-        if raw_result and isinstance(raw_result, str) and raw_result.endswith('.zip'):
+        if raw_result and isinstance(raw_result, str):
             return raw_result
-            
-        if temp_dir:
-            return self._create_standardized_zip(temp_dir)
-            
+        elif temp_dir:
+            return str(temp_dir)
         return None

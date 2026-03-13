@@ -129,6 +129,7 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
           <iframe
             srcDoc={processedHtml}
             className="border-0 pointer-events-none"
+            tabIndex={-1}
             style={{ 
               width: `${SLIDE_WIDTH}px`, 
               height: `${SLIDE_HEIGHT}px`,

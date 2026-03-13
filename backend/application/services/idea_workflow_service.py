@@ -13,9 +13,10 @@ class IdeaWorkflowService(BaseWorkflowService):
     Nhiệm vụ: Nhận Prompt -> Gọi Agent -> Trả về JSON Structure.
     """
 
-    def __init__(self, project_dir: str, llm_provider: LLMProvider):
+    def __init__(self, project_dir: str, llm_provider: LLMProvider, conversion_service=None):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
+        self.conversion_service = conversion_service
 
     async def generate_structure_from_idea(
         self, 

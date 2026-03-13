@@ -187,8 +187,7 @@ class ProjectService:
         source_type: str,
         source_data: dict,
         slide_options: dict,
-        output_folder: Path,
-        zip_path: Optional[str] = None # Thêm tham số ZIP path
+        output_folder: Path
     ) -> int:
         """
         Import project từ kết quả workflow AI.
@@ -213,30 +212,8 @@ class ProjectService:
             )
 
             # 3. Handle File Extraction & Conversion
-            html_folder = output_folder / "html"
-            
-            # 3a. Giải nén ZIP nếu có
-            if zip_path and Path(zip_path).exists():
-                logger.info(f"📦 Extracting zip: {zip_path}")
-                with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-                    for file_info in zip_ref.infolist():
-                        if not file_info.filename.endswith('/') and 'temp_debug' not in file_info.filename:
-                            try:
-                                zip_ref.extract(file_info, output_folder)
-                            except Exception as e:
-                                logger.error(f"Error extracting {file_info.filename}: {e}")
-
-            # 3b. Convert HTML (Gọi conversion_service)
+            html_folder = output_folder / "output" / "html"
             converted_folder = output_folder / "converted"
-            
-            if html_folder.exists():
-                if self.conversion_service and self.conversion_service.is_available():
-                    logger.info("🔄 Converting HTML slides...")
-                    # Đảm bảo folder converted tồn tại
-                    converted_folder.mkdir(parents=True, exist_ok=True)
-                    self.conversion_service.convert_slides_batch(html_folder, converted_folder)
-                else:
-                    logger.warning("⚠️ Conversion service not available, skipping conversion.")
 
             # 4. Insert Slides to DB
             # Ưu tiên lấy file đã convert
@@ -244,8 +221,7 @@ class ProjectService:
             source_dir = converted_folder if use_converted else html_folder
             
             if not source_dir.exists():
-                logger.error("❌ No HTML files found to import")
-                # Vẫn trả về project_id nhưng status có thể là error hoặc empty
+                logger.error(f"❌ No source_dir found: {source_dir}")
                 return project_id
 
             html_files = sorted(source_dir.glob("*.html"), key=self.extract_slide_index)

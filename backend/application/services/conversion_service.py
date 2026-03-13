@@ -21,6 +21,28 @@ class ConversionService:
     def is_available(self) -> bool:
         return self.infra.check_dependencies()
 
+    def convert_single_slide(self, input_path: str, output_path: str) -> bool:
+        """
+        Chuyển đổi 1 slide duy nhất từ HTML thô sang JSON/Absolute layout.
+        Trả về True nếu thành công, False nếu thất bại.
+        """
+        if not os.path.exists(input_path):
+            logger.error(f"Cannot convert: {input_path} does not exist.")
+            return False
+            
+        try:
+            os.makedirs(os.path.dirname(output_path), exist_ok=True)
+            process = self.infra.run_conversion_command(input_path, output_path)
+            if process.returncode == 0:
+                logger.info(f"Successfully converted single slide: {output_path}")
+                return True
+            else:
+                logger.error(f"Failed to convert single slide {input_path}: {process.stderr}")
+                return False
+        except Exception as e:
+            logger.error(f"Exception converting single slide {input_path}: {e}")
+            return False
+
     def convert_slides_batch(self, input_folder: Path, output_folder: Path) -> Dict[str, List[str]]:
         input_str = str(input_folder)
         output_str = str(output_folder)

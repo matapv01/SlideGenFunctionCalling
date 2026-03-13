@@ -51,28 +51,40 @@ const PresentationMode = () => {
     } catch { /* ignore */ }
   };
 
-  const exitPresentation = () => {
-    if (document.fullscreenElement) document.exitFullscreen();
+  const exitPresentation = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(() => {});
+    }
     navigate(-1);
-  };
+  }, [navigate]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
       if (e.key === "ArrowRight" || e.key === " ") { e.preventDefault(); next(); }
       if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
-      if (e.key === "Escape") exitPresentation();
+      if (e.key === "Escape") {
+        e.preventDefault();
+        exitPresentation();
+      }
     };
     window.addEventListener("keydown", handler);
     return () => window.removeEventListener("keydown", handler);
-  }, [next, prev]);
+  }, [next, prev, exitPresentation]);
 
   useEffect(() => {
     const handleFullscreenChange = () => {
-      if (!document.fullscreenElement) setIsFullscreen(false);
+      if (!document.fullscreenElement) {
+        setIsFullscreen(false);
+        // If we were in fullscreen and now we are not, it means user pressed Esc (browser default)
+        // or we called exitFullscreen. In both cases, stay consistent by going back to editor.
+        if (slides.length > 0) {
+           navigate(-1);
+        }
+      }
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, []);
+  }, [navigate, slides.length]);
 
   // Hide cursor after inactivity
   const handleMouseMove = () => {

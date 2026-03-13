@@ -56,6 +56,7 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 _capture_infra = PlaywrightCaptureProvider()
 _converter_infra = NodeJsConvertProvider()
 _parser_infra = MarkItDownParser()
+_conversion_service = ConversionService(converter_infra=_converter_infra)
 
 _idea_llm = GeminiLLMProvider(
     api_keys=[GEMINI_API_KEY] if GEMINI_API_KEY else [],
@@ -85,7 +86,8 @@ _slide_service = SlideService(static_dir=STATIC_DIR, image_dir=IMAGE_DIR)
 
 _idea_workflow_service = IdeaWorkflowService(
     project_dir=str(PROJECT_DIR),
-    llm_provider=_idea_llm
+    llm_provider=_idea_llm,
+    conversion_service=_conversion_service
 )
 
 _slidegen_workflow_service = SlideGenWorkflowService(
@@ -93,7 +95,8 @@ _slidegen_workflow_service = SlideGenWorkflowService(
     llm_provider=_slidegen_llm,
     capture_provider=_capture_infra,
     parser_provider=_parser_infra,
-    tool_retriever=_retriever_infra
+    tool_retriever=_retriever_infra,
+    conversion_service=_conversion_service
 )
 
 def get_user_repo() -> UserRepository:
@@ -140,10 +143,8 @@ def get_capture_service(
     return CaptureService(captures_dir=CAPTURES_DIR, slide_capture=infra)
 
 
-def get_conversion_service(
-    infra: ConvertProvider = Depends(get_converter_infra)
-) -> ConversionService:
-    return ConversionService(converter_infra=infra)
+def get_conversion_service() -> ConversionService:
+    return _conversion_service
 
 
 def get_project_service(

@@ -30,28 +30,6 @@ def _setup_output_dirs(output_folder: str) -> Tuple[str, str]:
         
     return output_dir, output_debug_dir
 
-def _package_output(output_folder: str, final_state: dict) -> str:
-    """Zips the final result and debug info."""
-    # 1. Zip Final Slides
-    final_zip_path = os.path.join(output_folder, "slides_langgraph.zip")
-    with zipfile.ZipFile(final_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for slide in final_state.get('final_slides', []):
-            if slide.get('html_path') and os.path.exists(slide['html_path']):
-                zipf.write(slide['html_path'], os.path.join("html", os.path.basename(slide['html_path'])))
-            if slide.get('png_path') and os.path.exists(slide['png_path']):
-                zipf.write(slide['png_path'], os.path.join("png", os.path.basename(slide['png_path'])))
-
-    # 2. Zip Debug Slides
-    debug_zip_path = os.path.join(output_folder, "slides_debug_langgraph.zip")
-    with zipfile.ZipFile(debug_zip_path, 'w', zipfile.ZIP_DEFLATED) as zipf:
-        for slide in final_state.get('all_debug_info', []):
-            if slide.get('html_path') and os.path.exists(slide['html_path']):
-                zipf.write(slide['html_path'], os.path.join("html", os.path.basename(slide['html_path'])))
-            if slide.get('png_path') and os.path.exists(slide['png_path']):
-                zipf.write(slide['png_path'], os.path.join("png", os.path.basename(slide['png_path'])))
-    
-    return final_zip_path
-
 def _emit_event(callback, event_type: str, data: Dict[Any, Any]):
     """Safe event emission."""
     if callback:
@@ -82,6 +60,7 @@ async def main_workflow(
         capture_provider: CaptureProvider = infra_providers['capture_provider']
         parser_provider: ParserProvider = infra_providers['parser_provider']
         tool_retriever: ToolRetrieveProvider = infra_providers['tool_retriever']
+        conversion_service = infra_providers.get('conversion_service')
 
         # Vì node slide_generator cần LangChain Runnable, ta lấy từ client
         langchain_llm = llm_provider.llm_client 
@@ -98,6 +77,7 @@ async def main_workflow(
                 "capture_provider": capture_provider,
                 "parser_provider": parser_provider,
                 "tools_dict": TOOLS_DICT,
+                "conversion_service": conversion_service,
                 "output_folder": output_folder,
                 "temp_dir": output_dir,
                 "temp_debug_dir": output_debug_dir,
@@ -119,9 +99,8 @@ async def main_workflow(
         # Run
         print("\n🚀 Running Workflow with Singleton Infrastructure...")
         final_state = await app.ainvoke(initial_input, config=graph_config)
-        
-        _package_output(output_folder, final_state)
-        return os.path.join(output_folder, "slides_langgraph.zip")
+        print("\n🚀 Workflow completed.")
+        return output_folder
 
     except Exception as e:
         logger.error(f"❌ Workflow Error: {e}")
@@ -152,6 +131,7 @@ async def main_workflow_from_chunks(
         capture_provider: CaptureProvider = infra_providers['capture_provider']
         parser_provider: ParserProvider = infra_providers['parser_provider']
         tool_retriever: ToolRetrieveProvider = infra_providers['tool_retriever']
+        conversion_service = infra_providers.get('conversion_service')
         langchain_llm = llm_provider.llm_client
 
         # Router flag is False because we don't need to route document conversion
@@ -169,6 +149,7 @@ async def main_workflow_from_chunks(
                 "capture_provider": capture_provider,
                 "parser_provider": parser_provider,
                 "tools_dict": TOOLS_DICT,
+                "conversion_service": conversion_service,
                 "output_folder": output_folder,
                 "max_retries": 1,
                 "temp_dir": output_dir,
@@ -212,9 +193,8 @@ async def main_workflow_from_chunks(
             'message': f'Created {len(final_state.get("final_slides", []))} slides'
         })
 
-        zip_path = _package_output(output_folder, final_state)
-        print(f"📦 Output saved: {zip_path}")
-        return zip_path
+        print(f"📦 Output saved to folder: {output_folder}")
+        return output_folder
 
     except Exception as e:
         print(f"❌ Workflow Failed: {e}")

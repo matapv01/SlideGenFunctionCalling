@@ -101,13 +101,13 @@ async def generate_from_docx_normal(
         if not slidegen_workflow_service.is_available():
             raise HTTPException(503, "Dịch vụ workflow không khả dụng")
 
-        result_zip, _ = await slidegen_workflow_service.process_docx(
+        output_folder_path = await slidegen_workflow_service.process_docx(
             docx_path=str(temp_path),
             output_folder=str(output_folder),
             router_flags=False
         )
 
-        if not result_zip:
+        if not output_folder_path:
             raise HTTPException(500, "Workflow thất bại")
 
         # 3. Import Project
@@ -117,8 +117,7 @@ async def generate_from_docx_normal(
             source_type='docx',
             source_data={'filename': file.filename},
             slide_options={},
-            output_folder=output_folder,
-            zip_path=result_zip
+            output_folder=output_folder
         )
 
         # 4. Build Response
@@ -201,16 +200,13 @@ async def stream_docx_generation(
                 await queue.put(('error_event', {'message': "Workflow failed"}))
                 return
 
-            zip_path = res[0] if isinstance(res, tuple) else res
-
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
                 project_name=project_name,
                 source_type='docx',
                 source_data={'filename': filename},
                 slide_options=slide_options,
-                output_folder=output_folder,
-                zip_path=zip_path
+                output_folder=output_folder
             )
 
             # Lấy số lượng slide thực tế từ kết quả workflow thay vì slide_options
@@ -218,7 +214,7 @@ async def stream_docx_generation(
             if os.path.exists(output_folder / "html"):
                 actual_slide_count = len(list((output_folder / "html").glob("*.html")))
 
-            workflow_temp_dir = os.path.dirname(zip_path)
+            workflow_temp_dir = str(output_folder)
 
             await queue.put(('complete', {
                 'project_id': pid,
@@ -354,19 +350,16 @@ async def stream_idea_generation(
                 await queue.put(('error_event', {'message': "Workflow failed"}))
                 return
 
-            zip_path = res[0] if isinstance(res, tuple) else res
-
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
                 project_name=f"idea_{session_id}",
                 source_type='idea',
                 source_data=idea_data,
                 slide_options={},
-                output_folder=output_folder,
-                zip_path=zip_path
+                output_folder=output_folder
             )
 
-            workflow_temp_dir = os.path.dirname(zip_path)
+            workflow_temp_dir = str(output_folder)
 
             await queue.put(('complete', {
                 'project_id': pid,
@@ -428,19 +421,16 @@ async def stream_manual_generation(
                 await queue.put(('error_event', {'message': "Workflow failed"}))
                 return
 
-            zip_path = res[0] if isinstance(res, tuple) else res
-
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
                 project_name=title,
                 source_type='manual_structure',
                 source_data={'session_id': session_id, 'title': title},
                 slide_options={'manual_mode': True},
-                output_folder=output_folder,
-                zip_path=zip_path
+                output_folder=output_folder
             )
 
-            workflow_temp_dir = os.path.dirname(zip_path)
+            workflow_temp_dir = str(output_folder)
 
             await queue.put(('complete', {
                 'project_id': pid,

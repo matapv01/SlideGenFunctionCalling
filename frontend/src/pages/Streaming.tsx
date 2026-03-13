@@ -11,6 +11,7 @@ import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
+import { ReadOnlySlide } from "@/components/ReadOnlySlide";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SlideThumb {
@@ -194,7 +195,7 @@ const Streaming = () => {
       const total = data.total_slides || slides.length;
       setCompleted(true);
       setProgress(100);
-      setCurrentStage(2);
+      setCurrentStage(stages.length);
       setTotalSlides(total);
       setActivity(`${t.streaming_done} ${total} ${t.streaming_slides_unit}`);
       es.close();
@@ -281,38 +282,44 @@ const Streaming = () => {
     return () => eventSourceRef.current?.close();
   }, [ideaSessionId]);
 
-  // Keyboard navigation for presentation mode
+  // Centralized keyboard navigation for Presentation and Preview modes
   useEffect(() => {
-    if (!isPresentMode) return;
-
     const handleKeyDown = (e: KeyboardEvent) => {
-      switch (e.key) {
-        case "ArrowRight":
-        case " ":
-          e.preventDefault();
-          setCurrentSlideIndex((prev) => Math.min(prev + 1, slides.length - 1));
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
-          break;
-        case "Escape":
+      if (e.key === "Escape") {
+        if (isPresentMode) {
           exitPresentation();
-          break;
-        case "Home":
-          e.preventDefault();
-          setCurrentSlideIndex(0);
-          break;
-        case "End":
-          e.preventDefault();
-          setCurrentSlideIndex(slides.length - 1);
-          break;
+        } else if (previewSlide) {
+          setPreviewSlide(null);
+        }
+        return;
+      }
+
+      if (isPresentMode) {
+        switch (e.key) {
+          case "ArrowRight":
+          case " ":
+            e.preventDefault();
+            setCurrentSlideIndex((prev) => Math.min(prev + 1, slides.length - 1));
+            break;
+          case "ArrowLeft":
+            e.preventDefault();
+            setCurrentSlideIndex((prev) => Math.max(prev - 1, 0));
+            break;
+          case "Home":
+            e.preventDefault();
+            setCurrentSlideIndex(0);
+            break;
+          case "End":
+            e.preventDefault();
+            setCurrentSlideIndex(slides.length - 1);
+            break;
+        }
       }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [isPresentMode, slides.length]);
+  }, [isPresentMode, previewSlide, slides.length]);
 
   // Listen for fullscreen exit
   useEffect(() => {
@@ -698,14 +705,14 @@ const Streaming = () => {
             </Button>
           </div>
 
-          {/* Slide content - Full screen */}
-          <div className="flex-1 flex items-center justify-center">
-            <div className="w-full h-full bg-white overflow-hidden relative">
+          {/* Slide content - Full screen with maintained aspect ratio */}
+          <div className="flex-1 flex items-center justify-center bg-black">
+            <div className="w-full h-full relative">
               {slides[currentSlideIndex]?.html ? (
-                <ScaledSlidePreview
-                  html={slides[currentSlideIndex].html}
-                  title={`Slide ${currentSlideIndex + 1}`}
-                  className="absolute inset-0"
+                <ReadOnlySlide
+                  slideId={`present-${currentSlideIndex}`}
+                  htmlContent={slides[currentSlideIndex].html}
+                  className="w-full h-full"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">
