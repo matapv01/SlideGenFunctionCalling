@@ -1261,9 +1261,21 @@
   box-shadow: 0 10px 20px rgba(18, 7, 36, 0.15);
 }
 
+.legacy-structure-page .style-card:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
 .legacy-structure-page .style-card.active {
   border-color: #4dabf7;
   box-shadow: 0 0 0 2px rgba(77, 171, 247, 0.35);
+}
+
+.legacy-structure-page .style-add-level {
+  border-style: dashed;
+  border-color: rgba(77, 171, 247, 0.55);
 }
 
 .legacy-structure-page .style-preview {
@@ -1480,4 +1492,258 @@
 .legacy-structure-page .word-editor::-webkit-scrollbar-thumb {
   background: var(--legacy-border);
   border-radius: 999px;
+}
+
+/* ---- Find & Replace Panel ---- */
+.legacy-structure-page .find-replace-panel {
+  background: var(--legacy-surface-strong);
+  border: 1px solid var(--legacy-border);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.legacy-structure-page .find-replace-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.legacy-structure-page .find-replace-input-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: var(--legacy-surface);
+  border: 1px solid var(--legacy-border);
+  border-radius: 6px;
+  padding: 0.25rem 0.6rem;
+}
+
+.legacy-structure-page .find-replace-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  outline: none;
+  color: inherit;
+  font-size: 0.85rem;
+  min-width: 0;
+}
+
+.legacy-structure-page .find-replace-icon {
+  opacity: 0.5;
+  flex-shrink: 0;
+}
+
+.legacy-structure-page .find-replace-spacer {
+  width: 14px;
+  flex-shrink: 0;
+}
+
+.legacy-structure-page .find-count {
+  font-size: 0.75rem;
+  white-space: nowrap;
+  opacity: 0.6;
+}
+
+.legacy-structure-page .find-count-found {
+  color: #4dabf7;
+  opacity: 1;
+}
+
+.legacy-structure-page .find-nav-btn {
+  background: var(--legacy-surface);
+  border: 1px solid var(--legacy-border);
+  border-radius: 6px;
+  padding: 0.28rem 0.4rem;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  transition: background 0.15s;
+}
+
+.legacy-structure-page .find-nav-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.legacy-structure-page .find-nav-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+.legacy-structure-page .find-case-label {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  cursor: pointer;
+  white-space: nowrap;
+  opacity: 0.75;
+  user-select: none;
+}
+
+.legacy-structure-page .find-close-btn {
+  background: transparent;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  padding: 0.25rem;
+  opacity: 0.55;
+  border-radius: 4px;
+  display: flex;
+  align-items: center;
+  transition: opacity 0.15s, background 0.15s;
+}
+
+.legacy-structure-page .find-close-btn:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.legacy-structure-page .find-action-btn {
+  background: rgba(102, 126, 234, 0.2);
+  border: 1px solid rgba(102, 126, 234, 0.4);
+  border-radius: 6px;
+  padding: 0.28rem 0.6rem;
+  font-size: 0.78rem;
+  color: inherit;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: background 0.15s;
+}
+
+.legacy-structure-page .find-action-btn:hover:not(:disabled) {
+  background: rgba(102, 126, 234, 0.38);
+}
+
+.legacy-structure-page .find-action-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.legacy-structure-page .find-action-btn-all {
+  background: rgba(76, 175, 80, 0.15);
+  border-color: rgba(76, 175, 80, 0.4);
+}
+
+.legacy-structure-page .find-action-btn-all:hover:not(:disabled) {
+  background: rgba(76, 175, 80, 0.3);
+}
+
+/* Find highlight marks */
+:is(.word-editor, .se-word-editor) .find-highlight {
+  background: rgba(255, 235, 59, 0.38);
+  color: inherit;
+  border-radius: 2px;
+}
+
+:is(.word-editor, .se-word-editor) .find-current {
+  background: rgba(255, 152, 0, 0.65);
+  outline: 2px solid rgba(255, 152, 0, 0.9);
+  border-radius: 2px;
+}
+
+/* ---- Zoom controls ---- */
+.legacy-structure-page .zoom-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+
+.legacy-structure-page .toolbar-zoom-group {
+  margin-left: auto;
+}
+
+.legacy-structure-page .toolbar-zoom-group .zoom-controls {
+  background: var(--legacy-surface);
+  border: 1px solid var(--legacy-border);
+  border-radius: 8px;
+  padding: 0.25rem 0.35rem;
+}
+
+.legacy-structure-page .zoom-btn {
+  background: var(--legacy-surface-strong);
+  border: 1px solid var(--legacy-border);
+  border-radius: 5px;
+  padding: 0.2rem 0.35rem;
+  color: inherit;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  transition: background 0.15s;
+}
+
+.legacy-structure-page .zoom-btn:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.legacy-structure-page .zoom-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.legacy-structure-page .zoom-value {
+  font-size: 0.78rem;
+  min-width: 36px;
+  text-align: center;
+  font-weight: 600;
+}
+
+.legacy-structure-page .save-indicator {
+  border: 1px solid var(--legacy-border);
+  background: var(--legacy-surface);
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.legacy-structure-page .save-indicator.saved {
+  color: #b7f0c4;
+  border-color: rgba(76, 175, 80, 0.45);
+}
+
+.legacy-structure-page .save-indicator.unsaved {
+  color: #ffe08a;
+  border-color: rgba(255, 193, 7, 0.45);
+}
+
+.legacy-structure-page .save-indicator.saving {
+  color: #9ac8ff;
+  border-color: rgba(77, 171, 247, 0.45);
+}
+
+.legacy-structure-page .validation-panel {
+  background: rgba(220, 53, 69, 0.12);
+  border: 1px solid rgba(220, 53, 69, 0.5);
+  border-radius: 10px;
+  padding: 0.55rem 0.75rem;
+}
+
+.legacy-structure-page .validation-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-bottom: 0.2rem;
+  color: #ffb3ba;
+}
+
+.legacy-structure-page .validation-list {
+  margin: 0;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-size: 0.78rem;
+  color: #ffd7db;
+}
+
+:is(.word-editor, .se-word-editor) .text-block.validation-error {
+  border-color: rgba(255, 77, 79, 0.9) !important;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.25);
+  background: rgba(255, 77, 79, 0.1);
 }

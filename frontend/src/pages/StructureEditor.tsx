@@ -2,7 +2,8 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Check, RotateCcw, Sparkles, Loader2, FileText, ChevronRight,
-  PlayCircle, Trash2, Type, AlignLeft, ArrowLeft, XCircle
+  PlayCircle, Trash2, Type, AlignLeft, ArrowLeft, XCircle,
+  Search, Undo2, Redo2, ZoomIn, ZoomOut, ChevronUp, ChevronDown, X, Plus
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -48,6 +49,19 @@ interface SlidePreview {
   isTransition?: boolean;
 }
 
+interface FlatEditorBlock {
+  node_id: string;
+  level: number;
+  type: "title" | "content";
+  text: string;
+  is_transition: boolean;
+}
+
+interface ValidationIssue {
+  message: string;
+  nodeId: string;
+}
+
 // ============ MAIN COMPONENT ============
 
 const StructureEditor = () => {
@@ -66,7 +80,7 @@ const StructureEditor = () => {
   const introSlideRef = useRef<IntroSlide | null>(null);
   const [introSlide, setIntroSlide] = useState<IntroSlide | null>(null);
   const [slides, setSlides] = useState<SlidePreview[]>([]);
-  const [stats, setStats] = useState({ blocks: 0, chars: 0, slides: 0 });
+  const [stats, setStats] = useState({ blocks: 0, chars: 0, slides: 0, words: 0 });
 
   // UI state
   const [introModalOpen, setIntroModalOpen] = useState(false);
@@ -81,13 +95,40 @@ const StructureEditor = () => {
 
   const [cancelDialogOpen, setCancelDialogOpen] = useState(false);
 
+  // Find & Replace
+  const [findReplaceOpen, setFindReplaceOpen] = useState(false);
+  const [findText, setFindText] = useState("");
+  const [replaceText, setReplaceText] = useState("");
+  const [matchCount, setMatchCount] = useState(0);
+  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
+  const [caseSensitive, setCaseSensitive] = useState(false);
+  const findInputRef = useRef<HTMLInputElement>(null);
+
+  // Zoom
+  const [zoomLevel, setZoomLevel] = useState(100);
+  const [maxLevel, setMaxLevel] = useState(6);
+
+  // Save/validation state
+  const [isDirty, setIsDirty] = useState(false);
+  const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [validationIssues, setValidationIssues] = useState<ValidationIssue[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
   // Refs
   const editorRef = useRef<HTMLDivElement>(null);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const documentTextRef = useRef("");
   const listenersSetupRef = useRef(false);
+  const historyRef = useRef<string[]>([]);
+  const historyIndexRef = useRef(-1);
+  const isApplyingHistoryRef = useRef(false);
 
   const handleGoBack = () => {
+    if (isDirty) {
+      setCancelDialogOpen(true);
+      return;
+    }
     navigate(-1);
   };
 
@@ -115,9 +156,87 @@ const StructureEditor = () => {
     const clone = node.cloneNode(true) as Element;
     const handle = clone.querySelector(".drag-handle");
     if (handle) handle.remove();
+    // Strip find-highlight marks (keep their text)
+    clone.querySelectorAll(".find-highlight").forEach((mark) => {
+      const text = document.createTextNode(mark.textContent || "");
+      mark.parentNode?.replaceChild(text, mark);
+    });
+    clone.normalize();
     clone.innerHTML = clone.innerHTML.replace(/<br\s*\/?>/gi, "\n");
     return clone.textContent || "";
   };
+
+  const collectFlatBlocksFromEditor = useCallback(
+    (includeEmpty = false): FlatEditorBlock[] => {
+      const editor = editorRef.current;
+      if (!editor) return [];
+
+      const blocks = editor.querySelectorAll(".text-block");
+      const result: FlatEditorBlock[] = [];
+
+      blocks.forEach((block) => {
+        const el = block as HTMLElement;
+        const text = extractTextSafely(block);
+        const trimmed = text.trim();
+        if (!includeEmpty && !trimmed) return;
+
+        const type = (el.dataset.type === "title" ? "title" : "content") as "title" | "content";
+        result.push({
+          node_id: el.dataset.nodeId || generateNodeId(),
+          level: el.dataset.level !== undefined ? parseInt(el.dataset.level, 10) : 1,
+          type,
+          text: trimmed,
+          is_transition: el.dataset.transition === "true",
+        });
+      });
+
+      return result;
+    },
+    []
+  );
+
+  const clearValidationHighlights = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.querySelectorAll(".text-block.validation-error").forEach((block) => {
+      block.classList.remove("validation-error");
+    });
+  }, []);
+
+  const updateHistoryButtons = useCallback(() => {
+    setCanUndo(historyIndexRef.current > 0);
+    setCanRedo(historyIndexRef.current >= 0 && historyIndexRef.current < historyRef.current.length - 1);
+  }, []);
+
+  const initializeHistoryFromEditor = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    historyRef.current = [editor.innerHTML];
+    historyIndexRef.current = 0;
+    updateHistoryButtons();
+  }, [updateHistoryButtons]);
+
+  const recordHistorySnapshot = useCallback(() => {
+    if (isApplyingHistoryRef.current) return;
+    const editor = editorRef.current;
+    if (!editor) return;
+    const html = editor.innerHTML;
+
+    const current =
+      historyIndexRef.current >= 0 ? historyRef.current[historyIndexRef.current] : null;
+    if (current === html) return;
+
+    if (historyIndexRef.current < historyRef.current.length - 1) {
+      historyRef.current = historyRef.current.slice(0, historyIndexRef.current + 1);
+    }
+
+    historyRef.current.push(html);
+    if (historyRef.current.length > 120) {
+      historyRef.current.shift();
+    }
+    historyIndexRef.current = historyRef.current.length - 1;
+    updateHistoryButtons();
+  }, [updateHistoryButtons]);
 
   // ---- Build hierarchy from flat blocks ----
   const buildHierarchy = useCallback(
@@ -238,28 +357,8 @@ const StructureEditor = () => {
   const syncEditorToStructure = useCallback(() => {
     const editor = editorRef.current;
     if (!editor) return;
-
     const blocks = editor.querySelectorAll(".text-block");
-    const flatBlocks: Array<{
-      node_id: string;
-      level: number;
-      type: string;
-      text: string;
-      is_transition: boolean;
-    }> = [];
-
-    blocks.forEach((block) => {
-      const text = extractTextSafely(block).trim();
-      if (!text) return;
-      const el = block as HTMLElement;
-      flatBlocks.push({
-        node_id: el.dataset.nodeId || generateNodeId(),
-        level: el.dataset.level !== undefined ? parseInt(el.dataset.level) : 1,
-        type: el.dataset.type || "content",
-        text,
-        is_transition: el.dataset.transition === "true",
-      });
-    });
+    const flatBlocks = collectFlatBlocksFromEditor(false);
 
     const structure = buildHierarchy(flatBlocks);
     documentStructureRef.current = structure;
@@ -268,8 +367,9 @@ const StructureEditor = () => {
     setSlides(newSlides);
 
     const charCount = editor.textContent?.length || 0;
-    setStats({ blocks: blocks.length, chars: charCount, slides: newSlides.length });
-  }, [buildHierarchy, buildSlides]);
+    const wordCount = (editor.textContent || "").trim().split(/\s+/).filter((w) => w.length > 0).length;
+    setStats({ blocks: blocks.length, chars: charCount, slides: newSlides.length, words: wordCount });
+  }, [buildHierarchy, buildSlides, collectFlatBlocksFromEditor]);
 
   // ---- Save structure to backend ----
   const saveStructure = useCallback(async () => {
@@ -289,6 +389,8 @@ const StructureEditor = () => {
     try {
       const backendStructure = convertToBackendFormat(documentStructureRef.current);
       await api.updateStructure(sessionId, backendStructure, introSlideRef.current || undefined);
+      setIsDirty(false);
+      setLastSavedAt(Date.now());
     } catch {
       // Silent fail for auto-save
     }
@@ -296,12 +398,24 @@ const StructureEditor = () => {
 
   // ---- Full sync: sync DOM → state → save ----
   const fullSync = useCallback(() => {
+    setIsDirty(true);
+    if (validationIssues.length > 0) {
+      setValidationIssues([]);
+      clearValidationHighlights();
+    }
     syncEditorToStructure();
+    recordHistorySnapshot();
     if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
     saveTimeoutRef.current = setTimeout(() => {
       saveStructure();
     }, 1500);
-  }, [syncEditorToStructure, saveStructure]);
+  }, [
+    syncEditorToStructure,
+    saveStructure,
+    validationIssues.length,
+    clearValidationHighlights,
+    recordHistorySnapshot,
+  ]);
 
   // ---- Render existing structure into editor ----
   const renderExistingStructure = useCallback(
@@ -537,6 +651,11 @@ const StructureEditor = () => {
 
       setupEditorListeners();
       syncEditorToStructure();
+      initializeHistoryFromEditor();
+      setIsDirty(false);
+      setLastSavedAt(Date.now());
+      setValidationIssues([]);
+      clearValidationHighlights();
     } catch (err: any) {
       toast({
         title: "Lỗi tải cấu trúc",
@@ -548,6 +667,85 @@ const StructureEditor = () => {
     }
   };
 
+  const getSelectedBlocksInEditor = useCallback((editor: HTMLElement): HTMLElement[] => {
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0) return [];
+
+    const allBlocks = Array.from(editor.querySelectorAll(".text-block")) as HTMLElement[];
+    let selectedBlocks = allBlocks.filter((block) => selection.containsNode(block, true));
+
+    if (selectedBlocks.length === 0) {
+      const range = selection.getRangeAt(0);
+      let node: Node | null = range.commonAncestorContainer;
+      if (node.nodeType === 3) node = node.parentElement;
+      const block = (node as Element)?.closest?.(".text-block") as HTMLElement;
+      if (block) selectedBlocks = [block];
+    }
+
+    return selectedBlocks;
+  }, []);
+
+  const validateStructureBeforeApprove = useCallback((): ValidationIssue[] => {
+    const flatBlocksAll = collectFlatBlocksFromEditor(true);
+    const flatBlocks = flatBlocksAll.filter((b) => b.text.length > 0);
+    const issues: ValidationIssue[] = [];
+
+    clearValidationHighlights();
+
+    // Rule 1: Empty block
+    flatBlocksAll.forEach((block) => {
+      if (!block.text) {
+        issues.push({
+          nodeId: block.node_id,
+          message: "Phát hiện block rỗng. Hãy nhập nội dung hoặc chuyển về normal text.",
+        });
+      }
+    });
+
+    // Rule 2: Invalid level jump (e.g. L1 -> L4)
+    for (let i = 1; i < flatBlocks.length; i++) {
+      const prev = flatBlocks[i - 1];
+      const current = flatBlocks[i];
+      if (current.level > prev.level + 1) {
+        issues.push({
+          nodeId: current.node_id,
+          message: `Level nhảy sai từ L${prev.level} lên L${current.level}. Chỉ nên tăng tối đa 1 cấp.`,
+        });
+      }
+    }
+
+    // Rule 3: Missing slide title on level 1 node
+    const structure = buildHierarchy(flatBlocks);
+    structure.forEach((node) => {
+      if (node.level === 1 && !node.title?.trim()) {
+        issues.push({
+          nodeId: node.node_id,
+          message: "Slide cấp L1 đang thiếu title.",
+        });
+      }
+    });
+
+    if (issues.length > 0) {
+      setValidationIssues(issues);
+      const editor = editorRef.current;
+      if (editor) {
+        const issueIds = new Set(issues.map((issue) => issue.nodeId.replace(/_c$/, "")));
+        editor.querySelectorAll(".text-block").forEach((block) => {
+          const el = block as HTMLElement;
+          const id = el.dataset.nodeId || "";
+          const baseId = id.replace(/_c$/, "");
+          if (issueIds.has(baseId)) {
+            el.classList.add("validation-error");
+          }
+        });
+      }
+    } else {
+      setValidationIssues([]);
+    }
+
+    return issues;
+  }, [buildHierarchy, clearValidationHighlights, collectFlatBlocksFromEditor]);
+
   // ---- Formatting: Apply level/type to selected text ----
   const applyFormatting = (newLevel: number | "normal" | null, newType: "title" | "content" | null) => {
     const editor = editorRef.current;
@@ -556,20 +754,7 @@ const StructureEditor = () => {
     if (!selection) return;
 
     // Find selected blocks (existing formatted blocks in selection)
-    let selectedBlocks: HTMLElement[] = [];
-    if (selection.rangeCount > 0) {
-      const allBlocks = Array.from(editor.querySelectorAll(".text-block")) as HTMLElement[];
-      selectedBlocks = allBlocks.filter((block) => selection.containsNode(block, true));
-
-      // Fallback: check if cursor is inside a block
-      if (selectedBlocks.length === 0) {
-        const range = selection.getRangeAt(0);
-        let node: Node | null = range.commonAncestorContainer;
-        if (node.nodeType === 3) node = node.parentElement;
-        const block = (node as Element)?.closest?.(".text-block") as HTMLElement;
-        if (block) selectedBlocks = [block];
-      }
-    }
+    const selectedBlocks = selection.rangeCount > 0 ? getSelectedBlocksInEditor(editor) : [];
 
     // CASE 1: Editing existing block(s) - immediate effect
     if (selectedBlocks.length > 0) {
@@ -753,6 +938,21 @@ const StructureEditor = () => {
   // ---- Approve ----
   const handleApprove = async () => {
     if (!sessionId) return;
+
+    syncEditorToStructure();
+    const issues = validateStructureBeforeApprove();
+    if (issues.length > 0) {
+      setApproveDialogOpen(false);
+      toast({
+        title: "Không thể duyệt cấu trúc",
+        description: `Có ${issues.length} lỗi cần sửa trước khi Approve.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setValidationIssues([]);
+    clearValidationHighlights();
     setApproveDialogOpen(false);
     setSaving(true);
     try {
@@ -872,6 +1072,316 @@ const StructureEditor = () => {
     fullSync();
   };
 
+  // ---- Find & Replace ----
+  const clearHighlights = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    editor.querySelectorAll(".find-highlight").forEach((mark) => {
+      mark.replaceWith(document.createTextNode(mark.textContent || ""));
+    });
+    editor.normalize();
+  }, []);
+
+  const runFind = useCallback(
+    (searchText: string, cs: boolean = caseSensitive) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      clearHighlights();
+      if (!searchText.trim()) {
+        setMatchCount(0);
+        setCurrentMatchIndex(0);
+        return;
+      }
+
+      const walker = document.createTreeWalker(editor, NodeFilter.SHOW_TEXT, {
+        acceptNode(node) {
+          const parent = node.parentElement;
+          if (!parent) return NodeFilter.FILTER_REJECT;
+          if (parent.classList.contains("drag-handle")) return NodeFilter.FILTER_REJECT;
+          return NodeFilter.FILTER_ACCEPT;
+        },
+      });
+
+      const textNodes: Text[] = [];
+      let node;
+      while ((node = walker.nextNode())) textNodes.push(node as Text);
+
+      const flags = cs ? "g" : "gi";
+      const escaped = searchText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+      const regex = new RegExp(escaped, flags);
+
+      let count = 0;
+      textNodes.forEach((textNode) => {
+        const text = textNode.nodeValue || "";
+        if (!regex.test(text)) return;
+        regex.lastIndex = 0;
+        const fragment = document.createDocumentFragment();
+        let lastIndex = 0;
+        let match;
+        while ((match = regex.exec(text)) !== null) {
+          if (match.index > lastIndex) {
+            fragment.appendChild(document.createTextNode(text.slice(lastIndex, match.index)));
+          }
+          const mark = document.createElement("mark");
+          mark.className = "find-highlight";
+          mark.setAttribute("data-match-index", String(count));
+          mark.textContent = match[0];
+          fragment.appendChild(mark);
+          count++;
+          lastIndex = match.index + match[0].length;
+        }
+        if (lastIndex < text.length) {
+          fragment.appendChild(document.createTextNode(text.slice(lastIndex)));
+        }
+        textNode.parentNode?.replaceChild(fragment, textNode);
+      });
+
+      setMatchCount(count);
+      if (count > 0) {
+        setCurrentMatchIndex(0);
+        const firstMark = editor.querySelector(".find-highlight");
+        if (firstMark) {
+          firstMark.classList.add("find-current");
+          firstMark.scrollIntoView({ behavior: "smooth", block: "center" });
+        }
+      } else {
+        setCurrentMatchIndex(0);
+      }
+    },
+    [caseSensitive, clearHighlights]
+  );
+
+  const navigateMatch = useCallback(
+    (direction: "next" | "prev") => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const marks = Array.from(editor.querySelectorAll(".find-highlight"));
+      if (!marks.length) return;
+      marks.forEach((m) => m.classList.remove("find-current"));
+      const newIndex =
+        direction === "next"
+          ? (currentMatchIndex + 1) % marks.length
+          : (currentMatchIndex - 1 + marks.length) % marks.length;
+      setCurrentMatchIndex(newIndex);
+      marks[newIndex].classList.add("find-current");
+      marks[newIndex].scrollIntoView({ behavior: "smooth", block: "center" });
+    },
+    [currentMatchIndex]
+  );
+
+  const replaceCurrentMatch = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const marks = editor.querySelectorAll(".find-highlight");
+    const mark = marks[currentMatchIndex] as HTMLElement;
+    if (!mark) return;
+    mark.replaceWith(document.createTextNode(replaceText));
+    editor.normalize();
+    fullSync();
+    setTimeout(() => runFind(findText), 50);
+  }, [currentMatchIndex, replaceText, findText, runFind, fullSync]);
+
+  const replaceAllMatches = useCallback(() => {
+    const editor = editorRef.current;
+    if (!editor) return;
+    const marks = editor.querySelectorAll(".find-highlight");
+    if (!marks.length) return;
+    const count = marks.length;
+    marks.forEach((mark) => mark.replaceWith(document.createTextNode(replaceText)));
+    editor.normalize();
+    fullSync();
+    setMatchCount(0);
+    setCurrentMatchIndex(0);
+    toast({ title: `Đã thay thế ${count} kết quả` });
+  }, [replaceText, fullSync, toast]);
+
+  const handleUndo = () => {
+    const editor = editorRef.current;
+    if (!editor || historyIndexRef.current <= 0) return;
+
+    historyIndexRef.current -= 1;
+    const snapshot = historyRef.current[historyIndexRef.current];
+    if (typeof snapshot !== "string") return;
+
+    isApplyingHistoryRef.current = true;
+    editor.innerHTML = snapshot;
+    syncEditorToStructure();
+    setIsDirty(true);
+    updateHistoryButtons();
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveStructure();
+    }, 1500);
+    setTimeout(() => {
+      isApplyingHistoryRef.current = false;
+    }, 0);
+  };
+
+  const handleRedo = () => {
+    const editor = editorRef.current;
+    if (!editor || historyIndexRef.current >= historyRef.current.length - 1) return;
+
+    historyIndexRef.current += 1;
+    const snapshot = historyRef.current[historyIndexRef.current];
+    if (typeof snapshot !== "string") return;
+
+    isApplyingHistoryRef.current = true;
+    editor.innerHTML = snapshot;
+    syncEditorToStructure();
+    setIsDirty(true);
+    updateHistoryButtons();
+    if (saveTimeoutRef.current) clearTimeout(saveTimeoutRef.current);
+    saveTimeoutRef.current = setTimeout(() => {
+      saveStructure();
+    }, 1500);
+    setTimeout(() => {
+      isApplyingHistoryRef.current = false;
+    }, 0);
+  };
+
+  const adjustSelectedBlockLevels = useCallback(
+    (delta: number) => {
+      const editor = editorRef.current;
+      if (!editor) return;
+      const selectedBlocks = getSelectedBlocksInEditor(editor);
+      if (selectedBlocks.length === 0) return;
+
+      selectedBlocks.forEach((block) => {
+        const currentLevel = parseInt(block.dataset.level || "1", 10);
+        const nextLevel = Math.max(0, Math.min(maxLevel, currentLevel + delta));
+        const type = (block.dataset.type || "content") as "title" | "content";
+        block.className = `text-block text-level-${nextLevel} text-${type}`;
+        block.dataset.level = String(nextLevel);
+      });
+
+      fullSync();
+    },
+    [fullSync, getSelectedBlocksInEditor, maxLevel]
+  );
+
+  const addOneMoreLevel = () => {
+    setMaxLevel((prev) => prev + 1);
+    toast({ title: `Đã thêm level L${maxLevel + 1}` });
+  };
+
+  // Keyboard shortcuts
+  useEffect(() => {
+    const onKeyDown = (e: KeyboardEvent) => {
+      const target = e.target as HTMLElement | null;
+      const isInputField = target?.tagName === "INPUT" || target?.tagName === "TEXTAREA";
+      const isEditorFocused = !!target?.closest?.("#wordEditor");
+
+      // Global shortcuts
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "f") {
+        e.preventDefault();
+        setFindReplaceOpen(true);
+        setTimeout(() => findInputRef.current?.focus(), 100);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "h") {
+        e.preventDefault();
+        setFindReplaceOpen(true);
+        setTimeout(() => findInputRef.current?.focus(), 100);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "s") {
+        e.preventDefault();
+        syncEditorToStructure();
+        saveStructure();
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && e.key === "Enter") {
+        e.preventDefault();
+        setApproveDialogOpen(true);
+        return;
+      }
+
+      if (e.key === "Escape" && findReplaceOpen) {
+        setFindReplaceOpen(false);
+        clearHighlights();
+        setFindText("");
+        setMatchCount(0);
+        return;
+      }
+
+      // Editor shortcuts
+      if (!isEditorFocused || isInputField) return;
+
+      if (e.key === "Tab") {
+        e.preventDefault();
+        adjustSelectedBlockLevels(e.shiftKey ? -1 : 1);
+        return;
+      }
+
+      if ((e.ctrlKey || e.metaKey) && !e.shiftKey) {
+        const key = e.key.toLowerCase();
+        if (key === "z") {
+          e.preventDefault();
+          handleUndo();
+          return;
+        }
+        if (key === "y") {
+          e.preventDefault();
+          handleRedo();
+          return;
+        }
+        if (key === "b" || key === "i" || key === "u") {
+          e.preventDefault();
+          const command = key === "b" ? "bold" : key === "i" ? "italic" : "underline";
+          document.execCommand(command);
+          fullSync();
+        }
+      }
+
+      if (e.altKey && !e.ctrlKey && !e.metaKey) {
+        if (/^[0-9]$/.test(e.key)) {
+          e.preventDefault();
+          const targetLevel = parseInt(e.key, 10);
+          if (targetLevel > maxLevel) {
+            setMaxLevel(targetLevel);
+          }
+          applyFormatting(targetLevel, null);
+          return;
+        }
+        if (e.key.toLowerCase() === "t") {
+          e.preventDefault();
+          applyFormatting(null, "title");
+          return;
+        }
+        if (e.key.toLowerCase() === "c") {
+          e.preventDefault();
+          applyFormatting(null, "content");
+        }
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    return () => document.removeEventListener("keydown", onKeyDown);
+  }, [
+    adjustSelectedBlockLevels,
+    applyFormatting,
+    clearHighlights,
+    findReplaceOpen,
+    fullSync,
+    maxLevel,
+    saveStructure,
+    syncEditorToStructure,
+  ]);
+
+  useEffect(() => {
+    const onBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (!isDirty) return;
+      e.preventDefault();
+      e.returnValue = "";
+    };
+
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isDirty]);
+
   const disableStructureActions = loading || saving;
 
   return (
@@ -894,6 +1404,12 @@ const StructureEditor = () => {
             <div className="document-info">
               <FileText className="mr-2 h-4 w-4" />
               <span>{documentTitle || "Untitled document"}</span>
+            </div>
+            <div
+              className={cn("save-indicator", saving ? "saving" : isDirty ? "unsaved" : "saved")}
+              title={lastSavedAt ? `Lưu lúc ${new Date(lastSavedAt).toLocaleTimeString()}` : undefined}
+            >
+              {saving ? "Saving..." : isDirty ? "Unsaved changes" : "Saved"}
             </div>
             <div className="header-actions">
               <button className="btn btn-sm btn-info" onClick={openIntroModal} disabled={loading}>
@@ -943,7 +1459,7 @@ const StructureEditor = () => {
                         <span className="style-preview">Intro</span>
                         <span className="style-name">L0</span>
                       </button>
-                      {[1, 2, 3, 4, 5, 6].map((level) => (
+                      {Array.from({ length: maxLevel }, (_, idx) => idx + 1).map((level) => (
                         <button
                           key={level}
                           className={cn(`style-card style-l${level}`, pendingLevel === level && "active")}
@@ -964,6 +1480,14 @@ const StructureEditor = () => {
                           </span>
                         </button>
                       ))}
+                      <button
+                        className="style-card style-add-level"
+                        onClick={addOneMoreLevel}
+                        title="Thêm level con"
+                      >
+                        <Plus className="style-preview" style={{ width: 14, height: 14 }} />
+                        <span className="style-name">+Level</span>
+                      </button>
                     </div>
                   </div>
                   <div className="style-separator-group" />
@@ -988,6 +1512,59 @@ const StructureEditor = () => {
                       </button>
                     </div>
                   </div>
+                  <div className="style-separator-group" />
+                  <div className="style-group">
+                    <div className="group-label">Edit</div>
+                    <div className="style-row">
+                      <button className="style-card" onClick={handleUndo} title="Undo (Ctrl+Z)" disabled={!canUndo}>
+                        <Undo2 className="style-preview" style={{ width: 14, height: 14 }} />
+                        <span className="style-name">Undo</span>
+                      </button>
+                      <button className="style-card" onClick={handleRedo} title="Redo (Ctrl+Y)" disabled={!canRedo}>
+                        <Redo2 className="style-preview" style={{ width: 14, height: 14 }} />
+                        <span className="style-name">Redo</span>
+                      </button>
+                      <button
+                        className={cn("style-card", findReplaceOpen && "active")}
+                        onClick={() => {
+                          const next = !findReplaceOpen;
+                          setFindReplaceOpen(next);
+                          if (next) setTimeout(() => findInputRef.current?.focus(), 100);
+                          else { clearHighlights(); setFindText(""); setMatchCount(0); }
+                        }}
+                        title="Find & Replace (Ctrl+F)"
+                      >
+                        <Search className="style-preview" style={{ width: 14, height: 14 }} />
+                        <span className="style-name">Find</span>
+                      </button>
+                    </div>
+                  </div>
+                  <div className="style-separator-group" />
+                  <div className="style-group toolbar-zoom-group">
+                    <div className="group-label">Zoom</div>
+                    <div className="zoom-controls">
+                      <button
+                        className="zoom-btn"
+                        onClick={() => setZoomLevel((l) => Math.max(60, l - 10))}
+                        disabled={zoomLevel <= 60}
+                        title="Thu nhỏ"
+                      >
+                        <ZoomOut className="h-3.5 w-3.5" />
+                      </button>
+                      <span className="zoom-value">{zoomLevel}%</span>
+                      <button
+                        className="zoom-btn"
+                        onClick={() => setZoomLevel((l) => Math.min(200, l + 10))}
+                        disabled={zoomLevel >= 200}
+                        title="Phóng to"
+                      >
+                        <ZoomIn className="h-3.5 w-3.5" />
+                      </button>
+                      <button className="zoom-btn" onClick={() => setZoomLevel(100)} title="Reset zoom (100%)">
+                        <RotateCcw className="h-3 w-3" />
+                      </button>
+                    </div>
+                  </div>
                 </div>
 
                 <div className={cn("selection-info", selectionInfo && "visible")}>
@@ -998,6 +1575,83 @@ const StructureEditor = () => {
                   </span>
                 </div>
 
+                {validationIssues.length > 0 && (
+                  <div className="validation-panel">
+                    <div className="validation-title">Cần sửa trước khi Approve ({validationIssues.length})</div>
+                    <ul className="validation-list">
+                      {validationIssues.slice(0, 4).map((issue, idx) => (
+                        <li key={`${issue.nodeId}-${idx}`}>{issue.message}</li>
+                      ))}
+                      {validationIssues.length > 4 && <li>...và {validationIssues.length - 4} lỗi khác</li>}
+                    </ul>
+                  </div>
+                )}
+
+                {/* Find & Replace Panel */}
+                {findReplaceOpen && (
+                  <div className="find-replace-panel">
+                    <div className="find-replace-row">
+                      <div className="find-replace-input-wrap">
+                        <Search className="h-3.5 w-3.5 find-replace-icon" />
+                        <input
+                          ref={findInputRef}
+                          type="text"
+                          className="find-replace-input"
+                          placeholder="Tìm kiếm..."
+                          value={findText}
+                          onChange={(e) => { setFindText(e.target.value); runFind(e.target.value); }}
+                          onKeyDown={(e) => {
+                            if (e.key === "Enter") navigateMatch(e.shiftKey ? "prev" : "next");
+                            if (e.key === "Escape") { setFindReplaceOpen(false); clearHighlights(); setFindText(""); setMatchCount(0); }
+                          }}
+                        />
+                        <span className={cn("find-count", matchCount > 0 ? "find-count-found" : "find-count-none")}>
+                          {findText ? `${matchCount > 0 ? currentMatchIndex + 1 : 0}/${matchCount}` : ""}
+                        </span>
+                      </div>
+                      <button className="find-nav-btn" onClick={() => navigateMatch("prev")} disabled={matchCount === 0} title="Kết quả trước (Shift+Enter)">
+                        <ChevronUp className="h-3.5 w-3.5" />
+                      </button>
+                      <button className="find-nav-btn" onClick={() => navigateMatch("next")} disabled={matchCount === 0} title="Kết quả tiếp (Enter)">
+                        <ChevronDown className="h-3.5 w-3.5" />
+                      </button>
+                      <label className="find-case-label" title="Phân biệt hoa/thường">
+                        <input
+                          type="checkbox"
+                          checked={caseSensitive}
+                          onChange={(e) => { setCaseSensitive(e.target.checked); runFind(findText, e.target.checked); }}
+                        />
+                        <span>Aa</span>
+                      </label>
+                      <button
+                        className="find-close-btn"
+                        onClick={() => { setFindReplaceOpen(false); clearHighlights(); setFindText(""); setMatchCount(0); }}
+                      >
+                        <X className="h-3.5 w-3.5" />
+                      </button>
+                    </div>
+                    <div className="find-replace-row">
+                      <div className="find-replace-input-wrap">
+                        <span className="find-replace-spacer" />
+                        <input
+                          type="text"
+                          className="find-replace-input"
+                          placeholder="Thay thế bằng..."
+                          value={replaceText}
+                          onChange={(e) => setReplaceText(e.target.value)}
+                          onKeyDown={(e) => { if (e.key === "Enter") replaceCurrentMatch(); }}
+                        />
+                      </div>
+                      <button className="find-action-btn" onClick={replaceCurrentMatch} disabled={matchCount === 0}>
+                        Thay thế
+                      </button>
+                      <button className="find-action-btn find-action-btn-all" onClick={replaceAllMatches} disabled={matchCount === 0}>
+                        Tất cả
+                      </button>
+                    </div>
+                  </div>
+                )}
+
                 <div
                   ref={editorRef}
                   id="wordEditor"
@@ -1005,6 +1659,7 @@ const StructureEditor = () => {
                   suppressContentEditableWarning
                   spellCheck={false}
                   className="word-editor"
+                  style={zoomLevel !== 100 ? { fontSize: `${zoomLevel}%` } : undefined}
                 >
                   <div className="legacy-empty-state">
                     <Loader2 className="h-8 w-8 animate-spin" />
@@ -1022,6 +1677,11 @@ const StructureEditor = () => {
                     <ChevronRight className="h-4 w-4" />
                     <span>Slides:</span>
                     <span className="stat-value">{stats.slides}</span>
+                  </div>
+                  <div className="stat-item">
+                    <AlignLeft className="h-4 w-4" />
+                    <span>Words:</span>
+                    <span className="stat-value">{stats.words}</span>
                   </div>
                   <div className="stat-item">
                     <Loader2 className="h-4 w-4" />
