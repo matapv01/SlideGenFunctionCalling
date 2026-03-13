@@ -21,6 +21,7 @@ class SlideCreate(SlideBase):
 class SlideUpdate(BaseModel):
     """Schema khi update slide (cho phép update từng phần)"""
     title: Optional[str] = None
+    slide_index: Optional[int] = None
     content_text: Optional[str] = None
     html_content: Optional[str] = None
     design_settings: Optional[Dict[str, Any]] = None

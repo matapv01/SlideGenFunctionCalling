@@ -18,6 +18,7 @@ export interface SlideElement {
   fillColor?: string;
   strokeColor?: string;
   strokeWidth?: number;
+  strokeStyle?: string; // 'none' | 'solid' | 'dashed' | 'dotted'
   borderRadius?: number;
   shadow?: string;
   clipPath?: string;
@@ -25,13 +26,24 @@ export interface SlideElement {
   // Typography
   fontSize?: number;
   fontFamily?: string;
-  fontWeight?: string; // 'bold' | 'normal'
+  fontWeight?: string; // '100'-'900' or 'bold' | 'normal'
   fontStyle?: string; // 'italic' | 'normal'
   textDecoration?: string; // 'underline' | 'none'
-  textAlign?: "left" | "center" | "right";
+  textAlign?: "left" | "center" | "right" | "justify";
   lineHeight?: string;
   letterSpacing?: string;
   color?: string;
+
+  // Filter effects
+  blur?: number;
+  brightness?: number;
+  saturation?: number;
+
+  // Padding
+  paddingTop?: number;
+  paddingRight?: number;
+  paddingBottom?: number;
+  paddingLeft?: number;
 }
 
 export interface Slide {

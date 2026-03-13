@@ -12,46 +12,12 @@ import {
   Play,
   ChevronDown,
   Rocket,
-  Heart,
   Award,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
-
-const features = [
-  {
-    icon: Zap,
-    title: "Lightning Fast",
-    description: "Generate professional slides in seconds with our AI-powered engine",
-    gradient: "from-yellow-400 to-orange-500",
-  },
-  {
-    icon: Palette,
-    title: "Beautiful Designs",
-    description: "Stunning templates and themes crafted by professional designers",
-    gradient: "from-pink-500 to-rose-500",
-  },
-  {
-    icon: Clock,
-    title: "Save Hours",
-    description: "What used to take hours now takes minutes. Focus on what matters",
-    gradient: "from-cyan-400 to-blue-500",
-  },
-  {
-    icon: Globe,
-    title: "Multi-Language",
-    description: "Create presentations in any language with intelligent text processing",
-    gradient: "from-green-400 to-emerald-500",
-  },
-];
-
-const stats = [
-  { value: "10K+", label: "Presentations Created" },
-  { value: "99%", label: "Satisfaction Rate" },
-  { value: "50+", label: "Templates Available" },
-  { value: "24/7", label: "AI Availability" },
-];
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const sponsors = [
   { name: "TechCorp", logo: "🚀" },
@@ -85,6 +51,21 @@ const testimonials = [
 
 const Home = () => {
   const navigate = useNavigate();
+  const { t } = useLanguage();
+
+  const features = [
+    { icon: Zap, title: t.home_feat_fast_title, description: t.home_feat_fast_desc, gradient: "from-yellow-400 to-orange-500" },
+    { icon: Palette, title: t.home_feat_design_title, description: t.home_feat_design_desc, gradient: "from-pink-500 to-rose-500" },
+    { icon: Clock, title: t.home_feat_save_title, description: t.home_feat_save_desc, gradient: "from-cyan-400 to-blue-500" },
+    { icon: Globe, title: t.home_feat_multilang_title, description: t.home_feat_multilang_desc, gradient: "from-green-400 to-emerald-500" },
+  ];
+
+  const stats = [
+    { value: "10K+", label: t.home_stat_presentations },
+    { value: "99%", label: t.home_stat_satisfaction },
+    { value: "50+", label: t.home_stat_templates },
+    { value: "24/7", label: t.home_stat_ai },
+  ];
 
   const scrollToFeatures = () => {
     document.getElementById("features")?.scrollIntoView({ behavior: "smooth" });
@@ -111,21 +92,21 @@ const Home = () => {
               <span className="text-xl font-bold gradient-text">SlideGen</span>
             </div>
             <div className="hidden md:flex items-center gap-6">
-              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Features</a>
-              <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Testimonials</a>
-              <a href="#sponsors" className="text-sm text-muted-foreground hover:text-foreground transition-colors">Partners</a>
+              <a href="#features" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t.home_nav_features}</a>
+              <a href="#testimonials" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t.home_nav_testimonials}</a>
+              <a href="#sponsors" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t.home_nav_partners}</a>
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />
               <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
-                Sign In
+                {t.home_sign_in}
               </Button>
               <Button
                 size="sm"
                 className="gradient-primary text-white border-0 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                 onClick={() => navigate("/slidegen")}
               >
-                Get Started <ArrowRight className="ml-1 h-4 w-4" />
+                {t.home_get_started} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -142,15 +123,15 @@ const Home = () => {
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-primary opacity-75"></span>
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-primary"></span>
               </span>
-              <span className="text-primary font-medium">AI-Powered Presentation Generator</span>
+              <span className="text-primary font-medium">{t.home_hero_badge}</span>
             </div>
 
             {/* Main Headline */}
             <h1 className="mt-8 text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight animate-fade-in animation-delay-200">
-              Create Stunning Slides
+              {t.home_hero_h1}
               <br />
               <span className="relative">
-                <span className="gradient-text">In Seconds</span>
+                <span className="gradient-text">{t.home_hero_h1_span}</span>
                 <svg className="absolute -bottom-2 left-0 w-full" viewBox="0 0 300 12" fill="none">
                   <path d="M2 10C50 3 100 3 150 6C200 9 250 5 298 2" stroke="url(#gradient)" strokeWidth="3" strokeLinecap="round"/>
                   <defs>
@@ -165,8 +146,7 @@ const Home = () => {
 
             {/* Subtitle */}
             <p className="mt-8 mx-auto max-w-2xl text-lg sm:text-xl text-muted-foreground animate-fade-in animation-delay-400">
-              Transform your documents and ideas into beautiful, professional presentations with the power of AI.
-              No design skills required.
+              {t.home_hero_sub}
             </p>
 
             {/* CTA Buttons */}
@@ -178,7 +158,7 @@ const Home = () => {
               >
                 <span className="relative z-10 flex items-center">
                   <Rocket className="mr-2 h-5 w-5" />
-                  Start Creating Free
+                  {t.home_start_free}
                   <ArrowRight className="ml-2 h-5 w-5 transition-transform group-hover:translate-x-1" />
                 </span>
                 <div className="absolute inset-0 bg-gradient-to-r from-white/0 via-white/20 to-white/0 translate-x-[-200%] group-hover:translate-x-[200%] transition-transform duration-700" />
@@ -190,7 +170,7 @@ const Home = () => {
                 onClick={() => navigate("/guide")}
               >
                 <Play className="mr-2 h-5 w-5 text-primary" />
-                Watch Demo
+                {t.home_watch_demo}
               </Button>
             </div>
 
@@ -209,7 +189,7 @@ const Home = () => {
               onClick={scrollToFeatures}
               className="mt-16 mx-auto flex flex-col items-center text-muted-foreground hover:text-foreground transition-colors animate-bounce"
             >
-              <span className="text-sm">Discover More</span>
+              <span className="text-sm">{t.home_scroll_hint}</span>
               <ChevronDown className="h-5 w-5" />
             </button>
           </div>
@@ -221,14 +201,14 @@ const Home = () => {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-primary/10 text-primary mb-4">
-              Features
+              {t.home_features_badge}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold">
-              Everything You Need to
-              <span className="gradient-text"> Create Perfect Slides</span>
+              {t.home_features_h2}
+              <span className="gradient-text"> {t.home_features_h2_span}</span>
             </h2>
             <p className="mt-4 text-muted-foreground max-w-2xl mx-auto">
-              Powerful AI capabilities combined with intuitive design tools make SlideGen the ultimate presentation companion.
+              {t.home_features_sub}
             </p>
           </div>
 
@@ -257,19 +237,19 @@ const Home = () => {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-accent/10 text-accent mb-4">
-              How It Works
+              {t.home_how_badge}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold">
-              Three Simple Steps to
-              <span className="gradient-text"> Amazing Presentations</span>
+              {t.home_how_h2}
+              <span className="gradient-text"> {t.home_how_h2_span}</span>
             </h2>
           </div>
 
           <div className="grid md:grid-cols-3 gap-8">
             {[
-              { step: "01", title: "Upload or Describe", desc: "Upload your document or describe your presentation idea", icon: "📄" },
-              { step: "02", title: "AI Magic", desc: "Our AI analyzes and creates beautiful slides instantly", icon: "✨" },
-              { step: "03", title: "Export & Present", desc: "Download in multiple formats or present directly", icon: "🎯" },
+              { step: "01", title: t.home_step1_title, desc: t.home_step1_desc, icon: "📄" },
+              { step: "02", title: t.home_step2_title, desc: t.home_step2_desc, icon: "✨" },
+              { step: "03", title: t.home_step3_title, desc: t.home_step3_desc, icon: "🎯" },
             ].map((item, index) => (
               <div key={index} className="relative group">
                 <div className="absolute -inset-1 rounded-xl bg-gradient-to-r from-primary to-accent opacity-0 group-hover:opacity-20 blur transition-opacity" />
@@ -297,11 +277,11 @@ const Home = () => {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-16">
             <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-warning/10 text-warning mb-4">
-              Testimonials
+              {t.home_testimonial_badge}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold">
-              Loved by
-              <span className="gradient-text"> Thousands</span>
+              {t.home_testimonial_h2}
+              <span className="gradient-text"> {t.home_testimonial_h2_span}</span>
             </h2>
           </div>
 
@@ -334,11 +314,11 @@ const Home = () => {
         <div className="mx-auto max-w-7xl">
           <div className="text-center mb-12">
             <span className="inline-block px-3 py-1 text-sm font-medium rounded-full bg-info/10 text-info mb-4">
-              Partners & Sponsors
+              {t.home_partners_badge}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold">
-              Trusted by
-              <span className="gradient-text"> Industry Leaders</span>
+              {t.home_partners_h2}
+              <span className="gradient-text"> {t.home_partners_h2_span}</span>
             </h2>
           </div>
 
@@ -357,9 +337,9 @@ const Home = () => {
           </div>
 
           <div className="mt-12 text-center">
-            <p className="text-muted-foreground">Want to become a partner?</p>
+            <p className="text-muted-foreground">{t.home_partner_cta}</p>
             <Button variant="link" className="text-primary">
-              Contact us <ArrowRight className="ml-1 h-4 w-4" />
+              {t.home_contact} <ArrowRight className="ml-1 h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -375,11 +355,10 @@ const Home = () => {
                 <Sparkles className="h-8 w-8" />
               </div>
               <h2 className="text-3xl sm:text-4xl font-bold mb-4">
-                Ready to Create Amazing Presentations?
+                {t.home_cta_h2}
               </h2>
               <p className="text-lg text-white/80 mb-8 max-w-xl mx-auto">
-                Join thousands of users who are already creating stunning slides with SlideGen.
-                Start for free today!
+                {t.home_cta_sub}
               </p>
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
                 <Button
@@ -388,14 +367,14 @@ const Home = () => {
                   onClick={() => navigate("/slidegen")}
                 >
                   <Rocket className="mr-2 h-5 w-5" />
-                  Get Started Free
+                  {t.home_get_started_free}
                 </Button>
                 <Button
                   size="lg"
                   className="bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:text-white px-8 py-6 text-lg"
                   onClick={() => navigate("/login")}
                 >
-                  Sign In
+                  {t.home_sign_in}
                 </Button>
               </div>
             </div>
@@ -414,12 +393,12 @@ const Home = () => {
               <span className="font-semibold gradient-text">SlideGen</span>
             </div>
             <div className="flex items-center gap-6 text-sm text-muted-foreground">
-              <a href="#" className="hover:text-foreground transition-colors">Privacy</a>
-              <a href="#" className="hover:text-foreground transition-colors">Terms</a>
-              <a href="#" className="hover:text-foreground transition-colors">Contact</a>
+              <a href="#" className="hover:text-foreground transition-colors">{t.home_footer_privacy}</a>
+              <a href="#" className="hover:text-foreground transition-colors">{t.home_footer_terms}</a>
+              <a href="#" className="hover:text-foreground transition-colors">{t.home_footer_contact}</a>
             </div>
             <div className="flex items-center gap-2 text-sm text-muted-foreground">
-              Made with <Heart className="h-4 w-4 text-red-500 fill-red-500" /> by SlideGen Team
+              {t.home_footer_tagline}
             </div>
           </div>
         </div>

@@ -9,12 +9,14 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { login } = useAuth();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
@@ -28,10 +30,10 @@ const Login = () => {
     setLoading(true);
     try {
       await login(email, password, remember);
-      toast({ title: "Welcome back!" });
+      toast({ title: t.login_toast_success });
       navigate(from, { replace: true });
     } catch (err: any) {
-      toast({ title: "Login failed", description: err.message, variant: "destructive" });
+      toast({ title: t.login_toast_error, description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -53,23 +55,23 @@ const Login = () => {
           <div className="mx-auto mb-4 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
             <span className="text-lg font-bold text-primary-foreground">S</span>
           </div>
-          <CardTitle className="text-2xl">Welcome Back</CardTitle>
-          <CardDescription>Sign in to your SlideGen account</CardDescription>
+          <CardTitle className="text-2xl">{t.login_title}</CardTitle>
+          <CardDescription>{t.login_subtitle}</CardDescription>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
+              <Label htmlFor="email">{t.login_email}</Label>
               <div className="relative">
                 <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="email" type="email" placeholder="you@example.com" className="pl-9" value={email} onChange={(e) => setEmail(e.target.value)} required />
+                <Input id="email" type="email" placeholder={t.login_placeholder_email} className="pl-9" value={email} onChange={(e) => setEmail(e.target.value)} required />
               </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Password</Label>
+              <Label htmlFor="password">{t.login_password}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder="••••••" className="pl-9 pr-9" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder={t.login_placeholder_password} className="pl-9 pr-9" value={password} onChange={(e) => setPassword(e.target.value)} required />
                 <button type="button" className="absolute right-3 top-3 text-muted-foreground hover:text-foreground" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>
@@ -77,14 +79,14 @@ const Login = () => {
             </div>
             <div className="flex items-center gap-2">
               <Checkbox id="remember" checked={remember} onCheckedChange={(c) => setRemember(c === true)} />
-              <Label htmlFor="remember" className="text-sm">Remember me</Label>
+              <Label htmlFor="remember" className="text-sm">{t.login_remember}</Label>
             </div>
             <Button type="submit" className="w-full gradient-primary text-primary-foreground" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+              {loading ? t.login_signing_in : t.login_sign_in}
             </Button>
           </form>
           <p className="mt-4 text-center text-sm text-muted-foreground">
-            Don't have an account? <Link to="/register" className="text-primary hover:underline">Register</Link>
+            {t.login_no_account} <Link to="/register" className="text-primary hover:underline">{t.login_register}</Link>
           </p>
         </CardContent>
       </Card>

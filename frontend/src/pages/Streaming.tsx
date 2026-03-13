@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SlideThumb {
   index: number;
@@ -17,21 +18,22 @@ interface SlideThumb {
   title?: string;
 }
 
-const stages = [
-  { id: "analyze", label: "Analyze Content", icon: FileText },
-  { id: "prepare", label: "Prepare Content", icon: Sparkles },
-  { id: "design", label: "Design Slides", icon: PenTool },
-];
-
 const Streaming = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
   const location = useLocation();
   const { toast } = useToast();
+  const { t } = useLanguage();
+
+  const stages = [
+    { id: "analyze", label: t.streaming_stage_analyze, icon: FileText },
+    { id: "prepare", label: t.streaming_stage_prepare, icon: Sparkles },
+    { id: "design", label: t.streaming_stage_design, icon: PenTool },
+  ];
 
   const [currentStage, setCurrentStage] = useState(0);
   const [progress, setProgress] = useState(0);
-  const [activity, setActivity] = useState("Initializing...");
+  const [activity, setActivity] = useState(t.streaming_initializing);
   const [slides, setSlides] = useState<SlideThumb[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [completed, setCompleted] = useState(false);
@@ -49,14 +51,14 @@ const Streaming = () => {
     setProgress(0);
     setCurrentStage(0);
     setSlides([]);
-    setActivity("Connecting...");
+    setActivity(t.streaming_connecting);
 
     // Get parameters from location state
     const filename = location.state?.filename;
     const sessionId = location.state?.sessionId || ideaSessionId;
     
     if (!filename && !sessionId) {
-      setError("No file or session specified for streaming. Please upload a file first.");
+      setError(t.streaming_err_no_file);
       return;
     }
 
@@ -157,7 +159,7 @@ const Streaming = () => {
       setCompleted(true);
       setProgress(100);
       setCurrentStage(2);
-      setActivity(`Generation complete! ${data.total_slides || 0} slides created.`);
+      setActivity(`${t.streaming_done} ${data.total_slides || 0} ${t.streaming_slides_unit}`);
       es.close();
       // Store project_id for navigation
       if (data.project_id) {
@@ -171,7 +173,7 @@ const Streaming = () => {
 
     es.addEventListener("error_event", (e) => {
       const data = JSON.parse(e.data);
-      setError(data.message || "An error occurred");
+      setError(data.message || t.streaming_err_generic);
       es.close();
     });
 
@@ -194,7 +196,7 @@ const Streaming = () => {
     // Check if this is an idea workflow
     if (title && description) {
       setIsPreparingIdea(true);
-      setActivity("Preparing your idea...");
+      setActivity(t.streaming_preparing_activity);
       
       api.generateIdeaStructure({
         title: title,
@@ -206,12 +208,12 @@ const Streaming = () => {
         .then((response) => {
           setIdeaSessionId(response.session_id);
           setIsPreparingIdea(false);
-          toast({ title: "Structure ready", description: "Starting slide generation..." });
+          toast({ title: t.streaming_toast_ready, description: t.streaming_toast_starting });
         })
         .catch((err) => {
-          setError(err.message || "Failed to prepare idea structure");
+          setError(err.message || t.streaming_err_prepare);
           setIsPreparingIdea(false);
-          toast({ title: "Failed to prepare", description: err.message, variant: "destructive" });
+          toast({ title: t.streaming_toast_failed, description: err.message, variant: "destructive" });
         });
       return;
     }
@@ -313,9 +315,9 @@ const Streaming = () => {
 
   // Get status label for stage
   const getStageStatus = (stageIndex: number) => {
-    if (stageIndex < currentStage) return "Completed";
-    if (stageIndex === currentStage) return "Processing...";
-    return "Pending";
+    if (stageIndex < currentStage) return t.streaming_stage_completed_label;
+    if (stageIndex === currentStage) return t.streaming_stage_processing;
+    return t.streaming_stage_pending;
   };
 
   return (
@@ -336,7 +338,7 @@ const Streaming = () => {
             </h1>
           </div>
           <p className="text-muted-foreground animate-fade-in">
-            {completed ? "🎉 Completed!" : isPreparingIdea ? "💡 Preparing your idea..." : "Creating your presentation..."}
+          {completed ? t.streaming_completed : isPreparingIdea ? t.streaming_preparing : t.streaming_creating}
           </p>
         </div>
 
@@ -449,9 +451,9 @@ const Streaming = () => {
                   <span className="text-xl">🎉</span>
                 </div>
                 <div>
-                  <p className="font-semibold text-emerald-700 dark:text-emerald-300">Completed!</p>
+                  <p className="font-semibold text-emerald-700 dark:text-emerald-300">{t.streaming_done}</p>
                   <p className="text-sm text-emerald-600/80 dark:text-emerald-400/80">
-                    Successfully created {slides.length} slides
+                    {t.streaming_slides_created} {slides.length} {t.streaming_slides_unit}
                   </p>
                 </div>
               </div>
@@ -473,7 +475,7 @@ const Streaming = () => {
                 <p className="text-sm">{error}</p>
               </div>
               <Button variant="outline" size="sm" onClick={startStreaming} className="hover:bg-destructive/20">
-                <RefreshCw className="mr-2 h-4 w-4" /> Retry
+                <RefreshCw className="mr-2 h-4 w-4" /> {t.streaming_retry}
               </Button>
             </CardContent>
           </Card>
@@ -487,7 +489,7 @@ const Streaming = () => {
                 <FileText className="h-4 w-4 text-white" />
               </div>
               <h2 className="text-lg font-semibold">
-                Slides ({slides.length}/{completed ? slides.length : '...'})
+                {t.streaming_slides_header} ({slides.length}/{completed ? slides.length : '...'})
               </h2>
             </div>
             
@@ -515,7 +517,7 @@ const Streaming = () => {
                       index % 3 === 1 && "bg-violet-100 text-violet-700 dark:bg-violet-950 dark:text-violet-300",
                       index % 3 === 2 && "bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300"
                     )}>
-                      Slide {slide.index + 1}
+                      {t.streaming_slide_n} {slide.index + 1}
                     </div>
                     
                     {/* Thumbnail */}
@@ -535,7 +537,7 @@ const Streaming = () => {
                     {/* Status badge */}
                     <div className="mt-2 flex items-center gap-1.5 text-emerald-600 dark:text-emerald-400">
                       <CheckCircle2 className="h-3.5 w-3.5" />
-                      <span className="text-xs font-medium">Completed</span>
+                      <span className="text-xs font-medium">{t.streaming_slide_completed}</span>
                     </div>
                   </CardContent>
                 </Card>
@@ -552,21 +554,21 @@ const Streaming = () => {
               onClick={() => navigate(`/editor/${finalProjectId}`)}
               className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
             >
-              <ExternalLink className="mr-2 h-4 w-4" /> Go to Editor
+              <ExternalLink className="mr-2 h-4 w-4" /> {t.streaming_go_editor}
             </Button>
             <Button 
               size="lg"
               onClick={() => startPresentation(0)}
               className="bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
             >
-              <Presentation className="mr-2 h-4 w-4" /> Present
+              <Presentation className="mr-2 h-4 w-4" /> {t.streaming_present}
             </Button>
             <Button 
               size="lg"
               onClick={() => navigate("/slidegen")}
               className="border-2 border-violet-500 !text-violet-700 dark:!text-violet-300 bg-white dark:bg-gray-900 hover:bg-white dark:hover:bg-violet-950/50 hover:border-violet-500 transition-all hover:scale-105 shadow-md font-medium hover:!text-violet-700 dark:hover:!text-violet-300"
             >
-              <Home className="mr-2 h-4 w-4" /> Back to SlideGen
+              <Home className="mr-2 h-4 w-4" /> {t.streaming_back}
             </Button>
           </div>
         )}
@@ -580,7 +582,7 @@ const Streaming = () => {
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
                 <Eye className="h-4 w-4 text-white" />
               </div>
-              Slide {previewSlide ? previewSlide.index + 1 : ""}
+              {t.streaming_slide_n} {previewSlide ? previewSlide.index + 1 : ""}
               {previewSlide?.title && <span className="text-muted-foreground font-normal">- {previewSlide.title}</span>}
             </DialogTitle>
           </DialogHeader>
@@ -652,7 +654,7 @@ const Streaming = () => {
           {/* Top bar */}
           <div className="absolute top-0 left-0 right-0 z-10 flex items-center justify-between p-4 bg-gradient-to-b from-black/50 to-transparent opacity-0 hover:opacity-100 transition-opacity">
             <span className="text-white text-sm">
-              Slide {currentSlideIndex + 1} / {slides.length}
+              {t.streaming_slide_n} {currentSlideIndex + 1} / {slides.length}
             </span>
             <Button variant="ghost" size="icon" className="text-white hover:bg-white/20" onClick={() => exitPresentation()}>
               <X className="h-6 w-6" />
@@ -670,7 +672,7 @@ const Streaming = () => {
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">
-                  No content
+                  {t.streaming_no_content}
                 </div>
               )}
             </div>

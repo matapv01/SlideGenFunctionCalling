@@ -23,21 +23,62 @@ export const parseHtmlToElements = (html: string): {
   
   document.body.appendChild(tempContainer);
 
-  // 2. Extract background color
+  // 2. Extract background color from HTML <body> or <style> tags
   let backgroundColor = "#ffffff";
-  const computedBg = window.getComputedStyle(tempContainer).backgroundColor;
-  if (computedBg && computedBg !== 'rgba(0, 0, 0, 0)' && computedBg !== 'transparent') {
-    backgroundColor = computedBg;
-  }
   
-  // Check for background in child container
-  const container = tempContainer.querySelector('.slide-container') as HTMLElement;
-  if (container) {
-    const containerBg = window.getComputedStyle(container).backgroundColor;
-    if (containerBg && containerBg !== 'rgba(0, 0, 0, 0)' && containerBg !== 'transparent') {
-      backgroundColor = containerBg;
+  // Try to parse from HTML body tag or style
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(html, 'text/html');
+  
+  // Check body element's inline style or computed style from CSS
+  if (doc.body) {
+    const bodyStyle = doc.body.getAttribute('style');
+    if (bodyStyle) {
+      // Extract background from inline style
+      const bgMatch = bodyStyle.match(/background:\s*([^;]+)/i) || 
+                      bodyStyle.match(/background-color:\s*([^;]+)/i);
+      if (bgMatch) {
+        backgroundColor = bgMatch[1].trim();
+        console.log('🎨 [parseHtml] Found backgroundColor in body inline style:', backgroundColor);
+      }
+    }
+    
+    // Check style tags for body background
+    if (backgroundColor === "#ffffff") {
+      const styles = doc.querySelectorAll('style');
+      styles.forEach(styleEl => {
+        const cssText = styleEl.textContent || '';
+        // Match body { ... background: xxx ... }
+        const bodyStyleMatch = cssText.match(/body[^{]*\{[^}]*background:\s*([^;]+)/i) ||
+                               cssText.match(/body[^{]*\{[^}]*background-color:\s*([^;]+)/i);
+        if (bodyStyleMatch) {
+          backgroundColor = bodyStyleMatch[1].trim();
+          console.log('🎨 [parseHtml] Found backgroundColor in <style> body:', backgroundColor);
+        }
+      });
     }
   }
+  
+  // Fallback: Check computed style on tempContainer
+  if (backgroundColor === "#ffffff") {
+    const computedBg = window.getComputedStyle(tempContainer).backgroundColor;
+    if (computedBg && computedBg !== 'rgba(0, 0, 0, 0)' && computedBg !== 'transparent') {
+      backgroundColor = computedBg;
+      console.log('🎨 [parseHtml] Found backgroundColor from tempContainer computed:', backgroundColor);
+    }
+    
+    // Check for background in child container
+    const container = tempContainer.querySelector('.slide-container') as HTMLElement;
+    if (container) {
+      const containerBg = window.getComputedStyle(container).backgroundColor;
+      if (containerBg && containerBg !== 'rgba(0, 0, 0, 0)' && containerBg !== 'transparent') {
+        backgroundColor = containerBg;
+        console.log('🎨 [parseHtml] Found backgroundColor from .slide-container:', backgroundColor);
+      }
+    }
+  }
+  
+  console.log('✅ [parseHtml] Final backgroundColor:', backgroundColor);
   
   // 3. Extract SVG definitions (e.g., clipPaths)
   let defs = '';

@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface DocumentNode {
   id: string;
@@ -32,6 +33,7 @@ const StructureEditor = () => {
   const sessionId = searchParams.get("session");
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { t } = useLanguage();
   
   const [documentTitle, setDocumentTitle] = useState("");
   const [documentText, setDocumentText] = useState("");
@@ -45,18 +47,18 @@ const StructureEditor = () => {
       loadStructure();
     } else {
       setLoading(false);
-      toast({ title: "No session ID", description: "Please upload a document first", variant: "destructive" });
+      toast({ title: t.structure_toast_no_session, description: t.structure_toast_no_session_desc, variant: "destructive" });
     }
   }, [sessionId]);
 
   const loadStructure = async () => {
     try {
       const data = await api.getStructure(sessionId!);
-      setDocumentTitle(data.document_title || "Untitled");
+      setDocumentTitle(data.document_title || t.structure_untitled);
       setDocumentText(data.document_text || "");
       setNodes(data.document_structure?.map((n: any, i: number) => ({ ...n, id: n.id || `node-${i}` })) || []);
     } catch (err: any) {
-      toast({ title: "Failed to load structure", description: err.message, variant: "destructive" });
+      toast({ title: t.structure_toast_load_fail, description: err.message, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -104,14 +106,14 @@ const StructureEditor = () => {
       // Then approve
       const result = await api.approveStructure(sessionId);
       if (result.success) {
-        toast({ title: "Structure approved!", description: `${result.slide_types?.length || 0} slides prepared` });
+        toast({ title: t.structure_toast_approved, description: `${result.slide_types?.length || 0} ${t.structure_toast_slides_prepared}` });
         // Navigate to streaming page with session ID
         navigate(`/streaming/manual`, { state: { sessionId, documentTitle } });
       } else {
-        toast({ title: "Approval failed", description: result.message, variant: "destructive" });
+        toast({ title: t.structure_toast_approval_fail, description: result.message, variant: "destructive" });
       }
     } catch (err: any) {
-      toast({ title: "Failed to approve", description: err.message, variant: "destructive" });
+      toast({ title: t.structure_toast_approval_fail, description: err.message, variant: "destructive" });
     } finally {
       setSaving(false);
     }
@@ -134,17 +136,17 @@ const StructureEditor = () => {
         <div className="flex-[7] overflow-auto border-r border-border p-4 lg:p-6">
           <div className="mb-6 flex items-center justify-between">
             <div>
-              <h1 className="text-xl font-bold">Structure Editor</h1>
+              <h1 className="text-xl font-bold">{t.structure_title}</h1>
               <p className="text-sm text-muted-foreground">{documentTitle}</p>
             </div>
             <div className="flex gap-2">
               {!introSlide && (
                 <Button variant="outline" size="sm" onClick={addIntroSlide}>
-                  <Plus className="mr-1 h-3 w-3" /> Intro Slide
+                  <Plus className="mr-1 h-3 w-3" /> {t.structure_intro_slide}
                 </Button>
               )}
               <Button variant="outline" size="sm" onClick={() => addNode(1)}>
-                <Plus className="mr-1 h-3 w-3" /> Add Section
+                <Plus className="mr-1 h-3 w-3" /> {t.structure_add_section}
               </Button>
             </div>
           </div>
@@ -154,11 +156,11 @@ const StructureEditor = () => {
             <div className={cn("mb-4 rounded-lg p-3 transition-colors", typeColors[0])}>
               <div className="flex items-start justify-between">
                 <div className="flex-1">
-                  <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2">INTRO SLIDE</p>
+                  <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mb-2">{t.structure_intro_label}</p>
                   <Input
                     value={introSlide.content}
                     onChange={(e) => setIntroSlide({ ...introSlide, content: e.target.value })}
-                    placeholder="Presentation title..."
+                    placeholder={t.structure_title_ph}
                     className="border-none bg-transparent p-0 text-lg font-bold focus-visible:ring-0"
                   />
                 </div>
@@ -191,13 +193,13 @@ const StructureEditor = () => {
                   <Input
                     value={node.title}
                     onChange={(e) => updateNode(node.id, { title: e.target.value })}
-                    placeholder="Section title..."
+                    placeholder={t.structure_section_title_ph}
                     className="border-none bg-transparent p-0 font-semibold focus-visible:ring-0"
                   />
                   <Textarea
                     value={node.content}
                     onChange={(e) => updateNode(node.id, { content: e.target.value })}
-                    placeholder="Content text..."
+                    placeholder={t.structure_content_ph}
                     className="min-h-[60px] border-none bg-transparent p-0 text-sm focus-visible:ring-0 resize-none"
                   />
                   <div className="flex items-center gap-2">
@@ -207,7 +209,7 @@ const StructureEditor = () => {
                       </SelectTrigger>
                       <SelectContent>
                         {[1, 2, 3, 4, 5].map((i) => (
-                          <SelectItem key={i} value={String(i)}>Level {i}</SelectItem>
+                          <SelectItem key={i} value={String(i)}>{t.structure_level} {i}</SelectItem>
                         ))}
                       </SelectContent>
                     </Select>
@@ -218,7 +220,7 @@ const StructureEditor = () => {
                         onChange={(e) => updateNode(node.id, { is_transition: e.target.checked })}
                         className="h-3 w-3"
                       />
-                      Transition
+                      {t.structure_transition}
                     </label>
                   </div>
                 </div>
@@ -231,24 +233,24 @@ const StructureEditor = () => {
           </div>
 
           <Button variant="outline" className="mt-4 w-full border-dashed" onClick={() => addNode(1)}>
-            <Plus className="mr-2 h-4 w-4" /> Add Section
+            <Plus className="mr-2 h-4 w-4" /> {t.structure_add_section}
           </Button>
 
           <div className="mt-6 flex justify-end">
             <Button className="gradient-primary text-primary-foreground" onClick={handleApprove} disabled={saving || !sessionId}>
-              <Check className="mr-2 h-4 w-4" /> {saving ? "Processing..." : "Approve & Generate"}
+              <Check className="mr-2 h-4 w-4" /> {saving ? t.structure_processing : t.structure_approve}
             </Button>
           </div>
         </div>
 
         {/* Preview (30%) */}
         <div className="hidden flex-[3] overflow-auto bg-muted/30 p-4 lg:block">
-          <h2 className="mb-4 text-sm font-semibold text-muted-foreground">Document Preview</h2>
+          <h2 className="mb-4 text-sm font-semibold text-muted-foreground">{t.structure_preview}</h2>
           
           {/* Source Text */}
           {documentText && (
             <div className="mb-4">
-              <p className="text-xs font-semibold text-muted-foreground mb-2">SOURCE TEXT</p>
+              <p className="text-xs font-semibold text-muted-foreground mb-2">{t.structure_source_text}</p>
               <div className="max-h-48 overflow-auto rounded-lg bg-card p-3 text-sm whitespace-pre-wrap">
                 {documentText.slice(0, 1000)}
                 {documentText.length > 1000 && "..."}
@@ -257,18 +259,18 @@ const StructureEditor = () => {
           )}
 
           {/* Structure Preview */}
-          <p className="text-xs font-semibold text-muted-foreground mb-2">STRUCTURE ({nodes.length} sections)</p>
+          <p className="text-xs font-semibold text-muted-foreground mb-2">{t.structure_structure} ({nodes.length} {t.structure_sections})</p>
           <div className="space-y-2">
             {introSlide && (
               <div className="rounded-lg bg-purple-100 dark:bg-purple-900/30 p-3 shadow-sm">
-                <h3 className="font-bold text-purple-600 dark:text-purple-400">{introSlide.content || "Intro"}</h3>
+                <h3 className="font-bold text-purple-600 dark:text-purple-400">{introSlide.content || t.structure_intro_fallback}</h3>
               </div>
             )}
             {nodes.filter((n) => n.title.trim() || n.content.trim()).map((node) => (
               <div key={node.id} className="rounded-lg bg-card p-3 shadow-sm" style={{ marginLeft: `${(node.level - 1) * 8}px` }}>
-                <h4 className="font-semibold text-sm">{node.title || "Untitled"}</h4>
+                <h4 className="font-semibold text-sm">{node.title || t.structure_untitled}</h4>
                 {node.content && <p className="text-xs text-muted-foreground mt-1 line-clamp-2">{node.content}</p>}
-                {node.is_transition && <span className="text-xs text-warning">(Transition)</span>}
+                {node.is_transition && <span className="text-xs text-warning">{t.structure_transition_label}</span>}
               </div>
             ))}
           </div>

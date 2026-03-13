@@ -5,6 +5,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { ProtectedRoute } from "@/components/ProtectedRoute";
 
 import Home from "./pages/Home";
@@ -18,6 +19,7 @@ import SlideEditor from "./pages/SlideEditor";
 import PresentationMode from "./pages/PresentationMode";
 import ViewProject from "./pages/ViewProject";
 import Guide from "./pages/Guide";
+import Settings from "./pages/Settings";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -25,6 +27,7 @@ const queryClient = new QueryClient();
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <ThemeProvider>
+      <LanguageProvider>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
@@ -42,11 +45,13 @@ const App = () => (
               <Route path="/editor/:projectId" element={<ProtectedRoute><SlideEditor /></ProtectedRoute>} />
               <Route path="/present/:projectId" element={<ProtectedRoute><PresentationMode /></ProtectedRoute>} />
               <Route path="/view/:projectId" element={<ProtectedRoute><ViewProject /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </BrowserRouter>
         </TooltipProvider>
       </AuthProvider>
+      </LanguageProvider>
     </ThemeProvider>
   </QueryClientProvider>
 );
