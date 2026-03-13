@@ -18,6 +18,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const sponsors = [
   { name: "TechCorp", logo: "🚀" },
@@ -52,6 +53,7 @@ const testimonials = [
 const Home = () => {
   const navigate = useNavigate();
   const { t } = useLanguage();
+  const { user } = useAuth();
 
   const features = [
     { icon: Zap, title: t.home_feat_fast_title, description: t.home_feat_fast_desc, gradient: "from-yellow-400 to-orange-500" },
@@ -98,15 +100,17 @@ const Home = () => {
             </div>
             <div className="flex items-center gap-3">
               <ThemeToggle />
-              <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
-                {t.home_sign_in}
-              </Button>
+              {!user && (
+                <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
+                  {t.home_sign_in}
+                </Button>
+              )}
               <Button
                 size="sm"
                 className="gradient-primary text-white border-0 shadow-lg shadow-primary/25 hover:shadow-xl hover:shadow-primary/30 transition-all hover:-translate-y-0.5"
                 onClick={() => navigate("/slidegen")}
               >
-                {t.home_get_started} <ArrowRight className="ml-1 h-4 w-4" />
+                {user ? t.home_go_app : t.home_get_started} <ArrowRight className="ml-1 h-4 w-4" />
               </Button>
             </div>
           </div>
@@ -367,15 +371,17 @@ const Home = () => {
                   onClick={() => navigate("/slidegen")}
                 >
                   <Rocket className="mr-2 h-5 w-5" />
-                  {t.home_get_started_free}
+                  {user ? t.home_go_app : t.home_get_started_free}
                 </Button>
-                <Button
-                  size="lg"
-                  className="bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:text-white px-8 py-6 text-lg"
-                  onClick={() => navigate("/login")}
-                >
-                  {t.home_sign_in}
-                </Button>
+                {!user && (
+                  <Button
+                    size="lg"
+                    className="bg-transparent border-2 border-white/30 text-white hover:bg-white/10 hover:text-white px-8 py-6 text-lg"
+                    onClick={() => navigate("/login")}
+                  >
+                    {t.home_sign_in}
+                  </Button>
+                )}
               </div>
             </div>
           </div>

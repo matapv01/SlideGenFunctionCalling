@@ -33,12 +33,17 @@ interface Translations {
   appearance_theme: string;
   appearance_theme_light: string;
   appearance_theme_dark: string;
+  appearance_auto_theme: string;
+  appearance_auto_theme_hint: string;
+  appearance_dark_from: string;
+  appearance_light_from: string;
   appearance_language: string;
   appearance_language_hint: string;
   appearance_notifications: string;
   appearance_notifications_hint: string;
   appearance_save: string;
   appearance_saving: string;
+  appearance_unsaved_warning: string;
   security_title: string;
   security_subtitle: string;
   security_current_password: string;
@@ -69,6 +74,7 @@ interface Translations {
   home_nav_testimonials: string;
   home_nav_partners: string;
   home_sign_in: string;
+  home_go_app: string;
   home_get_started: string;
   home_hero_badge: string;
   home_hero_h1: string;
@@ -470,12 +476,17 @@ const vi: Translations = {
   appearance_theme: "Giao diện màu",
   appearance_theme_light: "Sáng",
   appearance_theme_dark: "Tối",
+  appearance_auto_theme: "Tự động đổi theo giờ",
+  appearance_auto_theme_hint: "Tự động chuyển giao diện theo khung giờ bạn cài",
+  appearance_dark_from: "Bật tối từ",
+  appearance_light_from: "Bật sáng từ",
   appearance_language: "Ngôn ngữ",
   appearance_language_hint: "Chọn ngôn ngữ hiển thị cho toàn bộ ứng dụng",
   appearance_notifications: "Thông báo",
   appearance_notifications_hint: "Nhận thông báo khi có cập nhật hoặc sự kiện mới",
   appearance_save: "Lưu cài đặt",
   appearance_saving: "Đang lưu...",
+  appearance_unsaved_warning: "Bạn có thay đổi chưa được lưu. Nhớ bấm 'Lưu cài đặt' để áp dụng.",
   security_title: "Đổi mật khẩu",
   security_subtitle: "Bảo vệ tài khoản bằng mật khẩu mạnh",
   security_current_password: "Mật khẩu hiện tại",
@@ -506,6 +517,7 @@ const vi: Translations = {
   home_nav_testimonials: "Đánh giá",
   home_nav_partners: "Đối tác",
   home_sign_in: "Đăng nhập",
+  home_go_app: "Vào ứng dụng",
   home_get_started: "Bắt đầu",
   home_hero_badge: "Tạo Slide Bằng AI",
   home_hero_h1: "Tạo Slide Ấn Tượng",
@@ -907,12 +919,17 @@ const en: Translations = {
   appearance_theme: "Color Theme",
   appearance_theme_light: "Light",
   appearance_theme_dark: "Dark",
+  appearance_auto_theme: "Auto switch by time",
+  appearance_auto_theme_hint: "Automatically switch theme based on the hours you set",
+  appearance_dark_from: "Switch to dark at",
+  appearance_light_from: "Switch to light at",
   appearance_language: "Language",
   appearance_language_hint: "Choose the display language for the entire application",
   appearance_notifications: "Notifications",
   appearance_notifications_hint: "Receive notifications for updates and new events",
   appearance_save: "Save Settings",
   appearance_saving: "Saving...",
+  appearance_unsaved_warning: "You have unsaved changes. Remember to click 'Save Settings' to apply them.",
   security_title: "Change Password",
   security_subtitle: "Keep your account safe with a strong password",
   security_current_password: "Current Password",
@@ -943,6 +960,7 @@ const en: Translations = {
   home_nav_testimonials: "Testimonials",
   home_nav_partners: "Partners",
   home_sign_in: "Sign In",
+  home_go_app: "Go to App",
   home_get_started: "Get Started",
   home_hero_badge: "AI-Powered Presentation Generator",
   home_hero_h1: "Create Stunning Slides",
