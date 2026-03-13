@@ -23,6 +23,7 @@ export interface SlideCanvasHandle {
   getSelectedZIndex: () => number;
   getMaxZIndex: () => number;
   injectElement: (html: string) => void;
+  deleteElement: () => void;
   saveHistory: (silent?: boolean) => void;
   reselectById: (id: string) => void;
 }
@@ -97,6 +98,9 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     },
     injectElement: (html: string) => {
       logicInstanceRef.current?.injectElement(html);
+    },
+    deleteElement: () => {
+      logicInstanceRef.current?.deleteElement();
     },
     saveHistory: (silent = false) => {
       logicInstanceRef.current?.saveHistory(silent);

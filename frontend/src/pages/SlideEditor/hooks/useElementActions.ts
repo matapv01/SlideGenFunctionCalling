@@ -150,12 +150,18 @@ export const useElementActions = ({
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
   const deleteElement = useCallback((id: string) => {
+    // Sync Shadow DOM canvas first
+    if (slideCanvasRef.current) {
+      slideCanvasRef.current.deleteElement();
+    }
+    
+    // Sync React state
     setSlides(prev => prev.map((slide, i) => {
       if (i !== currentSlideIndex) return slide;
       return { ...slide, elements: slide.elements.filter(el => el.id !== id) };
     }));
     setSelectedElementId(null);
-  }, [currentSlideIndex, setSlides, setSelectedElementId]);
+  }, [currentSlideIndex, setSlides, setSelectedElementId, slideCanvasRef]);
 
   const duplicateElement = useCallback((id: string) => {
     setSlides(prev => prev.map((slide, i) => {

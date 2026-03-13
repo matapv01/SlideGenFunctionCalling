@@ -179,7 +179,7 @@ async def get_current_user(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Không tìm thấy người dùng")
 
     return UserResponse(
-        id=user.id, email=user.email, username=user.username,
+        id=user.id, email=user.email,
         created_at=user.created_at, is_active=bool(user.is_active)
     )
 
@@ -202,6 +202,6 @@ async def get_current_user_from_token_param(
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Không tìm thấy người dùng hoặc người dùng không hoạt động")
 
     return UserResponse(
-        id=user.id, email=user.email, username=user.username,
+        id=user.id, email=user.email,
         created_at=user.created_at, is_active=bool(user.is_active)
     )

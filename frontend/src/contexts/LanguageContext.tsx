@@ -155,11 +155,11 @@ interface Translations {
   // ─────────── REGISTER ───────────
   register_title: string;
   register_subtitle: string;
-  register_username: string;
+  register_fullname: string;
   register_email: string;
   register_password: string;
   register_confirm_password: string;
-  register_error_username: string;
+  register_error_fullname: string;
   register_error_password: string;
   register_error_confirm: string;
   register_creating: string;
@@ -444,7 +444,7 @@ interface Translations {
   // ─── presentation mode ───
   present_slide: string;
   present_no_content: string;
-  register_placeholder_username: string;
+  register_placeholder_fullname: string;
   structure_untitled: string;
   structure_intro_fallback: string;
   structure_transition_label: string;
@@ -609,11 +609,11 @@ const vi: Translations = {
   // ─────────── REGISTER ───────────
   register_title: "Tạo tài khoản",
   register_subtitle: "Tham gia SlideGen và bắt đầu tạo slide",
-  register_username: "Tên đăng nhập",
+  register_fullname: "Họ và tên",
   register_email: "Email",
   register_password: "Mật khẩu",
   register_confirm_password: "Xác nhận mật khẩu",
-  register_error_username: "Tối thiểu 3 ký tự",
+  register_error_fullname: "Tối thiểu 3 ký tự",
   register_error_password: "Tối thiểu 6 ký tự",
   register_error_confirm: "Mật khẩu không khớp",
   register_creating: "Đang tạo...",
@@ -899,7 +899,7 @@ const vi: Translations = {
   // ─── presentation mode ───
   present_slide: "Slide",
   present_no_content: "Không có nội dung",
-  register_placeholder_username: "johndoe",
+  register_placeholder_fullname: "Nguyễn Văn A",
   structure_untitled: "Không có tên",
   structure_intro_fallback: "Giới thiệu",
   structure_transition_label: "(Chuyển tiếp)",
@@ -1064,11 +1064,11 @@ const en: Translations = {
   // ─────────── REGISTER ───────────
   register_title: "Create Account",
   register_subtitle: "Join SlideGen and start creating",
-  register_username: "Username",
+  register_fullname: "Full Name",
   register_email: "Email",
   register_password: "Password",
   register_confirm_password: "Confirm Password",
-  register_error_username: "Min 3 characters",
+  register_error_fullname: "Min 3 characters",
   register_error_password: "Min 6 characters",
   register_error_confirm: "Passwords don't match",
   register_creating: "Creating...",
@@ -1354,7 +1354,7 @@ const en: Translations = {
   // ─── presentation mode ───
   present_slide: "Slide",
   present_no_content: "No content",
-  register_placeholder_username: "johndoe",
+  register_placeholder_fullname: "John Doe",
   structure_untitled: "Untitled",
   structure_intro_fallback: "Intro",
   structure_transition_label: "(Transition)",

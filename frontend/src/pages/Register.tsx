@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/contexts/AuthContext";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Register = () => {
@@ -15,7 +16,7 @@ const Register = () => {
   const { register } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
-  const [username, setUsername] = useState("");
+  const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -23,7 +24,7 @@ const Register = () => {
   const [loading, setLoading] = useState(false);
 
   const errors = {
-    username: username.length > 0 && username.length < 3 ? t.register_error_username : "",
+    fullName: fullName.length > 0 && fullName.length < 3 ? t.register_error_fullname : "",
     password: password.length > 0 && password.length < 6 ? t.register_error_password : "",
     confirm: confirmPassword.length > 0 && confirmPassword !== password ? t.register_error_confirm : "",
   };
@@ -33,7 +34,7 @@ const Register = () => {
     if (Object.values(errors).some(Boolean)) return;
     setLoading(true);
     try {
-      await register(username, email, password);
+      await register(fullName, email, password);
       toast({ title: t.register_toast_success });
       navigate("/");
     } catch (err: any) {
@@ -51,7 +52,8 @@ const Register = () => {
           <ArrowLeft className="h-5 w-5" />
         </Button>
       </div>
-      <div className="absolute top-4 right-4">
+      <div className="absolute top-4 right-4 flex items-center gap-2">
+        <LanguageToggle />
         <ThemeToggle />
       </div>
       <Card className="w-full max-w-md glass animate-scale-in">
@@ -65,12 +67,12 @@ const Register = () => {
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
-              <Label htmlFor="username">{t.register_username}</Label>
+              <Label htmlFor="fullname">{t.register_fullname}</Label>
               <div className="relative">
                 <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="username" placeholder={t.register_placeholder_username} className="pl-9" value={username} onChange={(e) => setUsername(e.target.value)} required />
+                <Input id="fullname" placeholder={t.register_placeholder_fullname} className="pl-9" value={fullName} onChange={(e) => setFullName(e.target.value)} required />
               </div>
-              {errors.username && <p className="text-xs text-destructive">{errors.username}</p>}
+              {errors.fullName && <p className="text-xs text-destructive">{errors.fullName}</p>}
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">{t.register_email}</Label>

@@ -59,11 +59,11 @@ export const api = {
     return { token: tokenResponse.access_token, user };
   },
 
-  register: async (username: string, email: string, password: string) => {
+  register: async (fullName: string, email: string, password: string) => {
     // Register returns UserResponse (no token), need to login after
     await request<UserResponse>("/auth/register", {
       method: "POST",
-      body: JSON.stringify({ email, username, password }),
+      body: JSON.stringify({ email, full_name: fullName, password }),
     });
     // Auto-login after registration
     return api.login(email, password);

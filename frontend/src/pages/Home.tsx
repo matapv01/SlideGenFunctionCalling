@@ -17,6 +17,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
 
@@ -47,6 +48,18 @@ const testimonials = [
     role: "AI Engineer",
     content: "Ối dồi ôi công cụ gì mà mạnh quá",
     avatar: "🤖",
+  },
+  {
+    name: "Nam Nguyen",
+    role: "student",
+    content: "Mẹc Si đã xem và đánh giá 5 sao",
+    avatar: "👨‍🎓",
+  },
+  {
+    name: "Trung Nguyen",
+    role: "student",
+    content: "Vì mình quá thích Slidegen rồi, phải làm sao phải làm sao ?",
+    avatar: "👨‍🎓",
   },
 ];
 
@@ -99,6 +112,7 @@ const Home = () => {
               <a href="#sponsors" className="text-sm text-muted-foreground hover:text-foreground transition-colors">{t.home_nav_partners}</a>
             </div>
             <div className="flex items-center gap-3">
+              <LanguageToggle />
               <ThemeToggle />
               {!user && (
                 <Button variant="ghost" size="sm" onClick={() => navigate("/login")}>
@@ -171,7 +185,7 @@ const Home = () => {
                 variant="outline"
                 size="lg"
                 className="group px-8 py-6 text-lg border-2 hover:bg-primary/5 hover:text-foreground"
-                onClick={() => navigate("/guide")}
+                onClick={() => window.open("https://drive.google.com/file/d/1gm5jEYKQGgyByVU50dji7tS8O-8xeSRm/view?usp=sharing", "_blank")}
               >
                 <Play className="mr-2 h-5 w-5 text-primary" />
                 {t.home_watch_demo}

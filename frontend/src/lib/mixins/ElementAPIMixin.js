@@ -1,5 +1,13 @@
-// Mixin: public API for React to manipulate elements (style updates, z-order, inject, etc.)
 export const ElementAPIMixin = {
+
+    deleteElement() {
+        if (!this.selectedElements.length) return;
+        
+        const el = this.selectedElements[0];
+        el.remove();
+        this.deselectAll();
+        this.saveHistory();
+    },
 
     updateSelectedElementStyle(newStyles) {
         if (!this.selectedElements.length && !this.selectedElementId) {

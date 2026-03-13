@@ -43,7 +43,7 @@ import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 
 const Settings = () => {
-  const { user } = useAuth();
+  const { user, updateUser } = useAuth();
   const { theme, toggleTheme, autoTheme, setAutoTheme } = useTheme();
   const { language, setLanguage, t } = useLanguage();
   const { toast } = useToast();
@@ -118,6 +118,7 @@ const Settings = () => {
     setProfileLoading(true);
     try {
       await api.updateProfile({ full_name: fullName, avatar_url: avatarUrl, bio });
+      updateUser({ avatar_url: avatarUrl, full_name: fullName });
       toast({ title: t.toast_profile_success });
     } catch (err: any) {
       toast({ title: t.toast_profile_error, description: err.message, variant: "destructive" });

@@ -11,6 +11,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   Tooltip,
   TooltipContent,
@@ -186,12 +187,13 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" className="flex items-center gap-2">
-                    <div className="flex h-8 w-8 items-center justify-center rounded-full gradient-primary">
-                      <span className="text-xs font-bold text-primary-foreground">
+                    <Avatar className="h-8 w-8">
+                      <AvatarImage src={user.avatar_url || undefined} />
+                      <AvatarFallback className="gradient-primary text-primary-foreground text-xs font-bold">
                         {user.username?.charAt(0).toUpperCase() || "U"}
-                      </span>
-                    </div>
-                    <span className="hidden text-sm sm:inline">{user.username}</span>
+                      </AvatarFallback>
+                    </Avatar>
+                    <span className="hidden text-sm sm:inline">{user.full_name || user.username}</span>
                     <ChevronDown className="h-4 w-4" />
                   </Button>
                 </DropdownMenuTrigger>

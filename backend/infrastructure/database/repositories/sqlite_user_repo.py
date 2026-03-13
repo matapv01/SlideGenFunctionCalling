@@ -13,7 +13,6 @@ class SqliteUserRepository(UserRepository):
         return User(
             id=row['id'],
             email=row['email'],
-            username=row['username'],
             hashed_password=row['hashed_password'],
             is_active=bool(row['is_active']),
             created_at=row['created_at'] # Giả sử DB trả về datetime hoặc string parse được
@@ -63,8 +62,8 @@ class SqliteUserRepository(UserRepository):
         with get_db_connection() as conn:
             cursor = conn.cursor()
             cursor.execute(
-                "INSERT INTO users (email, username, hashed_password, is_active) VALUES (?, ?, ?, ?)",
-                (user.email, user.username, user.hashed_password, user.is_active)
+                "INSERT INTO users (email, hashed_password, is_active) VALUES (?, ?, ?)",
+                (user.email, user.hashed_password, user.is_active)
             )
             conn.commit()
             user_id = cursor.lastrowid
@@ -87,7 +86,7 @@ class SqliteUserRepository(UserRepository):
         """Get all users (for admin purposes)"""
         with get_db_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT id, email, username, created_at, is_active FROM users")
+            cursor.execute("SELECT id, email, created_at, is_active FROM users")
             return [dict(row) for row in cursor.fetchall()]
 
 

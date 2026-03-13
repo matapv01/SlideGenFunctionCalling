@@ -22,7 +22,6 @@ class TokenData(BaseModel):
 class UserBase(BaseModel):
     """Các trường chung cho User"""
     email: EmailStr
-    username: str = Field(..., min_length=3, max_length=50, description="Tên hiển thị của người dùng")
 
 
 class UserLogin(BaseModel):
@@ -33,6 +32,7 @@ class UserLogin(BaseModel):
 
 class UserCreate(UserBase):
     """Schema cho API Register (cần password)"""
+    full_name: str = Field(..., min_length=3, max_length=50, description="Họ và tên của người dùng")
     password: str = Field(..., min_length=6, description="Mật khẩu tối thiểu 6 ký tự")
 
 

@@ -19,7 +19,7 @@ async def register(
     user_data: UserCreate,
     auth_service: AuthService = Depends(get_auth_service)
 ):
-    user = auth_service.register_user(user_data.email, user_data.username, user_data.password)
+    user = auth_service.register_user(user_data.email, user_data.full_name, user_data.password)
     return UserResponse.model_validate(user)
 
 

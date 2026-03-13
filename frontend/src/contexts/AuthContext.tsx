@@ -2,9 +2,11 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 import { api } from "@/lib/api";
 
 interface User {
-  id: string;
+  id: number;
   username: string;
   email: string;
+  avatar_url?: string;
+  full_name?: string;
 }
 
 interface AuthContextType {
@@ -13,8 +15,9 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   login: (email: string, password: string, remember?: boolean) => Promise<void>;
-  register: (username: string, email: string, password: string) => Promise<void>;
+  register: (fullName: string, email: string, password: string) => Promise<void>;
   logout: () => void;
+  updateUser: (data: Partial<User>) => void;
 }
 
 const AuthContext = createContext<AuthContextType | null>(null);
@@ -34,6 +37,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const stored = localStorage.getItem("user");
     if (stored && token) {
       try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
+      
+      // Fetch latest profile to ensure we have avatar_url and full_name mapped
+      api.getProfile().then(profile => {
+        setUser(prev => {
+          if (!prev) return prev;
+          const updated = { ...prev, full_name: profile.full_name, avatar_url: profile.avatar_url };
+          localStorage.setItem("user", JSON.stringify(updated));
+          return updated;
+        });
+      }).catch(console.error);
     }
     setIsLoading(false);
   }, [token]);
@@ -46,8 +59,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("user", JSON.stringify(res.user));
   }, []);
 
-  const register = useCallback(async (username: string, email: string, password: string) => {
-    const res = await api.register(username, email, password);
+  const register = useCallback(async (fullName: string, email: string, password: string) => {
+    const res = await api.register(fullName, email, password);
     setToken(res.token);
     setUser(res.user);
     localStorage.setItem("token", res.token);
@@ -61,8 +74,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.removeItem("user");
   }, []);
 
+  const updateUser = useCallback((data: Partial<User>) => {
+    setUser((prev) => {
+      if (!prev) return prev;
+      const updated = { ...prev, ...data };
+      localStorage.setItem("user", JSON.stringify(updated));
+      return updated;
+    });
+  }, []);
+
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, register, logout }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );
