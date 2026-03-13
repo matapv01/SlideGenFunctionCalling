@@ -11,5 +11,4 @@ static/
 node_modules/
 node_modules/
 backend/node_modules/
-webfix/
 *.db
