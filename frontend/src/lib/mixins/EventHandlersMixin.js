@@ -53,6 +53,7 @@ export const EventHandlersMixin = {
 
         const isDragHandle  = target.classList && target.classList.contains('drag-handle');
         const isResizeHandle = target.classList && target.classList.contains('resize-handle');
+        const isMultiSelectIntent = e.shiftKey || e.ctrlKey || e.metaKey;
 
         // Click on canvas background → deselect
         if (!isResizeHandle && !isDragHandle && target.classList && (
@@ -91,15 +92,26 @@ export const EventHandlersMixin = {
             const el = this.selectedElements[0];
             this.isResizing = true;
             this.resizeHandle = target.classList[1]; // e.g. 'tl', 'tr', 'bl', 'br'
+            this.pendingSelectMode = null;
             this.dragStart = { x: e.clientX, y: e.clientY };
+            const bounds = this.getElementBounds
+                ? this.getElementBounds(el)
+                : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+
             if (el.style.position !== 'absolute') {
                 el.style.position = 'absolute';
-                el.style.left  = `${el.offsetLeft}px`;
-                el.style.top   = `${el.offsetTop}px`;
-                el.style.width = `${el.offsetWidth}px`;
+                el.style.left  = `${bounds.left}px`;
+                el.style.top   = `${bounds.top}px`;
+                el.style.width = `${bounds.width}px`;
+                el.style.height = `${bounds.height}px`;
             }
             this.elementsStartPos.clear();
-            this.elementsStartPos.set(el, { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+            this.elementsStartPos.set(el, {
+                x: bounds.left,
+                y: bounds.top,
+                width: bounds.width,
+                height: bounds.height,
+            });
             e.preventDefault();
             e.stopPropagation();
             return;
@@ -107,30 +119,50 @@ export const EventHandlersMixin = {
 
         const isAlreadySelected = this.selectedElements.includes(targetElement);
 
+        if (isMultiSelectIntent && !isDragHandle && !isResizeHandle) {
+            this.pendingSelectElement = targetElement;
+            this.pendingSelectMode = 'toggle';
+            this.dragStart = { x: e.clientX, y: e.clientY };
+            return;
+        }
+
         // Not yet selected → defer selection to mouseup (cancel if drag happens)
         if (!isAlreadySelected && !isDragHandle) {
             this.pendingSelectElement = targetElement;
+            this.pendingSelectMode = 'single';
             this.dragStart = { x: e.clientX, y: e.clientY };
             return;
         }
 
         // Already selected or drag handle → prepare for drag
-        if (isDragHandle) {
+        if (isDragHandle && !isAlreadySelected) {
             this.selectElement(targetElement);
         }
 
         this.isPreparedForDrag = true;
         this.draggedElement    = targetElement;
+        this.pendingSelectMode = null;
         this.dragStart         = { x: e.clientX, y: e.clientY };
 
         this.elementsStartPos.clear();
         this.selectedElements.forEach(el => {
+            const bounds = this.getElementBounds
+                ? this.getElementBounds(el)
+                : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+
             if (el.style.position !== 'absolute') {
                 el.style.position = 'absolute';
-                el.style.left = `${el.offsetLeft}px`;
-                el.style.top  = `${el.offsetTop}px`;
+                el.style.left = `${bounds.left}px`;
+                el.style.top  = `${bounds.top}px`;
+                el.style.width = `${bounds.width}px`;
+                el.style.height = `${bounds.height}px`;
             }
-            this.elementsStartPos.set(el, { x: el.offsetLeft, y: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+            this.elementsStartPos.set(el, {
+                x: bounds.left,
+                y: bounds.top,
+                width: bounds.width,
+                height: bounds.height,
+            });
         });
     },
 
@@ -166,6 +198,7 @@ export const EventHandlersMixin = {
             if (this.resizeHandle.includes('t')) { el.style.height = `${Math.max(20, height - dy)}px`; el.style.top  = `${y + dy}px`; }
 
             this.updateSelectionUI();
+            if (this.emitSelectedElementData) this.emitSelectedElementData(el);
             return;
         }
 
@@ -194,6 +227,9 @@ export const EventHandlersMixin = {
         });
 
         this.updateSelectionUI();
+        if (this.emitSelectedElementData && this.selectedElements.length === 1) {
+            this.emitSelectedElementData(this.selectedElements[0]);
+        }
         this.drawSmartGuides(snapped.guides);
     },
 
@@ -208,8 +244,15 @@ export const EventHandlersMixin = {
                 );
                 shouldSelect = dist <= 2;
             }
-            if (shouldSelect) this.selectElement(this.pendingSelectElement);
+            if (shouldSelect) {
+                if (this.pendingSelectMode === 'toggle') {
+                    this.toggleSelection(this.pendingSelectElement);
+                } else {
+                    this.selectElement(this.pendingSelectElement);
+                }
+            }
             this.pendingSelectElement = null;
+            this.pendingSelectMode = null;
             this.dragStart            = null;
             return;
         }
@@ -223,7 +266,12 @@ export const EventHandlersMixin = {
                 );
                 hasActualChange = dist > 3;
             }
-            if (hasActualChange) this.saveHistory();
+            if (hasActualChange) {
+                this.saveHistory();
+                if (this.emitSelectedElementData && this.selectedElements.length === 1) {
+                    this.emitSelectedElementData(this.selectedElements[0]);
+                }
+            }
         }
 
         this.isDragging         = false;
@@ -231,6 +279,7 @@ export const EventHandlersMixin = {
         this.isPreparedForDrag  = false;
         this.resizeHandle       = null;
         this.pendingSelectElement = null;
+        this.pendingSelectMode  = null;
         this.draggedElement     = null;
         this.elementsStartPos.clear();
         this.dragStart          = null;

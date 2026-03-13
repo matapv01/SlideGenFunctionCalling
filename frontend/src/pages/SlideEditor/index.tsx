@@ -92,6 +92,7 @@ const SlideEditor = () => {
         onNavigateBack={() => navigate(-1)}
         onDeselectElement={() => setSelectedElementId(null)}
         onSetDraggedItem={setDraggedItem}
+        onDeleteElement={selectedElementId ? () => deleteElement(selectedElementId) : undefined}
         onPresent={() => navigate(`/present/${projectId}`)}
         onExport={() => setIsExportModalOpen(true)}
       />
@@ -140,6 +141,30 @@ const SlideEditor = () => {
           onResetZoom={() => setZoom(autoFit ? 0.5 : 0.6)}
           onPrevSlide={() => currentSlideIndex > 0 && selectSlide(currentSlideIndex - 1)}
           onNextSlide={() => currentSlideIndex < slides.length - 1 && selectSlide(currentSlideIndex + 1)}
+          selectedElementId={selectedElementId}
+          onCopyElement={() => {
+            if (!selectedElementId) return;
+            slideCanvasRef.current?.copySelectedElement(selectedElementId);
+          }}
+          onPasteElement={() => {
+            slideCanvasRef.current?.pasteElement();
+          }}
+          onDuplicateElement={() => {
+            if (!selectedElementId) return;
+            duplicateElement(selectedElementId);
+          }}
+          onDeleteElement={() => {
+            if (!selectedElementId) return;
+            deleteElement(selectedElementId);
+          }}
+          onBringForward={() => {
+            if (!selectedElementId) return;
+            bringForward(selectedElementId);
+          }}
+          onSendBackward={() => {
+            if (!selectedElementId) return;
+            sendBackward(selectedElementId);
+          }}
         />
 
         {/* Properties Panel with edge arrow toggle */}

@@ -270,16 +270,16 @@ export const PropertiesPanel = ({
           <SectionLabel icon={Move} label={t.editor_section_transform} />
           <div className="grid grid-cols-2 gap-1.5">
             <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">X</span>} title={t.editor_prop_x}
-              type="number" value={Math.round(el.x)}
+              type="number" step={0.01} value={el.x}
               onChange={e => onUpdateElement(el.id, { x: Number((e.target as HTMLInputElement).value) })} />
             <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">Y</span>} title={t.editor_prop_y}
-              type="number" value={Math.round(el.y)}
+              type="number" step={0.01} value={el.y}
               onChange={e => onUpdateElement(el.id, { y: Number((e.target as HTMLInputElement).value) })} />
             <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">W</span>} title={t.editor_prop_width}
-              type="number" value={Math.round(el.width)}
+              type="number" step={0.01} value={el.width}
               onChange={e => onUpdateElement(el.id, { width: Number((e.target as HTMLInputElement).value) })} />
             <IconInput icon={() => <span className="text-[10px] font-bold text-muted-foreground">H</span>} title={t.editor_prop_height}
-              type="number" value={Math.round(el.height)}
+              type="number" step={0.01} value={el.height}
               onChange={e => onUpdateElement(el.id, { height: Number((e.target as HTMLInputElement).value) })} />
           </div>
           <div className="mt-1.5">

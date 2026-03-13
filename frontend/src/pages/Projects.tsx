@@ -10,7 +10,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
-import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
+import { ReadOnlySlide } from "@/components/ReadOnlySlide";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Projects = () => {
@@ -28,6 +28,7 @@ const Projects = () => {
   const [renameId, setRenameId] = useState<string | null>(null);
   const [renameName, setRenameName] = useState("");
   const [firstSlides, setFirstSlides] = useState<Record<string, string>>({});
+  const [firstSlideBackgrounds, setFirstSlideBackgrounds] = useState<Record<string, string>>({});
   const [slideCounts, setSlideCounts] = useState<Record<string, number>>({});
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [selectMode, setSelectMode] = useState(false);
@@ -51,6 +52,7 @@ const Projects = () => {
       
       // Fetch first slide and slide counts for each project
       const slidesMap: Record<string, string> = {};
+      const backgroundsMap: Record<string, string> = {};
       const countsMap: Record<string, number> = {};
       await Promise.all(
         mappedProjects.map(async (project: any) => {
@@ -59,11 +61,20 @@ const Projects = () => {
             countsMap[project.id] = slidesRes.slides?.length || 0;
             if (slidesRes.slides && slidesRes.slides.length > 0) {
               const slide = slidesRes.slides[0];
+              let backgroundColor = '#ffffff';
+              if (slide.design_settings) {
+                try {
+                  const ds = typeof slide.design_settings === 'string'
+                    ? JSON.parse(slide.design_settings)
+                    : slide.design_settings;
+                  if (ds?.backgroundColor) backgroundColor = ds.backgroundColor;
+                } catch {
+                  // Ignore malformed design_settings, fallback to default white
+                }
+              }
               const rawHtml = slide.html_content || slide.html || '';
-              const bgColor = slide.design_settings?.backgroundColor;
-              slidesMap[project.id] = bgColor
-                ? `<div style="width:1920px;height:1080px;background:${bgColor};position:relative;overflow:hidden;">${rawHtml}</div>`
-                : rawHtml;
+              slidesMap[project.id] = rawHtml;
+              backgroundsMap[project.id] = backgroundColor;
             }
           } catch {
             // Ignore errors for individual projects
@@ -71,6 +82,7 @@ const Projects = () => {
         })
       );
       setFirstSlides(slidesMap);
+      setFirstSlideBackgrounds(backgroundsMap);
       setSlideCounts(countsMap);
     } catch (err: any) {
       toast({ title: t.projects_toast_load_fail, description: err.message, variant: "destructive" });
@@ -268,9 +280,10 @@ const Projects = () => {
                 <CardContent>
                   <div className="aspect-video overflow-hidden rounded-lg bg-muted relative">
                     {firstSlides[project.id] ? (
-                      <ScaledSlidePreview
-                        html={firstSlides[project.id]}
-                        title={`${project.name} preview`}
+                      <ReadOnlySlide
+                        slideId={`project-thumb-${project.id}`}
+                        htmlContent={firstSlides[project.id]}
+                        backgroundColor={firstSlideBackgrounds[project.id]}
                         className="absolute inset-0"
                       />
                     ) : (

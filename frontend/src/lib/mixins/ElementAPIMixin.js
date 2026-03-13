@@ -1,11 +1,123 @@
 export const ElementAPIMixin = {
 
-    deleteElement() {
-        if (!this.selectedElements.length) return;
-        
-        const el = this.selectedElements[0];
+    resolveTargetElement(targetId = null) {
+        let el = this.selectedElements[0] || null;
+        if (el) return el;
+
+        const id = targetId || this.selectedElementId;
+        if (!id) return null;
+
+        try {
+            el = this.root.querySelector(`#${CSS.escape(id)}`);
+        } catch {
+            el = this.root.querySelector(`[id="${id}"]`);
+        }
+
+        if (el) this.selectedElements = [el];
+        return el;
+    },
+
+    getStyleNumber(el, styleName, fallback = 0) {
+        const direct = parseFloat(el.style?.[styleName]);
+        if (Number.isFinite(direct)) return direct;
+        const computed = parseFloat(window.getComputedStyle(el)?.[styleName]);
+        return Number.isFinite(computed) ? computed : fallback;
+    },
+
+    normalizeElementForCanvas(el) {
+        el.classList.remove('selected');
+        el.querySelectorAll('.resize-handle, .drag-handle, .smart-guide').forEach(h => h.remove());
+        el.removeAttribute('data-guide-key');
+        el.querySelectorAll('[data-guide-key]').forEach(node => node.removeAttribute('data-guide-key'));
+
+        if (!el.id) el.id = `el_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+        if (!el.classList.contains('element')) el.classList.add('element');
+        if (!el.hasAttribute('data-selectable')) el.setAttribute('data-selectable', 'true');
+        el.style.cursor = 'move';
+    },
+
+    deleteElement(targetId = null) {
+        const el = this.resolveTargetElement(targetId);
+        if (!el) return;
+
         el.remove();
         this.deselectAll();
+        this.saveHistory();
+    },
+
+    duplicateElement(targetId = null, offsetX = 24, offsetY = 24) {
+        const source = this.resolveTargetElement(targetId);
+        if (!source) return null;
+
+        const clone = source.cloneNode(true);
+        this.normalizeElementForCanvas(clone);
+        clone.id = `el_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+        const left = this.getStyleNumber(source, 'left', source.offsetLeft || 0);
+        const top = this.getStyleNumber(source, 'top', source.offsetTop || 0);
+
+        if (!clone.style.position) clone.style.position = source.style.position || 'absolute';
+        clone.style.left = `${left + offsetX}px`;
+        clone.style.top = `${top + offsetY}px`;
+        clone.style.zIndex = String(this.getMaxZIndex() + 1);
+
+        this.canvas.appendChild(clone);
+        this.selectElement(clone);
+        this.saveHistory();
+        return clone.id;
+    },
+
+    copySelectedElement(targetId = null) {
+        const source = this.resolveTargetElement(targetId);
+        if (!source) return false;
+
+        const clone = source.cloneNode(true);
+        this.normalizeElementForCanvas(clone);
+        clone.removeAttribute('id');
+
+        this.clipboardElementHTML = clone.outerHTML;
+        return true;
+    },
+
+    pasteElement(offsetX = 24, offsetY = 24) {
+        if (!this.clipboardElementHTML) return null;
+
+        const temp = document.createElement('div');
+        temp.innerHTML = this.clipboardElementHTML.trim();
+        const el = temp.firstElementChild;
+        if (!el || !(el instanceof HTMLElement)) return null;
+
+        this.normalizeElementForCanvas(el);
+        el.id = `el_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+
+        const left = this.getStyleNumber(el, 'left', 0);
+        const top = this.getStyleNumber(el, 'top', 0);
+        if (!el.style.position) el.style.position = 'absolute';
+        el.style.left = `${left + offsetX}px`;
+        el.style.top = `${top + offsetY}px`;
+        el.style.zIndex = String(this.getMaxZIndex() + 1);
+
+        this.canvas.appendChild(el);
+        this.selectElement(el);
+        this.saveHistory();
+        return el.id;
+    },
+
+    bringToFront(targetId = null) {
+        const el = this.resolveTargetElement(targetId);
+        if (!el) return;
+        el.style.zIndex = String(this.getMaxZIndex() + 1);
+        this.updateSelectionUI();
+        this.emitSelectedElementData(el);
+        this.saveHistory();
+    },
+
+    sendToBack(targetId = null) {
+        const el = this.resolveTargetElement(targetId);
+        if (!el) return;
+        el.style.zIndex = '0';
+        this.updateSelectionUI();
+        this.emitSelectedElementData(el);
         this.saveHistory();
     },
 

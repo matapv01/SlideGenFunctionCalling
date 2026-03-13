@@ -2,6 +2,14 @@ import { useEffect, useRef } from "react";
 import { Button } from "@/components/ui/button";
 import { SlideCanvas, SlideCanvasHandle } from "@/components/SlideCanvas";
 import { Maximize2 } from "lucide-react";
+import {
+  ContextMenu,
+  ContextMenuContent,
+  ContextMenuItem,
+  ContextMenuSeparator,
+  ContextMenuShortcut,
+  ContextMenuTrigger,
+} from "@/components/ui/context-menu";
 import type { Slide } from "../types";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -27,6 +35,13 @@ interface CanvasAreaProps {
   onResetZoom: () => void;
   onPrevSlide: () => void;
   onNextSlide: () => void;
+  selectedElementId: string | null;
+  onCopyElement: () => void;
+  onPasteElement: () => void;
+  onDuplicateElement: () => void;
+  onDeleteElement: () => void;
+  onBringForward: () => void;
+  onSendBackward: () => void;
 }
 
 export const CanvasArea = ({
@@ -47,6 +62,13 @@ export const CanvasArea = ({
   onResetZoom,
   onPrevSlide,
   onNextSlide,
+  selectedElementId,
+  onCopyElement,
+  onPasteElement,
+  onDuplicateElement,
+  onDeleteElement,
+  onBringForward,
+  onSendBackward,
 }: CanvasAreaProps) => {
   const { t } = useLanguage();
   const hasPrev = currentSlideIndex > 0;
@@ -108,37 +130,70 @@ export const CanvasArea = ({
       onDrop={onDrop}
     >
       {/* Outer wrapper occupies the post-scale footprint so centering stays correct */}
-      <div style={{ width: 1920 * zoom, height: 1080 * zoom, flexShrink: 0 }}>
-        <div
-          ref={canvasRef}
-          className="relative transition-transform duration-200 ease-out"
-          style={{
-            width: 1920,
-            height: 1080,
-            transform: `scale(${zoom})`,
-            transformOrigin: 'top left',
-          }}
-        >
-          {/* Slide shadow ring wrapper */}
-          <div className="rounded shadow-2xl ring-1 ring-black/10 dark:ring-white/5 overflow-hidden" style={{ width: 1920, height: 1080 }}>
-            {currentSlide ? (
-              <SlideCanvas
-                ref={slideCanvasRef}
-                slideId={currentSlide.id}
-                htmlContent={currentSlide.elements[0]?.content || ''}
-                backgroundColor={currentSlide.backgroundColor}
-                onChange={onChange}
-                onElementSelect={onElementSelect}
-                zoom={zoom}
-              />
-            ) : (
-              <div className="bg-white flex items-center justify-center text-gray-400" style={{ width: 1920, height: 1080 }}>
-                <p>{t.editor_loading_slide}</p>
+      <ContextMenu>
+        <ContextMenuTrigger asChild>
+          <div style={{ width: 1920 * zoom, height: 1080 * zoom, flexShrink: 0 }}>
+            <div
+              ref={canvasRef}
+              className="relative transition-transform duration-200 ease-out"
+              style={{
+                width: 1920,
+                height: 1080,
+                transform: `scale(${zoom})`,
+                transformOrigin: 'top left',
+              }}
+            >
+              {/* Slide shadow ring wrapper */}
+              <div className="rounded shadow-2xl ring-1 ring-black/10 dark:ring-white/5 overflow-hidden" style={{ width: 1920, height: 1080 }}>
+                {currentSlide ? (
+                  <SlideCanvas
+                    ref={slideCanvasRef}
+                    slideId={currentSlide.id}
+                    htmlContent={currentSlide.elements[0]?.content || ''}
+                    backgroundColor={currentSlide.backgroundColor}
+                    onChange={onChange}
+                    onElementSelect={onElementSelect}
+                    zoom={zoom}
+                  />
+                ) : (
+                  <div className="bg-white flex items-center justify-center text-gray-400" style={{ width: 1920, height: 1080 }}>
+                    <p>{t.editor_loading_slide}</p>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      </div>
+        </ContextMenuTrigger>
+
+        <ContextMenuContent className="w-56">
+          <ContextMenuItem disabled={!selectedElementId} onClick={onCopyElement}>
+            Copy
+            <ContextMenuShortcut>Ctrl+C</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuItem onClick={onPasteElement}>
+            Paste
+            <ContextMenuShortcut>Ctrl+V</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuItem disabled={!selectedElementId} onClick={onDuplicateElement}>
+            Duplicate
+            <ContextMenuShortcut>Ctrl+D</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem disabled={!selectedElementId} onClick={onBringForward}>
+            Bring Forward
+            <ContextMenuShortcut>Ctrl+]</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuItem disabled={!selectedElementId} onClick={onSendBackward}>
+            Send Backward
+            <ContextMenuShortcut>Ctrl+[</ContextMenuShortcut>
+          </ContextMenuItem>
+          <ContextMenuSeparator />
+          <ContextMenuItem disabled={!selectedElementId} className="text-destructive focus:text-destructive" onClick={onDeleteElement}>
+            Delete
+            <ContextMenuShortcut>Del</ContextMenuShortcut>
+          </ContextMenuItem>
+        </ContextMenuContent>
+      </ContextMenu>
 
       {/* Zoom Controls Overlay */}
       <div className="absolute bottom-5 right-5 flex items-center bg-background/90 backdrop-blur-md border border-border/40 rounded-xl shadow-lg p-1 gap-1 z-50">
