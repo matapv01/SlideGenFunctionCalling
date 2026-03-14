@@ -18,10 +18,10 @@ QUY TẮC VỀ VỊ TRÍ (POSITION):
 Bạn CHỈ được trả về JSON theo cấu trúc sau:
 {{
   "slide_chunks": [
-    {{"position": 0, "heading": "", "text_content": "Title: [Tiêu đề]\\nSubtitle: [Phụ đề]"}},
-    {{"position": 1, "heading": "Tiêu đề phần 1", "text_content": "- Ý chính 1\\n- Ý chính 2"}},
-    {{"position": -1, "heading": "TRANSITION", "text_content": "Tiếp theo: [Tên phần tiếp theo]"}},
-    {{"position": -2, "heading": "THANK_YOU", "text_content": "Lời cảm ơn chân thành"}}
+    {{"position": 0, "title": "", "content": "Title: [Tiêu đề]\\nSubtitle: [Phụ đề]", "slide_type": "intro"}},
+    {{"position": 1, "title": "Tiêu đề phần 1", "content": "- Ý chính 1\\n- Ý chính 2", "slide_type": "content"}},
+    {{"position": -1, "title": "TRANSITION", "content": "Tiếp theo: [Tên phần tiếp theo]", "slide_type": "transition"}},
+    {{"position": -2, "title": "THANK_YOU", "content": "Lời cảm ơn chân thành", "slide_type": "thank_you"}}
   ]
 }}
 """

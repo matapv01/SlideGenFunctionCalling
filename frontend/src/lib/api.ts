@@ -1,5 +1,12 @@
 const API_BASE_URL = "http://localhost:12008/api/v1";
 
+// Global logout function - will be set by AuthContext
+let globalLogout: (() => void) | null = null;
+
+export const setGlobalLogout = (logoutFn: () => void) => {
+  globalLogout = logoutFn;
+};
+
 async function request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
   const token = localStorage.getItem("token");
   const headers: Record<string, string> = {
@@ -12,11 +19,58 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
   if (!res.ok) {
+    console.log(`API Error for ${endpoint}:`, {
+      status: res.status,
+      statusText: res.statusText,
+      headers: Object.fromEntries(res.headers.entries())
+    });
+
+    // First try to get error message from backend
     const err = await res.json().catch(() => ({ message: res.statusText }));
-    const errMsg = typeof err.detail === 'string' 
-      ? err.detail 
-      : (err.detail ? JSON.stringify(err.detail) : (err.message || res.statusText));
-    throw new Error(errMsg);
+    const backendErrorMsg = typeof err.detail === 'string'
+      ? err.detail
+      : (err.detail ? JSON.stringify(err.detail) : (err.message || null));
+
+    console.log('Backend error message:', backendErrorMsg);
+
+    // Handle 401 Unauthorized
+    if (res.status === 401) {
+      const authRequired = res.headers.get("X-Auth-Required");
+      const authExpired = res.headers.get("X-Auth-Expired");
+
+      console.log('Auth headers:', { authRequired, authExpired });
+
+      if (authRequired) {
+        // User needs to login, don't auto logout - use backend message if available
+        const errorMsg = backendErrorMsg || "Vui lòng đăng nhập để sử dụng tính năng này";
+        console.log('Throwing auth required error:', errorMsg);
+        throw new Error(errorMsg);
+      } else if (authExpired && globalLogout) {
+        // Token expired, auto logout
+        console.warn("Token expired, logging out user automatically");
+        globalLogout();
+        const errorMsg = backendErrorMsg || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+        console.log('Throwing token expired error:', errorMsg);
+        throw new Error(errorMsg);
+      } else if (globalLogout) {
+        // Default 401 behavior
+        console.warn("Authentication failed, logging out user automatically");
+        globalLogout();
+        const errorMsg = backendErrorMsg || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
+        console.log('Throwing generic auth error:', errorMsg);
+        throw new Error(errorMsg);
+      } else {
+        // No globalLogout function available
+        const errorMsg = backendErrorMsg || "Vui lòng đăng nhập để sử dụng tính năng này";
+        console.log('Throwing no-logout auth error:', errorMsg);
+        throw new Error(errorMsg);
+      }
+    }
+
+    // For non-401 errors, use backend message
+    const finalErrorMsg = backendErrorMsg || res.statusText;
+    console.log('Throwing non-401 error:', finalErrorMsg);
+    throw new Error(finalErrorMsg);
   }
   return res.json();
 }
@@ -321,6 +375,79 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+  // Get idea structure details
+  getIdeaStructure: (sessionId: string) =>
+    request<{
+      session_id: string;
+      title: string;
+      slide_chunks: any[];
+      enable_transition_slides: boolean;
+      enable_thank_you_slide: boolean;
+      metadata?: any;
+    }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`),
+
+  // Update idea structure
+  updateIdeaStructure: (sessionId: string, data: {
+    title: string;
+    slide_chunks: any[];
+    enable_transition_slides: boolean;
+    enable_thank_you_slide: boolean;
+  }) =>
+    request<{
+      session_id: string;
+      title: string;
+      slide_chunks: any[];
+      enable_transition_slides: boolean;
+      enable_thank_you_slide: boolean;
+      metadata?: any;
+    }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`, {
+      method: "PUT",
+      body: JSON.stringify(data),
+    }),
+
   // Image URL - /api/image-serve/*
   imageUrl: (imageName: string) => `${API_BASE_URL}/image-serve/${encodeURIComponent(imageName)}`,
+
+  // Subscription endpoints - /api/subscription/*
+  getSubscriptionInfo: () => request<{
+    tier: string;
+    is_active: boolean;
+    expires_at?: string;
+    daily_limits: {
+      idea_generation: number;
+      docx_upload: number;
+      max_docx_slides: number;
+    };
+    current_usage: {
+      idea_generation: number;
+      docx_upload: number;
+    };
+    usage_reset_date: string;
+  }>("/subscription/info"),
+
+  redeemCode: (code: string) => request<{
+    success: boolean;
+    message: string;
+    new_tier: string;
+    expires_at?: string;
+  }>("/subscription/redeem", {
+    method: "POST",
+    body: JSON.stringify({ code })
+  }),
+
+  getPricingInfo: () => request<{
+    tiers: Array<{
+      name: string;
+      display_name: string;
+      price: number;
+      currency: string;
+      period: string;
+      features: Record<string, any>;
+    }>;
+  }>("/subscription/pricing"),
+
+  upgradeSubscription: (tier: string) => request<{ message: string }>("/subscription/upgrade", {
+    method: "POST",
+    body: JSON.stringify({ tier })
+  })
 };

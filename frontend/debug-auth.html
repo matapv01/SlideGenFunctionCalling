@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Debug Auth</title>
+</head>
+<body>
+    <h1>Debug Authentication Error Messages</h1>
+    <button onclick="testAuth()">Test Auth Without Token</button>
+    <button onclick="testIdeaGeneration()">Test Idea Generation</button>
+    <div id="result"></div>
+
+    <script>
+        const API_BASE_URL = "http://localhost:12008/api/v1";
+
+        async function testAuth() {
+            const result = document.getElementById('result');
+            try {
+                // Remove any existing token
+                localStorage.removeItem("token");
+
+                const response = await fetch(`${API_BASE_URL}/generate/test-auth`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    }
+                });
+
+                if (!response.ok) {
+                    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    console.log('Error data:', errorData);
+
+                    result.innerHTML = `
+                        <h3>Error Response:</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Headers:</strong></p>
+                        <pre>${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</pre>
+                        <p><strong>Error Detail:</strong> ${errorData.detail || errorData.message}</p>
+                    `;
+                } else {
+                    const data = await response.json();
+                    result.innerHTML = `<p>Success: ${JSON.stringify(data)}</p>`;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                result.innerHTML = `<p><strong>Fetch Error:</strong> ${error.message}</p>`;
+            }
+        }
+
+        async function testIdeaGeneration() {
+            const result = document.getElementById('result');
+            try {
+                // Remove any existing token
+                localStorage.removeItem("token");
+
+                const response = await fetch(`${API_BASE_URL}/generate/idea/structure`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: "Test",
+                        prompt: "Test prompt",
+                        content_length: "brief"
+                    })
+                });
+
+                if (!response.ok) {
+                    console.log('Response headers:', Object.fromEntries(response.headers.entries()));
+
+                    const errorData = await response.json().catch(() => ({ message: response.statusText }));
+                    console.log('Error data:', errorData);
+
+                    result.innerHTML = `
+                        <h3>Idea Generation Error Response:</h3>
+                        <p><strong>Status:</strong> ${response.status}</p>
+                        <p><strong>Headers:</strong></p>
+                        <pre>${JSON.stringify(Object.fromEntries(response.headers.entries()), null, 2)}</pre>
+                        <p><strong>Error Detail:</strong> ${errorData.detail || errorData.message}</p>
+                    `;
+                } else {
+                    const data = await response.json();
+                    result.innerHTML = `<p>Success: ${JSON.stringify(data)}</p>`;
+                }
+            } catch (error) {
+                console.error('Fetch error:', error);
+                result.innerHTML = `<p><strong>Fetch Error:</strong> ${error.message}</p>`;
+            }
+        }
+    </script>
+</body>
+</html>

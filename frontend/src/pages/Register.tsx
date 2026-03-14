@@ -29,9 +29,8 @@ const Register = () => {
     confirm: confirmPassword.length > 0 && confirmPassword !== password ? t.register_error_confirm : "",
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (Object.values(errors).some(Boolean)) return;
+  const performRegister = async () => {
+    if (loading || Object.values(errors).some(Boolean)) return;
     setLoading(true);
     try {
       await register(fullName, email, password);
@@ -42,6 +41,11 @@ const Register = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    performRegister();
   };
 
   return (
@@ -96,7 +100,7 @@ const Register = () => {
               <Label htmlFor="confirm">{t.register_confirm_password}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="confirm" type="password" placeholder={t.login_placeholder_password} className="pl-9" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} required />
+                <Input id="confirm" type="password" placeholder={t.login_placeholder_password} className="pl-9" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && performRegister()} required />
               </div>
               {errors.confirm && <p className="text-xs text-destructive">{errors.confirm}</p>}
             </div>

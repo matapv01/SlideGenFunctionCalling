@@ -32,7 +32,13 @@ for directory in [UPLOAD_DIR, OUTPUT_DIR, TEMP_DIR, CAPTURES_DIR]:
 DISABLE_CONVERTER = os.getenv('DISABLE_CONVERTER', '0').lower() in ('1', 'true', 'yes')
 
 # CORS settings
-CORS_ORIGINS = ["*"]  # Configure for production
+CORS_ORIGINS = [
+    "http://localhost:8080",  # Frontend development server
+    "http://127.0.0.1:8080",
+    "http://localhost:3000",  # Alternative React dev server port
+    "http://127.0.0.1:3000",
+    "*"  # Allow all origins for development
+]
 
 # Logging
 LOG_LEVEL = os.getenv('LOG_LEVEL', 'INFO')
@@ -199,9 +205,9 @@ async def initialize_playwright():
             viewport={"width": BROWSER_VIEWPORT_WIDTH, "height": BROWSER_VIEWPORT_HEIGHT},
             device_scale_factor=BROWSER_DEVICE_SCALE_FACTOR
         )
-        print("✅ Playwright initialized successfully")
+        print("[OK] Playwright initialized successfully")
         return {"playwright": playwright, "browser": browser, "context": context}
     except Exception as e:
-        print(f"❌ Error initializing Playwright: {e}")
+        print(f"[ERROR] Error initializing Playwright: {e}")
         import traceback; traceback.print_exc()
         return None

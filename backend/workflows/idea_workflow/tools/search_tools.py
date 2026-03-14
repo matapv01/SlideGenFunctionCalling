@@ -19,12 +19,23 @@ tavily_keys = {
 def get_tavily_client() -> TavilyClient:
     global _TAVILY_CLIENT, index
     if _TAVILY_CLIENT is None:
-        index = (index + 1) % 2
-        api_key = os.getenv(tavily_keys[index])
-        if not api_key:
-            raise ValueError("TAVILY_API_KEY environment variable is not set")
-        _TAVILY_CLIENT = TavilyClient(api_key=api_key)
-        index += 1
+        # Try keys in order until we find one that works
+        for i in range(3):
+            current_index = (index + i) % 3
+            api_key = os.getenv(tavily_keys[current_index])
+            if api_key:
+                try:
+                    _TAVILY_CLIENT = TavilyClient(api_key=api_key)
+                    index = (current_index + 1) % 3  # Update for next creation attempt
+                    print(f"Using Tavily API key {tavily_keys[current_index]}")
+                    break
+                except Exception as e:
+                    print(f"Failed to create Tavily client with {tavily_keys[current_index]}: {e}")
+                    continue
+
+        if _TAVILY_CLIENT is None:
+            raise ValueError("No valid TAVILY_API_KEY environment variables found (checked TAVILY_API_KEY1, TAVILY_API_KEY2, TAVILY_API_KEY3)")
+
     return _TAVILY_CLIENT
 
 

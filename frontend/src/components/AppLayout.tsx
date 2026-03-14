@@ -1,10 +1,12 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Home, FolderOpen, Settings, BookOpen, LogOut, Menu, X, ChevronDown, User, PanelLeftClose, PanelLeft } from "lucide-react";
+import { Home, FolderOpen, Settings, BookOpen, LogOut, Menu, X, ChevronDown, User, PanelLeftClose, PanelLeft, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ThemeToggle";
+import { LanguageToggle } from "@/components/LanguageToggle";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { api } from "@/lib/api";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,6 +49,15 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout, isAuthenticated } = useAuth();
+  const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      api.getSubscriptionInfo().then((info: any) => {
+        setSubscriptionTier(info.tier || "free");
+      }).catch(() => {});
+    }
+  }, [isAuthenticated]);
 
   const handleLogout = () => {
     logout();
@@ -183,21 +194,40 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           </Button>
           <div className="hidden lg:block" />
           <div className="flex items-center gap-2">
+            {/* Language and Theme toggles for all users */}
+            <LanguageToggle />
+            <ThemeToggle />
+
             {isAuthenticated && user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="flex items-center gap-2">
-                    <Avatar className="h-8 w-8">
+                  <Button variant="ghost" className="flex items-center gap-2 px-2">
+                    <Avatar className="h-8 w-8 flex-shrink-0">
                       <AvatarImage src={user.avatar_url || undefined} />
                       <AvatarFallback className="gradient-primary text-primary-foreground text-xs font-bold">
                         {user.username?.charAt(0).toUpperCase() || "U"}
                       </AvatarFallback>
                     </Avatar>
-                    <span className="hidden text-sm sm:inline">{user.full_name || user.username}</span>
-                    <ChevronDown className="h-4 w-4" />
+                    <div className="hidden sm:block text-left min-w-0">
+                      <div className="text-sm font-medium leading-tight truncate max-w-[120px]">
+                        {user.full_name || user.username || user.email}
+                      </div>
+                      <div className={cn(
+                        "text-xs leading-tight font-medium capitalize",
+                        subscriptionTier === "ultra" && "text-yellow-600 dark:text-yellow-400",
+                        subscriptionTier === "plus"  && "text-blue-600 dark:text-blue-400",
+                        subscriptionTier === "free"  && "text-muted-foreground"
+                      )}>
+                        {subscriptionTier === "ultra" ? "👑 ultra" : subscriptionTier}
+                      </div>
+                    </div>
+                    <ChevronDown className="h-4 w-4 flex-shrink-0" />
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end">
+                  <DropdownMenuItem onClick={() => navigate("/subscription")}>
+                    <Crown className="mr-2 h-4 w-4" /> {t.nav_subscription}
+                  </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate("/settings")}>
                     <Settings className="mr-2 h-4 w-4" /> {t.nav_settings}
                   </DropdownMenuItem>

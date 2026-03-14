@@ -152,6 +152,62 @@ interface Translations {
   login_register: string;
   login_toast_success: string;
   login_toast_error: string;
+
+  // ─────────── AUTH ERRORS ───────────
+  error_auth_required: string;
+  error_token_expired: string;
+  error_auth_general: string;
+  error_generate_title: string;
+  error_upload_title: string;
+  error_load_title: string;
+  error_save_title: string;
+
+  // ─────────── SUBSCRIPTION ───────────
+  subscription_title: string;
+  subscription_subtitle: string;
+  subscription_current_plan: string;
+  subscription_active: string;
+  subscription_expired: string;
+  subscription_expires_at: string;
+  subscription_no_expiry: string;
+  subscription_idea_generation: string;
+  subscription_docx_upload: string;
+  subscription_slide_limit: string;
+  subscription_today: string;
+  subscription_slides: string;
+  subscription_redeem_code: string;
+  subscription_enter_code: string;
+  subscription_code_placeholder: string;
+  subscription_use_code: string;
+  subscription_processing: string;
+  subscription_cancel: string;
+  subscription_upgrade: string;
+  subscription_current_tier: string;
+  subscription_guide_title: string;
+  subscription_guide_code_only: string;
+  subscription_guide_free_ultra: string;
+  subscription_guide_payment_soon: string;
+  subscription_unlimited: string;
+  subscription_error_load_title: string;
+  subscription_error_retry_later: string;
+  subscription_error_code_required: string;
+  subscription_success_title: string;
+  subscription_error_redeem_title: string;
+  subscription_error_invalid_code: string;
+  subscription_error_upgrade_title: string;
+  subscription_error_upgrade_desc: string;
+  subscription_error_load_info: string;
+  subscription_retry: string;
+  subscription_enter_code_desc: string;
+  subscription_code_label: string;
+  subscription_content_length: string;
+  subscription_priority_support: string;
+  subscription_advanced_features: string;
+  nav_subscription: string;
+  plan_requires_plus: string;
+  plan_requires_ultra: string;
+  plan_slide_limit_title: string;
+  plan_slide_limit_desc: string;
   // ─────────── REGISTER ───────────
   register_title: string;
   register_subtitle: string;
@@ -606,6 +662,62 @@ const vi: Translations = {
   login_register: "Đăng ký",
   login_toast_success: "Chào mừng trở lại!",
   login_toast_error: "Đăng nhập thất bại",
+
+  // ─────────── AUTH ERRORS ───────────
+  error_auth_required: "Vui lòng đăng nhập để sử dụng tính năng này",
+  error_token_expired: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+  error_auth_general: "Vui lòng đăng nhập để sử dụng tính năng này",
+  error_generate_title: "Lỗi tạo nội dung",
+  error_upload_title: "Lỗi upload",
+  error_load_title: "Lỗi tải dữ liệu",
+  error_save_title: "Lỗi lưu",
+
+  // ─────────── SUBSCRIPTION ───────────
+  subscription_title: "Quản lý Subscription",
+  subscription_subtitle: "Xem thông tin gói và nâng cấp tài khoản của bạn",
+  subscription_current_plan: "Gói hiện tại",
+  subscription_active: "Đang hoạt động",
+  subscription_expired: "Đã hết hạn",
+  subscription_expires_at: "Hết hạn",
+  subscription_no_expiry: "Không giới hạn thời gian",
+  subscription_idea_generation: "Tạo từ ý tưởng",
+  subscription_docx_upload: "Upload DOCX",
+  subscription_slide_limit: "Giới hạn slides",
+  subscription_today: "hôm nay",
+  subscription_slides: "slides",
+  subscription_redeem_code: "Nhập code nâng cấp",
+  subscription_enter_code: "Nhập code nâng cấp",
+  subscription_code_placeholder: "Nhập code tại đây...",
+  subscription_use_code: "Sử dụng code",
+  subscription_processing: "Đang xử lý...",
+  subscription_cancel: "Hủy",
+  subscription_upgrade: "Nâng cấp",
+  subscription_current_tier: "Gói hiện tại",
+  subscription_guide_title: "Hướng dẫn nâng cấp",
+  subscription_guide_code_only: "Hiện tại hệ thống chỉ hỗ trợ nâng cấp bằng code.",
+  subscription_guide_free_ultra: "Để nhận code Ultra miễn phí, sử dụng: SLIDEGENIUS",
+  subscription_guide_payment_soon: "Tính năng thanh toán online sẽ sớm được cập nhật.",
+  subscription_unlimited: "Không giới hạn",
+  subscription_error_load_title: "Lỗi tải subscription",
+  subscription_error_retry_later: "Vui lòng thử lại sau",
+  subscription_error_code_required: "Vui lòng nhập code",
+  subscription_success_title: "Thành công!",
+  subscription_error_redeem_title: "Không thể sử dụng code",
+  subscription_error_invalid_code: "Code không hợp lệ hoặc đã được sử dụng",
+  subscription_error_upgrade_title: "Tính năng chưa khả dụng",
+  subscription_error_upgrade_desc: "Hiện tại chỉ hỗ trợ nâng cấp bằng code. Vui lòng liên hệ support để nhận code.",
+  subscription_error_load_info: "Không thể tải thông tin subscription",
+  subscription_retry: "Thử lại",
+  subscription_enter_code_desc: "Nhập code để nâng cấp lên gói cao hơn",
+  subscription_code_label: "Code nâng cấp",
+  subscription_content_length: "Độ dài nội dung",
+  subscription_priority_support: "Hỗ trợ ưu tiên",
+  subscription_advanced_features: "Tính năng nâng cao",
+  nav_subscription: "Subscription",
+  plan_requires_plus: "Yêu cầu gói Plus trở lên",
+  plan_requires_ultra: "Yêu cầu gói Ultra",
+  plan_slide_limit_title: "Đã đạt giới hạn slides",
+  plan_slide_limit_desc: "Nâng cấp lên Plus hoặc Ultra để thêm nhiều slides hơn",
   // ─────────── REGISTER ───────────
   register_title: "Tạo tài khoản",
   register_subtitle: "Tham gia SlideGen và bắt đầu tạo slide",
@@ -1061,6 +1173,62 @@ const en: Translations = {
   login_register: "Register",
   login_toast_success: "Welcome back!",
   login_toast_error: "Login failed",
+
+  // ─────────── AUTH ERRORS ───────────
+  error_auth_required: "Please login to use this feature",
+  error_token_expired: "Session expired. Please login again.",
+  error_auth_general: "Please login to use this feature",
+  error_generate_title: "Generation Error",
+  error_upload_title: "Upload Error",
+  error_load_title: "Load Error",
+  error_save_title: "Save Error",
+
+  // ─────────── SUBSCRIPTION ───────────
+  subscription_title: "Manage Subscription",
+  subscription_subtitle: "View your plan information and upgrade your account",
+  subscription_current_plan: "Current Plan",
+  subscription_active: "Active",
+  subscription_expired: "Expired",
+  subscription_expires_at: "Expires",
+  subscription_no_expiry: "No expiration",
+  subscription_idea_generation: "Idea Generation",
+  subscription_docx_upload: "DOCX Upload",
+  subscription_slide_limit: "Slide Limit",
+  subscription_today: "today",
+  subscription_slides: "slides",
+  subscription_redeem_code: "Redeem Upgrade Code",
+  subscription_enter_code: "Enter Upgrade Code",
+  subscription_code_placeholder: "Enter code here...",
+  subscription_use_code: "Use Code",
+  subscription_processing: "Processing...",
+  subscription_cancel: "Cancel",
+  subscription_upgrade: "Upgrade",
+  subscription_current_tier: "Current Plan",
+  subscription_guide_title: "Upgrade Guide",
+  subscription_guide_code_only: "Currently the system only supports upgrade via code.",
+  subscription_guide_free_ultra: "To get a free Ultra code, use: SLIDEGENIUS",
+  subscription_guide_payment_soon: "Online payment feature will be updated soon.",
+  subscription_unlimited: "Unlimited",
+  subscription_error_load_title: "Failed to load subscription",
+  subscription_error_retry_later: "Please try again later",
+  subscription_error_code_required: "Please enter a code",
+  subscription_success_title: "Success!",
+  subscription_error_redeem_title: "Failed to redeem code",
+  subscription_error_invalid_code: "Invalid or already used code",
+  subscription_error_upgrade_title: "Feature unavailable",
+  subscription_error_upgrade_desc: "Currently only supports upgrade via code. Please contact support for a code.",
+  subscription_error_load_info: "Unable to load subscription info",
+  subscription_retry: "Retry",
+  subscription_enter_code_desc: "Enter code to upgrade to a higher plan",
+  subscription_code_label: "Upgrade Code",
+  subscription_content_length: "Content Length",
+  subscription_priority_support: "Priority Support",
+  subscription_advanced_features: "Advanced Features",
+  nav_subscription: "Subscription",
+  plan_requires_plus: "Requires Plus plan or higher",
+  plan_requires_ultra: "Requires Ultra plan",
+  plan_slide_limit_title: "Slide limit reached",
+  plan_slide_limit_desc: "Upgrade to Plus or Ultra to add more slides",
   // ─────────── REGISTER ───────────
   register_title: "Create Account",
   register_subtitle: "Join SlideGen and start creating",

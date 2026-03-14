@@ -26,8 +26,8 @@ const Login = () => {
 
   const from = (location.state as any)?.from?.pathname || "/slidegen";
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const performLogin = async () => {
+    if (loading) return;
     setLoading(true);
     try {
       await login(email, password, remember);
@@ -38,6 +38,11 @@ const Login = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    performLogin();
   };
 
   return (
@@ -73,7 +78,7 @@ const Login = () => {
               <Label htmlFor="password">{t.login_password}</Label>
               <div className="relative">
                 <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                <Input id="password" type={showPassword ? "text" : "password"} placeholder={t.login_placeholder_password} className="pl-9 pr-9" value={password} onChange={(e) => setPassword(e.target.value)} required />
+                <Input id="password" type={showPassword ? "text" : "password"} placeholder={t.login_placeholder_password} className="pl-9 pr-9" value={password} onChange={(e) => setPassword(e.target.value)} onKeyDown={(e) => e.key === "Enter" && performLogin()} required />
                 <button type="button" className="absolute right-3 top-3 text-muted-foreground hover:text-foreground" onClick={() => setShowPassword(!showPassword)}>
                   {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                 </button>

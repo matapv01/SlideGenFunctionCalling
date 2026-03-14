@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect, useCallback } from "react";
-import { api } from "@/lib/api";
+import { api, setGlobalLogout } from "@/lib/api";
 
 interface User {
   id: number;
@@ -33,23 +33,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [isLoading, setIsLoading] = useState(true);
 
+  const logout = useCallback(() => {
+    console.log("Logging out user...");
+    setToken(null);
+    setUser(null);
+    localStorage.removeItem("token");
+    localStorage.removeItem("user");
+  }, []);
+
+  // Register global logout function with API
   useEffect(() => {
-    const stored = localStorage.getItem("user");
-    if (stored && token) {
-      try { setUser(JSON.parse(stored)); } catch { /* ignore */ }
-      
-      // Fetch latest profile to ensure we have avatar_url and full_name mapped
-      api.getProfile().then(profile => {
-        setUser(prev => {
-          if (!prev) return prev;
-          const updated = { ...prev, full_name: profile.full_name, avatar_url: profile.avatar_url };
-          localStorage.setItem("user", JSON.stringify(updated));
-          return updated;
-        });
-      }).catch(console.error);
-    }
-    setIsLoading(false);
-  }, [token]);
+    setGlobalLogout(logout);
+  }, [logout]);
+
+  useEffect(() => {
+    const validateAndLoadUser = async () => {
+      const stored = localStorage.getItem("user");
+      if (stored && token) {
+        try {
+          setUser(JSON.parse(stored));
+
+          // Validate token by fetching profile
+          try {
+            const profile = await api.getProfile();
+            setUser(prev => {
+              if (!prev) return prev;
+              const updated = { ...prev, full_name: profile.full_name, avatar_url: profile.avatar_url };
+              localStorage.setItem("user", JSON.stringify(updated));
+              return updated;
+            });
+          } catch (error) {
+            // Token validation failed - logout automatically
+            console.warn("Token validation failed during initialization:", error);
+            logout();
+          }
+        } catch {
+          // Invalid stored user data - clear it
+          logout();
+        }
+      }
+      setIsLoading(false);
+    };
+
+    validateAndLoadUser();
+  }, [token, logout]);
 
   const login = useCallback(async (email: string, password: string, remember = false) => {
     const res = await api.login(email, password);
@@ -67,13 +94,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem("user", JSON.stringify(res.user));
   }, []);
 
-  const logout = useCallback(() => {
-    setToken(null);
-    setUser(null);
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-  }, []);
-
   const updateUser = useCallback((data: Partial<User>) => {
     setUser((prev) => {
       if (!prev) return prev;
@@ -84,7 +104,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token, isLoading, login, register, logout, updateUser }}>
+    <AuthContext.Provider value={{ user, token, isAuthenticated: !!token && !!user, isLoading, login, register, logout, updateUser }}>
       {children}
     </AuthContext.Provider>
   );

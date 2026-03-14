@@ -44,9 +44,12 @@ class UserResponse(UserBase):
     id: int
     is_active: bool
     created_at: datetime
+    username: Optional[str] = None
+    full_name: Optional[str] = None
+    avatar_url: Optional[str] = None
 
     class Config:
-        from_attributes = True  # Cho phép map từ ORM object hoặc Dictionary
+        from_attributes = True
 
 
 class ChangePasswordRequest(BaseModel):

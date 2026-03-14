@@ -24,17 +24,17 @@ from backend.config import API_HOST, API_PORT
 env_file = project_root / ".env"
 if env_file.exists():
     load_dotenv(env_file)
-    print(f"✅ Loaded .env from: {env_file}")
+    print(f"[OK] Loaded .env from: {env_file}")
 else:
     print(f"⚠️  No .env file found at: {env_file}")
 
 if __name__ == "__main__":
     print("=" * 60)
-    print("🌐 Starting SlideGen Backend Server")
+    print("Starting SlideGen Backend Server")
     print("=" * 60)
-    print(f"🚀 Server URL: http://{API_HOST}:{API_PORT}")
-    print(f"📡 API Docs: http://{API_HOST}:{API_PORT}/docs")
-    print(f"📸 Capture Health: http://{API_HOST}:{API_PORT}/health")
+    print(f"Server URL: http://{API_HOST}:{API_PORT}")
+    print(f"API Docs: http://{API_HOST}:{API_PORT}/docs")
+    print(f"Capture Health: http://{API_HOST}:{API_PORT}/health")
     print("=" * 60)
 
     uvicorn.run(

@@ -39,6 +39,10 @@ class IdeaService:
             logger.error(f"❌ Idea Workflow Error: {e}")
             raise HTTPException(status_code=500, detail=f"Idea generation failed: {str(e)}")
 
+        # Check if the result contains an error from the workflow
+        if isinstance(result, dict) and 'error' in result:
+            raise HTTPException(status_code=500, detail=f"Idea workflow failed: {result['error']}")
+
         slide_chunks = result.get('slide_chunks', [])
         
         if not slide_chunks:

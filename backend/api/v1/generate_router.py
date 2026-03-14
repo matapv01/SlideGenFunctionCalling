@@ -9,7 +9,7 @@ from typing import AsyncGenerator, Optional
 from pathlib import Path
 from datetime import datetime
 from backend.api.schemas.generate_schema import (
-    IdeaStructureRequest, IdeaStructureResponse, 
+    IdeaStructureRequest, IdeaStructureResponse, IdeaStructureDetailResponse, IdeaStructureUpdateRequest,
     DocxPrepareResponse, ManualSessionResponse
 )
 from backend.api.schemas.auth_schema import UserResponse
@@ -29,6 +29,11 @@ from backend.api.dependencies import (
     get_slidegen_workflow_service,
     get_idea_service
 )
+from backend.application.services.subscription_service import SubscriptionService
+from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
+from backend.api.rate_limiting import idea_structure_rate_limiter, idea_stream_rate_limiter
+from backend.api.constants import EventTypes, SourceTypes, FilePatterns
+from backend.utils.session_utils import SessionManager
 
 # Services
 from backend.application.services.project_service import ProjectService
@@ -39,6 +44,12 @@ from backend.application.services.idea_service import IdeaService
 
 router = APIRouter(prefix="/generate", tags=["GENERATE"])
 logger = logging.getLogger("SlideGen-Generation")
+
+
+def get_subscription_service() -> SubscriptionService:
+    """Get subscription service instance"""
+    user_repo = SqliteUserRepository()
+    return SubscriptionService(user_repo)
 
 
 def _cleanup_temp_dir():
@@ -79,7 +90,8 @@ async def generate_from_docx_normal(
     current_user: UserResponse = Depends(get_current_active_user),
     project_service: ProjectService = Depends(get_project_service),
     slide_service: SlideService = Depends(get_slide_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service)
+    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
     """
     [Synchronous] Upload DOCX -> Wait -> Return Slides JSON
@@ -87,15 +99,51 @@ async def generate_from_docx_normal(
     if not file.filename.endswith('.docx'):
         raise HTTPException(400, "Chỉ chấp nhận tệp DOCX")
 
+    # Get full user from repository with subscription data
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check subscription limits for docx upload
+    subscription_service.check_feature_access(user, "docx_upload")
+
     # 1. Setup paths
     project_name = os.path.splitext(file.filename)[0]
     output_folder = prepare_output_folder(project_name)
-    
+
     temp_path = TEMP_DIR / file.filename
     with open(temp_path, "wb") as f:
-        f.write(await file.read())
+        content = await file.read()
+        f.write(content)
+
+    # Estimate slide count for subscription validation
+    try:
+        from docx import Document
+        doc = Document(temp_path)
+
+        # Simple estimation: count headings as potential slides
+        slide_count = 0
+        for paragraph in doc.paragraphs:
+            if paragraph.style.name.startswith('Heading'):
+                slide_count += 1
+
+        # Minimum estimation
+        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
+
+        # Check slide count limits
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
+
+    except Exception as e:
+        logger.warning(f"Could not estimate slide count: {e}")
+        # For safety, assume 25 slides if can't estimate
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
 
     try:
+        # Increment usage counter
+        subscription_service.increment_usage(current_user.id, "docx_upload")
+
         # 2. Run Workflow
         logger.info(f"🤖 Processing DOCX: {file.filename}")
         if not slidegen_workflow_service.is_available():
@@ -135,7 +183,9 @@ async def generate_from_docx_normal(
 async def prepare_docx_stream(
     file: UploadFile = File(...),
     enable_transition_slides: str = Form("true"),
-    enable_thank_you_slide: str = Form("true")
+    enable_thank_you_slide: str = Form("true"),
+    current_user: UserResponse = Depends(get_current_active_user),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
     """
     [Step 1 Stream] Upload DOCX & Save Options -> Return Filename
@@ -143,10 +193,44 @@ async def prepare_docx_stream(
     if not file.filename.endswith('.docx'):
         raise HTTPException(400, "Chỉ chấp nhận tệp DOCX")
 
+    # Get full user from repository with subscription data
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check subscription limits for docx upload
+    subscription_service.check_feature_access(user, "docx_upload")
+
     _cleanup_temp_dir()
 
     temp_path = TEMP_DIR / file.filename
-    with open(temp_path, "wb") as f: f.write(await file.read())
+    content = await file.read()
+    with open(temp_path, "wb") as f:
+        f.write(content)
+
+    # Estimate slide count for subscription validation
+    try:
+        from docx import Document
+        doc = Document(temp_path)
+
+        # Simple estimation: count headings as potential slides
+        slide_count = 0
+        for paragraph in doc.paragraphs:
+            if paragraph.style.name.startswith('Heading'):
+                slide_count += 1
+
+        # Minimum estimation
+        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
+
+        # Check slide count limits
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
+
+    except Exception as e:
+        logger.warning(f"Could not estimate slide count: {e}")
+        # For safety, assume 25 slides if can't estimate
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
 
     options = {
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
@@ -163,13 +247,17 @@ async def stream_docx_generation(
     filename: str = Query(..., description="DOCX filename"),
     current_user: UserResponse = Depends(get_current_user_from_token_param),
     project_service: ProjectService = Depends(get_project_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service)
+    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
     """
     [Step 2 Stream] SSE Generation for DOCX
     """
     temp_path = TEMP_DIR / os.path.basename(filename)
     if not temp_path.exists(): raise HTTPException(400, "Tệp không tồn tại hoặc đã hết hạn")
+
+    # Increment usage counter (actual processing starts here)
+    subscription_service.increment_usage(current_user.id, "docx_upload")
 
     # Load options
     options_path = TEMP_DIR / f"{filename}.options.json"
@@ -243,7 +331,9 @@ async def stream_docx_generation(
 @router.post("/docx/manual-session", response_model=ManualSessionResponse)
 async def create_manual_session_from_docx(
     file: UploadFile = File(...),
-    structure_service: StructureService = Depends(get_structure_service)
+    current_user: UserResponse = Depends(get_current_active_user),
+    structure_service: StructureService = Depends(get_structure_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
     """
     Upload DOCX -> Parse Text -> Create Editing Session for Manual Mode
@@ -251,10 +341,47 @@ async def create_manual_session_from_docx(
     if not file.filename.endswith('.docx'):
         raise HTTPException(400, "Chỉ chấp nhận tệp DOCX")
 
+    # Get full user from repository with subscription data
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check subscription limits for docx upload
+    subscription_service.check_feature_access(user, "docx_upload")
+
     temp_path = TEMP_DIR / file.filename
-    with open(temp_path, "wb") as f: f.write(await file.read())
+    content = await file.read()
+    with open(temp_path, "wb") as f:
+        f.write(content)
+
+    # Estimate slide count for subscription validation
+    try:
+        from docx import Document
+        doc = Document(temp_path)
+
+        # Simple estimation: count headings as potential slides
+        slide_count = 0
+        for paragraph in doc.paragraphs:
+            if paragraph.style.name.startswith('Heading'):
+                slide_count += 1
+
+        # Minimum estimation
+        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
+
+        # Check slide count limits
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
+
+    except Exception as e:
+        logger.warning(f"Could not estimate slide count: {e}")
+        # For safety, assume 25 slides if can't estimate
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
 
     try:
+        # Increment usage counter
+        subscription_service.increment_usage(current_user.id, "docx_upload")
+
         from docx import Document
         doc = Document(temp_path)
         full_text = ""
@@ -291,18 +418,45 @@ async def create_manual_session_from_docx(
 # ==========================================
 
 
+@router.post("/test-auth")
+async def test_auth(
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Test endpoint to verify authentication error messages"""
+    return {"message": "Authenticated successfully", "user_id": current_user.id}
+
+
 @router.post("/idea/structure", response_model=IdeaStructureResponse)
 async def generate_idea_structure(
     request: IdeaStructureRequest,
-    idea_service: IdeaService = Depends(get_idea_service)
+    current_user: UserResponse = Depends(idea_structure_rate_limiter),
+    idea_service: IdeaService = Depends(get_idea_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
     """Step 1 Idea: Generate structure from prompt"""
+    # Get full user from repository with subscription data
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check subscription limits for idea generation
+    subscription_service.check_feature_access(user, "idea_generation")
+
+    # Check content length restrictions
     data = request.model_dump()
+    content_length = data.get('content_length', 'standard')
+    subscription_service.check_feature_access(user, "content_length", content_length=content_length)
+
     try:
+        # Increment usage counter
+        subscription_service.increment_usage(current_user.id, "idea_generation")
+
         return await idea_service.generate_structure(
             title=data.get('title', '').strip(),
             prompt=data.get('prompt', '').strip(),
-            content_length=data.get('content_length', 'standard'),
+            content_length=content_length,
             enable_transition=data.get('enable_transition_slides', True),
             enable_thank_you=data.get('enable_thank_you_slide', True)
         )
@@ -314,16 +468,17 @@ async def generate_idea_structure(
 @router.get("/idea/stream")
 async def stream_idea_generation(
     session_id: str = Query(...),
-    current_user: UserResponse = Depends(get_current_user_from_token_param),
+    current_user: UserResponse = Depends(idea_stream_rate_limiter),
     project_service: ProjectService = Depends(get_project_service),
     slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service)
 ):
     """Step 2 Idea: SSE Generation"""
-    file_path = TEMP_DIR / f"idea_{session_id}.json"
-    if not file_path.exists(): raise HTTPException(400, "Phiên không hợp lệ")
-    
-    with open(file_path, 'r', encoding='utf-8') as f: idea_data = json.load(f)
-    
+    try:
+        idea_data = await SessionManager.read_session_json(session_id, "idea")
+    except HTTPException as e:
+        # Re-raise with localized message
+        raise HTTPException(400, "Phiên không hợp lệ")
+
     title = idea_data.get('title', 'Untitled')
     output_folder = prepare_output_folder(f"idea_{session_id}")
 
@@ -374,11 +529,94 @@ async def stream_idea_generation(
             try:
                 ev = await asyncio.wait_for(queue.get(), timeout=1.0)
                 yield f"event: {ev[0]}\ndata: {json.dumps(ev[1])}\n\n"
-                if ev[0] in ['complete', 'error_event']: break
+                if ev[0] in [EventTypes.COMPLETE, EventTypes.ERROR_EVENT]: break
             except asyncio.TimeoutError:
                 yield ": keepalive\n\n"
 
+        # Cleanup idea session file after stream
+        await SessionManager.delete_session(session_id, "idea")
+
     return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+
+@router.get("/idea/structure/{session_id}", response_model=IdeaStructureDetailResponse)
+async def get_idea_structure(
+    session_id: str,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Get idea structure details for preview/editing"""
+    try:
+        data = await SessionManager.read_session_json(session_id, "idea")
+
+        # Sanitize slide_chunks to ensure all required fields are present
+        slide_chunks = data.get('slide_chunks', [])
+        sanitized_chunks = []
+
+        for i, chunk in enumerate(slide_chunks):
+            # Map different field formats to expected schema
+            title = chunk.get("title") or chunk.get("heading", f"Slide {i + 1}")
+            content = chunk.get("content") or chunk.get("description", "Content not available")
+
+            sanitized_chunk = {
+                "title": str(title).strip() if title else f"Slide {i + 1}",
+                "content": str(content).strip() if content else "Content not available",
+                "slide_type": chunk.get("slide_type", "content")
+            }
+            sanitized_chunks.append(sanitized_chunk)
+
+        return IdeaStructureDetailResponse(
+            session_id=session_id,
+            title=data.get('title', ''),
+            slide_chunks=sanitized_chunks,
+            enable_transition_slides=data.get('enable_transition_slides', True),
+            enable_thank_you_slide=data.get('enable_thank_you_slide', True),
+            metadata=data.get('metadata', {})
+        )
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
+    except Exception as e:
+        logger.error(f"Error reading structure: {e}")
+        raise HTTPException(500, "Failed to read structure")
+
+
+@router.put("/idea/structure/{session_id}", response_model=IdeaStructureDetailResponse)
+async def update_idea_structure(
+    session_id: str,
+    request: IdeaStructureUpdateRequest,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """Update idea structure before generation"""
+    try:
+        # Read existing data to preserve metadata
+        existing_data = await SessionManager.read_session_json(session_id, "idea")
+
+        # Update with new data
+        updated_data = {
+            'title': request.title.strip(),
+            'slide_chunks': [chunk.dict() for chunk in request.slide_chunks],
+            'enable_transition_slides': request.enable_transition_slides,
+            'enable_thank_you_slide': request.enable_thank_you_slide,
+            'prompt': existing_data.get('prompt', ''),  # Keep original prompt
+            'is_from_idea': True,
+            'metadata': existing_data.get('metadata', {})
+        }
+
+        # Save updated structure
+        await SessionManager.write_session_json(session_id, updated_data, "idea")
+
+        return IdeaStructureDetailResponse(
+            session_id=session_id,
+            title=updated_data['title'],
+            slide_chunks=updated_data['slide_chunks'],
+            enable_transition_slides=updated_data['enable_transition_slides'],
+            enable_thank_you_slide=updated_data['enable_thank_you_slide'],
+            metadata=updated_data.get('metadata', {})
+        )
+    except HTTPException:
+        raise  # Re-raise HTTP exceptions as-is
+    except Exception as e:
+        logger.error(f"Error updating structure: {e}")
+        raise HTTPException(500, "Failed to update structure")
 
 
 # ==========================================
@@ -412,7 +650,7 @@ async def stream_manual_generation(
         async def run_bg():
             res = await slidegen_workflow_service.process_chunks(
                 slide_chunks=data.get('slide_chunks', []),
-                document_title=title,
+                title=title,
                 output_folder=str(output_folder),
                 callback=callback
             )

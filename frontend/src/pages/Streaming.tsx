@@ -86,7 +86,8 @@ const Streaming = () => {
     // Get parameters from location state
     const filename = location.state?.filename;
     const sessionId = location.state?.sessionId || ideaSessionId;
-    
+    const isFromStructure = location.state?.isFromStructure;
+
     if (!filename && !sessionId) {
       setError(t.streaming_err_no_file);
       return;
@@ -94,9 +95,9 @@ const Streaming = () => {
 
     // Determine which stream URL to use
     let url: string;
-    if (ideaSessionId) {
-      // Idea workflow
-      url = api.ideaStreamUrl(ideaSessionId);
+    if (ideaSessionId || isFromStructure) {
+      // Idea workflow (either from direct idea generation or from structure preview)
+      url = api.ideaStreamUrl(sessionId || ideaSessionId);
     } else if (sessionId) {
       // Manual structure workflow
       url = api.manualStreamUrl(sessionId);

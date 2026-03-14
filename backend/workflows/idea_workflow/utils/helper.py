@@ -46,8 +46,9 @@ def create_default_html(content_data) -> str:
     """Create default HTML when unable to get from LLM"""
     # Handle both dict and string formats
     if isinstance(content_data, dict):
-        title = content_data.get('heading', 'Slide')
-        content_text = content_data.get('text_content', 'Default slide content')
+        # Support both old and new format
+        title = content_data.get('title') or content_data.get('heading', 'Slide')
+        content_text = content_data.get('content') or content_data.get('text_content', 'Default slide content')
     else:
         content_text = content_data if content_data else "Default slide content"
         title = "Slide"

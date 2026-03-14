@@ -1,6 +1,6 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Upload, Lightbulb, Sparkles } from "lucide-react";
+import { Upload, Lightbulb, Sparkles, Lock, Crown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
@@ -34,12 +34,24 @@ const SlideGen = () => {
   const [ideaThankYou, setIdeaThankYou] = useState(false);
   const [ideaContentLength, setIdeaContentLength] = useState("standard");
   const [isUploading, setIsUploading] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
+
+  useEffect(() => {
+    api.getSubscriptionInfo().then((info: any) => {
+      setSubscriptionTier(info.tier || "free");
+    }).catch(() => {});
+  }, []);
+
+  const tierOrder: Record<string, number> = { free: 0, plus: 1, ultra: 2 };
+  const isLocked = (requiredTier: string) =>
+    (tierOrder[subscriptionTier] ?? 0) < (tierOrder[requiredTier] ?? 0);
 
   const contentLengths = [
-    { id: "brief", label: t.slidegen_length_brief, slides: "5-8" },
-    { id: "standard", label: t.slidegen_length_standard, slides: "8-12" },
-    { id: "detailed", label: t.slidegen_length_detailed, slides: "12-18" },
-    { id: "extensive", label: t.slidegen_length_extensive, slides: "18-25" },
+    { id: "brief",     label: t.slidegen_length_brief,     slides: "5-8",   requiredTier: "free" },
+    { id: "standard",  label: t.slidegen_length_standard,  slides: "8-12",  requiredTier: "free" },
+    { id: "detailed",  label: t.slidegen_length_detailed,  slides: "12-18", requiredTier: "plus" },
+    { id: "extensive", label: t.slidegen_length_extensive,  slides: "18-25", requiredTier: "ultra" },
   ];
 
   const handleDocxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -62,7 +74,16 @@ const SlideGen = () => {
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
       }
     } catch (err: any) {
-      toast({ title: t.slidegen_toast_upload_fail, description: err.message, variant: "destructive" });
+      // Transform authentication error message using translation context
+      let errorMessage = err.message || "Upload failed";
+
+      if (errorMessage.toLowerCase().includes('authentication') ||
+          errorMessage.toLowerCase().includes('unauthorized') ||
+          errorMessage.toLowerCase().includes('not auth')) {
+        errorMessage = t.error_auth_required;
+      }
+
+      toast({ title: t.error_upload_title, description: errorMessage, variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -70,12 +91,43 @@ const SlideGen = () => {
 
 
 
-  const handleCreateFromIdea = () => {
+  const handleCreateFromIdea = async () => {
     if (!ideaTitle.trim()) {
       toast({ title: t.slidegen_toast_no_title, variant: "destructive" });
       return;
     }
-    navigate("/streaming/new", { state: { title: ideaTitle, description: ideaDescription, workflowMode, enableTransitions: ideaTransitions, enableThankYou: ideaThankYou, contentLength: ideaContentLength } });
+
+    setProcessing(true);
+    try {
+      // Generate structure first
+      const response = await api.generateIdeaStructure({
+        title: ideaTitle.trim(),
+        prompt: ideaDescription.trim(),
+        content_length: ideaContentLength,
+        enable_transition_slides: ideaTransitions,
+        enable_thank_you_slide: ideaThankYou
+      });
+
+      // Navigate to structure preview page
+      navigate(`/idea/structure/${response.session_id}`);
+    } catch (err: any) {
+      // Transform authentication error message using translation context
+      let errorMessage = err.message || "Failed to generate slide structure";
+
+      if (errorMessage.toLowerCase().includes('authentication') ||
+          errorMessage.toLowerCase().includes('unauthorized') ||
+          errorMessage.toLowerCase().includes('not auth')) {
+        errorMessage = t.error_auth_required;
+      }
+
+      toast({
+        title: t.error_generate_title,
+        description: errorMessage,
+        variant: "destructive"
+      });
+    } finally {
+      setProcessing(false);
+    }
   };
 
   return (
@@ -178,20 +230,43 @@ const SlideGen = () => {
                 <div>
                   <Label className="mb-2 block text-sm font-medium">{t.slidegen_length_label}</Label>
                   <div className="grid grid-cols-4 gap-2">
-                    {contentLengths.map((len) => (
-                      <button
-                        key={len.id}
-                        onClick={() => setIdeaContentLength(len.id)}
-                        className={`rounded-lg border p-2 text-center transition-all ${
-                          ideaContentLength === len.id
-                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        <p className="text-sm font-medium">{len.label}</p>
-                        <p className="text-xs text-muted-foreground">{len.slides} slides</p>
-                      </button>
-                    ))}
+                    {contentLengths.map((len) => {
+                      const locked = isLocked(len.requiredTier);
+                      return (
+                        <button
+                          key={len.id}
+                          title={locked ? (len.requiredTier === "ultra" ? t.plan_requires_ultra : t.plan_requires_plus) : undefined}
+                          onClick={() => {
+                            if (locked) {
+                              toast({
+                                title: len.requiredTier === "ultra" ? t.plan_requires_ultra : t.plan_requires_plus,
+                                description: t.plan_slide_limit_desc,
+                                variant: "destructive",
+                              });
+                              return;
+                            }
+                            setIdeaContentLength(len.id);
+                          }}
+                          className={`relative rounded-lg border p-2 text-center transition-all ${
+                            locked
+                              ? "border-border opacity-50 cursor-not-allowed"
+                              : ideaContentLength === len.id
+                              ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                              : "border-border hover:border-primary/50"
+                          }`}
+                        >
+                          {locked && (
+                            <div className="absolute top-1 right-1">
+                              {len.requiredTier === "ultra"
+                                ? <Crown className="h-3 w-3 text-yellow-500" />
+                                : <Lock className="h-3 w-3 text-muted-foreground" />}
+                            </div>
+                          )}
+                          <p className="text-sm font-medium">{len.label}</p>
+                          <p className="text-xs text-muted-foreground">{len.slides} slides</p>
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
 
@@ -207,8 +282,17 @@ const SlideGen = () => {
                   </div>
                 </div>
 
-                <Button className="w-full gradient-primary text-primary-foreground" onClick={handleCreateFromIdea}>
-                  {t.slidegen_generate} <Sparkles className="ml-2 h-4 w-4" />
+                <Button className="w-full gradient-primary text-primary-foreground" onClick={handleCreateFromIdea} disabled={processing}>
+                  {processing ? (
+                    <>
+                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+                      Generating...
+                    </>
+                  ) : (
+                    <>
+                      {t.slidegen_generate} <Sparkles className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               </CardContent>
             </Card>

@@ -7,7 +7,7 @@ from typing import Optional, Dict
 from jose import JWTError, jwt
 from fastapi import HTTPException, status
 from backend.domain.ports.user_repository import UserRepository
-from backend.domain.entities.user import User
+from backend.domain.entities.user import User, UserProfile
 
 
 class AuthService:
@@ -46,7 +46,8 @@ class AuthService:
         except JWTError:
             raise HTTPException(
                 status_code=status.HTTP_401_UNAUTHORIZED,
-                detail="Không thể xác thực thông tin đăng nhập"
+                detail="Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
+                headers={"X-Auth-Expired": "true"}
             )
 
     def authenticate_user(self, email: str, password: str) -> Optional[User]:
@@ -71,7 +72,16 @@ class AuthService:
             created_at=None
         )
         created_user = self.user_repo.create(new_user)
-        
+
+        # Save full_name to profile
+        if full_name:
+            profile = UserProfile(
+                user_id=created_user.id,
+                full_name=full_name
+            )
+            self.user_repo.create_or_update_profile(profile)
+            self.user_repo.create_default_settings(created_user.id)
+
         return created_user
 
     def change_password(self, user_id: int, current_password: str, new_password: str, user_hashed_password: str) -> None:

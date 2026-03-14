@@ -8,6 +8,7 @@ from backend.config import (
 )
 from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Optional
 import os
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 
@@ -171,24 +172,61 @@ async def get_current_user(
     auth_service: AuthService = Depends(get_auth_service),
     user_repo: UserRepository = Depends(get_user_repo)
 ) -> UserResponse:
-    
+
     token = credentials.credentials
     email = auth_service.decode_access_token(token)
-    
+
     user = user_repo.get_by_email(email)
     if user is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Không tìm thấy người dùng")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Vui lòng đăng nhập để sử dụng tính năng này",
+            headers={"X-Auth-Required": "true"}
+        )
+
+    # Fetch profile to get full_name and avatar_url
+    profile = user_repo.get_profile(user.id)
+    full_name = profile.full_name if profile else None
+    avatar_url = profile.avatar_url if profile else None
+    username = full_name or user.email.split("@")[0]
 
     return UserResponse(
         id=user.id, email=user.email,
-        created_at=user.created_at, is_active=bool(user.is_active)
+        created_at=user.created_at, is_active=bool(user.is_active),
+        full_name=full_name, avatar_url=avatar_url, username=username
     )
 
 
 async def get_current_active_user(current_user: UserResponse = Depends(get_current_user)) -> UserResponse:
     if not current_user.is_active:
-        raise HTTPException(status_code=400, detail="Người dùng không hoạt động")
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Tài khoản đã bị vô hiệu hóa"
+        )
     return current_user
+
+
+def get_current_user_optional(authorization: str = None) -> Optional[UserResponse]:
+    """Optional authentication - returns None if not authenticated"""
+    if not authorization:
+        return None
+
+    try:
+        from fastapi.security import HTTPAuthorizationCredentials
+        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=authorization.replace("Bearer ", ""))
+        # This is a simplified version - in real use, you'd need to inject the services properly
+        return None  # For now, return None - this would need proper implementation
+    except:
+        return None
+
+
+async def require_authentication_with_message():
+    """Dependency that requires authentication and shows friendly login message"""
+    raise HTTPException(
+        status_code=status.HTTP_401_UNAUTHORIZED,
+        detail="Vui lòng đăng nhập để sử dụng tính năng này",
+        headers={"X-Auth-Required": "true"}
+    )
 
 
 async def get_current_user_from_token_param(
