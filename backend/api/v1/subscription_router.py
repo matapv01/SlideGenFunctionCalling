@@ -71,3 +71,17 @@ async def upgrade_subscription(
         status_code=501,
         detail="Payment integration not yet available. Please use a subscription code to upgrade."
     )
+
+
+@router.post("/cancel")
+async def cancel_subscription(
+    immediate: bool = True,
+    current_user: UserResponse = Depends(get_current_active_user),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
+):
+    """Cancel subscription. immediate=True downgrades to free now; immediate=False lets it expire naturally."""
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return subscription_service.cancel_subscription(user.id, immediate=immediate)

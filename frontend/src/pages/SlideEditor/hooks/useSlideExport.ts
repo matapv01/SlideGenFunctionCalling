@@ -1,5 +1,6 @@
 ﻿import { useState } from "react";
 import { api } from "@/lib/api";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Slide } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
 
@@ -88,6 +89,7 @@ export interface ExportResult {
 }
 
 export const useSlideExport = () => {
+  const { t } = useLanguage();
   const [isExporting, setIsExporting] = useState(false);
   const [exportResult, setExportResult] = useState<ExportResult | null>(null);
   const [exportError, setExportError] = useState<string | null>(null);
@@ -129,10 +131,10 @@ export const useSlideExport = () => {
       if (result.success && result.download_url) {
         setExportResult({ download_url: result.download_url, message: result.message });
       } else {
-        throw new Error(result.message || 'Xuất PDF thất bại');
+        throw new Error(t.export_pdf_failed);
       }
     } catch (err: any) {
-      setExportError(err.message || 'Lỗi khi xuất PDF');
+      setExportError(t.export_pdf_error);
       throw err;
     } finally {
       setIsExporting(false);
@@ -150,7 +152,7 @@ export const useSlideExport = () => {
     slideCanvasRef: React.RefObject<SlideCanvasHandle>,
     _projectName: string
   ) => {
-    if (!slides.length) throw new Error('Không có slide để chụp');
+    if (!slides.length) throw new Error(t.export_no_slides);
 
     setIsExporting(true);
     setExportError(null);
@@ -174,10 +176,10 @@ export const useSlideExport = () => {
       if (result.success && result.download_url) {
         setExportResult({ download_url: result.download_url, message: result.message });
       } else {
-        throw new Error(result.message || 'Chụp ảnh thất bại');
+        throw new Error(t.export_capture_failed);
       }
     } catch (err: any) {
-      setExportError(err.message || 'Lỗi khi chụp ảnh');
+      setExportError(t.export_capture_error);
       throw err;
     } finally {
       setIsExporting(false);

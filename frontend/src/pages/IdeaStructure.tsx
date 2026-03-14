@@ -64,17 +64,11 @@ const IdeaStructure = () => {
       setStructure(data);
       setError(null);
     } catch (err: any) {
-      // Transform authentication error message using translation context
-      let errorMessage = err.message || "Failed to load structure";
-
-      if (errorMessage.toLowerCase().includes('authentication') ||
-          errorMessage.toLowerCase().includes('unauthorized') ||
-          errorMessage.toLowerCase().includes('not auth')) {
-        errorMessage = t.error_auth_required;
-      }
-
+      const rawMsg = (err.message || "").toLowerCase();
+      const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
+      const errorMessage = isAuth ? t.error_auth_required : t.error_load_title;
       setError(errorMessage);
-      toast({ title: t.error_load_title, description: errorMessage, variant: "destructive" });
+      toast({ title: t.error_load_title, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -92,18 +86,12 @@ const IdeaStructure = () => {
         enable_thank_you_slide: structure.enable_thank_you_slide,
       });
       setStructure(updatedData);
-      toast({ title: "Saved", description: "Structure updated successfully" });
+      toast({ title: t.profile_saved });
     } catch (err: any) {
-      // Transform authentication error message using translation context
-      let errorMessage = err.message || "Save failed";
-
-      if (errorMessage.toLowerCase().includes('authentication') ||
-          errorMessage.toLowerCase().includes('unauthorized') ||
-          errorMessage.toLowerCase().includes('not auth')) {
-        errorMessage = t.error_auth_required;
-      }
-
-      toast({ title: t.error_save_title, description: errorMessage, variant: "destructive" });
+      const rawMsg = (err.message || "").toLowerCase();
+      const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
+      const errMsg = isAuth ? t.error_auth_required : undefined;
+      toast({ title: t.error_save_title, description: errMsg, variant: "destructive" });
     } finally {
       setSaving(false);
     }

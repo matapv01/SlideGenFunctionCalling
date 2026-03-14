@@ -91,6 +91,18 @@ class SubscriptionService:
         """Increment feature usage counter"""
         self.user_repo.update_usage_count(user_id, feature_type, 1)
 
+    def cancel_subscription(self, user_id: int, immediate: bool) -> dict:
+        """Cancel subscription immediately or at period end"""
+        user = self.user_repo.get_by_id(user_id)
+        if not user or user.subscription_tier == "free":
+            raise HTTPException(status_code=400, detail="No active subscription to cancel")
+        if immediate:
+            self.user_repo.cancel_subscription(user_id, immediate=True)
+            return {"success": True, "immediate": True}
+        else:
+            # Non-immediate: just return the natural expiry date
+            return {"success": True, "immediate": False, "expires_at": user.subscription_expires_at}
+
     def redeem_subscription_code(self, user_id: int, code: str) -> Dict:
         """Redeem subscription upgrade code"""
         code = code.strip().upper()

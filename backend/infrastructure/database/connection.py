@@ -167,7 +167,19 @@ def init_db():
         # Insert default subscription codes if they don't exist
         cursor.execute("""
             INSERT OR IGNORE INTO subscription_codes (code, tier, duration_days, max_uses)
-            VALUES ('SLIDEGENIUS', 'ultra', 365, 1000)
+            VALUES ('SLIDEGENIUS', 'ultra', 30, 1000)
+        """)
+
+        # Ensure existing codes use 30-day duration
+        cursor.execute("""
+            UPDATE subscription_codes SET duration_days = 30
+            WHERE code = 'SLIDEGENIUS' AND duration_days != 30
+        """)
+
+        # Migrate existing paid users with NULL expires_at → set 30-day expiry from now
+        cursor.execute("""
+            UPDATE users SET subscription_expires_at = datetime('now', '+30 days')
+            WHERE subscription_tier != 'free' AND subscription_expires_at IS NULL
         """)
 
         # Add default subscription fields to existing users who don't have them

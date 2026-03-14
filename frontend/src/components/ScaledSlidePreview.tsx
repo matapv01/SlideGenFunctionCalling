@@ -80,14 +80,14 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
           margin: 0 !important;
           padding: 0 !important;
           overflow: hidden !important;
-          background: transparent;
         }
       </style>
     `;
-    
-    // Case 1: full HTML document — inject base styles into existing <head>
+
+    // Case 1: full HTML document — inject base styles at the START of <head>
+    // so the slide's own styles (coming later) can correctly override defaults
     if (processed.includes('</head>')) {
-      return processed.replace('</head>', `${baseStyles}</head>`);
+      return processed.replace(/<head([^>]*)>/i, `<head$1>${baseStyles}`);
     }
 
     // Case 2: fragment that starts with <body — inject before body tag

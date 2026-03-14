@@ -37,7 +37,7 @@ const Register = () => {
       toast({ title: t.register_toast_success });
       navigate("/");
     } catch (err: any) {
-      toast({ title: t.register_toast_error, description: err.message, variant: "destructive" });
+      toast({ title: t.register_toast_error, variant: "destructive" });
     } finally {
       setLoading(false);
     }

@@ -34,7 +34,7 @@ const Login = () => {
       toast({ title: t.login_toast_success });
       navigate(from, { replace: true });
     } catch (err: any) {
-      toast({ title: t.login_toast_error, description: err.message, variant: "destructive" });
+      toast({ title: t.login_toast_error, variant: "destructive" });
     } finally {
       setLoading(false);
     }

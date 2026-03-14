@@ -58,7 +58,7 @@ const StructureEditor = () => {
       setDocumentText(data.document_text || "");
       setNodes(data.document_structure?.map((n: any, i: number) => ({ ...n, id: n.id || `node-${i}` })) || []);
     } catch (err: any) {
-      toast({ title: t.structure_toast_load_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.structure_toast_load_fail, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -110,10 +110,10 @@ const StructureEditor = () => {
         // Navigate to streaming page with session ID
         navigate(`/streaming/manual`, { state: { sessionId, documentTitle } });
       } else {
-        toast({ title: t.structure_toast_approval_fail, description: result.message, variant: "destructive" });
+        toast({ title: t.structure_toast_approval_fail, variant: "destructive" });
       }
     } catch (err: any) {
-      toast({ title: t.structure_toast_approval_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.structure_toast_approval_fail, variant: "destructive" });
     } finally {
       setSaving(false);
     }

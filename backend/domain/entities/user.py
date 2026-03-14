@@ -21,6 +21,8 @@ class User:
         """Check if subscription is active"""
         if self.subscription_tier == "free":
             return True
+        if self.subscription_tier == "ultra" and self.subscription_expires_at is None:
+            return True  # Ultra with no expiry date = permanent
         if self.subscription_expires_at is None:
             return False
         return self.subscription_expires_at > datetime.now()

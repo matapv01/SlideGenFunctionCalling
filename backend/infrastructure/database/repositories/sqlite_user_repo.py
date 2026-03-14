@@ -292,10 +292,8 @@ class SqliteUserRepository(UserRepository):
             if cursor.fetchone()['count'] > 0:
                 return False
 
-            # Calculate expiration date
-            expires_at = None
-            if sub_code.tier != "ultra":  # Ultra is permanent
-                expires_at = datetime.now() + timedelta(days=sub_code.duration_days)
+            # Calculate expiration date — always 30 days from redemption
+            expires_at = datetime.now() + timedelta(days=sub_code.duration_days)
 
             try:
                 # Update user subscription
@@ -323,3 +321,16 @@ class SqliteUserRepository(UserRepository):
             except:
                 conn.rollback()
                 return False
+
+    def cancel_subscription(self, user_id: int, immediate: bool = True) -> None:
+        """Cancel user subscription. If immediate, downgrade to free right now."""
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            if immediate:
+                cursor.execute("""
+                    UPDATE users SET
+                        subscription_tier = 'free',
+                        subscription_expires_at = NULL
+                    WHERE id = ?
+                """, (user_id,))
+            conn.commit()

@@ -449,5 +449,10 @@ export const api = {
   upgradeSubscription: (tier: string) => request<{ message: string }>("/subscription/upgrade", {
     method: "POST",
     body: JSON.stringify({ tier })
-  })
+  }),
+
+  cancelSubscription: (immediate: boolean) => request<{ success: boolean; immediate: boolean; expires_at?: string }>(
+    `/subscription/cancel?immediate=${immediate}`,
+    { method: "POST" }
+  )
 };

@@ -74,16 +74,9 @@ const SlideGen = () => {
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
       }
     } catch (err: any) {
-      // Transform authentication error message using translation context
-      let errorMessage = err.message || "Upload failed";
-
-      if (errorMessage.toLowerCase().includes('authentication') ||
-          errorMessage.toLowerCase().includes('unauthorized') ||
-          errorMessage.toLowerCase().includes('not auth')) {
-        errorMessage = t.error_auth_required;
-      }
-
-      toast({ title: t.error_upload_title, description: errorMessage, variant: "destructive" });
+      const rawMsg = (err.message || "").toLowerCase();
+      const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
+      toast({ title: t.error_upload_title, description: isAuth ? t.error_auth_required : undefined, variant: "destructive" });
     } finally {
       setIsUploading(false);
     }
@@ -111,18 +104,11 @@ const SlideGen = () => {
       // Navigate to structure preview page
       navigate(`/idea/structure/${response.session_id}`);
     } catch (err: any) {
-      // Transform authentication error message using translation context
-      let errorMessage = err.message || "Failed to generate slide structure";
-
-      if (errorMessage.toLowerCase().includes('authentication') ||
-          errorMessage.toLowerCase().includes('unauthorized') ||
-          errorMessage.toLowerCase().includes('not auth')) {
-        errorMessage = t.error_auth_required;
-      }
-
+      const rawMsg = (err.message || "").toLowerCase();
+      const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
       toast({
         title: t.error_generate_title,
-        description: errorMessage,
+        description: isAuth ? t.error_auth_required : undefined,
         variant: "destructive"
       });
     } finally {

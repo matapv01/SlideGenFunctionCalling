@@ -121,7 +121,7 @@ const Settings = () => {
       updateUser({ avatar_url: avatarUrl, full_name: fullName });
       toast({ title: t.toast_profile_success });
     } catch (err: any) {
-      toast({ title: t.toast_profile_error, description: err.message, variant: "destructive" });
+      toast({ title: t.toast_profile_error, variant: "destructive" });
     } finally {
       setProfileLoading(false);
     }
@@ -144,7 +144,7 @@ const Settings = () => {
 
       toast({ title: t.toast_settings_success });
     } catch (err: any) {
-      toast({ title: t.toast_settings_error, description: err.message, variant: "destructive" });
+      toast({ title: t.toast_settings_error, variant: "destructive" });
     } finally {
       setSettingsLoading(false);
     }
@@ -167,7 +167,7 @@ const Settings = () => {
       setNewPassword("");
       setConfirmPassword("");
     } catch (err: any) {
-      toast({ title: t.toast_password_error, description: err.message, variant: "destructive" });
+      toast({ title: t.toast_password_error, variant: "destructive" });
     } finally {
       setPasswordLoading(false);
     }

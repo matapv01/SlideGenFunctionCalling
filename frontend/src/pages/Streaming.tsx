@@ -249,9 +249,9 @@ const Streaming = () => {
           toast({ title: t.streaming_toast_ready, description: t.streaming_toast_starting });
         })
         .catch((err) => {
-          setError(err.message || t.streaming_err_prepare);
+          setError(t.streaming_err_prepare);
           setIsPreparingIdea(false);
-          toast({ title: t.streaming_toast_failed, description: err.message, variant: "destructive" });
+          toast({ title: t.streaming_toast_failed, variant: "destructive" });
         });
       return;
     }

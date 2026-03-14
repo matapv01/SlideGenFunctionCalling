@@ -192,6 +192,7 @@ interface Translations {
   subscription_error_retry_later: string;
   subscription_error_code_required: string;
   subscription_success_title: string;
+  subscription_success_desc: string;
   subscription_error_redeem_title: string;
   subscription_error_invalid_code: string;
   subscription_error_upgrade_title: string;
@@ -208,6 +209,20 @@ interface Translations {
   plan_requires_ultra: string;
   plan_slide_limit_title: string;
   plan_slide_limit_desc: string;
+  export_pdf_failed: string;
+  export_pdf_error: string;
+  export_no_slides: string;
+  export_capture_failed: string;
+  export_capture_error: string;
+  subscription_cancel_renewal: string;
+  subscription_cancel_now: string;
+  subscription_cancel_renewal_title: string;
+  subscription_cancel_renewal_desc: string;
+  subscription_cancel_now_title: string;
+  subscription_cancel_now_desc: string;
+  subscription_cancel_confirm: string;
+  subscription_cancelled_now: string;
+  subscription_cancelled_renewal: string;
   // ─────────── REGISTER ───────────
   register_title: string;
   register_subtitle: string;
@@ -702,6 +717,7 @@ const vi: Translations = {
   subscription_error_retry_later: "Vui lòng thử lại sau",
   subscription_error_code_required: "Vui lòng nhập code",
   subscription_success_title: "Thành công!",
+  subscription_success_desc: "Gói của bạn đã được nâng cấp thành công.",
   subscription_error_redeem_title: "Không thể sử dụng code",
   subscription_error_invalid_code: "Code không hợp lệ hoặc đã được sử dụng",
   subscription_error_upgrade_title: "Tính năng chưa khả dụng",
@@ -718,6 +734,20 @@ const vi: Translations = {
   plan_requires_ultra: "Yêu cầu gói Ultra",
   plan_slide_limit_title: "Đã đạt giới hạn slides",
   plan_slide_limit_desc: "Nâng cấp lên Plus hoặc Ultra để thêm nhiều slides hơn",
+  export_pdf_failed: "Xuất PDF thất bại",
+  export_pdf_error: "Lỗi khi xuất PDF",
+  export_no_slides: "Không có slide để chụp",
+  export_capture_failed: "Chụp ảnh thất bại",
+  export_capture_error: "Lỗi khi chụp ảnh",
+  subscription_cancel_renewal: "Hủy gia hạn",
+  subscription_cancel_now: "Hủy ngay",
+  subscription_cancel_renewal_title: "Hủy gia hạn?",
+  subscription_cancel_renewal_desc: "Gói của bạn sẽ tiếp tục hoạt động đến hết kỳ hiện tại, sau đó tự động chuyển về gói Free.",
+  subscription_cancel_now_title: "Hủy ngay?",
+  subscription_cancel_now_desc: "Gói của bạn sẽ bị hủy ngay lập tức và chuyển về gói Free. Hành động này không thể hoàn tác.",
+  subscription_cancel_confirm: "Xác nhận hủy",
+  subscription_cancelled_now: "Đã hủy gói thành công. Tài khoản đã chuyển về gói Free.",
+  subscription_cancelled_renewal: "Gói của bạn sẽ hết hạn vào cuối kỳ và không được gia hạn tự động.",
   // ─────────── REGISTER ───────────
   register_title: "Tạo tài khoản",
   register_subtitle: "Tham gia SlideGen và bắt đầu tạo slide",
@@ -1213,6 +1243,7 @@ const en: Translations = {
   subscription_error_retry_later: "Please try again later",
   subscription_error_code_required: "Please enter a code",
   subscription_success_title: "Success!",
+  subscription_success_desc: "Your plan has been upgraded successfully.",
   subscription_error_redeem_title: "Failed to redeem code",
   subscription_error_invalid_code: "Invalid or already used code",
   subscription_error_upgrade_title: "Feature unavailable",
@@ -1229,6 +1260,20 @@ const en: Translations = {
   plan_requires_ultra: "Requires Ultra plan",
   plan_slide_limit_title: "Slide limit reached",
   plan_slide_limit_desc: "Upgrade to Plus or Ultra to add more slides",
+  export_pdf_failed: "PDF export failed",
+  export_pdf_error: "Error exporting PDF",
+  export_no_slides: "No slides to capture",
+  export_capture_failed: "Capture failed",
+  export_capture_error: "Error capturing slides",
+  subscription_cancel_renewal: "Cancel Renewal",
+  subscription_cancel_now: "Cancel Now",
+  subscription_cancel_renewal_title: "Cancel Renewal?",
+  subscription_cancel_renewal_desc: "Your plan will stay active until the end of the current period, then automatically revert to the Free plan.",
+  subscription_cancel_now_title: "Cancel Now?",
+  subscription_cancel_now_desc: "Your subscription will be cancelled immediately and downgraded to the Free plan. This action cannot be undone.",
+  subscription_cancel_confirm: "Confirm Cancel",
+  subscription_cancelled_now: "Subscription cancelled. Your account has been downgraded to the Free plan.",
+  subscription_cancelled_renewal: "Your plan will expire at the end of the current period and will not be renewed.",
   // ─────────── REGISTER ───────────
   register_title: "Create Account",
   register_subtitle: "Join SlideGen and start creating",

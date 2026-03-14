@@ -61,7 +61,7 @@ const Index = () => {
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
       }
     } catch (err: any) {
-      toast({ title: t.slidegen_toast_upload_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.slidegen_toast_upload_fail, variant: "destructive" });
     } finally {
       setIsUploading(false);
     }

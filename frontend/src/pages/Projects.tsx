@@ -85,7 +85,7 @@ const Projects = () => {
       setFirstSlideBackgrounds(backgroundsMap);
       setSlideCounts(countsMap);
     } catch (err: any) {
-      toast({ title: t.projects_toast_load_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_load_fail, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -98,7 +98,7 @@ const Projects = () => {
       setProjects((p) => p.filter((x) => x.id !== deleteId));
       toast({ title: t.projects_toast_deleted });
     } catch (err: any) {
-      toast({ title: t.projects_toast_delete_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_delete_fail, variant: "destructive" });
     }
     setDeleteId(null);
   };
@@ -110,7 +110,7 @@ const Projects = () => {
       setProjects((p) => p.map((x) => (x.id === renameId ? { ...x, name: renameName, title: renameName } : x)));
       toast({ title: t.projects_toast_renamed });
     } catch (err: any) {
-      toast({ title: t.projects_toast_rename_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_rename_fail, variant: "destructive" });
     }
     setRenameId(null);
   };
@@ -143,7 +143,7 @@ const Projects = () => {
       setSelectedIds(new Set());
       setSelectMode(false);
     } catch (err: any) {
-      toast({ title: t.projects_toast_delete_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.projects_toast_delete_fail, variant: "destructive" });
     }
     setBulkDeleteOpen(false);
   };

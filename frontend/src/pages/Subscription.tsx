@@ -40,9 +40,17 @@ interface PricingTier {
 
 const Subscription = () => {
   const { isAuthenticated } = useAuth();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const formatDate = (dateStr: string) => {
+    const d = new Date(dateStr);
+    if (language === "vi") {
+      return d.toLocaleDateString("vi-VN", { day: "2-digit", month: "2-digit", year: "numeric" });
+    }
+    return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+  };
 
   const [subscriptionInfo, setSubscriptionInfo] = useState<SubscriptionInfo | null>(null);
   const [pricingTiers, setPricingTiers] = useState<PricingTier[]>([]);
@@ -50,6 +58,9 @@ const Subscription = () => {
   const [codeInput, setCodeInput] = useState("");
   const [redeemingCode, setRedeemingCode] = useState(false);
   const [codeDialogOpen, setCodeDialogOpen] = useState(false);
+  const [cancelRenewalDialogOpen, setCancelRenewalDialogOpen] = useState(false);
+  const [cancelNowDialogOpen, setCancelNowDialogOpen] = useState(false);
+  const [cancellingNow, setCancellingNow] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) {
@@ -70,7 +81,7 @@ const Subscription = () => {
     } catch (error: any) {
       toast({
         title: t.subscription_error_load_title,
-        description: error.message || t.subscription_error_retry_later,
+        description: t.subscription_error_retry_later,
         variant: "destructive"
       });
     } finally {
@@ -89,10 +100,10 @@ const Subscription = () => {
 
     setRedeemingCode(true);
     try {
-      const result = await api.redeemCode(codeInput);
+      await api.redeemCode(codeInput);
       toast({
         title: t.subscription_success_title,
-        description: result.message
+        description: t.subscription_success_desc
       });
       setCodeDialogOpen(false);
       setCodeInput("");
@@ -100,7 +111,7 @@ const Subscription = () => {
     } catch (error: any) {
       toast({
         title: t.subscription_error_redeem_title,
-        description: error.message || t.subscription_error_invalid_code,
+        description: t.subscription_error_invalid_code,
         variant: "destructive"
       });
     } finally {
@@ -117,6 +128,28 @@ const Subscription = () => {
         description: t.subscription_error_upgrade_desc,
         variant: "destructive"
       });
+    }
+  };
+
+  const handleCancelRenewal = () => {
+    setCancelRenewalDialogOpen(false);
+    const expiresAt = subscriptionInfo?.expires_at
+      ? formatDate(subscriptionInfo.expires_at)
+      : "";
+    toast({ title: t.subscription_cancelled_renewal + (expiresAt ? ` (${expiresAt})` : "") });
+  };
+
+  const handleCancelNow = async () => {
+    setCancellingNow(true);
+    try {
+      await api.cancelSubscription(true);
+      toast({ title: t.subscription_cancelled_now });
+      setCancelNowDialogOpen(false);
+      await loadSubscriptionData();
+    } catch (error: any) {
+      toast({ title: t.subscription_error_redeem_title, variant: "destructive" });
+    } finally {
+      setCancellingNow(false);
     }
   };
 
@@ -185,7 +218,7 @@ const Subscription = () => {
             </CardTitle>
             <CardDescription>
               {subscriptionInfo.expires_at
-                ? `${t.subscription_expires_at}: ${new Date(subscriptionInfo.expires_at).toLocaleDateString()}`
+                ? `${t.subscription_expires_at}: ${formatDate(subscriptionInfo.expires_at)}`
                 : t.subscription_no_expiry}
             </CardDescription>
           </CardHeader>
@@ -248,6 +281,55 @@ const Subscription = () => {
                   </div>
                 </DialogContent>
               </Dialog>
+
+              {/* Cancel buttons — only for active paid plans */}
+              {subscriptionInfo.tier !== "free" && subscriptionInfo.is_active && (
+                <>
+                  <Dialog open={cancelRenewalDialogOpen} onOpenChange={setCancelRenewalDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/20">
+                        {t.subscription_cancel_renewal}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{t.subscription_cancel_renewal_title}</DialogTitle>
+                        <DialogDescription>{t.subscription_cancel_renewal_desc}</DialogDescription>
+                      </DialogHeader>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="outline" onClick={() => setCancelRenewalDialogOpen(false)}>
+                          {t.subscription_cancel}
+                        </Button>
+                        <Button variant="outline" className="text-orange-600 border-orange-300" onClick={handleCancelRenewal}>
+                          {t.subscription_cancel_confirm}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+
+                  <Dialog open={cancelNowDialogOpen} onOpenChange={setCancelNowDialogOpen}>
+                    <DialogTrigger asChild>
+                      <Button variant="outline" className="text-red-600 border-red-300 hover:bg-red-50 dark:hover:bg-red-950/20">
+                        {t.subscription_cancel_now}
+                      </Button>
+                    </DialogTrigger>
+                    <DialogContent>
+                      <DialogHeader>
+                        <DialogTitle>{t.subscription_cancel_now_title}</DialogTitle>
+                        <DialogDescription>{t.subscription_cancel_now_desc}</DialogDescription>
+                      </DialogHeader>
+                      <div className="flex justify-end gap-2 mt-4">
+                        <Button variant="outline" onClick={() => setCancelNowDialogOpen(false)}>
+                          {t.subscription_cancel}
+                        </Button>
+                        <Button variant="destructive" onClick={handleCancelNow} disabled={cancellingNow}>
+                          {cancellingNow ? t.subscription_processing : t.subscription_cancel_confirm}
+                        </Button>
+                      </div>
+                    </DialogContent>
+                  </Dialog>
+                </>
+              )}
             </div>
           </CardContent>
         </Card>

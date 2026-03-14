@@ -125,7 +125,7 @@ const ViewProject = () => {
       });
       setSlides(mappedSlides);
     } catch (err: any) {
-      toast({ title: t.view_toast_load_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.view_toast_load_fail, variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -139,7 +139,7 @@ const ViewProject = () => {
       setEditSlide(null);
       toast({ title: t.view_toast_updated });
     } catch (err: any) {
-      toast({ title: t.view_toast_save_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.view_toast_save_fail, variant: "destructive" });
     }
   };
 
@@ -150,7 +150,7 @@ const ViewProject = () => {
       setSlides((prev) => prev.filter((s) => s.id !== deleteSlideId));
       toast({ title: t.view_toast_deleted });
     } catch (err: any) {
-      toast({ title: t.view_toast_delete_fail, description: err.message, variant: "destructive" });
+      toast({ title: t.view_toast_delete_fail, variant: "destructive" });
     }
     setDeleteSlideId(null);
   };
