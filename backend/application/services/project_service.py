@@ -212,7 +212,7 @@ class ProjectService:
             )
 
             # 3. Handle File Extraction & Conversion
-            html_folder = output_folder / "output" / "html"
+            html_folder = output_folder / "html"
             converted_folder = output_folder / "converted"
 
             # 4. Insert Slides to DB

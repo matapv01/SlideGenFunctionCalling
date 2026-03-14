@@ -11,7 +11,6 @@ import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
-import { ReadOnlySlide } from "@/components/ReadOnlySlide";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SlideThumb {
@@ -321,6 +320,14 @@ const Streaming = () => {
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [isPresentMode, previewSlide, slides.length]);
 
+  // Hide body scrollbar while in present mode
+  useEffect(() => {
+    if (isPresentMode) {
+      document.body.style.overflow = 'hidden';
+      return () => { document.body.style.overflow = ''; };
+    }
+  }, [isPresentMode]);
+
   // Listen for fullscreen exit
   useEffect(() => {
     const handleFullscreenChange = () => {
@@ -620,7 +627,7 @@ const Streaming = () => {
 
       {/* Preview modal */}
       <Dialog open={!!previewSlide} onOpenChange={() => setPreviewSlide(null)}>
-        <DialogContent className="max-w-4xl">
+        <DialogContent className="max-w-4xl" aria-describedby={undefined}>
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
@@ -709,9 +716,9 @@ const Streaming = () => {
           <div className="flex-1 flex items-center justify-center bg-black">
             <div className="w-full h-full relative">
               {slides[currentSlideIndex]?.html ? (
-                <ReadOnlySlide
-                  slideId={`present-${currentSlideIndex}`}
-                  htmlContent={slides[currentSlideIndex].html}
+                <ScaledSlidePreview
+                  html={slides[currentSlideIndex].html}
+                  title={`Slide ${currentSlideIndex + 1}`}
                   className="w-full h-full"
                 />
               ) : (
