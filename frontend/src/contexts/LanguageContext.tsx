@@ -169,6 +169,8 @@ interface Translations {
   subscription_active: string;
   subscription_expired: string;
   subscription_expires_at: string;
+  subscription_auto_renew: string;
+  subscription_ends_on: string;
   subscription_no_expiry: string;
   subscription_idea_generation: string;
   subscription_docx_upload: string;
@@ -694,6 +696,8 @@ const vi: Translations = {
   subscription_active: "Đang hoạt động",
   subscription_expired: "Đã hết hạn",
   subscription_expires_at: "Hết hạn",
+  subscription_auto_renew: "Tự động gia hạn từ ngày",
+  subscription_ends_on: "Gói sẽ kết thúc ngày",
   subscription_no_expiry: "Không giới hạn thời gian",
   subscription_idea_generation: "Tạo từ ý tưởng",
   subscription_docx_upload: "Upload DOCX",
@@ -1220,6 +1224,8 @@ const en: Translations = {
   subscription_active: "Active",
   subscription_expired: "Expired",
   subscription_expires_at: "Expires",
+  subscription_auto_renew: "Auto-renews on",
+  subscription_ends_on: "Plan ends on",
   subscription_no_expiry: "No expiration",
   subscription_idea_generation: "Idea Generation",
   subscription_docx_upload: "DOCX Upload",

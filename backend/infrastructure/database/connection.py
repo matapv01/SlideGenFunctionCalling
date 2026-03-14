@@ -126,6 +126,7 @@ def init_db():
                 max_uses INTEGER DEFAULT 1,
                 current_uses INTEGER DEFAULT 0,
                 is_active BOOLEAN DEFAULT 1,
+                code_type TEXT DEFAULT 'limited',
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
             )
         """)
@@ -164,10 +165,16 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_usage_logs_user_date ON daily_usage_logs(user_id, usage_date)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_code_redemptions_user ON code_redemptions(user_id)")
 
+        # Migrate: add code_type column to existing DB if missing (must run before INSERT below)
+        try:
+            cursor.execute("ALTER TABLE subscription_codes ADD COLUMN code_type TEXT DEFAULT 'limited'")
+        except Exception:
+            pass  # Column already exists
+
         # Insert default subscription codes if they don't exist
         cursor.execute("""
-            INSERT OR IGNORE INTO subscription_codes (code, tier, duration_days, max_uses)
-            VALUES ('SLIDEGENIUS', 'ultra', 30, 1000)
+            INSERT OR IGNORE INTO subscription_codes (code, tier, duration_days, max_uses, code_type)
+            VALUES ('SLIDEGENIUS', 'ultra', 30, -1, 'unlimited')
         """)
 
         # Ensure existing codes use 30-day duration
@@ -175,6 +182,18 @@ def init_db():
             UPDATE subscription_codes SET duration_days = 30
             WHERE code = 'SLIDEGENIUS' AND duration_days != 30
         """)
+
+        # Set SLIDEGENIUS to unlimited type in existing DBs
+        cursor.execute("""
+            UPDATE subscription_codes SET code_type = 'unlimited'
+            WHERE code = 'SLIDEGENIUS' AND (code_type IS NULL OR code_type = 'limited')
+        """)
+
+        # Migrate: add cancel_at_period_end column to users if missing
+        try:
+            cursor.execute("ALTER TABLE users ADD COLUMN cancel_at_period_end BOOLEAN DEFAULT 0")
+        except Exception:
+            pass  # Column already exists
 
         # Migrate existing paid users with NULL expires_at → set 30-day expiry from now
         cursor.execute("""

@@ -37,7 +37,8 @@ async def get_subscription_info(
         expires_at=info["expires_at"],
         daily_limits=info["daily_limits"],
         current_usage=info["current_usage"],
-        usage_reset_date=str(info["usage_reset_date"])
+        usage_reset_date=str(info["usage_reset_date"]),
+        cancel_at_period_end=info.get("cancel_at_period_end", False)
     )
 
 

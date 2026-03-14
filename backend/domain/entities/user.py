@@ -15,6 +15,7 @@ class User:
     idea_usage_today: int = 0
     docx_usage_today: int = 0
     is_active: bool = True
+    cancel_at_period_end: bool = False
     created_at: datetime = field(default_factory=datetime.now)
 
     def is_subscription_active(self) -> bool:
@@ -88,14 +89,20 @@ class SubscriptionCode:
     code: str
     tier: str
     duration_days: int = 30
-    max_uses: int = 1
+    max_uses: int = 1       # -1 = no cap; only applies when code_type = "limited"
     current_uses: int = 0
     is_active: bool = True
+    code_type: str = "limited"  # "unlimited" | "limited"
     created_at: datetime = field(default_factory=datetime.now)
 
     def can_redeem(self) -> bool:
-        """Check if code can still be redeemed"""
-        return self.is_active and self.current_uses < self.max_uses
+        """Check if code can still be redeemed (ignores per-account policy)"""
+        if not self.is_active:
+            return False
+        if self.code_type == "unlimited":
+            return True
+        # limited: respect max_uses cap (-1 = no cap)
+        return self.max_uses == -1 or self.current_uses < self.max_uses
 
 @dataclass
 class CodeRedemption:

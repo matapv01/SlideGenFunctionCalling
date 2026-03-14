@@ -52,6 +52,12 @@ class SqliteUserRepository(UserRepository):
         except (KeyError, TypeError):
             docx_usage_today = 0
 
+        cancel_at_period_end = False
+        try:
+            cancel_at_period_end = bool(row['cancel_at_period_end'])
+        except (KeyError, TypeError):
+            cancel_at_period_end = False
+
         return User(
             id=row['id'],
             email=row['email'],
@@ -62,6 +68,7 @@ class SqliteUserRepository(UserRepository):
             idea_usage_today=idea_usage_today,
             docx_usage_today=docx_usage_today,
             is_active=bool(row['is_active']),
+            cancel_at_period_end=cancel_at_period_end,
             created_at=row['created_at'] # Giả sử DB trả về datetime hoặc string parse được
         )
 
@@ -271,6 +278,7 @@ class SqliteUserRepository(UserRepository):
                 max_uses=row['max_uses'],
                 current_uses=row['current_uses'],
                 is_active=bool(row['is_active']),
+                code_type=row['code_type'] if row['code_type'] else 'limited',
                 created_at=row['created_at']
             )
 
@@ -284,15 +292,16 @@ class SqliteUserRepository(UserRepository):
             if not sub_code or not sub_code.can_redeem():
                 return False
 
-            # Check if user already redeemed this code
-            cursor.execute("""
-                SELECT COUNT(*) as count FROM code_redemptions
-                WHERE user_id = ? AND code = ?
-            """, (user_id, code))
-            if cursor.fetchone()['count'] > 0:
-                return False
+            # Per-account check: limited codes can only be used once per account
+            if sub_code.code_type == "limited":
+                cursor.execute("""
+                    SELECT COUNT(*) as count FROM code_redemptions
+                    WHERE user_id = ? AND code = ?
+                """, (user_id, code))
+                if cursor.fetchone()['count'] > 0:
+                    return False
 
-            # Calculate expiration date — always 30 days from redemption
+            # Calculate expiration date — always duration_days from redemption
             expires_at = datetime.now() + timedelta(days=sub_code.duration_days)
 
             try:
@@ -300,11 +309,12 @@ class SqliteUserRepository(UserRepository):
                 cursor.execute("""
                     UPDATE users SET
                         subscription_tier = ?,
-                        subscription_expires_at = ?
+                        subscription_expires_at = ?,
+                        cancel_at_period_end = 0
                     WHERE id = ?
                 """, (sub_code.tier, expires_at, user_id))
 
-                # Increment code usage
+                # Increment code usage (for limited codes only, for tracking)
                 cursor.execute("""
                     UPDATE subscription_codes SET current_uses = current_uses + 1
                     WHERE code = ?
@@ -330,7 +340,12 @@ class SqliteUserRepository(UserRepository):
                 cursor.execute("""
                     UPDATE users SET
                         subscription_tier = 'free',
-                        subscription_expires_at = NULL
+                        subscription_expires_at = NULL,
+                        cancel_at_period_end = 0
                     WHERE id = ?
+                """, (user_id,))
+            else:
+                cursor.execute("""
+                    UPDATE users SET cancel_at_period_end = 1 WHERE id = ?
                 """, (user_id,))
             conn.commit()

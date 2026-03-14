@@ -13,6 +13,7 @@ class SubscriptionInfoResponse(BaseModel):
     daily_limits: Dict[str, int]
     current_usage: Dict[str, int]
     usage_reset_date: str
+    cancel_at_period_end: bool = False
 
 
 class RedeemCodeRequest(BaseModel):

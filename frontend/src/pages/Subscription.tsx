@@ -17,6 +17,7 @@ interface SubscriptionInfo {
   tier: string;
   is_active: boolean;
   expires_at?: string;
+  cancel_at_period_end: boolean;
   daily_limits: {
     idea_generation: number;
     docx_upload: number;
@@ -131,12 +132,21 @@ const Subscription = () => {
     }
   };
 
-  const handleCancelRenewal = () => {
-    setCancelRenewalDialogOpen(false);
-    const expiresAt = subscriptionInfo?.expires_at
-      ? formatDate(subscriptionInfo.expires_at)
-      : "";
-    toast({ title: t.subscription_cancelled_renewal + (expiresAt ? ` (${expiresAt})` : "") });
+  const [cancellingRenewal, setCancellingRenewal] = useState(false);
+
+  const handleCancelRenewal = async () => {
+    setCancellingRenewal(true);
+    try {
+      await api.cancelSubscription(false);
+      setCancelRenewalDialogOpen(false);
+      await loadSubscriptionData();
+      const expiresAt = subscriptionInfo?.expires_at ? formatDate(subscriptionInfo.expires_at) : "";
+      toast({ title: t.subscription_cancelled_renewal + (expiresAt ? ` (${expiresAt})` : "") });
+    } catch {
+      toast({ title: t.subscription_error_redeem_title, variant: "destructive" });
+    } finally {
+      setCancellingRenewal(false);
+    }
   };
 
   const handleCancelNow = async () => {
@@ -218,7 +228,9 @@ const Subscription = () => {
             </CardTitle>
             <CardDescription>
               {subscriptionInfo.expires_at
-                ? `${t.subscription_expires_at}: ${formatDate(subscriptionInfo.expires_at)}`
+                ? subscriptionInfo.cancel_at_period_end
+                  ? `${t.subscription_ends_on}: ${formatDate(subscriptionInfo.expires_at)}`
+                  : `${t.subscription_auto_renew}: ${formatDate(subscriptionInfo.expires_at)}`
                 : t.subscription_no_expiry}
             </CardDescription>
           </CardHeader>
@@ -285,27 +297,29 @@ const Subscription = () => {
               {/* Cancel buttons — only for active paid plans */}
               {subscriptionInfo.tier !== "free" && subscriptionInfo.is_active && (
                 <>
-                  <Dialog open={cancelRenewalDialogOpen} onOpenChange={setCancelRenewalDialogOpen}>
-                    <DialogTrigger asChild>
-                      <Button variant="outline" className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/20">
-                        {t.subscription_cancel_renewal}
-                      </Button>
-                    </DialogTrigger>
-                    <DialogContent>
-                      <DialogHeader>
-                        <DialogTitle>{t.subscription_cancel_renewal_title}</DialogTitle>
-                        <DialogDescription>{t.subscription_cancel_renewal_desc}</DialogDescription>
-                      </DialogHeader>
-                      <div className="flex justify-end gap-2 mt-4">
-                        <Button variant="outline" onClick={() => setCancelRenewalDialogOpen(false)}>
-                          {t.subscription_cancel}
+                  {!subscriptionInfo.cancel_at_period_end && (
+                    <Dialog open={cancelRenewalDialogOpen} onOpenChange={setCancelRenewalDialogOpen}>
+                      <DialogTrigger asChild>
+                        <Button variant="outline" className="text-orange-600 border-orange-300 hover:bg-orange-50 dark:hover:bg-orange-950/20">
+                          {t.subscription_cancel_renewal}
                         </Button>
-                        <Button variant="outline" className="text-orange-600 border-orange-300" onClick={handleCancelRenewal}>
-                          {t.subscription_cancel_confirm}
-                        </Button>
-                      </div>
-                    </DialogContent>
-                  </Dialog>
+                      </DialogTrigger>
+                      <DialogContent>
+                        <DialogHeader>
+                          <DialogTitle>{t.subscription_cancel_renewal_title}</DialogTitle>
+                          <DialogDescription>{t.subscription_cancel_renewal_desc}</DialogDescription>
+                        </DialogHeader>
+                        <div className="flex justify-end gap-2 mt-4">
+                          <Button variant="outline" onClick={() => setCancelRenewalDialogOpen(false)}>
+                            {t.subscription_cancel}
+                          </Button>
+                          <Button variant="outline" className="text-orange-600 border-orange-300" onClick={handleCancelRenewal} disabled={cancellingRenewal}>
+                            {cancellingRenewal ? t.subscription_processing : t.subscription_cancel_confirm}
+                          </Button>
+                        </div>
+                      </DialogContent>
+                    </Dialog>
+                  )}
 
                   <Dialog open={cancelNowDialogOpen} onOpenChange={setCancelNowDialogOpen}>
                     <DialogTrigger asChild>
@@ -405,9 +419,6 @@ const Subscription = () => {
           </CardHeader>
           <CardContent className="space-y-2">
             <p className="text-sm text-muted-foreground">• {t.subscription_guide_code_only}</p>
-            <p className="text-sm text-muted-foreground">
-              • {t.subscription_guide_free_ultra}: <code className="bg-muted px-2 py-1 rounded">SLIDEGENIUS</code>
-            </p>
             <p className="text-sm text-muted-foreground">• {t.subscription_guide_payment_soon}</p>
           </CardContent>
         </Card>

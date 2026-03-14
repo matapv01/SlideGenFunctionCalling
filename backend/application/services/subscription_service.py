@@ -26,7 +26,8 @@ class SubscriptionService:
                 "idea_generation": user.idea_usage_today,
                 "docx_upload": user.docx_usage_today
             },
-            "usage_reset_date": user.daily_usage_reset_date
+            "usage_reset_date": user.daily_usage_reset_date,
+            "cancel_at_period_end": user.cancel_at_period_end
         }
 
     def check_feature_access(self, user: User, feature_type: str, **kwargs) -> bool:
@@ -96,11 +97,10 @@ class SubscriptionService:
         user = self.user_repo.get_by_id(user_id)
         if not user or user.subscription_tier == "free":
             raise HTTPException(status_code=400, detail="No active subscription to cancel")
+        self.user_repo.cancel_subscription(user_id, immediate=immediate)
         if immediate:
-            self.user_repo.cancel_subscription(user_id, immediate=True)
             return {"success": True, "immediate": True}
         else:
-            # Non-immediate: just return the natural expiry date
             return {"success": True, "immediate": False, "expires_at": user.subscription_expires_at}
 
     def redeem_subscription_code(self, user_id: int, code: str) -> Dict:
