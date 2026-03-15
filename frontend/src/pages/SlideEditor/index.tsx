@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSlideEditor } from "./hooks";
@@ -64,8 +64,14 @@ const SlideEditor = () => {
 
   const autoFit = isSidebarOpen && isPropsPanelOpen;
 
-  // Both panels open → 50%, otherwise → 60%
+  // When panels open/close, reset zoom as a starting point.
+  // Skip the initial mount — CanvasArea's ResizeObserver sets the correct fit zoom first.
+  const isFirstRenderRef = useRef(true);
   useEffect(() => {
+    if (isFirstRenderRef.current) {
+      isFirstRenderRef.current = false;
+      return;
+    }
     setZoom(autoFit ? 0.53 : 0.60);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [autoFit]);

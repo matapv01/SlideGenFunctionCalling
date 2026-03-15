@@ -94,15 +94,11 @@ export const CanvasArea = ({
     return () => window.removeEventListener('keydown', handleKey);
   }, [onPrevSlide, onNextSlide]);
 
-  // Auto-fit: recalculate zoom whenever container is resized — only when both panels are open
-  const autoFitRef = useRef(autoFit);
-  autoFitRef.current = autoFit;
-
+  // Recalculate zoom whenever container is resized
   useEffect(() => {
     const el = containerRef.current;
     if (!el) return;
     const recalc = () => {
-      if (!autoFitRef.current) return;
       const availW = el.clientWidth  - PAD * 2;
       const availH = el.clientHeight - PAD * 2;
       if (availW <= 0 || availH <= 0) return;
