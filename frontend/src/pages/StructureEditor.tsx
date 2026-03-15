@@ -1507,6 +1507,14 @@ const StructureEditor = () => {
                         <span className="style-preview">Aa</span>
                         <span className="style-name">Normal</span>
                       </button>
+                      <button
+                        className={cn("style-card style-intro", pendingLevel === 0 && "active")}
+                        onClick={() => applyFormatting(0, null)}
+                        title="Level 0"
+                      >
+                        <span className="style-preview">0</span>
+                        <span className="style-name">L0</span>
+                      </button>
                       {visibleLevels.map((level) => (
                         <button
                           key={level}
