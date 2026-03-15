@@ -12,6 +12,10 @@ DISABLE_CONVERTER=0
 EMBEDDING_DEVICE=cuda
 
 # Frontend API URL — baked into the bundle at build time
-# With nginx (port 80): http://your-domain.com/api/v1
-# Without nginx (direct): http://your-domain.com:12008/api/v1
-VITE_API_BASE_URL=http://your-domain.com/api/v1
+# Use relative path so the build works on any domain/IP without rebuilding
+VITE_API_BASE_URL=/api/v1
+
+# Backend URL for nginx reverse proxy (docker/nginx.conf.template)
+# Single server (FE + BE same machine): http://slidegen:12008 # Docker internal
+# Split servers (BE on separate machine): http://be-server-ip-or-domain:12008
+BACKEND_URL=http://slidegen:12008

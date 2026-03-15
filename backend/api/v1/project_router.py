@@ -99,13 +99,15 @@ async def create_slide(
 @router.get("/by-name/{project_name}/slides", response_model=ViewerProjectResponse)
 async def get_project_slides_by_name(
     project_name: str,
+    current_user: UserResponse = Depends(get_current_active_user),
     service: ProjectService = Depends(get_project_service),
 ):
     """
-    Public Access: Get slides for viewer/export by project name.
-    Returns formatted structure for frontend/viewer.
+    Get slides for viewer/export by project name (owner only).
     """
     project_id, db_slides = service.get_project_slides_by_name(project_name)
+    # Verify the requesting user owns this project
+    service.get_project_details(project_id, current_user.id)
     
     # Format for frontend viewer
     slides = []

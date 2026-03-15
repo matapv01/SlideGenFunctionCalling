@@ -3,12 +3,13 @@
 from fastapi import APIRouter, HTTPException, Depends
 import logging
 from backend.api.schemas.edit_schema import (
-    StructureUpdateRequest, 
-    StructureApproveRequest, 
+    StructureUpdateRequest,
+    StructureApproveRequest,
     StructureResponse,
     ApprovedStructureResponse
 )
-from backend.api.dependencies import get_structure_service
+from backend.api.schemas.auth_schema import UserResponse
+from backend.api.dependencies import get_structure_service, get_current_active_user
 from backend.application.services.structure_service import StructureService
 
 router = APIRouter(prefix="/structure", tags=["STRUCTURE"])
@@ -18,6 +19,7 @@ logger = logging.getLogger("SlideGen-Structure")
 @router.get("/current", response_model=StructureResponse)
 async def get_current_structure(
     session_id: str,
+    _: UserResponse = Depends(get_current_active_user),
     service: StructureService = Depends(get_structure_service)
 ):
     """Lấy cấu trúc hiện tại để biên tập"""
@@ -36,6 +38,7 @@ async def get_current_structure(
 @router.put("/update")
 async def update_structure(
     request: StructureUpdateRequest,
+    _: UserResponse = Depends(get_current_active_user),
     service: StructureService = Depends(get_structure_service)
 ):
     """Lưu thay đổi cấu trúc từ người dùng"""
@@ -53,6 +56,7 @@ async def update_structure(
 @router.post("/approve", response_model=ApprovedStructureResponse)
 async def approve_structure(
     request: StructureApproveRequest,
+    _: UserResponse = Depends(get_current_active_user),
     service: StructureService = Depends(get_structure_service)
 ):
     """Xác nhận cấu trúc và chuẩn bị dữ liệu cho AI Workflow"""

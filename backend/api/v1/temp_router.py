@@ -1,11 +1,13 @@
 # File: backend/api/v1/temp_router.py
 
-from fastapi import APIRouter, HTTPException, Request
+from fastapi import APIRouter, HTTPException, Request, Depends
 from fastapi.responses import FileResponse, JSONResponse
 import logging
 import shutil
 from pathlib import Path
 from backend.config import TEMP_DIR
+from backend.api.dependencies import get_current_active_user
+from backend.api.schemas.auth_schema import UserResponse
 
 router = APIRouter(prefix="/temp", tags=["TEMP"])
 logger = logging.getLogger("SlideGen-temp")
@@ -51,7 +53,10 @@ async def serve_temp_file(path: str):
 
 
 @router.post("/cleanup")
-async def cleanup_temp_directory(request: Request):
+async def cleanup_temp_directory(
+    request: Request,
+    _: UserResponse = Depends(get_current_active_user),
+):
     """Clean up temporary workflow directory when user navigates to editor"""
     try:
         data = await request.json()

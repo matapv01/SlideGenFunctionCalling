@@ -1,4 +1,18 @@
 services:
+  nginx:
+    image: nginx:alpine
+    container_name: slidegen_nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+    environment:
+      BACKEND_URL: ${BACKEND_URL}
+    volumes:
+      - ./docker/nginx.conf.template:/etc/nginx/templates/default.conf.template:ro
+    depends_on:
+      slidegen:
+        condition: service_healthy
+
   slidegen:
     build:
       context: .

@@ -50,6 +50,8 @@ const Streaming = () => {
   };
 
   const eventSourceRef = useRef<EventSource | null>(null);
+  const completedRef = useRef(false);
+  const streamProjectIdRef = useRef<number | null>(null);
   
   const translateBackendMessage = (msg: string | undefined): string => {
     if (!msg) return "";
@@ -78,6 +80,8 @@ const Streaming = () => {
   const startStreaming = () => {
     setError(null);
     setCompleted(false);
+    completedRef.current = false;
+    streamProjectIdRef.current = null;
     setProgress(0);
     setCurrentStage(0);
     setSlides([]);
@@ -92,6 +96,9 @@ const Streaming = () => {
       setError(t.streaming_err_no_file);
       return;
     }
+
+    // Clear location state so back navigation doesn't re-trigger streaming
+    navigate(location.pathname, { replace: true, state: null });
 
     // Determine which stream URL to use
     let url: string;
@@ -194,18 +201,14 @@ const Streaming = () => {
       const data = JSON.parse(e.data);
       const total = data.total_slides || slides.length;
       setCompleted(true);
+      completedRef.current = true;
       setProgress(100);
       setCurrentStage(stages.length);
       setTotalSlides(total);
       setActivity(`${t.streaming_done} ${total} ${t.streaming_slides_unit}`);
       es.close();
-      // Store project_id for navigation
       if (data.project_id > 0) {
-        (window as any).__streamProjectId = data.project_id;
-      }
-      // Also store temp_dir for cleanup if needed
-      if (data.temp_dir) {
-        (window as any).__streamTempDir = data.temp_dir;
+        streamProjectIdRef.current = data.project_id;
       }
     });
 
@@ -216,7 +219,7 @@ const Streaming = () => {
     });
 
     es.onerror = () => {
-      if (!completed) {
+      if (!completedRef.current) {
         // Redirect to slidegen page when connection lost
         navigate("/slidegen", { replace: true });
       }
@@ -340,7 +343,7 @@ const Streaming = () => {
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
   }, [isPresentMode]);
 
-  const finalProjectId = (window as any).__streamProjectId || projectId;
+  const finalProjectId = streamProjectIdRef.current || projectId;
 
   const startPresentation = async (startIndex: number = 0) => {
     setCurrentSlideIndex(startIndex);
