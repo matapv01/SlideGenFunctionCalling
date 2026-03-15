@@ -72,7 +72,9 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
     // For non-401 errors, use backend message
     const finalErrorMsg = backendErrorMsg || res.statusText;
     console.log('Throwing non-401 error:', finalErrorMsg);
-    throw new Error(finalErrorMsg);
+    const error = new Error(finalErrorMsg) as any;
+    error.status = res.status;
+    throw error;
   }
   return res.json();
 }

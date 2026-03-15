@@ -78,9 +78,14 @@ const SlideGen = () => {
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
       }
     } catch (err: any) {
+      const isRateLimit = err.status === 429;
       const rawMsg = (err.message || "").toLowerCase();
       const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
-      toast({ title: t.error_upload_title, description: isAuth ? t.error_auth_required : undefined, variant: "destructive" });
+      toast({
+        title: isRateLimit ? t.error_rate_limit_title : t.error_upload_title,
+        description: isRateLimit ? t.error_rate_limit_desc : (isAuth ? t.error_auth_required : undefined),
+        variant: "destructive"
+      });
     } finally {
       setIsUploading(false);
     }
@@ -108,11 +113,12 @@ const SlideGen = () => {
       // Navigate to structure preview page
       navigate(`/idea/structure/${response.session_id}`);
     } catch (err: any) {
+      const isRateLimit = err.status === 429;
       const rawMsg = (err.message || "").toLowerCase();
       const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
       toast({
-        title: t.error_generate_title,
-        description: isAuth ? t.error_auth_required : undefined,
+        title: isRateLimit ? t.error_rate_limit_title : t.error_generate_title,
+        description: isRateLimit ? t.error_rate_limit_desc : (isAuth ? t.error_auth_required : undefined),
         variant: "destructive"
       });
     } finally {

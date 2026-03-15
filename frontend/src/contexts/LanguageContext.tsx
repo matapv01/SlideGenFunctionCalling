@@ -157,6 +157,8 @@ interface Translations {
   error_auth_required: string;
   error_token_expired: string;
   error_auth_general: string;
+  error_rate_limit_title: string;
+  error_rate_limit_desc: string;
   error_generate_title: string;
   error_upload_title: string;
   error_load_title: string;
@@ -684,6 +686,8 @@ const vi: Translations = {
   error_auth_required: "Vui lòng đăng nhập để sử dụng tính năng này",
   error_token_expired: "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.",
   error_auth_general: "Vui lòng đăng nhập để sử dụng tính năng này",
+  error_rate_limit_title: "Đã đạt giới hạn sử dụng",
+  error_rate_limit_desc: "Bạn đã dùng hết lượt tạo trong ngày. Nâng cấp gói để tiếp tục.",
   error_generate_title: "Lỗi tạo nội dung",
   error_upload_title: "Lỗi upload",
   error_load_title: "Lỗi tải dữ liệu",
@@ -1212,6 +1216,8 @@ const en: Translations = {
   error_auth_required: "Please login to use this feature",
   error_token_expired: "Session expired. Please login again.",
   error_auth_general: "Please login to use this feature",
+  error_rate_limit_title: "Daily limit reached",
+  error_rate_limit_desc: "You've used up your daily generation limit. Upgrade your plan to continue.",
   error_generate_title: "Generation Error",
   error_upload_title: "Upload Error",
   error_load_title: "Load Error",
