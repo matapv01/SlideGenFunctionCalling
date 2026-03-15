@@ -65,6 +65,9 @@ interface ValidationIssue {
 // ============ MAIN COMPONENT ============
 
 const StructureEditor = () => {
+  const DEFAULT_MAX_LEVEL = 6;
+  const VISIBLE_LEVEL_LIMIT = 6;
+
   const [searchParams] = useSearchParams();
   const sessionId = searchParams.get("session");
   const navigate = useNavigate();
@@ -106,7 +109,7 @@ const StructureEditor = () => {
 
   // Zoom
   const [zoomLevel, setZoomLevel] = useState(100);
-  const [maxLevel, setMaxLevel] = useState(6);
+  const [maxLevel, setMaxLevel] = useState(DEFAULT_MAX_LEVEL);
 
   // Save/validation state
   const [isDirty, setIsDirty] = useState(false);
@@ -427,10 +430,10 @@ const StructureEditor = () => {
         let result = "";
         for (const node of nodes) {
           if (node.title) {
-            result += `<span class="text-block text-level-${node.level} text-title" data-level="${node.level}" data-type="title" data-node-id="${node.node_id || generateNodeId()}"${node.is_transition ? ' data-transition="true"' : ''}><span class="drag-handle" contenteditable="false">⠿</span>${escapeHtml(node.title)}</span>\n`;
+            result += `<span class="text-block text-level-${node.level} text-title${node.is_transition ? " transition-hidden" : ""}" data-level="${node.level}" data-type="title" data-node-id="${node.node_id || generateNodeId()}"${node.is_transition ? ' data-transition="true"' : ''}><span class="drag-handle" contenteditable="false">⠿</span>${escapeHtml(node.title)}</span>\n`;
           }
           if (node.content) {
-            result += `<span class="text-block text-level-${node.level} text-content" data-level="${node.level}" data-type="content" data-node-id="${(node.node_id || generateNodeId()) + "_c"}"><span class="drag-handle" contenteditable="false">⠿</span>${escapeHtml(node.content)}</span>\n`;
+            result += `<span class="text-block text-level-${node.level} text-content${node.is_transition ? " transition-hidden" : ""}" data-level="${node.level}" data-type="content" data-node-id="${(node.node_id || generateNodeId()) + "_c"}"${node.is_transition ? ' data-transition="true"' : ''}><span class="drag-handle" contenteditable="false">⠿</span>${escapeHtml(node.content)}</span>\n`;
           }
           if (node.children?.length) {
             result += renderNodes(node.children);
@@ -1018,7 +1021,7 @@ const StructureEditor = () => {
       const beforeBlock = editor.querySelector(`[data-node-id="${slideId}"]`);
       if (beforeBlock) {
         const transBlock = document.createElement("span");
-        transBlock.className = "text-block text-level-1 text-title";
+        transBlock.className = "text-block text-level-1 text-title transition-hidden";
         transBlock.dataset.level = "1";
         transBlock.dataset.type = "title";
         transBlock.dataset.nodeId = transitionNodeId;
@@ -1028,11 +1031,10 @@ const StructureEditor = () => {
         transBlock.style.background = "rgba(13, 202, 240, 0.15)";
 
         beforeBlock.parentNode!.insertBefore(transBlock, beforeBlock);
-        beforeBlock.parentNode!.insertBefore(document.createElement("br"), beforeBlock);
 
         if (transitionNode.content) {
           const contentBlock = document.createElement("span");
-          contentBlock.className = "text-block text-level-1 text-content";
+          contentBlock.className = "text-block text-level-1 text-content transition-hidden";
           contentBlock.dataset.level = "1";
           contentBlock.dataset.type = "content";
           contentBlock.dataset.nodeId = transitionNodeId + "_c";
@@ -1041,7 +1043,6 @@ const StructureEditor = () => {
           contentBlock.style.borderColor = "#0dcaf0";
           contentBlock.style.background = "rgba(13, 202, 240, 0.1)";
           beforeBlock.parentNode!.insertBefore(contentBlock, beforeBlock);
-          beforeBlock.parentNode!.insertBefore(document.createElement("br"), beforeBlock);
         }
       }
     }
@@ -1264,6 +1265,36 @@ const StructureEditor = () => {
     toast({ title: `Đã thêm level L${maxLevel + 1}` });
   };
 
+  const removeHighestLevel = () => {
+    if (maxLevel <= DEFAULT_MAX_LEVEL) {
+      toast({ title: `Không thể xóa dưới L${DEFAULT_MAX_LEVEL}`, variant: "destructive" });
+      return;
+    }
+
+    const editor = editorRef.current;
+    if (editor?.querySelector(`.text-block[data-level="${maxLevel}"]`)) {
+      toast({
+        title: `Không thể xóa L${maxLevel}`,
+        description: `Vẫn còn block đang dùng level này. Hãy đổi về level thấp hơn trước.`,
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (pendingLevel === maxLevel) {
+      setPendingLevel(null);
+    }
+
+    setMaxLevel((prev) => prev - 1);
+    toast({ title: `Đã xóa level L${maxLevel}` });
+  };
+
+  const visibleLevels = Array.from({ length: VISIBLE_LEVEL_LIMIT }, (_, idx) => idx + 1);
+  const overflowLevels =
+    maxLevel > VISIBLE_LEVEL_LIMIT
+      ? Array.from({ length: maxLevel - VISIBLE_LEVEL_LIMIT }, (_, idx) => VISIBLE_LEVEL_LIMIT + idx + 1)
+      : [];
+
   // Keyboard shortcuts
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -1383,9 +1414,56 @@ const StructureEditor = () => {
   }, [isDirty]);
 
   const disableStructureActions = loading || saving;
+  const headerActions = (
+    <>
+      <button className="btn btn-sm btn-info" onClick={openIntroModal} disabled={loading}>
+        <Sparkles className="mr-1.5 h-4 w-4" /> Intro
+      </button>
+      <button
+        className="btn btn-sm btn-secondary"
+        onClick={() => setResetDialogOpen(true)}
+        disabled={loading || (stats.blocks === 0 && !introSlide)}
+      >
+        <RotateCcw className="mr-1.5 h-4 w-4" /> Reset
+      </button>
+      <button className="btn btn-sm btn-danger" onClick={() => setCancelDialogOpen(true)} disabled={loading}>
+        <XCircle className="mr-1.5 h-4 w-4" /> Cancel
+      </button>
+      <button
+        className="btn btn-sm btn-success"
+        onClick={() => setApproveDialogOpen(true)}
+        disabled={disableStructureActions || !sessionId || (stats.blocks === 0 && !introSlide)}
+      >
+        {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Check className="mr-1.5 h-4 w-4" />}
+        {saving ? "Processing..." : "Approve & Continue"}
+      </button>
+    </>
+  );
+
+  const desktopHeaderBar = (
+    <div className="legacy-app-header">
+      <button className="btn btn-outline-light" onClick={handleGoBack} disabled={disableStructureActions}>
+        <ArrowLeft className="mr-2 h-4 w-4" /> Back
+      </button>
+      <h2 className="header-title">
+        <FileText className="mr-2 h-5 w-5" /> Structure Editor
+      </h2>
+      <div className="document-info">
+        <FileText className="mr-2 h-4 w-4" />
+        <span>{documentTitle || "Untitled document"}</span>
+      </div>
+      <div
+        className={cn("save-indicator", saving ? "saving" : isDirty ? "unsaved" : "saved")}
+        title={lastSavedAt ? `Lưu lúc ${new Date(lastSavedAt).toLocaleTimeString()}` : undefined}
+      >
+        {saving ? "Saving..." : isDirty ? "Unsaved changes" : "Saved"}
+      </div>
+      <div className="header-actions">{headerActions}</div>
+    </div>
+  );
 
   return (
-    <AppLayout>
+    <AppLayout headerContent={desktopHeaderBar}>
       <div className="legacy-structure-page">
         <div className="legacy-aurora" aria-hidden />
         <div className="legacy-particles" aria-hidden>
@@ -1394,7 +1472,7 @@ const StructureEditor = () => {
           ))}
         </div>
         <div className="legacy-structure-content">
-          <div className="header-section">
+          <div className="header-section header-section-mobile">
             <button className="btn btn-outline-light" onClick={handleGoBack} disabled={disableStructureActions}>
               <ArrowLeft className="mr-2 h-4 w-4" /> Back
             </button>
@@ -1411,38 +1489,16 @@ const StructureEditor = () => {
             >
               {saving ? "Saving..." : isDirty ? "Unsaved changes" : "Saved"}
             </div>
-            <div className="header-actions">
-              <button className="btn btn-sm btn-info" onClick={openIntroModal} disabled={loading}>
-                <Sparkles className="mr-1.5 h-4 w-4" /> Intro
-              </button>
-              <button
-                className="btn btn-sm btn-secondary"
-                onClick={() => setResetDialogOpen(true)}
-                disabled={loading || (stats.blocks === 0 && !introSlide)}
-              >
-                <RotateCcw className="mr-1.5 h-4 w-4" /> Reset
-              </button>
-              <button className="btn btn-sm btn-danger" onClick={() => setCancelDialogOpen(true)} disabled={loading}>
-                <XCircle className="mr-1.5 h-4 w-4" /> Cancel
-              </button>
-              <button
-                className="btn btn-sm btn-success"
-                onClick={() => setApproveDialogOpen(true)}
-                disabled={disableStructureActions || !sessionId || (stats.blocks === 0 && !introSlide)}
-              >
-                {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Check className="mr-1.5 h-4 w-4" />}
-                {saving ? "Processing..." : "Approve & Continue"}
-              </button>
-            </div>
+            <div className="header-actions">{headerActions}</div>
           </div>
 
           <div className="main-content">
             <div className="editor-column">
               <div className="panel-container">
                 <div className="editor-toolbar">
-                  <div className="style-group">
+                  <div className="style-group level-group">
                     <div className="group-label">Level</div>
-                    <div className="style-row">
+                    <div className="style-row level-row">
                       <button
                         className={cn("style-card style-normal", pendingLevel === "normal" && "active")}
                         onClick={() => applyFormatting("normal", null)}
@@ -1451,15 +1507,7 @@ const StructureEditor = () => {
                         <span className="style-preview">Aa</span>
                         <span className="style-name">Normal</span>
                       </button>
-                      <button
-                        className={cn("style-card style-intro", pendingLevel === 0 && "active")}
-                        onClick={() => applyFormatting(0, null)}
-                        title="Intro Slide"
-                      >
-                        <span className="style-preview">Intro</span>
-                        <span className="style-name">L0</span>
-                      </button>
-                      {Array.from({ length: maxLevel }, (_, idx) => idx + 1).map((level) => (
+                      {visibleLevels.map((level) => (
                         <button
                           key={level}
                           className={cn(`style-card style-l${level}`, pendingLevel === level && "active")}
@@ -1480,6 +1528,28 @@ const StructureEditor = () => {
                           </span>
                         </button>
                       ))}
+                      <label className="level-overflow-select-wrap" title="Level bổ sung">
+                        <span className="level-overflow-label">More</span>
+                        <select
+                          className="level-overflow-select"
+                          defaultValue=""
+                          disabled={overflowLevels.length === 0}
+                          onChange={(e) => {
+                            const value = Number(e.target.value);
+                            if (!Number.isNaN(value) && value > 0) {
+                              applyFormatting(value, null);
+                            }
+                            e.target.value = "";
+                          }}
+                        >
+                          <option value="">Level...</option>
+                          {overflowLevels.map((level) => (
+                            <option key={`overflow-${level}`} value={level}>
+                              L{level}
+                            </option>
+                          ))}
+                        </select>
+                      </label>
                       <button
                         className="style-card style-add-level"
                         onClick={addOneMoreLevel}
@@ -1487,6 +1557,15 @@ const StructureEditor = () => {
                       >
                         <Plus className="style-preview" style={{ width: 14, height: 14 }} />
                         <span className="style-name">+Level</span>
+                      </button>
+                      <button
+                        className="style-card style-remove-level"
+                        onClick={removeHighestLevel}
+                        title={`Xóa level cao nhất (L${maxLevel})`}
+                        disabled={maxLevel <= DEFAULT_MAX_LEVEL}
+                      >
+                        <span className="style-preview">-</span>
+                        <span className="style-name">-Level</span>
                       </button>
                     </div>
                   </div>

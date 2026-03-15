@@ -26,7 +26,7 @@ const navItems = [
   { label: "Guide", path: "/guide", icon: BookOpen },
 ];
 
-export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppLayout: React.FC<{ children: React.ReactNode; headerContent?: React.ReactNode }> = ({ children, headerContent }) => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(() => {
     const stored = localStorage.getItem(SIDEBAR_COLLAPSED_KEY);
@@ -83,9 +83,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           <TooltipProvider delayDuration={0}>
             {navItems.map((item) => {
               // Check if current path matches or is a related sub-route
-              const isActive = location.pathname === item.path || 
+              const isActive = location.pathname === item.path ||
                 (item.path === "/projects" && (
-                  location.pathname.startsWith("/view/") || 
+                  location.pathname.startsWith("/view/") ||
                   location.pathname.startsWith("/editor/") ||
                   location.pathname.startsWith("/streaming/")
                 ));
@@ -177,7 +177,11 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="hidden lg:block" />
+          {headerContent ? (
+            <div className="hidden min-w-0 flex-1 pr-3 lg:flex lg:items-center">{headerContent}</div>
+          ) : (
+            <div className="hidden lg:block" />
+          )}
           <div className="flex items-center gap-2">
             <ThemeToggle />
             {isAuthenticated && user ? (
