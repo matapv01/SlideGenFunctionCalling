@@ -1,13 +1,50 @@
-# docker-compose.dev.yml — Local development overrides
-# Server KHÔNG dùng file này.
+# docker-compose.dev.yml — Development environment (standalone)
 #
-# Chạy local:
-#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+# Khởi động:
+#   docker compose -f docker-compose.dev.yml up --build
+#
+# Ports:
+#   12008 — FastAPI backend  (hot reload — tự reload khi sửa backend/)
+#   5173  — Vite dev server  (HMR — tự reload khi sửa frontend/src/)
+#
+# Node trick: named volumes (converter_node_modules, frontend_node_modules)
+# được khởi tạo từ image → không bị overwrite bởi bind mount host directory.
 
 services:
-  slidegen:
+  slidegen-dev:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile.dev
+    container_name: slidegen-dev
+    restart: unless-stopped
+    ports:
+      - "12008:12008"
+      - "5173:5173"
+    env_file: .env
     environment:
       LOG_LEVEL: DEBUG
+      EMBEDDING_DEVICE: cpu
+      DISABLE_CONVERTER: "0"
     volumes:
-      # Bind-mount backend source → thay đổi code không cần rebuild image
+      # ── Source code (live edits) ────────────────────────────────────────────
       - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./migrate_db.py:/app/migrate_db.py
+      - ./.env:/app/.env:ro
+
+      # ── Preserve node_modules từ image (không bị host override) ─────────────
+      # Docker khởi tạo named volume từ image content lần đầu chạy.
+      # Sau đó volume giữ nguyên dù bind mount backend/ hay frontend/ lên trên.
+      - converter_node_modules:/app/backend/infrastructure/converter/node_modules
+      - frontend_node_modules:/app/frontend/node_modules
+
+      # ── Persistent data ─────────────────────────────────────────────────────
+      - ./static:/app/static
+      - slidegen_db_dev:/app/backend/infrastructure/database
+      - huggingface_cache:/root/.cache/huggingface
+
+volumes:
+  slidegen_db_dev:
+  converter_node_modules:
+  frontend_node_modules:
+  huggingface_cache:

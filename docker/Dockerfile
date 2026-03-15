@@ -52,15 +52,23 @@ ENV PATH="/app/.venv/bin:$PATH" \
 
 # ── Playwright: install Chromium browser + its system deps ───────────────────
 # Stores browser to /root/.cache/ms-playwright/
-RUN playwright install chromium --with-deps
+# Also creates a stable symlink so Puppeteer can reuse the same binary
+RUN playwright install chromium --with-deps \
+    && CHROMIUM_PATH=$(find /root/.cache/ms-playwright -name "chrome" -type f | head -1) \
+    && ln -sf "$CHROMIUM_PATH" /usr/local/bin/chromium-playwright \
+    && echo "[Dockerfile] Playwright Chromium at: $CHROMIUM_PATH"
+
+# ── Puppeteer: skip its own Chromium download, reuse Playwright's ─────────────
+# Saves ~400MB image size; system deps already satisfied above
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/local/bin/chromium-playwright
 
 # ── Application source ────────────────────────────────────────────────────────
 COPY backend/ ./backend/
 COPY migrate_db.py .
 
 # ── Converter Node.js deps ────────────────────────────────────────────────────
-# Puppeteer downloads its own Chromium during npm install.
-# System deps are already satisfied by the playwright install step above.
+# PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true → Puppeteer will NOT download Chromium here
 RUN cd backend/infrastructure/converter && npm install --legacy-peer-deps
 
 # ── Frontend (pre-built static files) ────────────────────────────────────────

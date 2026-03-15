@@ -17,7 +17,7 @@ class NodeJsConvertProvider(ConvertProvider):
     def __init__(self):
         self.project_dir = PROJECT_DIR
         self.converter_js = os.path.join(PROJECT_DIR, "backend", "infrastructure", "converter", "converter.js")
-        self.node_modules = os.path.join(PROJECT_DIR, "node_modules")
+        self.node_modules = os.path.join(PROJECT_DIR, "backend", "infrastructure", "converter", "node_modules")
 
 
     def check_dependencies(self) -> bool:

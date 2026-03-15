@@ -1,0 +1,77 @@
+# ── Dev image: tất cả tools đủ để develop trong Docker ──────────────────────
+# Includes: Python 3.11, uv, Node.js 22, npm, Playwright Chromium, Puppeteer
+#
+# Usage:
+#   docker compose -f docker-compose.dev.yml up --build
+FROM python:3.11-slim
+
+# ── System deps + Node.js 22 ─────────────────────────────────────────────────
+RUN apt-get update && apt-get install -y --no-install-recommends \
+        curl \
+        gnupg \
+        ca-certificates \
+        git \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y --no-install-recommends nodejs \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# ── uv ───────────────────────────────────────────────────────────────────────
+RUN pip install --no-cache-dir uv
+
+WORKDIR /app
+
+# ── Python dependencies (cached — chỉ rebuild khi pyproject.toml / uv.lock đổi)
+COPY pyproject.toml uv.lock ./
+RUN uv sync --frozen
+
+# ── Playwright Chromium + system deps ────────────────────────────────────────
+# Playwright tự cài đủ libnss3, libatk, libgbm, v.v. qua --with-deps
+# Sau đó tạo symlink cố định để Puppeteer tái dùng binary — tiết kiệm ~400MB
+RUN uv run playwright install chromium --with-deps \
+    && CHROMIUM_PATH=$(find /root/.cache/ms-playwright -name "chrome" -type f | head -1) \
+    && ln -sf "$CHROMIUM_PATH" /usr/local/bin/chromium-playwright \
+    && echo "[DEV] Playwright Chromium → $CHROMIUM_PATH"
+
+# ── Puppeteer: dùng lại Chromium của Playwright, không download riêng ────────
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/local/bin/chromium-playwright
+
+# ── Python env ───────────────────────────────────────────────────────────────
+ENV PYTHONPATH=/app \
+    PYTHONUNBUFFERED=1 \
+    PYTHONDONTWRITEBYTECODE=1
+
+# ── Converter Node.js deps (cached) ──────────────────────────────────────────
+# Copy chỉ package.json để cache layer; node_modules sẽ được preserve bởi
+# named volume trong docker-compose.dev.yml
+COPY backend/infrastructure/converter/package.json /tmp/converter-pkg/package.json
+RUN mkdir -p /app/backend/infrastructure/converter \
+    && cp /tmp/converter-pkg/package.json /app/backend/infrastructure/converter/ \
+    && cd /app/backend/infrastructure/converter \
+    && npm install --legacy-peer-deps
+
+# ── Frontend Node.js deps (cached) ───────────────────────────────────────────
+# Tương tự: chỉ copy lockfile để cache layer; node_modules preserve bởi volume
+COPY frontend/package.json frontend/package-lock.json /tmp/frontend-pkg/
+RUN mkdir -p /app/frontend \
+    && cp /tmp/frontend-pkg/package.json /tmp/frontend-pkg/package-lock.json /app/frontend/ \
+    && cd /app/frontend \
+    && npm ci --legacy-peer-deps
+
+# ── Static / data directories ────────────────────────────────────────────────
+RUN mkdir -p \
+        /app/static/uploads \
+        /app/static/output \
+        /app/static/captures \
+        /app/static/temp \
+        /app/backend/infrastructure/database
+
+# ── Dev entrypoint ────────────────────────────────────────────────────────────
+COPY docker/dev-entrypoint.sh /dev-entrypoint.sh
+RUN chmod +x /dev-entrypoint.sh
+
+# Backend :12008 | Vite dev server :5173
+EXPOSE 12008 5173
+
+CMD ["/dev-entrypoint.sh"]
