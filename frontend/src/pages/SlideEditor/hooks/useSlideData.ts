@@ -86,8 +86,6 @@ export const useSlideData = (projectId: string | undefined): UseSlideDataReturn 
                 }]
               : [];
 
-            console.log(`✅ [Load] Slide ${s.id}: backgroundColor=${backgroundColor}, hasContent=${!!htmlForCanvas}`);
-
             return {
               id: String(s.id),
               elements,

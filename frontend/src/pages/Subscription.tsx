@@ -143,7 +143,7 @@ const Subscription = () => {
       const expiresAt = subscriptionInfo?.expires_at ? formatDate(subscriptionInfo.expires_at) : "";
       toast({ title: t.subscription_cancelled_renewal + (expiresAt ? ` (${expiresAt})` : "") });
     } catch {
-      toast({ title: t.subscription_error_redeem_title, variant: "destructive" });
+      toast({ title: t.subscription_error_load_title, variant: "destructive" });
     } finally {
       setCancellingRenewal(false);
     }
@@ -157,7 +157,7 @@ const Subscription = () => {
       setCancelNowDialogOpen(false);
       await loadSubscriptionData();
     } catch (error: any) {
-      toast({ title: t.subscription_error_redeem_title, variant: "destructive" });
+      toast({ title: t.subscription_error_load_title, variant: "destructive" });
     } finally {
       setCancellingNow(false);
     }

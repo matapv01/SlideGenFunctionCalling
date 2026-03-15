@@ -1,15 +1,33 @@
+# Python
 __pycache__/
-
-
-*.pyc
-
+**/__pycache__/
+**/*.pyc
 .venv/
+*.egg-info/
+.pytest_cache/
+
+# Env / secrets
 .env
 
-static/
+# Node
+node_modules/
+frontend/node_modules/
+backend/infrastructure/converter/node_modules/
+frontend/dist/
 
-node_modules/
-node_modules/
-backend/node_modules/
-*.db
-webfix/
+# Data (managed via Docker volumes)
+static/uploads/*
+static/output/*
+static/captures/*
+static/temp/*
+backend/infrastructure/database/*.db
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/

@@ -10,7 +10,6 @@ from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 from langchain_core.documents import Document
 from backend import config
 
-# Giả sử bạn có class interface RetrieverPort, nếu chưa có thì coi đây là infra service
 class GeminiToolRetrieveProvider(ToolRetrieveProvider):
     def __init__(self, tools_dict: Dict[str, List[Any]], index_path: str, api_key: str = None):
         """
@@ -27,6 +26,7 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         self.embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", google_api_key=api_key)
 
         self.retrievers = {}
+        self.vector_stores: dict = {}
         self.tools_dict = tools_dict
         self.tool_usage_history = {category: deque(maxlen=config.TOOL_RETRIEVER_TEMPORAL_WINDOW * 2) 
                                      for category in tools_dict.keys()}
@@ -59,7 +59,6 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         print("ToolRetriever initialized successfully.")
 
     def _build_and_save_retriever(self, category: str, tools: List[Any], base_index_path: str):
-        # (This function remains exactly the same)
         if not tools: return
         category_index_path = os.path.join(base_index_path, category)
         try:

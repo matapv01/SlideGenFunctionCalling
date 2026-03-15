@@ -3,13 +3,14 @@
 import os
 from playwright.async_api import async_playwright
 from backend.domain.ports.capture_provider import CaptureProvider
+from backend.config import BROWSER_VIEWPORT_WIDTH, BROWSER_VIEWPORT_HEIGHT
 import img2pdf
 from PIL import Image
 import uuid
 
 class PlaywrightCaptureProvider(CaptureProvider):
     def __init__(self):
-        self.viewport = {"width": 1920, "height": 1080}
+        self.viewport = {"width": BROWSER_VIEWPORT_WIDTH, "height": BROWSER_VIEWPORT_HEIGHT}
 
     async def generate_slide_from_html(self, html_content: str, output_path: str) -> str:
         """Chụp ảnh từ HTML content"""

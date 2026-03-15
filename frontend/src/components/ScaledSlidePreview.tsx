@@ -1,9 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { cn } from "@/lib/utils";
-
-// Slide dimensions (16:9 aspect ratio)
-const SLIDE_WIDTH = 1920;
-const SLIDE_HEIGHT = 1080;
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "@/pages/SlideEditor/constants";
 
 interface ScaledSlidePreviewProps {
   html: string;
@@ -20,8 +17,8 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
       const containerWidth = containerRef.current.clientWidth;
       const containerHeight = containerRef.current.clientHeight;
       const newScale = Math.min(
-        containerWidth / SLIDE_WIDTH,
-        containerHeight / SLIDE_HEIGHT
+        containerWidth / CANVAS_WIDTH,
+        containerHeight / CANVAS_HEIGHT
       );
       setScale(newScale);
     }
@@ -44,23 +41,23 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
     
     // Replace vw units with pixel equivalents (1vw = 19.2px for 1920px width)
     fixed = fixed.replace(/(\d+(?:\.\d+)?)\s*vw/gi, (_, num) => {
-      return `${(parseFloat(num) * SLIDE_WIDTH / 100).toFixed(2)}px`;
+      return `${(parseFloat(num) * CANVAS_WIDTH / 100).toFixed(2)}px`;
     });
     
     // Replace vh units with pixel equivalents (1vh = 10.8px for 1080px height)
     fixed = fixed.replace(/(\d+(?:\.\d+)?)\s*vh/gi, (_, num) => {
-      return `${(parseFloat(num) * SLIDE_HEIGHT / 100).toFixed(2)}px`;
+      return `${(parseFloat(num) * CANVAS_HEIGHT / 100).toFixed(2)}px`;
     });
     
     // Replace vmin with the smaller value
     fixed = fixed.replace(/(\d+(?:\.\d+)?)\s*vmin/gi, (_, num) => {
-      const minDim = Math.min(SLIDE_WIDTH, SLIDE_HEIGHT);
+      const minDim = Math.min(CANVAS_WIDTH, CANVAS_HEIGHT);
       return `${(parseFloat(num) * minDim / 100).toFixed(2)}px`;
     });
     
     // Replace vmax with the larger value
     fixed = fixed.replace(/(\d+(?:\.\d+)?)\s*vmax/gi, (_, num) => {
-      const maxDim = Math.max(SLIDE_WIDTH, SLIDE_HEIGHT);
+      const maxDim = Math.max(CANVAS_WIDTH, CANVAS_HEIGHT);
       return `${(parseFloat(num) * maxDim / 100).toFixed(2)}px`;
     });
     
@@ -75,8 +72,8 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
     const baseStyles = `
       <style id="slide-base-styles">
         html, body {
-          width: ${SLIDE_WIDTH}px !important;
-          height: ${SLIDE_HEIGHT}px !important;
+          width: ${CANVAS_WIDTH}px !important;
+          height: ${CANVAS_HEIGHT}px !important;
           margin: 0 !important;
           padding: 0 !important;
           overflow: hidden !important;
@@ -112,8 +109,8 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
   const processedHtml = processHtml(html);
 
   // Calculate scaled dimensions to fit in container
-  const scaledWidth = SLIDE_WIDTH * scale;
-  const scaledHeight = SLIDE_HEIGHT * scale;
+  const scaledWidth = CANVAS_WIDTH * scale;
+  const scaledHeight = CANVAS_HEIGHT * scale;
 
   return (
     <div ref={containerRef} className={cn("relative overflow-hidden", className)}>
@@ -131,8 +128,8 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
             className="border-0 pointer-events-none"
             tabIndex={-1}
             style={{ 
-              width: `${SLIDE_WIDTH}px`, 
-              height: `${SLIDE_HEIGHT}px`,
+              width: `${CANVAS_WIDTH}px`, 
+              height: `${CANVAS_HEIGHT}px`,
               transform: `scale(${scale})`,
               transformOrigin: 'top left',
               position: 'absolute',
@@ -147,5 +144,3 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
     </div>
   );
 };
-
-export { SLIDE_WIDTH, SLIDE_HEIGHT };

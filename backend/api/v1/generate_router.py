@@ -1,7 +1,6 @@
 # File: backend/api/v1/generate_router.py
 
 import os
-import shutil
 import json
 import logging
 import asyncio
@@ -27,7 +26,8 @@ from backend.api.dependencies import (
     get_structure_service,
     get_slide_service,
     get_slidegen_workflow_service,
-    get_idea_service
+    get_idea_service,
+    get_subscription_service
 )
 from backend.application.services.subscription_service import SubscriptionService
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
@@ -46,12 +46,6 @@ router = APIRouter(prefix="/generate", tags=["GENERATE"])
 logger = logging.getLogger("SlideGen-Generation")
 
 
-def get_subscription_service() -> SubscriptionService:
-    """Get subscription service instance"""
-    user_repo = SqliteUserRepository()
-    return SubscriptionService(user_repo)
-
-
 def _cleanup_temp_dir():
     """Helper to clean temp files"""
     try:
@@ -61,6 +55,22 @@ def _cleanup_temp_dir():
                 try: old_file.unlink()
                 except: pass
     except: pass
+
+
+def _check_docx_slide_limit(temp_path, subscription_service, user):
+    """Estimate slide count from DOCX and validate subscription limits."""
+    try:
+        from docx import Document
+        doc = Document(temp_path)
+        slide_count = 0
+        for paragraph in doc.paragraphs:
+            if paragraph.style.name.startswith('Heading'):
+                slide_count += 1
+        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
+    except Exception as e:
+        logger.warning(f"Could not estimate slide count: {e}")
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
 
 def prepare_output_folder(name: str):
     """Helper to create unique output folder"""
@@ -118,27 +128,8 @@ async def generate_from_docx_normal(
         content = await file.read()
         f.write(content)
 
-    # Estimate slide count for subscription validation
-    try:
-        from docx import Document
-        doc = Document(temp_path)
-
-        # Simple estimation: count headings as potential slides
-        slide_count = 0
-        for paragraph in doc.paragraphs:
-            if paragraph.style.name.startswith('Heading'):
-                slide_count += 1
-
-        # Minimum estimation
-        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
-
-        # Check slide count limits
-        subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
-
-    except Exception as e:
-        logger.warning(f"Could not estimate slide count: {e}")
-        # For safety, assume 25 slides if can't estimate
-        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
+    # Estimate slide count and validate subscription limits
+    _check_docx_slide_limit(temp_path, subscription_service, user)
 
     try:
         # Increment usage counter
@@ -210,27 +201,8 @@ async def prepare_docx_stream(
     with open(temp_path, "wb") as f:
         f.write(content)
 
-    # Estimate slide count for subscription validation
-    try:
-        from docx import Document
-        doc = Document(temp_path)
-
-        # Simple estimation: count headings as potential slides
-        slide_count = 0
-        for paragraph in doc.paragraphs:
-            if paragraph.style.name.startswith('Heading'):
-                slide_count += 1
-
-        # Minimum estimation
-        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
-
-        # Check slide count limits
-        subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
-
-    except Exception as e:
-        logger.warning(f"Could not estimate slide count: {e}")
-        # For safety, assume 25 slides if can't estimate
-        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
+    # Estimate slide count and validate subscription limits
+    _check_docx_slide_limit(temp_path, subscription_service, user)
 
     options = {
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
@@ -285,7 +257,7 @@ async def stream_docx_generation(
             )
             
             if not res:
-                await queue.put(('error_event', {'message': "Workflow failed"}))
+                await queue.put((EventTypes.ERROR_EVENT, {'message': "Workflow failed"}))
                 return
 
             pid = project_service.import_project_from_workflow(
@@ -307,11 +279,11 @@ async def stream_docx_generation(
 
             workflow_temp_dir = str(output_folder)
 
-            await queue.put(('complete', {
+            await queue.put((EventTypes.COMPLETE, {
                 'project_id': pid,
-                'project_name': project_name,        # Frontend cần cái này
-                'total_slides': actual_slide_count, # Hoặc lấy số lượng thực tế
-                'temp_dir': workflow_temp_dir       # Frontend cần cái này để cleanup
+                'project_name': project_name,
+                'total_slides': actual_slide_count,
+                'temp_dir': workflow_temp_dir
             }))
 
         asyncio.create_task(run_bg())
@@ -321,7 +293,7 @@ async def stream_docx_generation(
             try:
                 ev = await asyncio.wait_for(queue.get(), timeout=1.0)
                 yield f"event: {ev[0]}\ndata: {json.dumps(ev[1])}\n\n"
-                if ev[0] in ['complete', 'error_event']: break
+                if ev[0] in [EventTypes.COMPLETE, EventTypes.ERROR_EVENT]: break
             except asyncio.TimeoutError:
                 yield ": keepalive\n\n"
         
@@ -359,27 +331,8 @@ async def create_manual_session_from_docx(
     with open(temp_path, "wb") as f:
         f.write(content)
 
-    # Estimate slide count for subscription validation
-    try:
-        from docx import Document
-        doc = Document(temp_path)
-
-        # Simple estimation: count headings as potential slides
-        slide_count = 0
-        for paragraph in doc.paragraphs:
-            if paragraph.style.name.startswith('Heading'):
-                slide_count += 1
-
-        # Minimum estimation
-        slide_count = max(slide_count, len(doc.paragraphs) // 10, 1)
-
-        # Check slide count limits
-        subscription_service.check_feature_access(user, "docx_upload", slide_count=slide_count)
-
-    except Exception as e:
-        logger.warning(f"Could not estimate slide count: {e}")
-        # For safety, assume 25 slides if can't estimate
-        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
+    # Estimate slide count and validate subscription limits
+    _check_docx_slide_limit(temp_path, subscription_service, user)
 
     try:
         # Increment usage counter
@@ -419,14 +372,6 @@ async def create_manual_session_from_docx(
 # ==========================================
 # 2. GENERATE FROM IDEA (AI)
 # ==========================================
-
-
-@router.post("/test-auth")
-async def test_auth(
-    current_user: UserResponse = Depends(get_current_active_user)
-):
-    """Test endpoint to verify authentication error messages"""
-    return {"message": "Authenticated successfully", "user_id": current_user.id}
 
 
 @router.post("/idea/structure", response_model=IdeaStructureResponse)
@@ -658,8 +603,8 @@ async def stream_manual_generation(
                 callback=callback
             )
             
-            if not res: 
-                await queue.put(('error_event', {'message': "Workflow failed"}))
+            if not res:
+                await queue.put((EventTypes.ERROR_EVENT, {'message': "Workflow failed"}))
                 return
 
             pid = project_service.import_project_from_workflow(
@@ -673,7 +618,7 @@ async def stream_manual_generation(
 
             workflow_temp_dir = str(output_folder)
 
-            await queue.put(('complete', {
+            await queue.put((EventTypes.COMPLETE, {
                 'project_id': pid,
                 'project_name': title,
                 'total_slides': len(data.get('slide_chunks', [])),
@@ -681,12 +626,12 @@ async def stream_manual_generation(
             }))
 
         asyncio.create_task(run_bg())
-        
+
         while True:
             try:
                 ev = await asyncio.wait_for(queue.get(), timeout=1.0)
                 yield f"event: {ev[0]}\ndata: {json.dumps(ev[1])}\n\n"
-                if ev[0] in ['complete', 'error_event']: break
+                if ev[0] in [EventTypes.COMPLETE, EventTypes.ERROR_EVENT]: break
             except asyncio.TimeoutError:
                 yield ": keepalive\n\n"
 

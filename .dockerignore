@@ -40,3 +40,4 @@ logs/
 
 # Temp / scratch
 tmp_db_check.py
+scripts/

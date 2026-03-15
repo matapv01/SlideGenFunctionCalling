@@ -3,18 +3,14 @@
 from fastapi import APIRouter, Depends, HTTPException
 from backend.api.schemas.subscription_schema import (
     SubscriptionInfoResponse, RedeemCodeRequest, RedeemCodeResponse,
-    PricingInfoResponse, UpgradePlanRequest
+    PricingInfoResponse
 )
 from backend.api.schemas.auth_schema import UserResponse
-from backend.api.dependencies import get_current_active_user
+from backend.api.dependencies import get_current_active_user, get_subscription_service
 from backend.application.services.subscription_service import SubscriptionService
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
 
 router = APIRouter(prefix="/subscription", tags=["subscription"])
-
-def get_subscription_service() -> SubscriptionService:
-    user_repo = SqliteUserRepository()
-    return SubscriptionService(user_repo)
 
 
 @router.get("/info", response_model=SubscriptionInfoResponse)
@@ -60,18 +56,6 @@ async def get_pricing_info(
     """Get subscription pricing information (public endpoint)"""
     pricing_info = subscription_service.get_pricing_info()
     return PricingInfoResponse(**pricing_info)
-
-
-@router.post("/upgrade")
-async def upgrade_subscription(
-    request: UpgradePlanRequest,
-    current_user: UserResponse = Depends(get_current_active_user)
-):
-    """Upgrade subscription plan (placeholder for payment integration)"""
-    raise HTTPException(
-        status_code=501,
-        detail="Payment integration not yet available. Please use a subscription code to upgrade."
-    )
 
 
 @router.post("/cancel")

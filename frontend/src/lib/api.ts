@@ -21,57 +21,42 @@ async function request<T>(endpoint: string, options: RequestInit = {}): Promise<
 
   const res = await fetch(`${API_BASE_URL}${endpoint}`, { ...options, headers });
   if (!res.ok) {
-    console.log(`API Error for ${endpoint}:`, {
-      status: res.status,
-      statusText: res.statusText,
-      headers: Object.fromEntries(res.headers.entries())
-    });
-
     // First try to get error message from backend
     const err = await res.json().catch(() => ({ message: res.statusText }));
     const backendErrorMsg = typeof err.detail === 'string'
       ? err.detail
       : (err.detail ? JSON.stringify(err.detail) : (err.message || null));
 
-    console.log('Backend error message:', backendErrorMsg);
-
     // Handle 401 Unauthorized
     if (res.status === 401) {
       const authRequired = res.headers.get("X-Auth-Required");
       const authExpired = res.headers.get("X-Auth-Expired");
 
-      console.log('Auth headers:', { authRequired, authExpired });
-
       if (authRequired) {
         // User needs to login, don't auto logout - use backend message if available
         const errorMsg = backendErrorMsg || "Vui lòng đăng nhập để sử dụng tính năng này";
-        console.log('Throwing auth required error:', errorMsg);
         throw new Error(errorMsg);
       } else if (authExpired && globalLogout) {
         // Token expired, auto logout
         console.warn("Token expired, logging out user automatically");
         globalLogout();
         const errorMsg = backendErrorMsg || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-        console.log('Throwing token expired error:', errorMsg);
         throw new Error(errorMsg);
       } else if (globalLogout) {
         // Default 401 behavior
         console.warn("Authentication failed, logging out user automatically");
         globalLogout();
         const errorMsg = backendErrorMsg || "Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.";
-        console.log('Throwing generic auth error:', errorMsg);
         throw new Error(errorMsg);
       } else {
         // No globalLogout function available
         const errorMsg = backendErrorMsg || "Vui lòng đăng nhập để sử dụng tính năng này";
-        console.log('Throwing no-logout auth error:', errorMsg);
         throw new Error(errorMsg);
       }
     }
 
     // For non-401 errors, use backend message
     const finalErrorMsg = backendErrorMsg || res.statusText;
-    console.log('Throwing non-401 error:', finalErrorMsg);
     const error = new Error(finalErrorMsg) as any;
     error.status = res.status;
     throw error;
@@ -246,11 +231,6 @@ export const api = {
     }>("/structure/approve", {
       method: "POST",
       body: JSON.stringify({ session_id: sessionId }),
-    }),
-
-  createTestSession: () =>
-    request<{ success: boolean; session_id: string; redirect_url: string }>("/structure/test-session", {
-      method: "POST",
     }),
 
   // Slides endpoints - /api/projects/{project_id}/slides and /api/slides/{slide_id}

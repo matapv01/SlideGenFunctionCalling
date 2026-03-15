@@ -5,7 +5,7 @@ import logging
 from pathlib import Path
 from typing import List, Dict, Any
 from backend.config import (
-    STATIC_DIR, IMAGE_DIR,
+    STATIC_DIR,
 )
 
 logger = logging.getLogger(__name__)
@@ -14,9 +14,8 @@ logger = logging.getLogger(__name__)
 class SlideService:
     """Service for slide operations"""
 
-    def __init__(self, static_dir: Path, image_dir: Path):
+    def __init__(self, static_dir: Path):
         self.static_dir = static_dir
-        self.image_dir = image_dir
 
     def build_slides_from_output(self, output_folder: str) -> List[Dict[str, Any]]:
         """Build slides data from output folder"""

@@ -1,6 +1,7 @@
 import { useCallback } from "react";
 import { api } from "@/lib/api";
 import type { Slide, SlideElement } from "../types";
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../constants";
 
 interface UseSlideActionsParams {
   slides: Slide[];
@@ -108,7 +109,7 @@ export const useSlideActions = ({
           id: Date.now().toString(),
           type: "text",
           content: html,
-          x: 0, y: 0, width: 1920, height: 1080,
+          x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT,
           rotation: 0, zIndex: 1, opacity: 1,
         }]
       : [];

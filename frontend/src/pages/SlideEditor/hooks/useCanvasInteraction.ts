@@ -43,8 +43,6 @@ export const useCanvasInteraction = ({
 
   
   const handleElementSelectFromCanvas = useCallback((elementData: any) => {
-    console.log('[SlideEditor] Element selected from canvas:', elementData);
-    
     if (!elementData) {
       setSelectedElementId(null);
       return;

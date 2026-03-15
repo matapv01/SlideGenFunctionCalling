@@ -8,11 +8,8 @@ from pathlib import Path
 from datetime import datetime
 from io import BytesIO
 from typing import List, Dict, Any
-from backend.config import (
-    PROJECT_DIR, CAPTURES_DIR
-)
-import sys
-from domain.ports.capture_provider import CaptureProvider
+from backend.config import CAPTURES_DIR
+from backend.domain.ports.capture_provider import CaptureProvider
 
 logger = logging.getLogger(__name__)
 
@@ -169,11 +166,7 @@ class CaptureService:
         # Check if captures directory is writable
         captures_writable = os.access(self.captures_dir, os.W_OK)
 
-        # Check playwright availability
-        try:
-            playwright_available = True
-        except ImportError:
-            playwright_available = False
+        playwright_available = True
 
         health_status = {
             "captures_dir_exists": self.captures_dir.exists(),

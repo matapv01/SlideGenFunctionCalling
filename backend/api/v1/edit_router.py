@@ -64,24 +64,3 @@ async def approve_structure(
         raise HTTPException(status_code=404, detail="Không tìm thấy file cấu trúc tạm thời")
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi xử lý cấu trúc: {str(e)}")
-
-
-@router.post("/test-session")
-async def create_test_session(service: StructureService = Depends(get_structure_service)):
-    """Tạo session giả lập để debug giao diện editor"""
-    session_id = service.create_session(
-        filename="Demo_Tài_Liệu.docx",
-        full_text="Nội dung giả lập...",
-        paragraphs=[],
-        docx_path=""
-    )
-    # Khởi tạo cấu trúc mặc định
-    service.update_session_structure(session_id, [
-        {"level": 1, "title": "Giới thiệu chung", "content": "Nội dung mục 1", "children": []}
-    ])
-    
-    return {
-        "success": True, 
-        "session_id": session_id,
-        "redirect_url": f"/frontend/structure-editor.html?session={session_id}"
-    }

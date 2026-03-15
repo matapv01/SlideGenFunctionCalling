@@ -8,27 +8,19 @@ AI-powered presentation generator. Upload tài liệu hoặc nhập ý tưởng 
 
 - [Yêu cầu](#yêu-cầu)
 - [Cấu hình `.env`](#cấu-hình-env)
-- [Chạy với Docker](#chạy-với-docker)
-  - [Trên Server](#trên-server)
-  - [Local Development](#local-development)
+- [Server (Production)](#server-production)
+- [Local Development](#local-development)
 - [Lệnh Docker thường dùng](#lệnh-docker-thường-dùng)
-- [Chạy thủ công (không Docker)](#chạy-thủ-công-không-docker)
-  - [Trên Server](#trên-server-1)
-  - [Local](#local)
 - [Quản lý Subscription Codes](#quản-lý-subscription-codes)
 
 ---
 
 ## Yêu cầu
 
-| Môi trường | Yêu cầu |
-|---|---|
-| Docker | Docker 24+, Docker Compose v2, Git |
-| Thủ công | Python 3.11+, Node.js 22+, uv |
-
-**Cài Docker (nếu server chưa có):**
+Docker 24+, Docker Compose v2, Git.
 
 ```bash
+# Cài Docker nếu server chưa có
 curl -fsSL https://get.docker.com | sh
 sudo usermod -aG docker $USER
 newgrp docker
@@ -56,85 +48,84 @@ SECRET_KEY=your_jwt_secret_here
 
 ---
 
-## Chạy với Docker
-
-### Trên Server
+## Server (Production)
 
 **Lần đầu deploy:**
 
 ```bash
-# 1. Đăng nhập Docker Hub (cần để pull base image)
-docker login
-
-# 2. Clone repo
 git clone <repo-url> SlideGenFunctionCalling
 cd SlideGenFunctionCalling
 
-# 3. Tạo file .env
 cp env_template.txt .env
 nano .env   # điền API keys
 
-# 4. Build và chạy
 docker compose up -d --build
 ```
 
 > Lần đầu build mất **15–25 phút** do tải Python deps, Playwright Chromium, Node.js.
-> Theo dõi tiến trình: `docker compose logs -f`
+> Theo dõi: `docker compose logs -f`
 
 **Kiểm tra sau khi build xong:**
 
 ```bash
-docker compose ps                      # container có đang chạy không?
-curl http://localhost:12008/health     # health check
-curl -I http://localhost:12008         # frontend load được không?
+docker compose ps
+curl http://localhost:12008/health
 ```
 
-Nếu tất cả trả về `200 OK` → deploy thành công.
 Truy cập từ ngoài: `http://<server-ip>:12008`
 
 ---
 
-**Update code lên server:**
+**Update code:**
 
 ```bash
-# Trên máy local — push code mới
-git add .
-git commit -m "your message"
-git push
+# Máy local
+git add . && git commit -m "..." && git push
 
-# Trên server — pull và rebuild
-cd SlideGenFunctionCalling
+# Trên server
 git pull
 docker compose up -d --build
 ```
 
-> Rebuild lần sau nhanh hơn (~3–5 phút) vì Docker cache các layer không đổi.
+> Rebuild lần sau nhanh (~3–5 phút) nhờ Docker layer cache.
 > File `.env` và dữ liệu trong volumes **không bị ảnh hưởng** khi rebuild.
 
 ---
 
-### Local Development
+## Local Development
 
 **Lần đầu:**
 
 ```bash
 git clone <repo-url> SlideGenFunctionCalling
 cd SlideGenFunctionCalling
+
 cp env_template.txt .env   # điền API keys
 
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+docker compose -f docker-compose.dev.yml up --build
 ```
 
 **Từ lần 2 trở đi:**
 
 ```bash
-docker compose -f docker-compose.yml -f docker-compose.dev.yml up
+docker compose -f docker-compose.dev.yml up
 ```
 
-Dev mode khác production:
-- Bind-mount `backend/` → sửa code Python có hiệu lực ngay, không cần rebuild
-- Log level `DEBUG` tự động bật
-- App tại `http://localhost:12008`
+**Dev mode:**
+
+| | URL |
+|---|---|
+| Frontend (Vite HMR) | `http://localhost:5173` |
+| Backend API | `http://localhost:12008` |
+| API Docs | `http://localhost:12008/docs` |
+
+- Sửa file trong `backend/` → backend tự reload (uvicorn `--reload`)
+- Sửa file trong `frontend/src/` → browser tự cập nhật (Vite HMR)
+- Không cần rebuild image khi sửa code
+
+**Rebuild khi nào:**
+- Thêm/xóa Python package (`pyproject.toml` đổi)
+- Thêm/xóa npm package (`package.json` đổi)
 
 ---
 
@@ -147,7 +138,7 @@ docker compose ps
 # Theo dõi log realtime
 docker compose logs -f
 
-# Xem log gần nhất (không realtime)
+# Xem log gần nhất
 docker compose logs --tail 100
 
 # Restart không rebuild
@@ -160,49 +151,11 @@ docker compose down
 docker compose down -v
 
 # Vào trong container để debug
-docker compose exec slidegen bash
+docker compose exec slidegen bash          # production
+docker compose -f docker-compose.dev.yml exec slidegen-dev bash   # dev
 
-# Xem dung lượng image
-docker image ls slidegen
-```
-
----
-
-## Chạy thủ công (không Docker)
-
-### Trên Server
-
-Dùng script có sẵn — tự động build frontend và khởi động toàn bộ service trong 1 lệnh:
-
-```bash
-./scripts/run_server.sh
-```
-
-Script sẽ tự động:
-1. Sync Python dependencies (`uv sync`)
-2. Build frontend (`npm run build`)
-3. Install converter dependencies (`npm install`)
-4. Khởi động backend tại `http://0.0.0.0:12008`
-
-Frontend và API cùng chạy trên 1 port — truy cập từ ngoài: `http://<server-ip>:12008`
-
-**Kiểm tra sau khi chạy:**
-
-```bash
-curl -I http://127.0.0.1:12008/docs
-```
-
-### Local
-
-```bash
-# Terminal 1 — Backend
-uv sync
-uv run backend/main.py
-# → http://localhost:12008
-
-# Terminal 2 — Frontend dev server
-cd frontend && npm install && npm run dev
-# → http://localhost:8080
+# Rebuild 1 service cụ thể
+docker compose build --no-cache
 ```
 
 ---
@@ -228,6 +181,9 @@ DB file: `backend/infrastructure/database/slidegen.db`
 ### Tạo code mới
 
 ```bash
+# Vào container (production)
+docker compose exec slidegen bash
+
 # Unlimited
 sqlite3 backend/infrastructure/database/slidegen.db \
   "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type)

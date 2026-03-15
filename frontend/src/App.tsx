@@ -1,7 +1,5 @@
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { createBrowserRouter, RouterProvider, Outlet } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ThemeProvider } from "@/contexts/ThemeContext";
@@ -24,8 +22,6 @@ import Settings from "./pages/Settings";
 import Subscription from "./pages/Subscription";
 import NotFound from "./pages/NotFound";
 
-const queryClient = new QueryClient();
-
 // Context Providers Wrapper
 const ProvidersLayout = () => {
   return (
@@ -34,7 +30,6 @@ const ProvidersLayout = () => {
         <AuthProvider>
           <TooltipProvider>
             <Toaster />
-            <Sonner />
             <Outlet />
           </TooltipProvider>
         </AuthProvider>
@@ -66,10 +61,6 @@ const router = createBrowserRouter([
   }
 ]);
 
-const App = () => (
-  <QueryClientProvider client={queryClient}>
-    <RouterProvider router={router} />
-  </QueryClientProvider>
-);
+const App = () => <RouterProvider router={router} />;
 
 export default App;

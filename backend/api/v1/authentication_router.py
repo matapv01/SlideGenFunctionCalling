@@ -55,13 +55,13 @@ async def change_password(
     current_password = password_data.current_password
     new_password = password_data.new_password
 
-    user_dict = auth_service.user_repo.get_by_id(current_user.id)
-    
+    user_obj = auth_service.user_repo.get_by_id(current_user.id)
+
     auth_service.change_password(
         user_id=current_user.id,
         current_password=current_password,
         new_password=new_password,
-        user_hashed_password=user_dict["hashed_password"]
+        user_hashed_password=user_obj.hashed_password
     )
     
     return {"message": "Password changed successfully"}

@@ -2,7 +2,7 @@
 
 from backend.config import (
     setup_environment,
-    CAPTURES_DIR, PROJECT_DIR, STATIC_DIR, IMAGE_DIR,
+    CAPTURES_DIR, PROJECT_DIR, STATIC_DIR,
     LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
     IDEA_STRUCTURE_LLM_MODEL, IDEA_STRUCTURE_LLM_TEMPERATURE, IDEA_STRUCTURE_LLM_MAX_TOKENS
 )
@@ -41,6 +41,7 @@ from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
 from backend.application.services.idea_workflow_service import IdeaWorkflowService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
+from backend.application.services.subscription_service import SubscriptionService
 
 from backend.api.schemas.auth_schema import UserResponse
 
@@ -83,7 +84,7 @@ _retriever_infra = GeminiToolRetrieveProvider(
 
 # ===== SINGLETON SERVICES =====
 _structure_service = StructureService()
-_slide_service = SlideService(static_dir=STATIC_DIR, image_dir=IMAGE_DIR)
+_slide_service = SlideService(static_dir=STATIC_DIR)
 
 _idea_workflow_service = IdeaWorkflowService(
     project_dir=str(PROJECT_DIR),
@@ -206,20 +207,6 @@ async def get_current_active_user(current_user: UserResponse = Depends(get_curre
     return current_user
 
 
-def get_current_user_optional(authorization: str = None) -> Optional[UserResponse]:
-    """Optional authentication - returns None if not authenticated"""
-    if not authorization:
-        return None
-
-    try:
-        from fastapi.security import HTTPAuthorizationCredentials
-        credentials = HTTPAuthorizationCredentials(scheme="Bearer", credentials=authorization.replace("Bearer ", ""))
-        # This is a simplified version - in real use, you'd need to inject the services properly
-        return None  # For now, return None - this would need proper implementation
-    except:
-        return None
-
-
 async def require_authentication_with_message():
     """Dependency that requires authentication and shows friendly login message"""
     raise HTTPException(
@@ -244,3 +231,7 @@ async def get_current_user_from_token_param(
         id=user.id, email=user.email,
         created_at=user.created_at, is_active=bool(user.is_active)
     )
+
+
+def get_subscription_service() -> SubscriptionService:
+    return SubscriptionService(SqliteUserRepository())

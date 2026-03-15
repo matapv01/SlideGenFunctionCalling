@@ -1,9 +1,7 @@
 import { useRef, useEffect, useState, useCallback } from "react";
 import { SlideCanvas } from "./SlideCanvas";
 import { cn } from "@/lib/utils";
-
-const SLIDE_WIDTH = 1920;
-const SLIDE_HEIGHT = 1080;
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "@/pages/SlideEditor/constants";
 
 interface ReadOnlySlideProps {
   slideId: string;
@@ -23,7 +21,7 @@ export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, className
   const updateScale = useCallback(() => {
     if (!containerRef.current) return;
     const { clientWidth: w, clientHeight: h } = containerRef.current;
-    setScale(Math.min(w / SLIDE_WIDTH, h / SLIDE_HEIGHT));
+    setScale(Math.min(w / CANVAS_WIDTH, h / CANVAS_HEIGHT));
   }, []);
 
   useEffect(() => {
@@ -33,16 +31,16 @@ export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, className
     return () => ro.disconnect();
   }, [updateScale]);
 
-  const scaledW = SLIDE_WIDTH * scale;
-  const scaledH = SLIDE_HEIGHT * scale;
+  const scaledW = CANVAS_WIDTH * scale;
+  const scaledH = CANVAS_HEIGHT * scale;
 
   return (
     <div ref={containerRef} className={cn("relative overflow-hidden", className)}>
       <div className="absolute inset-0 flex items-center justify-center">
         <div style={{ width: scaledW, height: scaledH, overflow: "hidden", position: "relative" }}>
           <div style={{
-            width: SLIDE_WIDTH,
-            height: SLIDE_HEIGHT,
+            width: CANVAS_WIDTH,
+            height: CANVAS_HEIGHT,
             transform: `scale(${scale}) translateZ(0)`,
             transformOrigin: "top left",
             position: "absolute",

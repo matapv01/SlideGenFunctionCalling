@@ -208,8 +208,6 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
     
     retry_feedback = ""
 
-    MAX_REMAKE = 3
-
     for attempt in range(1, MAX_REMAKE + 1):
         print(f"🔁 Function-call generation attempt {attempt}/{MAX_REMAKE}")
 

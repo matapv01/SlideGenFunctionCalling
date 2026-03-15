@@ -34,16 +34,6 @@ class StructureService:
     def get_session(self, session_id: str) -> Optional[Dict]:
         return self._sessions.get(session_id)
 
-    def create_test_session(self) -> str:
-        """Tạo session giả để test"""
-        session_id = str(uuid.uuid4())
-        self._sessions[session_id] = {
-            "document_title": "Test Document",
-            "document_text": "Sample...",
-            "document_structure": [{"level": 1, "title": "Test", "content": "Content", "children": []}]
-        }
-        return session_id
-
     def update_session_structure(self, session_id: str, structure: List[Dict], intro_slide: Optional[Dict] = None):
         if session_id not in self._sessions:
             self._sessions[session_id] = {}

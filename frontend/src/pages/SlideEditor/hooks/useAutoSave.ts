@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { api } from "@/lib/api";
 import type { Slide } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
+import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../constants";
 
 interface PendingSaveData {
   slideId: string;
@@ -52,13 +53,11 @@ export const useAutoSave = ({
   const executeSave = useCallback(async (data: PendingSaveData) => {
     const { slideId, canvasHTML, elements, backgroundColor, backgroundImage, defs } = data;
 
-    console.log('💾 [SAVE] Saving slide:', slideId);
-
     const elementsToSave = elements.length > 0
       ? elements.map((el, idx) => idx === 0 ? { ...el, content: canvasHTML } : el)
       : canvasHTML
         ? [{ id: `canvas-${slideId}`, type: 'text' as const, content: canvasHTML,
-             x: 0, y: 0, width: 1920, height: 1080, rotation: 0, zIndex: 1, opacity: 1 }]
+             x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, rotation: 0, zIndex: 1, opacity: 1 }]
         : [];
 
     const titleElement = elements.find(el => el.type === 'text' && el.fontSize && el.fontSize > 30);
@@ -76,8 +75,6 @@ export const useAutoSave = ({
         content_text: contentText,
       });
 
-      console.log('✅ [SAVE] Saved slide:', slideId);
-
       setSlides(prevSlides =>
         prevSlides.map(slide => {
           if (slide.id !== slideId) return slide;
@@ -86,7 +83,7 @@ export const useAutoSave = ({
               ...slide,
               elements: canvasHTML
                 ? [{ id: `canvas-${slideId}`, type: 'text' as const, content: canvasHTML,
-                     x: 0, y: 0, width: 1920, height: 1080, rotation: 0, zIndex: 1, opacity: 1 }]
+                     x: 0, y: 0, width: CANVAS_WIDTH, height: CANVAS_HEIGHT, rotation: 0, zIndex: 1, opacity: 1 }]
                 : [],
             };
           }
@@ -179,8 +176,6 @@ export const useAutoSave = ({
       backgroundImage: currentSlide.backgroundImage,
       defs: currentSlide.defs,
     };
-
-    console.log('🔄 [AUTO-SAVE] Captured HTML for slide:', currentSlide.id, '— saving immediately...');
 
     // Save on the next tick so the DOM has fully settled, but with no noticeable delay
     if (autoSaveTimerRef.current) clearTimeout(autoSaveTimerRef.current);
