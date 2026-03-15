@@ -110,7 +110,7 @@ EMBEDDING_MODEL_NAME = "sentence-transformers/all-MiniLM-L6-v2"
 
 # Device cho embedding model: 'cpu', 'cuda', 'mps' (Apple Silicon)
 # Set 'cuda' nếu có GPU để tăng tốc embedding calculations
-EMBEDDING_DEVICE = "cuda"
+EMBEDDING_DEVICE = os.getenv("EMBEDDING_DEVICE", "cuda")
 
 # Normalize embeddings để cosine similarity hoạt động tốt hơn
 # Recommend: True cho các model sentence-transformers

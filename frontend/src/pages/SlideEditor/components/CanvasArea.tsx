@@ -119,7 +119,7 @@ export const CanvasArea = ({
   return (
     <div
       ref={containerRef}
-      className="flex-1 overflow-hidden relative flex items-center justify-center"
+      className="flex-1 overflow-auto relative flex items-center justify-center"
       style={{
         padding: PAD,
         backgroundColor: 'hsl(var(--muted) / 0.35)',

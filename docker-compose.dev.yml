@@ -1,0 +1,13 @@
+# docker-compose.dev.yml — Local development overrides
+# Server KHÔNG dùng file này.
+#
+# Chạy local:
+#   docker compose -f docker-compose.yml -f docker-compose.dev.yml up --build
+
+services:
+  slidegen:
+    environment:
+      LOG_LEVEL: DEBUG
+    volumes:
+      # Bind-mount backend source → thay đổi code không cần rebuild image
+      - ./backend:/app/backend

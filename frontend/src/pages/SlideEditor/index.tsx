@@ -137,7 +137,7 @@ const SlideEditor = () => {
           onZoomIn={() => setZoom(Math.min(2, zoom + 0.1))}
           onZoomOut={() => setZoom(Math.max(0.1, zoom - 0.1))}
           onZoomChange={setZoom}
-          autoFit={false}
+          autoFit={autoFit}
           onResetZoom={() => setZoom(autoFit ? 0.5 : 0.6)}
           onPrevSlide={() => currentSlideIndex > 0 && selectSlide(currentSlideIndex - 1)}
           onNextSlide={() => currentSlideIndex < slides.length - 1 && selectSlide(currentSlideIndex + 1)}

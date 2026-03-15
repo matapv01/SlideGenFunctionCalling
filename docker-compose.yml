@@ -1,0 +1,37 @@
+services:
+  slidegen:
+    build:
+      context: .
+      dockerfile: docker/Dockerfile
+    platform: linux/amd64
+    image: slidegen:latest
+    container_name: slidegen
+    restart: unless-stopped
+    ports:
+      - "12008:12008"
+    env_file:
+      - .env
+    environment:
+      # Override hardcoded 'cuda' in config.py — containers have no GPU by default
+      EMBEDDING_DEVICE: cpu
+      DISABLE_CONVERTER: "0"
+    volumes:
+      # Mount .env file so backend/main.py can find it at /app/.env
+      - ./.env:/app/.env:ro
+      # SQLite database (persisted across container restarts)
+      - slidegen_db:/app/backend/infrastructure/database
+      # User uploads, generated slides, captures, temp files
+      - slidegen_static:/app/static
+      # HuggingFace sentence-transformer model cache (avoid re-download on restart)
+      - huggingface_cache:/root/.cache/huggingface
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:12008/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 90s
+
+volumes:
+  slidegen_db:
+  slidegen_static:
+  huggingface_cache:

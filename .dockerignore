@@ -1,0 +1,42 @@
+# Version control
+.git/
+.gitignore
+
+# Secrets - never baked into image
+.env
+
+# Node modules (rebuilt inside Docker)
+frontend/node_modules/
+frontend/dist/
+backend/infrastructure/converter/node_modules/
+node_modules/
+
+# Python environment (rebuilt inside Docker)
+.venv/
+__pycache__/
+**/__pycache__/
+**/*.pyc
+**/*.pyo
+**/*.pyd
+*.egg-info/
+.pytest_cache/
+
+# Persistent data (managed via volumes)
+static/uploads/*
+static/output/*
+static/captures/*
+static/temp/*
+backend/infrastructure/database/slidegen.db
+
+# IDE / OS
+.vscode/
+.idea/
+*.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temp / scratch
+tmp_db_check.py
