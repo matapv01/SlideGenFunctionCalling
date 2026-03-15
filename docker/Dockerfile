@@ -59,9 +59,8 @@ COPY backend/ ./backend/
 COPY migrate_db.py .
 
 # ── Converter Node.js deps ────────────────────────────────────────────────────
-# PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true: reuse Playwright's Chromium at runtime
-# (entrypoint.sh exports PUPPETEER_EXECUTABLE_PATH before starting the server)
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true
+# Puppeteer downloads its own Chromium during npm install.
+# System deps are already satisfied by the playwright install step above.
 RUN cd backend/infrastructure/converter && npm install --legacy-peer-deps
 
 # ── Frontend (pre-built static files) ────────────────────────────────────────
