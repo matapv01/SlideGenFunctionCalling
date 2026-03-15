@@ -1,0 +1,1707 @@
+<!DOCTYPE html>
+<html lang="vi">
+<!-- Version 2 - Cache busted -->
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dự Án Của Tôi - SlideGen</title>
+    <script src="./config.js?v=2"></script> <!-- Load config -->
+    <script>console.log('🔍 HEAD: Projects.html loading...');</script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            z-index: 999;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .sidebar-toggle {
+            background: rgba(255, 255, 255, 0.2);
+            border: none;
+            color: white;
+            width: 35px;
+            height: 35px;
+            border-radius: 8px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+
+        .sidebar-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(5px);
+            color: white;
+        }
+
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-item i {
+            font-size: 1.3rem;
+        }
+
+        .sidebar-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: auto;
+        }
+
+        .sidebar-footer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-footer-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(5px);
+            color: white;
+        }
+
+        .sidebar-footer-item i {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-footer-item.logout {
+            background: rgba(220, 53, 69, 0.3);
+            border-color: rgba(220, 53, 69, 0.5);
+        }
+
+        .sidebar-footer-item.logout:hover {
+            background: rgba(220, 53, 69, 0.5);
+        }
+
+        /* User Menu Styles */
+        .user-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 10px 20px;
+            backdrop-filter: blur(10px);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info i {
+            font-size: 1.5rem;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-email {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-menu-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+        }
+
+        .user-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .user-menu-btn i {
+            font-size: 1.2rem;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            min-width: 180px;
+        }
+
+        .user-dropdown button {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .user-dropdown button:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Avatar Toggle Button (Left) */
+        .avatar-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1001;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .avatar-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        .avatar-toggle.active {
+            background: rgba(255, 255, 255, 0.4);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* User Info Top Right */
+        .user-info-top {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 10px 20px;
+            backdrop-filter: blur(10px);
+            color: white;
+            display: none;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info-top i {
+            font-size: 1.3rem;
+        }
+
+        .projects-container {
+            max-width: 1200px;
+            margin: 40px auto;
+            margin-left: 320px;
+            padding: 0 20px;
+        }
+
+        body.sidebar-hidden .projects-container {
+            margin-left: 80px;
+        }
+
+        /* Adjust avatar position when sidebar is open */
+        body:not(.sidebar-hidden) .avatar-toggle {
+            left: 300px;
+        }
+
+        .page-title {
+            color: white;
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 40px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .project-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            padding: 25px;
+            margin-bottom: 20px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .project-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .project-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 15px;
+        }
+
+        .project-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            margin: 0;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+        }
+
+        .project-title:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        .project-title.editing {
+            background: rgba(102, 126, 234, 0.15);
+        }
+
+        .project-title-input {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            padding: 4px 8px;
+            outline: none;
+            width: 100%;
+            background: white;
+        }
+
+        .project-meta {
+            display: flex;
+            gap: 20px;
+            color: #666;
+            font-size: 0.9rem;
+            margin-bottom: 15px;
+        }
+
+        .meta-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .project-description {
+            color: #555;
+            margin-bottom: 15px;
+            line-height: 1.6;
+        }
+
+        .project-actions {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-action {
+            padding: 8px 16px;
+            border-radius: 8px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+
+        .btn-view {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-view:hover {
+            transform: scale(1.05);
+        }
+
+        .btn-delete {
+            background: #dc3545;
+            color: white;
+        }
+
+        .btn-delete:hover {
+            background: #c82333;
+        }
+
+        .status-badge {
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: bold;
+        }
+
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+
+        .status-draft {
+            background: #fff3cd;
+            color: #856404;
+        }
+
+        .no-projects {
+            text-align: center;
+            color: white;
+            padding: 60px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .no-projects i {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            opacity: 0.5;
+        }
+
+        .no-projects h3 {
+            font-size: 1.8rem;
+            margin-bottom: 15px;
+        }
+
+        .no-projects p {
+            font-size: 1.1rem;
+            opacity: 0.8;
+            margin-bottom: 30px;
+        }
+
+        .no-projects .btn-action {
+            padding: 10px 20px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .loading {
+            text-align: center;
+            color: white;
+            padding: 40px;
+        }
+
+        .loading i {
+            font-size: 3rem;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% {
+                transform: rotate(0deg);
+            }
+
+            100% {
+                transform: rotate(360deg);
+            }
+        }
+
+        /* Avatar Toggle Hidden State */
+        .avatar-toggle.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Sidebar User Info */
+        .sidebar-user-info {
+            padding: 1rem;
+            margin: 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-user-info i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .sidebar-user-details {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .sidebar-user-name {
+            font-weight: 600;
+            color: white;
+            font-size: 0.95rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .sidebar-user-email {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.8);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        /* Modal Styles */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 16px;
+            padding: 2rem;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            margin: 0;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            color: #999;
+            cursor: pointer;
+            padding: 0;
+            width: 2rem;
+            height: 2rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 50%;
+            transition: all 0.3s ease;
+        }
+
+        .modal-close:hover {
+            background: #f0f0f0;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 1.25rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: #333;
+            font-size: 0.9rem;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.75rem;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-sizing: border-box;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .form-input[readonly] {
+            background: #f5f5f5;
+            color: #666;
+        }
+
+        textarea.form-input {
+            resize: vertical;
+            font-family: inherit;
+        }
+
+        .btn-primary,
+        .btn-secondary {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        /* ================== DARK MODE ================== */
+
+        /* Dark Mode Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 80px;
+            z-index: 9999;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: conic-gradient(#ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #ff6b6b);
+            border-radius: 50%;
+            z-index: -1;
+            animation: toggleGlow 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .theme-toggle:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes toggleGlow {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .theme-toggle .icon {
+            font-size: 1.4rem;
+            color: #ffffff;
+            transition: all 0.4s;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-toggle .sun-icon {
+            position: absolute;
+            opacity: 0;
+            transform: rotate(-90deg) scale(0);
+        }
+
+        .theme-toggle .moon-icon {
+            position: absolute;
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: linear-gradient(135deg, #0f0f23 0%, #1a1a3e 100%);
+        }
+
+        body.dark-mode .theme-toggle .sun-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        body.dark-mode .theme-toggle .moon-icon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0);
+        }
+
+        body.dark-mode .theme-toggle {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode .sidebar {
+            background: rgba(15, 15, 35, 0.9);
+            border-right-color: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .sidebar-item {
+            background: rgba(100, 150, 255, 0.1);
+            border-color: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .sidebar-item:hover {
+            background: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .sidebar-item.active {
+            background: rgba(100, 150, 255, 0.25);
+            border-color: rgba(100, 150, 255, 0.4);
+        }
+
+        body.dark-mode .sidebar-user-info {
+            background: rgba(100, 150, 255, 0.15);
+        }
+
+        body.dark-mode .sidebar-footer-item {
+            background: rgba(100, 150, 255, 0.1);
+            border-color: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .sidebar-footer-item:hover {
+            background: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .sidebar-footer-item.logout {
+            background: rgba(220, 53, 69, 0.25);
+            border-color: rgba(220, 53, 69, 0.4);
+        }
+
+        body.dark-mode .sidebar-footer-item.logout:hover {
+            background: rgba(220, 53, 69, 0.4);
+        }
+
+        body.dark-mode .project-card {
+            background: rgba(30, 30, 60, 0.8);
+        }
+
+        body.dark-mode .project-title {
+            color: #e0e7ff;
+        }
+
+        body.dark-mode .project-title:hover {
+            background: rgba(100, 150, 255, 0.15);
+        }
+
+        body.dark-mode .project-title.editing {
+            background: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .project-title-input {
+            background: rgba(30, 30, 60, 0.9);
+            color: #e0e7ff;
+            border-color: #667eea;
+        }
+
+        body.dark-mode .project-meta {
+            color: #a5b4fc;
+        }
+
+        body.dark-mode .project-description {
+            color: #c7d2fe;
+        }
+
+        body.dark-mode .btn-view {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+
+        body.dark-mode .btn-delete {
+            background: #dc2626;
+        }
+
+        body.dark-mode .btn-delete:hover {
+            background: #b91c1c;
+        }
+
+        body.dark-mode .no-projects {
+            background: rgba(30, 30, 60, 0.6);
+            border-color: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .modal-content {
+            background: rgba(20, 20, 40, 0.95);
+            color: #e0e7ff;
+        }
+
+        body.dark-mode .modal-title {
+            background: linear-gradient(135deg, #667eea 0%, #a855f7 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        body.dark-mode .modal-close {
+            color: #a5b4fc;
+        }
+
+        body.dark-mode .modal-close:hover {
+            background: rgba(100, 150, 255, 0.2);
+            color: #e0e7ff;
+        }
+
+        body.dark-mode .form-label {
+            color: #c7d2fe;
+        }
+
+        body.dark-mode .form-input {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(100, 150, 255, 0.3);
+            color: #e0e7ff;
+        }
+
+        body.dark-mode .form-input:focus {
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.2);
+        }
+
+        body.dark-mode .form-input[readonly] {
+            background: rgba(0, 0, 0, 0.4);
+            color: #9ca3af;
+        }
+
+        body.dark-mode .btn-primary {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+        }
+
+        body.dark-mode .btn-secondary {
+            background: rgba(55, 65, 81, 0.8);
+            color: #e0e7ff;
+        }
+
+        body.dark-mode .btn-secondary:hover {
+            background: rgba(75, 85, 99, 0.9);
+        }
+    </style>
+</head>
+
+<body class="sidebar-hidden">
+    <!-- Avatar Toggle Button (Left) -->
+    <button class="avatar-toggle" id="avatarToggle" onclick="toggleSidebar()">
+        <i class="bi bi-person-circle"></i>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar hidden" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="bi bi-stars"></i>
+                <span>SlideGen</span>
+            </div>
+        </div>
+
+        <!-- User Info in Sidebar -->
+        <div class="sidebar-user-info">
+            <i class="bi bi-person-circle"></i>
+            <div class="sidebar-user-details">
+                <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                <div class="sidebar-user-email" id="sidebarUserEmail">email@example.com</div>
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <a href="index.html" class="sidebar-item">
+                <i class="bi bi-plus-circle"></i>
+                <span>Tạo Slide Mới</span>
+            </a>
+            <a href="projects.html" class="sidebar-item active">
+                <i class="bi bi-folder"></i>
+                <span>Quản Lý Dự Án</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <a href="#" class="sidebar-footer-item" onclick="openProfile(); return false;">
+                <i class="bi bi-person"></i>
+                <span>Thông tin cá nhân</span>
+            </a>
+            <a href="#" class="sidebar-footer-item" onclick="openChangePassword(); return false;">
+                <i class="bi bi-key"></i>
+                <span>Đổi mật khẩu</span>
+            </a>
+            <a href="#" class="sidebar-footer-item logout" onclick="logout(); return false;">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Đăng xuất</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="projects-container">
+        <h1 class="page-title">
+            <i class="bi bi-folder"></i> Dự án của tôi
+        </h1>
+
+        <div id="loadingIndicator" class="loading">
+            <i class="bi bi-arrow-clockwise"></i>
+            <p>Đang tải dự án...</p>
+        </div>
+
+        <div id="projectsList" style="display: none;">
+            <!-- Projects will be loaded here -->
+        </div>
+
+        <div id="noProjects" class="no-projects" style="display: none;">
+            <i class="bi bi-inbox"></i>
+            <h3>Chưa có dự án nào</h3>
+            <p>Hãy tạo dự án đầu tiên của bạn!</p>
+            <button class="btn btn-action btn-view" onclick="window.location.href='index.html'"
+                style="margin-top: 20px; padding: 6px 12px; font-size: 0.85rem;">
+                Tạo dự án mới
+            </button>
+        </div>
+    </div>
+    <!-- Config is loaded as regular script in head -->
+    <script>
+        // Config is available as window.config
+        window.SLIDEGEN_CONFIG = window.config || {};
+        console.log('✅ Config loaded:', window.config);
+
+        // Use config from window (loaded as regular script)
+        const appConfig = window.config || {};
+
+        const API_CONFIG = {
+            BACKEND_URL: appConfig.BACKEND_URL || 'http://localhost:12008',
+            API_BASE_URL: appConfig.API_BASE_URL || 'http://localhost:12008'
+        };
+
+        // Check authentication
+        async function checkAuth() {
+            const token = localStorage.getItem('access_token');
+            console.log('checkAuth: token =', token ? 'exists' : 'null');
+
+            if (!token) {
+                console.log('checkAuth: No token, redirecting to login');
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            try {
+                console.log('checkAuth: Fetching from', `${API_CONFIG.BACKEND_URL}/api/auth/me`);
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('checkAuth: Response status', response.status);
+
+                if (!response.ok) {
+                    console.log('checkAuth: Response not OK, redirecting to login');
+                    localStorage.removeItem('access_token');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                const user = await response.json();
+                console.log('checkAuth: User authenticated', user.username);
+                window.currentUser = user;
+                document.getElementById('sidebarUsername').textContent = user.username;
+                document.getElementById('sidebarUserEmail').textContent = user.email;
+                document.getElementById('avatarToggle').style.display = 'flex';
+                return true;
+            } catch (error) {
+                console.error('checkAuth: Error', error);
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+
+        // Simple toast notification
+        function showToast(message, type = 'info') {
+            // For now, just use console.log and don't show alert
+            // Can implement a proper toast UI later if needed
+            console.log(`[${type.toUpperCase()}] ${message}`);
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            const avatarToggle = document.getElementById('avatarToggle');
+
+            sidebar.classList.toggle('hidden');
+            body.classList.toggle('sidebar-hidden');
+
+            if (sidebar.classList.contains('hidden')) {
+                avatarToggle.classList.remove('hidden');
+            } else {
+                avatarToggle.classList.add('hidden');
+            }
+        }
+
+        async function openProfile() {
+            const token = localStorage.getItem('access_token');
+            try {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.ok) {
+                    const profile = await response.json();
+                    document.getElementById('profileUsername').value = window.currentUser.username;
+                    document.getElementById('profileEmail').value = window.currentUser.email;
+                    document.getElementById('profileFullName').value = profile.full_name || '';
+                    document.getElementById('profileAvatar').value = profile.avatar_url || '';
+                    document.getElementById('profileBio').value = profile.bio || '';
+                }
+
+                document.getElementById('profileModal').classList.add('active');
+            } catch (error) {
+                console.error('Failed to load profile:', error);
+                alert('Không thể tải thông tin cá nhân');
+            }
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        async function saveProfile(event) {
+            event.preventDefault();
+
+            const token = localStorage.getItem('access_token');
+            const profileData = {
+                full_name: document.getElementById('profileFullName').value,
+                avatar_url: document.getElementById('profileAvatar').value,
+                bio: document.getElementById('profileBio').value
+            };
+
+            try {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                if (response.ok) {
+                    alert('Cập nhật thông tin thành công!');
+                    closeProfileModal();
+                } else {
+                    alert('Không thể cập nhật thông tin');
+                }
+            } catch (error) {
+                console.error('Failed to save profile:', error);
+                alert('Lỗi khi cập nhật thông tin');
+            }
+        }
+
+        function openChangePassword() {
+            const form = document.getElementById('changePasswordForm');
+            if (form) {
+                form.reset();
+            } else {
+                // Fallback: clear fields individually
+                const currentPwd = document.getElementById('currentPassword');
+                const newPwd = document.getElementById('newPassword');
+                const confirmPwd = document.getElementById('confirmPassword');
+                if (currentPwd) currentPwd.value = '';
+                if (newPwd) newPwd.value = '';
+                if (confirmPwd) confirmPwd.value = '';
+            }
+            document.getElementById('changePasswordModal').classList.add('active');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('active');
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('Mật khẩu mới và xác nhận mật khẩu không khớp!');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('Mật khẩu mới phải có ít nhất 6 ký tự!');
+                return;
+            }
+
+            const token = localStorage.getItem('access_token');
+
+            try {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/auth/change-password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Đổi mật khẩu thành công!');
+                    closeChangePasswordModal();
+                    document.getElementById('changePasswordForm').reset();
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Không thể đổi mật khẩu');
+                }
+            } catch (error) {
+                console.error('Failed to change password:', error);
+                alert('Lỗi khi đổi mật khẩu');
+            }
+        }
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function (event) {
+            const sidebar = document.getElementById('sidebar');
+            const avatarToggle = document.getElementById('avatarToggle');
+            const body = document.body;
+
+            if (sidebar && avatarToggle &&
+                !sidebar.contains(event.target) &&
+                !avatarToggle.contains(event.target) &&
+                !body.classList.contains('sidebar-hidden')) {
+                toggleSidebar();
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = 'login.html';
+        }
+
+        // Load projects
+        async function loadProjects() {
+            if (!await checkAuth()) return;
+
+            const token = localStorage.getItem('access_token');
+
+            try {
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/projects`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                if (response.status === 401) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = 'login.html';
+                    return;
+                }
+
+                if (!response.ok) {
+                    throw new Error('Lỗi khi tải dự án');
+                }
+
+                const data = await response.json();
+                displayProjects(data.projects);
+            } catch (error) {
+                console.error('Error loading projects:', error);
+                document.getElementById('loadingIndicator').innerHTML = `
+                    <i class="bi bi-exclamation-triangle"></i>
+                    <p>Lỗi tải dự án: ${error.message}</p>
+                `;
+            }
+        }
+
+        // Display projects
+        function displayProjects(projects) {
+            document.getElementById('loadingIndicator').style.display = 'none';
+
+            if (projects.length === 0) {
+                document.getElementById('noProjects').style.display = 'block';
+                return;
+            }
+
+            const projectsList = document.getElementById('projectsList');
+            projectsList.style.display = 'block';
+
+            projectsList.innerHTML = projects.map(project => `
+                <div class="project-card">
+                    <div class="project-header">
+                        <h3 class="project-title" data-project-id="${project.id}" ondblclick="editProjectTitle(${project.id}, this)" title="Nhấp đúp để sửa">${escapeHtml(project.title)}</h3>
+                        <span class="status-badge status-${project.status}">
+                            ${project.status === 'completed' ? 'Hoàn thành' : 'Nháp'}
+                        </span>
+                    </div>
+                    <div class="project-meta">
+                        <div class="meta-item">
+                            <i class="bi bi-file-slides"></i>
+                            <span>${project.slide_count || 0} slides</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-${project.source_type === 'docx' ? 'file-word' : 'lightbulb'}"></i>
+                            <span>${project.source_type === 'docx' ? 'DOCX' : 'Ý tưởng'}</span>
+                        </div>
+                        <div class="meta-item">
+                            <i class="bi bi-clock"></i>
+                            <span>${formatDate(project.updated_at)}</span>
+                        </div>
+                    </div>
+                    ${project.description ? `<p class="project-description">${escapeHtml(project.description)}</p>` : ''}
+                    <div class="project-actions">
+                        <button class="btn-action btn-view" onclick="editProject(${project.id})">
+                            <i class="bi bi-pencil"></i> Sửa slide
+                        </button>
+                        <button class="btn-action btn-delete" onclick="deleteProject(${project.id}, '${escapeHtml(project.title)}')">
+                            <i class="bi bi-trash"></i> Xóa
+                        </button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Edit project
+        function editProject(projectId) {
+            window.location.href = `edit.html?id=${projectId}`;
+        }
+
+        // Delete project
+        async function deleteProject(projectId, projectTitle) {
+            showDeleteProjectConfirmation(projectId, projectTitle);
+        }
+
+        function showDeleteProjectConfirmation(projectId, projectTitle) {
+            // Create modal overlay
+            const overlay = document.createElement('div');
+            overlay.style.cssText = `
+                position: fixed !important;
+                top: 0 !important;
+                left: 0 !important;
+                right: 0 !important;
+                bottom: 0 !important;
+                background: rgba(0, 0, 0, 0.5) !important;
+                backdrop-filter: blur(4px) !important;
+                z-index: 99999 !important;
+                display: flex !important;
+                align-items: center !important;
+                justify-content: center !important;
+                animation: fadeIn 0.2s ease !important;
+            `;
+
+            // Create modal
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                background: white !important;
+                border-radius: 16px !important;
+                padding: 32px !important;
+                max-width: 450px !important;
+                width: 90% !important;
+                box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3) !important;
+                animation: slideUp 0.3s ease !important;
+                position: relative !important;
+                z-index: 100000 !important;
+            `;
+
+            modal.innerHTML = `
+                <style>
+                    @keyframes fadeIn {
+                        from { opacity: 0; }
+                        to { opacity: 1; }
+                    }
+                    @keyframes slideUp {
+                        from { transform: translateY(20px); opacity: 0; }
+                        to { transform: translateY(0); opacity: 1; }
+                    }
+                    @keyframes fadeOut {
+                        from { opacity: 1; }
+                        to { opacity: 0; }
+                    }
+                </style>
+                <div style="text-align: center;">
+                    <div style="font-size: 48px; margin-bottom: 16px;">🗑️</div>
+                    <h3 style="margin: 0 0 12px 0; font-size: 24px; color: #1f2937;">Xóa Dự Án?</h3>
+                    <p style="margin: 0 0 24px 0; color: #6b7280; font-size: 14px;">
+                        Bạn có chắc muốn xóa dự án <strong>"${escapeHtml(projectTitle)}"</strong>?<br>
+                        Tất cả slides trong dự án này sẽ bị xóa. Hành động này không thể hoàn tác.
+                    </p>
+                    <div style="display: flex; gap: 12px; justify-content: center;">
+                        <button id="cancelDeleteProject" style="
+                            padding: 12px 24px;
+                            border: 2px solid #e5e7eb;
+                            border-radius: 8px;
+                            background: white;
+                            color: #6b7280;
+                            font-size: 14px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        ">Hủy</button>
+                        <button id="confirmDeleteProject" style="
+                            padding: 12px 24px;
+                            border: none;
+                            border-radius: 8px;
+                            background: #ef4444;
+                            color: white;
+                            font-size: 14px;
+                            font-weight: 600;
+                            cursor: pointer;
+                            transition: all 0.2s;
+                        ">Xóa Dự Án</button>
+                    </div>
+                </div>
+            `;
+
+            overlay.appendChild(modal);
+            document.body.appendChild(overlay);
+
+            // Add hover effects
+            const cancelBtn = modal.querySelector('#cancelDeleteProject');
+            const confirmBtn = modal.querySelector('#confirmDeleteProject');
+
+            cancelBtn.onmouseover = () => cancelBtn.style.background = '#f9fafb';
+            cancelBtn.onmouseout = () => cancelBtn.style.background = 'white';
+
+            confirmBtn.onmouseover = () => confirmBtn.style.background = '#dc2626';
+            confirmBtn.onmouseout = () => confirmBtn.style.background = '#ef4444';
+
+            // Handle buttons
+            cancelBtn.onclick = () => {
+                overlay.style.animation = 'fadeOut 0.2s ease';
+                setTimeout(() => overlay.remove(), 200);
+            };
+
+            confirmBtn.onclick = async () => {
+                overlay.remove();
+                await executeDeleteProject(projectId, projectTitle);
+            };
+
+            // Close on overlay click
+            overlay.onclick = (e) => {
+                if (e.target === overlay) {
+                    overlay.style.animation = 'fadeOut 0.2s ease';
+                    setTimeout(() => overlay.remove(), 200);
+                }
+            };
+        }
+
+        // Edit project title inline
+        function editProjectTitle(projectId, titleElement) {
+            const currentTitle = titleElement.textContent;
+
+            // Create input
+            const input = document.createElement('input');
+            input.type = 'text';
+            input.className = 'project-title-input';
+            input.value = currentTitle;
+
+            // Replace title with input
+            titleElement.replaceWith(input);
+            input.focus();
+            input.select();
+
+            // Save on blur or enter
+            const saveTitle = async () => {
+                const newTitle = input.value.trim() || currentTitle;
+
+                // Replace input with title
+                const newTitleElement = document.createElement('h3');
+                newTitleElement.className = 'project-title';
+                newTitleElement.setAttribute('data-project-id', projectId);
+                newTitleElement.setAttribute('ondblclick', `editProjectTitle(${projectId}, this)`);
+                newTitleElement.setAttribute('title', 'Nhấp đúp để sửa');
+                newTitleElement.textContent = newTitle;
+                input.replaceWith(newTitleElement);
+
+                // Save to database if changed
+                if (newTitle !== currentTitle) {
+                    try {
+                        const token = localStorage.getItem('access_token');
+                        const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/projects/${projectId}`, {
+                            method: 'PUT',
+                            headers: {
+                                'Authorization': `Bearer ${token}`,
+                                'Content-Type': 'application/json'
+                            },
+                            body: JSON.stringify({ title: newTitle })
+                        });
+
+                        if (response.ok) {
+                            showToast('✓ Đã cập nhật tên dự án', 'success');
+                            console.log('✅ Project title updated:', newTitle);
+                        } else {
+                            showToast('✗ Lỗi cập nhật tên dự án', 'error');
+                        }
+                    } catch (error) {
+                        console.error('Error updating project title:', error);
+                        showToast('✗ Lỗi cập nhật tên dự án', 'error');
+                    }
+                }
+            };
+
+            input.addEventListener('blur', saveTitle);
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter') {
+                    input.blur();
+                } else if (e.key === 'Escape') {
+                    input.value = currentTitle;
+                    input.blur();
+                }
+            });
+        }
+
+        async function executeDeleteProject(projectId, projectTitle) {
+            const token = localStorage.getItem('access_token');
+
+            try {
+                console.log('🗑️ Deleting project:', projectId);
+                const response = await fetch(`${API_CONFIG.BACKEND_URL}/api/projects/${projectId}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+
+                console.log('Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({}));
+                    console.error('Delete failed:', errorData);
+                    throw new Error(errorData.detail || 'Không thể xóa dự án');
+                }
+
+                // Show success message
+                showToast(`✓ Đã xóa dự án "${projectTitle}" thành công`, 'success');
+
+                // Reload projects
+                loadProjects();
+            } catch (error) {
+                console.error('Error deleting project:', error);
+                showToast(`✗ Lỗi khi xóa dự án: ${error.message}`, 'error');
+            }
+        }
+
+        // Format date
+        function formatDate(dateString) {
+            // Parse as UTC if no timezone info, then convert to local
+            let date;
+            if (dateString.endsWith('Z') || dateString.includes('+')) {
+                // Already has timezone info
+                date = new Date(dateString);
+            } else {
+                // No timezone, assume UTC from backend and convert to local
+                date = new Date(dateString + 'Z');
+            }
+
+            const now = new Date();
+
+            // Reset time to midnight for accurate day comparison
+            const dateOnly = new Date(date.getFullYear(), date.getMonth(), date.getDate());
+            const nowOnly = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+            const diffTime = nowOnly - dateOnly;
+            const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+            if (diffDays === 0) {
+                // Same day - show time in local timezone
+                const hours = date.getHours().toString().padStart(2, '0');
+                const minutes = date.getMinutes().toString().padStart(2, '0');
+                return `Hôm nay ${hours}:${minutes}`;
+            } else if (diffDays === 1) {
+                return 'Hôm qua';
+            } else if (diffDays < 7) {
+                return `${diffDays} ngày trước`;
+            } else if (diffDays < 30) {
+                const weeks = Math.floor(diffDays / 7);
+                return `${weeks} tuần trước`;
+            } else {
+                return date.toLocaleDateString('vi-VN', {
+                    day: '2-digit',
+                    month: '2-digit',
+                    year: 'numeric'
+                });
+            }
+        }
+
+        // Escape HTML
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+
+        // Expose functions to global scope for inline onclick events
+        window.toggleSidebar = toggleSidebar;
+        window.openProfile = openProfile;
+        window.closeProfileModal = closeProfileModal;
+        window.saveProfile = saveProfile;
+        window.openChangePassword = openChangePassword;
+        window.closeChangePasswordModal = closeChangePasswordModal;
+        window.changePassword = changePassword;
+        window.logout = logout;
+        window.editProject = editProject;
+        window.deleteProject = deleteProject;
+        window.editProjectTitle = editProjectTitle;
+
+        // Initialize
+        (async () => {
+            console.log('Starting initialization...');
+            console.log('Token exists:', !!localStorage.getItem('access_token'));
+            const authResult = await checkAuth();
+            console.log('Auth result:', authResult);
+            if (authResult) {
+                await loadProjects();
+            }
+        })();
+    </script>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Thông tin cá nhân</h3>
+                <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <form id="profileForm" onsubmit="saveProfile(event)">
+                <div class="form-group">
+                    <label class="form-label">Tên đăng nhập</label>
+                    <input type="text" class="form-input" id="profileUsername" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="profileEmail" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Họ và tên</label>
+                    <input type="text" class="form-input" id="profileFullName" placeholder="Nhập họ và tên">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Avatar URL</label>
+                    <input type="url" class="form-input" id="profileAvatar"
+                        placeholder="https://example.com/avatar.jpg">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Giới thiệu</label>
+                    <textarea class="form-input" id="profileBio" rows="3"
+                        placeholder="Giới thiệu về bản thân"></textarea>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn-secondary" onclick="closeProfileModal()">Hủy</button>
+                    <button type="submit" class="btn-primary">Lưu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Đổi mật khẩu</h3>
+                <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+            </div>
+            <form id="changePasswordForm" onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu hiện tại</label>
+                    <input type="password" class="form-input" id="currentPassword" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-input" id="newPassword" required>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Xác nhận mật khẩu mới</label>
+                    <input type="password" class="form-input" id="confirmPassword" required>
+                </div>
+                <div style="display: flex; gap: 1rem; justify-content: flex-end;">
+                    <button type="button" class="btn-secondary" onclick="closeChangePasswordModal()">Hủy</button>
+                    <button type="submit" class="btn-primary">Đổi mật khẩu</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Dark Mode Toggle Button -->
+    <button class="theme-toggle" onclick="toggleDarkMode()" aria-label="Chuyển đổi chế độ tối">
+        <i class="bi bi-moon-stars-fill icon moon-icon"></i>
+        <i class="bi bi-sun-fill icon sun-icon"></i>
+    </button>
+
+    <script>
+        // ================== DARK MODE ==================
+        function toggleDarkMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+
+            // Save state to localStorage
+            const isDarkMode = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+
+            // Add ripple effect on click
+            const toggle = document.querySelector('.theme-toggle');
+            if (toggle) {
+                toggle.style.transform = 'scale(0.9)';
+                setTimeout(() => {
+                    toggle.style.transform = '';
+                }, 150);
+            }
+        }
+
+        // Restore dark mode state on page load
+        (function () {
+            const savedDarkMode = localStorage.getItem('darkMode');
+            if (savedDarkMode === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+        })();
+    </script>
+</body>
+
+</html>

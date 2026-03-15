@@ -1,0 +1,109 @@
+        /* Arrow heads for straight connector */
+        .connector-line.straight .arrow-head {
+            pointer-events: none;
+            transition: all 0.2s ease;
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Ensure arrows are visible by default */
+        .connector-line.straight .arrow-head.forward {
+            border-left-color: #667eea;
+        }
+
+        .connector-line.straight .arrow-head.backward {
+            border-right-color: #667eea;
+        }
+
+        .connector-line.straight .arrow-head.circle {
+            background: #667eea !important;
+            border-color: #667eea !important;
+            opacity: 1 !important;
+            visibility: visible !important;
+            display: block !important;
+        }
+
+        .connector-line.straight .arrow-head.diamond {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .connector-line.straight .arrow-head.square {
+            background: #667eea;
+            border-color: #667eea;
+        }
+
+        .connector-line.straight:hover .arrow-head.forward {
+            border-left-color: #5a67d8 !important;
+        }
+
+        .connector-line.straight:hover .arrow-head.backward {
+            border-right-color: #5a67d8 !important;
+        }
+
+        .connector-line.straight:hover .arrow-head.circle {
+            background: #5a67d8 !important;
+            border-color: #5a67d8 !important;
+        }
+
+        .connector-line.straight:hover .arrow-head.diamond {
+            background: #5a67d8 !important;
+            border-color: #5a67d8 !important;
+        }
+
+        .connector-line.straight:hover .arrow-head.square {
+            background: #5a67d8 !important;
+            border-color: #5a67d8 !important;
+        }
+
+        .connector-line.straight.selected .arrow-head.forward {
+            border-left-color: #ff6b9d !important;
+        }
+
+        .connector-line.straight.selected .arrow-head.backward {
+            border-right-color: #ff6b9d !important;
+        }
+
+        .connector-line.straight.selected .arrow-head.circle {
+            background: #ff6b9d !important;
+            border-color: #ff6b9d !important;
+        }
+
+        .connector-line.straight.selected .arrow-head.diamond {
+            background: #ff6b9d !important;
+            border-color: #ff6b9d !important;
+        }
+
+        .connector-line.straight.selected .arrow-head.square {
+            background: #ff6b9d !important;
+            border-color: #ff6b9d !important;
+        }
+
+        .connector-line.curved svg .arrow-head {
+            fill: #667eea;
+            transition: all 0.2s ease;
+        }
+
+        .connector-line.curved svg path:hover+.arrow-head,
+        .connector-line.curved:hover svg .arrow-head {
+            fill: #5a67d8;
+        }
+
+        .connector-line.curved.selected svg .arrow-head {
+            fill: #ff6b9d;
+        }
+
+        .connector-line.step svg .arrow-head {
+            fill: #667eea;
+            transition: all 0.2s ease;
+        }
+
+        .connector-line.step svg path:hover+.arrow-head,
+        .connector-line.step:hover svg .arrow-head {
+            fill: #5a67d8;
+        }
+
+        .connector-line.step.selected svg .arrow-head {
+            fill: #ff6b9d;
+        }
+

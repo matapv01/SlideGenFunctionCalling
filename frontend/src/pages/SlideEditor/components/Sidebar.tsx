@@ -107,7 +107,10 @@ export const EditorSidebar = ({
                 key={tmpl.id} 
                 className="aspect-[4/3] border rounded-md bg-muted/20 hover:bg-muted cursor-pointer flex flex-col items-center justify-center p-2 text-center select-none"
                 draggable
-                onDragStart={() => onSetDraggedItem({ type: "template", subType: tmpl.layout })}
+                onDragStart={(e) => {
+                  e.dataTransfer.setData("application/json", JSON.stringify({ type: "template", subType: tmpl.layout }));
+                  onSetDraggedItem({ type: "template", subType: tmpl.layout });
+                }}
               >
                 <FileText className="h-8 w-8 mb-2 text-muted-foreground" />
                 <span className="text-xs font-medium">{tmpl.name}</span>
@@ -127,7 +130,10 @@ export const EditorSidebar = ({
                     key={item.id}
                     className="aspect-square border rounded-md flex flex-col items-center justify-center hover:bg-secondary cursor-grab active:cursor-grabbing p-1"
                     draggable
-                    onDragStart={() => onSetDraggedItem({ type: item.type, subType: item.subType })}
+                    onDragStart={(e) => {
+                      e.dataTransfer.setData("application/json", JSON.stringify({ type: item.type, subType: item.subType }));
+                      onSetDraggedItem({ type: item.type, subType: item.subType });
+                    }}
                   >
                     <item.icon className="h-6 w-6 mb-1 text-foreground" />
                     <span className="text-[10px] text-center leading-tight">{item.label}</span>

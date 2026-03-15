@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hướng Dẫn Sử Dụng - SlideGen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow-x: hidden;
+        }
+
+        .main-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar Styles */
+        .sidebar {
+            width: 280px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(0, 0, 0, 0.1);
+            position: fixed;
+            top: 0;
+            bottom: 0;
+            left: 0;
+            padding: 20px;
+            z-index: 1000;
+            overflow-y: auto;
+        }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: #667eea;
+            margin-bottom: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .nav-link {
+            color: #555;
+            padding: 12px 15px;
+            border-radius: 10px;
+            margin-bottom: 5px;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 500;
+        }
+
+        .nav-link:hover,
+        .nav-link.active {
+            background: #f0f2ff;
+            color: #667eea;
+        }
+
+        .nav-link i {
+            font-size: 1.2rem;
+        }
+
+        /* Content Styles */
+        .content-area {
+            flex-grow: 1;
+            margin-left: 280px;
+            /* Width of sidebar */
+            padding: 40px;
+        }
+
+        .guide-card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            scroll-margin-top: 20px;
+        }
+
+        .section-title {
+            color: #4a4a4a;
+            font-weight: 800;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .badge-mode {
+            font-size: 0.9rem;
+            padding: 5px 12px;
+            border-radius: 20px;
+            vertical-align: middle;
+        }
+
+        .tips-box {
+            background: #f8f9fa;
+            border-left: 4px solid #667eea;
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin-top: 20px;
+        }
+
+        /* Dark Mode Styles */
+        body.dark-mode {
+            background: linear-gradient(-45deg, #0f0f23, #1a1a3e, #0d1b2a, #1b263b, #0f0f23, #252547);
+            background-size: 400% 400%;
+            color: #e0e0e0;
+        }
+
+        body.dark-mode .sidebar {
+            background: rgba(15, 15, 35, 0.95);
+            border-right-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .sidebar-brand {
+            color: #a5b4fc;
+        }
+
+        body.dark-mode .nav-link {
+            color: #b0b0b0;
+        }
+
+        body.dark-mode .nav-link:hover,
+        body.dark-mode .nav-link.active {
+            background: rgba(102, 126, 234, 0.2);
+            color: #fff;
+        }
+
+        body.dark-mode .guide-card {
+            background: rgba(30, 30, 60, 0.95);
+            color: #e0e0e0;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+        }
+
+        body.dark-mode .section-title {
+            color: #fff;
+            border-bottom-color: rgba(255, 255, 255, 0.1);
+        }
+
+        body.dark-mode .text-muted {
+            color: #aaa !important;
+        }
+
+        body.dark-mode .alert-warning {
+            background-color: rgba(255, 193, 7, 0.1) !important;
+            color: #ffc107;
+        }
+
+        body.dark-mode .tips-box {
+            background: rgba(102, 126, 234, 0.1);
+            color: #e0e0e0;
+        }
+
+        /* Theme Toggle Button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: all 0.3s;
+            color: white;
+            font-size: 1.2rem;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode .theme-toggle {
+            background: rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+
+        .code-block {
+            background: #2d3436;
+            color: #f1f2f6;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Consolas', monospace;
+            font-size: 14px;
+            margin: 20px 0;
+            border-left: 5px solid #667eea;
+            white-space: pre-wrap;
+        }
+
+        .hierarchy-tree {
+            margin-left: 20px;
+            border-left: 2px dashed #ccc;
+            padding-left: 20px;
+        }
+
+        .hierarchy-item {
+            position: relative;
+            margin-bottom: 15px;
+        }
+
+        .hierarchy-item::before {
+            content: "";
+            position: absolute;
+            left: -22px;
+            top: 12px;
+            width: 20px;
+            height: 2px;
+            background: #ccc;
+        }
+
+        .tag-badge {
+            display: inline-block;
+            background: #e1f5fe;
+            color: #0288d1;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 0.9em;
+            margin-right: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <button class="theme-toggle" onclick="toggleDarkMode()" title="Chuyển đổi chế độ Sáng/Tối">
+        <i class="bi bi-moon-fill" id="themeIcon"></i>
+    </button>
+
+    <div class="main-wrapper">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <a href="index.html" class="sidebar-brand text-decoration-none">
+                <i class="bi bi-arrow-left-circle-fill"></i> Quay lại
+            </a>
+
+            <div class="nav flex-column">
+                <a href="#auto" class="nav-link active">
+                    <i class="bi bi-magic"></i> Chế độ Tự động
+                </a>
+                <a href="#heading" class="nav-link">
+                    <i class="bi bi-lightning-charge"></i> Tự động với Tiêu đề
+                </a>
+                <a href="#manual" class="nav-link">
+                    <i class="bi bi-pencil"></i> Chế độ Thủ công
+                </a>
+            </div>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="content-area">
+
+            <h1 class="text-white mb-5 fw-bold text-shadow">Hướng Dẫn Workflow Mode</h1>
+
+            <!-- Auto Mode -->
+            <div id="auto" class="guide-card">
+                <h2 class="section-title text-warning">
+                    <i class="bi bi-magic"></i> 1. Chế độ Auto (Tự Động)
+                </h2>
+                <p>Dành cho tài liệu thô, chưa có cấu trúc. AI sẽ tự động "đọc hiểu" và chia slide.</p>
+                <div class="alert alert-warning bg-warning bg-opacity-10 border-0">
+                    <i class="bi bi-info-circle-fill me-2"></i> <strong>Thích hợp nhất:</strong> Bài báo, văn bản thuần
+                    túy, nội dung copy từ web.
+                </div>
+            </div>
+
+            <!-- Auto With Heading -->
+            <div id="heading" class="guide-card">
+                <h2 class="section-title text-primary">
+                    <i class="bi bi-lightning-charge"></i> 2. Auto With Heading (Tự động theo Heading)
+                </h2>
+                <p>Sử dụng các <strong>Styles</strong> chuẩn của Microsoft Word để định hướng cho AI.</p>
+
+                <h5>Các Style được hỗ trợ (Từ lớn đến bé):</h5>
+                <p class="mb-4">
+                    <span class="badge bg-secondary fs-6 me-2">Title</span>
+                    <span class="badge bg-secondary fs-6 me-2">Subtitle</span>
+                    <span class="badge bg-primary fs-6 me-2">Heading 1</span>
+                    <span class="badge bg-primary fs-6 me-2">Heading 2</span>
+                    <span class="badge bg-primary fs-6 me-2">Heading 3</span>
+                    <span class="badge bg-info text-dark fs-6 me-2">Headline</span>
+                    <span class="badge bg-info text-dark fs-6 me-2">Subheadline</span>
+                </p>
+
+                <h5>Ví dụ cấu trúc Word mẫu đầy đủ:</h5>
+                <div class="code-block">
+                    Title: Báo Cáo Tổng Kết Năm 2024
+                    Subtitle: Chiến lược và Tầm nhìn 2025
+
+                    Heading 1: Phần 1 - Kế hoạch kinh doanh (Section Slide)
+                    Heading 2: Mục tiêu Quý 1 (Slide Title)
+                    Heading 3: Chi tiết doanh số (Sub-slide / Detail)
+                    Normal Text: Nội dung chi tiết về doanh số...
+
+                    Heading 2: Chiến lược Marketing (Slide Title tiếp theo)
+                    Headline: Các kênh quảng cáo chính (Điểm nhấn lớn)
+                    Subheadline: Facebook & Google Ads (Điểm nhấn nhỏ)
+                    Normal Text: Chúng ta sẽ tập trung vào viral video...
+                </div>
+            </div>
+
+            <!-- Manual Mode -->
+            <div id="manual" class="guide-card">
+                <h2 class="section-title text-success">
+                    <i class="bi bi-pencil"></i> 3. Manual Mode (Thủ Công)
+                </h2>
+                <p>Chế độ này cho phép bạn xây dựng cấu trúc theo tầng bậc (Hierarchy). Bạn có thể định nghĩa loại slide
+                    (Intro hay Slide thường) bằng Level.</p>
+
+                <h5 class="mb-3">Các Level (Cấp độ):</h5>
+
+                <div class="hierarchy-tree border-start-0 ms-0 ps-0">
+                    <div class="hierarchy-item mb-4">
+                        <strong class="text-danger fs-5">L0 (Slide Giới Thiệu)</strong>
+                        <p class="text-muted mb-1">Dùng cho Slide Giới Thiệu, Mở Đầu.</p>
+                        <ul class="small text-secondary mb-0">
+                            <li><strong>Tiêu đề:</strong> Tên chủ đề lớn / Tên phần.</li>
+                            <li><strong>Nội dung:</strong> Mô tả tổng quan, giới thiệu.</li>
+                        </ul>
+                    </div>
+
+                    <div class="hierarchy-item mb-4">
+                        <strong class="text-primary fs-5">L1 (Slide Nội Dung)</strong>
+                        <p class="text-muted mb-1">Dùng cho các Slide Nội Dung thông thường.</p>
+                        <ul class="small text-secondary mb-2">
+                            <li><strong>Tiêu đề:</strong> Tiêu đề trang slide.</li>
+                            <li><strong>Nội dung:</strong> Nội dung chính của slide.</li>
+                        </ul>
+
+                        <!-- L2 nested in L1 -->
+                        <div class="hierarchy-tree mt-2 border-start-0 ps-4"
+                            style="border-left: 2px dashed #ccc !important;">
+                            <div class="hierarchy-item">
+                                <strong class="text-success">L2 (Ý chính / Bullet Point)</strong>
+                                <p class="text-muted small mb-1">Các ý chi tiết nằm bên trong slide L1 (hoặc L0).</p>
+                                <ul class="small text-secondary mb-0">
+                                    <li><strong>Tiêu đề:</strong> Ý chính (Header của bullet).</li>
+                                    <li><strong>Nội dung:</strong> Diễn giải chi tiết cho ý đó.</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="mt-4">
+                    <h5>Ví dụ cấu trúc cấu trúc:</h5>
+                    <div class="code-block">
+                        [L0]
+                        Title: Giới thiệu Công Ty
+                        Content: Overview lịch sử hình thành và phát triển của công ty từ năm 2010...
+
+                        [L1]
+                        Title: Các Dịch Vụ Chính
+                        Content: Chúng tôi cung cấp các giải pháp công nghệ toàn diện bao gồm...
+
+                        [L2]
+                        Title: Web Development
+                        Content: Chuyên về React, Vue, Angular và các công nghệ Frontend hiện đại.
+
+                        [L2]
+                        Title: Mobile Apps
+                        Content: Phát triển ứng dụng Native iOS, Android và Cross-platform với Flutter.
+
+                        [L1]
+                        Title: Đội Ngũ Nhân Sự
+                        Content: Đội ngũ kỹ sư giàu kinh nghiệm...
+                    </div>
+                </div>
+            </div>
+
+            <div class="text-center pb-5">
+                <p class="text-white-50">Bạn đã sẵn sàng?</p>
+                <button onclick="window.close()" class="btn btn-light btn-lg fw-bold text-primary shadow">
+                    <i class="bi bi-check-lg"></i> Đã Hiểu - Bắt Đầu Tạo Slide
+                </button>
+            </div>
+
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Dark Mode Logic
+        function toggleDarkMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+            const isDarkMode = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+            updateThemeIcon(isDarkMode);
+        }
+
+        function updateThemeIcon(isDark) {
+            const icon = document.getElementById('themeIcon');
+            if (isDark) {
+                icon.classList.remove('bi-moon-fill');
+                icon.classList.add('bi-sun-fill');
+            } else {
+                icon.classList.remove('bi-sun-fill');
+                icon.classList.add('bi-moon-fill');
+            }
+        }
+
+        // Initialize Dark Mode from localStorage
+        const savedDarkMode = localStorage.getItem('darkMode');
+        if (savedDarkMode === 'true') {
+            document.body.classList.add('dark-mode');
+            updateThemeIcon(true);
+        } else {
+            updateThemeIcon(false);
+        }
+
+        // Simple active link highlighter
+        const sections = document.querySelectorAll('.guide-card');
+        const navLinks = document.querySelectorAll('.nav-link');
+
+        window.addEventListener('scroll', () => {
+            let current = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                if (scrollY >= sectionTop - 100) {
+                    current = section.getAttribute('id');
+                }
+            });
+
+            navLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href').includes(current)) {
+                    link.classList.add('active');
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

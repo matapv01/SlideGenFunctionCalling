@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Đăng ký - SlideGen</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <script src="./config.js?v=2"></script> <!-- v=2 forces cache reload -->
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .register-container {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            padding: 40px;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .logo h1 {
+            color: #667eea;
+            font-weight: bold;
+            margin: 0;
+        }
+
+        .logo p {
+            color: #6c757d;
+            font-size: 14px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            padding: 12px;
+            font-weight: 600;
+        }
+
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+
+        .divider {
+            text-align: center;
+            margin: 20px 0;
+            color: #6c757d;
+        }
+
+        .password-requirements {
+            font-size: 12px;
+            color: #6c757d;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+
+<body>
+    <div class="register-container">
+        <div class="logo">
+            <h1>🎨 SlideGen</h1>
+            <p>Tạo Tài khoản mới</p>
+        </div>
+
+        <form id="registerForm">
+            <div class="mb-3">
+                <label for="username" class="form-label">Tên người dùng</label>
+                <input type="text" class="form-control" id="username" required minlength="3">
+                <small class="text-muted">Ít nhất 3 ký tự</small>
+            </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Địa chỉ Email</label>
+                <input type="email" class="form-control" id="email" required>
+            </div>
+            <div class="mb-3">
+                <label for="password" class="form-label">Mật khẩu</label>
+                <input type="password" class="form-control" id="password" required minlength="6">
+                <div class="password-requirements">
+                    Mật khẩu phải chứa ít nhất 6 ký tự
+                </div>
+            </div>
+            <div class="mb-3">
+                <label for="confirmPassword" class="form-label">Xác nhận Mật khẩu</label>
+                <input type="password" class="form-control" id="confirmPassword" required>
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Tạo Tài khoản</button>
+        </form>
+
+        <div class="divider">
+            <span>hoặc</span>
+        </div>
+
+        <div class="text-center">
+            <p class="mb-0">Đã có tài khoản? <a href="login.html" class="text-decoration-none">Đăng nhập tại đây</a>
+            </p>
+        </div>
+
+        <div class="alert alert-danger mt-3 d-none" id="errorAlert"></div>
+        <div class="alert alert-success mt-3 d-none" id="successAlert"></div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // const API_BASE_URL = 'http://localhost:12008';
+        // Use global config loaded from config.js in head
+        const API_BASE_URL = (window.config && window.config.API_BASE_URL) || 'http://localhost:12008';
+
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            const username = document.getElementById('username').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            const errorAlert = document.getElementById('errorAlert');
+            const successAlert = document.getElementById('successAlert');
+
+            // Hide alerts
+            errorAlert.classList.add('d-none');
+            successAlert.classList.add('d-none');
+
+            // Validate passwords match
+            if (password !== confirmPassword) {
+                errorAlert.textContent = 'Mật khẩu không khớp';
+                errorAlert.classList.remove('d-none');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/register`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Đăng ký thất bại');
+                }
+
+                const data = await response.json();
+
+                // Show success message
+                successAlert.textContent = 'Tạo tài khoản thành công! Đang chuyển hướng đến đăng nhập...';
+                successAlert.classList.remove('d-none');
+
+                // Redirect to login after 2 seconds
+                setTimeout(() => {
+                    window.location.href = 'login.html';
+                }, 2000);
+
+            } catch (error) {
+                errorAlert.textContent = error.message;
+                errorAlert.classList.remove('d-none');
+            }
+        });
+    </script>
+</body>
+
+</html>

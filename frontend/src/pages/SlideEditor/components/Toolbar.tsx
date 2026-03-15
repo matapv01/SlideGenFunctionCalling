@@ -4,19 +4,21 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
-import type { SlideCanvasHandle } from "@/components/SlideCanvas";
+import { useEditorStore } from "../store/useEditorStore";
+import React, { useRef } from "react";
 
 interface ToolbarProps {
   projectName: string;
   isSidebarOpen: boolean;
   selectedElementId: string | null;
-  slideCanvasRef: React.RefObject<SlideCanvasHandle>;
+  slideCanvasRef: React.RefObject<any>;
   onNavigateBack: () => void;
   onToggleSidebar: () => void;
   onDeselectElement: () => void;
   onSetDraggedItem: (item: { type: string; subType: string }) => void;
   onSave: () => void;
   onResetZoom: () => void;
+  onImport: (html: string) => void;
 }
 
 export const Toolbar = ({
@@ -30,7 +32,44 @@ export const Toolbar = ({
   onSetDraggedItem,
   onSave,
   onResetZoom,
+  onImport,
 }: ToolbarProps) => {
+  const { undo, redo, pastStates, futureStates } = useEditorStore.temporal.getState();
+  const { currentSlideId, addElement } = useEditorStore();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleAddText = (subType: 'heading' | 'paragraph') => {
+    if (!currentSlideId) return;
+    addElement(currentSlideId, {
+      type: 'text',
+      content: subType === 'heading' ? 'Heading' : 'Text block',
+      x: 760, y: 440,
+      width: 400, height: subType === 'heading' ? 80 : 50,
+      rotation: 0, zIndex: 100, opacity: 1,
+      fontSize: subType === 'heading' ? 48 : 24,
+      color: '#000000',
+      textAlign: 'left',
+    });
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const reader = new FileReader();
+      reader.onload = (event) => {
+        const content = event.target?.result;
+        if (typeof content === 'string') {
+          onImport(content);
+        }
+      };
+      reader.readAsText(file);
+    }
+    // Reset the input value so the same file can be selected again
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <div className="h-14 border-b bg-background flex items-center justify-between px-4 sticky top-0 z-50">
       {/* Left Section */}
@@ -62,7 +101,8 @@ export const Toolbar = ({
         <Button 
           variant="ghost" 
           size="sm" 
-          onClick={() => onSetDraggedItem({ type: 'text', subType: 'paragraph' })}
+          onClick={() => handleAddText('paragraph')}
+          title="Add text block to slide"
         >
           <Type className="h-4 w-4 mr-2" /> Text
         </Button>
@@ -80,7 +120,8 @@ export const Toolbar = ({
           variant="ghost" 
           size="icon" 
           title="Undo"
-          onClick={() => slideCanvasRef.current?.undo()}
+          onClick={() => undo()}
+          disabled={pastStates.length === 0}
         >
           <Undo2 className="h-4 w-4" />
         </Button>
@@ -88,7 +129,8 @@ export const Toolbar = ({
           variant="ghost" 
           size="icon" 
           title="Redo"
-          onClick={() => slideCanvasRef.current?.redo()}
+          onClick={() => redo()}
+          disabled={futureStates.length === 0}
         >
           <Redo2 className="h-4 w-4" />
         </Button>
@@ -102,7 +144,14 @@ export const Toolbar = ({
         <Button variant="ghost" size="icon" onClick={onResetZoom} title="Reset Zoom">
           <Maximize className="h-4 w-4" />
         </Button>
-        <Button variant="default" size="sm" className="ml-2">
+        <input 
+          type="file" 
+          accept=".html" 
+          style={{ display: 'none' }} 
+          ref={fileInputRef} 
+          onChange={handleFileChange} 
+        />
+        <Button variant="default" size="sm" className="ml-2" onClick={() => fileInputRef.current?.click()}>
           <Upload className="h-4 w-4 mr-2" /> Import
         </Button>
       </div>

@@ -1,0 +1,624 @@
+/**
+ * PresentationMixin.js
+ * Version: 2026-02-06-v2 - Smooth crossfade transitions
+ * Handles presentation mode functionality for slides
+ * Includes fullscreen mode, navigation, timeline, and keyboard controls
+ */
+
+console.log('🎬 PresentationMixin loaded - v2026-02-06 with smooth crossfade');
+
+export const PresentationMixin = {
+    /**
+     * Start presentation mode
+     * @param {boolean} fromStart - Whether to start from first slide (default: true)
+     */
+    startPresentation(fromStart = true) {
+        if (this.slides.length === 0) return;
+
+        // Save current slide
+        this.saveCurrentSlide();
+
+        // Start from first slide or current slide based on parameter
+        this.presentationSlideIndex = fromStart ? 0 : this.currentSlideIndex;
+
+        // Show presentation mode
+        const presentationMode = document.getElementById('presentationMode');
+        presentationMode.classList.add('active');
+        this.presentationMode = true;
+
+        // Hide scrollbars
+        document.body.style.overflow = 'hidden';
+
+        // Request fullscreen API (hides Chrome address bar)
+        const elem = presentationMode;
+        if (elem.requestFullscreen) {
+            elem.requestFullscreen();
+        } else if (elem.webkitRequestFullscreen) { // Safari
+            elem.webkitRequestFullscreen();
+        } else if (elem.msRequestFullscreen) { // IE11
+            elem.msRequestFullscreen();
+        }
+
+        // Clear previous slides from container
+        const container = document.getElementById('presentationSlideContainer');
+        container.innerHTML = '';
+
+        // Reset transition flag
+        this.isTransitioning = false;
+
+        // Render first slide
+        this.renderPresentationSlide();
+
+        // Setup keyboard navigation
+        this.setupPresentationKeyboard();
+
+        // Scale to fit screen
+        this.scalePresentationToFit();
+    },
+
+    /**
+     * Render current slide in presentation mode with smooth crossfade transition
+     */
+    renderPresentationSlide() {
+        const slide = this.slides[this.presentationSlideIndex];
+        if (!slide) return;
+
+        const container = document.getElementById('presentationSlideContainer');
+
+        // Create temporary HTML file for this slide and render via iframe
+        const slideHtml = this.createPresentationSlideHtml(slide);
+        const blob = new Blob([slideHtml], { type: 'text/html' });
+        const iframeUrl = URL.createObjectURL(blob);
+
+        // Create new slide wrapper with smooth transition
+        const slideWrapper = document.createElement('div');
+        slideWrapper.className = 'presentation-slide-wrapper';
+        slideWrapper.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transition: opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+            transform: scale(0.98);
+            z-index: 2;
+        `;
+
+        // Create iframe to render the slide
+        const iframe = document.createElement('iframe');
+        iframe.style.cssText = `
+            width: 1920px;
+            height: 1080px;
+            border: none;
+            background: white;
+        `;
+        iframe.src = iframeUrl;
+
+        slideWrapper.appendChild(iframe);
+
+        // Get old slide for crossfade
+        const oldSlide = container.querySelector('.presentation-slide-wrapper');
+
+        if (oldSlide) {
+            // Set old slide z-index lower and prepare transition
+            oldSlide.style.zIndex = '1';
+            oldSlide.style.transition = 'opacity 1.2s cubic-bezier(0.25, 0.1, 0.25, 1), transform 1.2s cubic-bezier(0.25, 0.1, 0.25, 1)';
+
+            // Add new slide
+            container.appendChild(slideWrapper);
+
+            // Start smooth crossfade after iframe loads
+            iframe.onload = () => {
+                // Clean up blob URL
+                setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
+
+                requestAnimationFrame(() => {
+                    requestAnimationFrame(() => {
+                        setTimeout(() => {
+                            // Fade in new slide with scale
+                            slideWrapper.style.opacity = '1';
+                            slideWrapper.style.transform = 'scale(1)';
+
+                            // Fade out old slide with slight scale up
+                            oldSlide.style.opacity = '0';
+                            oldSlide.style.transform = 'scale(1.02)';
+
+                            // Remove old slide after transition completes
+                            setTimeout(() => {
+                                if (oldSlide.parentNode) {
+                                    oldSlide.remove();
+                                }
+                            }, 1250);
+                        }, 50);
+                    });
+                });
+            };
+
+            // Fallback in case iframe doesn't fire onload
+            setTimeout(() => {
+                if (slideWrapper.style.opacity === '0') {
+                    slideWrapper.style.opacity = '1';
+                    slideWrapper.style.transform = 'scale(1)';
+                    oldSlide.style.opacity = '0';
+                    oldSlide.style.transform = 'scale(1.02)';
+                    setTimeout(() => {
+                        if (oldSlide.parentNode) {
+                            oldSlide.remove();
+                        }
+                    }, 1250);
+                }
+            }, 300);
+        } else {
+            // First slide - no transition needed
+            container.appendChild(slideWrapper);
+
+            iframe.onload = () => {
+                setTimeout(() => URL.revokeObjectURL(iframeUrl), 100);
+                slideWrapper.style.opacity = '1';
+                slideWrapper.style.transform = 'scale(1)';
+            };
+
+            // Fallback
+            setTimeout(() => {
+                if (slideWrapper.style.opacity === '0') {
+                    slideWrapper.style.opacity = '1';
+                    slideWrapper.style.transform = 'scale(1)';
+                }
+            }, 300);
+        }
+
+        // Update counter
+        document.getElementById('presentationCounter').textContent =
+            `${this.presentationSlideIndex + 1} / ${this.slides.length}`;
+
+        // Update button states
+        document.getElementById('prevSlideBtn').disabled = this.presentationSlideIndex === 0;
+        document.getElementById('nextSlideBtn').disabled = this.presentationSlideIndex === this.slides.length - 1;
+
+        // Update cursor zones
+        const zoneLeft = document.getElementById('presentationZoneLeft');
+        const zoneRight = document.getElementById('presentationZoneRight');
+        if (this.presentationSlideIndex === 0) {
+            zoneLeft.classList.add('disabled');
+        } else {
+            zoneLeft.classList.remove('disabled');
+        }
+        if (this.presentationSlideIndex === this.slides.length - 1) {
+            zoneRight.classList.add('disabled');
+        } else {
+            zoneRight.classList.remove('disabled');
+        }
+
+        // Update timeline
+        this.updatePresentationTimeline();
+    },
+
+    /**
+     * Create standalone HTML for presentation slide
+     * @param {Object} slide - Slide object
+     * @returns {string} Complete HTML document
+     */
+    createPresentationSlideHtml(slide) {
+        // Sync math-field values from the live DOM before serializing
+        // (in case the user edited equations without triggering a save)
+        const liveCanvas = document.getElementById('slideCanvas');
+        if (liveCanvas) {
+            liveCanvas.querySelectorAll('[data-type="equation"] math-field').forEach(mf => {
+                try {
+                    const latex = mf.getValue ? mf.getValue() : (mf.value || mf.textContent);
+                    if (latex) {
+                        mf.textContent = latex;
+                        mf.setAttribute('data-latex', latex);
+                    }
+                } catch(e) {}
+            });
+        }
+
+        // Use LIVE canvas content for current slide (slide.content may be stale
+        // because saveCurrentSlide has a 50ms setTimeout delay)
+        const tempDiv = document.createElement('div');
+        const isCurrentSlide = this.slides[this.currentSlideIndex] === slide;
+        if (isCurrentSlide && liveCanvas) {
+            tempDiv.innerHTML = liveCanvas.innerHTML;
+        } else {
+            tempDiv.innerHTML = slide.content;
+            // Restore math-field textContent from data-latex if present
+            tempDiv.querySelectorAll('[data-type="equation"]').forEach(eqEl => {
+                const mf = eqEl.querySelector('math-field');
+                if (mf && mf.getAttribute('data-latex')) {
+                    mf.textContent = mf.getAttribute('data-latex');
+                }
+            });
+        }
+
+        // Remove ALL editor-specific elements and UI controls
+        tempDiv.querySelectorAll('.resize-handle').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.drag-handle').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.rotate-handle').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.connection-point').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.selection-box').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.guide-line').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.distance-line').forEach(el => el.remove());
+        tempDiv.querySelectorAll('.distance-label').forEach(el => el.remove());
+
+        // Clean up element attributes
+        tempDiv.querySelectorAll('.element').forEach(el => {
+            el.removeAttribute('contenteditable');
+            el.classList.remove('selected');
+            el.classList.remove('hover');
+            el.style.cursor = 'default';
+            // Remove any outline or selection styles
+            el.style.outline = 'none';
+            el.style.border = el.dataset.originalBorder || el.style.border;
+        });
+
+        // Replace math-field elements with MathJax-compatible $$LaTeX$$ spans
+        // MathJax SVG (loaded in iframe) will auto-render these as clean SVG
+        tempDiv.querySelectorAll('[data-type="equation"]').forEach(eqEl => {
+            const mf = eqEl.querySelector('math-field');
+            if (!mf) return;
+
+            const latex = (mf.getAttribute('data-latex') || mf.textContent).trim();
+            if (!latex) {
+                mf.remove();
+                return;
+            }
+
+            const fontSize = eqEl.style.fontSize || '40px';
+            const color = eqEl.style.color || 'inherit';
+
+            // Replace math-field with a styled span containing $$ delimiters for MathJax
+            const mjSpan = document.createElement('span');
+            mjSpan.className = 'mathjax-equation';
+            mjSpan.style.cssText = `font-size:${fontSize};color:${color};display:block;`;
+            mjSpan.textContent = `$$${latex}$$`;
+            mf.replaceWith(mjSpan);
+        });
+
+
+        const cleanContent = tempDiv.innerHTML;
+        const backgroundColor = slide.backgroundColor || 'white';
+
+        // Determine background CSS - handle both gradients and solid colors
+        let backgroundStyle = '';
+        if (backgroundColor.includes('gradient') ||
+            backgroundColor.includes('linear') ||
+            backgroundColor.includes('radial') ||
+            backgroundColor.startsWith('url(')) {
+            backgroundStyle = `background: ${backgroundColor};`;
+        } else {
+            backgroundStyle = `background-color: ${backgroundColor};`;
+        }
+
+        return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- MathJax SVG for clean equation rendering -->
+    <script>
+    window.MathJax = {
+        tex: { inlineMath: [['$','$']], displayMath: [['$$','$$']] },
+        svg: { fontCache: 'local' },
+        options: { skipHtmlTags: ['script','noscript','style','textarea','pre'] }
+    };
+    <\/script>
+    <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js"><\/script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            width: 1920px;
+            height: 1080px;
+            ${backgroundStyle}
+            position: relative;
+            overflow: hidden;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        }
+        .mathjax-equation {
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+        }
+        .mathjax-equation mjx-container {
+            font-size: inherit !important;
+            margin: 0 !important;
+            padding: 0 !important;
+        }
+        mjx-container[jax="SVG"][display="true"] {
+            margin: 0 !important;
+            display: inline !important;
+        }
+    </style>
+</head>
+<body>
+    ${cleanContent}
+</body>
+</html>`;
+    },
+
+    /**
+     * Scale presentation content to fit screen
+     */
+    scalePresentationToFit() {
+        const container = document.getElementById('presentationSlideContainer');
+        const windowWidth = window.innerWidth;
+        const windowHeight = window.innerHeight;
+
+        const scaleX = windowWidth / 1920;
+        const scaleY = windowHeight / 1080;
+        const scale = Math.min(scaleX, scaleY); // Full screen, no padding
+
+        // Calculate the scaled dimensions
+        const scaledWidth = 1920 * scale;
+        const scaledHeight = 1080 * scale;
+
+        // Calculate position to center
+        const left = (windowWidth - scaledWidth) / 2;
+        const top = (windowHeight - scaledHeight) / 2;
+
+        container.style.position = 'absolute';
+        container.style.left = `${left}px`;
+        container.style.top = `${top}px`;
+        container.style.transformOrigin = 'top left';
+        container.style.transform = `scale(${scale})`;
+    },
+
+    /**
+     * Setup keyboard navigation and event handlers for presentation mode
+     */
+    setupPresentationKeyboard() {
+        this.presentationKeyboardHandler = (e) => {
+            switch (e.key) {
+                case 'ArrowRight':
+                case 'ArrowDown':
+                case ' ':
+                case 'PageDown':
+                    e.preventDefault();
+                    this.nextPresentationSlide();
+                    break;
+                case 'ArrowLeft':
+                case 'ArrowUp':
+                case 'PageUp':
+                    e.preventDefault();
+                    this.previousPresentationSlide();
+                    break;
+                case 'Escape':
+                    e.preventDefault();
+                    this.exitPresentation();
+                    break;
+                case 'Home':
+                    e.preventDefault();
+                    this.presentationSlideIndex = 0;
+                    this.renderPresentationSlide();
+                    break;
+                case 'End':
+                    e.preventDefault();
+                    this.presentationSlideIndex = this.slides.length - 1;
+                    this.renderPresentationSlide();
+                    break;
+            }
+        };
+
+        document.addEventListener('keydown', this.presentationKeyboardHandler);
+
+        // Navigation buttons
+        document.getElementById('prevSlideBtn').onclick = () => this.previousPresentationSlide();
+        document.getElementById('nextSlideBtn').onclick = () => this.nextPresentationSlide();
+        document.getElementById('exitPresentation').onclick = () => this.exitPresentation();
+
+        // Click zones for navigation
+        document.getElementById('presentationZoneLeft').onclick = () => this.previousPresentationSlide();
+        document.getElementById('presentationZoneRight').onclick = () => this.nextPresentationSlide();
+
+        // Listen for fullscreen exit (when user presses ESC)
+        this.fullscreenChangeHandler = () => {
+            if (!document.fullscreenElement && !document.webkitFullscreenElement && !document.msFullscreenElement) {
+                if (this.presentationMode) {
+                    this.exitPresentation();
+                }
+            }
+        };
+        document.addEventListener('fullscreenchange', this.fullscreenChangeHandler);
+        document.addEventListener('webkitfullscreenchange', this.fullscreenChangeHandler);
+        document.addEventListener('msfullscreenchange', this.fullscreenChangeHandler);
+
+        // Window resize
+        window.addEventListener('resize', () => this.scalePresentationToFit());
+
+        // Setup timeline
+        this.setupPresentationTimeline();
+
+        // Setup auto-hide for timeline and controls
+        this.setupPresentationAutoHide();
+    },
+
+    /**
+     * Setup presentation timeline with slide markers
+     */
+    setupPresentationTimeline() {
+        const timelineSlides = document.getElementById('timelineSlides');
+        const timelineTrack = document.getElementById('timelineTrack');
+
+        // Clear existing markers
+        timelineSlides.innerHTML = '';
+
+        // Create slide markers
+        this.slides.forEach((slide, index) => {
+            const marker = document.createElement('div');
+            marker.className = 'timeline-slide-marker';
+            if (index === this.presentationSlideIndex) {
+                marker.classList.add('active');
+            }
+
+            const slideNumber = document.createElement('div');
+            slideNumber.className = 'slide-number';
+            slideNumber.textContent = `Slide ${index + 1}`;
+            marker.appendChild(slideNumber);
+
+            marker.addEventListener('click', () => {
+                this.goToPresentationSlide(index);
+            });
+
+            timelineSlides.appendChild(marker);
+        });
+
+        // Click on track to jump to slide
+        timelineTrack.addEventListener('click', (e) => {
+            const rect = timelineTrack.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const percentage = x / rect.width;
+            const targetSlide = Math.floor(percentage * this.slides.length);
+            this.goToPresentationSlide(Math.max(0, Math.min(targetSlide, this.slides.length - 1)));
+        });
+
+        this.updatePresentationTimeline();
+    },
+
+    /**
+     * Update presentation timeline progress and indicators
+     */
+    updatePresentationTimeline() {
+        const progress = document.getElementById('timelineProgress');
+        const indicator = document.getElementById('timelineIndicator');
+        const markers = document.querySelectorAll('.timeline-slide-marker');
+
+        // Update progress bar
+        const percentage = ((this.presentationSlideIndex + 1) / this.slides.length) * 100;
+        progress.style.width = percentage + '%';
+
+        // Update indicator position
+        const slidePercentage = (this.presentationSlideIndex / (this.slides.length - 1)) * 100;
+        indicator.style.left = slidePercentage + '%';
+
+        // Update active marker
+        markers.forEach((marker, index) => {
+            if (index === this.presentationSlideIndex) {
+                marker.classList.add('active');
+            } else {
+                marker.classList.remove('active');
+            }
+        });
+    },
+
+    /**
+     * Jump to specific slide in presentation
+     * @param {number} index - Slide index
+     */
+    goToPresentationSlide(index) {
+        if (this.isTransitioning) return; // Prevent spam
+        if (index >= 0 && index < this.slides.length) {
+            this.isTransitioning = true;
+            this.presentationSlideIndex = index;
+            this.renderPresentationSlide();
+            setTimeout(() => { this.isTransitioning = false; }, 1300);
+        }
+    },
+
+    /**
+     * Navigate to next slide
+     */
+    nextPresentationSlide() {
+        if (this.isTransitioning) return; // Prevent spam
+        if (this.presentationSlideIndex < this.slides.length - 1) {
+            this.isTransitioning = true;
+            this.presentationSlideIndex++;
+            this.renderPresentationSlide();
+            setTimeout(() => { this.isTransitioning = false; }, 1300);
+        }
+    },
+
+    /**
+     * Navigate to previous slide
+     */
+    previousPresentationSlide() {
+        if (this.isTransitioning) return; // Prevent spam
+        if (this.presentationSlideIndex > 0) {
+            this.isTransitioning = true;
+            this.presentationSlideIndex--;
+            this.renderPresentationSlide();
+            setTimeout(() => { this.isTransitioning = false; }, 650);
+        }
+    },
+
+    /**
+     * Setup auto-hide for timeline and controls
+     */
+    setupPresentationAutoHide() {
+        let hideTimeout;
+        const timeline = document.getElementById('presentationTimeline');
+        const controls = document.querySelector('.presentation-controls');
+
+        if (timeline && controls) {
+            const showControls = () => {
+                timeline.classList.add('show');
+                controls.classList.add('show');
+                clearTimeout(hideTimeout);
+                hideTimeout = setTimeout(() => {
+                    timeline.classList.remove('show');
+                    controls.classList.remove('show');
+                }, 1500);
+            };
+
+            // Listen on document to catch all mouse movements
+            this.presentationMouseMoveHandler = showControls;
+            document.addEventListener('mousemove', this.presentationMouseMoveHandler);
+
+            // Show initially
+            showControls();
+        }
+    },
+
+    /**
+     * Exit presentation mode
+     */
+    exitPresentation() {
+        // Remove fullscreen change handler
+        if (this.fullscreenChangeHandler) {
+            document.removeEventListener('fullscreenchange', this.fullscreenChangeHandler);
+            document.removeEventListener('webkitfullscreenchange', this.fullscreenChangeHandler);
+            document.removeEventListener('msfullscreenchange', this.fullscreenChangeHandler);
+            this.fullscreenChangeHandler = null;
+        }
+
+        // Remove auto-hide mouse handler
+        if (this.presentationMouseMoveHandler) {
+            document.removeEventListener('mousemove', this.presentationMouseMoveHandler);
+            this.presentationMouseMoveHandler = null;
+        }
+
+        // Exit fullscreen API (only if still in fullscreen)
+        if (document.fullscreenElement || document.webkitFullscreenElement || document.msFullscreenElement) {
+            if (document.exitFullscreen) {
+                document.exitFullscreen();
+            } else if (document.webkitExitFullscreen) {
+                document.webkitExitFullscreen();
+            } else if (document.msExitFullscreen) {
+                document.msExitFullscreen();
+            }
+        }
+
+        // Remove keyboard handler
+        if (this.presentationKeyboardHandler) {
+            document.removeEventListener('keydown', this.presentationKeyboardHandler);
+            this.presentationKeyboardHandler = null;
+        }
+
+        // Hide presentation mode
+        const presentationMode = document.getElementById('presentationMode');
+        presentationMode.classList.remove('active');
+        this.presentationMode = false;
+
+        // Restore scrollbars
+        document.body.style.overflow = '';
+
+        // Always return to the slide we were viewing in presentation
+        this.currentSlideIndex = this.presentationSlideIndex;
+        this.loadSlide(this.currentSlideIndex);
+        this.renderSlidesList();
+    }
+};

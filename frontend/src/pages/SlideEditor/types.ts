@@ -2,7 +2,7 @@
 
 export interface SlideElement {
   id: string;
-  type: "text" | "image" | "shape" | "icon" | "video";
+  type: "text" | "image" | "shape" | "icon" | "video" | "math" | "connector";
   subType?: string;
   content?: string;
   src?: string;
@@ -36,7 +36,8 @@ export interface SlideElement {
 
 export interface Slide {
   id: string;
-  elements: SlideElement[];
+  elements: SlideElement[];  // Interactive elements on top
+  htmlBackground?: string;   // Raw HTML from backend - rendered as read-only background
   backgroundColor?: string;
   backgroundImage?: string;
   notes?: string;

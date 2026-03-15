@@ -117,6 +117,17 @@
   body {
     @apply bg-background text-foreground;
   }
+  
+  /* MathLive Custom Overrides */
+  math-field {
+    --contains-highlight-background: transparent !important;
+  }
+  math-field::part(virtual-keyboard-toggle) {
+    display: none !important;
+  }
+  math-field::part(menu-toggle) {
+    display: none !important;
+  }
 }
 
 @layer utilities {

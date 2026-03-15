@@ -1,6 +1,6 @@
 import { 
   Type, Square, Circle, Triangle, 
-  Image as ImageIcon, Video, FileText 
+  Image as ImageIcon, Video, FileText, Sigma 
 } from "lucide-react";
 import type { ElementCategory, Template } from "./types";
 
@@ -38,6 +38,12 @@ export const ELEMENTS_CATEGORIES: ElementCategory[] = [
     items: [
       { id: "heading", icon: Type, label: "Heading", type: "text", subType: "heading" },
       { id: "paragraph", icon: Type, label: "Paragraph", type: "text", subType: "paragraph" },
+    ]
+  },
+  {
+    name: "Equations",
+    items: [
+      { id: "math", icon: Sigma, label: "Equation", type: "math", subType: "equation" },
     ]
   }
 ];

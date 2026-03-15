@@ -1,0 +1,29 @@
+/* Force zero padding and content-box sizing for ALL elements to match presentation mode */
+.element {
+    padding: 0 !important;
+    box-sizing: content-box !important;
+}
+
+/* Slightly expand text elements to prevent premature wrapping - invisible to user but prevents line breaks */
+.element[data-type="text"] [contenteditable="true"],
+.element[data-type="heading"] [contenteditable="true"],
+.element[data-type="list"] [contenteditable="true"],
+.element[contenteditable="true"] {
+    /* Reduce letter spacing to fit more text per line - compressed to match presentation mode */
+    letter-spacing: -0.752px !important;
+}
+
+.element:not([contenteditable="true"]) {
+    user-select: none;
+}
+
+.element[contenteditable="true"] {
+    cursor: move;
+    outline-offset: 5px;
+    /* Force zero padding to match presentation mode and prevent word wrapping issues */
+    padding: 0 !important;
+}
+
+.element[contenteditable="true"]:focus {
+    cursor: text;
+}

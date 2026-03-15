@@ -14,10 +14,6 @@ const SlideEditor = () => {
     projectName,
     loading,
     
-    // Refs
-    canvasRef,
-    slideCanvasRef,
-    
     // Setters
     setCurrentSlideIndex,
     setSelectedElementId,
@@ -33,7 +29,7 @@ const SlideEditor = () => {
     updateElement,
     handleDrop,
     handleSave,
-    handleElementSelectFromCanvas,
+    importSlide,
   } = useSlideEditor();
 
   // --- Loading State ---
@@ -52,13 +48,14 @@ const SlideEditor = () => {
         projectName={projectName}
         isSidebarOpen={isSidebarOpen}
         selectedElementId={selectedElementId}
-        slideCanvasRef={slideCanvasRef}
+        slideCanvasRef={{ current: null } as any} // temp fix so we dont change Toolbar interface deeply yet
         onNavigateBack={() => navigate(-1)}
         onToggleSidebar={() => setIsSidebarOpen(!isSidebarOpen)}
         onDeselectElement={() => setSelectedElementId(null)}
         onSetDraggedItem={setDraggedItem}
         onSave={handleSave}
         onResetZoom={() => setZoom(0.5)}
+        onImport={importSlide}
       />
 
       <div className="flex flex-1 overflow-hidden">
@@ -74,17 +71,9 @@ const SlideEditor = () => {
           onSetDraggedItem={setDraggedItem}
         />
 
-        {/* Canvas Area */}
         <CanvasArea
           currentSlide={currentSlide}
           zoom={zoom}
-          canvasRef={canvasRef}
-          slideCanvasRef={slideCanvasRef}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          onElementSelect={handleElementSelectFromCanvas}
-          onZoomIn={() => setZoom(Math.min(2, zoom + 0.1))}
-          onZoomOut={() => setZoom(Math.max(0.1, zoom - 0.1))}
         />
 
         {/* Properties Panel */}
