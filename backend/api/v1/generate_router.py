@@ -299,8 +299,11 @@ async def stream_docx_generation(
 
             # Lấy số lượng slide thực tế từ kết quả workflow thay vì slide_options
             actual_slide_count = 0
-            if os.path.exists(output_folder / "html"):
-                actual_slide_count = len(list((output_folder / "html").glob("*.html")))
+            _html_dir = output_folder / "output" / "html"
+            if not _html_dir.exists():
+                _html_dir = output_folder / "html"
+            if _html_dir.exists():
+                actual_slide_count = len(list(_html_dir.glob("*.html")))
 
             workflow_temp_dir = str(output_folder)
 

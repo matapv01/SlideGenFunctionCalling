@@ -63,9 +63,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
               return updated;
             });
           } catch (error) {
-            // Token validation failed - logout automatically
-            console.warn("Token validation failed during initialization:", error);
-            logout();
+            // Only warn — do not logout here.
+            // api.ts already calls globalLogout() for real auth errors (401).
+            // Calling logout() here would also evict users on transient network/parse errors.
+            console.warn("Profile fetch failed during initialization (ignored):", error);
           }
         } catch {
           // Invalid stored user data - clear it
@@ -76,7 +77,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
 
     validateAndLoadUser();
-  }, [token, logout]);
+  // chỉ chạy 1 lần lúc mount để khôi phục auth state từ localStorage
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const login = useCallback(async (email: string, password: string, remember = false) => {
     const res = await api.login(email, password);

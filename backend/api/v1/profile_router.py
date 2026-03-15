@@ -14,7 +14,7 @@ from backend.application.services.user_service import UserService
 router = APIRouter(prefix="/profile", tags=["PROFILE"])
 
 
-@router.get("/", response_model=UserProfileResponse)
+@router.get("", response_model=UserProfileResponse)
 async def get_profile(
     current_user: UserResponse = Depends(get_current_active_user),
     service: UserService = Depends(get_user_service)
@@ -23,7 +23,7 @@ async def get_profile(
     return service.get_profile(current_user.id)
 
 
-@router.put("/")
+@router.put("")
 async def update_profile(
     profile_data: UserProfileUpdate,
     current_user: UserResponse = Depends(get_current_active_user),

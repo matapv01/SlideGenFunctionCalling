@@ -12,9 +12,6 @@ npm install jszip @types/jszip --legacy-peer-deps
 
 ## Tạo file .env (root project)
 GEMINI_API_KEY=your_key_here
-TAVILY_API_KEY1=your_key_here
-TAVILY_API_KEY2=your_key_here
-TAVILY_API_KEY3=your_key_here
 
 
 ## Chạy Backend (Terminal 1)
@@ -25,6 +22,27 @@ uv run backend/main.py
 cd frontend
 npm run dev
 → Frontend: http://localhost:8080
+
+## Chạy trên Server
+
+Script `scripts/run_server.sh` build frontend và khởi động toàn bộ service trong 1 lệnh:
+
+```bash
+./scripts/run_server.sh
+```
+
+Script sẽ tự động:
+- Build frontend dist (Node 22)
+- Khởi động backend tại `http://0.0.0.0:12008`
+- Serve cả frontend lẫn API từ cùng 1 port
+
+API URL được cấu hình sẵn trong `frontend/.env.production`, không cần chỉnh thêm.
+
+### Kiểm tra nhanh sau khi chạy
+
+```bash
+curl -I http://127.0.0.1:12008/docs
+```
 
 ## Quản lý Subscription Codes
 

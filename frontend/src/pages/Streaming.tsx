@@ -200,7 +200,7 @@ const Streaming = () => {
       setActivity(`${t.streaming_done} ${total} ${t.streaming_slides_unit}`);
       es.close();
       // Store project_id for navigation
-      if (data.project_id) {
+      if (data.project_id > 0) {
         (window as any).__streamProjectId = data.project_id;
       }
       // Also store temp_dir for cleanup if needed

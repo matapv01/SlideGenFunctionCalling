@@ -14,7 +14,7 @@ from backend.application.services.project_service import ProjectService
 router = APIRouter(prefix="/projects", tags=["PROJECTS"])
 
 
-@router.get("/", response_model=ProjectListResponse)
+@router.get("", response_model=ProjectListResponse)
 async def list_projects(
     limit: int = 50,
     offset: int = 0,
@@ -26,7 +26,7 @@ async def list_projects(
     return {"projects": projects, "total": len(projects)}
 
 
-@router.post("/", response_model=CreateResourceResponse)
+@router.post("", response_model=CreateResourceResponse)
 async def create_project(
     project_data: ProjectCreate,
     current_user: UserResponse = Depends(get_current_active_user),

@@ -13,6 +13,7 @@ import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface SlideChunk {
   title: string;
@@ -34,6 +35,7 @@ const IdeaStructure = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
@@ -44,10 +46,12 @@ const IdeaStructure = () => {
   const [maxSlides, setMaxSlides] = useState<number>(-1);
 
   useEffect(() => {
-    api.getSubscriptionInfo().then((info: any) => {
-      setMaxSlides(info.daily_limits?.max_docx_slides ?? -1);
-    }).catch(() => {});
-  }, []);
+    if (isAuthenticated) {
+      api.getSubscriptionInfo().then((info: any) => {
+        setMaxSlides(info.daily_limits?.max_docx_slides ?? -1);
+      }).catch(() => {});
+    }
+  }, [isAuthenticated]);
 
   useEffect(() => {
     if (!sessionId) {

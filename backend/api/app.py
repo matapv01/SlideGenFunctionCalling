@@ -3,9 +3,10 @@
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, JSONResponse
 from backend.api.router import create_router
 import logging
-from backend.config import STATIC_DIR, FRONTEND_DIR, CORS_ORIGINS, LOG_LEVEL
+from backend.config import STATIC_DIR, FRONTEND_DIST_DIR, CORS_ORIGINS, LOG_LEVEL
 from backend.infrastructure.database.connection import init_db
 
 # Setup logging
@@ -33,28 +34,36 @@ def create_app():
 
     # Mount static files
     app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
-    app.mount("/frontend", StaticFiles(directory=str(FRONTEND_DIR)), name="frontend")
 
+    # API routes - MUST be registered before the SPA catch-all
     app.include_router(create_router())
 
+    # Serve frontend SPA from dist build
     @app.get("/")
-    async def read_root():
-        """
-        API Root - Returns API information
-        """
-        return {
-            "name": "SlideGen Backend API",
-            "version": "1.0.0",
-            "status": "running",
+    async def serve_root():
+        index = FRONTEND_DIST_DIR / "index.html"
+        if index.exists():
+            return FileResponse(str(index), headers={"Cache-Control": "no-store, must-revalidate"})
+        return JSONResponse({
+            "name": "SlideGen API", "version": "1.0.0", "status": "running",
             "docs": "/docs",
-            "endpoints": {
-                "upload_docx": "POST /api/upload-docx",
-                "slides": "GET /api/slides/{project_name}",
-                "export_pdf": "POST /api/export-slides-pdf",
-                "images": "GET /api/images/{name}"
-            },
-            "frontend": "http://localhost:8000"
-        }
+            "note": "Frontend not built. Run: cd frontend && npm run build"
+        })
+
+    @app.get("/{full_path:path}")
+    async def serve_spa(full_path: str):
+        # Never intercept API routes — let them fall through to a proper 404
+        if full_path.startswith("api/"):
+            return JSONResponse({"error": "Not found"}, status_code=404)
+        # Try to serve a real file from dist (JS, CSS, images, etc.)
+        file_path = FRONTEND_DIST_DIR / full_path
+        if file_path.exists() and file_path.is_file():
+            return FileResponse(str(file_path))
+        # Fallback: serve index.html for client-side SPA routing
+        index = FRONTEND_DIST_DIR / "index.html"
+        if index.exists():
+            return FileResponse(str(index), headers={"Cache-Control": "no-store, must-revalidate"})
+        return JSONResponse({"error": "Frontend not built. Run: cd frontend && npm run build"}, status_code=404)
 
     return app
 

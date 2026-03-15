@@ -10,11 +10,13 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 
 const SlideGen = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();
+  const { isAuthenticated } = useAuth();
 
   const workflowModes = [
     { id: "auto_heading", label: t.slidegen_workflow_auto_heading, desc: t.slidegen_workflow_auto_heading_desc },
@@ -38,10 +40,12 @@ const SlideGen = () => {
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
 
   useEffect(() => {
-    api.getSubscriptionInfo().then((info: any) => {
-      setSubscriptionTier(info.tier || "free");
-    }).catch(() => {});
-  }, []);
+    if (isAuthenticated) {
+      api.getSubscriptionInfo().then((info: any) => {
+        setSubscriptionTier(info.tier || "free");
+      }).catch(() => {});
+    }
+  }, [isAuthenticated]);
 
   const tierOrder: Record<string, number> = { free: 0, plus: 1, ultra: 2 };
   const isLocked = (requiredTier: string) =>

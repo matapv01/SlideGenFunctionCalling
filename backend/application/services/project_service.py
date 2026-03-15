@@ -212,8 +212,11 @@ class ProjectService:
             )
 
             # 3. Handle File Extraction & Conversion
-            html_folder = output_folder / "html"
-            converted_folder = output_folder / "converted"
+            # Workflow có thể tạo subfolder "output/" bên trong output_folder
+            sub_output = output_folder / "output"
+            base = sub_output if sub_output.exists() else output_folder
+            html_folder = base / "html"
+            converted_folder = base / "converted"
 
             # 4. Insert Slides to DB
             # Ưu tiên lấy file đã convert

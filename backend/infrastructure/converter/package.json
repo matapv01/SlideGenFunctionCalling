@@ -1,0 +1,8 @@
+{
+  "name": "slidegen-converter",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "puppeteer": "^24.39.1"
+  }
+}

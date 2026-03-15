@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useLocation } from "react-router-dom";
+import { Link, useNavigate, useLocation, Navigate } from "react-router-dom";
 import { Mail, Lock, Eye, EyeOff, ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,7 +15,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const Login = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { login } = useAuth();
+  const { login, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const { t } = useLanguage();
   const [email, setEmail] = useState("");
@@ -25,6 +25,11 @@ const Login = () => {
   const [loading, setLoading] = useState(false);
 
   const from = (location.state as any)?.from?.pathname || "/slidegen";
+
+  // Redirect nếu đã authenticated (xử lý race condition sau login)
+  if (!isLoading && isAuthenticated) {
+    return <Navigate to={from} replace />;
+  }
 
   const performLogin = async () => {
     if (loading) return;

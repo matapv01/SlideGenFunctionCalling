@@ -16,6 +16,7 @@ logger = logging.getLogger(__name__)
 PROJECT_DIR = Path(__file__).parent.parent  # web/
 STATIC_DIR = PROJECT_DIR / "static"
 FRONTEND_DIR = PROJECT_DIR / "frontend"
+FRONTEND_DIST_DIR = PROJECT_DIR / "frontend" / "dist"
 IMAGE_DIR = PROJECT_DIR / "Image"
 
 # Upload and output directories

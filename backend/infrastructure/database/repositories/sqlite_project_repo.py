@@ -179,7 +179,7 @@ class SqliteProjectRepository(ProjectRepository):
             conn.commit()
 
 
-    def save_project_metadata(self, project_id: int, slide_options: dict = None,
+    def save_metadata(self, project_id: int, slide_options: dict = None,
                             workflow_config: dict = None, generation_params: dict = None):
         """Save project metadata"""
         with get_db_connection() as conn:
@@ -200,7 +200,7 @@ class SqliteProjectRepository(ProjectRepository):
             conn.commit()
 
 
-    def get_project_metadata(self, project_id: int) -> Optional[dict]:
+    def get_metadata(self, project_id: int) -> Optional[dict]:
         """Get project metadata"""
         with get_db_connection() as conn:
             cursor = conn.cursor()

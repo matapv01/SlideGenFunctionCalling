@@ -17,7 +17,7 @@ from backend.api.schemas.converter_schema import (
 router = APIRouter(prefix="/convert", tags=["CONVERT"])
 logger = logging.getLogger("SlideGen-Convert")
 
-@router.post("/", response_model=ConversionResponse)
+@router.post("", response_model=ConversionResponse)
 async def convert_slides(
     data: ConvertRequest,
     service: ConversionService = Depends(get_conversion_service)
