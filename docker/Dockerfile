@@ -7,6 +7,10 @@ WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./frontend/
 RUN cd frontend && npm ci --legacy-peer-deps
 
+# Inject API base URL at build time so Vite bakes it into the bundle
+ARG VITE_API_BASE_URL
+ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
+
 # Build production bundle
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
@@ -51,9 +55,11 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1
 
 # ── Playwright: install Chromium browser + its system deps ───────────────────
-# Stores browser to /root/.cache/ms-playwright/
-# Also creates a stable symlink so Puppeteer can reuse the same binary
-RUN playwright install chromium --with-deps \
+# apt-get update must re-run here because lists were cleaned in the previous RUN
+RUN apt-get update \
+    && playwright install chromium --with-deps \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/* \
     && CHROMIUM_PATH=$(find /root/.cache/ms-playwright -name "chrome" -type f | head -1) \
     && ln -sf "$CHROMIUM_PATH" /usr/local/bin/chromium-playwright \
     && echo "[Dockerfile] Playwright Chromium at: $CHROMIUM_PATH"
