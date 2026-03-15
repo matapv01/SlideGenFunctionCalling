@@ -826,6 +826,17 @@ const StructureEditor = () => {
     const range = selection.getRangeAt(0);
     const nodeId = generateNodeId();
 
+    const isBoundaryEmptyLine = (node: Node | null): boolean => {
+      if (!node) return false;
+      if (node.nodeType === Node.ELEMENT_NODE) {
+        const el = node as HTMLElement;
+        if (el.tagName === "BR") return true;
+        if ((el.tagName === "DIV" || el.tagName === "P") && !(el.textContent || "").trim()) return true;
+      }
+      if (node.nodeType === Node.TEXT_NODE && !(node.textContent || "").trim()) return true;
+      return false;
+    };
+
     try {
       const wrapper = document.createElement("span");
       wrapper.className = `text-block text-level-${level} text-${type}`;
@@ -841,10 +852,16 @@ const StructureEditor = () => {
       handle.textContent = "⠿";
       wrapper.appendChild(handle);
       wrapper.appendChild(contents);
-      range.insertNode(wrapper);
 
-      const br = document.createElement("br");
-      wrapper.after(br);
+      // Trim leading/trailing empty line nodes from extracted content to avoid accidental blank lines.
+      while (wrapper.childNodes.length > 1 && isBoundaryEmptyLine(wrapper.childNodes[1])) {
+        wrapper.removeChild(wrapper.childNodes[1]);
+      }
+      while (wrapper.lastChild && wrapper.lastChild !== handle && isBoundaryEmptyLine(wrapper.lastChild)) {
+        wrapper.removeChild(wrapper.lastChild);
+      }
+
+      range.insertNode(wrapper);
 
       selection.removeAllRanges();
       fullSync();
@@ -1467,7 +1484,7 @@ const StructureEditor = () => {
       <div className="legacy-structure-page">
         <div className="legacy-aurora" aria-hidden />
         <div className="legacy-particles" aria-hidden>
-          {Array.from({ length: 10 }).map((_, index) => (
+          {Array.from({ length: 14 }).map((_, index) => (
             <span key={index} className={`legacy-particle legacy-particle-${index + 1}`} />
           ))}
         </div>
