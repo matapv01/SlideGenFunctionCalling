@@ -69,9 +69,10 @@ RUN mkdir -p \
 
 # ── Dev entrypoint ────────────────────────────────────────────────────────────
 COPY docker/dev-entrypoint.sh /dev-entrypoint.sh
-RUN chmod +x /dev-entrypoint.sh
+# Normalize line endings in case repository is checked out with CRLF on Windows.
+RUN sed -i 's/\r$//' /dev-entrypoint.sh && chmod +x /dev-entrypoint.sh
 
 # Backend :12008 | Vite dev server :5173
 EXPOSE 12008 5173
 
-CMD ["/dev-entrypoint.sh"]
+CMD ["sh", "/dev-entrypoint.sh"]

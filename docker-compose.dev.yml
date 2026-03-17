@@ -40,11 +40,9 @@ services:
 
       # ── Persistent data ─────────────────────────────────────────────────────
       - ./static:/app/static
-      - slidegen_db_dev:/app/backend/infrastructure/database
       - huggingface_cache:/root/.cache/huggingface
 
 volumes:
-  slidegen_db_dev:
   converter_node_modules:
   frontend_node_modules:
   huggingface_cache:
