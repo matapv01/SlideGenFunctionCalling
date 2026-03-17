@@ -277,6 +277,13 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       'slide-wrapper',
     ]);
 
+    const INLINE_FORMATTING_TAGS = new Set([
+      'span', 'strong', 'b', 'em', 'i', 'u', 'mark', 'small',
+      'sub', 'sup', 'code', 'kbd', 'samp', 'var', 'a',
+      'font', 'ins', 'del', 's', 'abbr', 'cite', 'q', 'time',
+      'br', 'wbr', 'hr',
+    ]);
+
     Array.from(tempContainer.querySelectorAll('*')).forEach(node => {
       if (!(node instanceof HTMLElement)) return;
 
@@ -284,101 +291,88 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       if (['style', 'script', 'link', 'meta', 'svg', 'defs', 'path', 'rect', 'circle', 'ellipse', 'line', 'polygon', 'polyline', 'g', 'use', 'clippath', 'lineargradient', 'radialgradient', 'stop', 'pattern', 'mask', 'text'].includes(tag)) return;
       // Skip layout wrappers — they're not slide "elements"
       if ([...node.classList].some(c => LAYOUT_CONTAINERS.has(c))) return;
+      // Keep inline formatting inside text flow; dragging these would detach styled fragments.
+      if (INLINE_FORMATTING_TAGS.has(tag)) {
+        node.classList.remove('element');
+        delete node.dataset.selectable;
+        if (node.dataset.type) delete node.dataset.type;
+        if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
+        return;
+      }
 
-      const hasAbsolutePosition =
-        (node.getAttribute('style')?.includes('position: absolute')) ||
-        (node.getAttribute('style')?.includes('position:absolute'));
-
-      // A node is a slide element if:
-      // 1. It has inline position:absolute (converter output), OR
-      // 2. Its parent is a known layout container (raw HTML fallback), OR
-      // 3. Its parent is tempContainer (top-level body child without wrapper)
-      // Note: containers themselves are skipped above, so parent===tempContainer
-      // won't tag .slide-container (it's already returned).
-      const parent = node.parentElement;
-      const parentIsContainer = parent === tempContainer ||
-        (parent && [...parent.classList].some(c => LAYOUT_CONTAINERS.has(c)));
-
-      if (hasAbsolutePosition || parentIsContainer) {
-        // Wrap bare <img> in a container div so it can receive resize handles
-        // (void elements like <img> cannot have children).
-        // Only wrap when we have valid dimension + position info (converter output).
-        // CSS-positioned images without inline styles are handled by their parent container.
-        if (tag === 'img') {
-          const imgW = node.style.width || (node.getAttribute('width') ? node.getAttribute('width') + 'px' : '');
-          const imgH = node.style.height || (node.getAttribute('height') ? node.getAttribute('height') + 'px' : '');
-          const imgL = node.style.left || '0px';
-          const imgT = node.style.top || '0px';
-          if (imgW && imgH) {
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = `position:absolute;left:${imgL};top:${imgT};width:${imgW};height:${imgH};overflow:hidden;cursor:move;`;
-            if (node.style.zIndex) wrapper.style.zIndex = node.style.zIndex;
-            wrapper.classList.add('element');
-            wrapper.dataset.type = 'image';
-            wrapper.dataset.selectable = 'true';
-            wrapper.id = node.id || `element_image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            node.style.position = 'static';
-            node.style.left = '';
-            node.style.top = '';
-            node.style.width = '100%';
-            node.style.height = '100%';
-            node.style.objectFit = 'cover';
-            node.style.pointerEvents = 'none';
-            node.removeAttribute('id');
-            node.parentElement!.insertBefore(wrapper, node);
-            wrapper.appendChild(node);
-            return;
-          }
-          // No valid dimensions — skip wrapping. The img's parent container
-          // will be the selectable element instead.
+      // Wrap bare <img> in a container div so it can receive resize handles
+      // (void elements like <img> cannot have children).
+      if (tag === 'img') {
+        const imgW = node.style.width || (node.getAttribute('width') ? node.getAttribute('width') + 'px' : '');
+        const imgH = node.style.height || (node.getAttribute('height') ? node.getAttribute('height') + 'px' : '');
+        const imgL = node.style.left || '0px';
+        const imgT = node.style.top || '0px';
+        if (imgW && imgH) {
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = `position:absolute;left:${imgL};top:${imgT};width:${imgW};height:${imgH};overflow:hidden;cursor:move;`;
+          if (node.style.zIndex) wrapper.style.zIndex = node.style.zIndex;
+          wrapper.classList.add('element');
+          wrapper.dataset.type = 'image';
+          wrapper.dataset.selectable = 'true';
+          wrapper.id = node.id || `element_image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          node.style.position = 'static';
+          node.style.left = '';
+          node.style.top = '';
+          node.style.width = '100%';
+          node.style.height = '100%';
+          node.style.objectFit = 'cover';
+          node.style.pointerEvents = 'none';
+          node.removeAttribute('id');
+          node.parentElement!.insertBefore(wrapper, node);
+          wrapper.appendChild(node);
           return;
         }
+      }
 
-        if (!node.classList.contains('element')) {
-          node.classList.add('element');
-        }
-        // Set data-selectable + cursor in processHTML so elements are always
-        // interactive, even before makeElementsSelectable runs on live DOM.
-        node.dataset.selectable = 'true';
-        if (!isReadOnly) node.style.cursor = 'move';
+      if (!node.classList.contains('element')) {
+        node.classList.add('element');
+      }
+      // Set data-selectable + cursor in processHTML so elements are always
+      // interactive, even before makeElementsSelectable runs on live DOM.
+      node.dataset.selectable = 'true';
+      if (!isReadOnly) node.style.cursor = 'move';
 
-        if (!node.dataset.type) {
-          let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
+      if (!node.dataset.type) {
+        let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
 
-          const hasImage = node.querySelector('img') || tag === 'img';
-          const hasVideo = node.querySelector('video') || tag === 'video';
-          const textContent = node.textContent?.trim() || '';
-          const hasSignificantText = textContent.length > 3;
+        const hasImage = node.querySelector('img') || tag === 'img';
+        const hasVideo = node.querySelector('video') || tag === 'video';
+        const textContent = node.textContent?.trim() || '';
+        const hasSignificantText = textContent.length > 3;
 
-          const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
-          const isDivWithText = tag === 'div' && hasSignificantText;
-          const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
-            node.style.backgroundImage || node.style.borderRadius;
+        const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
+        const isDivWithText = tag === 'div' && hasSignificantText;
+        const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
+          node.style.backgroundImage || node.style.borderRadius;
 
-          if (hasImage) {
-            elementType = 'image';
-          } else if (hasVideo) {
-            elementType = 'video';
-          } else if (explicitTextTags.includes(tag) && hasSignificantText) {
-            elementType = 'text';
-          } else if (isDivWithText && !hasBackgroundStyling) {
-            elementType = 'text';
-          } else if (hasSignificantText && !hasBackgroundStyling) {
-            elementType = 'text';
-          } else {
-            elementType = 'shape';
-          }
-
-          node.dataset.type = elementType;
+        if (hasImage) {
+          elementType = 'image';
+        } else if (hasVideo) {
+          elementType = 'video';
+        } else if (explicitTextTags.includes(tag) && hasSignificantText) {
+          elementType = 'text';
+        } else if (isDivWithText && !hasBackgroundStyling) {
+          elementType = 'text';
+        } else if (hasSignificantText && !hasBackgroundStyling) {
+          elementType = 'text';
+        } else {
+          elementType = 'shape';
         }
 
-        if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
-          node.setAttribute('contenteditable', 'true');
-        }
+        node.dataset.type = elementType;
+      }
 
-        if (!node.id) {
-          node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        }
+      if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
+        node.setAttribute('contenteditable', 'true');
+      }
+
+      if (!node.id) {
+        node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }
     });
 

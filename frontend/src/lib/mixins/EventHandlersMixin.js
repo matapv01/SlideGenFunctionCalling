@@ -1,6 +1,36 @@
 // Mixin: mouse event handlers (mousedown, mousemove, mouseup, dblclick)
 export const EventHandlersMixin = {
 
+    ensureDragPlaceholder(el, startPos) {
+        if (!el || !el.parentElement) return;
+        if (!this.dragPlaceholders) this.dragPlaceholders = new Map();
+        if (this.dragPlaceholders.has(el)) return;
+
+        const computed = window.getComputedStyle(el);
+        const placeholder = document.createElement('div');
+        placeholder.setAttribute('data-drag-placeholder', 'true');
+        placeholder.style.visibility = 'hidden';
+        placeholder.style.pointerEvents = 'none';
+        placeholder.style.width = `${startPos.width}px`;
+        placeholder.style.height = `${startPos.height}px`;
+        placeholder.style.marginTop = computed.marginTop;
+        placeholder.style.marginRight = computed.marginRight;
+        placeholder.style.marginBottom = computed.marginBottom;
+        placeholder.style.marginLeft = computed.marginLeft;
+        placeholder.style.display = computed.display === 'inline' ? 'inline-block' : computed.display;
+
+        el.parentElement.insertBefore(placeholder, el);
+        this.dragPlaceholders.set(el, placeholder);
+    },
+
+    clearDragPlaceholders() {
+        if (!this.dragPlaceholders) return;
+        this.dragPlaceholders.forEach((placeholder) => {
+            if (placeholder && placeholder.parentElement) placeholder.remove();
+        });
+        this.dragPlaceholders.clear();
+    },
+
     handleDoubleClick(e) {
         const target = e.target;
 
@@ -142,6 +172,12 @@ export const EventHandlersMixin = {
             return;
         }
 
+        // Normal drag (no Ctrl/Shift): always collapse to exactly one element.
+        // This avoids accidental multi-selection causing unrelated elements to move.
+        if (!isMultiSelectIntent && this.selectedElements.length > 1) {
+            this.selectElement(targetElement);
+        }
+
         // Already selected or drag handle → prepare for drag
         if (isDragHandle && !isAlreadySelected) {
             this.selectElement(targetElement);
@@ -183,6 +219,8 @@ export const EventHandlersMixin = {
                     if (el.style.position !== 'absolute') {
                         const startPos = this.elementsStartPos.get(el);
                         if (startPos) {
+                            // Keep a hidden placeholder in normal flow so sibling layout doesn't jump.
+                            this.ensureDragPlaceholder(el, startPos);
                             el.style.position = 'absolute';
                             el.style.left = `${startPos.x}px`;
                             el.style.top  = `${startPos.y}px`;
@@ -288,6 +326,8 @@ export const EventHandlersMixin = {
                 }
             }
         }
+
+        this.clearDragPlaceholders();
 
         this.isDragging         = false;
         this.isResizing         = false;
