@@ -46,6 +46,12 @@ export const SelectionMixin = {
         const decoration = computedStyle.textDecoration || computedStyle.textDecorationLine || '';
         const isUnderline = decoration.includes('underline');
 
+        const computedZ = parseInt(computedStyle.zIndex, 10);
+        const inlineZ = parseInt(el.style?.zIndex, 10);
+        const resolvedZIndex = Number.isFinite(computedZ)
+            ? computedZ
+            : (Number.isFinite(inlineZ) ? inlineZ : 0);
+
         const fontSizeVal = parseFloat(computedStyle.fontSize) || 16;
         const fontFamilyClean = computedStyle.fontFamily
             ? computedStyle.fontFamily.replace(/['"]/g, '')
@@ -77,6 +83,8 @@ export const SelectionMixin = {
                 width: bounds.width,
                 height: bounds.height,
                 position: computedStyle.position,
+                zIndex: resolvedZIndex,
+                opacity: parseFloat(computedStyle.opacity) || 1,
             },
         });
     },

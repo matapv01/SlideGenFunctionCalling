@@ -203,6 +203,7 @@ export const EditorSidebar = ({
                   slideId={`mini-${slide.id}-${idx}`}
                   htmlContent={rawHtml}
                   backgroundColor={slide.backgroundColor}
+                  backgroundImage={slide.backgroundImage}
                   className="absolute inset-0"
                 />
               ) : (
@@ -283,6 +284,7 @@ export const EditorSidebar = ({
                         slideId={`thumb-${slide.id}-${idx}`}
                         htmlContent={rawHtml}
                         backgroundColor={slide.backgroundColor}
+                        backgroundImage={slide.backgroundImage}
                         className="absolute inset-0"
                       />
                     ) : (

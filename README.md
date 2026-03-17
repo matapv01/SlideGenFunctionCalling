@@ -14,6 +14,24 @@ Không cần cài uv/Python/Node trên máy local.
 docker compose -f docker-compose.dev.yml up --build
 ```
 
+Nếu mạng tới PyPI chập chờn (timeout khi `uv sync`), có thể build với timeout/retry cao hơn:
+
+```bash
+docker compose -f docker-compose.dev.yml build \
+	--build-arg UV_HTTP_TIMEOUT=300 \
+	--build-arg UV_HTTP_CONNECT_TIMEOUT=60 \
+	--build-arg UV_HTTP_RETRIES=12
+
+docker compose -f docker-compose.dev.yml up
+```
+
+Nếu vẫn timeout do route tới `pypi.org`, có thể thử mirror:
+
+```bash
+docker compose -f docker-compose.dev.yml build \
+	--build-arg UV_DEFAULT_INDEX=https://pypi.tuna.tsinghua.edu.cn/simple
+```
+
 ### Từ lần sau
 
 ```bash

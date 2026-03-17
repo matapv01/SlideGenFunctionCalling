@@ -147,6 +147,7 @@ export const CanvasArea = ({
                     slideId={currentSlide.id}
                     htmlContent={currentSlide.elements[0]?.content || ''}
                     backgroundColor={currentSlide.backgroundColor}
+                    backgroundImage={currentSlide.backgroundImage}
                     onChange={onChange}
                     onElementSelect={onElementSelect}
                     zoom={zoom}

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { parseSlideDesignSettings, resolveSlideBackground } from "@/lib/slideBackground";
 import type { Slide, SlideElement } from "../types";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "../constants";
 
@@ -47,30 +48,21 @@ export const useSlideData = (projectId: string | undefined): UseSlideDataReturn 
         
         if (slidesResponse?.slides && Array.isArray(slidesResponse.slides)) {
           const mappedSlides: Slide[] = slidesResponse.slides.map((s: any) => {
-            let backgroundColor = "#ffffff";
-            let backgroundImage = undefined;
             let defs: string | undefined = undefined;
 
-            // Extract metadata (backgroundColor etc.) from design_settings
-            if (s.design_settings) {
-              try {
-                const ds = typeof s.design_settings === 'string'
-                  ? JSON.parse(s.design_settings)
-                  : s.design_settings;
+            const htmlForCanvas = s.html_content || '';
+            const parsedDesignSettings = parseSlideDesignSettings(s.design_settings);
+            const { backgroundColor, backgroundImage } = resolveSlideBackground(parsedDesignSettings, htmlForCanvas);
 
-                if (ds && typeof ds === 'object') {
-                  if (ds.backgroundColor) backgroundColor = ds.backgroundColor;
-                  if (ds.backgroundImage) backgroundImage = ds.backgroundImage;
-                  if (ds.defs) defs = ds.defs;
-                }
-              } catch (e) {
-                console.error("Failed to parse design_settings for slide", s.id, e);
-              }
+            // Extract metadata (backgroundColor etc.) from design_settings
+            if (parsedDesignSettings && typeof parsedDesignSettings === 'object') {
+              if (parsedDesignSettings.defs) defs = String(parsedDesignSettings.defs);
+            } else if (s.design_settings) {
+              console.error("Failed to parse design_settings for slide", s.id);
             }
 
             // html_content is the authoritative visual source — always rendered as a
             // single full-canvas element so nothing is lost between saves.
-            const htmlForCanvas = s.html_content || '';
             const elements: SlideElement[] = htmlForCanvas
               ? [{
                   id: `canvas-${s.id}`,

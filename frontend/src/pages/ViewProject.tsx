@@ -7,6 +7,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import { resolveSlideBackground } from "@/lib/slideBackground";
 import { AppLayout } from "@/components/AppLayout";
 import { ReadOnlySlide } from "@/components/ReadOnlySlide";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -111,16 +112,8 @@ const ViewProject = () => {
       const res = await api.getSlides(projectId!);
       // Map backend fields to frontend expected fields
       const mappedSlides = res.slides.map((s: any) => {
-        let backgroundColor = '#ffffff';
-        let backgroundImage: string | undefined;
-        if (s.design_settings) {
-          try {
-            const ds = typeof s.design_settings === 'string' ? JSON.parse(s.design_settings) : s.design_settings;
-            if (ds?.backgroundColor) backgroundColor = ds.backgroundColor;
-            if (ds?.backgroundImage) backgroundImage = ds.backgroundImage;
-          } catch { /* ignore */ }
-        }
         const html = s.html_content || '';
+        const { backgroundColor, backgroundImage } = resolveSlideBackground(s.design_settings, html);
         return { ...s, html, backgroundColor, backgroundImage };
       });
       setSlides(mappedSlides);
@@ -187,6 +180,7 @@ const ViewProject = () => {
                         slideId={`thumb-${slide.id || i}`}
                         htmlContent={slide.html}
                         backgroundColor={slide.backgroundColor}
+                        backgroundImage={slide.backgroundImage}
                         className="absolute inset-0"
                       />
                     ) : (
@@ -277,6 +271,7 @@ const ViewProject = () => {
                   slideId={`present-view-${currentSlideIndex}`}
                   htmlContent={slides[currentSlideIndex].html}
                   backgroundColor={slides[currentSlideIndex].backgroundColor}
+                  backgroundImage={slides[currentSlideIndex].backgroundImage}
                   className="absolute inset-0"
                 />
               ) : (
