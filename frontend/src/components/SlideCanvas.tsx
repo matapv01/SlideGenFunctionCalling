@@ -460,8 +460,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       [data-selectable="true"] { cursor: move; }
 
       [contenteditable="true"]:focus {
-        outline: 2px dashed #3b82f6;
-        outline-offset: 2px;
+        outline: none !important;
         cursor: text !important;
       }
 

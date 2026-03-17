@@ -1,0 +1,44 @@
+.element.selected {
+    outline: 3px solid var(--primary-color) !important;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2),
+                0 8px 30px rgba(102, 126, 234, 0.4) !important;
+    animation: selectedPulse 2s ease-in-out infinite;
+}
+
+@keyframes selectedPulse {
+    0%, 100% {
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2),
+                    0 8px 30px rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.4),
+                    0 8px 35px rgba(102, 126, 234, 0.6);
+    }
+}
+
+/* Tùy chỉnh resize handle */
+.element.selected .resize-handle {
+    display: block;
+}
+
+.element.selected .drag-handle {
+    display: flex;
+}
+
+/* Hiệu ứng khi đang resize */
+.group-container.selected {
+    border-color: var(--primary-color) !important;
+}
+
+.group-container > * {
+    cursor: move;
+}
+
+/* Improved selection styling */
+.element.selected .resize-handle {
+    background: #ff6b9d;
+    border: 2px solid white;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+

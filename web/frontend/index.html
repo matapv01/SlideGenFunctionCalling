@@ -1,0 +1,3827 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+    <title>SlideGen - AI Slide Generator</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body,
+        html {
+            height: 100%;
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            overflow-x: hidden;
+        }
+
+        /* Enhanced animated gradient background with more colors */
+        body {
+            background: linear-gradient(-45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #5f27cd, #00d2d3, #ff6348);
+            background-size: 400% 400%;
+            animation: gradientShift 12s ease infinite;
+        }
+
+        /* Chrome, Edge, Safari */
+        ::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Firefox */
+        html {
+            scrollbar-width: none;
+        }
+
+        /* IE, old Edge */
+        body {
+            -ms-overflow-style: none;
+        }
+
+        @keyframes gradientShift {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            25% {
+                background-position: 50% 100%;
+            }
+
+            50% {
+                background-position: 100% 50%;
+            }
+
+            75% {
+                background-position: 50% 0%;
+            }
+
+            100% {
+                background-position: 0% 50%;
+            }
+        }
+
+        /* Aurora effect overlay */
+        .aurora-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .aurora-overlay::before,
+        .aurora-overlay::after {
+            content: '';
+            position: absolute;
+            width: 200%;
+            height: 200%;
+            top: -50%;
+            left: -50%;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.15) 0%, transparent 70%);
+            animation: aurora 8s ease-in-out infinite;
+        }
+
+        .aurora-overlay::after {
+            animation-delay: -4s;
+            background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+        }
+
+        @keyframes aurora {
+
+            0%,
+            100% {
+                transform: translateX(-25%) translateY(-25%) rotate(0deg);
+            }
+
+            50% {
+                transform: translateX(25%) translateY(25%) rotate(180deg);
+            }
+        }
+
+        /* Enhanced floating particles with different shapes */
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 50%;
+            animation: float 20s infinite linear;
+            box-shadow: 0 0 20px rgba(255, 255, 255, 0.3);
+        }
+
+        /* Different particle styles */
+        .particle:nth-child(odd) {
+            border-radius: 50%;
+        }
+
+        .particle:nth-child(even) {
+            border-radius: 30%;
+            animation-name: floatRotate;
+        }
+
+        .particle:nth-child(1) {
+            width: 80px;
+            height: 80px;
+            left: 10%;
+            animation-delay: 0s;
+            animation-duration: 25s;
+        }
+
+        .particle:nth-child(2) {
+            width: 60px;
+            height: 60px;
+            left: 20%;
+            animation-delay: 2s;
+            animation-duration: 20s;
+        }
+
+        .particle:nth-child(3) {
+            width: 100px;
+            height: 100px;
+            left: 35%;
+            animation-delay: 4s;
+            animation-duration: 28s;
+        }
+
+        .particle:nth-child(4) {
+            width: 40px;
+            height: 40px;
+            left: 50%;
+            animation-delay: 0s;
+            animation-duration: 22s;
+        }
+
+        .particle:nth-child(5) {
+            width: 70px;
+            height: 70px;
+            left: 65%;
+            animation-delay: 3s;
+            animation-duration: 18s;
+        }
+
+        .particle:nth-child(6) {
+            width: 90px;
+            height: 90px;
+            left: 75%;
+            animation-delay: 5s;
+            animation-duration: 30s;
+        }
+
+        .particle:nth-child(7) {
+            width: 50px;
+            height: 50px;
+            left: 85%;
+            animation-delay: 1s;
+            animation-duration: 24s;
+        }
+
+        .particle:nth-child(8) {
+            width: 120px;
+            height: 120px;
+            left: 5%;
+            animation-delay: 6s;
+            animation-duration: 35s;
+        }
+
+        .particle:nth-child(9) {
+            width: 35px;
+            height: 35px;
+            left: 92%;
+            animation-delay: 8s;
+            animation-duration: 19s;
+        }
+
+        .particle:nth-child(10) {
+            width: 55px;
+            height: 55px;
+            left: 45%;
+            animation-delay: 10s;
+            animation-duration: 23s;
+        }
+
+        .particle:nth-child(11) {
+            width: 45px;
+            height: 45px;
+            left: 28%;
+            animation-delay: 12s;
+            animation-duration: 26s;
+        }
+
+        .particle:nth-child(12) {
+            width: 75px;
+            height: 75px;
+            left: 58%;
+            animation-delay: 7s;
+            animation-duration: 21s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(100vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 1;
+                transform: translateY(80vh) rotate(36deg) scale(1);
+            }
+
+            90% {
+                opacity: 1;
+                transform: translateY(-80vh) rotate(324deg) scale(1);
+            }
+
+            100% {
+                transform: translateY(-100vh) rotate(360deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        @keyframes floatRotate {
+
+            0%,
+            100% {
+                transform: translateY(100vh) rotate(0deg) scale(0);
+                opacity: 0;
+            }
+
+            10% {
+                opacity: 0.8;
+                transform: translateY(80vh) rotate(90deg) scale(1);
+            }
+
+            50% {
+                transform: translateY(0vh) rotate(450deg) scale(1.2);
+            }
+
+            90% {
+                opacity: 0.8;
+                transform: translateY(-80vh) rotate(810deg) scale(1);
+            }
+
+            100% {
+                transform: translateY(-100vh) rotate(900deg) scale(0);
+                opacity: 0;
+            }
+        }
+
+        /* Sparkle stars effect */
+        .sparkles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 3;
+        }
+
+        .sparkle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: #fff;
+            border-radius: 50%;
+            animation: sparkle 3s ease-in-out infinite;
+            box-shadow: 0 0 10px #fff, 0 0 20px #fff, 0 0 30px #fff;
+        }
+
+        .sparkle:nth-child(1) {
+            left: 10%;
+            top: 20%;
+            animation-delay: 0s;
+        }
+
+        .sparkle:nth-child(2) {
+            left: 30%;
+            top: 40%;
+            animation-delay: 0.5s;
+        }
+
+        .sparkle:nth-child(3) {
+            left: 50%;
+            top: 15%;
+            animation-delay: 1s;
+        }
+
+        .sparkle:nth-child(4) {
+            left: 70%;
+            top: 60%;
+            animation-delay: 1.5s;
+        }
+
+        .sparkle:nth-child(5) {
+            left: 90%;
+            top: 30%;
+            animation-delay: 2s;
+        }
+
+        .sparkle:nth-child(6) {
+            left: 15%;
+            top: 70%;
+            animation-delay: 2.5s;
+        }
+
+        .sparkle:nth-child(7) {
+            left: 85%;
+            top: 80%;
+            animation-delay: 0.3s;
+        }
+
+        .sparkle:nth-child(8) {
+            left: 45%;
+            top: 85%;
+            animation-delay: 1.8s;
+        }
+
+        .sparkle:nth-child(9) {
+            left: 25%;
+            top: 55%;
+            animation-delay: 0.8s;
+        }
+
+        .sparkle:nth-child(10) {
+            left: 75%;
+            top: 45%;
+            animation-delay: 1.3s;
+        }
+
+        .sparkle:nth-child(11) {
+            left: 60%;
+            top: 25%;
+            animation-delay: 2.2s;
+        }
+
+        .sparkle:nth-child(12) {
+            left: 5%;
+            top: 50%;
+            animation-delay: 0.6s;
+        }
+
+        @keyframes sparkle {
+
+            0%,
+            100% {
+                opacity: 0;
+                transform: scale(0) rotate(0deg);
+            }
+
+            50% {
+                opacity: 1;
+                transform: scale(1) rotate(180deg);
+            }
+        }
+
+        /* Floating geometric shapes */
+        .geometric-shapes {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 2;
+        }
+
+        .shape {
+            position: absolute;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            animation: shapeFloat 15s ease-in-out infinite;
+        }
+
+        .shape-circle {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+            left: 5%;
+            top: 30%;
+            animation-delay: 0s;
+        }
+
+        .shape-square {
+            width: 80px;
+            height: 80px;
+            right: 10%;
+            top: 40%;
+            animation-delay: 2s;
+            animation-name: shapeFloatRotate;
+        }
+
+        .shape-triangle {
+            width: 0;
+            height: 0;
+            border-left: 40px solid transparent;
+            border-right: 40px solid transparent;
+            border-bottom: 70px solid rgba(255, 255, 255, 0.1);
+            left: 15%;
+            bottom: 20%;
+            animation-delay: 4s;
+            animation-name: shapeFloatRotate;
+        }
+
+        .shape-diamond {
+            width: 60px;
+            height: 60px;
+            right: 20%;
+            bottom: 30%;
+            transform: rotate(45deg);
+            animation-delay: 3s;
+        }
+
+        .shape-hexagon {
+            width: 70px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.05);
+            left: 80%;
+            top: 20%;
+            clip-path: polygon(25% 0%, 75% 0%, 100% 50%, 75% 100%, 25% 100%, 0% 50%);
+            animation-delay: 5s;
+        }
+
+        @keyframes shapeFloat {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translateY(-30px) rotate(10deg);
+                opacity: 0.6;
+            }
+        }
+
+        @keyframes shapeFloatRotate {
+
+            0%,
+            100% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translateY(-30px) rotate(180deg);
+                opacity: 0.6;
+            }
+        }
+
+        /* Wave animation at bottom */
+        .wave-container {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 150px;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 4;
+        }
+
+        .wave {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 200%;
+            height: 100%;
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(255,255,255,0.1)' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") repeat-x;
+            animation: wave 10s linear infinite;
+        }
+
+        .wave:nth-child(2) {
+            bottom: 10px;
+            opacity: 0.5;
+            animation-duration: 15s;
+            animation-direction: reverse;
+        }
+
+        .wave:nth-child(3) {
+            bottom: 20px;
+            opacity: 0.3;
+            animation-duration: 20s;
+        }
+
+        @keyframes wave {
+            0% {
+                transform: translateX(0);
+            }
+
+            100% {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* Content Container */
+        .content {
+            position: relative;
+            z-index: 10;
+        }
+
+        /* Hero Section */
+        .hero-section {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 2rem;
+            text-align: center;
+            position: relative;
+        }
+
+        /* Enhanced logo with neon glow */
+        .logo-container {
+            position: relative;
+            margin-bottom: 1rem;
+        }
+
+        .logo-glow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.4) 0%, transparent 70%);
+            border-radius: 50%;
+            animation: pulseGlow 3s ease-in-out infinite;
+        }
+
+        .logo-ring {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 300px;
+            height: 300px;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            animation: ringPulse 4s ease-in-out infinite;
+        }
+
+        .logo-ring:nth-child(2) {
+            width: 350px;
+            height: 350px;
+            animation-delay: 0.5s;
+        }
+
+        .logo-ring:nth-child(3) {
+            width: 400px;
+            height: 400px;
+            animation-delay: 1s;
+        }
+
+        @keyframes pulseGlow {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.5;
+                filter: blur(0px);
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 0.9;
+                filter: blur(5px);
+            }
+        }
+
+        @keyframes ringPulse {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.1);
+                opacity: 0.6;
+            }
+        }
+
+        /* Enhanced title with typewriter and gradient text */
+        .hero-title {
+            font-size: 5rem;
+            font-weight: 800;
+            /* Tăng độ tương phản màu chữ tiêu đề */
+            color: #ffffff;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 0 40px rgba(255, 255, 255, 0.3);
+            animation: titleReveal 1s ease-out, textGlow 2s ease-in-out infinite;
+            letter-spacing: -2px;
+        }
+
+        .hero-title span {
+            display: inline-block;
+            /* Gradient sáng hơn và dễ đọc hơn */
+            background: linear-gradient(135deg, #ffffff 0%, #ffe4ec 30%, #ffffff 50%, #e0f7fa 70%, #ffffff 100%);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: shine 4s linear infinite, float3D 3s ease-in-out infinite;
+            filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3));
+        }
+
+        @keyframes shine {
+            to {
+                background-position: 300% center;
+            }
+        }
+
+        @keyframes textGlow {
+
+            0%,
+            100% {
+                text-shadow: 0 0 30px rgba(255, 255, 255, 0.5), 0 0 60px rgba(255, 255, 255, 0.3);
+            }
+
+            50% {
+                text-shadow: 0 0 50px rgba(255, 255, 255, 0.8), 0 0 100px rgba(255, 255, 255, 0.5);
+            }
+        }
+
+        @keyframes float3D {
+
+            0%,
+            100% {
+                transform: translateY(0) rotateX(0deg);
+            }
+
+            50% {
+                transform: translateY(-10px) rotateX(5deg);
+            }
+        }
+
+        @keyframes titleReveal {
+            from {
+                opacity: 0;
+                transform: translateY(-50px) scale(0.9) rotateX(-20deg);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0) scale(1) rotateX(0deg);
+            }
+        }
+
+        /* Animated badge with rainbow border */
+        .hero-badge {
+            display: inline-block;
+            background: rgba(0, 0, 0, 0.4);
+            backdrop-filter: blur(10px);
+            padding: 0.6rem 1.8rem;
+            border-radius: 50px;
+            /* Màu chữ badge sáng và rõ hơn */
+            color: #ffffff;
+            font-size: 0.95rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            animation: fadeInUp 0.8s ease-out 0.2s both, badgePulse 3s ease-in-out infinite;
+            position: relative;
+            overflow: hidden;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.5);
+        }
+
+        .hero-badge::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff);
+            background-size: 400% 400%;
+            border-radius: 50px;
+            z-index: -1;
+            animation: rainbowBorder 3s linear infinite;
+        }
+
+        .hero-badge::after {
+            content: '';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            right: 2px;
+            bottom: 2px;
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 50px;
+            z-index: -1;
+        }
+
+        @keyframes badgePulse {
+
+            0%,
+            100% {
+                transform: scale(1);
+            }
+
+            50% {
+                transform: scale(1.05);
+            }
+        }
+
+        @keyframes rainbowBorder {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 400% 50%;
+            }
+        }
+
+        .hero-subtitle {
+            font-size: 1.8rem;
+            /* Màu subtitle đậm và rõ hơn */
+            color: #ffffff;
+            margin-bottom: 1rem;
+            font-weight: 400;
+            animation: fadeInUp 0.8s ease-out 0.3s both;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .hero-description {
+            font-size: 1.2rem;
+            /* Màu description sáng hơn với shadow */
+            color: rgba(255, 255, 255, 0.95);
+            max-width: 600px;
+            margin-bottom: 2.5rem;
+            line-height: 1.8;
+            animation: fadeInUp 0.8s ease-out 0.4s both;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Enhanced buttons with ripple and morph effects */
+        .hero-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            animation: fadeInUp 0.8s ease-out 0.5s both;
+        }
+
+        .btn-glow {
+            position: relative;
+            padding: 1.1rem 2.8rem;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            z-index: 1;
+        }
+
+        /* Shine effect */
+        .btn-glow::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            transition: left 0.6s;
+            z-index: 2;
+        }
+
+        .btn-glow:hover::before {
+            left: 100%;
+        }
+
+        /* Border glow effect */
+        .btn-glow::after {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            background: linear-gradient(45deg, #ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #ff6b6b);
+            background-size: 400% 400%;
+            border-radius: 55px;
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.4s;
+            animation: borderGlow 3s linear infinite;
+        }
+
+        .btn-glow:hover::after {
+            opacity: 1;
+        }
+
+        @keyframes borderGlow {
+            0% {
+                background-position: 0% 50%;
+            }
+
+            100% {
+                background-position: 400% 50%;
+            }
+        }
+
+        .btn-primary-glow {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-primary-glow:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 25px 60px rgba(102, 126, 234, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        .btn-success-glow {
+            background: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            color: #fff;
+            box-shadow: 0 10px 40px rgba(56, 239, 125, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        }
+
+        .btn-success-glow:hover {
+            transform: translateY(-8px) scale(1.05);
+            box-shadow: 0 25px 60px rgba(56, 239, 125, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+
+        /* Options Button Circular Design */
+        .btn-options-circular {
+            position: relative;
+            width: 50px;
+            height: 50px;
+            padding: 0;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.5);
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            cursor: pointer;
+            overflow: visible;
+        }
+
+        .btn-options-circular:hover {
+            transform: scale(1.1) rotate(90deg);
+            border-color: rgba(255, 255, 255, 0.8);
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 8px 25px rgba(255, 255, 255, 0.3),
+                0 0 0 8px rgba(255, 255, 255, 0.1),
+                0 0 0 16px rgba(255, 255, 255, 0.05);
+        }
+
+        .btn-options-circular::before {
+            content: '';
+            position: absolute;
+            top: -3px;
+            left: -3px;
+            right: -3px;
+            bottom: -3px;
+            border-radius: 50%;
+            background: conic-gradient(from 0deg,
+                    rgba(255, 107, 107, 0.4),
+                    rgba(254, 202, 87, 0.4),
+                    rgba(72, 219, 251, 0.4),
+                    rgba(255, 159, 243, 0.4),
+                    rgba(84, 160, 255, 0.4),
+                    rgba(255, 107, 107, 0.4));
+            z-index: -1;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            animation: rotateGradient 3s linear infinite;
+        }
+
+        .btn-options-circular:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes rotateGradient {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn-options-circular i {
+            font-size: 1.3rem;
+            color: #ffffff;
+            transition: all 0.3s ease;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .btn-options-circular:hover i {
+            transform: rotate(-90deg) scale(1.1);
+            filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.8));
+        }
+
+        .btn-glow i {
+            margin-right: 0.5rem;
+            transition: transform 0.3s;
+        }
+
+        .btn-glow:hover i {
+            transform: scale(1.2) rotate(10deg);
+        }
+
+        /* Enhanced scroll indicator with trail effect */
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+
+        .scroll-indicator .mouse {
+            width: 30px;
+            height: 50px;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+            border-radius: 20px;
+            position: relative;
+            box-shadow: 0 0 15px rgba(255, 255, 255, 0.3);
+        }
+
+        .scroll-indicator .wheel {
+            width: 4px;
+            height: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 2px;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: scroll 2s infinite;
+            box-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
+        .scroll-text {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 0.8rem;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            animation: fadeInOut 2s infinite;
+        }
+
+        @keyframes fadeInOut {
+
+            0%,
+            100% {
+                opacity: 0.5;
+            }
+
+            50% {
+                opacity: 1;
+            }
+        }
+
+        @keyframes bounce {
+
+            0%,
+            20%,
+            50%,
+            80%,
+            100% {
+                transform: translateX(-50%) translateY(0);
+            }
+
+            40% {
+                transform: translateX(-50%) translateY(-15px);
+            }
+
+            60% {
+                transform: translateX(-50%) translateY(-7px);
+            }
+        }
+
+        @keyframes scroll {
+            0% {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateX(-50%) translateY(20px);
+            }
+        }
+
+        /* Enhanced features section with parallax */
+        .features-section {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(25px);
+            padding: 7rem 0;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .features-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.1) 0%, transparent 50%, rgba(0, 0, 0, 0.1) 100%);
+            pointer-events: none;
+        }
+
+        .section-title {
+            font-size: 3.2rem;
+            font-weight: 700;
+            /* Section title với shadow đậm hơn */
+            color: #ffffff;
+            text-align: center;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3);
+            position: relative;
+        }
+
+        .section-title::after {
+            content: '';
+            display: block;
+            width: 100px;
+            height: 4px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57, #48dbfb);
+            margin: 1rem auto 0;
+            border-radius: 2px;
+            animation: lineGrow 2s ease-out;
+        }
+
+        @keyframes lineGrow {
+            from {
+                width: 0;
+            }
+
+            to {
+                width: 100px;
+            }
+        }
+
+        .section-subtitle {
+            font-size: 1.2rem;
+            /* Section subtitle sáng và rõ hơn */
+            color: rgba(255, 255, 255, 0.95);
+            text-align: center;
+            margin-bottom: 4rem;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Enhanced feature cards with 3D tilt effect */
+        .feature-card {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 2.5rem;
+            border-radius: 24px;
+            text-align: center;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+            transform-style: preserve-3d;
+        }
+
+        .feature-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: left 0.7s;
+        }
+
+        .feature-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 60%);
+            opacity: 0;
+            transition: opacity 0.5s;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-20px) scale(1.03) rotateX(5deg);
+            border-color: rgba(255, 255, 255, 0.5);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.3), 0 0 40px rgba(255, 255, 255, 0.1);
+        }
+
+        .feature-card:hover::before {
+            left: 100%;
+        }
+
+        .feature-card:hover::after {
+            opacity: 1;
+        }
+
+        .feature-icon {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25) 0%, rgba(255, 255, 255, 0.05) 100%);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.8rem;
+            transform: rotate(-5deg);
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .feature-icon::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: conic-gradient(transparent, rgba(255, 255, 255, 0.3), transparent 30%);
+            animation: iconSpin 4s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .feature-card:hover .feature-icon::before {
+            opacity: 1;
+        }
+
+        @keyframes iconSpin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .feature-card:hover .feature-icon {
+            transform: rotate(0deg) scale(1.15);
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            /* Feature card title đậm hơn */
+            color: #ffffff;
+            margin-bottom: 1rem;
+            transition: transform 0.3s;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .feature-card p {
+            font-size: 1rem;
+            /* Feature card description sáng hơn */
+            color: rgba(255, 255, 255, 0.95);
+            line-height: 1.7;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Enhanced How It Works with animated connectors */
+        .how-it-works-section {
+            padding: 7rem 0;
+            background: rgba(0, 0, 0, 0.15);
+            position: relative;
+        }
+
+        .step-card {
+            text-align: center;
+            position: relative;
+            padding: 2rem;
+        }
+
+        .step-number {
+            width: 90px;
+            height: 90px;
+            margin: 0 auto 1.5rem;
+            background: linear-gradient(135deg, #fff 0%, #f0f0f0 100%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.2rem;
+            font-weight: 800;
+            /* Step number màu đậm hơn */
+            color: #5a67d8;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+            position: relative;
+            z-index: 2;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        .step-number::before {
+            content: '';
+            position: absolute;
+            top: -5px;
+            left: -5px;
+            right: -5px;
+            bottom: -5px;
+            border-radius: 50%;
+            background: conic-gradient(#ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #ff6b6b);
+            z-index: -1;
+            animation: stepGlow 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .step-card:hover .step-number::before {
+            opacity: 1;
+        }
+
+        @keyframes stepGlow {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .step-card:hover .step-number {
+            transform: scale(1.15) rotate(10deg);
+            box-shadow: 0 25px 60px rgba(0, 0, 0, 0.35);
+        }
+
+        .step-connector {
+            position: absolute;
+            top: 65px;
+            right: -50%;
+            width: 100%;
+            height: 4px;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.1));
+            z-index: 1;
+            overflow: hidden;
+        }
+
+        .step-connector::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 50%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.8), transparent);
+            animation: connectorFlow 2s linear infinite;
+        }
+
+        @keyframes connectorFlow {
+            to {
+                left: 200%;
+            }
+        }
+
+        .step-card:last-child .step-connector {
+            display: none;
+        }
+
+        .step-card h4 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            /* Step title sáng và rõ hơn */
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            transition: transform 0.3s;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .step-card p {
+            /* Step description sáng hơn */
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 1rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Enhanced capabilities with slide-in animation */
+        .capabilities-section {
+            padding: 7rem 0;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+        }
+
+        .capability-item {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            padding: 2rem;
+            border-radius: 20px;
+            display: flex;
+            align-items: flex-start;
+            gap: 1.5rem;
+            transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            margin-bottom: 1.5rem;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .capability-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.15), transparent);
+            transition: left 0.6s;
+        }
+
+        .capability-item:hover::before {
+            left: 100%;
+        }
+
+        .capability-item:hover {
+            background: rgba(255, 255, 255, 0.18);
+            border-color: rgba(255, 255, 255, 0.35);
+            transform: translateX(15px) scale(1.02);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.2), -10px 0 30px rgba(255, 255, 255, 0.05);
+        }
+
+        .capability-icon {
+            width: 65px;
+            height: 65px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.25), rgba(255, 255, 255, 0.05));
+            border-radius: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.9rem;
+            flex-shrink: 0;
+            transition: all 0.4s;
+        }
+
+        .capability-item:hover .capability-icon {
+            transform: scale(1.1) rotate(5deg);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.35), rgba(255, 255, 255, 0.1));
+        }
+
+        .capability-item h5 {
+            font-size: 1.25rem;
+            font-weight: 600;
+            /* Capability title sáng hơn */
+            color: #ffffff;
+            margin-bottom: 0.5rem;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .capability-item p {
+            /* Capability description sáng hơn */
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 0.95rem;
+            margin: 0;
+            line-height: 1.6;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        /* Enhanced CTA with floating elements */
+        .cta-section {
+            padding: 7rem 0;
+            text-align: center;
+            background: rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(25px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .cta-section::before,
+        .cta-section::after {
+            content: '';
+            position: absolute;
+            width: 300px;
+            height: 300px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, transparent 70%);
+            animation: ctaFloat 6s ease-in-out infinite;
+        }
+
+        .cta-section::before {
+            top: -100px;
+            left: -100px;
+        }
+
+        .cta-section::after {
+            bottom: -100px;
+            right: -100px;
+            animation-delay: 3s;
+        }
+
+        @keyframes ctaFloat {
+
+            0%,
+            100% {
+                transform: translate(0, 0) scale(1);
+            }
+
+            50% {
+                transform: translate(30px, 30px) scale(1.2);
+            }
+        }
+
+        .cta-title {
+            font-size: 3rem;
+            font-weight: 700;
+            /* CTA title với shadow đậm */
+            color: #ffffff;
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5), 0 4px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .cta-description {
+            font-size: 1.25rem;
+            /* CTA description sáng hơn */
+            color: rgba(255, 255, 255, 0.95);
+            margin-bottom: 2.5rem;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            text-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Enhanced footer with gradient line */
+        .footer-section {
+            background: rgba(0, 0, 0, 0.25);
+            backdrop-filter: blur(20px);
+            padding: 2.5rem 0;
+            text-align: center;
+            position: relative;
+        }
+
+        .footer-section::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 3px;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+            border-radius: 2px;
+        }
+
+        .footer-section p {
+            /* Footer text sáng hơn */
+            color: rgba(255, 255, 255, 0.9);
+            margin: 0;
+            font-size: 0.95rem;
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        }
+
+        .footer-links {
+            margin-top: 1rem;
+        }
+
+        .footer-links a {
+            /* Footer links sáng hơn */
+            color: rgba(255, 255, 255, 0.95);
+            text-decoration: none;
+            margin: 0 1rem;
+            transition: all 0.3s;
+            position: relative;
+            font-weight: 500;
+        }
+
+        .footer-links a::after {
+            content: '';
+            position: absolute;
+            bottom: -3px;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: linear-gradient(90deg, #ff6b6b, #feca57);
+            transition: width 0.3s;
+        }
+
+        .footer-links a:hover {
+            color: #fff;
+        }
+
+        .footer-links a:hover::after {
+            width: 100%;
+        }
+
+        /* Cursor trail effect */
+        .cursor-trail {
+            position: fixed;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 9999;
+            transform: translate(-50%, -50%);
+            transition: transform 0.1s ease-out;
+        }
+
+        /* Thêm CSS cho dark mode toggle button */
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 9999;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            overflow: hidden;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        .theme-toggle::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: conic-gradient(#ff6b6b, #feca57, #48dbfb, #ff9ff3, #54a0ff, #ff6b6b);
+            border-radius: 50%;
+            z-index: -1;
+            animation: toggleGlow 3s linear infinite;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+
+        .theme-toggle:hover::before {
+            opacity: 1;
+        }
+
+        @keyframes toggleGlow {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .theme-toggle .icon {
+            font-size: 1.6rem;
+            color: #ffffff;
+            transition: all 0.4s;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        .theme-toggle .sun-icon {
+            position: absolute;
+            opacity: 0;
+            transform: rotate(-90deg) scale(0);
+        }
+
+        .theme-toggle .moon-icon {
+            position: absolute;
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        /* Dark mode styles */
+        body.dark-mode {
+            background: linear-gradient(-45deg, #0f0f23, #1a1a3e, #0d1b2a, #1b263b, #0f0f23, #252547);
+            background-size: 400% 400%;
+        }
+
+        body.dark-mode .theme-toggle .sun-icon {
+            opacity: 1;
+            transform: rotate(0deg) scale(1);
+        }
+
+        body.dark-mode .theme-toggle .moon-icon {
+            opacity: 0;
+            transform: rotate(90deg) scale(0);
+        }
+
+        body.dark-mode .theme-toggle {
+            background: rgba(0, 0, 0, 0.4);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+
+        body.dark-mode .particle {
+            background: rgba(100, 150, 255, 0.1);
+            box-shadow: 0 0 20px rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .sparkle {
+            background: #a5b4fc;
+            box-shadow: 0 0 10px #a5b4fc, 0 0 20px #a5b4fc, 0 0 30px #a5b4fc;
+        }
+
+        body.dark-mode .aurora-overlay::before,
+        body.dark-mode .aurora-overlay::after {
+            background: radial-gradient(ellipse at center, rgba(100, 150, 255, 0.1) 0%, transparent 70%);
+        }
+
+        body.dark-mode .shape {
+            border-color: rgba(100, 150, 255, 0.15);
+        }
+
+        body.dark-mode .shape-triangle {
+            border-bottom-color: rgba(100, 150, 255, 0.08);
+        }
+
+        body.dark-mode .shape-hexagon {
+            background: rgba(100, 150, 255, 0.05);
+        }
+
+        body.dark-mode .logo-glow {
+            background: radial-gradient(circle, rgba(100, 150, 255, 0.3) 0%, transparent 70%);
+        }
+
+        body.dark-mode .logo-ring {
+            border-color: rgba(100, 150, 255, 0.2);
+        }
+
+        body.dark-mode .hero-title span {
+            background: linear-gradient(135deg, #e0e7ff 0%, #c7d2fe 30%, #a5b4fc 50%, #818cf8 70%, #e0e7ff 100%);
+            background-size: 300% auto;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        body.dark-mode .hero-badge {
+            background: rgba(30, 30, 60, 0.7);
+        }
+
+        body.dark-mode .hero-badge::before {
+            background: linear-gradient(45deg, #667eea, #764ba2, #6366f1, #8b5cf6, #667eea);
+        }
+
+        body.dark-mode .hero-badge::after {
+            background: rgba(20, 20, 40, 0.8);
+        }
+
+        body.dark-mode .btn-primary-glow {
+            background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+            box-shadow: 0 10px 40px rgba(79, 70, 229, 0.4);
+        }
+
+        body.dark-mode .btn-primary-glow:hover {
+            box-shadow: 0 25px 60px rgba(79, 70, 229, 0.6);
+        }
+
+        body.dark-mode .btn-success-glow {
+            background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+            box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4);
+        }
+
+        body.dark-mode .btn-success-glow:hover {
+            box-shadow: 0 25px 60px rgba(16, 185, 129, 0.6);
+        }
+
+        body.dark-mode .scroll-indicator .mouse {
+            border-color: rgba(165, 180, 252, 0.5);
+            box-shadow: 0 0 15px rgba(165, 180, 252, 0.3);
+        }
+
+        body.dark-mode .scroll-indicator .wheel {
+            background: rgba(165, 180, 252, 0.8);
+            box-shadow: 0 0 10px rgba(165, 180, 252, 0.5);
+        }
+
+        body.dark-mode .features-section {
+            background: rgba(15, 15, 35, 0.6);
+        }
+
+        body.dark-mode .features-section::before {
+            background: linear-gradient(180deg, rgba(0, 0, 0, 0.2) 0%, transparent 50%, rgba(0, 0, 0, 0.2) 100%);
+        }
+
+        body.dark-mode .section-title::after {
+            background: linear-gradient(90deg, #667eea, #8b5cf6, #a855f7);
+        }
+
+        body.dark-mode .feature-card {
+            background: rgba(30, 30, 60, 0.5);
+            border-color: rgba(100, 150, 255, 0.15);
+        }
+
+        body.dark-mode .feature-card:hover {
+            background: rgba(40, 40, 80, 0.6);
+            border-color: rgba(165, 180, 252, 0.4);
+            box-shadow: 0 40px 80px rgba(0, 0, 0, 0.5), 0 0 40px rgba(100, 150, 255, 0.1);
+        }
+
+        body.dark-mode .feature-icon {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.2) 0%, rgba(100, 150, 255, 0.05) 100%);
+        }
+
+        body.dark-mode .feature-card:hover .feature-icon {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.3) 0%, rgba(100, 150, 255, 0.1) 100%);
+        }
+
+        body.dark-mode .how-it-works-section {
+            background: rgba(10, 10, 25, 0.5);
+        }
+
+        body.dark-mode .step-number {
+            background: linear-gradient(135deg, #1e1e3f 0%, #2d2d5a 100%);
+            color: #a5b4fc;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, 0.4);
+        }
+
+        body.dark-mode .step-number::before {
+            background: conic-gradient(#667eea, #8b5cf6, #a855f7, #ec4899, #667eea);
+        }
+
+        body.dark-mode .step-connector {
+            background: linear-gradient(90deg, rgba(100, 150, 255, 0.4), rgba(100, 150, 255, 0.1));
+        }
+
+        body.dark-mode .step-connector::before {
+            background: linear-gradient(90deg, transparent, rgba(165, 180, 252, 0.6), transparent);
+        }
+
+        body.dark-mode .capabilities-section {
+            background: rgba(20, 20, 45, 0.4);
+        }
+
+        body.dark-mode .capability-item {
+            background: rgba(30, 30, 60, 0.5);
+            border-color: rgba(100, 150, 255, 0.12);
+        }
+
+        body.dark-mode .capability-item:hover {
+            background: rgba(40, 40, 80, 0.6);
+            border-color: rgba(165, 180, 252, 0.3);
+            box-shadow: 0 25px 50px rgba(0, 0, 0, 0.4), -10px 0 30px rgba(100, 150, 255, 0.05);
+        }
+
+        body.dark-mode .capability-icon {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.2), rgba(100, 150, 255, 0.05));
+        }
+
+        body.dark-mode .capability-item:hover .capability-icon {
+            background: linear-gradient(135deg, rgba(100, 150, 255, 0.3), rgba(100, 150, 255, 0.1));
+        }
+
+        body.dark-mode .cta-section {
+            background: rgba(10, 10, 25, 0.6);
+        }
+
+        body.dark-mode .cta-section::before,
+        body.dark-mode .cta-section::after {
+            background: radial-gradient(circle, rgba(100, 150, 255, 0.1) 0%, transparent 70%);
+        }
+
+        body.dark-mode .footer-section {
+            background: rgba(5, 5, 15, 0.7);
+        }
+
+        body.dark-mode .footer-section::before {
+            background: linear-gradient(90deg, transparent, rgba(165, 180, 252, 0.4), transparent);
+        }
+
+        body.dark-mode .wave {
+            background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1440 320'%3E%3Cpath fill='rgba(100,150,255,0.08)' d='M0,192L48,197.3C96,203,192,213,288,229.3C384,245,480,267,576,250.7C672,235,768,181,864,181.3C960,181,1056,235,1152,234.7C1248,235,1344,181,1392,154.7L1440,128L1440,320L1392,320C1344,320,1248,320,1152,320C1056,320,960,320,864,320C768,320,672,320,576,320C480,320,384,320,288,320C192,320,96,320,48,320L0,320Z'%3E%3C/path%3E%3C/svg%3E") repeat-x;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 3rem;
+            }
+
+            .hero-subtitle {
+                font-size: 1.3rem;
+            }
+
+            .section-title {
+                font-size: 2.2rem;
+            }
+
+            .hero-buttons {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .btn-glow {
+                width: 100%;
+                max-width: 300px;
+            }
+
+            .step-connector {
+                display: none;
+            }
+
+            .logo-ring {
+                display: none;
+            }
+
+            .geometric-shapes {
+                display: none;
+            }
+        }
+
+        /* Hidden file input */
+        #docxFile {
+            display: none;
+        }
+
+        /* Dropdown options styling */
+        .dropdown-menu {
+            z-index: 9999 !important;
+            background-color: rgba(30, 30, 30, 0.95) !important;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .dropdown-menu .form-check {
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .dropdown-menu .form-check-input {
+            cursor: pointer;
+            width: 1.2em;
+            height: 1.2em;
+            margin-right: 0.5rem;
+        }
+
+        .dropdown-menu .form-check-label {
+            cursor: pointer;
+            color: #fff;
+            font-size: 0.95rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .dropdown-menu .text-muted {
+            color: rgba(255, 255, 255, 0.5) !important;
+            font-size: 0.8rem;
+            margin-top: 0.2rem;
+        }
+
+        .dropdown-menu .dropdown-item-text {
+            color: #fff;
+            font-weight: 600;
+            padding: 0.5rem 1rem;
+        }
+
+        .dropdown-menu .dropdown-item-text i {
+            margin-right: 0.3rem;
+        }
+
+        .dropdown-menu li {
+            padding: 0;
+        }
+
+        .dropdown-menu .form-check:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 0.25rem;
+        }
+
+        #slideOptionsDropdown {
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            transition: all 0.3s ease;
+        }
+
+        #slideOptionsDropdown:hover {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.5);
+            transform: translateY(-2px);
+        }
+
+        /* Editor Page Styles */
+        .sidebar {
+            background-color: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(15px);
+            padding: 2rem;
+            height: 100vh;
+            color: #fff;
+            overflow-y: auto;
+        }
+
+        .sidebar h4 {
+            margin-bottom: 1.5rem;
+            font-weight: 700;
+            text-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        .slide-list {
+            margin-top: 1rem;
+        }
+
+        .slide-item {
+            padding: 1rem;
+            margin-bottom: 0.5rem;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .slide-item:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.02);
+        }
+
+        .slide-item.active {
+            background: rgba(255, 255, 255, 0.2);
+            border-color: rgba(255, 255, 255, 0.3);
+            font-weight: 600;
+        }
+
+        .editor-area {
+            padding: 2rem;
+            height: 100vh;
+            overflow-y: auto;
+            position: relative;
+        }
+
+        #toolbar {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            padding: 0.8rem 1.5rem;
+            border-radius: 15px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 0.5rem;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        #toolbar .btn {
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            transition: all 0.3s ease;
+        }
+
+        #toolbar .btn:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateY(-2px);
+        }
+
+        #toolbar input[type="color"] {
+            width: 30px;
+            height: 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            background: none;
+        }
+
+        #toolbar select {
+            padding: 0.3rem 0.6rem;
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-size: 0.9rem;
+        }
+
+        #toolbar select option {
+            background: rgba(30, 30, 30, 0.8);
+        }
+
+        .slide-container {
+            width: 100%;
+            min-height: 70vh;
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+            border-radius: 20px;
+            padding: 2rem;
+            margin-top: 1rem;
+            background-color: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(15px);
+            color: #fff;
+            font-family: Arial, sans-serif;
+            /* Default font */
+            font-size: 16px;
+            /* Default font size */
+            text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s ease;
+            outline: none;
+            /* Remove default focus outline */
+        }
+
+        .slide-container:focus {
+            border-color: rgba(255, 255, 255, 0.6);
+        }
+
+        .slide-container img,
+        .slide-container video {
+            max-width: 100%;
+            height: auto;
+            display: block;
+            margin: 1rem auto;
+            border-radius: 10px;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .slide-container h1,
+        .slide-container h2,
+        .slide-container h3,
+        .slide-container h4,
+        .slide-container h5,
+        .slide-container h6 {
+            margin-bottom: 1rem;
+            text-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .slide-container p {
+            margin-bottom: 1rem;
+        }
+
+        .slide-container a {
+            color: #818cf8;
+            text-decoration: underline;
+        }
+
+        .slide-container ul,
+        .slide-container ol {
+            margin-bottom: 1rem;
+            padding-left: 2rem;
+        }
+
+        .slide-container li {
+            margin-bottom: 0.5rem;
+        }
+
+        /* Loading Overlay Styles */
+        .loading-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 10000;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.2rem;
+        }
+
+        /* Toast Container Styles */
+        #toastContainer .toast {
+            min-width: 250px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            backdrop-filter: blur(10px);
+        }
+
+        #toastContainer .toast-header {
+            background-color: rgba(255, 255, 255, 0.15);
+            font-weight: 500;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        #toastContainer .toast-body {
+            font-size: 0.95rem;
+        }
+
+        /* Fix Bootstrap Modal to be centered properly */
+        #ideaModal.modal {
+            z-index: 1060 !important;
+        }
+
+        #ideaModal .modal-dialog {
+            margin: 1.75rem auto !important;
+        }
+
+        #ideaModal.modal.show {
+            display: flex !important;
+            align-items: center !important;
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            z-index: 999;
+            transition: transform 0.3s ease;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar.hidden {
+            transform: translateX(-100%);
+        }
+
+        .sidebar-header {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .sidebar-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .sidebar-user-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.15);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .sidebar-user-info i {
+            font-size: 2rem;
+            color: white;
+        }
+
+        .sidebar-user-details {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+            flex: 1;
+            /* Take available rounded space */
+            min-width: 0;
+            /* Enable ellipsis in flex child */
+        }
+
+        .sidebar-user-name {
+            color: white;
+            font-weight: 600;
+            font-size: 1rem;
+        }
+
+        .sidebar-user-email {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 0.85rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 155px;
+        }
+
+        .sidebar-menu {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex: 1;
+        }
+
+        .sidebar-footer {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            padding-top: 20px;
+            border-top: 1px solid rgba(255, 255, 255, 0.2);
+            margin-top: auto;
+        }
+
+        .sidebar-footer-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+            font-size: 0.95rem;
+        }
+
+        .sidebar-footer-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(5px);
+            color: white;
+        }
+
+        .sidebar-footer-item i {
+            font-size: 1.2rem;
+        }
+
+        .sidebar-footer-item.logout {
+            background: rgba(220, 53, 69, 0.3);
+            border-color: rgba(220, 53, 69, 0.5);
+        }
+
+        .sidebar-footer-item.logout:hover {
+            background: rgba(220, 53, 69, 0.5);
+        }
+
+        .sidebar-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 15px 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-decoration: none;
+            font-weight: 500;
+        }
+
+        .sidebar-item:hover {
+            background: rgba(255, 255, 255, 0.25);
+            transform: translateX(5px);
+            color: white;
+        }
+
+        .sidebar-item.active {
+            background: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.4);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+        }
+
+        .sidebar-item i {
+            font-size: 1.3rem;
+        }
+
+        /* User Menu Styles */
+        .user-menu {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
+        }
+
+        .user-info {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            border-radius: 25px;
+            padding: 10px 20px;
+            backdrop-filter: blur(10px);
+            color: white;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .user-info i {
+            font-size: 1.5rem;
+        }
+
+        .user-details {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-start;
+        }
+
+        .user-email {
+            font-size: 0.75rem;
+            opacity: 0.8;
+        }
+
+        .user-name {
+            font-weight: 600;
+            font-size: 0.95rem;
+        }
+
+        .user-menu-btn {
+            background: rgba(255, 255, 255, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 8px 12px;
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            margin-left: 10px;
+        }
+
+        .user-menu-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: translateY(-2px);
+        }
+
+        .user-menu-btn i {
+            font-size: 1.2rem;
+        }
+
+        .user-dropdown {
+            position: absolute;
+            top: 100%;
+            right: 0;
+            margin-top: 10px;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 10px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+            min-width: 180px;
+        }
+
+        .user-dropdown button {
+            width: 100%;
+            padding: 12px 20px;
+            border: none;
+            background: transparent;
+            color: #333;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+            text-align: left;
+        }
+
+        .user-dropdown button:hover {
+            background: rgba(102, 126, 234, 0.1);
+        }
+
+        /* Avatar Toggle Button (Left) */
+        .avatar-toggle {
+            position: fixed;
+            left: 20px;
+            top: 20px;
+            z-index: 1001;
+            width: 50px;
+            height: 50px;
+            background: rgba(255, 255, 255, 0.2);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            cursor: pointer;
+            backdrop-filter: blur(10px);
+            transition: all 0.3s ease;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 1.5rem;
+        }
+
+        .avatar-toggle:hover {
+            background: rgba(255, 255, 255, 0.3);
+            transform: scale(1.1);
+        }
+
+        /* VIP Badge Styling */
+        .vip-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: linear-gradient(135deg, #FFD700, #FFA500);
+            color: #000;
+            font-size: 0.65rem;
+            font-weight: 800;
+            padding: 2px 6px;
+            border-radius: 10px;
+            border: 1px solid rgba(255, 255, 255, 0.5);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            z-index: 2;
+            display: none;
+            /* Hidden by default */
+            align-items: center;
+            gap: 2px;
+            animation: vip-pulse 2s infinite;
+            pointer-events: none;
+        }
+
+        .vip-badge.free-tier {
+            background: linear-gradient(135deg, #6c757d, #adb5bd);
+            animation: none;
+            /* No pulse for free tier, or define a subtle one */
+        }
+
+        .vip-badge.free-tier i {
+            color: #fff;
+        }
+
+        @keyframes vip-pulse {
+            0% {
+                transform: scale(1);
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 2px 10px rgba(255, 215, 0, 0.5);
+            }
+
+            100% {
+                transform: scale(1);
+                box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            }
+        }
+
+        .sidebar-user-info {
+            position: relative;
+        }
+
+        .sidebar-user-info .vip-badge {
+            position: static;
+            /* No longer absolute */
+            margin-left: auto;
+            /* Push to right just in case */
+            font-size: 0.65rem;
+            padding: 3px 8px;
+            white-space: nowrap;
+            /* Prevent wrapping */
+        }
+
+        .avatar-toggle.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        /* Adjust main content when sidebar is visible */
+        body:not(.sidebar-hidden) .container {
+            margin-left: 280px;
+            width: calc(100% - 280px);
+        }
+
+        /* Profile & Change Password Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.6);
+            z-index: 2000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+            box-shadow: 0 10px 50px rgba(0, 0, 0, 0.3);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.3s;
+        }
+
+        .modal-close:hover {
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px 15px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.3s;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            width: 100%;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-secondary {
+            background: #6c757d;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.3s;
+            width: 100%;
+            margin-top: 10px;
+        }
+
+        .btn-secondary:hover {
+            transform: translateY(-2px);
+            background: #5a6268;
+        }
+    </style>
+</head>
+
+<body class="sidebar-hidden">
+    <!-- Avatar Toggle Button (Left) -->
+    <button class="avatar-toggle" id="avatarToggle" onclick="toggleSidebar()">
+        <i class="bi bi-person-circle"></i>
+        <div class="vip-badge" id="floatingVipBadge">
+            <i class="bi bi-patch-check-fill"></i> VIP
+        </div>
+    </button>
+
+    <!-- Sidebar Navigation -->
+    <div class="sidebar hidden" id="sidebar">
+        <div class="sidebar-header">
+            <div class="sidebar-logo">
+                <i class="bi bi-stars"></i>
+                <span>SlideGen</span>
+            </div>
+        </div>
+
+        <!-- User Info in Sidebar -->
+        <div class="sidebar-user-info">
+            <i class="bi bi-person-circle"></i>
+            <div class="sidebar-user-details">
+                <div class="sidebar-user-name" id="sidebarUsername">User</div>
+                <div class="sidebar-user-email" id="sidebarUserEmail">email@example.com</div>
+            </div>
+            <div class="vip-badge" id="sidebarVipBadge">
+                <i class="bi bi-patch-check-fill"></i> VIP
+            </div>
+        </div>
+
+        <div class="sidebar-menu">
+            <a href="index.html" class="sidebar-item active">
+                <i class="bi bi-plus-circle"></i>
+                <span>Tạo Slide Mới</span>
+            </a>
+            <a href="projects.html" class="sidebar-item">
+                <i class="bi bi-folder"></i>
+                <span>Quản Lý Dự Án</span>
+            </a>
+        </div>
+        <div class="sidebar-footer">
+            <a href="#" class="sidebar-footer-item" onclick="openProfile(); return false;">
+                <i class="bi bi-person"></i>
+                <span>Thông tin cá nhân</span>
+            </a>
+            <a href="#" class="sidebar-footer-item" onclick="openChangePassword(); return false;">
+                <i class="bi bi-key"></i>
+                <span>Đổi mật khẩu</span>
+            </a>
+            <a href="#" class="sidebar-footer-item logout" onclick="logout(); return false;">
+                <i class="bi bi-box-arrow-right"></i>
+                <span>Đăng xuất</span>
+            </a>
+        </div>
+    </div>
+
+    <!-- Thêm nút Dark Mode Toggle -->
+    <button class="theme-toggle" onclick="toggleDarkMode()" aria-label="Toggle dark mode">
+        <i class="bi bi-moon-stars-fill icon moon-icon"></i>
+        <i class="bi bi-sun-fill icon sun-icon"></i>
+    </button>
+
+    <!-- Profile Modal -->
+    <div class="modal-overlay" id="profileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Thông tin cá nhân</h2>
+                <button class="modal-close" onclick="closeProfileModal()">&times;</button>
+            </div>
+            <form onsubmit="saveProfile(event)">
+                <div class="form-group">
+                    <label class="form-label">Username</label>
+                    <input type="text" class="form-input" id="profileUsername" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Email</label>
+                    <input type="email" class="form-input" id="profileEmail" readonly>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Họ và tên</label>
+                    <input type="text" class="form-input" id="profileFullName" placeholder="Nhập họ và tên">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Avatar URL</label>
+                    <input type="url" class="form-input" id="profileAvatar"
+                        placeholder="https://example.com/avatar.jpg">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Bio</label>
+                    <textarea class="form-input" id="profileBio" rows="3"
+                        placeholder="Giới thiệu về bản thân"></textarea>
+                </div>
+                <button type="submit" class="btn-primary">Lưu thông tin</button>
+                <button type="button" class="btn-secondary" onclick="closeProfileModal()">Hủy</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Change Password Modal -->
+    <div class="modal-overlay" id="changePasswordModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 class="modal-title">Đổi mật khẩu</h2>
+                <button class="modal-close" onclick="closeChangePasswordModal()">&times;</button>
+            </div>
+            <form onsubmit="changePassword(event)">
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu hiện tại</label>
+                    <input type="password" class="form-input" id="currentPassword" required
+                        placeholder="Nhập mật khẩu hiện tại">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Mật khẩu mới</label>
+                    <input type="password" class="form-input" id="newPassword" required minlength="6"
+                        placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)">
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Xác nhận mật khẩu mới</label>
+                    <input type="password" class="form-input" id="confirmPassword" required
+                        placeholder="Nhập lại mật khẩu mới">
+                </div>
+                <button type="submit" class="btn-primary">Đổi mật khẩu</button>
+                <button type="button" class="btn-secondary" onclick="closeChangePasswordModal()">Hủy</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Aurora Overlay -->
+    <div class="aurora-overlay"></div>
+
+    <!-- Floating Particles -->
+    <div class="particles">
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+        <div class="particle"></div>
+    </div>
+
+    <!-- Sparkles -->
+    <div class="sparkles">
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+        <div class="sparkle"></div>
+    </div>
+
+    <!-- Geometric Shapes -->
+    <div class="geometric-shapes">
+        <div class="shape shape-circle"></div>
+        <div class="shape shape-square"></div>
+        <div class="shape shape-triangle"></div>
+        <div class="shape shape-diamond"></div>
+        <div class="shape shape-hexagon"></div>
+    </div>
+
+    <!-- Wave Animation -->
+    <div class="wave-container">
+        <div class="wave"></div>
+        <div class="wave"></div>
+        <div class="wave"></div>
+    </div>
+
+    <!-- Cursor Trail -->
+    <div class="cursor-trail" id="cursorTrail"></div>
+
+    <!-- Main Content -->
+    <div class="content">
+        <!-- Hero Section -->
+        <div class="hero-section">
+            <div class="logo-container">
+                <div class="logo-ring"></div>
+                <div class="logo-ring"></div>
+                <div class="logo-ring"></div>
+                <div class="logo-glow"></div>
+                <h1 class="hero-title"><span>✨ SlideGen</span></h1>
+            </div>
+
+            <div class="hero-badge">
+                <i class="bi bi-stars"></i> Powered by PAYT
+            </div>
+
+            <p class="hero-subtitle">Công cụ tạo bản trình bày AI mạnh mẽ</p>
+            <p class="hero-description">
+                Biến ý tưởng của bạn thành những bản trình bày tuyệt đẹp chỉ trong vài giây.
+                Trải nghiệm tương lai của việc sáng tạo nội dung với trình tạo slide thông minh của chúng tôi.
+            </p>
+
+            <div class="hero-buttons">
+                <div class="d-flex align-items-center gap-2" style="position: relative; z-index: 1000;">
+                    <button class="btn-glow btn-primary-glow" onclick="document.getElementById('docxFile').click()">
+                        <i class="bi bi-file-earmark-word"></i> Import DOCX
+                    </button>
+                    <div class="dropup">
+                        <button class="btn btn-outline-light btn-options-circular" type="button"
+                            id="slideOptionsDropdown" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class="bi bi-sliders"></i>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="slideOptionsDropdown"
+                            style="min-width: 320px;">
+                            <li class="dropdown-item-text">
+                                <strong><i class="bi bi-sliders"></i> Tùy chọn Slide</strong>
+                            </li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <!-- Workflow Mode Section -->
+                            <li class="px-3 py-2" onclick="event.stopPropagation();">
+                                <strong class="text-white"><i class="bi bi-diagram-3"></i> Chế độ Workflow</strong>
+                                <i class="bi bi-question-circle ms-2" style="cursor: pointer; color: #0dcaf0;"
+                                    onclick="window.open('guide.html', '_blank'); event.stopPropagation();"
+                                    title="Xem hướng dẫn chi tiết"></i>
+                                <!-- Auto (VIP) - No structure document -->
+                                <div class="form-check mt-2" onclick="event.stopPropagation();">
+                                    <input class="form-check-input" type="radio" name="workflowMode" id="autoNoStruct"
+                                        value="auto_no_struct" checked onclick="event.stopPropagation();">
+                                    <label class="form-check-label" for="autoNoStruct">
+                                        <i class="bi bi-magic"></i> Tự động
+                                        <span id="autoNoStructVipBadge" class="badge bg-warning text-dark ms-2"
+                                            style="display: none; font-size: 0.7rem;">VIP</span>
+                                    </label>
+                                    <small class="text-muted d-block ms-4">AI tự động tạo cấu trúc</small>
+                                </div>
+                                <!-- Auto With Doc Heading - Document has structure -->
+                                <div class="form-check mt-2" onclick="event.stopPropagation();">
+                                    <input class="form-check-input" type="radio" name="workflowMode"
+                                        id="autoWithHeading" value="auto" onclick="event.stopPropagation();">
+                                    <label class="form-check-label" for="autoWithHeading">
+                                        <i class="bi bi-lightning-charge"></i> Tự động với Tiêu đề
+                                    </label>
+                                    <small class="text-muted d-block ms-4">Tài liệu đã có cấu trúc tiêu đề</small>
+                                </div>
+                                <!-- Manual -->
+                                <div class="form-check mt-2" onclick="event.stopPropagation();">
+                                    <input class="form-check-input" type="radio" name="workflowMode" id="manualMode"
+                                        value="manual" onclick="event.stopPropagation();">
+                                    <label class="form-check-label" for="manualMode">
+                                        <i class="bi bi-pencil"></i> Thủ công
+                                    </label>
+                                    <small class="text-muted d-block ms-4">Xem và chỉnh sửa cấu trúc thủ công</small>
+                                </div>
+                            </li>
+                            <li id="addSlideDivider">
+                                <hr class="dropdown-divider">
+                            </li>
+                            <!-- Add Slide Options -->
+                            <li class="px-3 py-2" id="addSlideOptionsContainer" onclick="event.stopPropagation();">
+                                <strong><i class="bi bi-plus-circle"></i> Thêm Slide</strong>
+                                <div class="form-check mt-2" onclick="toggleCheckbox('enableTransitionSlides', event)">
+                                    <input class="form-check-input" type="checkbox" id="enableTransitionSlides"
+                                        onclick="event.stopPropagation();">
+                                    <label class="form-check-label" for="enableTransitionSlides">
+                                        <i class="bi bi-arrow-right-circle"></i> Slide Chuyển tiếp
+                                    </label>
+                                    <small class="text-muted d-block ms-4">Thêm slide giữa các phần</small>
+                                </div>
+                                <div class="form-check mt-2" onclick="toggleCheckbox('enableThankYouSlide', event)">
+                                    <input class="form-check-input" type="checkbox" id="enableThankYouSlide"
+                                        onclick="event.stopPropagation();">
+                                    <label class="form-check-label" for="enableThankYouSlide">
+                                        <i class="bi bi-hand-thumbs-up"></i> Slide Cảm ơn
+                                    </label>
+                                    <small class="text-muted d-block ms-4">Thêm slide kết thúc</small>
+                                </div>
+                            </li>
+                            <!-- VIP Upgrade Section -->
+                            <li id="vipUpgradeSection" style="display: none;">
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li class="px-3 py-2 text-center" id="vipUpgradeOption" style="display: none;"
+                                onclick="event.stopPropagation();">
+                                <button id="upgradeVipBtn" class="btn btn-sm btn-warning w-100"
+                                    style="font-weight: 600;">
+                                    <i class="bi bi-star-fill"></i> Nâng cấp VIP
+                                </button>
+                                <small class="text-muted d-block mt-1">Mở khóa Chế độ Auto Workflow!</small>
+                            </li>
+                        </ul>
+                    </div>
+                    <input type="file" id="docxFile" accept=".docx,.zip">
+                </div>
+
+                <!-- Tạo từ Ý tưởng button with VIP badge -->
+                <div id="ideaButtonWrapper" style="position: relative; display: inline-block;">
+                    <button id="ideaButton" class="btn-glow btn-info-glow" onclick="showIdeaModal()"
+                        style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border: none;">
+                        <i class="bi bi-lightbulb"></i> Tạo từ Ý tưởng
+                    </button>
+                    <!-- VIP badge positioned at top-right corner -->
+                    <span id="ideaButtonVipBadge" class="badge bg-warning text-dark" style="position: absolute; top: -8px; right: -8px; font-size: 0.65rem; font-weight: 800; 
+                               padding: 3px 8px; border-radius: 10px; box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+                               display: none; z-index: 10;">
+                        <i class="bi bi-patch-check-fill"></i> VIP
+                    </span>
+                </div>
+
+
+                <button class="btn-glow btn-success-glow" onclick="createNewSlide()">
+                    <i class="bi bi-plus-circle"></i> Tạo Slide Mới
+                </button>
+            </div>
+
+            <div class="scroll-indicator">
+                <div class="mouse">
+                    <div class="wheel"></div>
+                </div>
+                <div class="scroll-text">Cuộn xuống</div>
+            </div>
+        </div>
+
+        <!-- Features Section -->
+        <section class="features-section">
+            <div class="container">
+                <h2 class="section-title">Tại sao chọn SlideGen?</h2>
+                <p class="section-subtitle">Khám phá sức mạnh tạo bản trình bày bằng AI</p>
+
+                <div class="row g-4">
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">⚡</div>
+                            <h3>Cực Nhanh</h3>
+                            <p>Tạo các bài thuyết trình chuyên nghiệp chỉ trong vài giây với nội dung do AI tạo và định
+                                dạng thông minh</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">🎨</div>
+                            <h3>Thiết Kế Đẹp</h3>
+                            <p>Các mẫu hiện đại và bố cục tuyệt đẹp làm cho bài thuyết trình của bạn nổi bật giữa đám
+                                đông</p>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="feature-card">
+                            <div class="feature-icon">✏️</div>
+                            <h3>Chỉnh Sửa Dễ Dàng</h3>
+                            <p>Trình biên tập trực quan để tùy chỉnh mọi chi tiết trong slide của bạn với thao tác kéo
+                                thả đơn giản</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- How It Works Section -->
+        <section class="how-it-works-section">
+            <div class="container">
+                <h2 class="section-title">Cách Hoạt Động</h2>
+                <p class="section-subtitle">Bốn bước đơn giản để tạo bài thuyết trình tuyệt vời</p>
+
+                <div class="row">
+                    <div class="col-md-3">
+                        <div class="step-card">
+                            <div class="step-connector"></div>
+                            <div class="step-number">1</div>
+                            <h4>Nhập</h4>
+                            <p>Tải lên file DOCX của bạn</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step-card">
+                            <div class="step-connector"></div>
+                            <div class="step-number">2</div>
+                            <h4>Tạo</h4>
+                            <p>AI tạo các slide đẹp mắt</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step-card">
+                            <div class="step-connector"></div>
+                            <div class="step-number">3</div>
+                            <h4>Tùy Chỉnh</h4>
+                            <p>Chỉnh sửa và hoàn thiện nội dung</p>
+                        </div>
+                    </div>
+                    <div class="col-md-3">
+                        <div class="step-card">
+                            <div class="step-number">4</div>
+                            <h4>Xuất</h4>
+                            <p>Tải xuống dạng PDF</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Capabilities Section -->
+        <section class="capabilities-section">
+            <div class="container">
+                <h2 class="section-title">Tính Năng Mạnh Mẽ</h2>
+                <p class="section-subtitle">Mọi thứ bạn cần cho những bài thuyết trình ấn tượng</p>
+
+                <div class="row">
+                    <div class="col-md-6">
+                        <div class="capability-item">
+                            <div class="capability-icon">📄</div>
+                            <div>
+                                <h5>Hỗ Trợ Nhiều Định Dạng</h5>
+                                <p>DOCX và hơn thế nữa - nhập nội dung của bạn từ bất kỳ nguồn nào một cách liền mạch
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="capability-item">
+                            <div class="capability-icon">🎯</div>
+                            <div>
+                                <h5>Tổ Chức Nội Dung Thông Minh</h5>
+                                <p>AI tự động cấu trúc nội dung của bạn thành các slide logic và hấp dẫn</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="capability-item">
+                            <div class="capability-icon">🖼️</div>
+                            <div>
+                                <h5>Hỗ Trợ Đa Phương Tiện</h5>
+                                <p>Thêm hình ảnh, video, biểu đồ và hoạt ảnh một cách dễ dàng</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="capability-item">
+                            <div class="capability-icon">🚀</div>
+                            <div>
+                                <h5>Xuất Nhanh Chóng</h5>
+                                <p>Xuất ra PDF, PPTX hoặc chia sẻ trực tiếp bằng liên kết</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- CTA Section -->
+        <section class="cta-section">
+            <div class="container">
+                <h2 class="cta-title">Sẵn Sàng Tạo Các Slide Tuyệt Vời?</h2>
+                <p class="cta-description">
+                    Tham gia cùng hàng ngàn chuyên gia tin dùng SlideGen cho các bài thuyết trình của họ
+                </p>
+                <button class="btn-glow btn-primary-glow"
+                    onclick="document.documentElement.scrollTop = 0; document.body.scrollTop = 0;">
+                    <i class="bi bi-rocket-takeoff"></i> Bắt Đầu Miễn Phí
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer class="footer-section">
+            <div class="container py-4 text-center">
+                <p>&copy; 2025 SlideGen. Đã đăng ký bản quyền. Được làm bằng tình yêu dành cho những người sáng tạo.</p>
+            </div>
+        </footer>
+    </div>
+
+    <!-- Editor Page -->
+    <div id="editorPage" class="container-fluid" style="display: none;">
+        <div class="row">
+            <div class="col-md-3 sidebar">
+                <h4>Slides</h4>
+                <div id="slideList" class="slide-list"></div>
+                <button class="btn btn-success mt-3 w-100" onclick="createNewSlide()">Thêm Slide</button>
+            </div>
+            <div class="col-md-9 editor-area">
+                <div id="toolbar" class="mb-3">
+                    <button class="btn btn-light" onclick="document.execCommand('bold', false, null)"><i
+                            class="bi bi-type-bold"></i></button>
+                    <button class="btn btn-light" onclick="document.execCommand('italic', false, null)"><i
+                            class="bi bi-type-italic"></i></button>
+                    <button class="btn btn-light" onclick="document.execCommand('underline', false, null)"><i
+                            class="bi bi-type-underline"></i></button>
+                    <input type="color" id="colorPicker" title="Chọn màu chữ">
+                    <button class="btn btn-light btn-sm" onclick="applyTextColor()">OK</button>
+                    <select id="fontSizeSelect" onchange="changeFontSize()">
+                        <option value="12">12px</option>
+                        <option value="16">16px</option>
+                        <option value="20">20px</option>
+                        <option value="24">24px</option>
+                        <option value="32">32px</option>
+                        <option value="40">40px</option>
+                    </select>
+                    <select id="fontFamilySelect" onchange="changeFontFamily()">
+                        <option value="Arial">Arial</option>
+                        <option value="Times New Roman">Times New Roman</option>
+                        <option value="Courier New">Courier New</option>
+                        <option value="Georgia">Georgia</option>
+                        <option value="Verdana">Verdana</option>
+                    </select>
+                    <button class="btn btn-primary ms-3" onclick="exportToPDF()">Xuất PDF</button>
+                    <button class="btn btn-primary ms-2" onclick="exportToZip()">Xuất ZIP</button>
+                    <button class="btn btn-secondary ms-2" onclick="showHome()">Quay lại</button>
+                </div>
+                <div id="slideContainer" class="slide-container" contenteditable="true"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Loading overlay and toast container -->
+    <div id="loadingOverlay" class="loading-overlay" style="display: none;">
+        <div class="spinner-border text-light" role="status"></div>
+        <span id="loadingText" class="text-light ms-2"></span>
+    </div>
+
+    <div id="toastContainer" class="position-fixed bottom-0 end-0 p-3" style="z-index: 11;"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="./config.js"></script> <!-- Load config.js as a regular script -->
+
+    <!-- Inline script for global functions (before module script loads) -->
+    <script type="module">
+        // Authentication helpers
+        // Assuming config.js sets window.config directly
+        const API_BASE_URL = window.config.API_BASE_URL || 'http://localhost:12008';
+        console.log('✅ Config loaded:', window.config);
+
+        function getAuthToken() {
+            return localStorage.getItem('access_token');
+        }
+
+        function isAuthenticated() {
+            return !!getAuthToken();
+        }
+
+        async function checkAuth() {
+            if (!isAuthenticated()) {
+                window.location.href = 'login.html';
+                return false;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/me`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+
+                if (!response.ok) {
+                    localStorage.removeItem('access_token');
+                    window.location.href = 'login.html';
+                    return false;
+                }
+
+                const user = await response.json();
+                // Store user data globally
+                window.currentUser = user;
+
+                // Update sidebar user info
+                document.getElementById('sidebarUsername').textContent = user.username;
+                document.getElementById('sidebarUserEmail').textContent = user.email;
+
+                // Handle VIP Badge
+                const floatingVip = document.getElementById('floatingVipBadge');
+                const sidebarVip = document.getElementById('sidebarVipBadge');
+                const ideaButtonVip = document.getElementById('ideaButtonVipBadge');
+                const ideaButton = document.getElementById('ideaButton');
+
+                if (user.is_vip) {
+                    floatingVip.style.display = 'flex';
+                    sidebarVip.style.display = 'flex';
+                    // Hide VIP badge on idea button if user is VIP (they can use it)
+                    if (ideaButtonVip) ideaButtonVip.style.display = 'none';
+                    // Enable idea button for VIP users
+                    if (ideaButton) {
+                        ideaButton.disabled = false;
+                        ideaButton.style.opacity = '1';
+                        ideaButton.style.cursor = 'pointer';
+                        ideaButton.style.pointerEvents = 'auto';
+                    }
+                } else {
+                    floatingVip.style.display = 'none';
+                    sidebarVip.style.display = 'none';
+                    // Show VIP badge on idea button if user is not VIP (feature locked)
+                    if (ideaButtonVip) ideaButtonVip.style.display = 'inline-block';
+                    // Disable and dim idea button for non-VIP users
+                    if (ideaButton) {
+                        ideaButton.disabled = true;
+                        ideaButton.style.opacity = '0.5';
+                        ideaButton.style.cursor = 'not-allowed';
+                        ideaButton.style.pointerEvents = 'none';
+                    }
+                }
+
+                // Show avatar toggle
+                document.getElementById('avatarToggle').style.display = 'flex';
+                return true;
+            } catch (error) {
+                console.error('Auth check failed:', error);
+                localStorage.removeItem('access_token');
+                window.location.href = 'login.html';
+                return false;
+            }
+        }
+
+        function toggleSidebar() {
+            const sidebar = document.getElementById('sidebar');
+            const body = document.body;
+            const avatarToggle = document.getElementById('avatarToggle');
+
+            sidebar.classList.toggle('hidden');
+            body.classList.toggle('sidebar-hidden');
+
+            // Hide/show avatar when sidebar opens/closes
+            if (sidebar.classList.contains('hidden')) {
+                avatarToggle.classList.remove('hidden');
+            } else {
+                avatarToggle.classList.add('hidden');
+            }
+        }
+
+        async function openProfile() {
+            try {
+                // Load current profile data
+                const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    }
+                });
+
+                if (response.ok) {
+                    const profile = await response.json();
+                    document.getElementById('profileUsername').value = window.currentUser.username;
+                    document.getElementById('profileEmail').value = window.currentUser.email;
+                    document.getElementById('profileFullName').value = profile.full_name || '';
+                    document.getElementById('profileAvatar').value = profile.avatar_url || '';
+                    document.getElementById('profileBio').value = profile.bio || '';
+                }
+
+                document.getElementById('profileModal').classList.add('active');
+            } catch (error) {
+                console.error('Error loading profile:', error);
+                alert('Không thể tải thông tin cá nhân');
+            }
+        }
+
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.remove('active');
+        }
+
+        async function saveProfile(event) {
+            event.preventDefault();
+
+            const profileData = {
+                full_name: document.getElementById('profileFullName').value,
+                avatar_url: document.getElementById('profileAvatar').value,
+                bio: document.getElementById('profileBio').value
+            };
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/profile`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${getAuthToken()}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(profileData)
+                });
+
+                if (response.ok) {
+                    alert('Cập nhật thông tin thành công!');
+                    closeProfileModal();
+                } else {
+                    throw new Error('Failed to update profile');
+                }
+            } catch (error) {
+                console.error('Error saving profile:', error);
+                alert('Lỗi khi cập nhật thông tin: ' + error.message);
+            }
+        }
+
+        function openChangePassword() {
+            const form = document.getElementById('changePasswordModal');
+            // Clear form fields
+            const currentPwd = document.getElementById('currentPassword');
+            const newPwd = document.getElementById('newPassword');
+            const confirmPwd = document.getElementById('confirmPassword');
+            if (currentPwd) currentPwd.value = '';
+            if (newPwd) newPwd.value = '';
+            if (confirmPwd) confirmPwd.value = '';
+
+            // Open modal
+            document.getElementById('changePasswordModal').classList.add('active');
+        }
+
+        function closeChangePasswordModal() {
+            document.getElementById('changePasswordModal').classList.remove('active');
+        }
+
+        async function changePassword(event) {
+            event.preventDefault();
+
+            const currentPassword = document.getElementById('currentPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+
+            if (newPassword !== confirmPassword) {
+                alert('Mật khẩu mới và xác nhận mật khẩu không khớp!');
+                return;
+            }
+
+            if (newPassword.length < 6) {
+                alert('Mật khẩu mới phải có ít nhất 6 ký tự!');
+                return;
+            }
+
+            const token = localStorage.getItem('access_token');
+
+            try {
+                const response = await fetch(`${API_BASE_URL}/api/auth/change-password`, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        current_password: currentPassword,
+                        new_password: newPassword
+                    })
+                });
+
+                if (response.ok) {
+                    alert('Đổi mật khẩu thành công!');
+                    closeChangePasswordModal();
+                    // Clear form fields after successful change
+                    const currentPwd = document.getElementById('currentPassword');
+                    const newPwd = document.getElementById('newPassword');
+                    const confirmPwd = document.getElementById('confirmPassword');
+                    if (currentPwd) currentPwd.value = '';
+                    if (newPwd) newPwd.value = '';
+                    if (confirmPwd) confirmPwd.value = '';
+                } else {
+                    const error = await response.json();
+                    alert(error.detail || 'Không thể đổi mật khẩu');
+                }
+            } catch (error) {
+                console.error('Error changing password:', error);
+                alert('Lỗi khi đổi mật khẩu: ' + error.message);
+            }
+        }
+
+        // Close sidebar when clicking outside
+        document.addEventListener('click', function (event) {
+            const sidebar = document.getElementById('sidebar');
+            const avatarToggle = document.getElementById('avatarToggle');
+            const body = document.body;
+
+            if (sidebar && avatarToggle &&
+                !sidebar.contains(event.target) &&
+                !avatarToggle.contains(event.target) &&
+                !body.classList.contains('sidebar-hidden')) {
+                toggleSidebar();
+            }
+        });
+
+        function logout() {
+            localStorage.removeItem('access_token');
+            window.location.href = 'login.html';
+        }
+
+        // Check auth on page load
+        checkAuth();
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            const userMenu = document.querySelector('.user-menu');
+            if (userMenu && !userMenu.contains(e.target)) {
+                document.getElementById('userDropdown').style.display = 'none';
+            }
+        });
+
+        // Fallback functions in case module hasn't loaded yet
+        window.showIdeaModal = function () {
+            console.log('🎯 showIdeaModal called');
+            const modal = new bootstrap.Modal(document.getElementById('ideaModal'));
+            modal.show();
+        };
+
+        window.generateFromIdea = async function () {
+            console.log('🚀 generateFromIdea called');
+            const title = document.getElementById('ideaTitle').value.trim();
+            const prompt = document.getElementById('ideaPrompt').value.trim();
+            const contentLength = document.getElementById('ideaContentLength').value;
+            const enableTransitions = document.getElementById('ideaEnableTransitions').checked;
+            const enableThankYou = document.getElementById('ideaEnableThankYou').checked;
+
+            console.log('📝 Form data:', { title, prompt, contentLength, enableTransitions, enableThankYou });
+
+            // Validation
+            if (!title) {
+                alert('Vui lòng nhập tiêu đề presentation');
+                return;
+            }
+            if (!prompt) {
+                alert('Vui lòng nhập ý tưởng của bạn');
+                return;
+            }
+
+            try {
+                // Close modal
+                const modal = bootstrap.Modal.getInstance(document.getElementById('ideaModal'));
+                modal.hide();
+
+                // Show loading overlay
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                const loadingText = document.getElementById('loadingText');
+                if (loadingOverlay && loadingText) {
+                    loadingText.textContent = 'Đang tạo slide từ ý tưởng của bạn...';
+                    loadingOverlay.style.display = 'flex';
+                }
+
+                // Call backend API
+                const apiUrl = window.config?.API_BASE_URL
+                    ? `${window.config.API_BASE_URL}/api/generate-from-idea`
+                    : 'http://localhost:12008/api/generate-from-idea';
+                console.log('📡 Calling API:', apiUrl);
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${getAuthToken()}`
+                    },
+                    body: JSON.stringify({
+                        title: title,
+                        prompt: prompt,
+                        content_length: contentLength,
+                        enable_transition_slides: enableTransitions,
+                        enable_thank_you_slide: enableThankYou
+                    })
+                });
+
+                console.log('📥 Response status:', response.status);
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    console.error('❌ API error:', errorData);
+                    throw new Error(errorData.detail || 'Failed to generate slides from idea');
+                }
+
+                const result = await response.json();
+                console.log('✅ API result:', result);
+
+                // Redirect to streaming page with session_id
+                if (result.session_id) {
+                    window.location.href = `streaming.html?session=${result.session_id}`;
+                } else {
+                    throw new Error('No session ID returned from server');
+                }
+
+            } catch (error) {
+                console.error('Error generating from idea:', error);
+                alert(`Lỗi: ${error.message}`);
+
+                // Hide loading overlay
+                const loadingOverlay = document.getElementById('loadingOverlay');
+                if (loadingOverlay) {
+                    loadingOverlay.style.display = 'none';
+                }
+            }
+        };
+
+        // Expose functions to global scope for inline onclick events
+        window.toggleSidebar = toggleSidebar;
+        window.openProfile = openProfile;
+        window.closeProfileModal = closeProfileModal;
+        window.saveProfile = saveProfile;
+        window.openChangePassword = openChangePassword;
+        window.closeChangePasswordModal = closeChangePasswordModal;
+        window.changePassword = changePassword;
+        window.logout = logout;
+
+    </script>
+
+    <script type="module" src="script.js?v=3"></script>
+    <script>
+        // Cursor trail effect
+        const cursorTrail = document.getElementById('cursorTrail');
+        let mouseX = 0, mouseY = 0;
+        let trailX = 0, trailY = 0;
+
+        document.addEventListener('mousemove', (e) => {
+            mouseX = e.clientX;
+            mouseY = e.clientY;
+        });
+
+        function animateCursor() {
+            trailX += (mouseX - trailX) * 0.15;
+            trailY += (mouseY - trailY) * 0.15;
+            cursorTrail.style.left = trailX + 'px';
+            cursorTrail.style.top = trailY + 'px';
+            requestAnimationFrame(animateCursor);
+        }
+        animateCursor();
+
+        // Parallax effect on scroll
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const particles = document.querySelectorAll('.particle');
+            particles.forEach((particle, i) => {
+                const speed = 0.5 + (i * 0.1);
+                particle.style.transform = `translateY(${scrolled * speed}px)`;
+            });
+        });
+
+        // Add scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1,
+            rootMargin: '0px 0px -50px 0px'
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.style.opacity = '1';
+                    entry.target.style.transform = 'translateY(0)';
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.feature-card, .step-card, .capability-item').forEach(el => {
+            el.style.opacity = '0';
+            el.style.transform = 'translateY(50px)';
+            el.style.transition = 'all 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275)';
+            observer.observe(el);
+        });
+
+        // Button ripple effect
+        document.querySelectorAll('.btn-glow').forEach(button => {
+            button.addEventListener('click', function (e) {
+                const ripple = document.createElement('span');
+                const rect = this.getBoundingClientRect();
+                const size = Math.max(rect.width, rect.height);
+                const x = e.clientX - rect.left - size / 2;
+                const y = e.clientY - rect.top - size / 2;
+
+                ripple.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    left: ${x}px;
+                    top: ${y}px;
+                    background: rgba(255,255,255,0.4);
+                    border-radius: 50%;
+                    transform: scale(0);
+                    animation: rippleEffect 0.6s ease-out;
+                    pointer-events: none;
+                `;
+
+                this.appendChild(ripple);
+                setTimeout(() => ripple.remove(), 600);
+            });
+        });
+
+        // Add ripple keyframes
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes rippleEffect {
+                to {
+                    transform: scale(2);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Magnetic button effect
+        document.querySelectorAll('.btn-glow').forEach(button => {
+            button.addEventListener('mousemove', function (e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left - rect.width / 2;
+                const y = e.clientY - rect.top - rect.height / 2;
+                this.style.transform = `translateY(-8px) scale(1.05) translate(${x * 0.1}px, ${y * 0.1}px)`;
+            });
+
+            button.addEventListener('mouseleave', function () {
+                this.style.transform = '';
+            });
+        });
+
+        // 3D tilt effect on feature cards
+        document.querySelectorAll('.feature-card').forEach(card => {
+            card.addEventListener('mousemove', function (e) {
+                const rect = this.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                const centerX = rect.width / 2;
+                const centerY = rect.height / 2;
+                const rotateX = (y - centerY) / 10;
+                const rotateY = (centerX - x) / 10;
+
+                this.style.transform = `translateY(-20px) scale(1.03) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+            });
+
+            card.addEventListener('mouseleave', function () {
+                this.style.transform = '';
+            });
+        });
+
+        function toggleDarkMode() {
+            const body = document.body;
+            body.classList.toggle('dark-mode');
+
+            // Lưu trạng thái vào localStorage
+            const isDarkMode = body.classList.contains('dark-mode');
+            localStorage.setItem('darkMode', isDarkMode);
+
+            // Thêm hiệu ứng ripple khi click
+            const toggle = document.querySelector('.theme-toggle');
+            toggle.style.transform = 'scale(0.9)';
+            setTimeout(() => {
+                toggle.style.transform = '';
+            }, 150);
+        }
+
+        // Khôi phục trạng thái dark mode khi tải trang
+        document.addEventListener('DOMContentLoaded', function () {
+            console.log('🎨 SlideGen initialized');
+            const savedDarkMode = localStorage.getItem('darkMode');
+            if (savedDarkMode === 'true') {
+                document.body.classList.add('dark-mode');
+            }
+
+            // ========== TOGGLE SLIDE OPTIONS BASED ON WORKFLOW MODE ==========
+            const autoModeRadio = document.getElementById('autoWithHeading');
+            const manualModeRadio = document.getElementById('manualMode');
+            const autoOptionsSection = document.getElementById('autoOptionsSection');
+            const transitionOption = document.getElementById('transitionSlideOption');
+            const thankYouOption = document.getElementById('thankYouSlideOption');
+
+            function updateSlideOptionsVisibility() {
+                const isAutoMode = autoModeRadio.checked;
+                const displayValue = isAutoMode ? 'block' : 'none';
+
+                // Hide/show all auto-mode-option elements
+                const autoOptions = document.querySelectorAll('.auto-mode-option');
+                autoOptions.forEach(option => {
+                    option.style.display = displayValue;
+                });
+
+                // Also hide/show the divider section
+                if (autoOptionsSection) autoOptionsSection.style.display = displayValue;
+
+                console.log('📋 Workflow mode changed:', isAutoMode ? 'AUTO' : 'MANUAL');
+                console.log('   Slide options visibility:', displayValue);
+                console.log('   Hidden elements count:', autoOptions.length);
+            }
+
+            // Add listeners to radio buttons
+            if (autoModeRadio) {
+                autoModeRadio.addEventListener('change', updateSlideOptionsVisibility);
+            }
+            if (manualModeRadio) {
+                manualModeRadio.addEventListener('change', updateSlideOptionsVisibility);
+            }
+
+            // Set initial visibility (Auto mode is default)
+            updateSlideOptionsVisibility();
+        });
+
+        // Function to create new slide - creates project in database immediately
+        async function createNewSlide() {
+            console.log('Creating new slide from index.html...');
+            const token = localStorage.getItem('access_token');
+
+            if (!token) {
+                alert('Please login first');
+                window.location.href = 'login.html';
+                return;
+            }
+
+            try {
+                const apiUrl = window.config?.BACKEND_URL || 'http://localhost:12008';
+
+                // Create new project in database
+                const response = await fetch(`${apiUrl}/api/projects`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${token}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        title: 'Untitled Project',
+                        description: '',
+                        source_type: 'manual'
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    const projectId = data.project_id || data.id; // Handle both response formats
+                    console.log('✅ Project created with ID:', projectId);
+
+                    // Create first slide in database
+                    const slideResponse = await fetch(`${apiUrl}/api/projects/${projectId}/slides`, {
+                        method: 'POST',
+                        headers: {
+                            'Authorization': `Bearer ${token}`,
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({
+                            slide_index: 0,
+                            slide_type: 'content',
+                            title: 'Slide 1',
+                            html_content: '<div class="slide-container"><div class="content-wrapper" style="background: white;"></div></div>'
+                        })
+                    });
+
+                    if (slideResponse.ok) {
+                        console.log('✅ First slide created');
+                        // Redirect to editor with project ID
+                        window.location.href = `edit.html?id=${projectId}`;
+                    } else {
+                        throw new Error('Failed to create first slide');
+                    }
+                } else {
+                    throw new Error('Failed to create project');
+                }
+            } catch (error) {
+                console.error('Error creating new slide:', error);
+                alert('Failed to create new slide. Please try again.');
+            }
+        }
+    </script>
+
+    <!-- Idea Modal -->
+    <div class="modal fade" id="ideaModal" tabindex="-1" aria-labelledby="ideaModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content"
+                style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; border: none; border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.3);">
+                <div class="modal-header border-0">
+                    <h5 class="modal-title" id="ideaModalLabel">
+                        <i class="bi bi-lightbulb-fill"></i> Tạo Slide từ Ý tưởng của Bạn
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"
+                        aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p class="mb-3">Mô tả ý tưởng bài thuyết trình của bạn và để AI tạo cấu trúc và các slide cho bạn.
+                    </p>
+                    <div class="mb-3">
+                        <label for="ideaTitle" class="form-label">Tiêu đề Bài thuyết trình</label>
+                        <input type="text" class="form-control" id="ideaTitle"
+                            placeholder="Ví dụ: AI trong Doanh nghiệp Hiện đại"
+                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+                    </div>
+                    <div class="mb-3">
+                        <label for="ideaContentLength" class="form-label">Độ sâu Nội dung</label>
+                        <select class="form-select" id="ideaContentLength"
+                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;">
+                            <option value="brief" style="background: #667eea; color: white;">Ngắn gọn (5-8 slides) -
+                                Tổng quan nhanh</option>
+                            <option value="standard" selected style="background: #667eea; color: white;">Tiêu chuẩn
+                                (8-12
+                                slides) - Bao quát cân bằng</option>
+                            <option value="detailed" style="background: #667eea; color: white;">Chi tiết (12-18 slides)
+                                - Toàn diện</option>
+                            <option value="extensive" style="background: #667eea; color: white;">Chuyên sâu (18-25
+                                slides) - Phân tích sâu</option>
+                        </select>
+                        <small class="text-white-50 d-block mt-1">AI sẽ xác định số lượng slide tối ưu dựa trên độ phức
+                            tạp của nội dung</small>
+                    </div>
+                    <div class="mb-3">
+                        <label for="ideaPrompt" class="form-label">Ý tưởng / Prompt của Bạn</label>
+                        <textarea class="form-control" id="ideaPrompt" rows="6"
+                            placeholder="Mô tả ý tưởng bài thuyết trình của bạn ở đây...&#10;&#10;Ví dụ:&#10;Tạo bài thuyết trình về tác động của AI đối với doanh nghiệp hiện đại. Bao gồm:&#10;- Giới thiệu về AI&#10;- Các ứng dụng hiện tại&#10;- Lợi ích và thách thức&#10;- Xu hướng tương lai&#10;- Kết luận"
+                            style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3); color: white;"></textarea>
+                    </div>
+                    <div class="form-check mb-3">
+                        <input class="form-check-input" type="checkbox" id="ideaEnableTransitions">
+                        <label class="form-check-label" for="ideaEnableTransitions">
+                            Bật slide chuyển tiếp
+                        </label>
+                    </div>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" id="ideaEnableThankYou">
+                        <label class="form-check-label" for="ideaEnableThankYou">
+                            Bật slide cảm ơn
+                        </label>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Hủy</button>
+                    <button type="button" class="btn btn-success" onclick="generateFromIdea()">
+                        <i class="bi bi-magic"></i> Tạo Slide
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</body>
+
+</html>

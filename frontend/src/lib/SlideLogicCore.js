@@ -26,11 +26,9 @@ export class SlideEditorLogic {
         this.isResizing        = false;
         this.isPreparedForDrag = false;
         this.pendingSelectElement = null;
-        this.pendingSelectMode = null;
         this.draggedElement    = null;
         this.dragStart         = null;
         this.elementsStartPos  = new Map();
-        this.dragPlaceholders  = new Map();
         this.resizeHandle      = null;
         this.history           = [];
         this.historyIndex      = -1;
@@ -91,7 +89,6 @@ export class SlideEditorLogic {
         if (this.boundInput) this.root.removeEventListener('input', this.boundInput, true);
         if (this._inputTimer) { clearTimeout(this._inputTimer); this._inputTimer = null; }
         if (this._guideTimeout) { clearTimeout(this._guideTimeout); this._guideTimeout = null; }
-        if (this.clearDragPlaceholders) this.clearDragPlaceholders();
         this.deselectAll();
         this.clearSmartGuides();
     }

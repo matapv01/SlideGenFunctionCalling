@@ -3,6 +3,28 @@ import { rgbToHex } from '../utils/colorUtils.js';
 
 export const SelectionMixin = {
 
+    isCanvasChromeElement(el) {
+        return el.classList.contains('resize-handle') ||
+            el.classList.contains('drag-handle') ||
+            el.classList.contains('slide-bg-wrapper') ||
+            el.classList.contains('slide-container') ||
+            el.classList.contains('slide-inner-container') ||
+            el.classList.contains('outer-wrapper') ||
+            el.classList.contains('content-wrapper') ||
+            el.classList.contains('wrapper') ||
+            el.classList.contains('scale-container') ||
+            el.classList.contains('slide-wrapper');
+    },
+
+    getNextElementId() {
+        const ids = new Set(
+            Array.from(this.root.querySelectorAll('[id]')).map(node => node.id)
+        );
+        let idCounter = 1;
+        while (ids.has(`element-${idCounter}`)) idCounter += 1;
+        return `element-${idCounter}`;
+    },
+
     readNumeric(value) {
         const n = parseFloat(value);
         return Number.isFinite(n) ? n : null;
@@ -90,86 +112,49 @@ export const SelectionMixin = {
     },
 
     makeElementsSelectable() {
-        const selectableElements = this.root.querySelectorAll(
+        // Reset previously tagged nodes to avoid stale nested selectable targets.
+        this.canvas.querySelectorAll('[data-selectable="true"]').forEach(el => {
+            el.removeAttribute('data-selectable');
+            if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
+        });
+
+        const selectableElements = this.canvas.querySelectorAll(
             '.element, [data-type], ' +
-            '.content-wrapper > *, .slide-container > *, .slide-inner-container > *, ' +
             '[style*="position: absolute"], [style*="position:absolute"], ' +
             'h1, h2, h3, p, img, .text-block, .image-block'
         );
 
-        console.log('[makeElementsSelectable] Found', selectableElements.length, 'candidate elements');
-
-        let idCounter = 1;
-        let taggedCount = 0;
         selectableElements.forEach(el => {
-            if (el.classList.contains('resize-handle') ||
-                el.classList.contains('drag-handle') ||
-                el.classList.contains('slide-bg-wrapper') ||
-                el.classList.contains('slide-container') ||
-                el.classList.contains('slide-inner-container') ||
-                el.classList.contains('outer-wrapper') ||
-                el.classList.contains('content-wrapper') ||
-                el.classList.contains('wrapper') ||
-                el.classList.contains('scale-container') ||
-                el.classList.contains('slide-wrapper')) return;
-
-            // Intentionally treat each eligible node as an independent editable/draggable element.
-            // Do not short-circuit nested nodes based on selectable ancestors.
-
-            if (!el.id) el.id = `element-${idCounter++}`;
+            if (this.isCanvasChromeElement(el)) return;
+            if (!el.id) el.id = this.getNextElementId();
 
             el.style.cursor = 'move';
             el.setAttribute('data-selectable', 'true');
-            taggedCount++;
-            console.log('[makeElementsSelectable] Tagged:', el.tagName, el.id, 'type:', el.dataset?.type);
 
-            const isTextElement = ['H1', 'H2', 'H3', 'P', 'SPAN', 'DIV'].includes(el.tagName);
+            const isTextElement =
+                el.dataset.type === 'text' ||
+                ['H1', 'H2', 'H3', 'P'].includes(el.tagName) ||
+                el.classList.contains('text-block');
+
             if (isTextElement && !el.querySelector('img')) {
                 el.setAttribute('contenteditable', 'true');
-            }
-        });
-
-        // Leaf-only selectable policy: if a node contains other selectable nodes,
-        // keep interaction on the deepest descendants to avoid parent "group frame".
-        const tagged = Array.from(this.root.querySelectorAll('[data-selectable="true"], .element'));
-        const INLINE_FORMATTING_TAGS = new Set([
-            'SPAN', 'STRONG', 'B', 'EM', 'I', 'U', 'MARK', 'SMALL',
-            'SUB', 'SUP', 'CODE', 'KBD', 'SAMP', 'VAR', 'A',
-            'FONT', 'INS', 'DEL', 'S', 'ABBR', 'CITE', 'Q', 'TIME',
-            'BR', 'WBR', 'HR'
-        ]);
-
-        // Never make inline formatting fragments draggable/selectable blocks.
-        tagged.forEach(el => {
-            if (!INLINE_FORMATTING_TAGS.has(el.tagName)) return;
-            el.classList.remove('selected');
-            el.classList.remove('element');
-            el.removeAttribute('data-selectable');
-            el.removeAttribute('data-type');
-            if (el.hasAttribute('contenteditable')) el.removeAttribute('contenteditable');
-            if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
-            el.querySelectorAll('.resize-handle, .drag-handle').forEach(h => h.remove());
-        });
-
-        tagged.forEach(el => {
-            const childSelectable = !!el.querySelector('[data-selectable="true"], .element');
-
-            if (!childSelectable) return;
-
-            el.classList.remove('selected');
-            el.classList.remove('element');
-            el.removeAttribute('data-selectable');
-            // Parent text containers should not stay editable when child nodes are independently editable.
-            if (el.hasAttribute('contenteditable')) {
+            } else if (el.hasAttribute('contenteditable')) {
                 el.removeAttribute('contenteditable');
             }
-            el.querySelectorAll('.resize-handle, .drag-handle').forEach(h => h.remove());
         });
     },
 
     selectElement(el) {
         if (!el) { this.deselectAll(); return; }
-        console.log('[SlideLogicCore] Selecting element:', el);
+
+        if (!this.canvas.contains(el)) {
+            const topLevelSelectable = el.closest('[data-selectable="true"], .element');
+            if (!topLevelSelectable || !this.canvas.contains(topLevelSelectable)) {
+                this.deselectAll();
+                return;
+            }
+            el = topLevelSelectable;
+        }
 
         this.selectedElements = [el];
         this.selectedElementId = el.id;
@@ -179,25 +164,8 @@ export const SelectionMixin = {
     },
 
     toggleSelection(el) {
-        if (!el) return;
-
-        const idx = this.selectedElements.indexOf(el);
-        if (idx >= 0) {
-            this.selectedElements.splice(idx, 1);
-        } else {
-            this.selectedElements.push(el);
-            this.selectedElementId = el.id;
-        }
-
-        const primary = this.getPrimarySelectedElement();
-        this.selectedElementId = primary?.id ?? null;
-        this.refreshSelectionVisuals();
-
-        if (primary) {
-            this.emitSelectedElementData(primary);
-        } else if (this.onElementSelect) {
-            this.onElementSelect(null);
-        }
+        // Keep API compatibility but enforce single-select behavior.
+        this.selectElement(el);
     },
 
     deselectAll() {
@@ -251,8 +219,6 @@ export const SelectionMixin = {
 
         this.selectedElementId = el.id;
         this.refreshSelectionVisuals();
-
-        console.log('[highlightElement] Selected:', el.tagName, el.id, 'classes:', el.className);
     },
 
     addResizeHandles(element) {
