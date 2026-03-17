@@ -74,9 +74,10 @@ export const useElementActions = ({
         ></div>`;
 
     } else if (item.type === 'image') {
-      html = `<img id="${id}" class="element" data-type="image" data-selectable="true"
-        style="position:absolute;left:${x}px;top:${y}px;width:400px;height:280px;object-fit:cover;cursor:move;"
-        src="/placeholder.svg" alt="Image" />`;
+      html = `<div id="${id}" class="element" data-type="image" data-selectable="true"
+        style="position:absolute;left:${x}px;top:${y}px;width:400px;height:280px;cursor:move;">
+        <img style="width:100%;height:100%;object-fit:cover;pointer-events:none;" src="/placeholder.svg" alt="Image" />
+      </div>`;
 
     } else if (item.type === 'video') {
       html = `<div id="${id}" class="element" data-type="video" data-selectable="true"

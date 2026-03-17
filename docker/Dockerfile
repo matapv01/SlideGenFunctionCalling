@@ -1,5 +1,5 @@
 # ── Stage 1: Build frontend ──────────────────────────────────────────────────
-FROM --platform=linux/amd64 node:22-alpine AS frontend-builder
+FROM node:22-alpine AS frontend-builder
 
 WORKDIR /app
 
@@ -7,22 +7,18 @@ WORKDIR /app
 COPY frontend/package.json frontend/package-lock.json ./frontend/
 RUN cd frontend && npm ci --legacy-peer-deps
 
-# Inject API base URL at build time so Vite bakes it into the bundle
-ARG VITE_API_BASE_URL
-ENV VITE_API_BASE_URL=$VITE_API_BASE_URL
-
 # Build production bundle
 COPY frontend/ ./frontend/
 RUN cd frontend && npm run build
 
 
 # ── Stage 2: Build Python dependencies ──────────────────────────────────────
-FROM --platform=linux/amd64 python:3.11-slim AS python-deps
+FROM python:3.11-slim AS python-deps
 
 WORKDIR /app
 
-# Install uv
-RUN pip install uv --no-cache-dir
+# Install uv binary (no pip)
+COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /uvx /bin/
 
 # Install Python deps into a virtualenv (lockfile ensures reproducibility)
 COPY pyproject.toml uv.lock ./
@@ -30,7 +26,7 @@ RUN uv sync --frozen --no-dev
 
 
 # ── Stage 3: Runtime image ───────────────────────────────────────────────────
-FROM --platform=linux/amd64 python:3.11-slim AS runtime
+FROM python:3.11-slim AS runtime
 
 LABEL org.opencontainers.image.title="SlideGen" \
       org.opencontainers.image.description="AI-powered presentation generator" \
@@ -55,27 +51,24 @@ ENV PATH="/app/.venv/bin:$PATH" \
     PYTHONDONTWRITEBYTECODE=1
 
 # ── Playwright: install Chromium browser + its system deps ───────────────────
-# apt-get update must re-run here because lists were cleaned in the previous RUN
-RUN apt-get update \
-    && playwright install chromium --with-deps \
-    && apt-get clean \
-    && rm -rf /var/lib/apt/lists/* \
+# Stores browser to /root/.cache/ms-playwright/ and creates a stable symlink
+RUN playwright install chromium --with-deps \
     && CHROMIUM_PATH=$(find /root/.cache/ms-playwright -name "chrome" -type f | head -1) \
     && ln -sf "$CHROMIUM_PATH" /usr/local/bin/chromium-playwright \
-    && echo "[Dockerfile] Playwright Chromium at: $CHROMIUM_PATH"
-
-# ── Puppeteer: skip its own Chromium download, reuse Playwright's ─────────────
-# Saves ~400MB image size; system deps already satisfied above
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/local/bin/chromium-playwright
+    && echo "[PROD] Playwright Chromium at: $CHROMIUM_PATH"
 
 # ── Application source ────────────────────────────────────────────────────────
 COPY backend/ ./backend/
 COPY migrate_db.py .
 
 # ── Converter Node.js deps ────────────────────────────────────────────────────
-# PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true → Puppeteer will NOT download Chromium here
-RUN cd backend/infrastructure/converter && npm install --legacy-peer-deps
+# PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true: reuse Playwright's Chromium at runtime
+# without downloading a second Chromium binary via Puppeteer
+ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
+    PUPPETEER_EXECUTABLE_PATH=/usr/local/bin/chromium-playwright
+RUN cd backend/infrastructure/converter \
+    && npm install --legacy-peer-deps \
+    && npm install puppeteer --legacy-peer-deps
 
 # ── Frontend (pre-built static files) ────────────────────────────────────────
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist/

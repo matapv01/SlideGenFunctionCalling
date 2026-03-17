@@ -58,7 +58,13 @@ export const EventHandlersMixin = {
         // Click on canvas background → deselect
         if (!isResizeHandle && !isDragHandle && target.classList && (
             target.classList.contains('slide-bg-wrapper') ||
-            target.classList.contains('slide-container')
+            target.classList.contains('slide-container') ||
+            target.classList.contains('slide-inner-container') ||
+            target.classList.contains('outer-wrapper') ||
+            target.classList.contains('content-wrapper') ||
+            target.classList.contains('wrapper') ||
+            target.classList.contains('scale-container') ||
+            target.classList.contains('slide-wrapper')
         )) {
             this.deselectAll();
             return;
@@ -75,6 +81,8 @@ export const EventHandlersMixin = {
             }
             targetElement = targetElement.parentElement;
         }
+
+        console.log('[handleMouseDown] target:', target.tagName, target.className, '→ resolved:', targetElement?.tagName, targetElement?.className, 'selectable:', targetElement?.hasAttribute?.('data-selectable'));
 
         if (!targetElement || targetElement === this.root) {
             this.deselectAll();
@@ -150,13 +158,6 @@ export const EventHandlersMixin = {
                 ? this.getElementBounds(el)
                 : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
 
-            if (el.style.position !== 'absolute') {
-                el.style.position = 'absolute';
-                el.style.left = `${bounds.left}px`;
-                el.style.top  = `${bounds.top}px`;
-                el.style.width = `${bounds.width}px`;
-                el.style.height = `${bounds.height}px`;
-            }
             this.elementsStartPos.set(el, {
                 x: bounds.left,
                 y: bounds.top,
@@ -176,6 +177,20 @@ export const EventHandlersMixin = {
             if (dist > 5) {
                 this.isDragging      = true;
                 this.isPreparedForDrag = false;
+
+                // Convert CSS-positioned elements to absolute only when drag actually starts
+                this.selectedElements.forEach(el => {
+                    if (el.style.position !== 'absolute') {
+                        const startPos = this.elementsStartPos.get(el);
+                        if (startPos) {
+                            el.style.position = 'absolute';
+                            el.style.left = `${startPos.x}px`;
+                            el.style.top  = `${startPos.y}px`;
+                            el.style.width = `${startPos.width}px`;
+                            el.style.height = `${startPos.height}px`;
+                        }
+                    }
+                });
             } else {
                 return;
             }
@@ -242,7 +257,7 @@ export const EventHandlersMixin = {
                     Math.pow(e.clientX - this.dragStart.x, 2) +
                     Math.pow(e.clientY - this.dragStart.y, 2)
                 );
-                shouldSelect = dist <= 2;
+                shouldSelect = dist <= 5;
             }
             if (shouldSelect) {
                 if (this.pendingSelectMode === 'toggle') {

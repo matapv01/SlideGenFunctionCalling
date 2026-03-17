@@ -1,213 +1,119 @@
-# SlideGen
+# 1. Cài dependencies
 
-AI-powered presentation generator. Upload tài liệu hoặc nhập ý tưởng → nhận slide HTML đẹp.
-
----
-
-## Mục lục
-
-- [Yêu cầu](#yêu-cầu)
-- [Cấu hình `.env`](#cấu-hình-env)
-- [Server (Production)](#server-production)
-- [Local Development](#local-development)
-- [Lệnh Docker thường dùng](#lệnh-docker-thường-dùng)
-- [Quản lý Subscription Codes](#quản-lý-subscription-codes)
-
----
-
-## Yêu cầu
-
-Docker 24+, Docker Compose v2, Git.
-
-```bash
-# Cài Docker nếu server chưa có
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-newgrp docker
-docker --version
-```
-
----
-
-## Cấu hình `.env`
-
-```bash
-cp env_template.txt .env
-nano .env
-```
-
-```env
+## Tạo file .env (root project)
 GEMINI_API_KEY=your_key_here
-TAVILY_API_KEY1=your_key_here
-TAVILY_API_KEY2=your_key_here
-TAVILY_API_KEY3=your_key_here
-SECRET_KEY=your_jwt_secret_here
-```
+VITE_API_BASE_URL=http://your-server-domain:12008/api/v1
 
-> `.env` đã git-ignore — phải tạo tay trên mỗi máy, không commit lên git.
+## Chạy Dev bằng Docker (khuyên dùng)
 
----
+Không cần cài uv/Python/Node trên máy local.
 
-## Server (Production)
-
-**Lần đầu deploy:**
+### Lần đầu
 
 ```bash
-git clone <repo-url> SlideGenFunctionCalling
-cd SlideGenFunctionCalling
-
-cp env_template.txt .env
-nano .env   # điền API keys
-
-docker compose up -d --build
-```
-
-> Lần đầu build mất **15–25 phút** do tải Python deps, Playwright Chromium, Node.js.
-> Theo dõi: `docker compose logs -f`
-
-**Kiểm tra sau khi build xong:**
-
-```bash
-docker compose ps
-curl http://localhost:12008/health
-```
-
-Truy cập từ ngoài: `http://<server-ip>:12008`
-
----
-
-**Update code:**
-
-```bash
-# Máy local
-git add . && git commit -m "..." && git push
-
-# Trên server
-git pull
-docker compose up -d --build
-```
-
-> Rebuild lần sau nhanh (~3–5 phút) nhờ Docker layer cache.
-> File `.env` và dữ liệu trong volumes **không bị ảnh hưởng** khi rebuild.
-
----
-
-## Local Development
-
-**Lần đầu:**
-
-```bash
-git clone <repo-url> SlideGenFunctionCalling
-cd SlideGenFunctionCalling
-
-cp env_template.txt .env   # điền API keys
-
 docker compose -f docker-compose.dev.yml up --build
 ```
 
-**Từ lần 2 trở đi:**
+### Từ lần sau
 
 ```bash
 docker compose -f docker-compose.dev.yml up
 ```
 
-**Dev mode:**
+### URL khi chạy dev
 
-| | URL |
-|---|---|
-| Frontend (Vite HMR) | `http://localhost:5173` |
-| Backend API | `http://localhost:12008` |
-| API Docs | `http://localhost:12008/docs` |
+- Frontend (Vite HMR): http://localhost:5173
+- Backend API: http://localhost:12008
+- API Docs: http://localhost:12008/docs
 
-- Sửa file trong `backend/` → backend tự reload (uvicorn `--reload`)
-- Sửa file trong `frontend/src/` → browser tự cập nhật (Vite HMR)
-- Không cần rebuild image khi sửa code
-
-**Rebuild khi nào:**
-- Thêm/xóa Python package (`pyproject.toml` đổi)
-- Thêm/xóa npm package (`package.json` đổi)
-
----
-
-## Lệnh Docker thường dùng
+### Lệnh thường dùng cho dev
 
 ```bash
-# Xem container đang chạy
-docker compose ps
+# Xem log
+docker compose -f docker-compose.dev.yml logs -f
 
-# Theo dõi log realtime
-docker compose logs -f
+# Vào container dev
+docker compose -f docker-compose.dev.yml exec slidegen-dev bash
 
-# Xem log gần nhất
-docker compose logs --tail 100
-
-# Restart không rebuild
-docker compose restart
-
-# Dừng (giữ nguyên data)
-docker compose down
-
-# Dừng + xóa toàn bộ data (KHÔNG THỂ PHỤC HỒI)
-docker compose down -v
-
-# Vào trong container để debug
-docker compose exec slidegen bash          # production
-docker compose -f docker-compose.dev.yml exec slidegen-dev bash   # dev
-
-# Rebuild 1 service cụ thể
-docker compose build --no-cache
+# Dừng môi trường dev
+docker compose -f docker-compose.dev.yml down
 ```
 
----
+
+## Chạy Backend (Terminal 1)
+uv run backend/main.py
+→ Backend: http://localhost:12008
+
+## Chạy Frontend (Terminal 2)
+cd frontend
+npm run dev
+→ Frontend: http://localhost:5173
+
+## Chạy trên Server
+
+Script `scripts/run_server.sh` build frontend và khởi động toàn bộ service trong 1 lệnh:
+
+```bash
+./scripts/run_server.sh
+```
+
+Script sẽ tự động:
+- Build frontend dist (Node 22)
+- Khởi động backend tại `http://0.0.0.0:12008`
+- Serve cả frontend lẫn API từ cùng 1 port
+
+**Cấu hình API URL** (thêm vào `.env` ở root, script sẽ đọc khi build):
+
+```
+VITE_API_BASE_URL=http://your-server-domain:12008/api/v1
+```
+
+Nếu không set, mặc định dùng `http://aicontest.ptit.edu.vn:12008/api/v1`.
+
+### Kiểm tra nhanh sau khi chạy
+
+```bash
+curl -I http://127.0.0.1:12008/docs
+```
 
 ## Quản lý Subscription Codes
 
 DB file: `backend/infrastructure/database/slidegen.db`
+Dùng [DB Browser for SQLite](https://sqlitebrowser.org/) hoặc chạy SQL trực tiếp.
 
 ### Các loại code
 
-| `code_type` | `max_uses` | Hành vi |
-|---|---|---|
-| `unlimited` | bất kỳ | Dùng bao nhiêu lần cũng được, cùng account cũng gia hạn lại |
-| `limited` | `1` | Chỉ 1 tài khoản dùng 1 lần |
-| `limited` | `N` | Tối đa N tài khoản, mỗi account 1 lần |
+| `code_type`  | `max_uses` | Hành vi |
+|--------------|------------|---------|
+| `unlimited`  | bất kỳ     | Dùng bao nhiêu lần cũng được, cùng 1 account cũng gia hạn lại được |
+| `limited`    | `1`        | Chỉ 1 tài khoản dùng được 1 lần |
+| `limited`    | `N`        | Tối đa N tài khoản dùng được, mỗi account 1 lần |
 
-### Code mặc định
+### Code mặc định (có sẵn trong DB)
 
 | Code | Tier | Loại | Thời hạn |
-|---|---|---|---|
+|------|------|------|----------|
 | `SLIDEGENIUS` | Ultra | unlimited | 30 ngày/lần nhập |
 
-### Tạo code mới
+### Ví dụ tạo code
 
 ```bash
-# Vào container (production)
-docker compose exec slidegen bash
+# Unlimited (dùng bao nhiêu lần cũng được)
+sqlite3 backend/infrastructure/database/slidegen.db "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type) VALUES ('PROMO2025', 'plus', 30, -1, 'unlimited');"
 
-# Unlimited
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type)
-   VALUES ('PROMO2025', 'plus', 30, -1, 'unlimited');"
+# Chỉ 1 tài khoản dùng được
+sqlite3 backend/infrastructure/database/slidegen.db "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type) VALUES ('VIP-ABCD', 'ultra', 30, 1, 'limited');"
 
-# Giới hạn 1 tài khoản
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type)
-   VALUES ('VIP-ABCD', 'ultra', 30, 1, 'limited');"
-
-# Giới hạn 50 tài khoản
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type)
-   VALUES ('LAUNCH50', 'plus', 30, 50, 'limited');"
+# Tối đa 50 tài khoản
+sqlite3 backend/infrastructure/database/slidegen.db "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type) VALUES ('LAUNCH50', 'plus', 30, 50, 'limited');"
 ```
 
-### Tắt / bật code
+### Tắt/kích hoạt code
 
 ```bash
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "UPDATE subscription_codes SET is_active = 0 WHERE code = 'PROMO2025';"
+# Tắt code
+sqlite3 backend/infrastructure/database/slidegen.db "UPDATE subscription_codes SET is_active = 0 WHERE code = 'PROMO2025';"
 
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "UPDATE subscription_codes SET is_active = 1 WHERE code = 'PROMO2025';"
+# Bật lại
+sqlite3 backend/infrastructure/database/slidegen.db "UPDATE subscription_codes SET is_active = 1 WHERE code = 'PROMO2025';"
 ```
-
-> **Tip:** Dùng [DB Browser for SQLite](https://sqlitebrowser.org/) để quản lý DB trực quan hơn.

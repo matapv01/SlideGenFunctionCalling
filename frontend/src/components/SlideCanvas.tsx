@@ -40,6 +40,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
   const logicInstanceRef = useRef<SlideEditorLogic | null>(null);
   // Store slide-specific CSS so it can be round-tripped when saving
   const slideCSSRef = useRef<string>('');
+  // Store <link> tags (e.g. Google Fonts) so they survive the save/reload cycle
+  const slideLinkTagsRef = useRef<string>('');
 
   // Use refs so SlideEditorLogic always calls the latest callbacks without needing re-init
   const onElementSelectRef = useRef<(data: any) => void>(props.onElementSelect);
@@ -64,19 +66,25 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     },
     getHTML: () => {
       const canvasHTML = logicInstanceRef.current?.getHTML() || '';
-      // Prepend slide-specific CSS so it survives save/reload cycles.
+      // Prepend <link> tags and slide-specific CSS so they survive save/reload cycles.
       // Re-remap Shadow DOM selectors back to standard CSS selectors so the
       // stored html_content works correctly in a normal iframe/browser context.
+      const linkTags = slideLinkTagsRef.current;
       const css = slideCSSRef.current;
+      let result = '';
+      if (linkTags && linkTags.trim()) {
+        result += linkTags + '\n';
+      }
       if (css && css.trim()) {
         const standardCSS = css
           .replace(/\.slide-bg-wrapper\s*\{/g, 'body {')
           .replace(/\.slide-bg-wrapper\b/g, 'body')
           .replace(/:host\s*\{/g, 'html {')
           .replace(/:host\b/g, 'html');
-        return `<style>${standardCSS}</style>\n${canvasHTML}`;
+        result += `<style>${standardCSS}</style>\n`;
       }
-      return canvasHTML;
+      result += canvasHTML;
+      return result;
     },
     undo: () => {
       logicInstanceRef.current?.undo();
@@ -182,6 +190,11 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     const styleElements = Array.from(doc.querySelectorAll('style'));
     let collectedCSS = styleElements.map(s => s.textContent || '').join('\n');
 
+    // Collect <link rel="stylesheet"> elements (e.g. Google Fonts) so they
+    // can be injected into the Shadow DOM and preserved across save/reload.
+    const linkElements = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
+    const linkTagsHTML = linkElements.map(l => l.outerHTML).join('\n');
+
     // --- 2. Extract ALL body {} properties BEFORE remapping ---
     // Merge all body rules (later properties win = CSS cascade).
     // This replaces the fragile regex-based background-only extraction.
@@ -222,44 +235,102 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
     // Persist CSS for getHTML() round-trip
     slideCSSRef.current = collectedCSS;
+    slideLinkTagsRef.current = linkTagsHTML;
 
     // --- 4. Remove style elements from body to avoid duplicates ---
     styleElements.forEach(s => s.remove());
 
     // --- 5. Auto-enhance elements from converter HTML ---
+    // Process ALL descendants (not just direct children) so elements inside
+    // .content-wrapper / .outer-wrapper from the converter also get enhanced.
     const tempContainer = document.createElement('div');
     tempContainer.innerHTML = doc.body.innerHTML;
 
-    Array.from(tempContainer.children).forEach(el => {
-      if (!(el instanceof HTMLElement)) return;
-      if (el.nodeType !== 1) return;
+    // Layout containers: skip these (don't tag as elements), but their
+    // children still get iterated/processed by querySelectorAll('*').
+    const LAYOUT_CONTAINERS = new Set([
+      'outer-wrapper', 'content-wrapper', 'slide-container',
+      'slide-inner-container', 'wrapper', 'scale-container',
+      'slide-wrapper',
+    ]);
 
-      const tag = el.tagName.toLowerCase();
-      if (['style', 'script', 'link', 'meta', 'svg'].includes(tag)) return;
+    Array.from(tempContainer.querySelectorAll('*')).forEach(node => {
+      if (!(node instanceof HTMLElement)) return;
 
-      const computedStyle = window.getComputedStyle(el);
-      const hasAbsolutePosition = computedStyle.position === 'absolute' ||
-        computedStyle.position === 'fixed' ||
-        (el.getAttribute('style')?.includes('position: absolute')) ||
-        (el.getAttribute('style')?.includes('position:absolute'));
+      const tag = node.tagName.toLowerCase();
+      if (['style', 'script', 'link', 'meta', 'svg', 'defs', 'path', 'rect', 'circle', 'ellipse', 'line', 'polygon', 'polyline', 'g', 'use', 'clippath', 'lineargradient', 'radialgradient', 'stop', 'pattern', 'mask', 'text'].includes(tag)) return;
+      // Skip layout wrappers — they're not slide "elements"
+      if ([...node.classList].some(c => LAYOUT_CONTAINERS.has(c))) return;
 
-      if (hasAbsolutePosition) {
-        if (!el.classList.contains('element')) {
-          el.classList.add('element');
+      const hasAbsolutePosition =
+        (node.getAttribute('style')?.includes('position: absolute')) ||
+        (node.getAttribute('style')?.includes('position:absolute'));
+
+      // A node is a slide element if:
+      // 1. It has inline position:absolute (converter output), OR
+      // 2. Its parent is a known layout container (raw HTML fallback), OR
+      // 3. Its parent is tempContainer (top-level body child without wrapper)
+      // Note: containers themselves are skipped above, so parent===tempContainer
+      // won't tag .slide-container (it's already returned).
+      const parent = node.parentElement;
+      const parentIsContainer = parent === tempContainer ||
+        (parent && [...parent.classList].some(c => LAYOUT_CONTAINERS.has(c)));
+
+      if (hasAbsolutePosition || parentIsContainer) {
+        // Wrap bare <img> in a container div so it can receive resize handles
+        // (void elements like <img> cannot have children).
+        // Only wrap when we have valid dimension + position info (converter output).
+        // CSS-positioned images without inline styles are handled by their parent container.
+        if (tag === 'img') {
+          const imgW = node.style.width || (node.getAttribute('width') ? node.getAttribute('width') + 'px' : '');
+          const imgH = node.style.height || (node.getAttribute('height') ? node.getAttribute('height') + 'px' : '');
+          const imgL = node.style.left || '0px';
+          const imgT = node.style.top || '0px';
+          if (imgW && imgH) {
+            const wrapper = document.createElement('div');
+            wrapper.style.cssText = `position:absolute;left:${imgL};top:${imgT};width:${imgW};height:${imgH};overflow:hidden;cursor:move;`;
+            if (node.style.zIndex) wrapper.style.zIndex = node.style.zIndex;
+            wrapper.classList.add('element');
+            wrapper.dataset.type = 'image';
+            wrapper.dataset.selectable = 'true';
+            wrapper.id = node.id || `element_image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+            node.style.position = 'static';
+            node.style.left = '';
+            node.style.top = '';
+            node.style.width = '100%';
+            node.style.height = '100%';
+            node.style.objectFit = 'cover';
+            node.style.pointerEvents = 'none';
+            node.removeAttribute('id');
+            node.parentElement!.insertBefore(wrapper, node);
+            wrapper.appendChild(node);
+            return;
+          }
+          // No valid dimensions — skip wrapping. The img's parent container
+          // will be the selectable element instead.
+          return;
         }
 
-        if (!el.dataset.type) {
+        if (!node.classList.contains('element')) {
+          node.classList.add('element');
+        }
+        // Set data-selectable + cursor in processHTML so elements are always
+        // interactive, even before makeElementsSelectable runs on live DOM.
+        node.dataset.selectable = 'true';
+        if (!isReadOnly) node.style.cursor = 'move';
+
+        if (!node.dataset.type) {
           let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
 
-          const hasImage = el.querySelector('img') || tag === 'img';
-          const hasVideo = el.querySelector('video') || tag === 'video';
-          const textContent = el.textContent?.trim() || '';
+          const hasImage = node.querySelector('img') || tag === 'img';
+          const hasVideo = node.querySelector('video') || tag === 'video';
+          const textContent = node.textContent?.trim() || '';
           const hasSignificantText = textContent.length > 3;
 
           const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
           const isDivWithText = tag === 'div' && hasSignificantText;
-          const hasBackgroundStyling = el.style.background || el.style.backgroundColor ||
-            el.style.backgroundImage || el.style.borderRadius;
+          const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
+            node.style.backgroundImage || node.style.borderRadius;
 
           if (hasImage) {
             elementType = 'image';
@@ -275,15 +346,15 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
             elementType = 'shape';
           }
 
-          el.dataset.type = elementType;
+          node.dataset.type = elementType;
         }
 
-        if (!isReadOnly && el.dataset.type === 'text' && !el.hasAttribute('contenteditable')) {
-          el.setAttribute('contenteditable', 'true');
+        if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
+          node.setAttribute('contenteditable', 'true');
         }
 
-        if (!el.id) {
-          el.id = `element_${el.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        if (!node.id) {
+          node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         }
       }
     });
@@ -324,9 +395,13 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       }
 
       ${isReadOnly ? '' : `
-      .element.selected {
+      [contenteditable] {
+        outline: none;
+      }
+
+      .selected, [data-selectable].selected {
         outline: 3px solid #3b82f6 !important;
-        outline-offset: 2px;
+        outline-offset: 2px !important;
         box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2),
                     0 8px 30px rgba(59, 130, 246, 0.4) !important;
         animation: selectedPulse 2s ease-in-out infinite;
@@ -357,7 +432,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         pointer-events: auto !important;
       }
 
-      .element.selected .resize-handle {
+      .selected .resize-handle {
         display: block;
       }
 
@@ -397,9 +472,11 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       ` : ''}
     `;
 
-    // --- 7. ReadOnly: compute content-wrapper scale from CSS dimensions ---
+    // --- 7. Compute content-wrapper scale from CSS dimensions ---
+    // The converter's resize <script> doesn't execute via innerHTML in Shadow DOM,
+    // so we need to compute the scale statically from the CSS dimensions.
     let scaleOverrideCSS = '';
-    if (isReadOnly) {
+    {
       const allCwMatches = [...collectedCSS.matchAll(/\.content-wrapper\s*\{([^}]+)\}/gs)];
       for (const m of allCwMatches) {
         const ruleBody = m[1];
@@ -425,6 +502,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     // collectedCSS is still included so descendant selectors (body .child → .slide-bg-wrapper .child)
     // and non-body rules (.content-wrapper, .outer-wrapper, element classes) continue to work.
     return `
+      ${linkTagsHTML}
       <style>
         ${baseShadowCSS}
         ${collectedCSS}
@@ -453,7 +531,9 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     try {
       const processedHTML = processHTML(props.htmlContent, props.readOnly);
       shadowRootRef.current.innerHTML = processedHTML;
-      if (props.readOnly) applyConverterScaleFallback(shadowRootRef.current);
+      // The converter's resize <script> doesn't execute via innerHTML in Shadow DOM,
+      // so apply the scale fallback for both readOnly and editor modes.
+      applyConverterScaleFallback(shadowRootRef.current);
     } catch (e) {
       console.error('[SlideCanvas] Failed to process/inject HTML:', e);
       return;

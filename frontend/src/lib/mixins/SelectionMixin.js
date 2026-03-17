@@ -83,25 +83,59 @@ export const SelectionMixin = {
 
     makeElementsSelectable() {
         const selectableElements = this.root.querySelectorAll(
-            '[style*="position: absolute"], [style*="position:absolute"], h1, h2, h3, p, img, .text-block, .image-block'
+            '.element, [data-type], ' +
+            '.content-wrapper > *, .slide-container > *, .slide-inner-container > *, ' +
+            '[style*="position: absolute"], [style*="position:absolute"], ' +
+            'h1, h2, h3, p, img, .text-block, .image-block'
         );
 
+        console.log('[makeElementsSelectable] Found', selectableElements.length, 'candidate elements');
+
         let idCounter = 1;
+        let taggedCount = 0;
         selectableElements.forEach(el => {
             if (el.classList.contains('resize-handle') ||
                 el.classList.contains('drag-handle') ||
                 el.classList.contains('slide-bg-wrapper') ||
-                el.classList.contains('slide-container')) return;
+                el.classList.contains('slide-container') ||
+                el.classList.contains('slide-inner-container') ||
+                el.classList.contains('outer-wrapper') ||
+                el.classList.contains('content-wrapper') ||
+                el.classList.contains('wrapper') ||
+                el.classList.contains('scale-container') ||
+                el.classList.contains('slide-wrapper')) return;
+
+            // Check if nested inside an already-selectable container
+            let isNested = false;
+            let ancestor = el.parentElement;
+            while (ancestor && ancestor !== this.root) {
+                if (ancestor.hasAttribute('data-selectable') || ancestor.classList.contains('element')) {
+                    isNested = true;
+                    break;
+                }
+                ancestor = ancestor.parentElement;
+            }
+
+            if (isNested) {
+                // Nested text elements still need contenteditable so double-click positions
+                // the cursor at the exact clicked element — but they must NOT become drag targets.
+                const isTextEl = ['H1', 'H2', 'H3', 'P', 'SPAN'].includes(el.tagName);
+                if (isTextEl && !el.querySelector('img') && !el.hasAttribute('contenteditable')) {
+                    el.setAttribute('contenteditable', 'true');
+                }
+                return; // skip id, cursor:move, data-selectable
+            }
 
             if (!el.id) el.id = `element-${idCounter++}`;
 
             el.style.cursor = 'move';
             el.setAttribute('data-selectable', 'true');
+            taggedCount++;
+            console.log('[makeElementsSelectable] Tagged:', el.tagName, el.id, 'type:', el.dataset?.type);
 
             const isTextElement = ['H1', 'H2', 'H3', 'P', 'SPAN', 'DIV'].includes(el.tagName);
             if (isTextElement && !el.querySelector('img')) {
                 el.setAttribute('contenteditable', 'true');
-                el.style.outline = 'none';
             }
         });
     },
@@ -174,7 +208,6 @@ export const SelectionMixin = {
         if (!this.selectedElements.length) return;
 
         this.selectedElements.forEach(el => {
-            if (!el.classList.contains('element')) el.classList.add('element');
             el.classList.add('selected');
         });
 
@@ -196,6 +229,8 @@ export const SelectionMixin = {
     },
 
     addResizeHandles(element) {
+        // Void elements cannot have children — skip
+        if (['IMG', 'INPUT', 'BR', 'HR'].includes(element.tagName)) return;
         if (element.querySelector('.resize-handle')) return;
 
         let handlesHTML = `
