@@ -7,6 +7,7 @@ interface ReadOnlySlideProps {
   slideId: string;
   htmlContent: string;
   backgroundColor?: string;
+  backgroundImage?: string;
   className?: string;
 }
 
@@ -14,7 +15,7 @@ interface ReadOnlySlideProps {
  * Renders a slide using the exact same Shadow DOM + processHTML pipeline as the editor,
  * but without any editing functionality. Scales to fit the container.
  */
-export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, className }: ReadOnlySlideProps) => {
+export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, backgroundImage, className }: ReadOnlySlideProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.1);
 
@@ -52,6 +53,7 @@ export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, className
               slideId={slideId}
               htmlContent={htmlContent}
               backgroundColor={backgroundColor}
+              backgroundImage={backgroundImage}
               readOnly
             />
           </div>

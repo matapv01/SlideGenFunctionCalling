@@ -5,6 +5,7 @@ interface SlideCanvasProps {
   slideId: string;
   htmlContent: string;
   backgroundColor?: string;
+  backgroundImage?: string;
   onElementSelect?: (data: any) => void;
   onChange?: () => void;
   zoom?: number;
@@ -42,6 +43,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
   const slideCSSRef = useRef<string>('');
   // Store <link> tags (e.g. Google Fonts) so they survive the save/reload cycle
   const slideLinkTagsRef = useRef<string>('');
+  // Only converter-generated slides use --scale centering logic on .content-wrapper.
+  const needsConverterScaleFallbackRef = useRef<boolean>(false);
 
   // Use refs so SlideEditorLogic always calls the latest callbacks without needing re-init
   const onElementSelectRef = useRef<(data: any) => void>(props.onElementSelect);
@@ -54,10 +57,13 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
   // Apply fallback background to host element (visible when slide CSS has no bg)
   useEffect(() => {
-    if (props.backgroundColor && containerRef.current) {
-      containerRef.current.style.background = props.backgroundColor;
-    }
-  }, [props.backgroundColor]);
+    if (!containerRef.current) return;
+    containerRef.current.style.backgroundColor = props.backgroundColor || '';
+    containerRef.current.style.backgroundImage = props.backgroundImage || '';
+    containerRef.current.style.backgroundPosition = props.backgroundImage ? 'center center' : '';
+    containerRef.current.style.backgroundSize = props.backgroundImage ? 'cover' : '';
+    containerRef.current.style.backgroundRepeat = props.backgroundImage ? 'no-repeat' : '';
+  }, [props.backgroundColor, props.backgroundImage]);
 
   // Expose các method cho component cha (SlideEditor.tsx) gọi
   useImperativeHandle(ref, () => ({
@@ -138,6 +144,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
   // The converter's resize JS (var(--scale,1)) doesn't execute via innerHTML.
   // Fallback for readOnly mode: set --scale from measured dimensions.
   const applyConverterScaleFallback = (shadowRoot: ShadowRoot) => {
+    if (!needsConverterScaleFallbackRef.current) return;
+
     setTimeout(() => {
       const cw = shadowRoot.querySelector('.content-wrapper') as HTMLElement | null;
       if (!cw) return;
@@ -173,6 +181,30 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     return props;
   };
 
+  // Remap top-level page selectors so imported HTML/CSS keeps browser parity in Shadow DOM.
+  const remapCssSelectorsForShadowDom = (css: string): string => {
+    return css.replace(/([^{}]+)\{/g, (fullMatch, selectorChunk: string) => {
+      const trimmed = selectorChunk.trim();
+      // Keep at-rules intact: @media, @keyframes, @font-face, etc.
+      if (trimmed.startsWith('@')) return fullMatch;
+
+      const remappedSelectors = selectorChunk
+        .split(',')
+        .map((selector) => selector
+          // Normalize any persisted :host from previous editor saves back to html first.
+          .replace(/:host\b/g, 'html')
+          // In Shadow DOM, map :root custom-properties to :host.
+          .replace(/:root\b/g, 'html')
+          // Then map browser selectors to Shadow DOM equivalents.
+          .replace(/\bhtml\b/g, ':host')
+          .replace(/\bbody\b/g, '.slide-bg-wrapper')
+        )
+        .join(',');
+
+      return `${remappedSelectors}{`;
+    });
+  };
+
   // Xử lý HTML & CSS Isolation
   const processHTML = (rawHTML: string, isReadOnly = false): string => {
     // Fix viewport units to absolute pixels (vw/vh refer to page viewport in Shadow DOM)
@@ -190,33 +222,28 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     const styleElements = Array.from(doc.querySelectorAll('style'));
     let collectedCSS = styleElements.map(s => s.textContent || '').join('\n');
 
+    // Converted HTML from the parser uses transform: ... scale(var(--scale, 1))
+    // and a script that sets --scale at runtime. We only apply Shadow DOM
+    // scale fallback for this converter-specific pattern.
+    const hasConverterScalePattern =
+      /\.content-wrapper\s*\{[^}]*scale\(var\(--scale\s*,\s*1\)\)/is.test(collectedCSS) ||
+      /setProperty\(\s*['"]--scale['"]/i.test(rawHTML);
+    needsConverterScaleFallbackRef.current = hasConverterScalePattern;
+
     // Collect <link rel="stylesheet"> elements (e.g. Google Fonts) so they
     // can be injected into the Shadow DOM and preserved across save/reload.
     const linkElements = Array.from(doc.querySelectorAll('link[rel="stylesheet"]'));
     const linkTagsHTML = linkElements.map(l => l.outerHTML).join('\n');
 
-    // --- 2. Extract ALL body {} properties BEFORE remapping ---
-    // Merge all body rules (later properties win = CSS cascade).
-    // This replaces the fragile regex-based background-only extraction.
-    const mergedBodyProps: Record<string, string> = {};
-    const bodyRuleRegex = /\bbody\s*\{([^}]+)\}/g;
-    let bodyMatch;
-    while ((bodyMatch = bodyRuleRegex.exec(collectedCSS)) !== null) {
-      const parsed = parseCSSProperties(bodyMatch[1]);
-      Object.assign(mergedBodyProps, parsed); // later values overwrite
-    }
+    // --- 2. Preserve body visual fidelity ---
+    // Keep browser-authored body CSS in collectedCSS after selector remap, and only
+    // carry body inline style + minimal fallbacks on the wrapper element.
+    const mergedBodyProps: Record<string, string> = parseCSSProperties(doc.body.getAttribute('style') || '');
 
-    // Apply overrides matching ScaledSlidePreview's base styles:
-    // html, body { margin: 0 !important; padding: 0 !important; overflow: hidden !important }
-    mergedBodyProps['margin'] = '0';
-    mergedBodyProps['padding'] = '0';
-    mergedBodyProps['overflow'] = 'hidden';
-    // Ensure wrapper fills the host element
-    mergedBodyProps['position'] = 'relative';
-    mergedBodyProps['width'] = '100%';
-    mergedBodyProps['height'] = '100%';
-    mergedBodyProps['min-height'] = '1080px';
-    mergedBodyProps['box-sizing'] = 'border-box';
+    if (!mergedBodyProps['position']) mergedBodyProps['position'] = 'relative';
+    if (!mergedBodyProps['width']) mergedBodyProps['width'] = '100%';
+    if (!mergedBodyProps['height']) mergedBodyProps['height'] = '100%';
+    if (!mergedBodyProps['box-sizing']) mergedBodyProps['box-sizing'] = 'border-box';
 
     // Build inline style string from merged body properties
     const wrapperInlineStyle = Object.entries(mergedBodyProps)
@@ -227,11 +254,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     // body {} → .slide-bg-wrapper {} (class on wrapper div)
     // html {} → :host
     // body .child → .slide-bg-wrapper .child (descendant combinator)
-    collectedCSS = collectedCSS
-      .replace(/\bbody\s*\{/g, '.slide-bg-wrapper {')
-      .replace(/\bhtml\s*\{/g, ':host {')
-      .replace(/\bbody\s+/g, '.slide-bg-wrapper ')
-      .replace(/\bhtml\s+/g, ':host ');
+    collectedCSS = remapCssSelectorsForShadowDom(collectedCSS);
 
     // Persist CSS for getHTML() round-trip
     slideCSSRef.current = collectedCSS;
@@ -254,6 +277,13 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       'slide-wrapper',
     ]);
 
+    const INLINE_FORMATTING_TAGS = new Set([
+      'span', 'strong', 'b', 'em', 'i', 'u', 'mark', 'small',
+      'sub', 'sup', 'code', 'kbd', 'samp', 'var', 'a',
+      'font', 'ins', 'del', 's', 'abbr', 'cite', 'q', 'time',
+      'br', 'wbr', 'hr',
+    ]);
+
     Array.from(tempContainer.querySelectorAll('*')).forEach(node => {
       if (!(node instanceof HTMLElement)) return;
 
@@ -261,101 +291,88 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       if (['style', 'script', 'link', 'meta', 'svg', 'defs', 'path', 'rect', 'circle', 'ellipse', 'line', 'polygon', 'polyline', 'g', 'use', 'clippath', 'lineargradient', 'radialgradient', 'stop', 'pattern', 'mask', 'text'].includes(tag)) return;
       // Skip layout wrappers — they're not slide "elements"
       if ([...node.classList].some(c => LAYOUT_CONTAINERS.has(c))) return;
+      // Keep inline formatting inside text flow; dragging these would detach styled fragments.
+      if (INLINE_FORMATTING_TAGS.has(tag)) {
+        node.classList.remove('element');
+        delete node.dataset.selectable;
+        if (node.dataset.type) delete node.dataset.type;
+        if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
+        return;
+      }
 
-      const hasAbsolutePosition =
-        (node.getAttribute('style')?.includes('position: absolute')) ||
-        (node.getAttribute('style')?.includes('position:absolute'));
-
-      // A node is a slide element if:
-      // 1. It has inline position:absolute (converter output), OR
-      // 2. Its parent is a known layout container (raw HTML fallback), OR
-      // 3. Its parent is tempContainer (top-level body child without wrapper)
-      // Note: containers themselves are skipped above, so parent===tempContainer
-      // won't tag .slide-container (it's already returned).
-      const parent = node.parentElement;
-      const parentIsContainer = parent === tempContainer ||
-        (parent && [...parent.classList].some(c => LAYOUT_CONTAINERS.has(c)));
-
-      if (hasAbsolutePosition || parentIsContainer) {
-        // Wrap bare <img> in a container div so it can receive resize handles
-        // (void elements like <img> cannot have children).
-        // Only wrap when we have valid dimension + position info (converter output).
-        // CSS-positioned images without inline styles are handled by their parent container.
-        if (tag === 'img') {
-          const imgW = node.style.width || (node.getAttribute('width') ? node.getAttribute('width') + 'px' : '');
-          const imgH = node.style.height || (node.getAttribute('height') ? node.getAttribute('height') + 'px' : '');
-          const imgL = node.style.left || '0px';
-          const imgT = node.style.top || '0px';
-          if (imgW && imgH) {
-            const wrapper = document.createElement('div');
-            wrapper.style.cssText = `position:absolute;left:${imgL};top:${imgT};width:${imgW};height:${imgH};overflow:hidden;cursor:move;`;
-            if (node.style.zIndex) wrapper.style.zIndex = node.style.zIndex;
-            wrapper.classList.add('element');
-            wrapper.dataset.type = 'image';
-            wrapper.dataset.selectable = 'true';
-            wrapper.id = node.id || `element_image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-            node.style.position = 'static';
-            node.style.left = '';
-            node.style.top = '';
-            node.style.width = '100%';
-            node.style.height = '100%';
-            node.style.objectFit = 'cover';
-            node.style.pointerEvents = 'none';
-            node.removeAttribute('id');
-            node.parentElement!.insertBefore(wrapper, node);
-            wrapper.appendChild(node);
-            return;
-          }
-          // No valid dimensions — skip wrapping. The img's parent container
-          // will be the selectable element instead.
+      // Wrap bare <img> in a container div so it can receive resize handles
+      // (void elements like <img> cannot have children).
+      if (tag === 'img') {
+        const imgW = node.style.width || (node.getAttribute('width') ? node.getAttribute('width') + 'px' : '');
+        const imgH = node.style.height || (node.getAttribute('height') ? node.getAttribute('height') + 'px' : '');
+        const imgL = node.style.left || '0px';
+        const imgT = node.style.top || '0px';
+        if (imgW && imgH) {
+          const wrapper = document.createElement('div');
+          wrapper.style.cssText = `position:absolute;left:${imgL};top:${imgT};width:${imgW};height:${imgH};overflow:hidden;cursor:move;`;
+          if (node.style.zIndex) wrapper.style.zIndex = node.style.zIndex;
+          wrapper.classList.add('element');
+          wrapper.dataset.type = 'image';
+          wrapper.dataset.selectable = 'true';
+          wrapper.id = node.id || `element_image_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+          node.style.position = 'static';
+          node.style.left = '';
+          node.style.top = '';
+          node.style.width = '100%';
+          node.style.height = '100%';
+          node.style.objectFit = 'cover';
+          node.style.pointerEvents = 'none';
+          node.removeAttribute('id');
+          node.parentElement!.insertBefore(wrapper, node);
+          wrapper.appendChild(node);
           return;
         }
+      }
 
-        if (!node.classList.contains('element')) {
-          node.classList.add('element');
-        }
-        // Set data-selectable + cursor in processHTML so elements are always
-        // interactive, even before makeElementsSelectable runs on live DOM.
-        node.dataset.selectable = 'true';
-        if (!isReadOnly) node.style.cursor = 'move';
+      if (!node.classList.contains('element')) {
+        node.classList.add('element');
+      }
+      // Set data-selectable + cursor in processHTML so elements are always
+      // interactive, even before makeElementsSelectable runs on live DOM.
+      node.dataset.selectable = 'true';
+      if (!isReadOnly) node.style.cursor = 'move';
 
-        if (!node.dataset.type) {
-          let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
+      if (!node.dataset.type) {
+        let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
 
-          const hasImage = node.querySelector('img') || tag === 'img';
-          const hasVideo = node.querySelector('video') || tag === 'video';
-          const textContent = node.textContent?.trim() || '';
-          const hasSignificantText = textContent.length > 3;
+        const hasImage = node.querySelector('img') || tag === 'img';
+        const hasVideo = node.querySelector('video') || tag === 'video';
+        const textContent = node.textContent?.trim() || '';
+        const hasSignificantText = textContent.length > 3;
 
-          const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
-          const isDivWithText = tag === 'div' && hasSignificantText;
-          const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
-            node.style.backgroundImage || node.style.borderRadius;
+        const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
+        const isDivWithText = tag === 'div' && hasSignificantText;
+        const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
+          node.style.backgroundImage || node.style.borderRadius;
 
-          if (hasImage) {
-            elementType = 'image';
-          } else if (hasVideo) {
-            elementType = 'video';
-          } else if (explicitTextTags.includes(tag) && hasSignificantText) {
-            elementType = 'text';
-          } else if (isDivWithText && !hasBackgroundStyling) {
-            elementType = 'text';
-          } else if (hasSignificantText && !hasBackgroundStyling) {
-            elementType = 'text';
-          } else {
-            elementType = 'shape';
-          }
-
-          node.dataset.type = elementType;
+        if (hasImage) {
+          elementType = 'image';
+        } else if (hasVideo) {
+          elementType = 'video';
+        } else if (explicitTextTags.includes(tag) && hasSignificantText) {
+          elementType = 'text';
+        } else if (isDivWithText && !hasBackgroundStyling) {
+          elementType = 'text';
+        } else if (hasSignificantText && !hasBackgroundStyling) {
+          elementType = 'text';
+        } else {
+          elementType = 'shape';
         }
 
-        if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
-          node.setAttribute('contenteditable', 'true');
-        }
+        node.dataset.type = elementType;
+      }
 
-        if (!node.id) {
-          node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-        }
+      if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
+        node.setAttribute('contenteditable', 'true');
+      }
+
+      if (!node.id) {
+        node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }
     });
 
@@ -402,20 +419,6 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       .selected, [data-selectable].selected {
         outline: 3px solid #3b82f6 !important;
         outline-offset: 2px !important;
-        box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2),
-                    0 8px 30px rgba(59, 130, 246, 0.4) !important;
-        animation: selectedPulse 2s ease-in-out infinite;
-      }
-
-      @keyframes selectedPulse {
-        0%, 100% {
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.2),
-                      0 8px 30px rgba(59, 130, 246, 0.4);
-        }
-        50% {
-          box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.4),
-                      0 8px 35px rgba(59, 130, 246, 0.6);
-        }
       }
 
       .resize-handle {
@@ -476,7 +479,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     // The converter's resize <script> doesn't execute via innerHTML in Shadow DOM,
     // so we need to compute the scale statically from the CSS dimensions.
     let scaleOverrideCSS = '';
-    {
+    if (hasConverterScalePattern) {
       const allCwMatches = [...collectedCSS.matchAll(/\.content-wrapper\s*\{([^}]+)\}/gs)];
       for (const m of allCwMatches) {
         const ruleBody = m[1];

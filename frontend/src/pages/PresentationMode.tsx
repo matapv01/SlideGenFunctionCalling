@@ -3,6 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
+import { resolveSlideBackground } from "@/lib/slideBackground";
 import { cn } from "@/lib/utils";
 import { ReadOnlySlide } from "@/components/ReadOnlySlide";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -26,15 +27,8 @@ const PresentationMode = () => {
     try {
       const data = await api.getSlides(projectId!);
       const mapped = (data?.slides ?? []).map((s: any) => {
-        let backgroundColor = '#ffffff';
-        let backgroundImage: string | undefined;
-        if (s.design_settings) {
-          try {
-            const ds = typeof s.design_settings === 'string' ? JSON.parse(s.design_settings) : s.design_settings;
-            if (ds?.backgroundColor) backgroundColor = ds.backgroundColor;
-            if (ds?.backgroundImage) backgroundImage = ds.backgroundImage;
-          } catch { /* ignore */ }
-        }
+        const html = s.html_content || '';
+        const { backgroundColor, backgroundImage } = resolveSlideBackground(s.design_settings, html);
         return { ...s, backgroundColor, backgroundImage, html: s.html_content || '' };
       });
       setSlides(mapped);
@@ -114,6 +108,7 @@ const PresentationMode = () => {
             slideId={`present-${currentSlide}`}
             htmlContent={html}
             backgroundColor={currentSlideData?.backgroundColor}
+            backgroundImage={currentSlideData?.backgroundImage}
             className="w-full h-full"
           />
         ) : (

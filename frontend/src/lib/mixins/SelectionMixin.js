@@ -46,6 +46,12 @@ export const SelectionMixin = {
         const decoration = computedStyle.textDecoration || computedStyle.textDecorationLine || '';
         const isUnderline = decoration.includes('underline');
 
+        const computedZ = parseInt(computedStyle.zIndex, 10);
+        const inlineZ = parseInt(el.style?.zIndex, 10);
+        const resolvedZIndex = Number.isFinite(computedZ)
+            ? computedZ
+            : (Number.isFinite(inlineZ) ? inlineZ : 0);
+
         const fontSizeVal = parseFloat(computedStyle.fontSize) || 16;
         const fontFamilyClean = computedStyle.fontFamily
             ? computedStyle.fontFamily.replace(/['"]/g, '')
@@ -77,6 +83,8 @@ export const SelectionMixin = {
                 width: bounds.width,
                 height: bounds.height,
                 position: computedStyle.position,
+                zIndex: resolvedZIndex,
+                opacity: parseFloat(computedStyle.opacity) || 1,
             },
         });
     },
@@ -105,26 +113,8 @@ export const SelectionMixin = {
                 el.classList.contains('scale-container') ||
                 el.classList.contains('slide-wrapper')) return;
 
-            // Check if nested inside an already-selectable container
-            let isNested = false;
-            let ancestor = el.parentElement;
-            while (ancestor && ancestor !== this.root) {
-                if (ancestor.hasAttribute('data-selectable') || ancestor.classList.contains('element')) {
-                    isNested = true;
-                    break;
-                }
-                ancestor = ancestor.parentElement;
-            }
-
-            if (isNested) {
-                // Nested text elements still need contenteditable so double-click positions
-                // the cursor at the exact clicked element — but they must NOT become drag targets.
-                const isTextEl = ['H1', 'H2', 'H3', 'P', 'SPAN'].includes(el.tagName);
-                if (isTextEl && !el.querySelector('img') && !el.hasAttribute('contenteditable')) {
-                    el.setAttribute('contenteditable', 'true');
-                }
-                return; // skip id, cursor:move, data-selectable
-            }
+            // Intentionally treat each eligible node as an independent editable/draggable element.
+            // Do not short-circuit nested nodes based on selectable ancestors.
 
             if (!el.id) el.id = `element-${idCounter++}`;
 
@@ -137,6 +127,43 @@ export const SelectionMixin = {
             if (isTextElement && !el.querySelector('img')) {
                 el.setAttribute('contenteditable', 'true');
             }
+        });
+
+        // Leaf-only selectable policy: if a node contains other selectable nodes,
+        // keep interaction on the deepest descendants to avoid parent "group frame".
+        const tagged = Array.from(this.root.querySelectorAll('[data-selectable="true"], .element'));
+        const INLINE_FORMATTING_TAGS = new Set([
+            'SPAN', 'STRONG', 'B', 'EM', 'I', 'U', 'MARK', 'SMALL',
+            'SUB', 'SUP', 'CODE', 'KBD', 'SAMP', 'VAR', 'A',
+            'FONT', 'INS', 'DEL', 'S', 'ABBR', 'CITE', 'Q', 'TIME',
+            'BR', 'WBR', 'HR'
+        ]);
+
+        // Never make inline formatting fragments draggable/selectable blocks.
+        tagged.forEach(el => {
+            if (!INLINE_FORMATTING_TAGS.has(el.tagName)) return;
+            el.classList.remove('selected');
+            el.classList.remove('element');
+            el.removeAttribute('data-selectable');
+            el.removeAttribute('data-type');
+            if (el.hasAttribute('contenteditable')) el.removeAttribute('contenteditable');
+            if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
+            el.querySelectorAll('.resize-handle, .drag-handle').forEach(h => h.remove());
+        });
+
+        tagged.forEach(el => {
+            const childSelectable = !!el.querySelector('[data-selectable="true"], .element');
+
+            if (!childSelectable) return;
+
+            el.classList.remove('selected');
+            el.classList.remove('element');
+            el.removeAttribute('data-selectable');
+            // Parent text containers should not stay editable when child nodes are independently editable.
+            if (el.hasAttribute('contenteditable')) {
+                el.removeAttribute('contenteditable');
+            }
+            el.querySelectorAll('.resize-handle, .drag-handle').forEach(h => h.remove());
         });
     },
 
