@@ -95,6 +95,12 @@ export const useElementActions = ({
   }, [currentSlide, slideCanvasRef, setSelectedElementId]);
 
   const updateElement = useCallback((id: string, updates: Partial<SlideElement> & { _filter?: string }) => {
+    console.log('[SlideEditor][Properties] updateElement called', {
+      id,
+      updates,
+      currentSlideIndex,
+    });
+
     // Sync React state
     setSlides(prev => prev.map((slide, i) => {
       if (i !== currentSlideIndex) return slide;
@@ -146,7 +152,11 @@ export const useElementActions = ({
       if (updates.content !== undefined) s.innerHTML = updates.content;
       if (updates._filter !== undefined) s.filter = updates._filter;
 
-      slideCanvasRef.current.updateElement(s);
+      console.log('[SlideEditor][Properties] pushing style patch to canvas', {
+        id,
+        stylePatch: s,
+      });
+      slideCanvasRef.current.updateElement(s, id);
     }
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
@@ -191,7 +201,7 @@ export const useElementActions = ({
     }));
     if (slideCanvasRef.current) {
       const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 0;
-      slideCanvasRef.current.updateElement({ zIndex: `${current + 1}` });
+      slideCanvasRef.current.updateElement({ zIndex: `${current + 1}` }, id);
     }
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
@@ -207,7 +217,7 @@ export const useElementActions = ({
     }));
     if (slideCanvasRef.current) {
       const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 1;
-      slideCanvasRef.current.updateElement({ zIndex: `${Math.max(0, current - 1)}` });
+      slideCanvasRef.current.updateElement({ zIndex: `${Math.max(0, current - 1)}` }, id);
     }
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 

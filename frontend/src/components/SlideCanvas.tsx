@@ -14,7 +14,7 @@ interface SlideCanvasProps {
 }
 
 export interface SlideCanvasHandle {
-  updateElement: (styles: any) => void;
+  updateElement: (styles: any, targetId?: string) => void;
   getHTML: () => string;
   undo: () => void;
   redo: () => void;
@@ -67,8 +67,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
   // Expose các method cho component cha (SlideEditor.tsx) gọi
   useImperativeHandle(ref, () => ({
-    updateElement: (styles: any) => {
-      logicInstanceRef.current?.updateSelectedElementStyle(styles);
+    updateElement: (styles: any, targetId?: string) => {
+      logicInstanceRef.current?.updateSelectedElementStyle(styles, targetId ?? null);
     },
     getHTML: () => {
       const canvasHTML = logicInstanceRef.current?.getHTML() || '';
@@ -281,6 +281,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       'span', 'strong', 'b', 'em', 'i', 'u', 'mark', 'small',
       'sub', 'sup', 'code', 'kbd', 'samp', 'var', 'a',
       'font', 'ins', 'del', 's', 'abbr', 'cite', 'q', 'time',
+      // Keep list items attached to their list container; dragging LI directly causes list reflow.
+      'li',
       'br', 'wbr', 'hr',
     ]);
 
@@ -345,7 +347,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         const textContent = node.textContent?.trim() || '';
         const hasSignificantText = textContent.length > 3;
 
-        const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
+        const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'pre', 'a'];
         const isDivWithText = tag === 'div' && hasSignificantText;
         const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
           node.style.backgroundImage || node.style.borderRadius;
@@ -374,6 +376,16 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       if (!node.id) {
         node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
       }
+    });
+
+    // Keep slide elements independent: only leaf nodes remain selectable.
+    // If a selectable node contains another selectable node, the parent is demoted.
+    Array.from(tempContainer.querySelectorAll<HTMLElement>('[data-selectable="true"]')).forEach(node => {
+      if (!node.querySelector('[data-selectable="true"]')) return;
+      node.removeAttribute('data-selectable');
+      node.classList.remove('element');
+      node.removeAttribute('contenteditable');
+      if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
     });
 
     // In read-only mode: strip editor-only artifacts
@@ -518,6 +530,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
   useEffect(() => {
     if (!containerRef.current) return;
+    let initLogicTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Attach Shadow DOM (once)
     if (!shadowRootRef.current) {
@@ -545,7 +558,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (props.readOnly) return;
 
     // Wait one tick for DOM to render
-    setTimeout(() => {
+    initLogicTimer = setTimeout(() => {
       if (logicInstanceRef.current) {
         logicInstanceRef.current.destroy();
       }
@@ -563,6 +576,10 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     }, 10);
 
     return () => {
+      if (initLogicTimer) {
+        clearTimeout(initLogicTimer);
+        initLogicTimer = null;
+      }
       if (logicInstanceRef.current) {
         logicInstanceRef.current.destroy();
         logicInstanceRef.current = null;

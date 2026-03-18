@@ -1,8 +1,76 @@
 // Mixin: mouse event handlers (mousedown, mousemove, mouseup, dblclick)
 export const EventHandlersMixin = {
 
+    normalizeEventTarget(target) {
+        if (target instanceof HTMLElement) return target;
+        if (target instanceof Text) return target.parentElement;
+        return null;
+    },
+
+    ensureElementAbsolutePosition(el, providedBounds = null) {
+        if (!el) return null;
+
+        const bounds = providedBounds || (this.getElementBounds
+            ? this.getElementBounds(el)
+            : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight });
+
+        const computedPosition = window.getComputedStyle(el).position;
+        if (computedPosition !== 'absolute') {
+            console.log('[SlideLogicCore][Layout] Converting element to absolute', {
+                id: el.id || null,
+                computedPosition,
+                left: bounds.left,
+                top: bounds.top,
+                width: bounds.width,
+                height: bounds.height,
+            });
+            el.style.setProperty('position', 'absolute', 'important');
+            el.style.left = `${bounds.left}px`;
+            el.style.top = `${bounds.top}px`;
+            el.style.width = `${bounds.width}px`;
+            el.style.height = `${bounds.height}px`;
+        }
+
+        return bounds;
+    },
+
+    freezeSelectableSiblingsLayout(targetElement) {
+        if (!targetElement || !(targetElement instanceof HTMLElement)) return;
+
+        const parent = targetElement.parentElement;
+        if (!parent) return;
+
+        const siblingsToFreeze = Array.from(parent.children)
+            .filter((node) => node instanceof HTMLElement)
+            .filter((node) =>
+                node.hasAttribute('data-selectable') || node.classList.contains('element')
+            )
+            .filter((node) => !this.isCanvasChromeElement || !this.isCanvasChromeElement(node));
+
+        if (siblingsToFreeze.length === 0) return;
+
+        // Snapshot all bounds first so converting one element cannot shift others.
+        const snapshots = siblingsToFreeze.map((el) => {
+            const bounds = this.getElementBounds
+                ? this.getElementBounds(el)
+                : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+            return { el, bounds };
+        });
+
+        console.log('[SlideLogicCore][Layout] Freezing sibling layout before drag/update', {
+            targetId: targetElement.id || null,
+            parentTag: parent.tagName,
+            siblingCount: snapshots.length,
+            siblingIds: snapshots.map(({ el }) => el.id || null),
+        });
+
+        snapshots.forEach(({ el, bounds }) => {
+            this.ensureElementAbsolutePosition(el, bounds);
+        });
+    },
+
     handleDoubleClick(e) {
-        const target = e.target instanceof HTMLElement ? e.target : null;
+        const target = this.normalizeEventTarget(e.target);
         if (!target) return;
 
         const textElement = target.closest('[contenteditable]');
@@ -26,8 +94,18 @@ export const EventHandlersMixin = {
     },
 
     handleMouseDown(e) {
-        const target = e.target instanceof HTMLElement ? e.target : null;
+        const target = this.normalizeEventTarget(e.target);
         if (!target) return;
+
+        console.log('[SlideLogicCore][Drag] MouseDown', {
+            targetTag: target.tagName,
+            targetId: target.id || null,
+            targetClasses: target.className || null,
+            selectedIds: this.selectedElements.map((el) => el.id || null),
+            isEditingText: this.isEditingText,
+            clientX: e.clientX,
+            clientY: e.clientY,
+        });
 
         // If guides are lingering from a previous drag, clear them immediately
         if (this._guideTimeout) { clearTimeout(this._guideTimeout); this._guideTimeout = null; }
@@ -51,7 +129,7 @@ export const EventHandlersMixin = {
             return;
         }
 
-        let targetElement = target.closest('.element, [data-selectable]');
+        let targetElement = target.closest('[data-selectable="true"]');
         if ((isResizeHandle || isDragHandle) && !targetElement) {
             // Handles always belong to a selectable parent; if not, ignore.
             return;
@@ -74,7 +152,7 @@ export const EventHandlersMixin = {
             return;
         }
 
-        const normalizedTarget = targetElement.closest('[data-selectable="true"], .element');
+        const normalizedTarget = targetElement.closest('[data-selectable="true"]');
         if (!normalizedTarget || !this.canvas.contains(normalizedTarget)) {
             this.deselectAll();
             return;
@@ -87,17 +165,11 @@ export const EventHandlersMixin = {
             this.isResizing = true;
             this.resizeHandle = target.classList[1]; // e.g. 'tl', 'tr', 'bl', 'br'
             this.dragStart = { x: e.clientX, y: e.clientY };
-            const bounds = this.getElementBounds
+            let bounds = this.getElementBounds
                 ? this.getElementBounds(el)
                 : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
 
-            if (el.style.position !== 'absolute') {
-                el.style.position = 'absolute';
-                el.style.left  = `${bounds.left}px`;
-                el.style.top   = `${bounds.top}px`;
-                el.style.width = `${bounds.width}px`;
-                el.style.height = `${bounds.height}px`;
-            }
+            bounds = this.ensureElementAbsolutePosition(el, bounds) || bounds;
             this.elementsStartPos.clear();
             this.elementsStartPos.set(el, {
                 x: bounds.left,
@@ -130,8 +202,9 @@ export const EventHandlersMixin = {
         }
 
         this.isPreparedForDrag = true;
-        this.draggedElement    = targetElement;
-        this.dragStart         = { x: e.clientX, y: e.clientY };
+        this.draggedElement = targetElement;
+        this._layoutFrozenForInteraction = false;
+        this.dragStart = { x: e.clientX, y: e.clientY };
 
         this.elementsStartPos.clear();
         const bounds = this.getElementBounds
@@ -147,112 +220,179 @@ export const EventHandlersMixin = {
     },
 
     handleMouseMove(e) {
-        // Only start real drag after moving > 5px (prevents accidental drags)
+        // Start real drag only after moving > 5px to avoid accidental drags.
         if (this.isPreparedForDrag && !this.isDragging && this.dragStart) {
-            const dist = Math.sqrt(
+            const distanceMoved = Math.sqrt(
                 Math.pow(e.clientX - this.dragStart.x, 2) +
                 Math.pow(e.clientY - this.dragStart.y, 2)
             );
-            if (dist > 5) {
-                this.isDragging      = true;
+
+            if (distanceMoved > 5) {
+                this.isDragging = true;
                 this.isPreparedForDrag = false;
+                this.disableTemplateDrag = true;
+
+                console.log('[SlideLogicCore][Drag] Drag started', {
+                    draggedId: this.draggedElement?.id || null,
+                    start: this.dragStart,
+                    current: { x: e.clientX, y: e.clientY },
+                    thresholdDistance: distanceMoved,
+                    scale: this.currentScale,
+                });
             } else {
                 return;
             }
         }
 
-        // RESIZE
-        if (this.isResizing && this.selectedElements.length > 0) {
-            e.preventDefault();
-            const el        = this.selectedElements[0];
-            const startRect = this.elementsStartPos.get(el);
-            if (!startRect) return;
+        if (this.isResizing) {
+            if (this.selectedElements.length !== 1) return;
 
+            const targetElement = this.selectedElements[0];
             const dx = (e.clientX - this.dragStart.x) / this.currentScale;
             const dy = (e.clientY - this.dragStart.y) / this.currentScale;
+            const el = targetElement;
+            const startRect = this.elementsStartPos.get(el);
+            if (!startRect) return;
             const { x, y, width, height } = startRect;
 
-            if (this.resizeHandle.includes('r')) el.style.width  = `${Math.max(20, width  + dx)}px`;
-            if (this.resizeHandle.includes('l')) { el.style.width  = `${Math.max(20, width  - dx)}px`; el.style.left = `${x + dx}px`; }
-            if (this.resizeHandle.includes('b')) el.style.height = `${Math.max(20, height + dy)}px`;
-            if (this.resizeHandle.includes('t')) { el.style.height = `${Math.max(20, height - dy)}px`; el.style.top  = `${y + dy}px`; }
+            if (this.resizeHandle.includes('r')) {
+                el.style.width = `${Math.max(20, width + dx)}px`;
+            }
+            if (this.resizeHandle.includes('l')) {
+                el.style.width = `${Math.max(20, width - dx)}px`;
+                el.style.left = `${x + dx}px`;
+            }
+            if (this.resizeHandle.includes('b')) {
+                el.style.height = `${Math.max(20, height + dy)}px`;
+            }
+            if (this.resizeHandle.includes('t')) {
+                el.style.height = `${Math.max(20, height - dy)}px`;
+                el.style.top = `${y + dy}px`;
+            }
 
             this.updateSelectionUI();
             if (this.emitSelectedElementData) this.emitSelectedElementData(el);
             return;
         }
 
-        if (!this.isDragging || !this.draggedElement) return;
-        e.preventDefault();
+        if (this.isDragging && this.selectedElements.length > 0) {
+            this.clearSmartGuides();
 
-        const primaryElement = this.draggedElement;
-        const startPos       = this.elementsStartPos.get(primaryElement);
-        if (!startPos) return;
+            let finalDx = (e.clientX - this.dragStart.x) / this.currentScale;
+            let finalDy = (e.clientY - this.dragStart.y) / this.currentScale;
 
-        let finalDx = (e.clientX - this.dragStart.x) / this.currentScale;
-        let finalDy = (e.clientY - this.dragStart.y) / this.currentScale;
+            const primaryElement = this.selectedElements[0];
+            const startPos = this.elementsStartPos.get(primaryElement);
+            if (!startPos) return;
 
-        // Snap & guide lines
-        const snapped = this.snapToGuides(primaryElement, startPos.x + finalDx, startPos.y + finalDy);
-        finalDx = snapped.x - startPos.x;
-        finalDy = snapped.y - startPos.y;
+            this.ensureElementAbsolutePosition(primaryElement, {
+                left: startPos.x,
+                top: startPos.y,
+                width: startPos.width,
+                height: startPos.height,
+            });
 
-        primaryElement.style.left = `${startPos.x + finalDx}px`;
-        primaryElement.style.top  = `${startPos.y + finalDy}px`;
+            const snapped = this.snapToGuides(primaryElement, startPos.x + finalDx, startPos.y + finalDy);
+            finalDx = snapped.x - startPos.x;
+            finalDy = snapped.y - startPos.y;
 
-        this.updateSelectionUI();
-        if (this.emitSelectedElementData) {
-            this.emitSelectedElementData(primaryElement);
+            this.selectedElements.forEach((el) => {
+                const elStartPos = this.elementsStartPos.get(el);
+                if (!elStartPos) return;
+
+                this.ensureElementAbsolutePosition(el, {
+                    left: elStartPos.x,
+                    top: elStartPos.y,
+                    width: elStartPos.width,
+                    height: elStartPos.height,
+                });
+
+                el.style.left = `${elStartPos.x + finalDx}px`;
+                el.style.top = `${elStartPos.y + finalDy}px`;
+            });
+
+            this.drawSmartGuides(snapped.guides);
+
+            if (this.selectedElements.length === 1 && this.emitSelectedElementData) {
+                this.emitSelectedElementData(this.selectedElements[0]);
+            }
         }
-        this.drawSmartGuides(snapped.guides);
     },
 
     handleMouseUp(e) {
-        // Confirm pending selection if the mouse barely moved (it was a click, not a drag)
+        this.isTextSelecting = false;
+
+        this.root.querySelectorAll('.dragging, .drag-preview').forEach((el) => {
+            el.classList.remove('dragging', 'drag-preview');
+        });
+        this.clearSmartGuides();
+
         if (this.pendingSelectElement) {
             let shouldSelect = true;
+
             if (this.dragStart && e) {
-                const dist = Math.sqrt(
+                const distanceMoved = Math.sqrt(
                     Math.pow(e.clientX - this.dragStart.x, 2) +
                     Math.pow(e.clientY - this.dragStart.y, 2)
                 );
-                shouldSelect = dist <= 2;
+                shouldSelect = distanceMoved <= 2;
             }
+
             if (shouldSelect) {
                 this.selectElement(this.pendingSelectElement);
             }
+
             this.pendingSelectElement = null;
-            this.dragStart            = null;
+            this.dragStart = null;
             return;
         }
 
+        const endedDrag = this.isDragging;
+        const endedResize = this.isResizing;
+        const activeElement = this.selectedElements[0] || null;
+
         if (this.isDragging || this.isResizing) {
             let hasActualChange = false;
+
             if (this.dragStart && e) {
-                const dist = Math.sqrt(
+                const distanceMoved = Math.sqrt(
                     Math.pow(e.clientX - this.dragStart.x, 2) +
                     Math.pow(e.clientY - this.dragStart.y, 2)
                 );
-                hasActualChange = dist > 3;
+                hasActualChange = distanceMoved > 3;
             }
+
             if (hasActualChange) {
+                this.justFinishedDragging = true;
+                setTimeout(() => {
+                    this.justFinishedDragging = false;
+                }, 100);
+
                 this.saveHistory();
                 if (this.emitSelectedElementData && this.selectedElements.length === 1) {
                     this.emitSelectedElementData(this.selectedElements[0]);
                 }
             }
+
+            console.log('[SlideLogicCore][Drag] MouseUp after interaction', {
+                mode: endedResize ? 'resize' : (endedDrag ? 'drag' : 'unknown'),
+                hasActualChange,
+                elementId: activeElement?.id || null,
+                left: activeElement?.style?.left || null,
+                top: activeElement?.style?.top || null,
+                width: activeElement?.style?.width || null,
+                height: activeElement?.style?.height || null,
+            });
         }
 
-        this.isDragging         = false;
-        this.isResizing         = false;
-        this.isPreparedForDrag  = false;
-        this.resizeHandle       = null;
+        this.isDragging = false;
+        this.isResizing = false;
+        this.isPreparedForDrag = false;
+        this.resizeHandle = null;
         this.pendingSelectElement = null;
-        this.draggedElement     = null;
+        this.draggedElement = null;
+        this.disableTemplateDrag = false;
         this.elementsStartPos.clear();
-        this.dragStart          = null;
-        // Keep guides visible briefly after release so user can confirm alignment
-        if (this._guideTimeout) clearTimeout(this._guideTimeout);
-        this._guideTimeout = setTimeout(() => this.clearSmartGuides(), 400);
+        this.dragStart = null;
     },
 };

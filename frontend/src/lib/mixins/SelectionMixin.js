@@ -142,13 +142,39 @@ export const SelectionMixin = {
                 el.removeAttribute('contenteditable');
             }
         });
+
+        // Keep elements independent: if a selectable node contains another
+        // selectable node, only keep the inner (leaf) node draggable/selectable.
+        this.canvas.querySelectorAll('[data-selectable="true"]').forEach(el => {
+            if (!el.querySelector('[data-selectable="true"]')) return;
+            el.removeAttribute('data-selectable');
+            el.classList.remove('element');
+            if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
+            if (el.hasAttribute('contenteditable')) el.removeAttribute('contenteditable');
+        });
+
+        // Freeze each selectable node to absolute coordinates once so moving or
+        // resizing one element never causes layout reflow in other elements.
+        const leafSelectables = Array.from(this.canvas.querySelectorAll('[data-selectable="true"]'));
+        const snapshots = leafSelectables.map((el) => {
+            const bounds = this.getElementBounds
+                ? this.getElementBounds(el)
+                : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+            return { el, bounds };
+        });
+
+        snapshots.forEach(({ el, bounds }) => {
+            if (this.ensureElementAbsolutePosition) {
+                this.ensureElementAbsolutePosition(el, bounds);
+            }
+        });
     },
 
     selectElement(el) {
         if (!el) { this.deselectAll(); return; }
 
         if (!this.canvas.contains(el)) {
-            const topLevelSelectable = el.closest('[data-selectable="true"], .element');
+            const topLevelSelectable = el.closest('[data-selectable="true"]');
             if (!topLevelSelectable || !this.canvas.contains(topLevelSelectable)) {
                 this.deselectAll();
                 return;
@@ -226,22 +252,49 @@ export const SelectionMixin = {
         if (['IMG', 'INPUT', 'BR', 'HR'].includes(element.tagName)) return;
         if (element.querySelector('.resize-handle')) return;
 
-        let handlesHTML = `
-            <div class="resize-handle tl"></div>
-            <div class="resize-handle tr"></div>
-            <div class="resize-handle bl"></div>
-            <div class="resize-handle br"></div>
-        `;
+        console.log('[SlideLogicCore][Selection] Injecting handles', {
+            id: element.id || null,
+            tag: element.tagName,
+            type: element.dataset.type || null,
+            contentEditable: element.getAttribute('contenteditable'),
+            childCountBefore: element.childNodes.length,
+        });
+
+        const createHandle = (className, title = null, text = '') => {
+            const handle = document.createElement('span');
+            handle.className = className;
+            handle.setAttribute('contenteditable', 'false');
+            handle.setAttribute('data-editor-handle', 'true');
+            handle.setAttribute('aria-hidden', 'true');
+            // Keep handles out of document flow even before CSS class rules apply.
+            handle.style.position = 'absolute';
+            if (title) handle.setAttribute('title', title);
+            if (text) handle.textContent = text;
+            return handle;
+        };
+
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(createHandle('resize-handle tl'));
+        fragment.appendChild(createHandle('resize-handle tr'));
+        fragment.appendChild(createHandle('resize-handle bl'));
+        fragment.appendChild(createHandle('resize-handle br'));
 
         if (element.dataset.type === 'text' || element.hasAttribute('contenteditable')) {
-            handlesHTML += `<div class="drag-handle" title="Drag to move">⠿</div>`;
+            fragment.appendChild(createHandle('drag-handle', 'Drag to move', '⠿'));
         }
 
-        element.insertAdjacentHTML('beforeend', handlesHTML);
+        element.appendChild(fragment);
+
+        console.log('[SlideLogicCore][Selection] Handles injected', {
+            id: element.id || null,
+            childCountAfter: element.childNodes.length,
+            resizeHandleCount: element.querySelectorAll('.resize-handle').length,
+        });
     },
 
     updateSelectionUI() {
         if (this.selectedElements.length === 0) return;
+        if (this.isDragging || this.isResizing) return;
         const primary = this.getPrimarySelectedElement();
         if (primary) this.highlightElement(primary);
     },
