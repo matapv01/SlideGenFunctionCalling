@@ -16,6 +16,11 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const SLIDE_W = 1920;
 const SLIDE_H = 1080;
 const PAD = 48; // px on each side
+const MAX_ZOOM = 2;
+const AUTO_FIT_BOOST = 1.1;
+const LAYOUT_TRANSITION_MS = 320;
+
+type SidebarLayout = "both-open" | "left-open" | "right-open" | "both-closed";
 
 interface CanvasAreaProps {
   currentSlide: Slide | undefined;
@@ -31,7 +36,7 @@ interface CanvasAreaProps {
   onZoomIn: () => void;
   onZoomOut: () => void;
   onZoomChange: (z: number) => void;
-  autoFit: boolean;
+  sidebarLayout: SidebarLayout;
   onResetZoom: () => void;
   onPrevSlide: () => void;
   onNextSlide: () => void;
@@ -58,7 +63,7 @@ export const CanvasArea = ({
   onZoomIn,
   onZoomOut,
   onZoomChange,
-  autoFit,
+  sidebarLayout,
   onResetZoom,
   onPrevSlide,
   onNextSlide,
@@ -74,6 +79,55 @@ export const CanvasArea = ({
   const hasPrev = currentSlideIndex > 0;
   const hasNext = currentSlideIndex < slides.length - 1;
   const containerRef = useRef<HTMLDivElement>(null);
+  const prevLayoutRef = useRef<SidebarLayout | null>(null);
+
+  const getFitZoom = () => {
+    const el = containerRef.current;
+    if (!el) return null;
+
+    const availW = el.clientWidth - PAD * 2;
+    const availH = el.clientHeight - PAD * 2;
+    if (availW <= 0 || availH <= 0) return null;
+
+    const fit = Math.min(availW / SLIDE_W, availH / SLIDE_H);
+    return Math.floor(fit * 100) / 100;
+  };
+
+  const getBoostedFitZoom = () => {
+    const fit = getFitZoom();
+    if (fit === null) return null;
+    const boosted = Math.min(MAX_ZOOM, fit * AUTO_FIT_BOOST);
+    return Math.round(boosted * 100) / 100;
+  };
+
+  const getTargetZoomForLayout = () => {
+    if (sidebarLayout === "both-closed") {
+      return getBoostedFitZoom();
+    }
+    return getFitZoom();
+  };
+
+  // Set initial base zoom from current layout once.
+  useEffect(() => {
+    const targetZoom = getTargetZoomForLayout();
+    if (targetZoom !== null) onZoomChange(targetZoom);
+  }, [onZoomChange]);
+
+  // Re-fit for every sidebar layout state transition (4 cases),
+  // so reopening sidebars never keeps stale zoom from another layout.
+  useEffect(() => {
+    const prevLayout = prevLayoutRef.current;
+    prevLayoutRef.current = sidebarLayout;
+
+    if (prevLayout === null || prevLayout === sidebarLayout) return;
+
+    const timer = window.setTimeout(() => {
+      const targetZoom = getTargetZoomForLayout();
+      if (targetZoom !== null) onZoomChange(targetZoom);
+    }, LAYOUT_TRANSITION_MS);
+
+    return () => window.clearTimeout(timer);
+  }, [sidebarLayout, onZoomChange]);
 
   // Keyboard navigation
   useEffect(() => {
@@ -94,23 +148,16 @@ export const CanvasArea = ({
     return () => window.removeEventListener('keydown', handleKey);
   }, [onPrevSlide, onNextSlide]);
 
-  // Recalculate zoom whenever container is resized
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const recalc = () => {
-      const availW = el.clientWidth  - PAD * 2;
-      const availH = el.clientHeight - PAD * 2;
-      if (availW <= 0 || availH <= 0) return;
-      const fit = Math.min(availW / SLIDE_W, availH / SLIDE_H);
-      onZoomChange(Math.floor(fit * 100) / 100);
-    };
-    recalc();
-    const ro = new ResizeObserver(recalc);
-    ro.observe(el);
-    return () => ro.disconnect();
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  // Keep zoom fully user-controlled. We intentionally do NOT auto-fit on resize.
+
+  const handleResetZoom = () => {
+    const fit = getFitZoom();
+    if (fit !== null) {
+      onZoomChange(fit);
+      return;
+    }
+    onResetZoom();
+  };
 
   return (
     <div
@@ -128,15 +175,26 @@ export const CanvasArea = ({
       {/* Outer wrapper occupies the post-scale footprint so centering stays correct */}
       <ContextMenu>
         <ContextMenuTrigger asChild>
-          <div style={{ width: 1920 * zoom, height: 1080 * zoom, flexShrink: 0 }}>
+          <div
+            style={{
+              width: 1920 * zoom,
+              height: 1080 * zoom,
+              flexShrink: 0,
+              transition: 'width 140ms cubic-bezier(0.22, 1, 0.36, 1), height 140ms cubic-bezier(0.22, 1, 0.36, 1)',
+              willChange: 'width, height',
+            }}
+          >
             <div
               ref={canvasRef}
-              className="relative transition-transform duration-200 ease-out"
+              className="relative"
               style={{
                 width: 1920,
                 height: 1080,
-                transform: `scale(${zoom})`,
+                transform: `translateZ(0) scale(${zoom})`,
                 transformOrigin: 'top left',
+                transition: 'transform 140ms cubic-bezier(0.22, 1, 0.36, 1)',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden',
               }}
             >
               {/* Slide shadow ring wrapper */}
@@ -202,7 +260,7 @@ export const CanvasArea = ({
           <span className="text-base font-semibold leading-none select-none">+</span>
         </Button>
         <div className="w-px h-4 bg-border/50 mx-0.5" />
-        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-muted" onClick={onResetZoom} title={t.editor_reset_zoom}>
+        <Button variant="ghost" size="icon" className="h-7 w-7 rounded-lg hover:bg-muted" onClick={handleResetZoom} title={t.editor_reset_zoom}>
           <Maximize2 className="h-3.5 w-3.5 text-muted-foreground" />
         </Button>
       </div>

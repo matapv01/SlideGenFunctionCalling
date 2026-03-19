@@ -1,9 +1,20 @@
-import { useState, useEffect, useRef } from "react";
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSlideEditor } from "./hooks";
 import { Toolbar, EditorSidebar, PropertiesPanel, CanvasArea, ExportModal } from "./components";
 import { useLanguage } from "@/contexts/LanguageContext";
+
+const MIN_ZOOM = 0.1;
+const MAX_ZOOM = 2;
+const ZOOM_STEP = 0.01; // 1%
+
+const clampAndRoundZoom = (value: number) => {
+  const clamped = Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value));
+  return Math.round(clamped * 100) / 100;
+};
+
+type SidebarLayout = "both-open" | "left-open" | "right-open" | "both-closed";
 
 const SlideEditor = () => {
   const { projectId } = useParams();
@@ -62,19 +73,9 @@ const SlideEditor = () => {
     setCanRedo(slideCanvasRef.current?.canRedo() ?? false);
   };
 
-  const autoFit = isSidebarOpen && isPropsPanelOpen;
-
-  // When panels open/close, reset zoom as a starting point.
-  // Skip the initial mount — CanvasArea's ResizeObserver sets the correct fit zoom first.
-  const isFirstRenderRef = useRef(true);
-  useEffect(() => {
-    if (isFirstRenderRef.current) {
-      isFirstRenderRef.current = false;
-      return;
-    }
-    setZoom(autoFit ? 0.53 : 0.60);
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [autoFit]);
+  const sidebarLayout: SidebarLayout = isSidebarOpen
+    ? (isPropsPanelOpen ? "both-open" : "left-open")
+    : (isPropsPanelOpen ? "right-open" : "both-closed");
 
 
   // --- Loading State ---
@@ -140,11 +141,11 @@ const SlideEditor = () => {
           onDrop={handleDrop}
           onElementSelect={(data) => { handleElementSelectFromCanvas(data); if (data) setIsPropsPanelOpen(true); }}
           onChange={handleCanvasChange}
-          onZoomIn={() => setZoom(Math.min(2, zoom + 0.1))}
-          onZoomOut={() => setZoom(Math.max(0.1, zoom - 0.1))}
+          onZoomIn={() => setZoom((prev) => clampAndRoundZoom(prev + ZOOM_STEP))}
+          onZoomOut={() => setZoom((prev) => clampAndRoundZoom(prev - ZOOM_STEP))}
           onZoomChange={setZoom}
-          autoFit={autoFit}
-          onResetZoom={() => setZoom(autoFit ? 0.5 : 0.6)}
+          sidebarLayout={sidebarLayout}
+          onResetZoom={() => setZoom(0.6)}
           onPrevSlide={() => currentSlideIndex > 0 && selectSlide(currentSlideIndex - 1)}
           onNextSlide={() => currentSlideIndex < slides.length - 1 && selectSlide(currentSlideIndex + 1)}
           selectedElementId={selectedElementId}

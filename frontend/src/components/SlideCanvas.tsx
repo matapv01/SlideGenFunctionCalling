@@ -244,6 +244,10 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (!mergedBodyProps['width']) mergedBodyProps['width'] = '100%';
     if (!mergedBodyProps['height']) mergedBodyProps['height'] = '100%';
     if (!mergedBodyProps['box-sizing']) mergedBodyProps['box-sizing'] = 'border-box';
+    // In editor mode, hide imported body scrollbars so the slide surface stays clean.
+    mergedBodyProps['overflow'] = 'hidden';
+    mergedBodyProps['overflow-x'] = 'hidden';
+    mergedBodyProps['overflow-y'] = 'hidden';
 
     // Build inline style string from merged body properties
     const wrapperInlineStyle = Object.entries(mergedBodyProps)
@@ -424,14 +428,26 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         position: relative;
       }
 
+      .slide-bg-wrapper,
+      .slide-bg-wrapper * {
+        scrollbar-width: none;
+      }
+
+      .slide-bg-wrapper::-webkit-scrollbar,
+      .slide-bg-wrapper *::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        display: none;
+      }
+
       ${isReadOnly ? '' : `
       [contenteditable] {
         outline: none;
       }
 
       .selected, [data-selectable].selected {
-        outline: 3px solid #3b82f6 !important;
-        outline-offset: 2px !important;
+        box-shadow: 0 0 0 3px #3b82f6 !important;
+        outline: none !important;
       }
 
       .resize-handle {
