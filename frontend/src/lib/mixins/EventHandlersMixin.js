@@ -34,6 +34,20 @@ export const EventHandlersMixin = {
     handleDoubleClick(e) {
         const target = e.target;
 
+        // ── Equation: activate MathLive field ───────────────────────────────
+        let eqElement = target;
+        while (eqElement && eqElement !== this.root) {
+            if (eqElement.dataset?.type === 'equation') break;
+            eqElement = eqElement.parentElement;
+        }
+        if (eqElement && eqElement !== this.root && eqElement.dataset.type === 'equation') {
+            this.activateEquationEditor(eqElement);
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
+        // ── Text contenteditable: existing behavior ──────────────────────────
         let textElement = target;
         while (textElement && textElement !== this.root) {
             if (textElement.hasAttribute('contenteditable')) break;
@@ -59,6 +73,98 @@ export const EventHandlersMixin = {
         }
     },
 
+    activateEquationEditor(el) {
+        if (el._mathfieldActive) return;
+
+        import('mathlive').then(() => {
+            el._mathfieldActive = true;
+            this.isEditingText = true;
+            this.selectElement(el);
+            this.hideSelectionUI();
+
+            // Reuse the existing read-only math-field injected by renderEquationsInRoot
+            let mf = el.querySelector('math-field');
+
+            if (!mf) {
+                // First activation before renderEquationsInRoot ran — create the field
+                mf = document.createElement('math-field');
+                mf.value = el.dataset.latex || '';
+                el.innerHTML = '';
+                el.appendChild(mf);
+            }
+
+            // Switch from display to edit mode
+            mf.removeAttribute('read-only');
+            mf.style.pointerEvents = 'auto';
+            mf.style.cursor = 'text';
+
+            // Persist LaTeX as user types
+            const onInput = () => {
+                el.dataset.latex = mf.value;
+                if (this._inputTimer) clearTimeout(this._inputTimer);
+                this._inputTimer = setTimeout(() => {
+                    this._inputTimer = null;
+                    this.saveHistory();
+                }, 300);
+            };
+            mf._equationInputHandler = onInput;
+            mf.addEventListener('input', onInput);
+
+            // Exit when math-field loses focus (with small delay to avoid spurious blur)
+            const onFocusOut = () => {
+                setTimeout(() => {
+                    if (el._mathfieldActive && !mf.hasFocus?.()) {
+                        this.exitEquationEditor(el);
+                    }
+                }, 150);
+            };
+            mf._equationFocusOutHandler = onFocusOut;
+            mf.addEventListener('focusout', onFocusOut);
+
+            mf.focus();
+        }).catch(() => {
+            el._mathfieldActive = false;
+            this.isEditingText = false;
+        });
+    },
+
+    exitEquationEditor(el) {
+        if (!el || !el._mathfieldActive) return;
+
+        const mf = el.querySelector('math-field');
+        if (mf) {
+            // Capture final LaTeX
+            el.dataset.latex = mf.value || el.dataset.latex || '';
+
+            // Remove event listeners
+            if (mf._equationInputHandler) {
+                mf.removeEventListener('input', mf._equationInputHandler);
+                delete mf._equationInputHandler;
+            }
+            if (mf._equationFocusOutHandler) {
+                mf.removeEventListener('focusout', mf._equationFocusOutHandler);
+                delete mf._equationFocusOutHandler;
+            }
+
+            // Switch back to display (read-only) mode — MathLive renders it
+            mf.setAttribute('read-only', '');
+            mf.style.pointerEvents = 'none';
+            mf.style.cursor = '';
+        }
+
+        el._mathfieldActive = false;
+        this.isEditingText = false;
+        el.style.cursor = 'move';
+
+        // Re-show selection handles
+        const selected = this.root.querySelector('.selected');
+        if (selected) {
+            selected.querySelectorAll('.resize-handle, .drag-handle')
+                .forEach(h => h.style.display = '');
+        }
+        this.saveHistory();
+    },
+
     handleMouseDown(e) {
         const target = e.target;
 
@@ -66,8 +172,20 @@ export const EventHandlersMixin = {
         if (this._guideTimeout) { clearTimeout(this._guideTimeout); this._guideTimeout = null; }
         this.clearSmartGuides();
 
-        // Allow ongoing text editing to continue unless clicking outside
+        // Allow ongoing text/equation editing to continue unless clicking outside
         if (this.isEditingText) {
+            // Check if click is inside an active equation editor
+            const activeEqEl = this.selectedElements.find?.(sel => sel._mathfieldActive);
+            if (activeEqEl) {
+                let clickedEl = target;
+                while (clickedEl && clickedEl !== this.root) {
+                    if (clickedEl === activeEqEl) return; // click inside equation — let MathLive handle
+                    clickedEl = clickedEl.parentElement;
+                }
+                this.exitEquationEditor(activeEqEl);
+                return;
+            }
+
             let clickedElement = target;
             let isClickingEditableElement = false;
             while (clickedElement && clickedElement !== this.root) {

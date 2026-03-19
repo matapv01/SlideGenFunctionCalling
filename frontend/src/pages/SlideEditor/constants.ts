@@ -1,5 +1,5 @@
 import { 
-  Type, Square, Circle, Triangle, Star, Minus, Diamond,
+  Type, Square, Circle, Triangle, Star, Minus, Diamond, Sigma,
   Image as ImageIcon, Video,
   Heading1, Heading2, AlignLeft, Tag,
 } from "lucide-react";
@@ -39,6 +39,7 @@ export const ELEMENTS_CATEGORIES: ElementCategory[] = [
       { id: "star",     icon: Star,     label: "Star",      type: "shape", subType: "star" },
       { id: "diamond",  icon: Diamond,  label: "Diamond",   type: "shape", subType: "diamond" },
       { id: "line",     icon: Minus,    label: "Line",      type: "shape", subType: "line" },
+      { id: "equation", icon: Sigma,    label: "Equation",  type: "equation", subType: "equation" },
     ]
   },
   {

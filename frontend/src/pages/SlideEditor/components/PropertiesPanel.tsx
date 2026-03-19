@@ -227,6 +227,7 @@ export const PropertiesPanel = ({
     image: t.editor_type_image,
     shape: t.editor_type_shape,
     video: t.editor_type_video,
+    equation: 'Equation',
   };
 
   return (

@@ -289,6 +289,14 @@ export const SelectionMixin = {
     },
 
     exitEditMode() {
+        // Handle equation editor exit
+        const activeEqEl = this.selectedElements.find?.(el => el._mathfieldActive) ||
+            (this.selectedElements[0]?._mathfieldActive ? this.selectedElements[0] : null);
+        if (activeEqEl) {
+            this.exitEquationEditor(activeEqEl);
+            return;
+        }
+
         if (!this.isEditingText) return;
 
         this.isEditingText = false;

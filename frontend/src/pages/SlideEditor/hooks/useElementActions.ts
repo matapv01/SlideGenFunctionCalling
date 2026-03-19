@@ -83,6 +83,12 @@ export const useElementActions = ({
       html = `<div id="${id}" class="element" data-type="video" data-selectable="true"
         style="position:absolute;left:${x}px;top:${y}px;width:480px;height:270px;background:#000;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;"
         >Video</div>`;
+
+    } else if (item.type === 'equation') {
+      const defaultLatex = 'x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}';
+      html = `<div id="${id}" class="element equation" data-type="equation" data-selectable="true" data-latex="${defaultLatex}"
+        style="position:absolute;left:${x}px;top:${y}px;width:500px;min-height:80px;background:transparent;cursor:move;display:flex;align-items:center;justify-content:center;padding:8px;"
+        ></div>`;
     }
 
     if (!html) return;

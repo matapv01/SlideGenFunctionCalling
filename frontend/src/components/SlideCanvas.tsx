@@ -205,6 +205,50 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     });
   };
 
+  /**
+   * Renders equation elements as read-only MathLive math-field elements.
+   * Imports the browser mathlive bundle (registering the custom element).
+   * Works in both editor (static display) and readOnly (presentation) modes.
+   */
+  const renderEquationsInRoot = async (root: ShadowRoot | HTMLElement) => {
+    const equationNodes = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-type="equation"]')
+    ).filter(n => !n.querySelector('math-field'));
+    if (!equationNodes.length) return;
+
+    try {
+      await import('mathlive'); // registers <math-field> custom element globally
+    } catch (e) {
+      console.warn('[SlideCanvas] mathlive unavailable, using text fallback:', e);
+      equationNodes.forEach(node => {
+        const latex = node.dataset.latex || '';
+        node.innerHTML = `<span style="font-family:monospace;font-size:24px;color:inherit;">${latex}</span>`;
+      });
+      return;
+    }
+
+    equationNodes.forEach(node => {
+      const latex = node.dataset.latex || '';
+      node.innerHTML = '';
+
+      const mf = document.createElement('math-field') as HTMLElement & { value: string };
+      mf.setAttribute('read-only', '');
+      mf.style.cssText = [
+        'width:100%',
+        'min-height:60px',
+        'border:none',
+        'background:transparent',
+        'font-size:32px',
+        'outline:none',
+        'pointer-events:none', // let mouse events pass through to parent for drag
+      ].join(';');
+
+      node.appendChild(mf);
+      mf.value = latex; // set after append so custom element has upgraded
+    });
+  };
+
+
   // Xử lý HTML & CSS Isolation
   const processHTML = (rawHTML: string, isReadOnly = false): string => {
     // Fix viewport units to absolute pixels (vw/vh refer to page viewport in Shadow DOM)
@@ -300,6 +344,16 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         return;
       }
 
+      // Preserve equation data-type — never reclassify equation elements
+      if (node.dataset.type === 'equation' || node.classList.contains('equation')) {
+        node.dataset.type = 'equation';
+        if (!node.classList.contains('element')) node.classList.add('element');
+        node.dataset.selectable = 'true';
+        if (!isReadOnly) node.style.cursor = 'move';
+        if (!node.id) node.id = `element_equation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        return;
+      }
+
       // Wrap bare <img> in a container div so it can receive resize handles
       // (void elements like <img> cannot have children).
       if (tag === 'img') {
@@ -376,7 +430,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       }
     });
 
-    // In read-only mode: strip editor-only artifacts
+    // In read-only mode: strip editor-only artifacts and render equations as static math
     if (isReadOnly) {
       tempContainer.querySelectorAll('.resize-handle, .drag-handle, .smart-guide').forEach(el => el.remove());
       tempContainer.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
@@ -386,6 +440,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       tempContainer.querySelectorAll<HTMLElement>('*').forEach(el => {
         if (el.style && el.style.cursor === 'move') el.style.removeProperty('cursor');
       });
+
+      // Equation nodes rendered after DOM injection — see renderEquationsInRoot()
     }
 
     let bodyContent = tempContainer.innerHTML;
@@ -455,6 +511,27 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       `}
 
       .smart-guide { opacity: 0.7; }
+
+      /* ── Equation element ── */
+      [data-type="equation"] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60px;
+        overflow: visible;
+      }
+      [data-type="equation"] math-field {
+        width: 100%;
+        min-height: 60px;
+        border: none;
+        background: transparent;
+        font-size: 32px;
+        outline: none;
+      }
+      /* MathLive static markup sizing */
+      [data-type="equation"] .ML__base {
+        font-size: 32px;
+      }
 
       ${isReadOnly ? '' : `
       [data-selectable="true"] { cursor: move; }
@@ -537,6 +614,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       // The converter's resize <script> doesn't execute via innerHTML in Shadow DOM,
       // so apply the scale fallback for both readOnly and editor modes.
       applyConverterScaleFallback(shadowRootRef.current);
+      // Render equation elements as static MathLive markup
+      renderEquationsInRoot(shadowRootRef.current);
     } catch (e) {
       console.error('[SlideCanvas] Failed to process/inject HTML:', e);
       return;
@@ -576,6 +655,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (!props.readOnly || !shadowRootRef.current) return;
     shadowRootRef.current.innerHTML = processHTML(props.htmlContent, true);
     applyConverterScaleFallback(shadowRootRef.current);
+    renderEquationsInRoot(shadowRootRef.current);
   }, [props.htmlContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync zoom to logic instance

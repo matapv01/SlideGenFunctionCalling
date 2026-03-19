@@ -2,10 +2,11 @@
 
 export interface SlideElement {
   id: string;
-  type: "text" | "image" | "shape" | "icon" | "video";
+  type: "text" | "image" | "shape" | "icon" | "video" | "equation";
   subType?: string;
   content?: string;
   src?: string;
+  latex?: string;
   x: number;
   y: number;
   width: number;
