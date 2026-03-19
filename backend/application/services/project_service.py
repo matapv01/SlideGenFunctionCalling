@@ -216,7 +216,13 @@ class ProjectService:
             sub_output = output_folder / "output"
             base = sub_output if sub_output.exists() else output_folder
             html_folder = base / "html"
+            # Converted folder can be at base/converted/ or output_folder/converted/
+            # (finalize_slide saves to output_folder/converted/, html goes to output_folder/output/html/)
             converted_folder = base / "converted"
+            if not (converted_folder.exists() and any(converted_folder.iterdir())):
+                root_converted = output_folder / "converted"
+                if root_converted.exists() and any(root_converted.iterdir()):
+                    converted_folder = root_converted
 
             # 4. Insert Slides to DB
             # Ưu tiên lấy file đã convert

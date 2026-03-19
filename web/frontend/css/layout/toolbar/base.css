@@ -1,0 +1,18 @@
+        .toolbar-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .toolbar-center {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .toolbar-right {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+

@@ -331,61 +331,62 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         }
       }
 
-      if (!node.classList.contains('element')) {
-        node.classList.add('element');
-      }
-      // Set data-selectable + cursor in processHTML so elements are always
-      // interactive, even before makeElementsSelectable runs on live DOM.
-      node.dataset.selectable = 'true';
-      if (!isReadOnly) node.style.cursor = 'move';
+      // Only make absolute-positioned elements independently selectable/draggable.
+      // Non-absolute elements (flex/grid children, static flow) keep their CSS
+      // layout and are NOT draggable — this preserves visual fidelity.
+      const inlinePosition = node.style.position;
+      const isAbsolute = inlinePosition === 'absolute';
 
-      if (!node.dataset.type) {
-        let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
+      if (isAbsolute) {
+        if (!node.classList.contains('element')) {
+          node.classList.add('element');
+        }
+        node.dataset.selectable = 'true';
+        if (!isReadOnly) node.style.cursor = 'move';
 
-        const hasImage = node.querySelector('img') || tag === 'img';
-        const hasVideo = node.querySelector('video') || tag === 'video';
-        const textContent = node.textContent?.trim() || '';
-        const hasSignificantText = textContent.length > 3;
+        if (!node.dataset.type) {
+          let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
 
-        const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'pre', 'a'];
-        const isDivWithText = tag === 'div' && hasSignificantText;
-        const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
-          node.style.backgroundImage || node.style.borderRadius;
+          const hasImage = node.querySelector('img') || tag === 'img';
+          const hasVideo = node.querySelector('video') || tag === 'video';
+          const textContent = node.textContent?.trim() || '';
+          const hasSignificantText = textContent.length > 3;
 
-        if (hasImage) {
-          elementType = 'image';
-        } else if (hasVideo) {
-          elementType = 'video';
-        } else if (explicitTextTags.includes(tag) && hasSignificantText) {
-          elementType = 'text';
-        } else if (isDivWithText && !hasBackgroundStyling) {
-          elementType = 'text';
-        } else if (hasSignificantText && !hasBackgroundStyling) {
-          elementType = 'text';
-        } else {
-          elementType = 'shape';
+          const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'pre', 'a'];
+          const isDivWithText = tag === 'div' && hasSignificantText;
+          const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
+            node.style.backgroundImage || node.style.borderRadius;
+
+          if (hasImage) {
+            elementType = 'image';
+          } else if (hasVideo) {
+            elementType = 'video';
+          } else if (explicitTextTags.includes(tag) && hasSignificantText) {
+            elementType = 'text';
+          } else if (isDivWithText && !hasBackgroundStyling) {
+            elementType = 'text';
+          } else if (hasSignificantText && !hasBackgroundStyling) {
+            elementType = 'text';
+          } else {
+            elementType = 'shape';
+          }
+
+          node.dataset.type = elementType;
         }
 
-        node.dataset.type = elementType;
-      }
+        if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
+          node.setAttribute('contenteditable', 'true');
+        }
 
-      if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
-        node.setAttribute('contenteditable', 'true');
+        if (!node.id) {
+          node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+      } else {
+        // Non-absolute elements: strip any stale editor attributes
+        node.classList.remove('element');
+        delete node.dataset.selectable;
+        if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
       }
-
-      if (!node.id) {
-        node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
-      }
-    });
-
-    // Keep slide elements independent: only leaf nodes remain selectable.
-    // If a selectable node contains another selectable node, the parent is demoted.
-    Array.from(tempContainer.querySelectorAll<HTMLElement>('[data-selectable="true"]')).forEach(node => {
-      if (!node.querySelector('[data-selectable="true"]')) return;
-      node.removeAttribute('data-selectable');
-      node.classList.remove('element');
-      node.removeAttribute('contenteditable');
-      if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
     });
 
     // In read-only mode: strip editor-only artifacts

@@ -165,6 +165,11 @@ export const EventHandlersMixin = {
             this.isResizing = true;
             this.resizeHandle = target.classList[1]; // e.g. 'tl', 'tr', 'bl', 'br'
             this.dragStart = { x: e.clientX, y: e.clientY };
+
+            // Freeze ALL selectable siblings to absolute so resizing one
+            // element doesn't cause layout reflow in CSS flex/grid layouts.
+            this.freezeSelectableSiblingsLayout(el);
+
             let bounds = this.getElementBounds
                 ? this.getElementBounds(el)
                 : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
@@ -231,6 +236,14 @@ export const EventHandlersMixin = {
                 this.isDragging = true;
                 this.isPreparedForDrag = false;
                 this.disableTemplateDrag = true;
+
+                // Freeze ALL selectable siblings to absolute positioning
+                // right before drag begins. This preserves CSS layout during
+                // display but ensures elements can be freely moved.
+                if (!this._layoutFrozenForInteraction && this.draggedElement) {
+                    this.freezeSelectableSiblingsLayout(this.draggedElement);
+                    this._layoutFrozenForInteraction = true;
+                }
 
                 console.log('[SlideLogicCore][Drag] Drag started', {
                     draggedId: this.draggedElement?.id || null,

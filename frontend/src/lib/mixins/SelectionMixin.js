@@ -118,6 +118,9 @@ export const SelectionMixin = {
             if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
         });
 
+        // Only tag absolute-positioned elements as selectable/draggable.
+        // Non-absolute elements (flex/grid/static layout) keep their CSS layout
+        // and are NOT interactive — this preserves visual fidelity with HTML.
         const selectableElements = this.canvas.querySelectorAll(
             '.element, [data-type], ' +
             '[style*="position: absolute"], [style*="position:absolute"], ' +
@@ -126,6 +129,11 @@ export const SelectionMixin = {
 
         selectableElements.forEach(el => {
             if (this.isCanvasChromeElement(el)) return;
+
+            // Only make absolute-positioned elements selectable
+            const computedPosition = window.getComputedStyle(el).position;
+            if (computedPosition !== 'absolute') return;
+
             if (!el.id) el.id = this.getNextElementId();
 
             el.style.cursor = 'move';
@@ -143,31 +151,10 @@ export const SelectionMixin = {
             }
         });
 
-        // Keep elements independent: if a selectable node contains another
-        // selectable node, only keep the inner (leaf) node draggable/selectable.
-        this.canvas.querySelectorAll('[data-selectable="true"]').forEach(el => {
-            if (!el.querySelector('[data-selectable="true"]')) return;
-            el.removeAttribute('data-selectable');
-            el.classList.remove('element');
-            if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
-            if (el.hasAttribute('contenteditable')) el.removeAttribute('contenteditable');
-        });
-
-        // Freeze each selectable node to absolute coordinates once so moving or
-        // resizing one element never causes layout reflow in other elements.
-        const leafSelectables = Array.from(this.canvas.querySelectorAll('[data-selectable="true"]'));
-        const snapshots = leafSelectables.map((el) => {
-            const bounds = this.getElementBounds
-                ? this.getElementBounds(el)
-                : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
-            return { el, bounds };
-        });
-
-        snapshots.forEach(({ el, bounds }) => {
-            if (this.ensureElementAbsolutePosition) {
-                this.ensureElementAbsolutePosition(el, bounds);
-            }
-        });
+        // NOTE: Do NOT freeze elements to absolute positioning here.
+        // Elements keep their original CSS layout (flex/grid/static) so the
+        // slide looks identical to the original HTML. Absolute conversion
+        // happens lazily in handleMouseMove when the user starts dragging.
     },
 
     selectElement(el) {

@@ -1,0 +1,340 @@
+        .elements-content {
+            padding: 20px;
+        }
+
+        .element-category {
+            margin-bottom: 25px;
+        }
+
+        .category-title {
+            font-size: 12px;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+
+        .element-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .element-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 15px 10px;
+            background: var(--bg-item);
+            border: 2px solid transparent;
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .element-item:hover {
+            background: var(--bg-item-hover);
+            border-color: var(--primary-color);
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(102, 126, 234, 0.15);
+        }
+
+        /* Highlight cho import elements */
+        .element-item[data-element="image"],
+        .element-item[data-element="video"] {
+            border: 2px solid #48bb78 !important;
+            background: linear-gradient(135deg, #f0fff4, #e6fffa) !important;
+            position: relative;
+        }
+
+        .element-item[data-element="image"]:hover,
+        .element-item[data-element="video"]:hover {
+            border-color: #38a169 !important;
+            transform: translateY(-4px) !important;
+            box-shadow: 0 8px 25px rgba(72, 187, 120, 0.3) !important;
+        }
+
+        .element-item[data-element="image"]::after,
+        .element-item[data-element="video"]::after {
+            content: "📂";
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            width: 16px;
+            height: 16px;
+            background: #48bb78;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            animation: pulse 2s infinite;
+        }
+
+        .element-icon {
+            width: 32px;
+            height: 32px;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .element-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        /* Template Styles */
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+        }
+
+        .template-item {
+            display: flex;
+            flex-direction: column;
+            cursor: grab;
+            transition: all 0.2s ease;
+        }
+
+        .template-item:hover {
+            transform: translateY(-2px);
+        }
+
+        .template-item:active {
+            cursor: grabbing;
+        }
+
+        /* Elements Panel Styles */
+        .elements-content {
+            padding: 15px;
+        }
+
+        .element-category {
+            margin-bottom: 20px;
+        }
+
+        .category-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #2d3748;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .element-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+
+        .element-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px 8px;
+            border: 1px solid #e2e8f0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: white;
+        }
+
+        .element-item:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.15);
+            transform: translateY(-2px);
+        }
+
+        .element-item:active {
+            transform: translateY(0);
+        }
+
+        .element-icon {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 6px;
+            height: 24px;
+        }
+
+        .element-label {
+            font-size: 10px;
+            color: #4a5568;
+            text-align: center;
+            font-weight: 500;
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 60px;
+            border-radius: 8px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            font-size: 10px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+            margin-bottom: 8px;
+        }
+
+        .template-title {
+            font-weight: 700;
+            font-size: 8px;
+            color: white;
+            margin-bottom: 2px;
+        }
+
+        .template-subtitle {
+            font-size: 6px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .template-header {
+            font-weight: 600;
+            font-size: 8px;
+            margin-bottom: 4px;
+        }
+
+        .template-bullets {
+            font-size: 6px;
+            text-align: left;
+        }
+
+        .template-columns {
+            display: flex;
+            width: 100%;
+            height: 100%;
+        }
+
+        .template-col {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 8px;
+            font-weight: 500;
+        }
+
+        .template-col:first-child {
+            border-right: 1px solid #e2e8f0;
+        }
+
+        .template-image-placeholder {
+            font-size: 16px;
+            margin-bottom: 4px;
+        }
+
+        .template-content-text {
+            font-size: 6px;
+            font-weight: 500;
+        }
+
+        .template-quote {
+            font-size: 8px;
+            color: white;
+            margin-bottom: 4px;
+            font-style: italic;
+        }
+
+        .template-author {
+            font-size: 6px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .template-center {
+            font-weight: 700;
+            font-size: 10px;
+            color: white;
+        }
+
+        .template-label {
+            font-size: 11px;
+            font-weight: 500;
+            color: var(--text-dark);
+            text-align: center;
+        }
+
+        /* Canvas drop feedback */
+        .element {
+            position: absolute;
+            cursor: default;
+            transition: box-shadow 0.2s ease;
+            border: 1px dashed transparent;
+        }
+
+        /* Selected element mặc định cursor (JS sẽ thay đổi khi hover gần cạnh) */
+        .element.selected {
+            cursor: default;
+        }
+
+        /* Text elements: text cursor trong content area */
+        .element.selected[contenteditable="true"],
+        .element.selected [contenteditable="true"] {
+            cursor: text !important;
+        }
+
+        /* Drag handle always has move cursor */
+        .drag-handle {
+            cursor: move !important;
+        }
+
+        .element:hover {
+            border-color: rgba(102, 126, 234, 0.5);
+        }
+
+        .element:active {
+            box-shadow: 0 10px 40px rgba(102, 126, 234, 0.4) !important;
+            transform: scale(1.01);
+            transition: transform 0.1s ease;
+        }
+
+        /* Tooltip cho resize handles */
+
+
+        /* Drag and drop styles */
+        .element img,
+        .element video {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+            border-radius: inherit;
+        }
+
+        .element.dragging {
+            opacity: 0.8;
+            transform: scale(1.02);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+            z-index: 9999 !important;
+        }
+
+        .element.drag-preview {
+            opacity: 0.4;
+            transform: scale(0.98);
+        }
+
+        /* Multi-select drag feedback */
+        .multi-select-indicator {
+            position: absolute;
+            border: 2px dashed #ff6b9d;
+            background: rgba(255, 107, 157, 0.1);
+            pointer-events: none;
+            z-index: 9998;
+            opacity: 0;
+            transition: opacity 0.1s ease;
+        }
+
+        .multi-select-indicator.visible {
+            opacity: 1;
+        }
+
