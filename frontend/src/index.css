@@ -317,6 +317,7 @@
   background: hsl(var(--card));
   padding: 24px 32px;
   color: hsl(var(--foreground));
+  caret-color: hsl(var(--foreground));
   font-family: 'Segoe UI', system-ui, sans-serif;
   font-size: 14px;
   line-height: 1.8;
@@ -338,6 +339,7 @@
   position: relative;
   transition: all 0.2s ease;
   user-select: text;
+  caret-color: hsl(var(--foreground));
   padding-right: 70px;
   cursor: text;
 }
@@ -1270,21 +1272,21 @@
 }
 
 .legacy-app-header .btn-info {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border-color: transparent;
-  color: #fff;
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
 }
 
 .legacy-app-header .btn-danger {
-  background: rgba(255, 107, 107, 0.88);
-  border-color: rgba(255, 107, 107, 0.95);
-  color: #fff;
+  background: hsl(var(--destructive));
+  border-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
 }
 
 .legacy-app-header .btn-success {
-  background: linear-gradient(135deg, #4caf50, #2fb344);
-  border-color: transparent;
-  color: #fff;
+  background: hsl(var(--success));
+  border-color: hsl(var(--success));
+  color: hsl(var(--success-foreground));
 }
 
 .legacy-app-header .save-indicator {
@@ -1444,25 +1446,56 @@
 
 .legacy-structure-page .btn-secondary {
   background: hsl(var(--muted));
-  border-color: var(--legacy-border);
+  border-color: hsl(var(--border));
+  color: hsl(var(--foreground));
 }
 
 .legacy-structure-page .btn-danger {
-  background: rgba(255, 107, 107, 0.85);
-  border-color: rgba(255, 107, 107, 0.95);
-  color: #fff;
+  background: hsl(var(--destructive));
+  border-color: hsl(var(--destructive));
+  color: hsl(var(--destructive-foreground));
 }
 
 .legacy-structure-page .btn-success {
-  background: linear-gradient(135deg, #4caf50, #2fb344);
-  border: none;
-  color: #fff;
+  background: hsl(var(--success));
+  border-color: hsl(var(--success));
+  color: hsl(var(--success-foreground));
 }
 
 .legacy-structure-page .btn-info {
-  background: linear-gradient(135deg, #667eea, #764ba2);
-  border: none;
-  color: #fff;
+  background: hsl(var(--primary));
+  border-color: hsl(var(--primary));
+  color: hsl(var(--primary-foreground));
+}
+
+.legacy-app-header .btn-info:hover:not(:disabled),
+.legacy-structure-page .btn-info:hover:not(:disabled) {
+  background: hsl(var(--primary) / 0.9);
+}
+
+.legacy-app-header .btn-success:hover:not(:disabled),
+.legacy-structure-page .btn-success:hover:not(:disabled) {
+  background: hsl(var(--success) / 0.9);
+}
+
+.legacy-app-header .btn-danger:hover:not(:disabled),
+.legacy-structure-page .btn-danger:hover:not(:disabled) {
+  background: hsl(var(--destructive) / 0.9);
+}
+
+.dark .legacy-app-header .btn-danger,
+.dark .legacy-structure-page .btn-danger {
+  background: #dc2626;
+  border-color: #dc2626;
+  color: #ffffff;
+  box-shadow: 0 8px 20px rgba(220, 38, 38, 0.32);
+}
+
+.dark .legacy-app-header .btn-danger:hover:not(:disabled),
+.dark .legacy-structure-page .btn-danger:hover:not(:disabled) {
+  background: #ef4444;
+  border-color: #ef4444;
+  box-shadow: 0 10px 24px rgba(239, 68, 68, 0.38);
 }
 
 .legacy-structure-page .badge {
@@ -1570,8 +1603,9 @@
   font-size: 0.65rem;
   text-transform: uppercase;
   letter-spacing: 0.2rem;
-  color: inherit;
-  opacity: 0.7;
+  color: hsl(var(--foreground) / 0.92);
+  opacity: 0.95;
+  font-weight: 700;
 }
 
 .legacy-structure-page .style-row {
@@ -1594,27 +1628,33 @@
   flex: 0 0 auto;
   min-width: 82px;
   display: flex;
-  flex-direction: column;
-  gap: 0.15rem;
+  align-items: center;
+  justify-content: center;
+  position: relative;
 }
 
 .legacy-structure-page .level-overflow-label {
+  position: absolute;
+  top: -0.5rem;
+  left: 0.45rem;
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.08rem;
-  opacity: 0.72;
+  background: var(--legacy-surface-strong);
+  padding: 0 0.2rem;
+  opacity: 0.9;
   line-height: 1;
 }
 
 .legacy-structure-page .level-overflow-select {
   height: 48px;
   border-radius: 6px;
-  border: 1px solid var(--legacy-border);
+  border: 1px solid hsl(var(--foreground) / 0.28);
   background: var(--legacy-surface-strong);
-  color: inherit;
+  color: hsl(var(--foreground) / 0.95);
   padding: 0.32rem 0.4rem;
   font-size: 0.74rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .legacy-structure-page .level-overflow-select:disabled {
@@ -1631,9 +1671,9 @@
   min-width: 46px;
   height: 48px;
   border-radius: 6px;
-  border: 1px solid var(--legacy-border);
+  border: 1px solid hsl(var(--foreground) / 0.25);
   background: var(--legacy-surface-strong);
-  color: inherit;
+  color: hsl(var(--foreground) / 0.95);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1642,6 +1682,10 @@
   font-size: 0.7rem;
   cursor: pointer;
   transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.legacy-structure-page .style-intro {
+  min-width: 60px;
 }
 
 .legacy-structure-page .style-card:hover {
@@ -1668,15 +1712,16 @@
 
 .legacy-structure-page .style-preview {
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .legacy-structure-page .style-name {
   font-size: 0.55rem;
   letter-spacing: 0.1rem;
   text-transform: uppercase;
-  color: inherit;
-  opacity: 0.6;
+  color: hsl(var(--foreground) / 0.9);
+  opacity: 0.88;
+  font-weight: 700;
 }
 
 .legacy-structure-page .style-separator-group {
@@ -1690,13 +1735,95 @@
   border: 1px solid var(--legacy-border);
   border-radius: 10px;
   padding: 0.6rem 0.9rem;
-  display: none;
+  min-height: 44px;
+  display: flex;
   align-items: center;
   gap: 0.75rem;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity 120ms ease;
 }
 
 .legacy-structure-page .selection-info.visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.legacy-structure-page .quick-format-toolbar {
+  position: fixed;
+  z-index: 120;
+  transform: translateX(-50%);
+  display: inline-flex;
+  align-items: flex-end;
+  gap: 0.55rem;
+  padding: 0.45rem 0.55rem;
+  max-width: calc(100vw - 24px);
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
+  white-space: normal;
+  border-radius: 10px;
+  border: 1px solid var(--legacy-border);
+  background: hsl(var(--card) / 0.97);
+  box-shadow: 0 10px 24px hsl(var(--foreground) / 0.2);
+  backdrop-filter: blur(8px);
+}
+
+.legacy-structure-page .quick-tool-group {
   display: flex;
+  flex-direction: column;
+  gap: 0.22rem;
+  min-width: max-content;
+}
+
+.legacy-structure-page .quick-tool-group-label {
+  font-size: 0.56rem;
+  font-weight: 700;
+  letter-spacing: 0.12rem;
+  text-transform: uppercase;
+  color: hsl(var(--foreground) / 0.78);
+  padding-left: 0.1rem;
+}
+
+.legacy-structure-page .quick-tool-group-row {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  white-space: nowrap;
+}
+
+.legacy-structure-page .quick-tool-btn {
+  height: 30px;
+  min-width: 30px;
+  border-radius: 6px;
+  border: 1px solid hsl(var(--foreground) / 0.2);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: hsl(var(--foreground) / 0.95);
+  background: transparent;
+  transition: background 0.12s ease, border-color 0.12s ease;
+}
+
+.legacy-structure-page .quick-tool-btn:hover {
+  background: hsl(var(--foreground) / 0.08);
+  border-color: hsl(var(--foreground) / 0.35);
+}
+
+.legacy-structure-page .quick-level-btn {
+  min-width: 34px;
+  padding: 0 0.35rem;
+  font-size: 0.68rem;
+  font-weight: 600;
+}
+
+.legacy-structure-page .quick-tool-separator {
+  width: 1px;
+  height: 20px;
+  background: var(--legacy-border);
 }
 
 .legacy-structure-page .selection-text {
@@ -1761,8 +1888,40 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
   padding-bottom: 0.5rem;
   border-bottom: 1px solid var(--legacy-border);
+}
+
+.legacy-structure-page .panel-header h5 {
+  margin: 0;
+  display: flex;
+  align-items: center;
+}
+
+.legacy-structure-page .preview-header-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+.legacy-structure-page .preview-header-actions .btn {
+  white-space: nowrap;
+}
+
+.dark .legacy-structure-page .preview-header-actions .intro-preview-btn {
+  background: linear-gradient(135deg, hsl(var(--primary)) 0%, hsl(var(--primary) / 0.82) 100%);
+  border-color: hsl(var(--primary) / 0.95);
+  color: hsl(var(--primary-foreground));
+  box-shadow: 0 8px 24px hsl(var(--primary) / 0.34);
+}
+
+.dark .legacy-structure-page .preview-header-actions .intro-preview-btn:hover:not(:disabled) {
+  background: linear-gradient(135deg, hsl(var(--primary) / 0.96) 0%, hsl(var(--primary) / 0.74) 100%);
+  box-shadow: 0 10px 26px hsl(var(--primary) / 0.42);
 }
 
 .legacy-structure-page .slides-container {
@@ -2058,10 +2217,10 @@
 
 .legacy-structure-page .zoom-btn {
   background: var(--legacy-surface-strong);
-  border: 1px solid var(--legacy-border);
+  border: 1px solid hsl(var(--foreground) / 0.25);
   border-radius: 5px;
   padding: 0.2rem 0.35rem;
-  color: inherit;
+  color: hsl(var(--foreground) / 0.95);
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -2074,7 +2233,7 @@
 }
 
 .legacy-structure-page .zoom-btn:hover:not(:disabled) {
-  background: var(--legacy-hover);
+  background: hsl(var(--foreground) / 0.08);
 }
 
 .legacy-structure-page .zoom-value {

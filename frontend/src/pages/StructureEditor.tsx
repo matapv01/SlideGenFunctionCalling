@@ -3,7 +3,8 @@ import { useSearchParams, useNavigate } from "react-router-dom";
 import {
   Check, RotateCcw, Sparkles, Loader2, FileText, ChevronRight,
   PlayCircle, Trash2, Type, AlignLeft, ArrowLeft, XCircle,
-  Search, Undo2, Redo2, ZoomIn, ZoomOut, ChevronUp, ChevronDown, X, Plus
+  Search, Undo2, Redo2, ZoomIn, ZoomOut, ChevronUp, ChevronDown, X, Plus,
+  Bold, Italic, Underline
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -91,6 +92,11 @@ const StructureEditor = () => {
   const [resetDialogOpen, setResetDialogOpen] = useState(false);
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [selectionInfo, setSelectionInfo] = useState<{ text: string; length: number } | null>(null);
+  const [quickToolbar, setQuickToolbar] = useState<{ visible: boolean; x: number; y: number }>({
+    visible: false,
+    x: 0,
+    y: 0,
+  });
 
   // Pending formatting state (two-step: Level then Type)
   const [pendingLevel, setPendingLevel] = useState<number | "normal" | null>(null);
@@ -120,6 +126,9 @@ const StructureEditor = () => {
 
   // Refs
   const editorRef = useRef<HTMLDivElement>(null);
+  const quickToolbarRef = useRef<HTMLDivElement>(null);
+  const savedSelectionRangeRef = useRef<Range | null>(null);
+  const isPointerSelectingRef = useRef(false);
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const documentTextRef = useRef("");
   const listenersSetupRef = useRef(false);
@@ -218,6 +227,117 @@ const StructureEditor = () => {
     historyIndexRef.current = 0;
     updateHistoryButtons();
   }, [updateHistoryButtons]);
+
+  const updateSelectionInfo = useCallback(() => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection || selection.rangeCount === 0) {
+      setSelectionInfo(null);
+      return;
+    }
+
+    const selectedText = selection.toString().replace(/\s+/g, " ").trim();
+    const inEditor =
+      !!selection.anchorNode &&
+      !!selection.focusNode &&
+      editor.contains(selection.anchorNode) &&
+      editor.contains(selection.focusNode);
+
+    if (!inEditor || selectedText.length === 0) {
+      setSelectionInfo(null);
+      return;
+    }
+
+    setSelectionInfo({
+      text: selectedText.length > 80 ? selectedText.substring(0, 80) + "..." : selectedText,
+      length: selectedText.length,
+    });
+  }, []);
+
+  const rememberEditorSelection = useCallback(() => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection || selection.rangeCount === 0 || selection.isCollapsed) return;
+
+    const inEditor =
+      !!selection.anchorNode &&
+      !!selection.focusNode &&
+      editor.contains(selection.anchorNode) &&
+      editor.contains(selection.focusNode);
+    if (!inEditor) return;
+
+    savedSelectionRangeRef.current = selection.getRangeAt(0).cloneRange();
+  }, []);
+
+  const restoreEditorSelection = useCallback((): boolean => {
+    const editor = editorRef.current;
+    const savedRange = savedSelectionRangeRef.current;
+    if (!editor || !savedRange) return false;
+
+    if (!editor.contains(savedRange.startContainer) || !editor.contains(savedRange.endContainer)) {
+      savedSelectionRangeRef.current = null;
+      return false;
+    }
+
+    const selection = window.getSelection();
+    if (!selection) return false;
+    selection.removeAllRanges();
+    selection.addRange(savedRange.cloneRange());
+    return true;
+  }, []);
+
+  const updateQuickToolbarPosition = useCallback(() => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      setQuickToolbar((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    const selectedText = selection.toString().trim();
+    const inEditor =
+      !!selection.anchorNode &&
+      !!selection.focusNode &&
+      editor.contains(selection.anchorNode) &&
+      editor.contains(selection.focusNode);
+
+    if (!selectedText || !inEditor) {
+      setQuickToolbar((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    if (rect.width === 0 && rect.height === 0) {
+      setQuickToolbar((prev) => ({ ...prev, visible: false }));
+      return;
+    }
+
+    const viewportPadding = 12;
+    const editorRect = editor.getBoundingClientRect();
+    const leftBound = Math.max(viewportPadding, editorRect.left + 8);
+    const rightBound = Math.min(window.innerWidth - viewportPadding, editorRect.right - 8);
+    const availableWidth = Math.max(220, rightBound - leftBound);
+    const estimatedWidth = Math.min(availableWidth, 280 + (maxLevel + 3) * 36);
+    const rawCenterX = rect.left + rect.width / 2;
+    const clampedX = Math.max(
+      leftBound + estimatedWidth / 2,
+      Math.min(rightBound - estimatedWidth / 2, rawCenterX)
+    );
+
+    const aboveY = rect.top - 56;
+    const belowY = rect.bottom + 10;
+    let finalY = aboveY;
+    if (aboveY < viewportPadding) {
+      finalY = belowY;
+    }
+
+    rememberEditorSelection();
+    setQuickToolbar({
+      visible: true,
+      x: clampedX,
+      y: finalY,
+    });
+  }, [maxLevel, rememberEditorSelection]);
 
   const recordHistorySnapshot = useCallback(() => {
     if (isApplyingHistoryRef.current) return;
@@ -456,20 +576,26 @@ const StructureEditor = () => {
     listenersSetupRef.current = true;
 
     // Text selection
-    const handleSelection = () => {
-      const selection = window.getSelection();
-      const selectedText = selection?.toString().trim() || "";
-      if (selectedText.length > 0) {
-        setSelectionInfo({
-          text: selectedText.length > 80 ? selectedText.substring(0, 80) + "..." : selectedText,
-          length: selectedText.length,
-        });
-      } else {
-        setSelectionInfo(null);
-      }
+    const handleSelectionCommit = () => {
+      window.requestAnimationFrame(() => {
+        updateSelectionInfo();
+        updateQuickToolbarPosition();
+      });
     };
-    editor.addEventListener("mouseup", handleSelection);
-    editor.addEventListener("keyup", handleSelection);
+    const handlePointerDown = (e: MouseEvent) => {
+      if (e.button !== 0) return;
+      isPointerSelectingRef.current = true;
+      setQuickToolbar((prev) => ({ ...prev, visible: false }));
+    };
+    const handlePointerUp = () => {
+      if (!isPointerSelectingRef.current) return;
+      isPointerSelectingRef.current = false;
+      handleSelectionCommit();
+    };
+
+    editor.addEventListener("mousedown", handlePointerDown);
+    editor.addEventListener("mouseup", handlePointerUp);
+    editor.addEventListener("keyup", handleSelectionCommit);
 
     // Content changes (debounced)
     let inputTimeout: ReturnType<typeof setTimeout>;
@@ -514,7 +640,96 @@ const StructureEditor = () => {
 
     // Drag & Drop
     setupDragDrop(editor);
-  }, [fullSync]);
+  }, [fullSync, updateQuickToolbarPosition, updateSelectionInfo]);
+
+  useEffect(() => {
+    const handleDocumentMouseUp = () => {
+      if (!isPointerSelectingRef.current) return;
+      isPointerSelectingRef.current = false;
+      window.requestAnimationFrame(() => {
+        updateSelectionInfo();
+        updateQuickToolbarPosition();
+      });
+    };
+
+    const handleSelectionChange = () => {
+      if (isPointerSelectingRef.current) return;
+      const selection = window.getSelection();
+      const editor = editorRef.current;
+      if (!selection || !editor || selection.rangeCount === 0) {
+        setSelectionInfo(null);
+        setQuickToolbar((prev) => ({ ...prev, visible: false }));
+        return;
+      }
+
+      const inEditor =
+        !!selection.anchorNode &&
+        !!selection.focusNode &&
+        editor.contains(selection.anchorNode) &&
+        editor.contains(selection.focusNode);
+
+      if (!inEditor) {
+        setSelectionInfo(null);
+        setQuickToolbar((prev) => ({ ...prev, visible: false }));
+      }
+    };
+
+    const handleDocumentMouseDown = (e: MouseEvent) => {
+      const editor = editorRef.current;
+      const target = e.target as Node | null;
+      if (!editor || !target) return;
+
+      if (quickToolbarRef.current && quickToolbarRef.current.contains(target)) {
+        return;
+      }
+
+      if (!editor.contains(target)) {
+        setQuickToolbar((prev) => ({ ...prev, visible: false }));
+      }
+    };
+
+    document.addEventListener("mouseup", handleDocumentMouseUp);
+    document.addEventListener("mousedown", handleDocumentMouseDown);
+    document.addEventListener("selectionchange", handleSelectionChange);
+    return () => {
+      document.removeEventListener("mouseup", handleDocumentMouseUp);
+      document.removeEventListener("mousedown", handleDocumentMouseDown);
+      document.removeEventListener("selectionchange", handleSelectionChange);
+    };
+  }, [updateQuickToolbarPosition, updateSelectionInfo]);
+
+  useEffect(() => {
+    if (!quickToolbar.visible) return;
+    const toolbar = quickToolbarRef.current;
+    const editor = editorRef.current;
+    if (!toolbar || !editor) return;
+
+    const rect = toolbar.getBoundingClientRect();
+    const padding = 10;
+    const editorRect = editor.getBoundingClientRect();
+
+    const leftLimit = Math.max(padding, editorRect.left + 6);
+    const rightLimit = Math.min(window.innerWidth - padding, editorRect.right - 6);
+    const topLimit = padding;
+    const bottomLimit = window.innerHeight - padding;
+
+    let dx = 0;
+    let dy = 0;
+
+    if (rect.left < leftLimit) dx = leftLimit - rect.left;
+    else if (rect.right > rightLimit) dx = rightLimit - rect.right;
+
+    if (rect.top < topLimit) dy = topLimit - rect.top;
+    else if (rect.bottom > bottomLimit) dy = bottomLimit - rect.bottom;
+
+    if (dx !== 0 || dy !== 0) {
+      setQuickToolbar((prev) => ({
+        ...prev,
+        x: prev.x + dx,
+        y: prev.y + dy,
+      }));
+    }
+  }, [quickToolbar.visible, quickToolbar.x, quickToolbar.y]);
 
   // ---- Drag & Drop ----
   const setupDragDrop = (editor: HTMLDivElement) => {
@@ -1312,6 +1527,21 @@ const StructureEditor = () => {
       ? Array.from({ length: maxLevel - VISIBLE_LEVEL_LIMIT }, (_, idx) => VISIBLE_LEVEL_LIMIT + idx + 1)
       : [];
 
+  const applyInlineCommand = (command: "bold" | "italic" | "underline") => {
+    if (!restoreEditorSelection()) return;
+    document.execCommand(command);
+    fullSync();
+    updateSelectionInfo();
+    window.requestAnimationFrame(() => updateQuickToolbarPosition());
+  };
+
+  const applyFormattingFromQuickToolbar = (level: number | "normal" | null, type: "title" | "content" | null) => {
+    if (!restoreEditorSelection()) return;
+    applyFormatting(level, type);
+    updateSelectionInfo();
+    window.requestAnimationFrame(() => updateQuickToolbarPosition());
+  };
+
   // Keyboard shortcuts
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -1433,9 +1663,6 @@ const StructureEditor = () => {
   const disableStructureActions = loading || saving;
   const headerActions = (
     <>
-      <button className="btn btn-sm btn-info" onClick={openIntroModal} disabled={loading}>
-        <Sparkles className="mr-1.5 h-4 w-4" /> Intro
-      </button>
       <button
         className="btn btn-sm btn-secondary"
         onClick={() => setResetDialogOpen(true)}
@@ -1527,10 +1754,10 @@ const StructureEditor = () => {
                       <button
                         className={cn("style-card style-intro", pendingLevel === 0 && "active")}
                         onClick={() => applyFormatting(0, null)}
-                        title="Level 0"
+                        title="Intro Slide"
                       >
-                        <span className="style-preview">0</span>
-                        <span className="style-name">L0</span>
+                        <span className="style-preview">Intro</span>
+                        <span className="style-name">Slide</span>
                       </button>
                       {visibleLevels.map((level) => (
                         <button
@@ -1679,6 +1906,100 @@ const StructureEditor = () => {
                   </span>
                 </div>
 
+                {quickToolbar.visible && (
+                  <div
+                    ref={quickToolbarRef}
+                    className="quick-format-toolbar"
+                    style={{ left: quickToolbar.x, top: quickToolbar.y }}
+                    onMouseDown={(e) => e.preventDefault()}
+                  >
+                    <div className="quick-tool-group">
+                      <div className="quick-tool-group-label">Format</div>
+                      <div className="quick-tool-group-row">
+                        <button
+                          className="quick-tool-btn"
+                          title="Bold"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => applyInlineCommand("bold")}
+                        >
+                          <Bold className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          className="quick-tool-btn"
+                          title="Italic"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => applyInlineCommand("italic")}
+                        >
+                          <Italic className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          className="quick-tool-btn"
+                          title="Underline"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => applyInlineCommand("underline")}
+                        >
+                          <Underline className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="quick-tool-group">
+                      <div className="quick-tool-group-label">Level</div>
+                      <div className="quick-tool-group-row">
+                        <button
+                          className="quick-tool-btn quick-level-btn"
+                          title="Normal Text"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => applyFormattingFromQuickToolbar("normal", null)}
+                        >
+                          N
+                        </button>
+                        <button
+                          className="quick-tool-btn quick-level-btn"
+                          title="Level 0"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => applyFormattingFromQuickToolbar(0, null)}
+                        >
+                          L0
+                        </button>
+                        {Array.from({ length: maxLevel }, (_, idx) => idx + 1).map((level) => (
+                          <button
+                            key={`quick-level-${level}`}
+                            className="quick-tool-btn quick-level-btn"
+                            title={`Level ${level}`}
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyFormattingFromQuickToolbar(level, null)}
+                          >
+                            L{level}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="quick-tool-group">
+                      <div className="quick-tool-group-label">Type</div>
+                      <div className="quick-tool-group-row">
+                        <button
+                          className="quick-tool-btn"
+                          title="Type: Title"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => applyFormattingFromQuickToolbar(null, "title")}
+                        >
+                          <Type className="h-3.5 w-3.5" />
+                        </button>
+                        <button
+                          className="quick-tool-btn"
+                          title="Type: Content"
+                          onMouseDown={(e) => e.preventDefault()}
+                          onClick={() => applyFormattingFromQuickToolbar(null, "content")}
+                        >
+                          <AlignLeft className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
                 {validationIssues.length > 0 && (
                   <div className="validation-panel">
                     <div className="validation-title">Cần sửa trước khi Approve ({validationIssues.length})</div>
@@ -1802,7 +2123,12 @@ const StructureEditor = () => {
                   <h5>
                     <FileText className="mr-2 h-4 w-4" /> Slide Previews
                   </h5>
-                  <span className="badge bg-success">{stats.slides} slides</span>
+                  <div className="preview-header-actions">
+                    <button className="btn btn-sm btn-info intro-preview-btn" onClick={openIntroModal} disabled={loading}>
+                      {introSlide ? "Edit Intro Slide" : "Add Intro Slide"}
+                    </button>
+                    <span className="badge bg-success">{stats.slides} slides</span>
+                  </div>
                 </div>
                 <div className="slides-container">
                   {slides.length === 0 ? (
