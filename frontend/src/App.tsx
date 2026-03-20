@@ -38,35 +38,28 @@ const ProvidersLayout = () => {
   );
 };
 
-const router = createBrowserRouter(
-  [
-    {
-      element: <ProvidersLayout />,
-      children: [
-        { path: "/", element: <Home /> },
-        { path: "/slidegen", element: <SlideGen /> },
-        { path: "/login", element: <Login /> },
-        { path: "/register", element: <Register /> },
-        { path: "/guide", element: <Guide /> },
-        { path: "/projects", element: <ProtectedRoute><Projects /></ProtectedRoute> },
-        { path: "/streaming/:projectId", element: <ProtectedRoute><Streaming /></ProtectedRoute> },
-        { path: "/structure/:projectId", element: <ProtectedRoute><StructureEditor /></ProtectedRoute> },
-        { path: "/idea/structure/:sessionId", element: <ProtectedRoute><IdeaStructure /></ProtectedRoute> },
-        { path: "/editor/:projectId", element: <ProtectedRoute><SlideEditor /></ProtectedRoute> },
-        { path: "/present/:projectId", element: <ProtectedRoute><PresentationMode /></ProtectedRoute> },
-        { path: "/view/:projectId", element: <ProtectedRoute><ViewProject /></ProtectedRoute> },
-        { path: "/settings", element: <ProtectedRoute><Settings /></ProtectedRoute> },
-        { path: "/subscription", element: <ProtectedRoute><Subscription /></ProtectedRoute> },
-        { path: "*", element: <NotFound /> },
-      ]
-    }
-  ],
+const router = createBrowserRouter([
   {
-    future: {
-      v7_startTransition: true,
-    },
+    element: <ProvidersLayout />,
+    children: [
+      { path: "/", element: <Home /> },
+      { path: "/slidegen", element: <SlideGen /> },
+      { path: "/login", element: <Login /> },
+      { path: "/register", element: <Register /> },
+      { path: "/guide", element: <Guide /> },
+      { path: "/projects", element: <ProtectedRoute><Projects /></ProtectedRoute> },
+      { path: "/streaming/:projectId", element: <ProtectedRoute><Streaming /></ProtectedRoute> },
+      { path: "/structure/:projectId", element: <ProtectedRoute><StructureEditor /></ProtectedRoute> },
+      { path: "/idea/structure/:sessionId", element: <ProtectedRoute><IdeaStructure /></ProtectedRoute> },
+      { path: "/editor/:projectId", element: <ProtectedRoute><SlideEditor /></ProtectedRoute> },
+      { path: "/present/:projectId", element: <ProtectedRoute><PresentationMode /></ProtectedRoute> },
+      { path: "/view/:projectId", element: <ProtectedRoute><ViewProject /></ProtectedRoute> },
+      { path: "/settings", element: <ProtectedRoute><Settings /></ProtectedRoute> },
+      { path: "/subscription", element: <ProtectedRoute><Subscription /></ProtectedRoute> },
+      { path: "*", element: <NotFound /> },
+    ]
   }
-);
+]);
 
 const App = () => <RouterProvider router={router} />;
 
