@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useSearchParams, useNavigate } from "react-router-dom";
+import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import {
   Check, RotateCcw, Sparkles, Loader2, FileText, ChevronRight,
   PlayCircle, Trash2, Type, AlignLeft, ArrowLeft, XCircle,
@@ -71,7 +71,8 @@ const StructureEditor = () => {
   const VISIBLE_LEVEL_LIMIT = 6;
 
   const [searchParams] = useSearchParams();
-  const sessionId = searchParams.get("session");
+  const { projectId } = useParams();
+  const sessionId = searchParams.get("session") || projectId || null;
   const navigate = useNavigate();
   const { toast } = useToast();
   const { t } = useLanguage();

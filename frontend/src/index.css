@@ -114,13 +114,11 @@
   * {
     @apply border-border;
   }
-<<<<<<< HEAD
+
   html {
     scroll-behavior: smooth;
   }
-=======
 
->>>>>>> refactor/trung/manual
   body {
     @apply bg-background text-foreground;
   }
@@ -1760,7 +1758,7 @@
 .legacy-structure-page .quick-format-toolbar {
   position: fixed;
   z-index: 120;
-  transform: translateX(-50%);
+  transform: translate(-50%, -100%);
   display: inline-flex;
   align-items: flex-end;
   gap: 0.55rem;
