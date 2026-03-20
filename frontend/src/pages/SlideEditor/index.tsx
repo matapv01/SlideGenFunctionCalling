@@ -100,7 +100,8 @@ const SlideEditor = () => {
         onDeselectElement={() => setSelectedElementId(null)}
         onSetDraggedItem={setDraggedItem}
         onDeleteElement={selectedElementId ? () => deleteElement(selectedElementId) : undefined}
-        onPresent={() => navigate(`/present/${projectId}`)}
+        onPresentFromStart={() => navigate(`/present/${projectId}?slide=0`)}
+        onPresentFromCurrent={() => navigate(`/present/${projectId}?slide=${currentSlideIndex}`)}
         onExport={() => setIsExportModalOpen(true)}
       />
 

@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useState, useRef, useCallback, useEffect } from "react";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import type { DragItem } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
 import { useSlideData } from "./useSlideData";
@@ -24,6 +24,7 @@ import { useAutoSave } from "./useAutoSave";
 export const useSlideEditor = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
 
   // ── UI state ────────────────────────────────────────────────────────
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
@@ -40,6 +41,28 @@ export const useSlideEditor = () => {
   const { slides, setSlides, projectName, loading } = useSlideData(projectId);
   const currentSlide = slides[currentSlideIndex];
   const selectedElement = currentSlide?.elements.find(el => el.id === selectedElementId);
+
+  // Apply initial slide from URL query once after data is loaded.
+  const didApplyInitialSlideRef = useRef(false);
+  useEffect(() => {
+    if (didApplyInitialSlideRef.current || loading || slides.length === 0) return;
+
+    const rawSlideParam = searchParams.get("slide");
+    if (!rawSlideParam) {
+      didApplyInitialSlideRef.current = true;
+      return;
+    }
+
+    const requestedIndex = Number.parseInt(rawSlideParam, 10);
+    if (Number.isNaN(requestedIndex)) {
+      didApplyInitialSlideRef.current = true;
+      return;
+    }
+
+    const boundedIndex = Math.max(0, Math.min(requestedIndex, slides.length - 1));
+    setCurrentSlideIndex(boundedIndex);
+    didApplyInitialSlideRef.current = true;
+  }, [loading, slides.length, searchParams, setCurrentSlideIndex]);
 
   // ── Slide CRUD ────────────────────────────────────────────────────────
   const { addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide, reorderSlides } = useSlideActions({
