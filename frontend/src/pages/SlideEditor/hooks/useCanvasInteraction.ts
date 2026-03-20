@@ -97,13 +97,13 @@ export const useCanvasInteraction = ({
         rotation: 0,
         zIndex: toNumber(elementData.style.zIndex, 1),
         opacity: toNumber(elementData.style.opacity, 1),
-        fontSize: toNumber(elementData.style.fontSize, 16),
+        fontSize: elType === 'equation' ? 32 : toNumber(elementData.style.fontSize, 16),
         fontFamily: elementData.style.fontFamily || 'Inter',
         fontWeight: elementData.style.fontWeight || 'normal',
         fontStyle: elementData.style.fontStyle || 'normal',
         textDecoration: elementData.style.textDecoration || 'none',
         textAlign: elementData.style.textAlign as "left" | "center" | "right" || 'left',
-        color: elementData.style.color || '#000000',
+        color: elType === 'equation' ? '#333333' : (elementData.style.color || '#000000'),
         fillColor: elementData.style.backgroundColor || 'transparent'
       };
       

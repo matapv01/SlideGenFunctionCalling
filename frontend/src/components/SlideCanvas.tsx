@@ -31,6 +31,8 @@ export interface SlideCanvasHandle {
   bringToFront: (id?: string) => void;
   sendToBack: (id?: string) => void;
   isTextEditing: () => boolean;
+  activateEquationById: (id: string) => void;
+  insertMath: (latex: string) => void;
   saveHistory: (silent?: boolean) => void;
   reselectById: (id: string) => void;
 }
@@ -133,6 +135,46 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     isTextEditing: () => {
       return !!logicInstanceRef.current?.isEditingText;
     },
+    activateEquationById: (id: string) => {
+      try {
+        const root = shadowRootRef.current;
+        const logic: any = logicInstanceRef.current;
+        const el = root?.querySelector<HTMLElement>(`#${CSS.escape(id)}`) ?? null;
+        if (!root || !logic?.activateEquationEditor || !el) return;
+        logic.activateEquationEditor(el);
+      } catch {
+        // no-op
+      }
+    },
+    insertMath: (latex: string) => {
+      const logic: any = logicInstanceRef.current;
+      if (!logic) return;
+
+      // Find the selected element on canvas
+      const selectedEl = logic.getSelectedElement();
+      if (!selectedEl || selectedEl.getAttribute('data-type') !== 'equation') return;
+
+      const mf = selectedEl.querySelector('math-field') as any;
+      if (mf) {
+        // If mf is found, insert LaTeX
+        mf.insert(latex, { focus: true });
+        selectedEl.dataset.latex = mf.value;
+        mf.setAttribute('value', mf.value);
+        logic.saveHistory();
+      } else {
+        // If mf not upgraded yet, we might need to wait or activate it
+        logic.activateEquationEditor(selectedEl);
+        setTimeout(() => {
+          const newMf = selectedEl.querySelector('math-field') as any;
+          if (newMf) {
+            newMf.insert(latex, { focus: true });
+            selectedEl.dataset.latex = newMf.value;
+            newMf.setAttribute('value', newMf.value);
+            logic.saveHistory();
+          }
+        }, 50);
+      }
+    },
     saveHistory: (silent = false) => {
       logicInstanceRef.current?.saveHistory(silent);
     },
@@ -211,40 +253,51 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
    * Works in both editor (static display) and readOnly (presentation) modes.
    */
   const renderEquationsInRoot = async (root: ShadowRoot | HTMLElement) => {
-    const equationNodes = Array.from(
+    const allEquationNodes = Array.from(
       root.querySelectorAll<HTMLElement>('[data-type="equation"]')
-    ).filter(n => !n.querySelector('math-field'));
-    if (!equationNodes.length) return;
+    );
+    if (!allEquationNodes.length) return;
 
     try {
       await import('mathlive'); // registers <math-field> custom element globally
     } catch (e) {
       console.warn('[SlideCanvas] mathlive unavailable, using text fallback:', e);
-      equationNodes.forEach(node => {
+      allEquationNodes.forEach(node => {
         const latex = node.dataset.latex || '';
         node.innerHTML = `<span style="font-family:monospace;font-size:24px;color:inherit;">${latex}</span>`;
       });
       return;
     }
 
-    equationNodes.forEach(node => {
-      const latex = node.dataset.latex || '';
-      node.innerHTML = '';
+    allEquationNodes.forEach(node => {
+      let mf = node.querySelector('math-field') as HTMLElement & { value?: string };
+      
+      // 1. Create math-field if it doesn't exist (e.g. initial load from raw HTML)
+      if (!mf) {
+        const latex = node.dataset.latex || '';
+        node.innerHTML = '';
+        mf = document.createElement('math-field') as HTMLElement & { value: string };
+        mf.setAttribute('read-only', '');
+        mf.style.cssText = [
+          'width:fit-content',
+          'max-width:100%',
+          'min-height:60px',
+          'border:none',
+          'background:transparent',
+          'font-size:inherit',
+          'color:inherit',
+          'outline:none',
+        ].join(';');
+        node.appendChild(mf);
+        mf.value = latex;
+      }
 
-      const mf = document.createElement('math-field') as HTMLElement & { value: string };
-      mf.setAttribute('read-only', '');
-      mf.style.cssText = [
-        'width:100%',
-        'min-height:60px',
-        'border:none',
-        'background:transparent',
-        'font-size:32px',
-        'outline:none',
-        'pointer-events:none', // let mouse events pass through to parent for drag
-      ].join(';');
-
-      node.appendChild(mf);
-      mf.value = latex; // set after append so custom element has upgraded
+      // 2. Ensure an overlay exists for selection shadowing
+      if (!node.querySelector('.equation-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.className = 'equation-overlay';
+        node.insertBefore(overlay, mf);
+      }
     });
   };
 
@@ -519,18 +572,39 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         justify-content: center;
         min-height: 60px;
         overflow: visible;
+        position: relative;
+      }
+      .equation-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+        background: transparent;
+        cursor: move;
       }
       [data-type="equation"] math-field {
-        width: 100%;
+        width: fit-content;
+        max-width: 100%;
         min-height: 60px;
         border: none;
         background: transparent;
-        font-size: 32px;
+        font-size: inherit;
+        color: inherit;
         outline: none;
       }
-      /* MathLive static markup sizing */
-      [data-type="equation"] .ML__base {
-        font-size: 32px;
+      [data-type="equation"] math-field::part(menu-toggle),
+      [data-type="equation"] math-field::part(virtual-keyboard-toggle) {
+        display: none !important;
+        visibility: hidden;
+      }
+      /* MathLive static markup sizing and colors */
+      [data-type="equation"] math-field,
+      [data-type="equation"] .ML__base,
+      [data-type="equation"] .ML__mathlive {
+        font-size: inherit !important;
+        color: inherit !important;
       }
 
       ${isReadOnly ? '' : `

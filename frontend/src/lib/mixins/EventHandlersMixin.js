@@ -82,44 +82,50 @@ export const EventHandlersMixin = {
             this.selectElement(el);
             this.hideSelectionUI();
 
-            // Reuse the existing read-only math-field injected by renderEquationsInRoot
+            // Keep the existing <math-field> if present; otherwise create it.
             let mf = el.querySelector('math-field');
-
             if (!mf) {
-                // First activation before renderEquationsInRoot ran — create the field
                 mf = document.createElement('math-field');
                 mf.value = el.dataset.latex || '';
                 el.innerHTML = '';
                 el.appendChild(mf);
             }
 
-            // Switch from display to edit mode
+            // Hide selection overlay to allow interaction with MathLive
+            const overlay = el.querySelector('.equation-overlay');
+            if (overlay) overlay.style.display = 'none';
+
+            // Ensure edit mode
             mf.removeAttribute('read-only');
             mf.style.pointerEvents = 'auto';
             mf.style.cursor = 'text';
 
-            // Persist LaTeX as user types
-            const onInput = () => {
-                el.dataset.latex = mf.value;
-                if (this._inputTimer) clearTimeout(this._inputTimer);
-                this._inputTimer = setTimeout(() => {
-                    this._inputTimer = null;
-                    this.saveHistory();
-                }, 300);
-            };
-            mf._equationInputHandler = onInput;
-            mf.addEventListener('input', onInput);
+            // Attach handlers only once per equation element.
+            if (!mf._equationInputHandler) {
+                const onInput = () => {
+                    el.dataset.latex = mf.value;
+                    mf.setAttribute('value', mf.value);
+                    if (this._inputTimer) clearTimeout(this._inputTimer);
+                    this._inputTimer = setTimeout(() => {
+                        this._inputTimer = null;
+                        this.saveHistory();
+                    }, 300);
+                };
+                mf._equationInputHandler = onInput;
+                mf.addEventListener('input', onInput);
+            }
 
-            // Exit when math-field loses focus (with small delay to avoid spurious blur)
-            const onFocusOut = () => {
-                setTimeout(() => {
-                    if (el._mathfieldActive && !mf.hasFocus?.()) {
-                        this.exitEquationEditor(el);
-                    }
-                }, 150);
-            };
-            mf._equationFocusOutHandler = onFocusOut;
-            mf.addEventListener('focusout', onFocusOut);
+            if (!mf._equationFocusOutHandler) {
+                const onFocusOut = () => {
+                    setTimeout(() => {
+                        if (el._mathfieldActive && !mf.hasFocus?.()) {
+                            this.exitEquationEditor(el);
+                        }
+                    }, 150);
+                };
+                mf._equationFocusOutHandler = onFocusOut;
+                mf.addEventListener('focusout', onFocusOut);
+            }
 
             mf.focus();
         }).catch(() => {
@@ -133,36 +139,38 @@ export const EventHandlersMixin = {
 
         const mf = el.querySelector('math-field');
         if (mf) {
-            // Capture final LaTeX
-            el.dataset.latex = mf.value || el.dataset.latex || '';
-
-            // Remove event listeners
-            if (mf._equationInputHandler) {
-                mf.removeEventListener('input', mf._equationInputHandler);
-                delete mf._equationInputHandler;
-            }
-            if (mf._equationFocusOutHandler) {
-                mf.removeEventListener('focusout', mf._equationFocusOutHandler);
-                delete mf._equationFocusOutHandler;
+            // Capture final LaTeX before blur.
+            const prevLatex = el.dataset.latex;
+            const nextLatex = mf.value || el.dataset.latex || '';
+            if (nextLatex !== el.dataset.latex) {
+                el.dataset.latex = nextLatex;
             }
 
-            // Switch back to display (read-only) mode — MathLive renders it
-            mf.setAttribute('read-only', '');
+            // Only unfocus: keep MathLive field in place.
+            try { mf.blur?.(); } catch {}
+
+            // If user changed LaTeX but debounce hasn't fired yet, persist it.
+            if (prevLatex !== nextLatex) {
+                this.saveHistory();
+            }
+
             mf.style.pointerEvents = 'none';
-            mf.style.cursor = '';
+
+            // Show selection overlay again
+            const overlay = el.querySelector('.equation-overlay');
+            if (overlay) overlay.style.display = 'block';
         }
 
         el._mathfieldActive = false;
         this.isEditingText = false;
         el.style.cursor = 'move';
 
-        // Re-show selection handles
+        // Re-show selection handles after unfocus.
         const selected = this.root.querySelector('.selected');
         if (selected) {
             selected.querySelectorAll('.resize-handle, .drag-handle')
                 .forEach(h => h.style.display = '');
         }
-        this.saveHistory();
     },
 
     handleMouseDown(e) {
@@ -182,6 +190,7 @@ export const EventHandlersMixin = {
                     if (clickedEl === activeEqEl) return; // click inside equation — let MathLive handle
                     clickedEl = clickedEl.parentElement;
                 }
+                // Click outside: just unfocus equation, then continue normal selection.
                 this.exitEquationEditor(activeEqEl);
                 return;
             }

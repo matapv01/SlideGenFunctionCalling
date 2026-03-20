@@ -6,7 +6,9 @@ import {
   Move, Maximize2, RotateCw, Type, Eye, Sun, Droplets,
   PaintBucket, Layers, SquareDashed, Blend, Space,
   BringToFront, SendToBack, Ban,
+  Sigma, Divide, Variable, Parentheses, Calculator,
 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -296,8 +298,8 @@ export const PropertiesPanel = ({
 
         <Separator />
 
-        {/* ── 2. TYPOGRAPHY (text only) ── */}
-        {el.type === 'text' && (
+        {/* ── 2. TYPOGRAPHY (text & equation) ── */}
+        {(el.type === 'text' || el.type === 'equation') && (
           <>
             <div>
               <SectionLabel icon={Type} label={t.editor_section_typography} />
@@ -340,7 +342,7 @@ export const PropertiesPanel = ({
                 {/* Text color swatch */}
                 <div className="flex items-center gap-1.5 bg-muted/30 rounded-md px-2 h-8 border border-border/50" title={t.editor_prop_text_color}>
                   <span className="text-[9px] font-bold text-muted-foreground shrink-0">A</span>
-                  <input type="color" value={el.color || '#000000'}
+                  <input type="color" value={el.color || (el.type === 'equation' ? '#333333' : '#000000')}
                     onChange={e => onUpdateElement(el.id, { color: e.target.value })}
                     className="flex-1 h-5 rounded cursor-pointer border-0 outline-none bg-transparent" />
                 </div>
@@ -385,6 +387,51 @@ export const PropertiesPanel = ({
             </div>
 
             <Separator />
+
+            {/* ── 2b. INSERT MATH (equation only) ── */}
+            {el.type === 'equation' && (
+              <div className="space-y-3">
+                <SectionLabel icon={Sigma} label="Insert Math" />
+                <Accordion type="multiple" className="w-full space-y-1">
+                  {[
+                    { id: 'frac', label: 'Phân số', icon: Divide, items: [{ s: '\\frac{\\placeholder}', l: 'a/b' }] },
+                    { id: 'script', label: 'Chỉ số', icon: Variable, items: [{ s: '^{\\placeholder}', l: 'x²' }, { s: '_{\\placeholder}', l: 'xₙ' }, { s: '^{\\placeholder}_{\\placeholder}', l: 'xⁿₘ' }] },
+                    { id: 'root', label: 'Căn thức', icon: () => <span className="text-xs font-serif">√</span>, items: [{ s: '\\sqrt{\\placeholder}', l: '√x' }, { s: '\\sqrt[\\placeholder]{\\placeholder}', l: 'ⁿ√x' }] },
+                    { id: 'int', label: 'Tích phân', icon: () => <span className="text-xs font-serif">∫</span>, items: [{ s: '\\int', l: '∫' }, { s: '\\int_{\\placeholder}^{\\placeholder}', l: '∫ⁿₘ' }] },
+                    { id: 'op', label: 'Toán tử lớn', icon: Sigma, items: [{ s: '\\sum_{\\placeholder}^{\\placeholder}', l: 'Σ' }, { s: '\\prod_{\\placeholder}^{\\placeholder}', l: 'Π' }] },
+                    { id: 'lim', label: 'Giới hạn & Log', icon: () => <span className="text-[9px] font-bold">lim</span>, items: [{ s: '\\lim_{\\placeholder \\to \\placeholder}', l: 'lim' }, { s: '\\ln', l: 'ln' }, { s: '\\log', l: 'log' }, { s: '\\min', l: 'min' }, { s: '\\max', l: 'max' }] },
+                    { id: 'bracket', label: 'Ngoặc', icon: Parentheses, items: [{ s: '( \\placeholder )', l: '( )' }, { s: '[ \\placeholder ]', l: '[ ]' }, { s: '\\{ \\placeholder \\}', l: '{ }' }, { s: '| \\placeholder |', l: '| |' }] },
+                    { id: 'trig', label: 'Lượng giác', icon: Calculator, items: [{ s: '\\sin', l: 'sin' }, { s: '\\cos', l: 'cos' }, { s: '\\tan', l: 'tan' }] },
+                    { id: 'matrix', label: 'Ma trận', icon: () => <span className="grid grid-cols-2 gap-0.5 w-3 h-3"><div className="bg-current opacity-50" /><div className="bg-current opacity-50" /><div className="bg-current opacity-50" /><div className="bg-current opacity-50" /></span>, items: [{ s: '\\begin{pmatrix} \\placeholder & \\placeholder \\\\ \\placeholder & \\placeholder \\end{pmatrix}', l: '2x2' }] },
+                  ].map(cat => (
+                    <AccordionItem key={cat.id} value={cat.id} className="border rounded-md px-2 bg-muted/10">
+                      <AccordionTrigger className="py-2 hover:no-underline">
+                        <div className="flex items-center gap-2">
+                          <cat.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                          <span className="text-xs font-medium text-foreground/80">{cat.label}</span>
+                        </div>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-2 pt-1">
+                        <div className="flex flex-wrap gap-1.5 ">
+                          {cat.items.map((item, idx) => (
+                            <Button
+                              key={idx}
+                              variant="outline"
+                              size="sm"
+                              className="h-8 min-w-[40px] px-2 text-[11px] font-serif hover:bg-primary/5 hover:text-primary hover:border-primary/30"
+                              onClick={() => slideCanvasRef?.current?.insertMath(item.s)}
+                            >
+                              {item.l}
+                            </Button>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+                <Separator className="mt-4" />
+              </div>
+            )}
           </>
         )}
 
