@@ -124,7 +124,10 @@ export const SelectionMixin = {
             console.log('[makeElementsSelectable] Tagged:', el.tagName, el.id, 'type:', el.dataset?.type);
 
             const isTextElement = ['H1', 'H2', 'H3', 'P', 'SPAN', 'DIV'].includes(el.tagName);
-            if (isTextElement && !el.querySelector('img')) {
+            const dataType = el.dataset.type;
+            const isNonTextType = dataType === 'equation' || dataType === 'shape' || dataType === 'image';
+            
+            if (isTextElement && !el.querySelector('img') && !isNonTextType) {
                 el.setAttribute('contenteditable', 'true');
             }
         });
