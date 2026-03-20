@@ -584,6 +584,30 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         background: transparent;
         cursor: move;
       }
+      [data-type="equation"] {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center; /* default */
+        padding: 0 16px;
+      }
+      /* Align Left */
+      [data-type="equation"][style*="text-align: left"],
+      [data-type="equation"][style*="text-align:left"],
+      [data-type="equation"][style*="text-align: flex-start"] { 
+        justify-content: flex-start !important; 
+      }
+      /* Align Center */
+      [data-type="equation"][style*="text-align: center"],
+      [data-type="equation"][style*="text-align:center"] { 
+        justify-content: center !important; 
+      }
+      /* Align Right */
+      [data-type="equation"][style*="text-align: right"],
+      [data-type="equation"][style*="text-align:right"],
+      [data-type="equation"][style*="text-align: flex-end"] { 
+        justify-content: flex-end !important; 
+      }
+
       [data-type="equation"] math-field {
         width: fit-content;
         max-width: 100%;
