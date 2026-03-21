@@ -6,7 +6,10 @@ import {
   Move, Maximize2, RotateCw, Type, Eye, Sun, Droplets,
   PaintBucket, Layers, SquareDashed, Blend, Space,
   BringToFront, SendToBack, Ban,
+  Sigma, Divide, Variable, Parentheses, Calculator,
+  Plus, ArrowRight,
 } from "lucide-react";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Slider } from "@/components/ui/slider";
@@ -227,6 +230,7 @@ export const PropertiesPanel = ({
     image: t.editor_type_image,
     shape: t.editor_type_shape,
     video: t.editor_type_video,
+    equation: 'Equation',
   };
 
   return (
@@ -391,6 +395,130 @@ export const PropertiesPanel = ({
 
             <Separator />
           </>
+        )}
+
+
+
+        {/* ── 2b. INSERT MATH (equation only) ── */}
+        {el.type === 'equation' && (
+          <div className="space-y-3">
+            <SectionLabel icon={Type} label={t.editor_section_typography} />
+
+            <div className="grid grid-cols-2 gap-1.5">
+              {/* Size */}
+              <IconInput icon={() => <span className="text-[9px] font-bold text-muted-foreground">Aa</span>} title={t.editor_prop_font_size}
+                type="number" value={el.fontSize || 32} min={8} max={500}
+                onChange={e => onUpdateElement(el.id, { fontSize: Number((e.target as HTMLInputElement).value) })} />
+
+              {/* Color */}
+              <div className="flex items-center gap-1.5 bg-muted/30 rounded-md px-2 h-8 border border-border/50" title={t.editor_prop_text_color}>
+                <span className="text-[9px] font-bold text-muted-foreground shrink-0">A</span>
+                <input type="color" value={el.color || '#333333'}
+                  onChange={e => onUpdateElement(el.id, { color: e.target.value })}
+                  className="flex-1 h-5 rounded cursor-pointer border-0 outline-none bg-transparent" />
+              </div>
+            </div>
+
+            {/* Align Buttons for Equation */}
+            <div className="flex border rounded-md p-0.5 bg-muted/20 gap-0.5">
+              {([
+                { value: 'left', Icon: AlignLeft, title: t.editor_align_left },
+                { value: 'center', Icon: AlignCenter, title: t.editor_align_center },
+                { value: 'right', Icon: AlignRight, title: t.editor_align_right },
+              ] as const).map(({ value, Icon, title }) => (
+                <Tip key={value} label={title} side="bottom">
+                  <Button
+                    variant={el.textAlign === value ? 'secondary' : 'ghost'}
+                    size="icon" className="h-7 flex-1"
+                    onClick={() => onUpdateElement(el.id, { textAlign: value } as any)}>
+                    <Icon className="h-3.5 w-3.5" />
+                  </Button>
+                </Tip>
+              ))}
+            </div>
+
+            <Separator className="mt-2" />
+            
+            <SectionLabel icon={Sigma} label="Insert Math" />
+            <Accordion type="multiple" className="w-full space-y-1">
+              {[
+                { id: 'frac', label: 'Phân số & Căn', icon: Divide, items: [
+                  { s: '\\frac{\\placeholder}{\\placeholder}', l: 'a/b' },
+                  { s: '\\sqrt{\\placeholder}', l: '√x' },
+                  { s: '\\sqrt[\\placeholder]{\\placeholder}', l: 'ⁿ√x' }
+                ]},
+                { id: 'script', label: 'Chỉ số', icon: Variable, items: [
+                  { s: '{\\placeholder}^{\\placeholder}', l: 'xⁿ' },
+                  { s: '{\\placeholder}_{\\placeholder}', l: 'xₙ' },
+                  { s: '{\\placeholder}^{\\placeholder}_{\\placeholder}', l: 'xⁿₘ' }
+                ]},
+                { id: 'op', label: 'Tổng & Tích phân', icon: Sigma, items: [
+                  { s: '\\int_{\\placeholder}^{\\placeholder}', l: '∫' },
+                  { s: '\\sum_{\\placeholder}^{\\placeholder}', l: 'Σ' },
+                  { s: '\\prod_{\\placeholder}^{\\placeholder}', l: 'Π' },
+                  { s: '\\lim_{\\placeholder \\to \\placeholder}', l: 'lim' }
+                ]},
+                { id: 'bracket', label: 'Ngoặc', icon: Parentheses, items: [
+                  { s: '\\left( \\placeholder \\right)', l: '( )' },
+                  { s: '\\left[ \\placeholder \\right]', l: '[ ]' },
+                  { s: '\\left\\{ \\placeholder \\right\\}', l: '{ }' },
+                  { s: '\\left| \\placeholder \\right|', l: '| |' }
+                ]},
+                { id: 'greek', label: 'Ký hiệu Hy Lạp', icon: () => <span className="text-xs font-serif">αβ</span>, items: [
+                  { s: '\\alpha', l: 'α' }, { s: '\\beta', l: 'β' }, { s: '\\gamma', l: 'γ' },
+                  { s: '\\delta', l: 'δ' }, { s: '\\epsilon', l: 'ε' }, { s: '\\theta', l: 'θ' },
+                  { s: '\\lambda', l: 'λ' }, { s: '\\pi', l: 'π' }, { s: '\\sigma', l: 'σ' },
+                  { s: '\\omega', l: 'ω' }, { s: '\\Delta', l: 'Δ' }, { s: '\\Omega', l: 'Ω' }
+                ]},
+                { id: 'symbol', label: 'Toán tử & Ký hiệu', icon: Plus, items: [
+                  { s: '\\pm', l: '±' }, { s: '\\infty', l: '∞' }, { s: '\\neq', l: '≠' },
+                  { s: '\\approx', l: '≈' }, { s: '\\leq', l: '≤' }, { s: '\\geq', l: '≥' },
+                  { s: '\\forall', l: '∀' }, { s: '\\exists', l: '∃' }, { s: '\\in', l: '∈' },
+                  { s: '\\notin', l: '∉' }, { s: '\\subset', l: '⊂' }, { s: '\\cup', l: '∪' }
+                ]},
+                { id: 'arrow', label: 'Mũi tên', icon: ArrowRight, items: [
+                  { s: '\\rightarrow', l: '→' }, { s: '\\leftarrow', l: '←' },
+                  { s: '\\Rightarrow', l: '⇒' }, { s: '\\Leftarrow', l: '⇐' },
+                  { s: '\\Leftrightarrow', l: '⇔' }, { s: '\\implies', l: '⟹' }
+                ]},
+                { id: 'common', label: 'Công thức mẫu', icon: Calculator, items: [
+                  { s: 'a^2 + b^2 = c^2', l: 'Pythagore' },
+                  { s: 'x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}', l: 'Bậc 2' },
+                  { s: 'E = mc^2', l: 'Einstein' },
+                  { s: 'e^{i\\pi} + 1 = 0', l: 'Euler' }
+                ]},
+                { id: 'matrix', label: 'Ma trận', icon: () => <span className="grid grid-cols-2 gap-0.5 w-3 h-3"><div className="bg-current opacity-50" /><div className="bg-current opacity-50" /><div className="bg-current opacity-50" /><div className="bg-current opacity-50" /></span>, items: [
+                  { s: '\\begin{pmatrix} \\placeholder & \\placeholder \\\\ \\placeholder & \\placeholder \\end{pmatrix}', l: '2x2' },
+                  { s: '\\begin{bmatrix} \\placeholder & \\placeholder \\\\ \\placeholder & \\placeholder \\end{bmatrix}', l: '[2x2]' }
+                ]},
+              ].map(cat => (
+                <AccordionItem key={cat.id} value={cat.id} className="border rounded-md px-2 bg-muted/10">
+                  <AccordionTrigger className="py-2 hover:no-underline">
+                    <div className="flex items-center gap-2">
+                      <cat.icon className="h-3.5 w-3.5 text-muted-foreground" />
+                      <span className="text-xs font-medium text-foreground/80">{cat.label}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="pb-2 pt-1">
+                    <div className="flex flex-wrap gap-1.5 ">
+                      {cat.items.map((item, idx) => (
+                        <Button
+                          key={idx}
+                          variant="outline"
+                          size="sm"
+                          className="h-8 min-w-[40px] px-2 text-[11px] font-serif hover:bg-primary/5 hover:text-primary hover:border-primary/30"
+                          onClick={() => slideCanvasRef?.current?.insertMath(item.s)}
+                        >
+                          {item.l}
+                        </Button>
+                      ))}
+                    </div>
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+            <Separator className="mt-4" />
+          </div>
         )}
 
         {/* ── 3. APPEARANCE ── */}

@@ -70,6 +70,27 @@ export const EventHandlersMixin = {
     },
 
     handleDoubleClick(e) {
+        const target = e.target;
+
+        // ── Equation: activate MathLive field ───────────────────────────────
+        let eqElement = target;
+        while (eqElement && eqElement !== this.root) {
+            if (eqElement.dataset?.type === 'equation') break;
+            eqElement = eqElement.parentElement;
+        }
+        if (eqElement && eqElement !== this.root && eqElement.dataset.type === 'equation') {
+            this.activateEquationEditor(eqElement);
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
+        // ── Text contenteditable: existing behavior ──────────────────────────
+        let textElement = target;
+        while (textElement && textElement !== this.root) {
+            if (textElement.hasAttribute('contenteditable')) break;
+            textElement = textElement.parentElement;
+        }
         const target = this.normalizeEventTarget(e.target);
         if (!target) return;
 
@@ -93,6 +114,106 @@ export const EventHandlersMixin = {
         }
     },
 
+    activateEquationEditor(el) {
+        if (el._mathfieldActive) return;
+
+        import('mathlive').then(() => {
+            el._mathfieldActive = true;
+            this.isEditingText = true;
+            this.selectElement(el);
+            this.hideSelectionUI();
+
+            // Keep the existing <math-field> if present; otherwise create it.
+            let mf = el.querySelector('math-field');
+            if (!mf) {
+                mf = document.createElement('math-field');
+                mf.value = el.dataset.latex || '';
+                el.innerHTML = '';
+                el.appendChild(mf);
+            }
+
+            // Hide selection overlay to allow interaction with MathLive
+            const overlay = el.querySelector('.equation-overlay');
+            if (overlay) overlay.style.display = 'none';
+
+            // Ensure edit mode
+            mf.removeAttribute('read-only');
+            mf.style.pointerEvents = 'auto';
+            mf.style.cursor = 'text';
+
+            // Attach handlers only once per equation element.
+            if (!mf._equationInputHandler) {
+                const onInput = () => {
+                    el.dataset.latex = mf.value;
+                    mf.setAttribute('value', mf.value);
+                    if (this._inputTimer) clearTimeout(this._inputTimer);
+                    this._inputTimer = setTimeout(() => {
+                        this._inputTimer = null;
+                        this.saveHistory();
+                    }, 300);
+                };
+                mf._equationInputHandler = onInput;
+                mf.addEventListener('input', onInput);
+            }
+
+            if (!mf._equationFocusOutHandler) {
+                const onFocusOut = () => {
+                    setTimeout(() => {
+                        if (el._mathfieldActive && !mf.hasFocus?.()) {
+                            this.exitEquationEditor(el);
+                        }
+                    }, 150);
+                };
+                mf._equationFocusOutHandler = onFocusOut;
+                mf.addEventListener('focusout', onFocusOut);
+            }
+
+            mf.focus();
+        }).catch(() => {
+            el._mathfieldActive = false;
+            this.isEditingText = false;
+        });
+    },
+
+    exitEquationEditor(el) {
+        if (!el || !el._mathfieldActive) return;
+
+        const mf = el.querySelector('math-field');
+        if (mf) {
+            // Capture final LaTeX before blur.
+            const prevLatex = el.dataset.latex;
+            const nextLatex = mf.value || el.dataset.latex || '';
+            if (nextLatex !== el.dataset.latex) {
+                el.dataset.latex = nextLatex;
+            }
+
+            // Only unfocus: keep MathLive field in place.
+            try { mf.blur?.(); } catch {}
+
+            // If user changed LaTeX but debounce hasn't fired yet, persist it.
+            if (prevLatex !== nextLatex) {
+                this.saveHistory();
+            }
+
+            mf.style.pointerEvents = 'none';
+
+            // Show selection overlay again
+            const overlay = el.querySelector('.equation-overlay');
+            if (overlay) overlay.style.display = 'block';
+        }
+
+        el._mathfieldActive = false;
+        this.isEditingText = false;
+        el.style.cursor = 'move';
+
+        // Re-show selection handles after unfocus.
+        const selected = this.root.querySelector('.selected');
+        if (selected) {
+            selected.querySelectorAll('.resize-handle, .drag-handle')
+                .forEach(h => h.style.display = '');
+        }
+    },
+
     handleMouseDown(e) {
         const target = this.normalizeEventTarget(e.target);
         if (!target) return;
@@ -111,6 +232,40 @@ export const EventHandlersMixin = {
         if (this._guideTimeout) { clearTimeout(this._guideTimeout); this._guideTimeout = null; }
         this.clearSmartGuides();
 
+        // Allow ongoing text/equation editing to continue unless clicking outside
+        if (this.isEditingText) {
+            // Check if click is inside an active equation editor
+            const activeEqEl = this.selectedElements.find?.(sel => sel._mathfieldActive);
+            if (activeEqEl) {
+                let clickedEl = target;
+                while (clickedEl && clickedEl !== this.root) {
+                    if (clickedEl === activeEqEl) return; // click inside equation — let MathLive handle
+                    clickedEl = clickedEl.parentElement;
+                }
+                // Click outside: just unfocus equation, then continue normal selection.
+                this.exitEquationEditor(activeEqEl);
+                return;
+            }
+
+            let clickedElement = target;
+            let isClickingEditableElement = false;
+            while (clickedElement && clickedElement !== this.root) {
+                if (clickedElement.hasAttribute('contenteditable') && this.selectedElements.includes(clickedElement)) {
+                    isClickingEditableElement = true;
+                    break;
+                }
+                clickedElement = clickedElement.parentElement;
+            }
+            if (isClickingEditableElement) return;
+            this.exitEditMode();
+        }
+
+        const isDragHandle  = target.classList && target.classList.contains('drag-handle');
+        const isResizeHandle = target.classList && target.classList.contains('resize-handle');
+        const isMultiSelectIntent = e.shiftKey || e.ctrlKey || e.metaKey;
+
+        // Click on canvas background → deselect
+        if (!isResizeHandle && !isDragHandle && target.classList && (
         const isDragHandle = target.classList.contains('drag-handle');
         const isResizeHandle = target.classList.contains('resize-handle');
         const isCanvasBackground = !isResizeHandle && !isDragHandle && (

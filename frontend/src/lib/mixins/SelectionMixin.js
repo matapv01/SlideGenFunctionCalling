@@ -139,6 +139,11 @@ export const SelectionMixin = {
             el.style.cursor = 'move';
             el.setAttribute('data-selectable', 'true');
 
+            const isTextElement = ['H1', 'H2', 'H3', 'P', 'SPAN', 'DIV'].includes(el.tagName);
+            const dataType = el.dataset.type;
+            const isNonTextType = dataType === 'equation' || dataType === 'shape' || dataType === 'image';
+            
+            if (isTextElement && !el.querySelector('img') && !isNonTextType) {
             const isTextElement =
                 el.dataset.type === 'text' ||
                 ['H1', 'H2', 'H3', 'P'].includes(el.tagName) ||
@@ -295,6 +300,14 @@ export const SelectionMixin = {
     },
 
     exitEditMode() {
+        // Handle equation editor exit
+        const activeEqEl = this.selectedElements.find?.(el => el._mathfieldActive) ||
+            (this.selectedElements[0]?._mathfieldActive ? this.selectedElements[0] : null);
+        if (activeEqEl) {
+            this.exitEquationEditor(activeEqEl);
+            return;
+        }
+
         if (!this.isEditingText) return;
 
         this.isEditingText = false;
