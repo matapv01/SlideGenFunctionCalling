@@ -2692,7 +2692,6 @@ class GenerateLineChartSlide2(BaseModel):
         )
     )
 
-
 class GenerateLineChartSlide3(BaseModel):
     """Schema for generate_line_chart_slide_3"""
     main_title: str = Field(..., description=(
@@ -2854,6 +2853,285 @@ class GenerateLineChartSlide3(BaseModel):
             "without overpowering the visualization."
         )
     )
+
+class GenerateFunnelChartSlide1(BaseModel):
+    """Input schema for generate_funnel_chart_slide_1."""
+    main_title: str = Field(..., description="Main title of the funnel chart slide (10–60 characters). Example: Clean Eating Conversion Journey")
+    subtitle: str = Field(..., description="Subtitle, unit, or data source. Example: User Engagement & Healthy Habits – Q1 2026")
+    insight: str = Field(default="", description="Description or key insight derived from the funnel chart data")
+    chart_type: str = Field(default="funnel", description="Type of chart. For this schema it must be 'funnel'")
+    chart_options: Dict[str, Any] = Field(
+        description="""
+            # Chart options define how the funnel chart is displayed and styled.
+            # These options control segment layout, labels, and conversion metrics.
+
+            "chart_options": {
+                "unit": "string | null",                  # Unit appended to values (e.g., users, %, sessions)
+
+                "show_value": boolean,                    # Show value inside each funnel segment
+                "show_legend": boolean,                   # Display legend (optional)
+                "show_conversion_rate": boolean,          # Show conversion rate between stages
+                "show_dropoff": boolean,                  # Show drop-off percentage between stages
+
+                "data_label_format": "string",            # Example: "{value}", "{value} users"
+
+                "segment_gap": "number",                  # Vertical spacing between funnel segments
+                "max_segment_width": "number",            # Max width of the top segment
+                "min_segment_width": "number",            # Min width of the bottom segment
+
+                "colors": {
+                    "stage_colors": ["string"],           # List of colors for each funnel stage
+                    "label_color": "string",              # Color for side labels (conversion/drop)
+                    "value_color": "string",              # Color for values inside segments
+                    "accent_color": "string"              # Accent color for theme highlights
+                }
+            }
+        """
+    )
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Funnel chart data represents a stage-based conversion flow.
+            # Each stage has a label and a numeric value.
+
+            "data": {
+                "stages": [
+                    {
+                        "label": "string",               # Stage name (e.g., App Awareness)
+                        "value": "number"               # Value at this stage (e.g., number of users)
+                    }
+                ]
+            }
+
+            # Rules:
+            # - Stages must be ordered from top (largest) to bottom (smallest)
+            # - Values should decrease progressively to represent funnel drop-off
+            # - All values must be numeric and non-negative
+            # - Recommended number of stages: 3–7 for clarity
+        """
+    )
+    font_family: str = Field(default="Inter, sans-serif", description="Main font family for the slide")
+    accent_color: str = Field(default="#F9D466", description="CSS accent color for decorative elements")
+    main_title_color: str = Field(default="#2E7D32", description="CSS color for the main title")
+    subtitle_color: str = Field(default="#4B5563", description="CSS color for subtitle")
+    insight_text_color: str = Field(default="#374151", description="CSS color for insight text")
+    main_title_font_size: str = Field(default="80px", description="CSS font size for the main title")
+    subtitle_font_size: str = Field(default="34px", description="CSS font size for the subtitle")
+    insight_font_size: str = Field(default="28px", description="CSS font size for insight text")
+
+class GenerateRadarChartSlide1(BaseModel):
+    """
+    Input schema for generate_radar_chart_slide_1.
+    This schema defines parameters used to generate a radar chart slide
+    with a professional, warm style suitable for healthcare service reports and multidimensional analysis.
+    """
+    main_title: str = Field(..., description="Main title of the healthcare service radar chart slide (10–60 characters). Example: Care Service Quality Index")
+    subtitle: str = Field(..., description="Subtitle or data source related to healthcare/service analysis. Example: Customer Experience Report Q1/2026")
+    insight: str = Field(default="", description="Key insight or analysis derived from the care service radar chart (e.g., strengths, weaknesses, improvement areas)")
+    chart_type: str = Field(default="radar", description="Type of chart. Must be 'radar' for care service multidimensional analysis")
+    chart_options: Dict[str, Any] = Field(
+        description="""
+            # Chart options define how the healthcare radar chart is displayed and styled.
+            # These options are tailored for service quality evaluation and patient experience metrics.
+
+            "chart_options": {
+                "unit": "string | null",              # Optional unit (e.g., score, /10, %, level)
+
+                "show_value": boolean,                # Show score values on each axis point
+                "show_legend": boolean,               # Display legend for current vs target comparison
+
+                "data_label_format": "string | null", # Example: "{value}/10", "{value}%"
+
+                "show_grid_lines": boolean,           # Show background grid (quality levels)
+                "show_axis_lines": boolean,           # Show axes for each service dimension
+
+                "max_value": "number | null",         # Max score (typically 10 in healthcare scoring systems)
+                "num_levels": "number",               # Number of levels (e.g., 5 levels: poor → excellent)
+
+                "colors": {
+                    "axis_color": "string",           # Axis line color
+                    "grid_color": "string",           # Grid background color
+                    "data_fill": "string",            # Fill color for actual performance
+                    "data_stroke": "string",          # Border color for data polygon
+                    "label_color": "string",          # Axis label color
+                    "accent_color": "string"          # Highlight color for emphasis
+                }
+            }
+        """
+    )
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Radar chart data for healthcare service evaluation.
+            # Each axis represents a care-related dimension.
+
+            "data": {
+                "axes": [
+                    "string"     # Example: Medical, Psychological, Nutrition, Physical Activity, Technology, Environment
+                ],
+
+                "series": [
+                    {
+                        "label": "string",             # Example: Current, Target
+                        "values": ["number"]           # Scores per axis (must match axes length)
+                    }
+                ]
+            }
+
+            # Rules:
+            # - Each axis represents a healthcare/service quality dimension
+            # - Values should be normalized (recommended: 0–10 scale)
+            # - Length of values must match number of axes
+            # - Multiple series allow comparison (e.g., current vs target performance)
+        """
+    )
+    font_family: str = Field(default="Inter, sans-serif", description="Main font family for the slide")
+    accent_color: str = Field(default="#F4A261", description="Warm accent color suitable for healthcare visuals")
+    main_title_color: str = Field(default="#1D3557", description="Color of the main title (professional and trustworthy tone)")
+    subtitle_color: str = Field(default="#457B9D", description="Color of subtitle text")
+    insight_text_color: str = Field(default="#1D3557", description="Color of insight/analysis text")
+    main_title_font_size: str = Field(default="64px", description="Font size for main title")
+    subtitle_font_size: str = Field(default="28px", description="Font size for subtitle")
+    insight_font_size: str = Field(default="30px", description="Font size for insight text")
+
+
+class GenerateTableSlide1(BaseModel):
+    """
+    Input schema for generate_table_slide_1.
+    This schema defines parameters used to generate a table slide
+    with a Science Lab visual style.
+    """
+    main_title: str = Field(..., description="Main title of the table slide (10–60 characters). Example: Renewable Energy Capacity by Region")
+    subtitle: str = Field(..., description="Subtitle or data source. Example: Global Energy Research Lab – 2024 Data")
+    insight: str = Field(default="", description="Short analytical insight or key takeaway derived from the table data.")
+    chart_type: str = Field(default="table", description="Type of chart. Must always be 'table'.")
+    chart_options: Dict[str, Any] = Field(..., description="""
+        Table configuration controlling how the data table is displayed.
+        Schema:
+        {
+        "unit": "string | null",
+        "show_value": "boolean",
+        "data_label_format": "string",
+        "colors": {
+            "header_bg": "string",
+            "grid_color": "string",
+            "text_color": "string",
+            "highlight_bg": "string"
+        }
+        }
+        Explanation:
+        - unit: Optional unit appended to each value (e.g. "GW", "%", "$")
+        - show_value: Whether to display values inside table cells
+        - data_label_format: Template for formatting values (e.g. "{value}", "{value} units")
+        - colors:
+            - header_bg: Background color of table header
+            - grid_color: Color of table borders/grid lines
+            - text_color: Color of table cell text
+            - highlight_bg: Background color for row labels
+        """
+    )
+    data_input: Dict[str, Any] = Field(..., description="""
+        Table data structure including columns and rows.
+        Schema:
+        {
+        "data": {
+            "columns": ["string"],
+            "rows": [
+            {
+                "label": "string",
+                "values": ["number"]
+            }
+            ]
+        }
+        }
+        Explanation:
+        - columns: List of column names (e.g. Solar, Wind, Hydro)
+        - rows: Each row represents a category:
+            - label: Row name (e.g. region, category)
+            - values: Numeric values corresponding to each column
+        The system will render this into a styled comparison table.
+        Typical use cases:
+        - Scientific experiment results
+        - Regional comparisons
+        - Technical performance metrics
+        """
+    )
+    font_family: str = Field(default="Inter, Arial, sans-serif", description="Main font family used in the slide layout.")
+    accent_color: str = Field(default="#76C2B4", description="Accent color used for highlights and decorative elements.")
+    main_title_color: str = Field(default="#333333", description="CSS color used for the main title.")
+    subtitle_color: str = Field(default="#666666", description="CSS color used for subtitle text.")
+    insight_text_color: str = Field(default="#444444", description="CSS color used for insight text.")
+    main_title_font_size: str = Field(default="72px", description="Font size of the main title.")
+    subtitle_font_size: str = Field(default="32px", description="Font size of the subtitle.")
+    insight_font_size: str = Field(default="28px", description="Font size used for insight text.")
+
+
+class GenerateTreemapChartSlide(BaseModel):
+    """Input schema for generate_treemap_chart_slide."""
+    main_title: str = Field(...,description="Main title of the treemap chart slide (10–60 characters). Example: Stock Market Distribution by Sector")
+    subtitle: str = Field(..., description="Subtitle, unit, or data source. Example: Global Equity Markets – Q1 2026 Analysis")
+    insight: str = Field(default="", description="Narrative insight explaining key patterns or hierarchy dominance in the treemap")
+    chart_type: str = Field(default="treemap", description="Type of chart. For this schema it must be 'treemap'")
+
+    chart_options: Dict[str, Any] = Field(
+        description="""
+            # Chart options define how the treemap is visually rendered.
+            # These control layout spacing, labeling, and color styling.
+
+            "chart_options": {
+                "unit": "string | null",              # Optional unit appended to values (e.g., B, %, USD)
+
+                "show_value": boolean,                # Whether to display numeric values
+                "show_label": boolean,                # Whether to display labels inside blocks
+
+                "data_label_format": "string",        # Example: "{label}: ${value}B"
+
+                "padding": "number",                 # Inner spacing between rectangles
+                "border_radius": "number",           # Rounded corners for blocks
+
+                "colors": {
+                    "base_color": "string",          # Primary color for treemap blocks
+                    "accent_color": "string",        # Accent color for highlights
+                    "text_color": "string",          # Text color inside blocks
+                    "border_color": "string"         # Border color for rectangles
+                }
+            }
+        """
+    )
+
+    data_input: Dict[str, Any] = Field(
+        description="""
+            # Treemap data represents hierarchical structure using nested rectangles.
+            # Each parent node can contain multiple child nodes.
+
+            "data": [
+                {
+                    "label": "string",               # Parent category (e.g., Technology)
+                    "value": "number",              # Total value of the category
+
+                    "children": [
+                        {
+                            "label": "string",       # Sub-category (e.g., Software)
+                            "value": "number"        # Value contribution
+                        }
+                    ]
+                }
+            ]
+
+            # Rules:
+            # - Parent value should equal or exceed sum of children values
+            # - All values must be numeric
+            # - Treemap uses proportional area to represent value
+            # - Data is rendered using slice-and-dice layout (horizontal split by parent, vertical by children)
+        """
+    )
+    font_family: str = Field(default="Inter, sans-serif", description="Main font family for the slide")
+    accent_color: str = Field(default="#3B82F6", description="Accent color used for UI highlights and decorations")
+    main_title_color: str = Field(default="#FFFFFF", description="Color of the main title")
+    subtitle_color: str = Field(default="#94A3B8", description="Color of the subtitle text")
+    insight_text_color: str = Field(default="#CBD5E1", description="Color of the insight text block")
+    main_title_font_size: str = Field(default="64px", description="Font size for the main title")
+    subtitle_font_size: str = Field(default="28px", description="Font size for the subtitle")
+    insight_font_size: str = Field(default="26px", description="Font size for the insight text")
+
 
 
 INTRO_TOOLS = [
@@ -3377,7 +3655,8 @@ CONTENT_TOOLS = [
         name="generate_planning_phase_slide",
         description="Generates a Planning Phase slide with timeline and icon markers. This slide shows 4 stages represented by pin markers containing line art icons (brain, checklist, design, puzzle), each with its own timeline dot, title, and description. The markers are displayed horizontally above the timeline items, creating a visual flow. Perfect for presenting project phases, process steps, strategic planning stages, or any sequential workflow with 4 key stages. Features customizable colors for markers and timeline elements.",
         args_schema=GeneratePlanningPhaseSlideInput
-    )
+    ),
+    
 ]
 
 TEAM_TOOLS = [
@@ -3514,7 +3793,7 @@ THANK_YOU_TOOLS = [
     )
 ]
 
-GRAPH_TOOLS = [
+CHART_TOOLS = [
 #---BAR CHART SLIDES-------------------------------------------------------------------------    
     
     StructuredTool.from_function(
@@ -3668,7 +3947,7 @@ GRAPH_TOOLS = [
         args_schema=GenerateLineChartSlide2
     ),
     StructuredTool.from_function(
-    func=generate_line_chart_slide_3,
+        func=generate_line_chart_slide_3,
         name="generate_line_chart_slide_3",
         description=(
             "Generates a premium dark-mode Line Chart slide with a futuristic, high-contrast aesthetic.\n"
@@ -3682,11 +3961,64 @@ GRAPH_TOOLS = [
             "The layout is designed to present technical data trends with a premium dark-mode aesthetic."
         ),
         args_schema=GenerateLineChartSlide3
+    ),
+    StructuredTool.from_function(
+        func=generate_funnel_chart_slide_1,
+        name="generate_funnel_chart_slide_1",
+        description=(
+            "The slide layout is organized into two main sections:\n"
+            "- Top section: displays the main title and subtitle with a prominent vertical accent border on the left.\n"
+            "- Main content area: arranged in a two-column layout.\n"
+            "  • Left column: an insight panel containing a styled card for key narrative text (optional).\n"
+            "  • Right column: a large centered funnel chart visualizing stage-by-stage progression.\n\n"
+            "Additional decorative elements include subtle background patterns, organic-themed SVG graphics, and a bottom accent bar."
+        ),
+        args_schema=GenerateFunnelChartSlide1
+    ),
+    StructuredTool.from_function(
+        func=generate_radar_chart_slide_1,
+        name="generate_radar_chart_slide_1",
+        description=(
+            "The slide layout consists of a full-width header at the top and a two-column content section below.\n"
+            "- The header displays a large bold main title with a smaller subtitle underneath.\n"
+            "- The lower section is split into two columns:\n"
+            "  • Left column: contains a highlighted insight card with soft gradients and borders, followed by a rounded legend box listing series labels with colored swatches.\n"
+            "  • Right column: displays a large centered radar chart rendered in SVG.\n"
+            "- The background uses soft gradient colors with subtle decorative blobs to create a warm, modern visual style.\n"
+            "- The overall layout emphasizes clear hierarchy: title → insight → legend → chart, with balanced spacing and a professional healthcare-themed aesthetic."
+        ),
+        args_schema=GenerateRadarChartSlide1
+    ),
+    StructuredTool.from_function(
+        func=generate_table_slide_1,
+        name="generate_table_slide_1",
+        description=(
+            "A structured slide layout with a clean Science Lab style.\n"
+            "- Top section: displays a large, bold main title with an optional subtitle beneath it.\n"
+            "- Main content area: split into two columns.\n"
+            "  • Left column: shows an insight card in a highlighted box.\n"
+            "  • Right column: displays a formatted data table with headers and rows.\n"
+            "- Background includes subtle grid patterns and minimal lab-themed decorative elements."
+        ),
+        args_schema=GenerateTableSlide1
+    ),
+    StructuredTool.from_function(
+        func=generate_treemap_chart_slide_market_analysis,
+        name="generate_treemap_chart_slide_market_analysis",
+        description=(
+            "The slide layout is structured into two main areas:\n"
+            "- Top section: displays the main title and subtitle with a vertical accent bar for visual emphasis.\n"
+            "- Main content area: arranged in a two-column layout.\n"
+            "  • Left column: a styled insight panel highlighting key narrative takeaways.\n"
+            "  • Right column: contains a treemap chart on top and a summary data table below.\n\n"
+            "The layout is designed to balance qualitative insights with hierarchical data visualization and tabular comparison."
+        ),
+        args_schema=GenerateTreemapChartSlide
     )
 ]
 
 # All available slide generation tools with complete parameter schemas
-ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + GRAPH_TOOLS
+ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
 
 TOOLS_DICT = {
     'INTRO_TOOLS': INTRO_TOOLS,
@@ -3694,7 +4026,7 @@ TOOLS_DICT = {
     'CONTENT_TOOLS': CONTENT_TOOLS,
     'TEAM_TOOLS': TEAM_TOOLS,
     'THANK_YOU_TOOLS': THANK_YOU_TOOLS,
-    'GRAPH_TOOLS': GRAPH_TOOLS
+    'CHART_TOOLS': CHART_TOOLS
 }
 
 # Tool utilities

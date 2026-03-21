@@ -23578,4 +23578,1337 @@ def generate_line_chart_slide_3(
 
     
 
-#-------PIE CHART SLIDES------------------------------------------------------------------
+#-------FUNNEL CHART SLIDES------------------------------------------------------------------
+
+def generate_funnel_chart_slide_1(
+    main_title="Clean Eating Conversion Journey",
+    subtitle="User Engagement & Healthy Habits – Q1 2026",
+    insight="",
+    chart_type="funnel",
+    chart_options={
+        "unit": " users",
+        "show_value": True,
+        "show_legend": True,
+        "show_conversion_rate": True,
+        "show_dropoff": True,
+        "data_label_format": "{value}",
+        "segment_gap": 15,
+        "max_segment_width": 700,
+        "min_segment_width": 200,
+        "colors": {
+            "stage_colors": ["#4CAF50", "#66BB6A", "#81C784", "#A5D6A7", "#C8E6C9"],
+            "label_color": "#2E7D32",
+            "value_color": "#1B5E20",
+            "accent_color": "#F9D466"
+        }
+    },
+
+    data_input={
+        "data": {
+            "stages": [
+                {"label": "App Awareness", "value": 25000},
+                {"label": "Recipe Views", "value": 18500},
+                {"label": "Meal Logged", "value": 9200},
+                {"label": "Weekly Goal Met", "value": 4100},
+                {"label": "Premium Member", "value": 1200}
+            ]
+        }
+    },
+
+    font_family="'Inter', sans-serif",
+    accent_color="#F9D466",
+    main_title_color="#2E7D32",
+    subtitle_color="#4B5563",
+    insight_text_color="#374151",
+
+    main_title_font_size="80px",
+    subtitle_font_size="34px",
+    insight_font_size="28px"
+)->str:
+    """
+    Slide deck with a Clean Eating / Healthy Lifestyle theme.
+    Features organic green tones, soft yellow backgrounds, and a friendly, health-conscious UI.
+    """
+
+    # ===== 1. GET DATA =====
+    data = data_input.get("data", {})
+    stages = data.get("stages", [])
+    
+    options = chart_options 
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", True)
+    show_conversion_rate = options.get("show_conversion_rate", True)
+    show_dropoff = options.get("show_dropoff", True)
+    data_label_format = options.get("data_label_format", "{value}")
+    segment_gap = options.get("segment_gap", 15)
+    max_w = options.get("max_segment_width") or 700
+    min_w = options.get("min_segment_width") or 200
+
+    colors = options.get("colors", {})
+    stage_colors = colors.get("stage_colors", ["#4CAF50", "#81C784", "#C8E6C9"])
+    label_color = colors.get("label_color", "#2E7D32")
+    value_color = colors.get("value_color", "#1B5E20")
+    
+    # Theme colors from the image
+    bg_color = "#FFFAD1" # Pale yellow background
+    organic_green = "#599E5E"
+
+    # ===== 2. PROCESS FUNNEL CHART =====
+    max_val = max([s.get("value", 0) for s in stages], default=1)
+    stage_h = 100
+    top_y = 60
+    center_x = 550
+    
+    segments_html = ""
+    labels_html = ""
+    metrics_html = ""
+    
+    for i, stage in enumerate(stages):
+        label = stage.get("label", "")
+        value = stage.get("value", 0)
+        
+        # Calculate trapezoid widths
+        w_top = min_w + (max_w - min_w) * (value / max_val if max_val else 0)
+        
+        # Look ahead for bottom width
+        if i < len(stages) - 1:
+            next_val = stages[i + 1].get("value", 0)
+            w_bot = min_w + (max_w - min_w) * (next_val / max_val if max_val else 0)
+        else:
+            w_bot = w_top * 0.8 # Slightly narrower for the last stage
+            
+        y1 = top_y + i * (stage_h + segment_gap)
+        y2 = y1 + stage_h
+        
+        xlt, xrt = center_x - w_top/2, center_x + w_top/2
+        xlb, xrb = center_x - w_bot/2, center_x + w_bot/2
+        
+        color = stage_colors[i % len(stage_colors)]
+        
+        # Funnel Stage Segment
+        segments_html += f'<polygon points="{xlt},{y1} {xrt},{y1} {xrb},{y2} {xlb},{y2}" fill="{color}" fill-opacity="0.9" stroke="white" stroke-width="3" />'
+        
+        # Labels inside segments
+        labels_html += f'<text x="{center_x}" y="{y1 + stage_h/2 - 8}" text-anchor="middle" font-size="28" font-weight="700" fill="white">{label.upper()}</text>'
+        
+        if show_value:
+            val_text = data_label_format.replace("{value}", f"{value:,}") + unit
+            labels_html += f'<text x="{center_x}" y="{y1 + stage_h/2 + 25}" text-anchor="middle" font-size="22" fill="white" font-weight="500">{val_text}</text>'
+
+        # Side Metrics (Conversion & Drop-off)
+        if i < len(stages) - 1:
+            next_val = stages[i+1].get("value", 0)
+            mid_y = y1 + stage_h + (segment_gap / 2)
+            
+            if show_conversion_rate and value > 0:
+                conv = (next_val / value) * 100
+                metrics_html += f'<text x="{center_x + max_w/2 + 20}" y="{mid_y + 6}" font-size="18" font-weight="700" fill="{label_color}">↗ {conv:.1f}% CV</text>'
+            
+            if show_dropoff and value > 0:
+                drop = ((value - next_val) / value) * 100
+                metrics_html += f'<text x="{center_x - max_w/2 - 120}" y="{mid_y + 6}" font-size="18" fill="#EF4444">↘ {drop:.1f}% Drop</text>'
+
+    funnel_chart_html = """
+    <div style="width: 1100px; height: 700px; margin: 0 auto; display: flex; justify-content: center; align-items: center;">
+        <svg position="center" width="1100" height="700" viewBox="0 0 1100 700">
+
+            <!-- Tầng 1 -->
+            <polygon points="100.0,60 1000.0,60 935.0,160 165.0,160" fill="#4CAF50" fill-opacity="0.9" stroke="white" stroke-width="3" />
+            <text x="550" y="102.0" text-anchor="middle" font-size="28" font-weight="700" fill="white">APP AWARENESS</text>
+            <text x="550" y="135.0" text-anchor="middle" font-size="22" fill="white">25,000 users</text>
+
+            <!-- Tầng 2 -->
+            <polygon points="165.0,175 935.0,175 842.0,275 258.0,275" fill="#8BC34A" fill-opacity="0.9" stroke="white" stroke-width="3" />
+            <text x="550" y="217.0" text-anchor="middle" font-size="28" font-weight="700" fill="white">RECIPE VIEWS</text>
+            <text x="550" y="250.0" text-anchor="middle" font-size="22" fill="white">18,500 users</text>
+
+            <!-- Tầng 3 -->
+            <polygon points="258.0,290 842.0,290 791.0,390 309.0,390" fill="#FFC107" fill-opacity="0.9" stroke="white" stroke-width="3" />
+            <text x="550" y="332.0" text-anchor="middle" font-size="28" font-weight="700" fill="white">MEAL LOGGED</text>
+            <text x="550" y="365.0" text-anchor="middle" font-size="22" fill="white">9,200 users</text>
+
+            <!-- Tầng 4 -->
+            <polygon points="309.0,405 791.0,405 762.0,505 338.0,505" fill="#FF9800" fill-opacity="0.9" stroke="white" stroke-width="3" />
+            <text x="550" y="447.0" text-anchor="middle" font-size="28" font-weight="700" fill="white">WEEKLY GOAL MET</text>
+            <text x="550" y="480.0" text-anchor="middle" font-size="22" fill="white">4,100 users</text>
+
+            <!-- Tầng 5 -->
+            <polygon points="338.0,520 762.0,520 739.6,620 360.4,620" fill="#E53935" fill-opacity="0.9" stroke="white" stroke-width="3" />
+            <text x="550" y="562.0" text-anchor="middle" font-size="28" font-weight="700" fill="white">PREMIUM MEMBER</text>
+            <text x="550" y="595.0" text-anchor="middle" font-size="22" fill="white">1,200 users</text>
+
+            <!-- DROP -->
+            <g font-size="18" font-family="Arial, sans-serif" font-weight="bold" fill="#D32F2F">
+            <text x="120" y="173.5" text-anchor="end">↘ 26.0% Drop</text>
+            <text x="140" y="288.5" text-anchor="end">↘ 50.3% Drop</text>
+            <text x="160" y="403.5" text-anchor="end">↘ 55.4% Drop</text>
+            <text x="180" y="518.5" text-anchor="end">↘ 70.7% Drop</text>
+            </g>
+
+            <!-- CV -->
+            <g font-size="18" font-family="Arial, sans-serif" font-weight="bold" fill="#599E5E">
+            <text x="980" y="173.5" text-anchor="start">↗ 74.0% CV</text>
+            <text x="960" y="288.5" text-anchor="start">↗ 49.7% CV</text>
+            <text x="940" y="403.5" text-anchor="start">↗ 44.6% CV</text>
+            <text x="920" y="518.5" text-anchor="start">↗ 29.3% CV</text>
+            </g>
+
+        </svg>
+    </div>
+    """
+
+    # ===== 3. DESIGN DECORATIONS (Organic Leaves/Icons) =====
+    decorations_svg = f"""
+    <div style="position:absolute; top:40px; right:60px; width:200px; height:200px; opacity:0.6;">
+        <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M50 80C70 80 85 60 85 40C85 20 70 10 50 10C30 10 15 20 15 40C15 60 30 80 50 80Z" fill="{organic_green}" fill-opacity="0.2"/>
+            <path d="M50 10V80" stroke="{organic_green}" stroke-width="2" stroke-linecap="round"/>
+            <path d="M50 30C60 30 70 25 75 20" stroke="{organic_green}" stroke-width="2" stroke-linecap="round"/>
+            <path d="M50 50C35 50 25 45 20 40" stroke="{organic_green}" stroke-width="2" stroke-linecap="round"/>
+        </svg>
+    </div>
+    <div style="position:absolute; bottom:0; left:0; width:100%; height:10px; background: {accent_color};"></div>
+    """
+
+    # ===== 4. RENDER HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+      width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
+      font-family: {font_family};
+      background-color: {bg_color};
+      background-image: radial-gradient({accent_color}66 1.5px, transparent 1.5px);
+      background-size: 50px 50px;
+    }}
+    .container {{
+      padding: 80px 100px;
+    }}
+    .header-group {{
+      margin-bottom: 50px;
+      border-left: 15px solid {organic_green};
+      padding-left: 30px;
+    }}
+    h1 {{
+      font-size: {main_title_font_size};
+      color: {main_title_color};
+      margin: 0;
+      font-weight: 800;
+      letter-spacing: -2px;
+      text-transform: uppercase;
+    }}
+    .subtitle {{
+      font-size: {subtitle_font_size};
+      color: {subtitle_color};
+      margin-top: 5px;
+      font-weight: 400;
+    }}
+    .content-area {{
+      display: flex;
+      gap: 50px;
+      align-items: flex-start;
+    }}
+    .insight-panel {{
+      width: 450px;
+      margin-top: 60px;
+    }}
+    .insight-card {{
+      background: white;
+      padding: 40px;
+      border-radius: 40px;
+      box-shadow: 15px 15px 0px {accent_color};
+      font-size: {insight_font_size};
+      color: {insight_text_color};
+      line-height: 1.5;
+      border: 3px solid {organic_green}44;
+    }}
+    .chart-panel {{
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }}
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header-group">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="content-area">
+                <div class="insight-panel">
+                    {f'<div class="insight-card">{insight}</div>' if insight else ""}
+                </div>
+                <div class="chart-panel">
+                    {funnel_chart_html}
+                </div>
+            </div>
+        </div>
+        {decorations_svg}
+    </body>
+    </html>
+    """
+    return html_code
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+    def generate_radar_chart_slide_1(
+    main_title="Chỉ Số Đánh Giá Chất Lượng Dịch Vụ Chăm Sóc",
+    subtitle="Báo cáo phân tích trải nghiệm khách hàng Q1/2026",
+    insight=(
+        "Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. "
+        "Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe."
+    ),
+    chart_type="radar",
+    chart_options={
+        "unit": "đ",
+        "show_value": True,
+        "data_label_format": "{value}",
+        "show_grid_lines": True,
+        "show_axis_lines": True,
+        "max_value": 10,
+        "num_levels": 5,
+        "colors": {
+            "axis_color": "#D1D5DB",
+            "grid_color": "#E5E7EB",
+            "label_color": "#374151",
+            "accent_color": "#F4A261"
+        }
+    },
+    data_input={
+        "data": {
+            "axes": ["Y tế", "Tâm lý", "Dinh dưỡng", "Vận động", "Công nghệ", "Môi trường"],
+            "series": [
+                {"label": "Hiện tại", "values": [8.5, 9.2, 7.8, 8.0, 6.5, 8.8]},
+                {"label": "Mục tiêu", "values": [9.5, 9.5, 9.0, 8.5, 8.5, 9.5]}
+            ]
+        }
+    },
+    font_family="'Inter', sans-serif",
+    accent_color="#F4A261",
+    main_title_color="#1D3557",
+    subtitle_color="#457B9D",
+    insight_text_color="#1D3557",
+    main_title_font_size="64px",
+    subtitle_font_size="28px",
+    insight_font_size="30px"
+) -> str:
+        """
+        Create a radar chart slide with a professional, warm style.
+        Suitable for healthcare service reports, medical care, or multidimensional analysis
+        """
+
+    # ===== 1. GET & PROCESS DATA =====
+    data = data_input.get("data", {})
+    axes = data.get("axes", [])
+    series = data.get("series", [])
+    num_axes = len(axes)
+    
+    options = chart_options
+    max_val = options.get("max_value") or 10
+    num_levels = options.get("num_levels", 5)
+    colors_opt = options.get("colors", {})
+    
+    import math
+
+    # Cấu hình kích thước SVG
+    width, height = 900, 700
+    cx, cy = width / 2, height / 2
+    radius = 280
+
+    def get_coords(value, index, total):
+        angle = (math.pi * 2 * index / total) - (math.pi / 2)
+        r = (value / max_val) * radius
+        return cx + r * math.cos(angle), cy + r * math.sin(angle)
+
+    # ===== 2. RENDER RADAR SVG COMPONENTS =====
+    
+    # Grid lines (concentric polygons)
+    grid_html = ""
+    for i in range(1, num_levels + 1):
+        level_val = (max_val / num_levels) * i
+        points = []
+        for j in range(num_axes):
+            px, py = get_coords(level_val, j, num_axes)
+            points.append(f"{px},{py}")
+        grid_html += f'<polygon points="{" ".join(points)}" fill="none" stroke="{colors_opt.get("grid_color", "#EEE")}" stroke-width="1" />'
+
+    # Axis lines and Labels
+    axes_html = ""
+    labels_html = ""
+    for i in range(num_axes):
+        px, py = get_coords(max_val, i, num_axes)
+        # Line from center
+        axes_html += f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="{colors_opt.get("axis_color", "#CCC")}" stroke-width="1" />'
+        
+        # Labels placement
+        label_r = radius + 40
+        lx = cx + label_r * math.cos((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        ly = cy + label_r * math.sin((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        anchor = "middle"
+        if lx < cx - 20: anchor = "end"
+        elif lx > cx + 20: anchor = "start"
+        
+        labels_html += f'<text x="{lx}" y="{ly}" text-anchor="{anchor}" font-size="20" fill="{colors_opt.get("label_color", "#333")}" font-weight="600">{axes[i]}</text>'
+
+    # Data Polygons (Series)
+    series_colors = ["#1D3557", "#F4A261", "#2A9D8F", "#E76F51"]
+    data_polygons_html = ""
+    legend_items_html = ""
+    
+    for idx, s in enumerate(series):
+        s_color = series_colors[idx % len(series_colors)]
+        s_values = s.get("values", [])
+        s_label = s.get("label", "Series")
+        
+        points = []
+        data_points_html = ""
+        for i, val in enumerate(s_values):
+            px, py = get_coords(val, i, num_axes)
+            points.append(f"{px},{py}")
+            if options.get("show_value"):
+                data_points_html += f'<circle cx="{px}" cy="{py}" r="5" fill="{s_color}" />'
+                vx, vy = px - cx, py - cy
+                norm = math.sqrt(vx * vx + vy * vy) or 1
+                ux, uy = vx / norm, vy / norm
+                label_distance = 24
+                if idx == 0:  # "Hiện tại" -> đặt số vào bên trong polygon
+                    tx, ty = px - ux * label_distance, py - uy * label_distance
+                else:  # "Mục tiêu" -> đặt số ra ngoài polygon
+                    tx, ty = px + ux * label_distance, py + uy * label_distance
+
+                anchor = "middle"
+                if idx == 0:
+                    # Label nằm trong: canh ngược chiều trục để text không tràn ra ngoài
+                    if ux > 0.25:
+                        anchor = "end"
+                    elif ux < -0.25:
+                        anchor = "start"
+                else:
+                    # Label nằm ngoài: canh cùng chiều trục
+                    if ux > 0.25:
+                        anchor = "start"
+                    elif ux < -0.25:
+                        anchor = "end"
+
+                data_points_html += (
+                    f'<text x="{tx}" y="{ty}" text-anchor="{anchor}" '
+                    f'font-size="16" font-weight="bold" fill="{s_color}">{val}</text>'
+                )
+        
+        data_polygons_html += f"""
+            <polygon points="{" ".join(points)}" fill="{s_color}" fill-opacity="0.2" stroke="{s_color}" stroke-width="3" />
+            {data_points_html}
+        """
+        
+        legend_variant_class = "legend-swatch-current" if idx == 0 else "legend-swatch-target" if idx == 1 else ""
+        legend_items_html += f"""
+        <div class="legend-item">
+            <span class="legend-swatch {legend_variant_class}"></span>
+            <span class="legend-label">{s_label}</span>
+        </div>
+        """
+
+    # ===== 3. RENDER FINAL HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                overflow: hidden; font-family: {font_family};
+                background: linear-gradient(135deg, #a4daf2 0%, #eec6f2 50%, #cafad9 100%);
+            }}
+            .slide-container {{
+                position: relative; width: 100%; height: 100%;
+                background-image: 
+                    radial-gradient(circle at 85% 15%, rgba(168, 218, 220, 0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 10% 90%, rgba(71, 123, 157, 0.08) 0%, transparent 45%),
+                    radial-gradient(circle at 50% 50%, rgba(244, 162, 97, 0.02) 0%, transparent 50%);
+            }}
+            .header {{
+                padding: 80px 100px 40px 100px;
+            }}
+            h1 {{
+                font-size: {main_title_font_size}; color: {main_title_color};
+                margin: 0; font-weight: 800; letter-spacing: -1px;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size}; color: {subtitle_color};
+                margin-top: 15px; font-weight: 500;
+            }}
+            .content-flex {{
+                display: flex; padding: 0 100px; gap: 80px; align-items: flex-start;
+            }}
+            .left-col {{
+                flex: 1; margin-top: 40px;
+            }}
+            .right-col {{
+                flex: 1.5; display: flex; justify-content: center;
+            }}
+            .insight-box {{
+                background: linear-gradient(135deg, rgba(71, 123, 157, 0.08) 0%, rgba(168, 218, 220, 0.08) 100%);
+                padding: 40px; border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(29, 53, 87, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                font-size: {insight_font_size}; color: {insight_text_color};
+                line-height: 1.7; border-left: 4px solid #457B9D;
+                border-top: 4px solid rgba(244, 162, 97, 0.3);
+                margin-bottom: 50px; font-weight: 500; letter-spacing: 0.3px;
+            }}
+            .legend-container {{
+                background: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(240, 248, 251, 0.9));
+                padding: 26px 28px;
+                border-radius: 18px;
+                display: inline-block;
+                border: 1px solid rgba(69, 123, 157, 0.18);
+                box-shadow: 0 10px 24px rgba(29, 53, 87, 0.12);
+                backdrop-filter: blur(2px);
+            }}
+            .legend-title {{
+                font-size: 16px;
+                text-transform: uppercase;
+                color: #2F5D78;
+                margin-bottom: 14px;
+                font-weight: 800;
+                letter-spacing: 1.2px;
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                margin-bottom: 12px;
+            }}
+            .legend-swatch {{
+                width: 22px;
+                height: 22px;
+                display: inline-block;
+                flex-shrink: 0;
+                border-radius: 999px;
+                margin-right: 12px;
+                border: 2px solid rgba(255,255,255,0.9);
+                box-shadow: 0 0 0 1px rgba(69, 123, 157, 0.2);
+            }}
+            .legend-swatch-current {{
+                background: linear-gradient(135deg, #6ea2e0, #1D3557);
+            }}
+            .legend-swatch-target {{
+                background: linear-gradient(135deg, #F6B37C, #cf8b53);
+            }}
+            .legend-label {{
+                font-size: 21px;
+                font-weight: 650;
+                color: #24465E;
+            }}
+            .chart-wrapper {{
+                width: {width}px; height: {height}px;
+            }}
+            .background-blob {{
+                position: absolute; bottom: -260px; left: -140px;
+                width: 460px; height: 460px; background: rgba(168, 218, 220, 0.26);
+                border-radius: 50%; z-index: -1; pointer-events: none;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="header">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">{insight}</div>
+                    <div class="legend-container">
+                        <div class="legend-title">Chú thích</div>
+                        {legend_items_html}
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="chart-wrapper">
+                        <svg viewBox="0 0 {width} {height}" width="100%" height="100%">
+                            {grid_html}
+                            {axes_html}
+                            {data_polygons_html}
+                            {labels_html}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="background-blob"></div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+
+#-------RADAR CHART SLIDES------------------------------------------------------------------
+
+def generate_radar_chart_slide_1(
+    main_title="Chỉ Số Đánh Giá Chất Lượng Dịch Vụ Chăm Sóc",
+    subtitle="Báo cáo phân tích trải nghiệm khách hàng Q1/2026",
+    insight=(
+        "Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. "
+        "Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe."
+    ),
+    chart_type="radar",
+    chart_options={
+        "unit": "đ",
+        "show_value": True,
+        "data_label_format": "{value}",
+        "show_grid_lines": True,
+        "show_axis_lines": True,
+        "max_value": 10,
+        "num_levels": 5,
+        "colors": {
+            "axis_color": "#D1D5DB",
+            "grid_color": "#E5E7EB",
+            "label_color": "#374151",
+            "accent_color": "#F4A261"
+        }
+    },
+    data_input={
+        "data": {
+            "axes": ["Y tế", "Tâm lý", "Dinh dưỡng", "Vận động", "Công nghệ", "Môi trường"],
+            "series": [
+                {"label": "Hiện tại", "values": [8.5, 9.2, 7.8, 8.0, 6.5, 8.8]},
+                {"label": "Mục tiêu", "values": [9.5, 9.5, 9.0, 8.5, 8.5, 9.5]}
+            ]
+        }
+    },
+    font_family="'Inter', sans-serif",
+    accent_color="#F4A261",
+    main_title_color="#1D3557",
+    subtitle_color="#457B9D",
+    insight_text_color="#1D3557",
+    main_title_font_size="64px",
+    subtitle_font_size="28px",
+    insight_font_size="30px"
+) -> str:
+    """
+    Create a radar chart slide with a professional, warm style.
+    Suitable for healthcare service reports, medical care, or multidimensional analysis
+    """
+
+    # ===== 1. GET & PROCESS DATA =====
+    data = data_input.get("data", {})
+    axes = data.get("axes", [])
+    series = data.get("series", [])
+    num_axes = len(axes)
+    
+    options = chart_options
+    max_val = options.get("max_value") or 10
+    num_levels = options.get("num_levels", 5)
+    colors_opt = options.get("colors", {})
+    
+    import math
+
+    # Cấu hình kích thước SVG
+    width, height = 900, 700
+    cx, cy = width / 2, height / 2
+    radius = 280
+
+    def get_coords(value, index, total):
+        angle = (math.pi * 2 * index / total) - (math.pi / 2)
+        r = (value / max_val) * radius
+        return cx + r * math.cos(angle), cy + r * math.sin(angle)
+
+    # ===== 2. RENDER RADAR SVG COMPONENTS =====
+    
+    # Grid lines (concentric polygons)
+    grid_html = ""
+    for i in range(1, num_levels + 1):
+        level_val = (max_val / num_levels) * i
+        points = []
+        for j in range(num_axes):
+            px, py = get_coords(level_val, j, num_axes)
+            points.append(f"{px},{py}")
+        grid_html += f'<polygon points="{" ".join(points)}" fill="none" stroke="{colors_opt.get("grid_color", "#EEE")}" stroke-width="1" />'
+
+    # Axis lines and Labels
+    axes_html = ""
+    labels_html = ""
+    for i in range(num_axes):
+        px, py = get_coords(max_val, i, num_axes)
+        # Line from center
+        axes_html += f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="{colors_opt.get("axis_color", "#CCC")}" stroke-width="1" />'
+        
+        # Labels placement
+        label_r = radius + 40
+        lx = cx + label_r * math.cos((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        ly = cy + label_r * math.sin((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        anchor = "middle"
+        if lx < cx - 20: anchor = "end"
+        elif lx > cx + 20: anchor = "start"
+        
+        labels_html += f'<text x="{lx}" y="{ly}" text-anchor="{anchor}" font-size="20" fill="{colors_opt.get("label_color", "#333")}" font-weight="600">{axes[i]}</text>'
+
+    # Data Polygons (Series)
+    series_colors = ["#1D3557", "#F4A261", "#2A9D8F", "#E76F51"]
+    data_polygons_html = ""
+    legend_items_html = ""
+    
+    for idx, s in enumerate(series):
+        s_color = series_colors[idx % len(series_colors)]
+        s_values = s.get("values", [])
+        s_label = s.get("label", "Series")
+        
+        points = []
+        data_points_html = ""
+        for i, val in enumerate(s_values):
+            px, py = get_coords(val, i, num_axes)
+            points.append(f"{px},{py}")
+            if options.get("show_value"):
+                data_points_html += f'<circle cx="{px}" cy="{py}" r="5" fill="{s_color}" />'
+                vx, vy = px - cx, py - cy
+                norm = math.sqrt(vx * vx + vy * vy) or 1
+                ux, uy = vx / norm, vy / norm
+                label_distance = 24
+                if idx == 0:  # "Hiện tại" -> đặt số vào bên trong polygon
+                    tx, ty = px - ux * label_distance, py - uy * label_distance
+                else:  # "Mục tiêu" -> đặt số ra ngoài polygon
+                    tx, ty = px + ux * label_distance, py + uy * label_distance
+
+                anchor = "middle"
+                if idx == 0:
+                    # Label nằm trong: canh ngược chiều trục để text không tràn ra ngoài
+                    if ux > 0.25:
+                        anchor = "end"
+                    elif ux < -0.25:
+                        anchor = "start"
+                else:
+                    # Label nằm ngoài: canh cùng chiều trục
+                    if ux > 0.25:
+                        anchor = "start"
+                    elif ux < -0.25:
+                        anchor = "end"
+
+                data_points_html += (
+                    f'<text x="{tx}" y="{ty}" text-anchor="{anchor}" '
+                    f'font-size="16" font-weight="bold" fill="{s_color}">{val}</text>'
+                )
+        
+        data_polygons_html += f"""
+            <polygon points="{" ".join(points)}" fill="{s_color}" fill-opacity="0.2" stroke="{s_color}" stroke-width="3" />
+            {data_points_html}
+        """
+        
+        legend_variant_class = "legend-swatch-current" if idx == 0 else "legend-swatch-target" if idx == 1 else ""
+        legend_items_html += f"""
+        <div class="legend-item">
+            <span class="legend-swatch {legend_variant_class}"></span>
+            <span class="legend-label">{s_label}</span>
+        </div>
+        """
+
+    # ===== 3. RENDER FINAL HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                overflow: hidden; font-family: {font_family};
+                background: linear-gradient(135deg, #a4daf2 0%, #eec6f2 50%, #cafad9 100%);
+            }}
+            .slide-container {{
+                position: relative; width: 100%; height: 100%;
+                background-image: 
+                    radial-gradient(circle at 85% 15%, rgba(168, 218, 220, 0.15) 0%, transparent 40%),
+                    radial-gradient(circle at 10% 90%, rgba(71, 123, 157, 0.08) 0%, transparent 45%),
+                    radial-gradient(circle at 50% 50%, rgba(244, 162, 97, 0.02) 0%, transparent 50%);
+            }}
+            .header {{
+                padding: 80px 100px 40px 100px;
+            }}
+            h1 {{
+                font-size: {main_title_font_size}; color: {main_title_color};
+                margin: 0; font-weight: 800; letter-spacing: -1px;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size}; color: {subtitle_color};
+                margin-top: 15px; font-weight: 500;
+            }}
+            .content-flex {{
+                display: flex; padding: 0 100px; gap: 80px; align-items: flex-start;
+            }}
+            .left-col {{
+                flex: 1; margin-top: 40px;
+            }}
+            .right-col {{
+                flex: 1.5; display: flex; justify-content: center;
+            }}
+            .insight-box {{
+                background: linear-gradient(135deg, rgba(71, 123, 157, 0.08) 0%, rgba(168, 218, 220, 0.08) 100%);
+                padding: 40px; border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(29, 53, 87, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                font-size: {insight_font_size}; color: {insight_text_color};
+                line-height: 1.7; border-left: 4px solid #457B9D;
+                border-top: 4px solid rgba(244, 162, 97, 0.3);
+                margin-bottom: 50px; font-weight: 500; letter-spacing: 0.3px;
+            }}
+            .legend-container {{
+                background: linear-gradient(145deg, rgba(255,255,255,0.85), rgba(240, 248, 251, 0.9));
+                padding: 26px 28px;
+                border-radius: 18px;
+                display: inline-block;
+                border: 1px solid rgba(69, 123, 157, 0.18);
+                box-shadow: 0 10px 24px rgba(29, 53, 87, 0.12);
+                backdrop-filter: blur(2px);
+            }}
+            .legend-title {{
+                font-size: 16px;
+                text-transform: uppercase;
+                color: #2F5D78;
+                margin-bottom: 14px;
+                font-weight: 800;
+                letter-spacing: 1.2px;
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                margin-bottom: 12px;
+            }}
+            .legend-swatch {{
+                width: 22px;
+                height: 22px;
+                display: inline-block;
+                flex-shrink: 0;
+                border-radius: 999px;
+                margin-right: 12px;
+                border: 2px solid rgba(255,255,255,0.9);
+                box-shadow: 0 0 0 1px rgba(69, 123, 157, 0.2);
+            }}
+            .legend-swatch-current {{
+                background: linear-gradient(135deg, #6ea2e0, #1D3557);
+            }}
+            .legend-swatch-target {{
+                background: linear-gradient(135deg, #F6B37C, #cf8b53);
+            }}
+            .legend-label {{
+                font-size: 21px;
+                font-weight: 650;
+                color: #24465E;
+            }}
+            .chart-wrapper {{
+                width: {width}px; height: {height}px;
+            }}
+            .background-blob {{
+                position: absolute; bottom: -260px; left: -140px;
+                width: 460px; height: 460px; background: rgba(168, 218, 220, 0.26);
+                border-radius: 50%; z-index: -1; pointer-events: none;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="header">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">{insight}</div>
+                    <div class="legend-container">
+                        <div class="legend-title">Chú thích</div>
+                        {legend_items_html}
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="chart-wrapper">
+                        <svg viewBox="0 0 {width} {height}" width="100%" height="100%">
+                            {grid_html}
+                            {axes_html}
+                            {data_polygons_html}
+                            {labels_html}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="background-blob"></div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+
+
+#-------TABLE CHART SLIDES------------------------------------------------------------------
+
+def generate_table_slide_1(
+    main_title="Renewable Energy Capacity by Region",
+    subtitle="Global Energy Research Lab – 2024 Data",
+    insight=(
+        "Asia shows the largest installed renewable capacity, particularly in solar energy. "
+        "Europe maintains strong wind power production, while hydro remains a stable base "
+        "energy source across multiple regions."
+    ),
+    chart_type="table",
+    chart_options={
+        "unit": " GW",
+        "show_value": True,
+        "data_label_format": "{value}",
+        "colors": {
+            "header_bg": "#76C2B4",
+            "grid_color": "#D1D5DB",
+            "text_color": "#333333",
+            "highlight_bg": "#E6F4F1"
+        }
+    },
+
+    data_input={
+        "data": {
+            "columns": ["Solar", "Wind", "Hydro"],
+            "rows": [
+                {"label": "Asia", "values": [620, 430, 510]},
+                {"label": "Europe", "values": [310, 520, 260]},
+                {"label": "North America", "values": [290, 340, 300]},
+                {"label": "South America", "values": [150, 120, 380]}
+            ]
+        }
+    },
+
+    font_family="Inter, Arial, sans-serif",
+    accent_color="#76C2B4",
+    main_title_color="#333333",
+    subtitle_color="#666666",
+    insight_text_color="#444444",
+
+    main_title_font_size="72px",
+    subtitle_font_size="32px",
+    insight_font_size="28px"
+)->str:
+    """
+    Slide deck with a Science Lab style.
+    Suitable for research reports, group projects, or technical data analysis.
+    """
+
+    # ===== 1.GET DATA =====
+    data = data_input.get("data", {})
+    columns = data.get("columns", [])
+    rows = data.get("rows", [])
+
+    options = chart_options 
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", True)
+    data_label_format = options.get("data_label_format", "{value}")
+
+    colors = options.get(
+        "colors",
+        {
+            "header_bg": "#76C2B4", 
+            "grid_color": "#D1D5DB",
+            "text_color": "#333333",
+            "highlight_bg": "#E6F4F1",
+            "accent_color": "#76C2B4"
+        }
+    )
+
+    header_bg = colors.get("header_bg")
+    grid_color = colors.get("grid_color")
+    text_color = colors.get("text_color")
+    highlight_bg = colors.get("highlight_bg")
+
+    # ===== 2. PROCESS TABLE =====
+    table_rows_html = ""
+    for row in rows:
+        label = row.get("label", "")
+        values = row.get("values", [])
+        cells_html = ""
+
+        for value in values:
+            formatted_value = ""
+            if show_value:
+                formatted_value = data_label_format.replace("{value}", str(value))
+                if unit:
+                    formatted_value += unit
+
+            cells_html += f"""
+            <td style="padding:20px; border-bottom:1px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
+                {formatted_value}
+            </td>
+            """
+
+        table_rows_html += f"""
+        <tr style="background-color: white;">
+            <td style="padding:20px; border-bottom:1px solid {grid_color}; font-weight:700; font-size:24px; color:{main_title_color}; background:{highlight_bg}66;">
+                {label}
+            </td>
+            {cells_html}
+        </tr>
+        """
+
+    header_cells = ""
+    for col in columns:
+        header_cells += f"""
+        <th style="padding:22px; background:{header_bg}; border-bottom:3px solid rgba(0,0,0,0.1); font-size:24px; color:white; text-transform:uppercase; letter-spacing:1px; width:25%;">
+            {col}
+        </th>
+        """
+
+    table_html = f"""
+    <table style="border-collapse:collapse; width:60%; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); table-layout:fixed;">
+        <thead>
+            <tr>
+                <th style="padding:22px; background:{header_bg}; border-bottom:3px solid rgba(0,0,0,0.1); font-size:24px; color:white; text-transform:uppercase; width:25%;">
+                    Hạng mục
+                </th>
+                {header_cells}
+            </tr>
+        </thead>
+        <tbody>
+            {table_rows_html}
+        </tbody>
+    </table>
+    """
+
+    # ===== 3. DESIGN SVG (LAB ICONS) =====
+    decorations_svg = f"""
+    <div style="position:absolute; bottom:20px; right:30px; width:180px; height:180px; opacity:0.25; pointer-events:none; z-index:0;">
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M140 40V140C140 151.046 131.046 160 120 160H80C68.9543 160 60 151.046 60 140V40" stroke="{header_bg}" stroke-width="8" stroke-linecap="round"/>
+            <path d="M50 40H150" stroke="{header_bg}" stroke-width="8" stroke-linecap="round"/>
+            <rect x="75" y="100" width="50" height="40" fill="{header_bg}" fill-opacity="0.3" />
+            <circle cx="160" cy="60" r="10" fill="{header_bg}" fill-opacity="0.2" />
+            <circle cx="175" cy="90" r="6" fill="{header_bg}" fill-opacity="0.2" />
+        </svg>
+    </div>
+    """
+
+    # ===== 4. RENDER HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+      width:1920px;
+      height:1080px;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      font-family:{font_family};
+      background-color:#F8FBFB;
+      background-image: radial-gradient(#d1d5db 1px, transparent 1px);
+      background-size: 40px 40px; /* Hiệu ứng giấy kẻ ô tập */
+    }}
+
+    .header-container {{
+      padding: 80px 100px 0 100px;
+    }}
+
+    .title-box {{
+      display: inline-block;
+      background: {header_bg};
+      padding: 10px 40px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+    }}
+
+    h1 {{
+      font-size: {main_title_font_size};
+      color: {main_title_color};
+      margin: 0;
+      font-weight: 900;
+      text-transform: uppercase;
+    }}
+
+    .subtitle {{
+      font-size: {subtitle_font_size};
+      color: {subtitle_color};
+      margin-top: 10px;
+      font-weight: 500;
+    }}
+
+    .main-flex {{
+      display: flex;
+      padding: 60px 100px;
+      gap: 60px;
+      height: 600px;
+    }}
+
+    .left-panel {{
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }}
+
+    .right-panel {{
+      flex: 2;
+      display: flex;
+      align-items: center;
+    }}
+
+    .insight-card {{
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      border-left: 15px solid {header_bg};
+      box-shadow: 10px 10px 0px rgba(118, 194, 180, 0.2);
+      font-size: {insight_font_size};
+      color: {insight_text_color};
+      line-height: 1.6;
+    }}
+    </style>
+    </head>
+
+    <body>
+        <div class="header-container">
+            <h1>{main_title}</h1>
+            {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+        </div>
+
+        <div class="main-flex">
+            <div class="left-panel">
+                <div class="insight-card">
+                    {insight}
+                </div>
+            </div>
+
+            <div class="right-panel">
+                {table_html}
+            </div>
+        </div>
+
+        {decorations_svg}
+    </body>
+    </html>
+    """
+    return html_code
+
+#-------TREEMAP CHART SLIDES------------------------------------------------------------------
+
+def generate_treemap_chart_slide_1(
+    main_title="Stock Market Distribution by Sector",
+    subtitle="Global Equity Markets – Q1 2026 Analysis",
+    insight=(
+        "Technology remains the dominant force, led by Software and Hardware. "
+        "Finance follows closely, showing a balanced distribution across Banking and Insurance. "
+        "Consumer Goods shows significant growth in E-commerce segments."
+    ),
+    chart_type="treemap",
+    chart_options={
+        "unit": "B",
+        "show_value": True,
+        "show_label": True,
+        "data_label_format": "{label}: ${value}B",
+        "padding": 4,
+        "border_radius": 4,
+        "colors": {
+            "base_color": "#1E3A8A",
+            "accent_color": "#3B82F6",
+            "text_color": "#FFFFFF",
+            "border_color": "#1E293B"
+        }
+    },
+    data_input={
+        "data": [
+            {
+                "label": "Technology",
+                "value": 450,
+                "children": [
+                    {"label": "Software", "value": 250},
+                    {"label": "Hardware", "value": 150},
+                    {"label": "Cloud", "value": 50}
+                ]
+            },
+            {
+                "label": "Finance",
+                "value": 300,
+                "children": [
+                    {"label": "Banking", "value": 180},
+                    {"label": "Insurance", "value": 120}
+                ]
+            },
+            {
+                "label": "Consumer",
+                "value": 250,
+                "children": [
+                    {"label": "Retail", "value": 150},
+                    {"label": "E-commerce", "value": 100}
+                ]
+            }
+        ]
+    },
+    font_family="'Inter', sans-serif",
+    accent_color="#3B82F6",
+    main_title_color="#FFFFFF",
+    subtitle_color="#94A3B8",
+    insight_text_color="#CBD5E1",
+    main_title_font_size="64px",
+    subtitle_font_size="28px",
+    insight_font_size="26px"
+) -> str:
+    """
+    Generates a professional treemap chart slide with a financial theme.
+    The layout is optimized for high-density hierarchical data visualization.
+    """
+
+    # ===== 1. PREPARE DATA & OPTIONS =====
+    data = data_input.get("data", [])
+    options = chart_options
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", True)
+    show_label = options.get("show_label", True)
+    label_format = options.get("data_label_format", "{label}: {value}")
+    
+    colors = options.get("colors", {})
+    base_color = colors.get("base_color", "#1E3A8A")
+    accent_color_val = colors.get("accent_color", "#3B82F6")
+    text_color = colors.get("text_color", "#FFFFFF")
+    border_color = colors.get("border_color", "#FFFFFF")
+    padding = options.get("padding", 4)
+    radius = options.get("border_radius", 4)
+
+    total_value = sum(item.get("value", 0) for item in data)
+
+    # ===== 2. TREEMAP LOGIC (SLICE & DICE) =====
+    # Canvas dimensions for the SVG
+    canvas_w = 1100
+    canvas_h = 550
+    
+    svg_elements = []
+    
+    current_x = 0
+    for i, parent in enumerate(data):
+        p_label = parent.get("label", "")
+        p_value = parent.get("value", 0)
+        children = parent.get("children", [])
+        
+        # Calculate parent width based on proportion
+        p_width = (p_value / total_value * canvas_w) if total_value > 0 else 0
+        
+        # Draw parent background grouping (slightly different shades)
+        p_bg_color = base_color if i % 2 == 0 else "#1e40af"
+        
+        # Process children
+        child_y = 0
+        child_total = sum(c.get("value", 0) for c in children)
+        
+        for c_idx, child in enumerate(children):
+            c_label = child.get("label", "")
+            c_value = child.get("value", 0)
+            c_height = (c_value / child_total * canvas_h) if child_total > 0 else 0
+            
+            # Formatting text
+            display_text = label_format.replace("{label}", c_label).replace("{value}", str(c_value)).replace("{unit}", unit)
+            
+            # SVG Rect for leaf node
+            svg_elements.append(f"""
+            <g>
+                <rect x="{current_x + padding}" y="{child_y + padding}" 
+                      width="{p_width - 2*padding}" height="{c_height - 2*padding}" 
+                      fill="{p_bg_color}" stroke="{border_color}" stroke-width="1" rx="{radius}" />
+                <text x="{current_x + p_width/2}" y="{child_y + c_height/2}" 
+                      fill="{text_color}" font-size="16" font-weight="600"
+                      text-anchor="middle" dominant-baseline="middle" style="pointer-events: none;">
+                    {display_text if show_label else ""}
+                </text>
+            </g>
+            """)
+            child_y += c_height
+            
+        current_x += p_width
+
+    treemap_svg_html = f"""
+    <div style="width: 1100px; height: 550px; margin-bottom: 30px;">
+        <svg width="1100" height="550" viewBox="0 0 1100 550">
+            {"".join(svg_elements)}
+        </svg>
+    </div>
+    """
+
+    # ===== 3. TABLE GENERATION =====
+    table_rows = ""
+    for item in data:
+        table_rows += f"""
+        <tr style="border-bottom: 1px solid #334155;">
+            <td style="padding: 15px; font-weight: bold; color: {accent_color_val};">{item['label']}</td>
+            <td style="padding: 15px; text-align: right; color: white;">{item['value']} {unit}</td>
+            <td style="padding: 15px; text-align: right; color: #94A3B8;">{round(item['value']/total_value*100, 1)}%</td>
+        </tr>
+        """
+
+    table_html = f"""
+    <div style="position:relative; width:1100px; max-width:100vw; overflow-x:auto; margin:0 auto;">
+        <table style="width:100%; min-width:600px; border-collapse:collapse; background:rgba(30,41,59,0.5); font-size:20px;">
+            <thead>
+                <tr style="background:#1E293B; color:#94A3B8; text-align:left;">
+                    <th style="padding:15px;">Sector</th>
+                    <th style="padding:15px; text-align:right;">Market Value</th>
+                    <th style="padding:15px; text-align:right;">% Share</th>
+                </tr>
+            </thead>
+            <tbody>
+                {table_rows}
+            </tbody>
+        </table>
+    </div>
+    """
+
+    # ===== 4. FINAL HTML RENDER =====
+    return f"""
+    <html>
+    <body style="margin: 0; padding: 60px; width: 1920px; height: 1080px; 
+                 background: linear-gradient(135deg, #0F172A 0%, #1E293B 100%); 
+                 font-family: {font_family}; color: white; box-sizing: border-box; overflow: hidden;">
+        
+        <div style="margin-bottom: 60px; border-left: 10px solid {accent_color}; padding-left: 30px;">
+            <h1 style="margin: 0; font-size: {main_title_font_size}; color: {main_title_color}; text-transform: uppercase; letter-spacing: 2px;">
+                {main_title}
+            </h1>
+            <div style="font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px;">
+                {subtitle}
+            </div>
+        </div>
+
+        <div style="display: flex; gap: 60px; align-items: flex-start;">
+            <div style="width: 550px; background: rgba(255,255,255,0.05); padding: 40px; border-radius: 15px; border: 1px solid rgba(255,255,255,0.1);">
+                <div style="font-size: 20px; color: {accent_color}; font-weight: bold; margin-bottom: 20px; text-transform: uppercase;">Key Insights</div>
+                <div style="font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.6; font-style: italic;">
+                    "{insight}"
+                </div>
+            </div>
+
+            <div style="flex: 1;">
+                {treemap_svg_html}
+                {table_html}
+            </div>
+        </div>
+
+        <div style="position: absolute; bottom: 40px; right: 60px; font-size: 18px; color: #475569;">
+            Wardiere Finance | Internal Strategy Document
+        </div>
+    </body>
+    </html>
+    """
