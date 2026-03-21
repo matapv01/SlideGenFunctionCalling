@@ -12,6 +12,7 @@ AI-powered presentation generator. Upload tài liệu hoặc nhập ý tưởng 
 - [Local Development](#local-development)
 - [Lệnh Docker thường dùng](#lệnh-docker-thường-dùng)
 - [Quản lý Subscription Codes](#quản-lý-subscription-codes)
+- [Reset Database](#reset-database)
 
 ---
 
@@ -211,3 +212,41 @@ sqlite3 backend/infrastructure/database/slidegen.db \
 ```
 
 > **Tip:** Dùng [DB Browser for SQLite](https://sqlitebrowser.org/) để quản lý DB trực quan hơn.
+
+---
+
+## Reset Database
+
+### Reset toàn bộ DB (Production)
+
+```bash
+# Dừng container và xóa volume DB
+docker compose down -v
+
+# Rebuild + khởi động lại (DB sẽ được tạo mới)
+docker compose up -d --build
+```
+
+### Reset toàn bộ DB (Development)
+
+```bash
+# Dừng container và xóa volume DB
+docker compose -f docker-compose.dev.yml down -v
+
+# Rebuild + khởi động lại (DB sẽ được tạo mới)
+docker compose -f docker-compose.dev.yml up --build
+```
+
+### Reset chỉ DB mà giữ container chạy
+
+```bash
+# Production
+rm backend/infrastructure/database/slidegen.db
+docker compose exec slidegen python migrate_db.py
+
+# Development
+rm backend/infrastructure/database/slidegen.db
+docker compose -f docker-compose.dev.yml exec slidegen-dev python migrate_db.py
+```
+
+> **⚠️ Lưu ý:** `docker compose down -v` sẽ xóa **toàn bộ data** và **không thể phục hồi**. Hãy backup trước nếu cần.

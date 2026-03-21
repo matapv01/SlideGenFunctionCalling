@@ -70,7 +70,8 @@ export const EventHandlersMixin = {
     },
 
     handleDoubleClick(e) {
-        const target = e.target;
+        const target = this.normalizeEventTarget(e.target);
+        if (!target) return;
 
         // ── Equation: activate MathLive field ───────────────────────────────
         let eqElement = target;
@@ -86,14 +87,6 @@ export const EventHandlersMixin = {
         }
 
         // ── Text contenteditable: existing behavior ──────────────────────────
-        let textElement = target;
-        while (textElement && textElement !== this.root) {
-            if (textElement.hasAttribute('contenteditable')) break;
-            textElement = textElement.parentElement;
-        }
-        const target = this.normalizeEventTarget(e.target);
-        if (!target) return;
-
         const textElement = target.closest('[contenteditable]');
         if (textElement && (textElement.classList.contains('element') || textElement.hasAttribute('data-selectable'))) {
             this.isEditingText = true;
@@ -263,11 +256,9 @@ export const EventHandlersMixin = {
         const isDragHandle  = target.classList && target.classList.contains('drag-handle');
         const isResizeHandle = target.classList && target.classList.contains('resize-handle');
         const isMultiSelectIntent = e.shiftKey || e.ctrlKey || e.metaKey;
+        void isMultiSelectIntent;
 
         // Click on canvas background → deselect
-        if (!isResizeHandle && !isDragHandle && target.classList && (
-        const isDragHandle = target.classList.contains('drag-handle');
-        const isResizeHandle = target.classList.contains('resize-handle');
         const isCanvasBackground = !isResizeHandle && !isDragHandle && (
             target.classList.contains('slide-bg-wrapper') ||
             target.classList.contains('slide-container') ||
