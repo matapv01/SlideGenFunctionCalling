@@ -235,7 +235,10 @@ export const PropertiesPanel = ({
 
   return (
     <TooltipProvider>
-    <div className="w-72 border-l bg-background flex flex-col h-full overflow-y-auto overflow-x-hidden">
+    <div
+      className="w-72 border-l bg-background flex flex-col h-full overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden"
+      style={{ scrollbarWidth: "none" }}
+    >
 
       {/* ── Header + actions ── */}
       <div className="px-3 py-2.5 border-b flex items-center justify-between">
@@ -267,7 +270,10 @@ export const PropertiesPanel = ({
         </div>
       </div>
 
-      <div className="p-3 space-y-4 overflow-y-auto">
+      <div
+        className="p-3 space-y-4 overflow-y-auto [&::-webkit-scrollbar]:hidden"
+        style={{ scrollbarWidth: "none" }}
+      >
 
         {/* ── 1. POSITION & SIZE ── */}
         <div>

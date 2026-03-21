@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useParams, useNavigate } from "react-router-dom";
+import { useParams, useNavigate, useSearchParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight, X, Maximize } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api";
@@ -11,6 +11,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 const PresentationMode = () => {
   const { projectId } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { t } = useLanguage();
   const [slides, setSlides] = useState<any[]>([]);
   const [currentSlide, setCurrentSlide] = useState(0);
@@ -18,10 +19,23 @@ const PresentationMode = () => {
   const [showControls, setShowControls] = useState(true);
   const containerRef = useRef<HTMLDivElement>(null);
   const hideTimer = useRef<ReturnType<typeof setTimeout>>();
+  const isClosingRef = useRef(false);
 
   useEffect(() => {
     loadSlides();
   }, [projectId]);
+
+  useEffect(() => {
+    if (slides.length === 0) return;
+
+    const rawSlide = searchParams.get("slide");
+    const requestedIndex = Number.parseInt(rawSlide || "0", 10);
+    const startIndex = Number.isNaN(requestedIndex)
+      ? 0
+      : Math.max(0, Math.min(requestedIndex, slides.length - 1));
+
+    setCurrentSlide(startIndex);
+  }, [slides.length, searchParams]);
 
   const loadSlides = async () => {
     try {
@@ -45,12 +59,22 @@ const PresentationMode = () => {
     } catch { /* ignore */ }
   };
 
+  const navigateBackToEditor = useCallback(() => {
+    if (!projectId) {
+      navigate("/projects", { replace: true });
+      return;
+    }
+
+    navigate(`/editor/${projectId}?slide=${currentSlide}`, { replace: true });
+  }, [navigate, projectId, currentSlide]);
+
   const exitPresentation = useCallback(() => {
+    isClosingRef.current = true;
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
-    navigate(-1);
-  }, [navigate]);
+    navigateBackToEditor();
+  }, [navigateBackToEditor]);
 
   useEffect(() => {
     const handler = (e: KeyboardEvent) => {
@@ -69,16 +93,19 @@ const PresentationMode = () => {
     const handleFullscreenChange = () => {
       if (!document.fullscreenElement) {
         setIsFullscreen(false);
-        // If we were in fullscreen and now we are not, it means user pressed Esc (browser default)
-        // or we called exitFullscreen. In both cases, stay consistent by going back to editor.
-        if (slides.length > 0) {
-           navigate(-1);
+        // Avoid double-navigation when user clicks our close button.
+        if (isClosingRef.current) {
+          isClosingRef.current = false;
+          return;
         }
+
+        // Browser-level fullscreen exit (Esc/F11): still return to editor.
+        navigateBackToEditor();
       }
     };
     document.addEventListener("fullscreenchange", handleFullscreenChange);
     return () => document.removeEventListener("fullscreenchange", handleFullscreenChange);
-  }, [navigate, slides.length]);
+  }, [navigateBackToEditor]);
 
   // Hide cursor after inactivity
   const handleMouseMove = () => {

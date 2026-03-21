@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState, useCallback } from "react";
+import { memo, useRef, useEffect, useState, useCallback } from "react";
 import { SlideCanvas } from "./SlideCanvas";
 import { cn } from "@/lib/utils";
 import { CANVAS_WIDTH, CANVAS_HEIGHT } from "@/pages/SlideEditor/constants";
@@ -15,25 +15,46 @@ interface ReadOnlySlideProps {
  * Renders a slide using the exact same Shadow DOM + processHTML pipeline as the editor,
  * but without any editing functionality. Scales to fit the container.
  */
-export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, backgroundImage, className }: ReadOnlySlideProps) => {
+export const ReadOnlySlide = memo(({ slideId, htmlContent, backgroundColor, backgroundImage, className }: ReadOnlySlideProps) => {
   const containerRef = useRef<HTMLDivElement>(null);
   const [scale, setScale] = useState(0.1);
+  const frameRef = useRef<number | null>(null);
+  const lastScaleRef = useRef<number>(0.1);
 
   const updateScale = useCallback(() => {
     if (!containerRef.current) return;
     const { clientWidth: w, clientHeight: h } = containerRef.current;
-    setScale(Math.min(w / CANVAS_WIDTH, h / CANVAS_HEIGHT));
+    const next = Math.min(w / CANVAS_WIDTH, h / CANVAS_HEIGHT);
+    // Round to 2 decimals to avoid noisy sub-pixel rerenders and flicker.
+    const rounded = Math.max(0.01, Math.round(next * 100) / 100);
+    if (Math.abs(rounded - lastScaleRef.current) < 0.01) return;
+    lastScaleRef.current = rounded;
+    setScale(rounded);
   }, []);
 
   useEffect(() => {
-    updateScale();
-    const ro = new ResizeObserver(updateScale);
+    const scheduleScaleUpdate = () => {
+      if (frameRef.current !== null) cancelAnimationFrame(frameRef.current);
+      frameRef.current = requestAnimationFrame(() => {
+        frameRef.current = null;
+        updateScale();
+      });
+    };
+
+    scheduleScaleUpdate();
+    const ro = new ResizeObserver(scheduleScaleUpdate);
     if (containerRef.current) ro.observe(containerRef.current);
-    return () => ro.disconnect();
+    return () => {
+      ro.disconnect();
+      if (frameRef.current !== null) {
+        cancelAnimationFrame(frameRef.current);
+        frameRef.current = null;
+      }
+    };
   }, [updateScale]);
 
-  const scaledW = CANVAS_WIDTH * scale;
-  const scaledH = CANVAS_HEIGHT * scale;
+  const scaledW = Math.round(CANVAS_WIDTH * scale);
+  const scaledH = Math.round(CANVAS_HEIGHT * scale);
 
   return (
     <div ref={containerRef} className={cn("relative overflow-hidden", className)}>
@@ -48,6 +69,7 @@ export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, backgroun
             top: 0,
             left: 0,
             willChange: "transform",
+            backfaceVisibility: "hidden",
           }}>
             <SlideCanvas
               slideId={slideId}
@@ -61,4 +83,4 @@ export const ReadOnlySlide = ({ slideId, htmlContent, backgroundColor, backgroun
       </div>
     </div>
   );
-};
+});

@@ -417,6 +417,8 @@ interface Translations {
   toolbar_present: string;
   toolbar_present_button: string;
   toolbar_present_desc: string;
+  toolbar_present_from_start: string;
+  toolbar_present_from_current: string;
   toolbar_undo: string;
   toolbar_undo_desc: string;
   toolbar_redo: string;
@@ -947,6 +949,8 @@ const vi: Translations = {
   toolbar_present: "Trình chiếu",
   toolbar_present_button: "Trình chiếu",
   toolbar_present_desc: "Bắt đầu trình chiếu toàn màn hình từ slide đầu",
+  toolbar_present_from_start: "Trình chiếu từ đầu",
+  toolbar_present_from_current: "Trình chiếu từ slide hiện tại",
   toolbar_undo: "Hoàn tác",
   toolbar_undo_desc: "Quay lại thao tác vừa thực hiện",
   toolbar_redo: "Làm lại",
@@ -1477,6 +1481,8 @@ const en: Translations = {
   toolbar_present: "Present",
   toolbar_present_button: "Present",
   toolbar_present_desc: "Start fullscreen presentation from the first slide",
+  toolbar_present_from_start: "Present from start",
+  toolbar_present_from_current: "Present from current slide",
   toolbar_undo: "Undo",
   toolbar_undo_desc: "Undo the last action",
   toolbar_redo: "Redo",

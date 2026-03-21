@@ -121,24 +121,79 @@ export const ElementAPIMixin = {
         this.saveHistory();
     },
 
-    updateSelectedElementStyle(newStyles) {
-        if (!this.selectedElements.length && !this.selectedElementId) {
+    updateSelectedElementStyle(newStyles, targetId = null) {
+        console.log('[SlideLogicCore][Properties] updateSelectedElementStyle called', {
+            targetId,
+            selectedElementId: this.selectedElementId || null,
+            selectedIds: this.selectedElements.map((node) => node?.id || null),
+            styles: newStyles,
+        });
+
+        if (!this.selectedElements.length && !this.selectedElementId && !targetId) {
             console.warn('[SlideLogicCore] No element selected to update');
             return;
         }
 
         let el = this.selectedElements[0];
-        if (!el && this.selectedElementId) {
-            el = this.root.querySelector(`#${this.selectedElementId}`);
-            if (el) this.selectedElements = [el];
+        if (el && (!el.isConnected || !this.root.contains(el))) {
+            el = null;
+        }
+
+        const resolvedId = targetId || this.selectedElementId;
+        if (!el && resolvedId) {
+            try {
+                el = this.root.querySelector(`#${CSS.escape(resolvedId)}`);
+            } catch {
+                el = this.root.querySelector(`[id="${resolvedId}"]`);
+            }
+            if (el) {
+                this.selectedElements = [el];
+                this.selectedElementId = el.id;
+            }
         }
 
         if (!el) {
-            console.warn('[SlideLogicCore] Could not find element to update');
+            console.warn('[SlideLogicCore][Properties] Could not find element to update', {
+                targetId,
+                selectedElementId: this.selectedElementId || null,
+            });
             return;
         }
 
-        console.log('[SlideLogicCore] Updating element style:', { id: el.id, styles: newStyles });
+        const hasPositionalUpdate =
+            Object.prototype.hasOwnProperty.call(newStyles, 'left') ||
+            Object.prototype.hasOwnProperty.call(newStyles, 'top') ||
+            Object.prototype.hasOwnProperty.call(newStyles, 'width') ||
+            Object.prototype.hasOwnProperty.call(newStyles, 'height');
+
+        if (hasPositionalUpdate) {
+            const computedPosition = window.getComputedStyle(el).position;
+            if (computedPosition !== 'absolute') {
+                const bounds = this.getElementBounds
+                    ? this.getElementBounds(el)
+                    : { left: el.offsetLeft, top: el.offsetTop, width: el.offsetWidth, height: el.offsetHeight };
+
+                el.style.setProperty('position', 'absolute', 'important');
+                if (!Object.prototype.hasOwnProperty.call(newStyles, 'left')) {
+                    el.style.left = `${bounds.left}px`;
+                }
+                if (!Object.prototype.hasOwnProperty.call(newStyles, 'top')) {
+                    el.style.top = `${bounds.top}px`;
+                }
+                if (!Object.prototype.hasOwnProperty.call(newStyles, 'width')) {
+                    el.style.width = `${bounds.width}px`;
+                }
+                if (!Object.prototype.hasOwnProperty.call(newStyles, 'height')) {
+                    el.style.height = `${bounds.height}px`;
+                }
+            }
+        }
+
+        console.log('[SlideLogicCore][Properties] Applying styles to element', {
+            id: el.id,
+            computedPosition: window.getComputedStyle(el).position,
+            styles: newStyles,
+        });
 
         Object.entries(newStyles).forEach(([key, value]) => {
             if (key === 'innerHTML' || key === 'textContent' || key === 'content') {
@@ -149,6 +204,16 @@ export const ElementAPIMixin = {
         });
 
         this.updateSelectionUI();
+        if (this.emitSelectedElementData) this.emitSelectedElementData(el);
+        console.log('[SlideLogicCore][Properties] Applied styles result', {
+            id: el.id,
+            left: el.style.left || null,
+            top: el.style.top || null,
+            width: el.style.width || null,
+            height: el.style.height || null,
+            transform: el.style.transform || null,
+            position: el.style.position || null,
+        });
         this.saveHistory();
     },
 

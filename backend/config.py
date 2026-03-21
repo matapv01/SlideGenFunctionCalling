@@ -136,8 +136,8 @@ FAISS_FORCE_REBUILD = False
 VLM_MAX_RETRIES = 3
 
 # --- Playwright Browser Configuration ---
-BROWSER_VIEWPORT_WIDTH = 1600
-BROWSER_VIEWPORT_HEIGHT = 900
+BROWSER_VIEWPORT_WIDTH = 1920
+BROWSER_VIEWPORT_HEIGHT = 1080
 BROWSER_DEVICE_SCALE_FACTOR = 1
 
 # ============================================================================

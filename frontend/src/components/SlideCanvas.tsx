@@ -14,7 +14,7 @@ interface SlideCanvasProps {
 }
 
 export interface SlideCanvasHandle {
-  updateElement: (styles: any) => void;
+  updateElement: (styles: any, targetId?: string) => void;
   getHTML: () => string;
   undo: () => void;
   redo: () => void;
@@ -69,8 +69,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
   // Expose các method cho component cha (SlideEditor.tsx) gọi
   useImperativeHandle(ref, () => ({
-    updateElement: (styles: any) => {
-      logicInstanceRef.current?.updateSelectedElementStyle(styles);
+    updateElement: (styles: any, targetId?: string) => {
+      logicInstanceRef.current?.updateSelectedElementStyle(styles, targetId ?? null);
     },
     getHTML: () => {
       const canvasHTML = logicInstanceRef.current?.getHTML() || '';
@@ -341,6 +341,10 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (!mergedBodyProps['width']) mergedBodyProps['width'] = '100%';
     if (!mergedBodyProps['height']) mergedBodyProps['height'] = '100%';
     if (!mergedBodyProps['box-sizing']) mergedBodyProps['box-sizing'] = 'border-box';
+    // In editor mode, hide imported body scrollbars so the slide surface stays clean.
+    mergedBodyProps['overflow'] = 'hidden';
+    mergedBodyProps['overflow-x'] = 'hidden';
+    mergedBodyProps['overflow-y'] = 'hidden';
 
     // Build inline style string from merged body properties
     const wrapperInlineStyle = Object.entries(mergedBodyProps)
@@ -378,6 +382,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       'span', 'strong', 'b', 'em', 'i', 'u', 'mark', 'small',
       'sub', 'sup', 'code', 'kbd', 'samp', 'var', 'a',
       'font', 'ins', 'del', 's', 'abbr', 'cite', 'q', 'time',
+      // Keep list items attached to their list container; dragging LI directly causes list reflow.
+      'li',
       'br', 'wbr', 'hr',
     ]);
 
@@ -436,50 +442,61 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         }
       }
 
-      if (!node.classList.contains('element')) {
-        node.classList.add('element');
-      }
-      // Set data-selectable + cursor in processHTML so elements are always
-      // interactive, even before makeElementsSelectable runs on live DOM.
-      node.dataset.selectable = 'true';
-      if (!isReadOnly) node.style.cursor = 'move';
+      // Only make absolute-positioned elements independently selectable/draggable.
+      // Non-absolute elements (flex/grid children, static flow) keep their CSS
+      // layout and are NOT draggable — this preserves visual fidelity.
+      const inlinePosition = node.style.position;
+      const isAbsolute = inlinePosition === 'absolute';
 
-      if (!node.dataset.type) {
-        let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
+      if (isAbsolute) {
+        if (!node.classList.contains('element')) {
+          node.classList.add('element');
+        }
+        node.dataset.selectable = 'true';
+        if (!isReadOnly) node.style.cursor = 'move';
 
-        const hasImage = node.querySelector('img') || tag === 'img';
-        const hasVideo = node.querySelector('video') || tag === 'video';
-        const textContent = node.textContent?.trim() || '';
-        const hasSignificantText = textContent.length > 3;
+        if (!node.dataset.type) {
+          let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
 
-        const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
-        const isDivWithText = tag === 'div' && hasSignificantText;
-        const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
-          node.style.backgroundImage || node.style.borderRadius;
+          const hasImage = node.querySelector('img') || tag === 'img';
+          const hasVideo = node.querySelector('video') || tag === 'video';
+          const textContent = node.textContent?.trim() || '';
+          const hasSignificantText = textContent.length > 3;
 
-        if (hasImage) {
-          elementType = 'image';
-        } else if (hasVideo) {
-          elementType = 'video';
-        } else if (explicitTextTags.includes(tag) && hasSignificantText) {
-          elementType = 'text';
-        } else if (isDivWithText && !hasBackgroundStyling) {
-          elementType = 'text';
-        } else if (hasSignificantText && !hasBackgroundStyling) {
-          elementType = 'text';
-        } else {
-          elementType = 'shape';
+          const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'pre', 'a'];
+          const isDivWithText = tag === 'div' && hasSignificantText;
+          const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
+            node.style.backgroundImage || node.style.borderRadius;
+
+          if (hasImage) {
+            elementType = 'image';
+          } else if (hasVideo) {
+            elementType = 'video';
+          } else if (explicitTextTags.includes(tag) && hasSignificantText) {
+            elementType = 'text';
+          } else if (isDivWithText && !hasBackgroundStyling) {
+            elementType = 'text';
+          } else if (hasSignificantText && !hasBackgroundStyling) {
+            elementType = 'text';
+          } else {
+            elementType = 'shape';
+          }
+
+          node.dataset.type = elementType;
         }
 
-        node.dataset.type = elementType;
-      }
+        if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
+          node.setAttribute('contenteditable', 'true');
+        }
 
-      if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
-        node.setAttribute('contenteditable', 'true');
-      }
-
-      if (!node.id) {
-        node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        if (!node.id) {
+          node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+      } else {
+        // Non-absolute elements: strip any stale editor attributes
+        node.classList.remove('element');
+        delete node.dataset.selectable;
+        if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
       }
     });
 
@@ -520,14 +537,26 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         position: relative;
       }
 
+      .slide-bg-wrapper,
+      .slide-bg-wrapper * {
+        scrollbar-width: none;
+      }
+
+      .slide-bg-wrapper::-webkit-scrollbar,
+      .slide-bg-wrapper *::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        display: none;
+      }
+
       ${isReadOnly ? '' : `
       [contenteditable] {
         outline: none;
       }
 
       .selected, [data-selectable].selected {
-        outline: 3px solid #3b82f6 !important;
-        outline-offset: 2px !important;
+        box-shadow: 0 0 0 3px #3b82f6 !important;
+        outline: none !important;
       }
 
       .resize-handle {
@@ -635,8 +664,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       [data-selectable="true"] { cursor: move; }
 
       [contenteditable="true"]:focus {
-        outline: 2px dashed #3b82f6;
-        outline-offset: 2px;
+        outline: none !important;
         cursor: text !important;
       }
 
@@ -694,6 +722,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
   useEffect(() => {
     if (!containerRef.current) return;
+    let initLogicTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Attach Shadow DOM (once)
     if (!shadowRootRef.current) {
@@ -723,7 +752,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (props.readOnly) return;
 
     // Wait one tick for DOM to render
-    setTimeout(() => {
+    initLogicTimer = setTimeout(() => {
       if (logicInstanceRef.current) {
         logicInstanceRef.current.destroy();
       }
@@ -741,6 +770,10 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     }, 10);
 
     return () => {
+      if (initLogicTimer) {
+        clearTimeout(initLogicTimer);
+        initLogicTimer = null;
+      }
       if (logicInstanceRef.current) {
         logicInstanceRef.current.destroy();
         logicInstanceRef.current = null;
