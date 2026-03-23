@@ -397,6 +397,7 @@ export const api = {
     tier: string;
     is_active: boolean;
     expires_at?: string;
+    cancel_at_period_end: boolean;
     daily_limits: {
       idea_generation: number;
       docx_upload: number;

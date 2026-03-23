@@ -312,6 +312,11 @@ export const EventHandlersMixin = {
             this.resizeHandle = target.classList[1]; // e.g. 'tl', 'tr', 'bl', 'br'
             this.dragStart = { x: e.clientX, y: e.clientY };
 
+            // Imported text blocks often include max-width/max-height (inline or class CSS),
+            // which clamps growth while resizing. Explicitly remove these constraints.
+            el.style.setProperty('max-width', 'none', 'important');
+            el.style.setProperty('max-height', 'none', 'important');
+
             // Freeze ALL selectable siblings to absolute so resizing one
             // element doesn't cause layout reflow in CSS flex/grid layouts.
             this.freezeSelectableSiblingsLayout(el);
