@@ -42,6 +42,8 @@ services:
       retries: 3
       start_period: 90s
 
+  
+
 volumes:
   slidegen_db:
   slidegen_static:
