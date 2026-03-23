@@ -60,12 +60,7 @@ const router = createBrowserRouter(
         { path: "*", element: <NotFound /> },
       ]
     }
-  ],
-  {
-    future: {
-      v7_startTransition: true,
-    },
-  }
+  ]
 );
 
 const App = () => <RouterProvider router={router} />;

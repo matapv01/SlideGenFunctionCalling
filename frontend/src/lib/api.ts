@@ -175,6 +175,13 @@ export const api = {
     return request<any>("/generate/docx", { method: "POST", body: formData });
   },
 
+  // Upload endpoints - /api/generate/pdf*
+  uploadPdf: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<any>("/generate/pdf", { method: "POST", body: formData });
+  },
+
   // Upload for streaming workflow
   uploadDocxForStream: (file: File, options: {
     enable_transition_slides?: boolean;
@@ -196,6 +203,17 @@ export const api = {
       session_id: string;
       document_title: string;
     }>("/generate/docx/manual-session", { method: "POST", body: formData });
+  },
+
+  // Upload PDF for manual structure editing workflow
+  uploadPdfForManual: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<{
+      success: boolean;
+      session_id: string;
+      document_title: string;
+    }>("/generate/pdf/manual-session", { method: "POST", body: formData });
   },
 
   // Structure Editor endpoints - /api/structure/*
@@ -397,6 +415,7 @@ export const api = {
     tier: string;
     is_active: boolean;
     expires_at?: string;
+    cancel_at_period_end: boolean;
     daily_limits: {
       idea_generation: number;
       docx_upload: number;

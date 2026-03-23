@@ -61,21 +61,29 @@ const SlideGen = () => {
   const handleDocxUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
+    const fileName = file.name.toLowerCase();
+    const sourceType: "docx" | "pdf" = fileName.endsWith(".pdf") ? "pdf" : "docx";
+    if (sourceType === "pdf") console.log("[SlideGen] PDF selected for upload:", { name: file.name, type: file.type, size: file.size });
     setIsUploading(true);
     try {
+      if (sourceType === "pdf") {
+        const res = await api.uploadPdf(file);
+        toast({
+          title: t.slidegen_toast_success,
+          description: res?.message || "Backend received PDF file"
+        });
+        return;
+      }
+
       if (workflowMode === "manual") {
         // Manual mode: upload for structure editing
         const res = await api.uploadDocxForManual(file);
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_opening_structure });
         navigate(`/structure?session=${res.session_id}`);
       } else {
-        // Auto modes: upload for streaming workflow
-        const res = await api.uploadDocxForStream(file, {
-          enable_transition_slides: docxTransitions,
-          enable_thank_you_slide: docxThankYou,
-        });
+        // Auto modes: only upload file so backend can process it (e.g. to Markdown)
+        await api.uploadDocx(file);
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_starting });
-        navigate(`/streaming/docx`, { state: { filename: res.filename } });
       }
     } catch (err: any) {
       const isRateLimit = err.status === 429;
@@ -197,7 +205,7 @@ const SlideGen = () => {
                 </div>
 
                 {/* Upload button */}
-                <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
+                <input ref={docxRef} type="file" accept=".docx,.pdf,application/pdf" className="hidden" onChange={handleDocxUpload} />
                 <Button className="w-full gradient-primary text-primary-foreground" disabled={isUploading} onClick={() => docxRef.current?.click()}>
                   {isUploading ? t.slidegen_uploading : t.slidegen_choose_file} <Upload className="ml-2 h-4 w-4" />
                 </Button>

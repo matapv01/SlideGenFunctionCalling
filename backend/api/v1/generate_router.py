@@ -369,6 +369,45 @@ async def create_manual_session_from_docx(
         raise HTTPException(500, str(e))
 
 
+@router.post("/pdf")
+async def receive_pdf_only(
+    file: UploadFile = File(...),
+    current_user: UserResponse = Depends(get_current_active_user),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
+):
+    """
+    [Receive Only] Upload PDF and save to temp folder.
+    No workflow/conversion is executed at this stage.
+    """
+    if not file.filename or not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(400, "Chỉ chấp nhận tệp PDF")
+
+    safe_filename = os.path.basename(file.filename)
+    if not safe_filename:
+        raise HTTPException(400, "Tên tệp không hợp lệ")
+
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Reuse existing upload quota gate until PDF-specific quota is introduced.
+    subscription_service.check_feature_access(user, "docx_upload")
+
+    temp_path = TEMP_DIR / safe_filename
+    content = await file.read()
+    with open(temp_path, "wb") as f:
+        f.write(content)
+
+    subscription_service.increment_usage(current_user.id, "docx_upload")
+
+    return {
+        "success": True,
+        "filename": safe_filename,
+        "message": "PDF uploaded successfully"
+    }
+
+
 # ==========================================
 # 2. GENERATE FROM IDEA (AI)
 # ==========================================
