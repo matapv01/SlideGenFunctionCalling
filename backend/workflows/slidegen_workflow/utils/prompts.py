@@ -104,11 +104,15 @@ INTRO_PROMPT = """
 
 **RULES:**
 1. CONTENT: Short title + brief subtitle. No fluff!
-2. HTML: Use <br> or <p> for line breaks ONLY
+2. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
+   ✅ CORRECT: "Smart Contract Security<br>Detecting Vulnerabilities<br>A Community Project"
+   ❌ WRONG: "Smart Contract Security Detecting Vulnerabilities A Community Project"
+   Every sentence, bullet point, or idea = separate line with <br>!
+3. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
+4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/347/1600/900) NOT text! Text seeds cause 404s!
-4. MATCH previous slide's style
+5. MATCH previous slide's visual style
 
 Generate clean, HIGHLY READABLE function call.
 """
@@ -145,11 +149,15 @@ CONTENT_PROMPT = """
    {highlight_instruction}
    Example: "AI improves <span style="font-weight: bold;">efficiency</span> by 80%"
    ⚠️ ONLY use <span style="font-weight:bold"> for KEY PHRASES!
-2. HTML: Use <br> or <p> for line breaks ONLY
+2. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
+   ✅ CORRECT: "Lost $3.35B in 2025<br>630 security incidents<br>37% increase vs 2024"
+   ❌ WRONG: "Lost $3.35B in 2025 630 security incidents 37% increase vs 2024"
+   Every bullet point, fact, or sentence = separate line with <br>!
+3. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
    ❌ NO style attributes except for key phrase highlights!
-3. CONTENT: Concise, no filler words
-4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
+4. CONTENT: Concise, no filler words
+5. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
 
 Generate READABLE, professional function call.
@@ -200,7 +208,12 @@ SLIDE_TYPE_PROMPTS = {
 HUMAN_PROMPT_TEMPLATE = """
 CONTEXT: {slide_context_map}
 
-PREVIOUS SLIDE (match this style!): {previous_slide_function_call}
+PREVIOUS SLIDE STYLE (match VISUAL STYLE ONLY — colors, fonts, layout. Do NOT reuse any text/content from here): {previous_slide_function_call}
+
+DIVERSITY REQUIREMENT:
+To keep the presentation visually engaging, you MUST NOT use the exact same tool as the `previous_slide_function_call`. 
+Additionally, try to AVOID these recently used tools if possible:
+{recent_tools}
 
 DESIGN PLAN: {slide_plan}
 

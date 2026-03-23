@@ -109,16 +109,16 @@ EMBEDDING_CACHE_DIR = None
 # --- Tool Retrieval Diversity Configuration ---
 # MMR (Maximal Marginal Relevance) lambda parameter
 # Higher = more focus on relevance, Lower = more focus on diversity
-TOOL_RETRIEVER_MMR_LAMBDA = 0.7
+TOOL_RETRIEVER_MMR_LAMBDA = 0.5
 
 # Number of candidates to retrieve before applying MMR (should be 2-3x TOOL_RETRIEVER_TOP_K)
 TOOL_RETRIEVER_CANDIDATE_MULTIPLIER = 3
 
 # Temporal decay penalty weight
-TOOL_RETRIEVER_TEMPORAL_DECAY_WEIGHT = 0.2
+TOOL_RETRIEVER_TEMPORAL_DECAY_WEIGHT = 0.5
 
 # Maximum history window for temporal decay (in number of slides)
-TOOL_RETRIEVER_TEMPORAL_WINDOW = 10
+TOOL_RETRIEVER_TEMPORAL_WINDOW = 5
 
 # Enable/disable temporal decay feature
 TOOL_RETRIEVER_ENABLE_TEMPORAL_DECAY = True

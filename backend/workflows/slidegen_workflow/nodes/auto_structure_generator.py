@@ -84,7 +84,7 @@ def generate_structure_from_plaintext(state: State, config: RunnableConfig) -> S
     ])
     
     # Create chain
-    chain = prompt | llm.llm | StrOutputParser()
+    chain = prompt | llm | StrOutputParser()
     
     # Invoke LLM
     print("🤖 Calling LLM to generate structure...")

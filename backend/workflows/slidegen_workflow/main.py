@@ -86,14 +86,16 @@ async def main_workflow(
             "recursion_limit": 500
         }
 
+        _slide_options = slide_options or {}
         initial_input = {
             "docx_file": docx_file,
+            "workflow_mode": _slide_options.get("workflow_mode", "auto_no_heading"),
             "current_slide_index": -1,
             "retry_count": 0,
             "final_slides": [],
             "all_debug_info": [],
             "vlm_decision": "accept",
-            "slide_options": slide_options or {}
+            "slide_options": _slide_options
         }
 
         # Run

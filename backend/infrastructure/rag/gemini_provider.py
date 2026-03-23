@@ -1,7 +1,7 @@
 # File: backend/infrastructure/rag/gemini_provider.py
 
 import os
-from typing import List, Dict, Any
+from typing import List, Dict, Any, Tuple
 from langchain_community.vectorstores import FAISS
 from collections import deque
 import numpy as np
@@ -30,6 +30,9 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         self.tools_dict = tools_dict
         self.tool_usage_history = {category: deque(maxlen=config.TOOL_RETRIEVER_TEMPORAL_WINDOW * 2) 
                                      for category in tools_dict.keys()}
+        
+        # Cache for pre-computed tool description embeddings (used by MMR)
+        self._embedding_cache: Dict[str, np.ndarray] = {}
 
         if os.path.exists(index_path):
             print(f"Found existing index at '{index_path}'. Loading retrievers from disk...")
@@ -37,13 +40,13 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
                 category_index_path = os.path.join(index_path, category)
                 if os.path.exists(category_index_path):
                     try:
-                        # --- CHANGE: 'allow_dangerous_deserialization' is often not needed for Google's embeddings ---
                         vector_store = FAISS.load_local(
                             folder_path=category_index_path,
                             embeddings=self.embeddings,
-                            allow_dangerous_deserialization=True  # Keep for safety with FAISS
+                            allow_dangerous_deserialization=True
                         )
                         self.retrievers[category] = vector_store.as_retriever()
+                        self.vector_stores[category] = vector_store
                         print(f"  - Successfully loaded retriever for '{category}'.")
                     except Exception as e:
                         print(f"  - FAILED to load retriever for '{category}': {e}. Will rebuild it.")
@@ -55,6 +58,9 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
             os.makedirs(index_path)
             for category, tools in tools_dict.items():
                 self._build_and_save_retriever(category, tools, index_path)
+
+        # Pre-compute and cache all tool description embeddings for MMR
+        self._precompute_embeddings()
 
         print("ToolRetriever initialized successfully.")
 
@@ -71,6 +77,20 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
             print(f"  - Built and saved retriever for '{category}' at '{category_index_path}'.")
         except Exception as e:
             print(f"  - FAILED to build and save retriever for '{category}': {e}")
+
+    def _precompute_embeddings(self):
+        """Pre-compute embeddings for all tool descriptions at init time.
+        This avoids expensive per-slide embed_query calls during MMR."""
+        print("  - Pre-computing tool description embeddings for MMR cache...")
+        for category, tools in self.tools_dict.items():
+            for tool in tools:
+                if tool.name not in self._embedding_cache:
+                    try:
+                        emb = np.array(self.embeddings.embed_query(tool.description))
+                        self._embedding_cache[tool.name] = emb
+                    except Exception as e:
+                        print(f"  - WARNING: Failed to embed '{tool.name}': {e}")
+        print(f"  - Cached {len(self._embedding_cache)} tool embeddings.")
 
     def _apply_temporal_decay(
         self, 
@@ -93,25 +113,25 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
             return tool_scores
         
         adjusted_scores = {}
-        usage_history = self.tool_usage_history.get(category, deque())
+        usage_history: deque[Tuple[str, int]] = self.tool_usage_history.get(category, deque())
         temporal_window = config.TOOL_RETRIEVER_TEMPORAL_WINDOW
         decay_weight = config.TOOL_RETRIEVER_TEMPORAL_DECAY_WEIGHT
         
         for tool_name, base_score in tool_scores.items():
             # Count how many times this tool was used in the temporal window
-            recent_usage_count = 0
+            recent_usage_count: int = 0
             
             for used_tool_name, used_slide_index in usage_history:
                 if used_tool_name == tool_name:
                     # Check if within temporal window
-                    slides_ago = current_slide_index - used_slide_index
+                    slides_ago = int(current_slide_index) - int(used_slide_index)
                     if 0 < slides_ago <= temporal_window:
                         recent_usage_count += 1
             
-            # Apply decay penalty
+            # Apply steep exponential decay penalty: e.g. weight=0.5 -> 0.5^1 = 0.5, 0.5^2 = 0.25
             if recent_usage_count > 0:
-                decay_penalty = 1.0 / (1.0 + decay_weight * recent_usage_count)
-                adjusted_score = base_score * decay_penalty
+                decay_factor = float(max(0.01, (1.0 - decay_weight) ** recent_usage_count))
+                adjusted_score = float(base_score) * decay_factor
             else:
                 adjusted_score = base_score
             
@@ -121,88 +141,90 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
 
     def _calculate_mmr_scores(
         self, 
-        candidate_docs: List[Document],
-        query: str,
-        category: str,
+        candidate_names: List[str],
+        candidate_scores: Dict[str, float],
+        query_embedding: np.ndarray,
         top_k: int,
         lambda_param: float
     ) -> List[str]:
         """
-        Apply MMR (Maximal Marginal Relevance) algorithm to select diverse tools.
+        Apply MMR (Maximal Marginal Relevance) using pre-cached embeddings.
         
         Args:
-            candidate_docs: List of candidate documents from initial retrieval
-            query: The original query string
-            category: Tool category
+            candidate_names: List of candidate tool names (pre-sorted by score)
+            candidate_scores: Dict mapping tool_name -> similarity score
+            query_embedding: The query embedding vector
             top_k: Number of tools to select
             lambda_param: MMR lambda (0-1, higher = more relevance, lower = more diversity)
             
         Returns:
             List of selected tool names (in order of selection)
         """
-        if not config.TOOL_RETRIEVER_ENABLE_MMR or len(candidate_docs) <= top_k:
-            # If MMR disabled or not enough candidates, just return top docs
-            return [doc.metadata['name'] for doc in candidate_docs[:top_k]]
+        if not config.TOOL_RETRIEVER_ENABLE_MMR or len(candidate_names) <= top_k:
+            return candidate_names[:top_k]
         
-        # Get embeddings for query and all candidates
-        try:
-            query_embedding = np.array(self.embeddings.embed_query(query))
-            
-            # Get candidate embeddings from tool descriptions
-            candidate_texts = [doc.page_content for doc in candidate_docs]
-            candidate_embeddings = np.array([
-                self.embeddings.embed_query(text) for text in candidate_texts
-            ])
-            
-            # Calculate initial relevance scores (cosine similarity with query)
-            def cosine_similarity(vec1, vec2):
-                return np.dot(vec1, vec2) / (np.linalg.norm(vec1) * np.linalg.norm(vec2))
-            
-            relevance_scores = [
-                cosine_similarity(query_embedding, emb) for emb in candidate_embeddings
-            ]
-            
-            # MMR algorithm
-            selected_indices = []
-            remaining_indices = list(range(len(candidate_docs)))
-            
-            # Step 1: Select most relevant document
-            best_idx = max(remaining_indices, key=lambda i: relevance_scores[i])
-            selected_indices.append(best_idx)
-            remaining_indices.remove(best_idx)
-            
-            # Step 2-K: Select remaining documents balancing relevance and diversity
-            while len(selected_indices) < top_k and remaining_indices:
-                best_mmr_score = float('-inf')
-                best_idx = None
-                
-                for idx in remaining_indices:
-                    # Relevance component
-                    relevance = relevance_scores[idx]
-                    
-                    # Diversity component (max similarity to already selected)
-                    max_similarity = max(
-                        cosine_similarity(candidate_embeddings[idx], candidate_embeddings[sel_idx])
-                        for sel_idx in selected_indices
-                    )
-                    
-                    # MMR score
-                    mmr_score = lambda_param * relevance - (1 - lambda_param) * max_similarity
-                    
-                    if mmr_score > best_mmr_score:
-                        best_mmr_score = mmr_score
-                        best_idx = idx
-                
-                if best_idx is not None:
-                    selected_indices.append(best_idx)
-                    remaining_indices.remove(best_idx)
-            
-            # Return selected tool names in order
-            return [candidate_docs[idx].metadata['name'] for idx in selected_indices]
+        # Use cached embeddings — no API calls needed
+        candidate_embeddings = {}
+        valid_candidates = []
+        for name in candidate_names:
+            if name in self._embedding_cache:
+                candidate_embeddings[name] = self._embedding_cache[name]
+                valid_candidates.append(name)
+            else:
+                # Fallback: still include but skip for diversity calc
+                valid_candidates.append(name)
         
-        except Exception as e:
-            print(f"  - MMR calculation failed: {e}. Falling back to simple ranking.")
-            return [doc.metadata['name'] for doc in candidate_docs[:top_k]]
+        top_k_int = int(top_k)
+        if len(valid_candidates) <= top_k_int:
+            return valid_candidates[:top_k_int]
+        
+        def cosine_similarity(vec1, vec2):
+            norm1, norm2 = np.linalg.norm(vec1), np.linalg.norm(vec2)
+            if norm1 == 0 or norm2 == 0:
+                return 0.0
+            return float(np.dot(vec1, vec2) / (norm1 * norm2))
+        
+        # MMR algorithm using cached embeddings
+        selected = []
+        remaining = list(valid_candidates)
+        
+        # Step 1: Select most relevant (highest score)
+        best = max(remaining, key=lambda n: candidate_scores.get(n, 0.0))
+        selected.append(best)
+        remaining.remove(best)
+        
+        # Step 2-K: Balance relevance and diversity
+        while len(selected) < top_k and remaining:
+            best_mmr_score = float('-inf')
+            best_name = None
+            
+            for name in remaining:
+                # Relevance component (normalized score)
+                relevance = candidate_scores.get(name, 0.0)
+                
+                # Diversity component (max similarity to already selected)
+                max_sim = 0.0
+                if name in candidate_embeddings:
+                    for sel_name in selected:
+                        if sel_name in candidate_embeddings:
+                            sim = cosine_similarity(
+                                candidate_embeddings[name],
+                                candidate_embeddings[sel_name]
+                            )
+                            max_sim = max(max_sim, sim)
+                
+                # MMR score
+                mmr_score = lambda_param * relevance - (1 - lambda_param) * max_sim
+                
+                if mmr_score > best_mmr_score:
+                    best_mmr_score = mmr_score
+                    best_name = name
+            
+            if best_name is not None:
+                selected.append(best_name)
+                remaining.remove(best_name)
+        
+        return selected
 
     def get_relevant_tools(
         self, 
@@ -212,7 +234,7 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         current_slide_index: int = 0
     ) -> List[Any]:
         """
-        Get relevant tools using MMR and temporal decay.
+        Get relevant tools using FAISS similarity scores, temporal decay, and MMR diversity.
         
         Args:
             category: Tool category
@@ -223,45 +245,64 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         Returns:
             List of selected tools
         """
-        if category not in self.retrievers: 
+        if category not in self.vector_stores: 
             return []
         
-        # Step 1: Retrieve larger candidate pool
-        retriever = self.retrievers[category]
+        vector_store = self.vector_stores[category]
         num_candidates = top_k * config.TOOL_RETRIEVER_CANDIDATE_MULTIPLIER
-        candidate_docs = retriever.invoke(query, k=num_candidates)
         
-        if not candidate_docs:
+        # Step 1: Use similarity_search_with_score for REAL FAISS distances
+        try:
+            results_with_scores = vector_store.similarity_search_with_score(query, k=num_candidates)
+        except Exception as e:
+            print(f"  - FAISS search failed: {e}. Falling back to retriever.")
+            candidate_docs = self.retrievers[category].invoke(query)
+            results_with_scores = [(doc, 1.0) for doc in candidate_docs]
+        
+        if not results_with_scores:
             return []
         
-        # Step 2: Apply Temporal Decay to initial scores
-        # Create initial scores (assuming FAISS returns docs sorted by similarity)
-        initial_scores = {
-            doc.metadata['name']: 1.0 - (i * 0.01)  # Slight decay for ranking
-            for i, doc in enumerate(candidate_docs)
-        }
+        # Convert L2 distances to similarity scores (0 to 1)
+        # Assuming maximum reasonable L2 distance for normalized embeddings is ~2.0
+        # We cap it to avoid negative scores.
+        fixed_max_distance = 2.0
+        similarity_scores = {}
+        for doc, distance in results_with_scores:
+            # Score = 1.0 (perfect match) to 0.0 (opposite)
+            score = max(0.0, 1.0 - (distance / fixed_max_distance))
+            similarity_scores[doc.metadata['name']] = score
         
+        # Step 2: Apply Temporal Decay
         adjusted_scores = self._apply_temporal_decay(
-            initial_scores, 
+            similarity_scores, 
             category, 
             current_slide_index
         )
         
-        # Re-sort candidates by adjusted scores
-        candidate_docs_sorted = sorted(
-            candidate_docs,
-            key=lambda doc: adjusted_scores.get(doc.metadata['name'], 0.0),
+        # Sort candidate names by adjusted scores
+        candidate_names = sorted(
+            adjusted_scores.keys(),
+            key=lambda name: adjusted_scores[name],
             reverse=True
         )
         
-        # Step 3: Apply MMR for diversity
-        selected_tool_names = self._calculate_mmr_scores(
-            candidate_docs_sorted,
-            query,
-            category,
-            top_k,
-            config.TOOL_RETRIEVER_MMR_LAMBDA
-        )
+        # Step 3: Apply MMR for diversity using cached embeddings
+        try:
+            query_embedding = np.array(self.embeddings.embed_query(query))
+        except Exception as e:
+            print(f"  - Query embedding failed: {e}. Skipping MMR.")
+            query_embedding = None
+        
+        if query_embedding is not None:
+            selected_tool_names = self._calculate_mmr_scores(
+                candidate_names,
+                adjusted_scores,
+                query_embedding,
+                top_k,
+                config.TOOL_RETRIEVER_MMR_LAMBDA
+            )
+        else:
+            selected_tool_names = candidate_names[:top_k]
         
         # Step 4: Map back to tool objects
         category_tool_map = {tool.name: tool for tool in self.tools_dict.get(category, [])}

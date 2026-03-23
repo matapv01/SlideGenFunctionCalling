@@ -20,9 +20,25 @@ WORKDIR /app
 # Install uv binary (no pip)
 COPY --from=ghcr.io/astral-sh/uv:0.8.15 /uv /uvx /bin/
 
+# Network hardening for unstable links to package indexes.
+ARG UV_HTTP_TIMEOUT=180
+ARG UV_HTTP_CONNECT_TIMEOUT=30
+ARG UV_HTTP_RETRIES=8
+
+ENV UV_HTTP_TIMEOUT=${UV_HTTP_TIMEOUT} \
+    UV_HTTP_CONNECT_TIMEOUT=${UV_HTTP_CONNECT_TIMEOUT} \
+    UV_HTTP_RETRIES=${UV_HTTP_RETRIES}
+
 # Install Python deps into a virtualenv (lockfile ensures reproducibility)
 COPY pyproject.toml uv.lock ./
-RUN uv sync --frozen --no-dev
+RUN sh -c 'for i in 1 2 3; do \
+        echo "[BUILD] uv sync attempt $i/3"; \
+        uv sync --frozen --no-dev && exit 0; \
+        echo "[BUILD] uv sync failed, retrying in 10s..."; \
+        sleep 10; \
+    done; \
+    echo "[BUILD] uv sync failed after 3 attempts"; \
+    exit 1'
 
 
 # ── Stage 3: Runtime image ───────────────────────────────────────────────────
