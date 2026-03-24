@@ -1589,6 +1589,18 @@
   border-color: hsl(var(--foreground) / 0.35);
 }
 
+.legacy-structure-page .quick-tool-btn.active {
+  background: hsl(var(--primary) / 0.18);
+  border-color: hsl(var(--primary) / 0.72);
+  color: hsl(var(--foreground));
+  font-weight: 800;
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.38);
+}
+
+.legacy-structure-page .quick-tool-btn.active svg {
+  stroke-width: 2.3;
+}
+
 .legacy-structure-page .quick-level-btn {
   min-width: 34px;
   padding: 0 0.35rem;

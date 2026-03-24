@@ -310,18 +310,11 @@ const StructureEditor = () => {
       return;
     }
 
-    // Always use the latest mouse position from the ref
-    const cursorX = lastMousePosRef.current.x;
-    const cursorY = lastMousePosRef.current.y;
-
-    // Fallback: if mouse pos is 0,0 (never moved), use selection rect center
-    let posX = cursorX;
-    let posY = cursorY;
-    if (cursorX === 0 && cursorY === 0) {
-      const rect = selection.getRangeAt(0).getBoundingClientRect();
-      posX = rect.left + rect.width / 2;
-      posY = rect.top;
-    }
+    // Anchor toolbar to the selection rect to keep it stable while clicking toolbar buttons.
+    const rect = selection.getRangeAt(0).getBoundingClientRect();
+    const hasRect = rect.width > 0 || rect.height > 0;
+    const posX = hasRect ? rect.left + rect.width / 2 : lastMousePosRef.current.x;
+    const posY = hasRect ? rect.top : lastMousePosRef.current.y;
 
     const viewportPadding = 12;
     const editorRect = editor.getBoundingClientRect();
@@ -1016,6 +1009,7 @@ const StructureEditor = () => {
         block.dataset.level = String(level);
         block.dataset.type = type as string;
       });
+
       setPendingLevel(null);
       setPendingType(null);
       fullSync();
@@ -1544,6 +1538,68 @@ const StructureEditor = () => {
       ? Array.from({ length: maxLevel - VISIBLE_LEVEL_LIMIT }, (_, idx) => VISIBLE_LEVEL_LIMIT + idx + 1)
       : [];
 
+  const getPreviousAdjacentBlockContext = useCallback((): { level: number; type: "title" | "content" } | null => {
+    const editor = editorRef.current;
+    const selection = window.getSelection();
+    if (!editor || !selection || selection.rangeCount === 0) return null;
+
+    const range = selection.getRangeAt(0);
+    const blocks = Array.from(editor.querySelectorAll(".text-block")) as HTMLElement[];
+    if (blocks.length === 0) return null;
+
+    let previousBlock: HTMLElement | null = null;
+    let anchorNode: Node | null = range.startContainer;
+    if (anchorNode.nodeType === Node.TEXT_NODE) {
+      anchorNode = anchorNode.parentElement;
+    }
+
+    const currentBlock = (anchorNode as Element | null)?.closest?.(".text-block") as HTMLElement | null;
+    if (currentBlock) {
+      const idx = blocks.indexOf(currentBlock);
+      if (idx > 0) previousBlock = blocks[idx - 1];
+    } else {
+      for (const block of blocks) {
+        const blockRange = document.createRange();
+        blockRange.selectNode(block);
+        const endsBeforeSelection = blockRange.compareBoundaryPoints(Range.END_TO_START, range) <= 0;
+        if (!endsBeforeSelection) break;
+        previousBlock = block;
+      }
+    }
+
+    if (!previousBlock) return null;
+    const level = parseInt(previousBlock.dataset.level || "1", 10);
+    if (Number.isNaN(level)) return null;
+
+    return {
+      level,
+      type: (previousBlock.dataset.type === "title" ? "title" : "content") as "title" | "content",
+    };
+  }, []);
+
+  const previousAdjacentBlock = getPreviousAdjacentBlockContext();
+  const hasStructuredBlocks = !!editorRef.current?.querySelector(".text-block");
+  const isInitialUnstructuredContext = !previousAdjacentBlock && !hasStructuredBlocks;
+
+  const quickToolbarLevelOptions = isInitialUnstructuredContext
+    ? [0, 1]
+    : previousAdjacentBlock
+      ? Array.from({ length: Math.min(maxLevel, previousAdjacentBlock.level + 1) }, (_, idx) => idx + 1)
+      : [0, ...Array.from({ length: maxLevel }, (_, idx) => idx + 1)];
+
+  const quickToolbarTypeOptions: Array<"title" | "content"> =
+    isInitialUnstructuredContext && pendingLevel !== null && pendingLevel !== "normal"
+      ? ["title"]
+      : previousAdjacentBlock && pendingLevel !== null && pendingLevel !== "normal"
+        ? pendingLevel === previousAdjacentBlock.level
+          ? ["title", "content"]
+          : pendingLevel === Math.min(maxLevel, previousAdjacentBlock.level + 1)
+            ? ["title"]
+            : pendingLevel < previousAdjacentBlock.level
+              ? ["title"]
+              : ["title", "content"]
+        : ["title", "content"];
+
   const applyInlineCommand = (command: "bold" | "italic" | "underline") => {
     if (!restoreEditorSelection()) return;
     document.execCommand(command);
@@ -1556,7 +1612,6 @@ const StructureEditor = () => {
     if (!restoreEditorSelection()) return;
     applyFormatting(level, type);
     updateSelectionInfo();
-    window.requestAnimationFrame(() => updateQuickToolbarPosition());
   };
 
   // Keyboard shortcuts
@@ -1928,25 +1983,17 @@ const StructureEditor = () => {
                       <div className="quick-tool-group-label">Level</div>
                       <div className="quick-tool-group-row">
                         <button
-                          className="quick-tool-btn quick-level-btn"
+                          className={cn("quick-tool-btn quick-level-btn", pendingLevel === "normal" && "active")}
                           title="Normal Text"
                           onMouseDown={(e) => e.preventDefault()}
                           onClick={() => applyFormattingFromQuickToolbar("normal", null)}
                         >
                           N
                         </button>
-                        <button
-                          className="quick-tool-btn quick-level-btn"
-                          title="Level 0"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => applyFormattingFromQuickToolbar(0, null)}
-                        >
-                          L0
-                        </button>
-                        {Array.from({ length: maxLevel }, (_, idx) => idx + 1).map((level) => (
+                        {quickToolbarLevelOptions.map((level) => (
                           <button
                             key={`quick-level-${level}`}
-                            className="quick-tool-btn quick-level-btn"
+                            className={cn("quick-tool-btn quick-level-btn", pendingLevel === level && "active")}
                             title={`Level ${level}`}
                             onMouseDown={(e) => e.preventDefault()}
                             onClick={() => applyFormattingFromQuickToolbar(level, null)}
@@ -1960,22 +2007,26 @@ const StructureEditor = () => {
                     <div className="quick-tool-group">
                       <div className="quick-tool-group-label">Type</div>
                       <div className="quick-tool-group-row">
-                        <button
-                          className="quick-tool-btn"
-                          title="Type: Title"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => applyFormattingFromQuickToolbar(null, "title")}
-                        >
-                          <Type className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          className="quick-tool-btn"
-                          title="Type: Content"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => applyFormattingFromQuickToolbar(null, "content")}
-                        >
-                          <AlignLeft className="h-3.5 w-3.5" />
-                        </button>
+                        {quickToolbarTypeOptions.includes("title") && (
+                          <button
+                            className={cn("quick-tool-btn", pendingType === "title" && "active")}
+                            title="Type: Title"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyFormattingFromQuickToolbar(null, "title")}
+                          >
+                            <Type className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                        {quickToolbarTypeOptions.includes("content") && (
+                          <button
+                            className={cn("quick-tool-btn", pendingType === "content" && "active")}
+                            title="Type: Content"
+                            onMouseDown={(e) => e.preventDefault()}
+                            onClick={() => applyFormattingFromQuickToolbar(null, "content")}
+                          >
+                            <AlignLeft className="h-3.5 w-3.5" />
+                          </button>
+                        )}
                       </div>
                     </div>
                   </div>
