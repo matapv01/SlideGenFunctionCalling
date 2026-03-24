@@ -15,10 +15,6 @@ import {
   ArrowLeft,
   ArrowUp,
   ArrowDown,
-  Search,
-  ChevronUp,
-  ChevronDown,
-  X,
 } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -36,13 +32,6 @@ interface SlideChunk {
   title: string;
   content: string;
   slide_type?: string;
-}
-
-interface FindMatch {
-  slideIndex: number;
-  field: "title" | "content";
-  start: number;
-  end: number;
 }
 
 interface IdeaStructureData {
@@ -70,12 +59,6 @@ const IdeaStructure = () => {
   const [maxSlides, setMaxSlides] = useState<number>(-1);
   const [isDirty, setIsDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
-  const [findOpen, setFindOpen] = useState(false);
-  const [findText, setFindText] = useState("");
-  const [replaceText, setReplaceText] = useState("");
-  const [caseSensitive, setCaseSensitive] = useState(false);
-  const [findMatches, setFindMatches] = useState<FindMatch[]>([]);
-  const [currentMatchIndex, setCurrentMatchIndex] = useState(0);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -242,114 +225,10 @@ const IdeaStructure = () => {
       .filter(Boolean);
   }, [formatPreviewContent]);
 
-  const buildFindMatches = useCallback((data: IdeaStructureData, keyword: string, cs: boolean): FindMatch[] => {
-    const query = keyword.trim();
-    if (!query) return [];
-
-    const lookup = cs ? query : query.toLowerCase();
-    const matches: FindMatch[] = [];
-
-    data.slide_chunks.forEach((slide, slideIndex) => {
-      (["title", "content"] as const).forEach((field) => {
-        const source = slide[field] || "";
-        const haystack = cs ? source : source.toLowerCase();
-
-        let cursor = 0;
-        while (cursor <= haystack.length) {
-          const at = haystack.indexOf(lookup, cursor);
-          if (at === -1) break;
-          matches.push({
-            slideIndex,
-            field,
-            start: at,
-            end: at + lookup.length,
-          });
-          cursor = at + Math.max(lookup.length, 1);
-        }
-      });
-    });
-
-    return matches;
-  }, []);
-
-  const runFind = useCallback((jumpToFirst = false) => {
-    if (!structure) return;
-    const matches = buildFindMatches(structure, findText, caseSensitive);
-    setFindMatches(matches);
-
-    if (matches.length === 0) {
-      setCurrentMatchIndex(0);
-      return;
-    }
-
-    if (jumpToFirst) {
-      setCurrentMatchIndex(0);
-      setEditingIndex(matches[0].slideIndex);
-      return;
-    }
-
-    const bounded = Math.min(currentMatchIndex, matches.length - 1);
-    setCurrentMatchIndex(bounded);
-  }, [buildFindMatches, caseSensitive, currentMatchIndex, findText, structure]);
-
-  const navigateMatch = useCallback((direction: "next" | "prev") => {
-    if (findMatches.length === 0) return;
-    const nextIndex =
-      direction === "next"
-        ? (currentMatchIndex + 1) % findMatches.length
-        : (currentMatchIndex - 1 + findMatches.length) % findMatches.length;
-
-    setCurrentMatchIndex(nextIndex);
-    setEditingIndex(findMatches[nextIndex].slideIndex);
-  }, [currentMatchIndex, findMatches]);
-
-  const replaceCurrentMatch = useCallback(() => {
-    if (!structure || findMatches.length === 0) return;
-    const match = findMatches[currentMatchIndex];
-    if (!match) return;
-
-    updateStructure((prev) => {
-      const target = prev.slide_chunks[match.slideIndex];
-      if (!target) return prev;
-
-      const source = target[match.field] || "";
-      const replaced = source.slice(0, match.start) + replaceText + source.slice(match.end);
-      const nextChunks = [...prev.slide_chunks];
-      nextChunks[match.slideIndex] = {
-        ...nextChunks[match.slideIndex],
-        [match.field]: replaced,
-      };
-      return { ...prev, slide_chunks: nextChunks };
-    });
-  }, [currentMatchIndex, findMatches, replaceText, structure, updateStructure]);
-
-  const replaceAllMatches = useCallback(() => {
-    if (!structure || !findText.trim()) return;
-    const escaped = findText.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const regex = new RegExp(escaped, caseSensitive ? "g" : "gi");
-
-    updateStructure((prev) => {
-      const nextChunks = prev.slide_chunks.map((slide) => ({
-        ...slide,
-        title: (slide.title || "").replace(regex, replaceText),
-        content: (slide.content || "").replace(regex, replaceText),
-      }));
-      return { ...prev, slide_chunks: nextChunks };
-    });
-  }, [caseSensitive, findText, replaceText, structure, updateStructure]);
-
-  useEffect(() => {
-    if (!findOpen) return;
-    runFind(false);
-  }, [findOpen, findText, caseSensitive, structure, runFind]);
-
   const disableActions = loading || saving || generating;
 
   const headerActions = (
     <>
-      <button className="btn btn-sm btn-outline-light" onClick={() => setFindOpen((prev) => !prev)} disabled={disableActions}>
-        <Search className="mr-1.5 h-4 w-4" /> Find
-      </button>
       <button className="btn btn-sm btn-secondary" onClick={() => void saveStructure()} disabled={disableActions}>
         {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
         {saving ? "Saving..." : "Save"}
@@ -424,13 +303,6 @@ const IdeaStructure = () => {
   return (
     <AppLayout headerContent={desktopHeaderBar}>
       <div className="legacy-structure-page">
-        <div className="legacy-aurora" aria-hidden />
-        <div className="legacy-particles" aria-hidden>
-          {Array.from({ length: 14 }).map((_, index) => (
-            <span key={index} className={`legacy-particle legacy-particle-${index + 1}`} />
-          ))}
-        </div>
-
         <div className="legacy-structure-content">
           <div className="header-section header-section-mobile">
             <button className="btn btn-outline-light" onClick={() => navigate("/slidegen")} disabled={disableActions}>
@@ -514,68 +386,6 @@ const IdeaStructure = () => {
                 </div>
 
                 <div className="slides-container">
-                  {findOpen && (
-                    <div className="find-replace-panel">
-                      <div className="find-replace-row">
-                        <div className="find-replace-input-wrap">
-                          <Search className="find-replace-icon h-4 w-4" />
-                          <input
-                            className="find-replace-input"
-                            value={findText}
-                            onChange={(e) => setFindText(e.target.value)}
-                            placeholder="Find text..."
-                          />
-                        </div>
-
-                        <span className={cn("find-count", findMatches.length > 0 && "find-count-found")}>
-                          {findMatches.length > 0 ? `${currentMatchIndex + 1}/${findMatches.length}` : "0/0"}
-                        </span>
-
-                        <button className="find-nav-btn" onClick={() => navigateMatch("prev")} disabled={findMatches.length === 0}>
-                          <ChevronUp className="h-4 w-4" />
-                        </button>
-                        <button className="find-nav-btn" onClick={() => navigateMatch("next")} disabled={findMatches.length === 0}>
-                          <ChevronDown className="h-4 w-4" />
-                        </button>
-
-                        <label className="find-case-label" htmlFor="find-case-sensitive">
-                          <input
-                            id="find-case-sensitive"
-                            type="checkbox"
-                            checked={caseSensitive}
-                            onChange={(e) => setCaseSensitive(e.target.checked)}
-                          />
-                          Aa
-                        </label>
-
-                        <button className="find-close-btn" onClick={() => setFindOpen(false)}>
-                          <X className="h-4 w-4" />
-                        </button>
-                      </div>
-
-                      <div className="find-replace-row">
-                        <div className="find-replace-input-wrap">
-                          <input
-                            className="find-replace-input"
-                            value={replaceText}
-                            onChange={(e) => setReplaceText(e.target.value)}
-                            placeholder="Replace with..."
-                          />
-                        </div>
-
-                        <button className="find-action-btn" onClick={() => runFind(true)} disabled={!findText.trim()}>
-                          Find All
-                        </button>
-                        <button className="find-action-btn" onClick={replaceCurrentMatch} disabled={findMatches.length === 0}>
-                          Replace
-                        </button>
-                        <button className="find-action-btn find-action-btn-all" onClick={replaceAllMatches} disabled={!findText.trim()}>
-                          Replace All
-                        </button>
-                      </div>
-                    </div>
-                  )}
-
                   {structure.slide_chunks.map((slide, index) => (
                     <div
                       key={index}

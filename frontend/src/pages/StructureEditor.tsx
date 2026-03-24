@@ -132,6 +132,7 @@ const StructureEditor = () => {
   const quickToolbarRef = useRef<HTMLDivElement>(null);
   const savedSelectionRangeRef = useRef<Range | null>(null);
   const isPointerSelectingRef = useRef(false);
+  const lastMousePosRef = useRef<{ x: number; y: number }>({ x: 0, y: 0 });
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const documentTextRef = useRef("");
   const listenersSetupRef = useRef(false);
@@ -309,26 +310,31 @@ const StructureEditor = () => {
       return;
     }
 
-    const rect = selection.getRangeAt(0).getBoundingClientRect();
-    if (rect.width === 0 && rect.height === 0) {
-      setQuickToolbar((prev) => ({ ...prev, visible: false }));
-      return;
+    // Always use the latest mouse position from the ref
+    const cursorX = lastMousePosRef.current.x;
+    const cursorY = lastMousePosRef.current.y;
+
+    // Fallback: if mouse pos is 0,0 (never moved), use selection rect center
+    let posX = cursorX;
+    let posY = cursorY;
+    if (cursorX === 0 && cursorY === 0) {
+      const rect = selection.getRangeAt(0).getBoundingClientRect();
+      posX = rect.left + rect.width / 2;
+      posY = rect.top;
     }
 
     const viewportPadding = 12;
     const editorRect = editor.getBoundingClientRect();
     const leftBound = Math.max(viewportPadding, editorRect.left + 8);
     const rightBound = Math.min(window.innerWidth - viewportPadding, editorRect.right - 8);
-    const availableWidth = Math.max(220, rightBound - leftBound);
-    const estimatedWidth = Math.min(availableWidth, 280 + (maxLevel + 3) * 36);
-    const rawCenterX = rect.left + rect.width / 2;
-    const clampedX = Math.max(
-      leftBound + estimatedWidth / 2,
-      Math.min(rightBound - estimatedWidth / 2, rawCenterX)
-    );
+    const estimatedWidth = Math.min(rightBound - leftBound, 280 + (maxLevel + 3) * 36);
+    // Left edge at mouse X, clamped so toolbar stays in editor bounds
+    const clampedX = Math.max(leftBound, Math.min(rightBound - estimatedWidth, posX));
 
-    const aboveY = rect.top - 56;
-    const belowY = rect.bottom + 10;
+    // Position toolbar so its bottom edge is above the mouse cursor (like Word)
+    const toolbarHeight = quickToolbarRef.current?.offsetHeight || 56;
+    const aboveY = posY - toolbarHeight - 8;
+    const belowY = posY + 16;
     let finalY = aboveY;
     if (aboveY < viewportPadding) {
       finalY = belowY;
@@ -590,9 +596,10 @@ const StructureEditor = () => {
       isPointerSelectingRef.current = true;
       setQuickToolbar((prev) => ({ ...prev, visible: false }));
     };
-    const handlePointerUp = () => {
+    const handlePointerUp = (e: MouseEvent) => {
       if (!isPointerSelectingRef.current) return;
       isPointerSelectingRef.current = false;
+      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
       handleSelectionCommit();
     };
 
@@ -646,13 +653,18 @@ const StructureEditor = () => {
   }, [fullSync, updateQuickToolbarPosition, updateSelectionInfo]);
 
   useEffect(() => {
-    const handleDocumentMouseUp = () => {
+    const handleDocumentMouseUp = (e: MouseEvent) => {
+      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
       if (!isPointerSelectingRef.current) return;
       isPointerSelectingRef.current = false;
       window.requestAnimationFrame(() => {
         updateSelectionInfo();
         updateQuickToolbarPosition();
       });
+    };
+
+    const handleDocumentMouseMove = (e: MouseEvent) => {
+      lastMousePosRef.current = { x: e.clientX, y: e.clientY };
     };
 
     const handleSelectionChange = () => {
@@ -693,10 +705,12 @@ const StructureEditor = () => {
 
     document.addEventListener("mouseup", handleDocumentMouseUp);
     document.addEventListener("mousedown", handleDocumentMouseDown);
+    document.addEventListener("mousemove", handleDocumentMouseMove);
     document.addEventListener("selectionchange", handleSelectionChange);
     return () => {
       document.removeEventListener("mouseup", handleDocumentMouseUp);
       document.removeEventListener("mousedown", handleDocumentMouseDown);
+      document.removeEventListener("mousemove", handleDocumentMouseMove);
       document.removeEventListener("selectionchange", handleSelectionChange);
     };
   }, [updateQuickToolbarPosition, updateSelectionInfo]);
@@ -1712,12 +1726,6 @@ const StructureEditor = () => {
   return (
     <AppLayout headerContent={desktopHeaderBar}>
       <div className="legacy-structure-page">
-        <div className="legacy-aurora" aria-hidden />
-        <div className="legacy-particles" aria-hidden>
-          {Array.from({ length: 14 }).map((_, index) => (
-            <span key={index} className={`legacy-particle legacy-particle-${index + 1}`} />
-          ))}
-        </div>
         <div className="legacy-structure-content">
           <div className="header-section header-section-mobile">
             <button className="btn btn-outline-light" onClick={handleGoBack} disabled={disableStructureActions}>
@@ -1916,36 +1924,6 @@ const StructureEditor = () => {
                     style={{ left: quickToolbar.x, top: quickToolbar.y }}
                     onMouseDown={(e) => e.preventDefault()}
                   >
-                    <div className="quick-tool-group">
-                      <div className="quick-tool-group-label">Format</div>
-                      <div className="quick-tool-group-row">
-                        <button
-                          className="quick-tool-btn"
-                          title="Bold"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => applyInlineCommand("bold")}
-                        >
-                          <Bold className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          className="quick-tool-btn"
-                          title="Italic"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => applyInlineCommand("italic")}
-                        >
-                          <Italic className="h-3.5 w-3.5" />
-                        </button>
-                        <button
-                          className="quick-tool-btn"
-                          title="Underline"
-                          onMouseDown={(e) => e.preventDefault()}
-                          onClick={() => applyInlineCommand("underline")}
-                        >
-                          <Underline className="h-3.5 w-3.5" />
-                        </button>
-                      </div>
-                    </div>
-
                     <div className="quick-tool-group">
                       <div className="quick-tool-group-label">Level</div>
                       <div className="quick-tool-group-row">
