@@ -1337,6 +1337,15 @@
     height: calc(100dvh - 5.9rem);
     min-height: calc(100vh - 5.9rem);
   }
+
+  /* Idea Structure: make right column wider than left settings column */
+  .legacy-idea-structure-page .editor-column {
+    flex: 4;
+  }
+
+  .legacy-idea-structure-page .preview-column {
+    flex: 8;
+  }
 }
 
 .legacy-structure-page .panel-container {
@@ -1622,6 +1631,7 @@
 }
 
 .legacy-structure-page .word-editor {
+  --editor-caret-color: #111111;
   flex: 1;
   background: var(--legacy-surface-strong);
   border-radius: 12px;
@@ -1630,7 +1640,17 @@
   overflow-y: auto;
   overflow-x: hidden;
   color: inherit;
+  caret-color: var(--editor-caret-color) !important;
   border: 1px solid var(--legacy-border-strong);
+}
+
+.legacy-structure-page .word-editor,
+.legacy-structure-page .word-editor * {
+  caret-color: var(--editor-caret-color) !important;
+}
+
+.dark .legacy-structure-page .word-editor {
+  --editor-caret-color: #ffffff;
 }
 
 @media (min-width: 1024px) {

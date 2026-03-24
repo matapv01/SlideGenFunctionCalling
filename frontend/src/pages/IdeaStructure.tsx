@@ -302,7 +302,7 @@ const IdeaStructure = () => {
 
   return (
     <AppLayout headerContent={desktopHeaderBar}>
-      <div className="legacy-structure-page">
+      <div className="legacy-structure-page legacy-idea-structure-page">
         <div className="legacy-structure-content">
           <div className="header-section header-section-mobile">
             <button className="btn btn-outline-light" onClick={() => navigate("/slidegen")} disabled={disableActions}>
