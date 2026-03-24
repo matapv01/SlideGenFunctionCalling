@@ -164,6 +164,12 @@ const StructureEditor = () => {
     return escapeHtml(text).replace(/\n/g, "<br>");
   };
 
+  const normalizeLoadedPlainText = (text: string): string => {
+    // Backend plain-text extraction can include paragraph separators as double newlines.
+    // Normalize for editor display so lines are not visually double-spaced.
+    return (text || "").replace(/\r\n?/g, "\n").replace(/\n{2,}/g, "\n");
+  };
+
   const generateNodeId = (): string => {
     return "node_" + Date.now() + "_" + Math.random().toString(36).substr(2, 9);
   };
@@ -865,7 +871,7 @@ const StructureEditor = () => {
     try {
       const data = await api.getStructure(sessionId!);
       setDocumentTitle(data.document_title || "Untitled");
-      documentTextRef.current = data.document_text || "";
+      documentTextRef.current = normalizeLoadedPlainText(data.document_text || "");
 
       const editor = editorRef.current;
       if (!editor) return;
@@ -874,7 +880,7 @@ const StructureEditor = () => {
         renderExistingStructure(data.document_structure);
       } else {
         // Show plain text - user will select and format
-        editor.innerHTML = escapeHtmlPreserveLineBreaks(data.document_text || "");
+        editor.innerHTML = escapeHtmlPreserveLineBreaks(documentTextRef.current);
       }
 
       setupEditorListeners();
@@ -953,23 +959,8 @@ const StructureEditor = () => {
       }
     });
 
-    if (issues.length > 0) {
-      setValidationIssues(issues);
-      const editor = editorRef.current;
-      if (editor) {
-        const issueIds = new Set(issues.map((issue) => issue.nodeId.replace(/_c$/, "")));
-        editor.querySelectorAll(".text-block").forEach((block) => {
-          const el = block as HTMLElement;
-          const id = el.dataset.nodeId || "";
-          const baseId = id.replace(/_c$/, "");
-          if (issueIds.has(baseId)) {
-            el.classList.add("validation-error");
-          }
-        });
-      }
-    } else {
-      setValidationIssues([]);
-    }
+    // Keep validation feedback as toast-only (no left-column panel/highlight).
+    setValidationIssues([]);
 
     return issues;
   }, [buildHierarchy, clearValidationHighlights, collectFlatBlocksFromEditor]);
@@ -1063,6 +1054,23 @@ const StructureEditor = () => {
       return false;
     };
 
+    const cleanupAdjacentEmptyLines = (node: Node) => {
+      const removeIfEmpty = (candidate: Node | null) => {
+        if (!candidate || !candidate.parentNode) return false;
+        if (!isBoundaryEmptyLine(candidate)) return false;
+        candidate.parentNode.removeChild(candidate);
+        return true;
+      };
+
+      // Browsers can leave empty text/div/br siblings around the inserted node after extract/insert.
+      while (removeIfEmpty(node.previousSibling)) {
+        // continue until the nearest previous sibling is meaningful
+      }
+      while (removeIfEmpty(node.nextSibling)) {
+        // continue until the nearest next sibling is meaningful
+      }
+    };
+
     try {
       const wrapper = document.createElement("span");
       wrapper.className = `text-block text-level-${level} text-${type}`;
@@ -1088,6 +1096,7 @@ const StructureEditor = () => {
       }
 
       range.insertNode(wrapper);
+      cleanupAdjacentEmptyLines(wrapper);
 
       selection.removeAllRanges();
       fullSync();
@@ -1170,15 +1179,30 @@ const StructureEditor = () => {
   const handleReset = () => {
     const editor = editorRef.current;
     if (editor) {
-      const plainText = editor.innerText || editor.textContent || "";
-      editor.innerHTML = escapeHtmlPreserveLineBreaks(plainText);
+      // Reset to the original plain text loaded from backend.
+      editor.innerHTML = escapeHtmlPreserveLineBreaks(documentTextRef.current || "");
     }
     documentStructureRef.current = [];
     introSlideRef.current = null;
     setIntroSlide(null);
+    setPendingLevel(null);
+    setPendingType(null);
+    setSelectionInfo(null);
+    setQuickToolbar((prev) => ({ ...prev, visible: false }));
+    setValidationIssues([]);
+    clearValidationHighlights();
+
+    if (saveTimeoutRef.current) {
+      clearTimeout(saveTimeoutRef.current);
+      saveTimeoutRef.current = null;
+    }
+
+    syncEditorToStructure();
+    initializeHistoryFromEditor();
+    setIsDirty(false);
+    setLastSavedAt(Date.now());
     setResetDialogOpen(false);
-    fullSync();
-    toast({ title: "Đã reset cấu trúc" });
+    toast({ title: "Đã reset về plain text ban đầu" });
   };
 
   // ---- Approve ----
@@ -1188,11 +1212,15 @@ const StructureEditor = () => {
     syncEditorToStructure();
     const issues = validateStructureBeforeApprove();
     if (issues.length > 0) {
+      const previewIssues = issues.slice(0, 3).map((issue) => `- ${issue.message}`).join("\n");
+      const remaining = issues.length - 3;
+      const moreText = remaining > 0 ? `\n...và ${remaining} lỗi khác.` : "";
       setApproveDialogOpen(false);
       toast({
         title: "Không thể duyệt cấu trúc",
-        description: `Có ${issues.length} lỗi cần sửa trước khi Approve.`,
+        description: `Vui lòng sửa các lỗi sau trước khi Approve:\n${previewIssues}${moreText}`,
         variant: "destructive",
+        duration: 3500,
       });
       return;
     }
@@ -2029,18 +2057,6 @@ const StructureEditor = () => {
                         )}
                       </div>
                     </div>
-                  </div>
-                )}
-
-                {validationIssues.length > 0 && (
-                  <div className="validation-panel">
-                    <div className="validation-title">Cần sửa trước khi Approve ({validationIssues.length})</div>
-                    <ul className="validation-list">
-                      {validationIssues.slice(0, 4).map((issue, idx) => (
-                        <li key={`${issue.nodeId}-${idx}`}>{issue.message}</li>
-                      ))}
-                      {validationIssues.length > 4 && <li>...và {validationIssues.length - 4} lỗi khác</li>}
-                    </ul>
                   </div>
                 )}
 
