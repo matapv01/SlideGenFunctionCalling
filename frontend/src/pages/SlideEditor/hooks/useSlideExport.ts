@@ -1,4 +1,4 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Slide } from "../types";

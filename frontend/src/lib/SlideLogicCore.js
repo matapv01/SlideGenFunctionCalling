@@ -26,15 +26,14 @@ export class SlideEditorLogic {
         this.isResizing        = false;
         this.isPreparedForDrag = false;
         this.pendingSelectElement = null;
-        this.pendingSelectMode = null;
         this.draggedElement    = null;
         this.dragStart         = null;
         this.elementsStartPos  = new Map();
-        this.dragPlaceholders  = new Map();
         this.resizeHandle      = null;
         this.history           = [];
         this.historyIndex      = -1;
         this.currentScale      = 1;
+        this._lastLoggedScale  = null;
         this.isEditingText     = false;
         this._guideTimeout    = null;
         this._inputTimer      = null;
@@ -45,8 +44,10 @@ export class SlideEditorLogic {
     init() {
         console.log('[SlideLogicCore] Initializing with root:', this.root);
 
-        this.root.addEventListener('mousedown', (e) => this.handleMouseDown(e), true);
-        this.root.addEventListener('dblclick',  (e) => this.handleDoubleClick(e), true);
+        this.boundMouseDown = (e) => this.handleMouseDown(e);
+        this.boundDoubleClick = (e) => this.handleDoubleClick(e);
+        this.root.addEventListener('mousedown', this.boundMouseDown, true);
+        this.root.addEventListener('dblclick', this.boundDoubleClick, true);
 
         // Real-time text-edit save: trigger saveHistory+onChange on every keystroke
         // Debounced 300ms so we don't hammer the API on every character
@@ -81,17 +82,27 @@ export class SlideEditorLogic {
 
     setScale(s) {
         this.currentScale = s || 1;
-        console.log('[SlideLogicCore] Scale updated:', this.currentScale);
+
+        const roundedScale = Math.round(this.currentScale * 100) / 100;
+        if (this._lastLoggedScale === null || Math.abs(roundedScale - this._lastLoggedScale) >= 0.05) {
+            this._lastLoggedScale = roundedScale;
+            console.log('[SlideLogicCore] Scale updated:', roundedScale);
+        }
     }
 
     destroy() {
         console.log('[SlideLogicCore] Destroying...');
+        if (this.boundMouseDown) {
+            this.root.removeEventListener('mousedown', this.boundMouseDown, true);
+        }
+        if (this.boundDoubleClick) {
+            this.root.removeEventListener('dblclick', this.boundDoubleClick, true);
+        }
         window.removeEventListener('mousemove', this.boundMouseMove);
         window.removeEventListener('mouseup',   this.boundMouseUp);
         if (this.boundInput) this.root.removeEventListener('input', this.boundInput, true);
         if (this._inputTimer) { clearTimeout(this._inputTimer); this._inputTimer = null; }
         if (this._guideTimeout) { clearTimeout(this._guideTimeout); this._guideTimeout = null; }
-        if (this.clearDragPlaceholders) this.clearDragPlaceholders();
         this.deselectAll();
         this.clearSmartGuides();
     }

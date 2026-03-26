@@ -3,6 +3,28 @@ import { rgbToHex } from '../utils/colorUtils.js';
 
 export const SelectionMixin = {
 
+    isCanvasChromeElement(el) {
+        return el.classList.contains('resize-handle') ||
+            el.classList.contains('drag-handle') ||
+            el.classList.contains('slide-bg-wrapper') ||
+            el.classList.contains('slide-container') ||
+            el.classList.contains('slide-inner-container') ||
+            el.classList.contains('outer-wrapper') ||
+            el.classList.contains('content-wrapper') ||
+            el.classList.contains('wrapper') ||
+            el.classList.contains('scale-container') ||
+            el.classList.contains('slide-wrapper');
+    },
+
+    getNextElementId() {
+        const ids = new Set(
+            Array.from(this.root.querySelectorAll('[id]')).map(node => node.id)
+        );
+        let idCounter = 1;
+        while (ids.has(`element-${idCounter}`)) idCounter += 1;
+        return `element-${idCounter}`;
+    },
+
     readNumeric(value) {
         const n = parseFloat(value);
         return Number.isFinite(n) ? n : null;
@@ -90,86 +112,65 @@ export const SelectionMixin = {
     },
 
     makeElementsSelectable() {
-        const selectableElements = this.root.querySelectorAll(
+        // Reset previously tagged nodes to avoid stale nested selectable targets.
+        this.canvas.querySelectorAll('[data-selectable="true"]').forEach(el => {
+            el.removeAttribute('data-selectable');
+            if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
+        });
+
+        // Only tag absolute-positioned elements as selectable/draggable.
+        // Non-absolute elements (flex/grid/static layout) keep their CSS layout
+        // and are NOT interactive — this preserves visual fidelity with HTML.
+        const selectableElements = this.canvas.querySelectorAll(
             '.element, [data-type], ' +
-            '.content-wrapper > *, .slide-container > *, .slide-inner-container > *, ' +
             '[style*="position: absolute"], [style*="position:absolute"], ' +
             'h1, h2, h3, p, img, .text-block, .image-block'
         );
 
-        console.log('[makeElementsSelectable] Found', selectableElements.length, 'candidate elements');
-
-        let idCounter = 1;
-        let taggedCount = 0;
         selectableElements.forEach(el => {
-            if (el.classList.contains('resize-handle') ||
-                el.classList.contains('drag-handle') ||
-                el.classList.contains('slide-bg-wrapper') ||
-                el.classList.contains('slide-container') ||
-                el.classList.contains('slide-inner-container') ||
-                el.classList.contains('outer-wrapper') ||
-                el.classList.contains('content-wrapper') ||
-                el.classList.contains('wrapper') ||
-                el.classList.contains('scale-container') ||
-                el.classList.contains('slide-wrapper')) return;
+            if (this.isCanvasChromeElement(el)) return;
 
-            // Intentionally treat each eligible node as an independent editable/draggable element.
-            // Do not short-circuit nested nodes based on selectable ancestors.
+            // Only make absolute-positioned elements selectable
+            const computedPosition = window.getComputedStyle(el).position;
+            if (computedPosition !== 'absolute') return;
 
-            if (!el.id) el.id = `element-${idCounter++}`;
+            if (!el.id) el.id = this.getNextElementId();
 
             el.style.cursor = 'move';
             el.setAttribute('data-selectable', 'true');
-            taggedCount++;
-            console.log('[makeElementsSelectable] Tagged:', el.tagName, el.id, 'type:', el.dataset?.type);
 
-            const isTextElement = ['H1', 'H2', 'H3', 'P', 'SPAN', 'DIV'].includes(el.tagName);
-            if (isTextElement && !el.querySelector('img')) {
+            const dataType = el.dataset.type;
+            const isNonTextType = dataType === 'equation' || dataType === 'shape' || dataType === 'image';
+
+            const isTextElement =
+                el.dataset.type === 'text' ||
+                ['H1', 'H2', 'H3', 'P'].includes(el.tagName) ||
+                el.classList.contains('text-block');
+
+            if (isTextElement && !el.querySelector('img') && !isNonTextType) {
                 el.setAttribute('contenteditable', 'true');
-            }
-        });
-
-        // Leaf-only selectable policy: if a node contains other selectable nodes,
-        // keep interaction on the deepest descendants to avoid parent "group frame".
-        const tagged = Array.from(this.root.querySelectorAll('[data-selectable="true"], .element'));
-        const INLINE_FORMATTING_TAGS = new Set([
-            'SPAN', 'STRONG', 'B', 'EM', 'I', 'U', 'MARK', 'SMALL',
-            'SUB', 'SUP', 'CODE', 'KBD', 'SAMP', 'VAR', 'A',
-            'FONT', 'INS', 'DEL', 'S', 'ABBR', 'CITE', 'Q', 'TIME',
-            'BR', 'WBR', 'HR'
-        ]);
-
-        // Never make inline formatting fragments draggable/selectable blocks.
-        tagged.forEach(el => {
-            if (!INLINE_FORMATTING_TAGS.has(el.tagName)) return;
-            el.classList.remove('selected');
-            el.classList.remove('element');
-            el.removeAttribute('data-selectable');
-            el.removeAttribute('data-type');
-            if (el.hasAttribute('contenteditable')) el.removeAttribute('contenteditable');
-            if (el.style?.cursor === 'move') el.style.removeProperty('cursor');
-            el.querySelectorAll('.resize-handle, .drag-handle').forEach(h => h.remove());
-        });
-
-        tagged.forEach(el => {
-            const childSelectable = !!el.querySelector('[data-selectable="true"], .element');
-
-            if (!childSelectable) return;
-
-            el.classList.remove('selected');
-            el.classList.remove('element');
-            el.removeAttribute('data-selectable');
-            // Parent text containers should not stay editable when child nodes are independently editable.
-            if (el.hasAttribute('contenteditable')) {
+            } else if (el.hasAttribute('contenteditable')) {
                 el.removeAttribute('contenteditable');
             }
-            el.querySelectorAll('.resize-handle, .drag-handle').forEach(h => h.remove());
         });
+
+        // NOTE: Do NOT freeze elements to absolute positioning here.
+        // Elements keep their original CSS layout (flex/grid/static) so the
+        // slide looks identical to the original HTML. Absolute conversion
+        // happens lazily in handleMouseMove when the user starts dragging.
     },
 
     selectElement(el) {
         if (!el) { this.deselectAll(); return; }
-        console.log('[SlideLogicCore] Selecting element:', el);
+
+        if (!this.canvas.contains(el)) {
+            const topLevelSelectable = el.closest('[data-selectable="true"]');
+            if (!topLevelSelectable || !this.canvas.contains(topLevelSelectable)) {
+                this.deselectAll();
+                return;
+            }
+            el = topLevelSelectable;
+        }
 
         this.selectedElements = [el];
         this.selectedElementId = el.id;
@@ -179,25 +180,8 @@ export const SelectionMixin = {
     },
 
     toggleSelection(el) {
-        if (!el) return;
-
-        const idx = this.selectedElements.indexOf(el);
-        if (idx >= 0) {
-            this.selectedElements.splice(idx, 1);
-        } else {
-            this.selectedElements.push(el);
-            this.selectedElementId = el.id;
-        }
-
-        const primary = this.getPrimarySelectedElement();
-        this.selectedElementId = primary?.id ?? null;
-        this.refreshSelectionVisuals();
-
-        if (primary) {
-            this.emitSelectedElementData(primary);
-        } else if (this.onElementSelect) {
-            this.onElementSelect(null);
-        }
+        // Keep API compatibility but enforce single-select behavior.
+        this.selectElement(el);
     },
 
     deselectAll() {
@@ -251,8 +235,6 @@ export const SelectionMixin = {
 
         this.selectedElementId = el.id;
         this.refreshSelectionVisuals();
-
-        console.log('[highlightElement] Selected:', el.tagName, el.id, 'classes:', el.className);
     },
 
     addResizeHandles(element) {
@@ -260,22 +242,49 @@ export const SelectionMixin = {
         if (['IMG', 'INPUT', 'BR', 'HR'].includes(element.tagName)) return;
         if (element.querySelector('.resize-handle')) return;
 
-        let handlesHTML = `
-            <div class="resize-handle tl"></div>
-            <div class="resize-handle tr"></div>
-            <div class="resize-handle bl"></div>
-            <div class="resize-handle br"></div>
-        `;
+        console.log('[SlideLogicCore][Selection] Injecting handles', {
+            id: element.id || null,
+            tag: element.tagName,
+            type: element.dataset.type || null,
+            contentEditable: element.getAttribute('contenteditable'),
+            childCountBefore: element.childNodes.length,
+        });
+
+        const createHandle = (className, title = null, text = '') => {
+            const handle = document.createElement('span');
+            handle.className = className;
+            handle.setAttribute('contenteditable', 'false');
+            handle.setAttribute('data-editor-handle', 'true');
+            handle.setAttribute('aria-hidden', 'true');
+            // Keep handles out of document flow even before CSS class rules apply.
+            handle.style.position = 'absolute';
+            if (title) handle.setAttribute('title', title);
+            if (text) handle.textContent = text;
+            return handle;
+        };
+
+        const fragment = document.createDocumentFragment();
+        fragment.appendChild(createHandle('resize-handle tl'));
+        fragment.appendChild(createHandle('resize-handle tr'));
+        fragment.appendChild(createHandle('resize-handle bl'));
+        fragment.appendChild(createHandle('resize-handle br'));
 
         if (element.dataset.type === 'text' || element.hasAttribute('contenteditable')) {
-            handlesHTML += `<div class="drag-handle" title="Drag to move">⠿</div>`;
+            fragment.appendChild(createHandle('drag-handle', 'Drag to move', '⠿'));
         }
 
-        element.insertAdjacentHTML('beforeend', handlesHTML);
+        element.appendChild(fragment);
+
+        console.log('[SlideLogicCore][Selection] Handles injected', {
+            id: element.id || null,
+            childCountAfter: element.childNodes.length,
+            resizeHandleCount: element.querySelectorAll('.resize-handle').length,
+        });
     },
 
     updateSelectionUI() {
         if (this.selectedElements.length === 0) return;
+        if (this.isDragging || this.isResizing) return;
         const primary = this.getPrimarySelectedElement();
         if (primary) this.highlightElement(primary);
     },
@@ -289,6 +298,14 @@ export const SelectionMixin = {
     },
 
     exitEditMode() {
+        // Handle equation editor exit
+        const activeEqEl = this.selectedElements.find?.(el => el._mathfieldActive) ||
+            (this.selectedElements[0]?._mathfieldActive ? this.selectedElements[0] : null);
+        if (activeEqEl) {
+            this.exitEquationEditor(activeEqEl);
+            return;
+        }
+
         if (!this.isEditingText) return;
 
         this.isEditingText = false;

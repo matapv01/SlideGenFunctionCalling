@@ -173,6 +173,7 @@ async def generate_from_docx_normal(
 @router.post("/docx/prepare-stream", response_model=DocxPrepareResponse)
 async def prepare_docx_stream(
     file: UploadFile = File(...),
+    workflow_mode: str = Form("auto_no_heading"),
     enable_transition_slides: str = Form("true"),
     enable_thank_you_slide: str = Form("true"),
     current_user: UserResponse = Depends(get_current_active_user),
@@ -205,6 +206,7 @@ async def prepare_docx_stream(
     _check_docx_slide_limit(temp_path, subscription_service, user)
 
     options = {
+        "workflow_mode": workflow_mode.strip() or "auto_no_heading",
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
         "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on')
     }

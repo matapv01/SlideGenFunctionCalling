@@ -131,8 +131,8 @@ const getHtmlBackground = (htmlContent?: string): SlideBackground => {
     const target = selector === 'body'
       ? doc.body
       : selector === 'html'
-      ? doc.documentElement
-      : doc.querySelector(selector);
+        ? doc.documentElement
+        : doc.querySelector(selector);
     if (!target) continue;
     const style = target.getAttribute('style');
     if (!style) continue;

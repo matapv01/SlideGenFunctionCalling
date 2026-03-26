@@ -50,7 +50,7 @@ API_PORT = 12008
 
 # --- LLM Configuration ---
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
-LLM_MODEL = "gemini-2.5-flash"
+LLM_MODEL = "gemini-3-flash-preview"
 # Base URL cho API endpoint
 LLM_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
@@ -109,16 +109,16 @@ EMBEDDING_CACHE_DIR = None
 # --- Tool Retrieval Diversity Configuration ---
 # MMR (Maximal Marginal Relevance) lambda parameter
 # Higher = more focus on relevance, Lower = more focus on diversity
-TOOL_RETRIEVER_MMR_LAMBDA = 0.7
+TOOL_RETRIEVER_MMR_LAMBDA = 0.5
 
 # Number of candidates to retrieve before applying MMR (should be 2-3x TOOL_RETRIEVER_TOP_K)
 TOOL_RETRIEVER_CANDIDATE_MULTIPLIER = 3
 
 # Temporal decay penalty weight
-TOOL_RETRIEVER_TEMPORAL_DECAY_WEIGHT = 0.2
+TOOL_RETRIEVER_TEMPORAL_DECAY_WEIGHT = 0.5
 
 # Maximum history window for temporal decay (in number of slides)
-TOOL_RETRIEVER_TEMPORAL_WINDOW = 10
+TOOL_RETRIEVER_TEMPORAL_WINDOW = 5
 
 # Enable/disable temporal decay feature
 TOOL_RETRIEVER_ENABLE_TEMPORAL_DECAY = True
@@ -136,8 +136,8 @@ FAISS_FORCE_REBUILD = False
 VLM_MAX_RETRIES = 3
 
 # --- Playwright Browser Configuration ---
-BROWSER_VIEWPORT_WIDTH = 1600
-BROWSER_VIEWPORT_HEIGHT = 900
+BROWSER_VIEWPORT_WIDTH = 1920
+BROWSER_VIEWPORT_HEIGHT = 1080
 BROWSER_DEVICE_SCALE_FACTOR = 1
 
 # ============================================================================

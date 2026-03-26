@@ -18,6 +18,41 @@ import time
 
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 
+# Keys that carry slide *content* — these must NOT leak into the next slide's prompt
+_CONTENT_KEYS = frozenset({
+    # text / titles
+    "main_title", "subtitle", "subtitle1", "subtitle2", "content_text",
+    "description_text", "header_text", "headline", "top_text", "title",
+    "author_line", "top_left_text", "bottom_text", "year",
+    "section_title", "section_subtitle",
+    # body content
+    "main_content", "content1", "content2", "content3", "content4",
+    "left_title", "right_title", "left_text", "right_text",
+    "left_content", "right_content", "description",
+    # list / structured content
+    "items", "agenda_items", "mission_items", "list_items", "steps",
+    # image alt text (content-specific)
+    "image_alt_text",
+})
+
+
+def _extract_style_params(tool_call: dict) -> dict:
+    """
+    Return a copy of *tool_call* that keeps only style-related parameters
+    (colors, fonts, opacity, layout, image URLs) and removes content fields
+    so the LLM won't copy text from the previous slide.
+    """
+    if not tool_call:
+        return {}
+    
+    result = {"name": tool_call.get("name", "")}
+    args = tool_call.get("arguments", {})
+    
+    style_args = {k: v for k, v in args.items() if k not in _CONTENT_KEYS}
+    result["arguments"] = style_args
+    return result
+
+
 def create_default_html(content_data) -> str:
     """Create default HTML when unable to get from LLM"""
     # Handle both dict and string formats
@@ -216,9 +251,26 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         print(current_text)
         print("-" * 100)
 
+        # Extract recently used tools for the prompt
+        recent_tools_list = []
+        if hasattr(tool_retriever, 'tool_usage_history') and tool_category in tool_retriever.tool_usage_history:
+            # Get unique tools used recently (most recent first)
+            history = list(tool_retriever.tool_usage_history[tool_category])
+            history.reverse()
+            seen = set()
+            for t_name, _ in history:
+                if t_name not in seen:
+                    recent_tools_list.append(f"- {t_name}")
+                    seen.add(t_name)
+                    if len(recent_tools_list) >= 3: # Only show top 3 recent to avoid overwhelming
+                        break
+        
+        recent_tools_str = "\n".join(recent_tools_list) if recent_tools_list else "- (None used recently)"
+
         response = slide_generator_runnable.invoke({
             "slide_context_map": current_context_map,
-            "previous_slide_function_call": json.dumps(previous_slide_function_call, indent=2),
+            "previous_slide_function_call": json.dumps(_extract_style_params(previous_slide_function_call), indent=2),
+            "recent_tools": recent_tools_str,
             "slide_plan": json.dumps(current_plan, indent=2),
             "slide_content": current_text,
             "previous_function_call": json.dumps(previous_function_call, indent=2),

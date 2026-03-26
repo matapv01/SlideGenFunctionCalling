@@ -131,6 +131,7 @@ export const EditorSidebar = ({
     star: t.editor_el_star,
     diamond: t.editor_el_diamond,
     line: t.editor_el_line,
+    equation: 'Equation',
     image: t.editor_el_image,
     video: t.editor_el_video,
   };

@@ -137,7 +137,8 @@ export const ScaledSlidePreview = ({ html, title, className }: ScaledSlidePrevie
               left: 0
             }}
             title={title}
-            sandbox="allow-same-origin allow-scripts"
+            // Keep scripts for converter-generated effects but avoid sandbox escape warning.
+            sandbox="allow-scripts"
           />
         </div>
       </div>

@@ -71,6 +71,7 @@ const SlideGen = () => {
       } else {
         // Auto modes: upload for streaming workflow
         const res = await api.uploadDocxForStream(file, {
+          workflow_mode: workflowMode,
           enable_transition_slides: docxTransitions,
           enable_thank_you_slide: docxThankYou,
         });

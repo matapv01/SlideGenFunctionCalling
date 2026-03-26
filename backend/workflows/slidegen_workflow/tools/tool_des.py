@@ -61,7 +61,6 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_comparison_slide,  # slide content
     generate_process_slide,  # slide content
     generate_process_steps_slide, # slide content
-    generate_icon_list_slide_2, # slide content
     generate_image_cutout_list_slide, # slide content
     generate_body_slide2,  # slide content
     generate_body_slide4,  # slide content
@@ -91,7 +90,6 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_icon_list_slide,   # slide content
     generate_flexible_columns_slide, # slide content
     generate_text_with_image_slide, # slide content
-    generate_instructions_slide,   # slide content
     generate_geometric_split_content_slide, # slide content
     generate_geometric_split_content_slide_2, # slide content
     generate_geometric_image_content_slide, # slide content
@@ -99,7 +97,6 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_memphis_content_slide, # slide content
     generate_memphis_multicolumn_slide, # slide content
     generate_memphis_grid_slide, # slide content
-    generate_premium_abstract_slide, # slide content
     generate_methodology_slide, # slide content
     generate_planning_phase_slide, # slide content
     generate_timeline_slide, # slide content
@@ -729,21 +726,6 @@ class GenerateProcessStepsSlideInput(BaseModel):
     font_family_body: str = Field(default="'Montserrat', 'Inter', sans-serif", description="The font for all other text. A clean sans-serif is recommended.")
     custom_css: str = Field(default="", description="Additional custom CSS.")
 
-class GenerateIconListSlide2Input(BaseModel):
-    """Input schema for generate_icon_list_slide_2."""
-    main_title: str = Field(..., description="The main title of the slide, typically using an elegant serif font. Default: 'Giải pháp'.")
-    subtitle: str = Field(..., description="A smaller, uppercase subtitle below the main title. Default: 'CÁCH TIẾP CẬN ĐA KÊNH'.")
-    items: List[str] = Field(..., description="A list of items, each with the raw SVG code for the icon and the corresponding text. Default: 3 items with network/phone/wifi icons and Vietnamese text.")
-    accent_color: str = Field(default="#EAD6D6", description="The background color for the icon containers (hex code).")
-    bg_color: str = Field(default="#FCFCFC", description="The main background color of the slide (hex code).")
-    title_color: str = Field(default="#1F2937", description="Color for the main title.")
-    subtitle_color: str = Field(default="#4B5563", description="Color for the subtitle.")
-    text_color: str = Field(default="#374151", description="Color for the item text.")
-    icon_color: str = Field(default="#FFFFFF", description="Fill color for the SVG icons inside the containers.")
-    font_family_title: str = Field(default="'Playfair Display', 'Inter', serif", description="The font for the main title. An elegant serif font is recommended.")
-    font_family_body: str = Field(default="'Montserrat', 'Inter', sans-serif", description="The font for all other text. A clean sans-serif is recommended.")
-    custom_css: str = Field(default="", description="Additional custom CSS.")
-
 class GenerateImageCutoutListSlideInput(BaseModel):
     """Input schema for generate_image_cutout_list_slide."""
     list_items: List[str] = Field(...,description=f"""A list of items to display, each with a 'title' (main point) and a 'description' (elaboration). default=[ {{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}}]""")
@@ -1214,17 +1196,6 @@ class GenerateTextWithImageSlideInput(BaseModel):
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
     doodle_border_url: str = Field(default="https://i.imgur.com/Qy2O1vN.png", description="URL for the seamless doodle image used as a border at the bottom.")
 
-class GenerateInstructionsSlideInput(BaseModel):
-    """Input schema for generate_instructions_slide."""
-    main_title: str = Field(..., description="The main title displayed in the header bar. Default: 'TOPIC'.")
-    columns: List[Dict[str, Union[str, List[str]]]] = Field(..., description="An array of exactly 3 objects, each representing a column. Each object should have 'title' and 'list_items' keys. The content is styled with large fonts for easy reading. Default: [{'title': 'TOPIC ONE', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}, {'title': 'TOPIC TWO', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}, {'title': 'TOPIC THREE', 'list_items': ['First instruction point.', 'Second instruction point.', 'Third instruction point.']}].")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="Font family for all text elements.")
-    header_primary_color: str = Field(default="#4F46E5", description="The primary (brighter) color for the header.")
-    header_secondary_color: str = Field(default="#1E293B", description="The secondary (darker) color for the header accent.")
-    header_text_color: str = Field(default="#FFFFFF", description="Text color for the header.")
-    body_title_color: str = Field(default="#1E293B", description="Text color for the column titles.")
-    body_text_color: str = Field(default="#333333", description="Text color for the list items.")
-
 class GenerateGeometricSplitContentSlideInput(BaseModel):
     """Input schema for generate_geometric_split_content_slide."""
     main_title: str = Field(..., description="The main title for the slide's content. Default: 'You can also split your content'.")
@@ -1314,25 +1285,6 @@ class GenerateMemphisGridSlideInput(BaseModel):
     top_panel_bg: str = Field(default="#19114B", description="The background color for the top panel.")
     bottom_panel_bg: str = Field(default="#403271", description="The background color for the bottom panel.")
     palette: List[str] = Field(default=["#F43F5E", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"], description="A list of 5 colors used for the various decorative shapes and accents.")
-
-class GeneratePremiumAbstractSlideInput(BaseModel):
-    """Input schema for generate_premium_abstract_slide."""
-    main_title: str = Field(..., description="The main title of the slide. Default: 'HR Management'.")
-    content_paragraphs: List[str] = Field(..., description=f"""A list of strings for body text. Default: [
-        "We foster a dynamic and supportive work environment where every individual can thrive. Our approach integrates technology and human-centric policies to build a resilient and engaged workforce.",
-        "From talent acquisition to professional development, our comprehensive strategies ensure that our people are our greatest asset, driving innovation and success."
-    ]""")
-    bg_color: str = Field(default="#F8FAFC", description="The base background color (hex code).")
-    aurora_color_1: str = Field(default="#FBCFE8", description="First color (hex code) for the aurora gradient effect.")
-    aurora_color_2: str = Field(default="#CFFAFE", description="Second color (hex code) for the aurora gradient effect.")
-    aurora_color_3: str = Field(default="#DDD6FE", description="Third color (hex code) for the aurora gradient effect.")
-    title_color: str = Field(default="#881337", description="Color for the main title (hex code).")
-    text_color: str = Field(default="#334155", description="Color for the paragraph text (hex code).")
-    enable_animation: Optional[bool] = Field(default=True, description="Whether to enable subtle loading animations. Default: True.")
-    show_border: Optional[bool] = Field(default=True, description="Whether to show a subtle finishing border around the slide. Default: True.")
-    font_family_title: str = Field(default="Poppins", description="Font family for the title from Google Fonts.")
-    font_family_content: str = Field(default="Inter", description="Font family for the content from Google Fonts.")
-    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
 class GenerateMethodologySlideInput(BaseModel):
     """Input schema for generate_methodology_slide"""
@@ -2068,12 +2020,6 @@ CONTENT_TOOLS = [
         args_schema=GenerateProcessStepsSlideInput
     ),
     StructuredTool.from_function(
-        func=generate_icon_list_slide_2,
-        name="generate_icon_list_slide_2",
-        description="Generates a clean, minimalist slide for presenting solutions, features, or key points. It features a two-column layout with a large, elegant title on the left and a vertical list of icon-text pairs on the right. Ideal for corporate or business presentations requiring a sophisticated aesthetic.",
-        args_schema=GenerateIconListSlide2Input
-    ),
-    StructuredTool.from_function(
         func=generate_image_cutout_list_slide,
         name="generate_image_cutout_list_slide",
         description="Generates a sophisticated list slide with a unique 'cut-out' effect, where the main content panel appears to sit on top of a continuous background image. Ideal for presenting key points, features, or agenda items in a modern, high-end style.",
@@ -2249,12 +2195,6 @@ CONTENT_TOOLS = [
         args_schema=GenerateTextWithImageSlideInput
     ),
     StructuredTool.from_function(
-        func=generate_instructions_slide,
-        name="generate_instructions_slide",
-        description="Generates a professional and highly legible Content Slide for instructions or feature lists. This slide is characterized by its clean, structured layout featuring a prominent two-tone header and a content area **strictly designed for a three-column layout to maintain visual balance.** It has been enhanced with **extra-large fonts and generous spacing** to ensure maximum readability and impact, making it ideal for presenting processes, guidelines, or key feature sets in a clear and modern way.",
-        args_schema=GenerateInstructionsSlideInput
-    ),
-    StructuredTool.from_function(
         func=generate_geometric_split_content_slide,
         name="generate_geometric_split_content_slide",
         description="Generates a **Content Slide** for comparing items in multiple columns (typically 2 or 3). This slide maintains the 'geometric theme' with a main title and a grid of content below. The layout is robustly designed to ensure decorative elements never overlap with the text, making it ideal for breaking down concepts, comparing features, or listing pros and cons.",
@@ -2295,12 +2235,6 @@ CONTENT_TOOLS = [
         name="generate_memphis_grid_slide",
         description="Generates a 'Memphis-style' content slide featuring a 2x3 grid. It uses the signature 20/80 panel layout and is specifically designed to display exactly six items. The playful decorative shapes are arranged to not interfere with the content, making it perfect for reviewing multiple concepts in a creative presentation.",
         args_schema=GenerateMemphisGridSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_premium_abstract_slide,
-        name="generate_premium_abstract_slide",
-        description="Generates a versatile content, introduction, or section divider slide. It features a premium, highly modern design with an 'aurora' gradient background and an abstract 'glassmorphism' graphic. Perfect for presenting key concepts, introducing a topic, or opening a new presentation section with a sophisticated, high-tech, and elegant first impression.",
-        args_schema=GeneratePremiumAbstractSlideInput
     ),
     StructuredTool.from_function(
         func=generate_methodology_slide,

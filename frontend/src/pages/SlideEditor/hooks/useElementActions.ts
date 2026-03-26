@@ -83,6 +83,15 @@ export const useElementActions = ({
       html = `<div id="${id}" class="element" data-type="video" data-selectable="true"
         style="position:absolute;left:${x}px;top:${y}px;width:480px;height:270px;background:#000;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;"
         >Video</div>`;
+
+    } else if (item.type === 'equation') {
+      const defaultLatex = 'x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}';
+      const safeLatexAttr = defaultLatex.replace(/"/g, '&quot;');
+      const color = '#333333';
+      const fontSize = 32;
+      html = `<div id="${id}" class="element equation" data-type="equation" data-selectable="true" data-latex="${defaultLatex}"
+        style="position:absolute;left:${x}px;top:${y}px;width:500px;min-height:80px;background:transparent;cursor:move;display:flex;align-items:center;justify-content:center;padding:8px;font-size:${fontSize}px;color:${color};"
+        ><div class="equation-overlay"></div><math-field value="${safeLatexAttr}" style="width:fit-content;max-width:100%;min-height:60px;"></math-field></div>`;
     }
 
     if (!html) return;
@@ -92,9 +101,20 @@ export const useElementActions = ({
     // canvas's selectElement → onElementSelect → handleElementSelectFromCanvas
     // will create the React state entry — just pre-select the id here
     setSelectedElementId(id);
+
+    // For equations: immediately activate MathLive edit mode.
+    if (item.type === 'equation') {
+      slideCanvasRef.current?.activateEquationById?.(id);
+    }
   }, [currentSlide, slideCanvasRef, setSelectedElementId]);
 
   const updateElement = useCallback((id: string, updates: Partial<SlideElement> & { _filter?: string }) => {
+    console.log('[SlideEditor][Properties] updateElement called', {
+      id,
+      updates,
+      currentSlideIndex,
+    });
+
     // Sync React state
     setSlides(prev => prev.map((slide, i) => {
       if (i !== currentSlideIndex) return slide;
@@ -146,7 +166,11 @@ export const useElementActions = ({
       if (updates.content !== undefined) s.innerHTML = updates.content;
       if (updates._filter !== undefined) s.filter = updates._filter;
 
-      slideCanvasRef.current.updateElement(s);
+      console.log('[SlideEditor][Properties] pushing style patch to canvas', {
+        id,
+        stylePatch: s,
+      });
+      slideCanvasRef.current.updateElement(s, id);
     }
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
@@ -191,7 +215,7 @@ export const useElementActions = ({
     }));
     if (slideCanvasRef.current) {
       const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 0;
-      slideCanvasRef.current.updateElement({ zIndex: `${current + 1}` });
+      slideCanvasRef.current.updateElement({ zIndex: `${current + 1}` }, id);
     }
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
@@ -207,7 +231,7 @@ export const useElementActions = ({
     }));
     if (slideCanvasRef.current) {
       const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 1;
-      slideCanvasRef.current.updateElement({ zIndex: `${Math.max(0, current - 1)}` });
+      slideCanvasRef.current.updateElement({ zIndex: `${Math.max(0, current - 1)}` }, id);
     }
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 

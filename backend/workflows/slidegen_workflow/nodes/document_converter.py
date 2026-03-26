@@ -108,11 +108,11 @@ def convert_document(state: State, config: Optional[RunnableConfig] = None) -> S
     print(f"🔍 DEBUG: has_structure = {has_structure}, structure length = {len(structure)}")
     
     # Get workflow mode from state
-    workflow_mode = state.get('workflow_mode', 'auto')
+    workflow_mode = state.get('workflow_mode', 'auto_no_heading')
     print(f"🔍 DEBUG: workflow_mode = {workflow_mode}")
     
-    # VALIDATION: If user chose 'auto' (Doc With Heading) but document has no structure, raise error
-    if workflow_mode == 'auto' and not has_structure:
+    # VALIDATION: If user chose 'auto_heading' (Doc With Heading) but document has no structure, raise error
+    if workflow_mode == 'auto_heading' and not has_structure:
         error_msg = (
             "❌ Document không có cấu trúc heading!\n\n"
             "Bạn đã chọn chế độ 'Auto With Doc Heading' nhưng tài liệu không có tiêu đề heading (H1, H2, H3...).\n\n"

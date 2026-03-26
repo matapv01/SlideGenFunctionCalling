@@ -14,7 +14,7 @@ interface SlideCanvasProps {
 }
 
 export interface SlideCanvasHandle {
-  updateElement: (styles: any) => void;
+  updateElement: (styles: any, targetId?: string) => void;
   getHTML: () => string;
   undo: () => void;
   redo: () => void;
@@ -31,6 +31,8 @@ export interface SlideCanvasHandle {
   bringToFront: (id?: string) => void;
   sendToBack: (id?: string) => void;
   isTextEditing: () => boolean;
+  activateEquationById: (id: string) => void;
+  insertMath: (latex: string) => void;
   saveHistory: (silent?: boolean) => void;
   reselectById: (id: string) => void;
 }
@@ -67,8 +69,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
   // Expose các method cho component cha (SlideEditor.tsx) gọi
   useImperativeHandle(ref, () => ({
-    updateElement: (styles: any) => {
-      logicInstanceRef.current?.updateSelectedElementStyle(styles);
+    updateElement: (styles: any, targetId?: string) => {
+      logicInstanceRef.current?.updateSelectedElementStyle(styles, targetId ?? null);
     },
     getHTML: () => {
       const canvasHTML = logicInstanceRef.current?.getHTML() || '';
@@ -132,6 +134,46 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     },
     isTextEditing: () => {
       return !!logicInstanceRef.current?.isEditingText;
+    },
+    activateEquationById: (id: string) => {
+      try {
+        const root = shadowRootRef.current;
+        const logic: any = logicInstanceRef.current;
+        const el = root?.querySelector<HTMLElement>(`#${CSS.escape(id)}`) ?? null;
+        if (!root || !logic?.activateEquationEditor || !el) return;
+        logic.activateEquationEditor(el);
+      } catch {
+        // no-op
+      }
+    },
+    insertMath: (latex: string) => {
+      const logic: any = logicInstanceRef.current;
+      if (!logic) return;
+
+      // Find the selected element on canvas
+      const selectedEl = logic.getSelectedElement();
+      if (!selectedEl || selectedEl.getAttribute('data-type') !== 'equation') return;
+
+      const mf = selectedEl.querySelector('math-field') as any;
+      if (mf) {
+        // If mf is found, insert LaTeX
+        mf.insert(latex, { focus: true });
+        selectedEl.dataset.latex = mf.value;
+        mf.setAttribute('value', mf.value);
+        logic.saveHistory();
+      } else {
+        // If mf not upgraded yet, we might need to wait or activate it
+        logic.activateEquationEditor(selectedEl);
+        setTimeout(() => {
+          const newMf = selectedEl.querySelector('math-field') as any;
+          if (newMf) {
+            newMf.insert(latex, { focus: true });
+            selectedEl.dataset.latex = newMf.value;
+            newMf.setAttribute('value', newMf.value);
+            logic.saveHistory();
+          }
+        }, 50);
+      }
     },
     saveHistory: (silent = false) => {
       logicInstanceRef.current?.saveHistory(silent);
@@ -205,6 +247,61 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     });
   };
 
+  /**
+   * Renders equation elements as read-only MathLive math-field elements.
+   * Imports the browser mathlive bundle (registering the custom element).
+   * Works in both editor (static display) and readOnly (presentation) modes.
+   */
+  const renderEquationsInRoot = async (root: ShadowRoot | HTMLElement) => {
+    const allEquationNodes = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-type="equation"]')
+    );
+    if (!allEquationNodes.length) return;
+
+    try {
+      await import('mathlive'); // registers <math-field> custom element globally
+    } catch (e) {
+      console.warn('[SlideCanvas] mathlive unavailable, using text fallback:', e);
+      allEquationNodes.forEach(node => {
+        const latex = node.dataset.latex || '';
+        node.innerHTML = `<span style="font-family:monospace;font-size:24px;color:inherit;">${latex}</span>`;
+      });
+      return;
+    }
+
+    allEquationNodes.forEach(node => {
+      let mf = node.querySelector('math-field') as HTMLElement & { value?: string };
+      
+      // 1. Create math-field if it doesn't exist (e.g. initial load from raw HTML)
+      if (!mf) {
+        const latex = node.dataset.latex || '';
+        node.innerHTML = '';
+        mf = document.createElement('math-field') as HTMLElement & { value: string };
+        mf.setAttribute('read-only', '');
+        mf.style.cssText = [
+          'width:fit-content',
+          'max-width:100%',
+          'min-height:60px',
+          'border:none',
+          'background:transparent',
+          'font-size:inherit',
+          'color:inherit',
+          'outline:none',
+        ].join(';');
+        node.appendChild(mf);
+        mf.value = latex;
+      }
+
+      // 2. Ensure an overlay exists for selection shadowing
+      if (!node.querySelector('.equation-overlay')) {
+        const overlay = document.createElement('div');
+        overlay.className = 'equation-overlay';
+        node.insertBefore(overlay, mf);
+      }
+    });
+  };
+
+
   // Xử lý HTML & CSS Isolation
   const processHTML = (rawHTML: string, isReadOnly = false): string => {
     // Fix viewport units to absolute pixels (vw/vh refer to page viewport in Shadow DOM)
@@ -244,6 +341,10 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (!mergedBodyProps['width']) mergedBodyProps['width'] = '100%';
     if (!mergedBodyProps['height']) mergedBodyProps['height'] = '100%';
     if (!mergedBodyProps['box-sizing']) mergedBodyProps['box-sizing'] = 'border-box';
+    // In editor mode, hide imported body scrollbars so the slide surface stays clean.
+    mergedBodyProps['overflow'] = 'hidden';
+    mergedBodyProps['overflow-x'] = 'hidden';
+    mergedBodyProps['overflow-y'] = 'hidden';
 
     // Build inline style string from merged body properties
     const wrapperInlineStyle = Object.entries(mergedBodyProps)
@@ -281,6 +382,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       'span', 'strong', 'b', 'em', 'i', 'u', 'mark', 'small',
       'sub', 'sup', 'code', 'kbd', 'samp', 'var', 'a',
       'font', 'ins', 'del', 's', 'abbr', 'cite', 'q', 'time',
+      // Keep list items attached to their list container; dragging LI directly causes list reflow.
+      'li',
       'br', 'wbr', 'hr',
     ]);
 
@@ -297,6 +400,16 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         delete node.dataset.selectable;
         if (node.dataset.type) delete node.dataset.type;
         if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
+        return;
+      }
+
+      // Preserve equation data-type — never reclassify equation elements
+      if (node.dataset.type === 'equation' || node.classList.contains('equation')) {
+        node.dataset.type = 'equation';
+        if (!node.classList.contains('element')) node.classList.add('element');
+        node.dataset.selectable = 'true';
+        if (!isReadOnly) node.style.cursor = 'move';
+        if (!node.id) node.id = `element_equation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
         return;
       }
 
@@ -329,54 +442,65 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         }
       }
 
-      if (!node.classList.contains('element')) {
-        node.classList.add('element');
-      }
-      // Set data-selectable + cursor in processHTML so elements are always
-      // interactive, even before makeElementsSelectable runs on live DOM.
-      node.dataset.selectable = 'true';
-      if (!isReadOnly) node.style.cursor = 'move';
+      // Only make absolute-positioned elements independently selectable/draggable.
+      // Non-absolute elements (flex/grid children, static flow) keep their CSS
+      // layout and are NOT draggable — this preserves visual fidelity.
+      const inlinePosition = node.style.position;
+      const isAbsolute = inlinePosition === 'absolute';
 
-      if (!node.dataset.type) {
-        let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
+      if (isAbsolute) {
+        if (!node.classList.contains('element')) {
+          node.classList.add('element');
+        }
+        node.dataset.selectable = 'true';
+        if (!isReadOnly) node.style.cursor = 'move';
 
-        const hasImage = node.querySelector('img') || tag === 'img';
-        const hasVideo = node.querySelector('video') || tag === 'video';
-        const textContent = node.textContent?.trim() || '';
-        const hasSignificantText = textContent.length > 3;
+        if (!node.dataset.type) {
+          let elementType: 'text' | 'image' | 'video' | 'shape' = 'shape';
 
-        const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'li', 'blockquote', 'pre', 'a'];
-        const isDivWithText = tag === 'div' && hasSignificantText;
-        const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
-          node.style.backgroundImage || node.style.borderRadius;
+          const hasImage = node.querySelector('img') || tag === 'img';
+          const hasVideo = node.querySelector('video') || tag === 'video';
+          const textContent = node.textContent?.trim() || '';
+          const hasSignificantText = textContent.length > 3;
 
-        if (hasImage) {
-          elementType = 'image';
-        } else if (hasVideo) {
-          elementType = 'video';
-        } else if (explicitTextTags.includes(tag) && hasSignificantText) {
-          elementType = 'text';
-        } else if (isDivWithText && !hasBackgroundStyling) {
-          elementType = 'text';
-        } else if (hasSignificantText && !hasBackgroundStyling) {
-          elementType = 'text';
-        } else {
-          elementType = 'shape';
+          const explicitTextTags = ['h1', 'h2', 'h3', 'h4', 'h5', 'h6', 'p', 'span', 'blockquote', 'pre', 'a'];
+          const isDivWithText = tag === 'div' && hasSignificantText;
+          const hasBackgroundStyling = node.style.background || node.style.backgroundColor ||
+            node.style.backgroundImage || node.style.borderRadius;
+
+          if (hasImage) {
+            elementType = 'image';
+          } else if (hasVideo) {
+            elementType = 'video';
+          } else if (explicitTextTags.includes(tag) && hasSignificantText) {
+            elementType = 'text';
+          } else if (isDivWithText && !hasBackgroundStyling) {
+            elementType = 'text';
+          } else if (hasSignificantText && !hasBackgroundStyling) {
+            elementType = 'text';
+          } else {
+            elementType = 'shape';
+          }
+
+          node.dataset.type = elementType;
         }
 
-        node.dataset.type = elementType;
-      }
+        if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
+          node.setAttribute('contenteditable', 'true');
+        }
 
-      if (!isReadOnly && node.dataset.type === 'text' && !node.hasAttribute('contenteditable')) {
-        node.setAttribute('contenteditable', 'true');
-      }
-
-      if (!node.id) {
-        node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        if (!node.id) {
+          node.id = `element_${node.dataset.type}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        }
+      } else {
+        // Non-absolute elements: strip any stale editor attributes
+        node.classList.remove('element');
+        delete node.dataset.selectable;
+        if (node.style?.cursor === 'move') node.style.removeProperty('cursor');
       }
     });
 
-    // In read-only mode: strip editor-only artifacts
+    // In read-only mode: strip editor-only artifacts and render equations as static math
     if (isReadOnly) {
       tempContainer.querySelectorAll('.resize-handle, .drag-handle, .smart-guide').forEach(el => el.remove());
       tempContainer.querySelectorAll('.selected').forEach(el => el.classList.remove('selected'));
@@ -386,6 +510,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       tempContainer.querySelectorAll<HTMLElement>('*').forEach(el => {
         if (el.style && el.style.cursor === 'move') el.style.removeProperty('cursor');
       });
+
+      // Equation nodes rendered after DOM injection — see renderEquationsInRoot()
     }
 
     let bodyContent = tempContainer.innerHTML;
@@ -411,14 +537,26 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         position: relative;
       }
 
+      .slide-bg-wrapper,
+      .slide-bg-wrapper * {
+        scrollbar-width: none;
+      }
+
+      .slide-bg-wrapper::-webkit-scrollbar,
+      .slide-bg-wrapper *::-webkit-scrollbar {
+        width: 0 !important;
+        height: 0 !important;
+        display: none;
+      }
+
       ${isReadOnly ? '' : `
       [contenteditable] {
         outline: none;
       }
 
       .selected, [data-selectable].selected {
-        outline: 3px solid #3b82f6 !important;
-        outline-offset: 2px !important;
+        box-shadow: 0 0 0 3px #3b82f6 !important;
+        outline: none !important;
       }
 
       .resize-handle {
@@ -456,12 +594,77 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
       .smart-guide { opacity: 0.7; }
 
+      /* ── Equation element ── */
+      [data-type="equation"] {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 60px;
+        overflow: visible;
+        position: relative;
+      }
+      .equation-overlay {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+        background: transparent;
+        cursor: move;
+      }
+      [data-type="equation"] {
+        display: flex !important;
+        align-items: center !important;
+        justify-content: center; /* default */
+        padding: 0 16px;
+      }
+      /* Align Left */
+      [data-type="equation"][style*="text-align: left"],
+      [data-type="equation"][style*="text-align:left"],
+      [data-type="equation"][style*="text-align: flex-start"] { 
+        justify-content: flex-start !important; 
+      }
+      /* Align Center */
+      [data-type="equation"][style*="text-align: center"],
+      [data-type="equation"][style*="text-align:center"] { 
+        justify-content: center !important; 
+      }
+      /* Align Right */
+      [data-type="equation"][style*="text-align: right"],
+      [data-type="equation"][style*="text-align:right"],
+      [data-type="equation"][style*="text-align: flex-end"] { 
+        justify-content: flex-end !important; 
+      }
+
+      [data-type="equation"] math-field {
+        width: fit-content;
+        max-width: 100%;
+        min-height: 60px;
+        border: none;
+        background: transparent;
+        font-size: inherit;
+        color: inherit;
+        outline: none;
+      }
+      [data-type="equation"] math-field::part(menu-toggle),
+      [data-type="equation"] math-field::part(virtual-keyboard-toggle) {
+        display: none !important;
+        visibility: hidden;
+      }
+      /* MathLive static markup sizing and colors */
+      [data-type="equation"] math-field,
+      [data-type="equation"] .ML__base,
+      [data-type="equation"] .ML__mathlive {
+        font-size: inherit !important;
+        color: inherit !important;
+      }
+
       ${isReadOnly ? '' : `
       [data-selectable="true"] { cursor: move; }
 
       [contenteditable="true"]:focus {
-        outline: 2px dashed #3b82f6;
-        outline-offset: 2px;
+        outline: none !important;
         cursor: text !important;
       }
 
@@ -519,6 +722,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
 
   useEffect(() => {
     if (!containerRef.current) return;
+    let initLogicTimer: ReturnType<typeof setTimeout> | null = null;
 
     // Attach Shadow DOM (once)
     if (!shadowRootRef.current) {
@@ -537,6 +741,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       // The converter's resize <script> doesn't execute via innerHTML in Shadow DOM,
       // so apply the scale fallback for both readOnly and editor modes.
       applyConverterScaleFallback(shadowRootRef.current);
+      // Render equation elements as static MathLive markup
+      renderEquationsInRoot(shadowRootRef.current);
     } catch (e) {
       console.error('[SlideCanvas] Failed to process/inject HTML:', e);
       return;
@@ -546,7 +752,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (props.readOnly) return;
 
     // Wait one tick for DOM to render
-    setTimeout(() => {
+    initLogicTimer = setTimeout(() => {
       if (logicInstanceRef.current) {
         logicInstanceRef.current.destroy();
       }
@@ -564,6 +770,10 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     }, 10);
 
     return () => {
+      if (initLogicTimer) {
+        clearTimeout(initLogicTimer);
+        initLogicTimer = null;
+      }
       if (logicInstanceRef.current) {
         logicInstanceRef.current.destroy();
         logicInstanceRef.current = null;
@@ -576,6 +786,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     if (!props.readOnly || !shadowRootRef.current) return;
     shadowRootRef.current.innerHTML = processHTML(props.htmlContent, true);
     applyConverterScaleFallback(shadowRootRef.current);
+    renderEquationsInRoot(shadowRootRef.current);
   }, [props.htmlContent]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Sync zoom to logic instance

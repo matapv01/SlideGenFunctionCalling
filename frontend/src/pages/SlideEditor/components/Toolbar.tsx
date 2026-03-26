@@ -1,10 +1,11 @@
 import { 
-  ArrowLeft, MousePointer, Type, Download, Play, 
+  ArrowLeft, MousePointer, Type, Download, Play, ChevronDown,
   Undo2, Redo2, Trash2 
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -43,7 +44,8 @@ interface ToolbarProps {
   onDeselectElement: () => void;
   onSetDraggedItem: (item: { type: string; subType: string }) => void;
   onDeleteElement?: () => void;
-  onPresent: () => void;
+  onPresentFromStart: () => void;
+  onPresentFromCurrent: () => void;
   onExport: () => void;
 }
 
@@ -57,7 +59,8 @@ export const Toolbar = ({
   onDeselectElement,
   onSetDraggedItem,
   onDeleteElement,
-  onPresent,
+  onPresentFromStart,
+  onPresentFromCurrent,
   onExport,
 }: ToolbarProps) => {
   const { t } = useLanguage();
@@ -102,15 +105,26 @@ export const Toolbar = ({
             <Download className="h-3.5 w-3.5 mr-1.5" /> {t.toolbar_export_button}
           </Button>
         </Tip>
-        <Tip label={t.toolbar_present} shortcut="F5" desc={t.toolbar_present_desc} side="bottom">
-          <Button
-            size="sm"
-            className="h-8 text-xs px-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 ml-0.5"
-            onClick={onPresent}
-          >
-            <Play className="h-3.5 w-3.5 mr-1.5" /> {t.toolbar_present_button}
-          </Button>
-        </Tip>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button
+              size="sm"
+              className="h-8 text-xs px-3 rounded-lg bg-primary text-primary-foreground hover:bg-primary/90 ml-0.5"
+            >
+              <Play className="h-3.5 w-3.5 mr-1.5" />
+              {t.toolbar_present_button}
+              <ChevronDown className="h-3.5 w-3.5 ml-1" />
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="center" className="w-52">
+            <DropdownMenuItem onClick={onPresentFromStart}>
+              <Play className="h-3.5 w-3.5 mr-2" /> {t.toolbar_present_from_start}
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onPresentFromCurrent}>
+              <Play className="h-3.5 w-3.5 mr-2" /> {t.toolbar_present_from_current}
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
       </div>
 
       {/* Right Section */}
