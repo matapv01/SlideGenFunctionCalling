@@ -159,6 +159,9 @@ CONTENT_PROMPT = """
 4. CONTENT: Concise, no filler words
 5. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
+6. MATH/EQUATIONS: If you need to output math formulas, you MUST write them in LaTeX and wrap them strictly inside `<math-field>` tags.
+   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
+   ❌ WRONG: `$E = mc^2$` or just `E=mc^2`
 
 Generate READABLE, professional function call.
 """
