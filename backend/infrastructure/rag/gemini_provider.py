@@ -34,6 +34,11 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         # Cache for pre-computed tool description embeddings (used by MMR)
         self._embedding_cache: Dict[str, np.ndarray] = {}
 
+        if getattr(config, 'FAISS_FORCE_REBUILD', False) and os.path.exists(index_path):
+            print(f"FAISS_FORCE_REBUILD is True. Deleting old index at '{index_path}' to re-index all tools...")
+            import shutil
+            shutil.rmtree(index_path)
+
         if os.path.exists(index_path):
             print(f"Found existing index at '{index_path}'. Loading retrievers from disk...")
             for category in tools_dict.keys():

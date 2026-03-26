@@ -130,7 +130,7 @@ TOOL_RETRIEVER_ENABLE_MMR = True
 FAISS_INDEX_PATH = "faiss_tool_retriever_index"
 
 # Force rebuild FAISS index on startup (set True after changing EMBEDDING_MODEL_NAME)
-FAISS_FORCE_REBUILD = False
+FAISS_FORCE_REBUILD = True
 
 # --- VLM Evaluation (Visual Language Model) ---
 VLM_MAX_RETRIES = 3
