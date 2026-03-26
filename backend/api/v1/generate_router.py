@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import asyncio
+import re
 from typing import AsyncGenerator, Optional
 from pathlib import Path
 from datetime import datetime
@@ -27,9 +28,11 @@ from backend.api.dependencies import (
     get_slide_service,
     get_slidegen_workflow_service,
     get_idea_service,
-    get_subscription_service
+    get_subscription_service,
+    get_conversion_service
 )
 from backend.application.services.subscription_service import SubscriptionService
+from backend.application.services.conversion_service import ConversionService
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
 from backend.api.rate_limiting import idea_structure_rate_limiter, idea_stream_rate_limiter
 from backend.api.constants import EventTypes, SourceTypes, FilePatterns
@@ -74,7 +77,16 @@ def _check_docx_slide_limit(temp_path, subscription_service, user):
 
 def prepare_output_folder(name: str):
     """Helper to create unique output folder"""
-    safe_name = name.replace(' ', '_')
+    raw_name = str(name or "Untitled")
+    raw_name = re.sub(r"[\x00-\x1f\x7f]", " ", raw_name)
+    raw_name = re.sub(r"[\\/:*?\"<>|]", " ", raw_name)
+    safe_name = re.sub(r"\s+", "_", raw_name).strip("._")
+    if not safe_name:
+        safe_name = "Untitled"
+
+    if len(safe_name) > 120:
+        safe_name = safe_name[:120].rstrip("._")
+
     folder = OUTPUT_DIR / safe_name
     if folder.exists():
         folder = OUTPUT_DIR / f"{safe_name}_{int(datetime.now().timestamp())}"
@@ -88,6 +100,29 @@ def sanitize_event_data(event_type: str, data: dict):
         if 'html_path' in new_data: new_data['is_temp'] = True
         if 'image_path' in new_data: new_data['is_temp'] = True
     return new_data
+
+
+def ensure_converted_slides(output_folder: Path, conversion_service: Optional[ConversionService]) -> None:
+    """Best-effort conversion pass to ensure converted HTML exists for import/view."""
+    if conversion_service is None:
+        return
+
+    base_output = output_folder / "output"
+    html_folder = (base_output / "html") if (base_output / "html").exists() else (output_folder / "html")
+
+    if not html_folder.exists():
+        logger.warning(f"Conversion skipped: HTML folder not found at {html_folder}")
+        return
+
+    converted_folder = output_folder / "converted"
+    converted_folder.mkdir(parents=True, exist_ok=True)
+
+    result = conversion_service.convert_slides_batch(html_folder, converted_folder)
+    logger.info(
+        "Idea/manual conversion batch complete: %s success, %s failed",
+        len(result.get("success", [])),
+        len(result.get("failed", []))
+    )
 
 # ==========================================
 # 1. GENERATE FROM FILE (DOCX)
@@ -420,7 +455,8 @@ async def stream_idea_generation(
     session_id: str = Query(...),
     current_user: UserResponse = Depends(idea_stream_rate_limiter),
     project_service: ProjectService = Depends(get_project_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service)
+    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
+    conversion_service: ConversionService = Depends(get_conversion_service)
 ):
     """Step 2 Idea: SSE Generation"""
     try:
@@ -454,6 +490,9 @@ async def stream_idea_generation(
             if not res:
                 await queue.put(('error_event', {'message': "Workflow failed"}))
                 return
+
+            # Ensure idea output has converted HTML (absolute positioning), matching full docx flow.
+            ensure_converted_slides(output_folder, conversion_service)
 
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
