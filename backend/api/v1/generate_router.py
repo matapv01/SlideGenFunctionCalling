@@ -124,6 +124,43 @@ def ensure_converted_slides(output_folder: Path, conversion_service: Optional[Co
         len(result.get("failed", []))
     )
 
+
+def _to_idea_text(value: Optional[str], fallback: str = "") -> str:
+    if value is None:
+        return fallback
+    txt = str(value).strip()
+    return txt if txt else fallback
+
+
+def _parse_intro_title_subtitle(raw_content: str, fallback_title: str) -> tuple[str, str]:
+    """
+    Parse intro content formatted like:
+      Title: ...\nSubtitle: ...
+    Returns clean (title, subtitle) without labels.
+    """
+    text = _to_idea_text(raw_content, "")
+    if not text:
+        return fallback_title, ""
+
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    parsed_title = ""
+    parsed_subtitle = ""
+
+    for line in lines:
+        lower_line = line.lower()
+        if lower_line.startswith("title:"):
+            parsed_title = line.split(":", 1)[1].strip()
+        elif lower_line.startswith("subtitle:"):
+            parsed_subtitle = line.split(":", 1)[1].strip()
+
+    if parsed_title or parsed_subtitle:
+        return parsed_title or fallback_title, parsed_subtitle
+
+    # Fallback: no explicit labels, use first line as title and the rest as subtitle.
+    first = lines[0]
+    rest = "\n".join(lines[1:]).strip()
+    return first or fallback_title, rest
+
 # ==========================================
 # 1. GENERATE FROM FILE (DOCX)
 # ==========================================
@@ -448,6 +485,97 @@ async def generate_idea_structure(
     except Exception as e:
         logger.error(f"Idea structure error: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.post("/idea/structure/{session_id}/manual-session", response_model=ManualSessionResponse)
+async def convert_idea_to_manual_session(
+    session_id: str,
+    current_user: UserResponse = Depends(get_current_active_user),
+    structure_service: StructureService = Depends(get_structure_service)
+):
+    """
+    Convert idea JSON session into StructureEditor-compatible manual session.
+    This pre-populates L0 intro + L1 blocks so user can edit with manual UI immediately.
+    """
+    try:
+        idea_data = await SessionManager.read_session_json(session_id, "idea")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Idea session read error: {e}")
+        raise HTTPException(status_code=500, detail="Không thể đọc dữ liệu idea session")
+
+    document_title = _to_idea_text(idea_data.get("title"), "Untitled")
+    slide_chunks = idea_data.get("slide_chunks", [])
+
+    if not slide_chunks:
+        raise HTTPException(status_code=400, detail="Idea session không có slide chunk để chuyển đổi")
+
+    manual_structure = []
+    intro_title = document_title
+    intro_subtitle = ""
+    plain_text_parts = []
+
+    for idx, chunk in enumerate(slide_chunks):
+        title = _to_idea_text(chunk.get("title") or chunk.get("heading"), f"Slide {idx + 1}")
+        content = _to_idea_text(
+            chunk.get("content") or chunk.get("description") or chunk.get("text_content"),
+            ""
+        )
+        slide_type = _to_idea_text(chunk.get("slide_type"), "content").lower()
+
+        if slide_type == "intro":
+            intro_title, intro_subtitle = _parse_intro_title_subtitle(
+                content or title or document_title,
+                document_title,
+            )
+            continue
+
+        plain_text_parts.append(title)
+        if content:
+            plain_text_parts.append(content)
+
+        manual_structure.append({
+            "node_id": f"idea_node_{idx + 1}",
+            "level": 1,
+            "title": title,
+            "content": content,
+            "children": [],
+            "is_transition": slide_type == "transition",
+        })
+
+    full_text = "\n\n".join(plain_text_parts) if plain_text_parts else document_title
+
+    manual_session_id = structure_service.create_session(
+        filename=f"{document_title}.docx",
+        full_text=full_text,
+        paragraphs=[],
+        docx_path=""
+    )
+
+    intro_node = {
+        "node_id": "intro_slide_0",
+        "level": 0,
+        "title": intro_title,
+        "content": intro_subtitle,
+        "children": [],
+        "is_transition": False,
+    }
+
+    # Put intro directly into structure so StructureEditor can render L0 immediately on first load.
+    structure_with_intro = [intro_node] + manual_structure
+
+    structure_service.update_session_structure(
+        session_id=manual_session_id,
+        structure=structure_with_intro,
+        intro_slide=None
+    )
+
+    return {
+        "success": True,
+        "session_id": manual_session_id,
+        "document_title": document_title,
+    }
 
 
 @router.get("/idea/stream")

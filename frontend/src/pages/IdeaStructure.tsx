@@ -73,7 +73,17 @@ const IdeaStructure = () => {
       navigate("/slidegen", { replace: true });
       return;
     }
-    loadStructure();
+
+    // Legacy route fallback: immediately map idea session -> manual structure editor.
+    (async () => {
+      try {
+        const manualSession = await api.convertIdeaToManualSession(sessionId);
+        navigate(`/structure?session=${manualSession.session_id}`, { replace: true });
+      } catch {
+        // If conversion endpoint fails, keep legacy behavior for debugging/recovery.
+        loadStructure();
+      }
+    })();
   }, [sessionId]);
 
   const loadStructure = async () => {

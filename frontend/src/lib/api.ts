@@ -361,6 +361,16 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+    // Convert idea session to manual structure session (L0/L1 editor flow)
+    convertIdeaToManualSession: (sessionId: string) =>
+      request<{
+        success: boolean;
+        session_id: string;
+        document_title: string;
+      }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}/manual-session`, {
+        method: "POST",
+      }),
+
   // Get idea structure details
   getIdeaStructure: (sessionId: string) =>
     request<{

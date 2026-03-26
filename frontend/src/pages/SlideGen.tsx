@@ -111,8 +111,10 @@ const SlideGen = () => {
         enable_thank_you_slide: ideaThankYou
       });
 
-      // Navigate to structure preview page
-      navigate(`/idea/structure/${response.session_id}`);
+      // Convert idea JSON into manual structure session (L0/L1 blocks) and open StructureEditor.
+      const manualSession = await api.convertIdeaToManualSession(response.session_id);
+      toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_opening_structure });
+      navigate(`/structure?session=${manualSession.session_id}`);
     } catch (err: any) {
       const isRateLimit = err.status === 429;
       const rawMsg = (err.message || "").toLowerCase();
