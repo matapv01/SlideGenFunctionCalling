@@ -288,6 +288,56 @@ async def prepare_docx_stream(
     return {"filename": file.filename}
 
 
+# ==========================================
+# MARKDOWN PARSER - Reusable for Manual & Idea
+# ==========================================
+
+@router.post("/markdown/parse")
+async def parse_markdown(
+    content: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """
+    Parse markdown text into hierarchical structure.
+    Can be used by both Manual Mode and Idea Mode.
+    
+    Request body:
+    {
+        "markdown": "# Title\\nContent...",
+        "default_title": "Optional title"
+    }
+    """
+    try:
+        from backend.workflows.slidegen_workflow.utils.markdown_parser import markdown_to_manual_structure, validate_markdown_structure
+        
+        markdown_text = content.get('markdown', '').strip()
+        default_title = content.get('default_title', 'Document')
+        
+        if not markdown_text:
+            raise ValueError("Markdown content is empty")
+        
+        # Parse markdown
+        document_title, structure = markdown_to_manual_structure(markdown_text, default_title)
+        
+        # Validate
+        is_valid, errors = validate_markdown_structure(structure)
+        if not is_valid:
+            logger.warning(f"Markdown validation issues: {errors}")
+        
+        return {
+            "success": True,
+            "document_title": document_title,
+            "structure": structure,
+            "validation_warnings": errors if not is_valid else [],
+            "node_count": len(structure)
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Markdown parse error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to parse markdown")
+
+
 @router.get("/docx/stream")
 async def stream_docx_generation(
     filename: str = Query(..., description="DOCX filename"),

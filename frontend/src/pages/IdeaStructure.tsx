@@ -21,6 +21,15 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription,
+  DialogFooter,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
@@ -59,6 +68,9 @@ const IdeaStructure = () => {
   const [maxSlides, setMaxSlides] = useState<number>(-1);
   const [isDirty, setIsDirty] = useState(false);
   const [lastSavedAt, setLastSavedAt] = useState<number | null>(null);
+  const [markdownModalOpen, setMarkdownModalOpen] = useState(false);
+  const [markdownText, setMarkdownText] = useState("");
+  const [markdownParsing, setMarkdownParsing] = useState(false);
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -235,10 +247,78 @@ const IdeaStructure = () => {
       .filter(Boolean);
   }, [formatPreviewContent]);
 
+  // ---- Markdown Import ----
+  const handleImportMarkdown = async () => {
+    if (!structure || !markdownText.trim()) {
+      toast({ title: "Please enter markdown", variant: "destructive" });
+      return;
+    }
+
+    setMarkdownParsing(true);
+    try {
+      const response = await api.parseMarkdown({
+        markdown: markdownText,
+        default_title: structure.title || "Document"
+      });
+
+      if (response.success && response.structure) {
+        // Convert parsed structure to slide chunks format
+        const slideChunks: SlideChunk[] = [];
+        
+        const convertToSlideChunks = (nodes: any[]) => {
+          nodes.forEach((node) => {
+            slideChunks.push({
+              title: node.title,
+              content: node.content || "",
+              slide_type: "content"
+            });
+            
+            if (node.children && node.children.length > 0) {
+              convertToSlideChunks(node.children);
+            }
+          });
+        };
+
+        convertToSlideChunks(response.structure);
+        
+        // Update structure with new slide chunks
+        updateStructure((prev) => ({
+          ...prev,
+          slide_chunks: slideChunks
+        }));
+        
+        setMarkdownModalOpen(false);
+        setMarkdownText("");
+        setIsDirty(true);
+        
+        toast({
+          title: "Markdown imported successfully!",
+          description: `Created ${response.node_count} nodes from markdown`
+        });
+      }
+    } catch (err: any) {
+      toast({
+        title: "Markdown parsing error",
+        description: err.message || "Please check your markdown format",
+        variant: "destructive"
+      });
+    } finally {
+      setMarkdownParsing(false);
+    }
+  };
+
   const disableActions = loading || saving || generating;
 
   const headerActions = (
     <>
+      <button
+        className="btn btn-sm btn-info"
+        onClick={() => setMarkdownModalOpen(true)}
+        disabled={disableActions}
+        title="Import markdown to quickly create slide structure"
+      >
+        <FileText className="mr-1.5 h-4 w-4" /> Import Markdown
+      </button>
       <button className="btn btn-sm btn-secondary" onClick={() => void saveStructure()} disabled={disableActions}>
         {saving ? <Loader2 className="mr-1.5 h-4 w-4 animate-spin" /> : <Save className="mr-1.5 h-4 w-4" />}
         {saving ? "Saving..." : "Save"}
@@ -483,6 +563,62 @@ const IdeaStructure = () => {
           </div>
         </div>
       </div>
+
+      {/* Markdown Import Modal */}
+      <Dialog open={markdownModalOpen} onOpenChange={setMarkdownModalOpen}>
+        <DialogContent className="max-w-2xl max-h-[80vh] flex flex-col">
+          <DialogHeader>
+            <DialogTitle>Import Markdown</DialogTitle>
+            <DialogDescription>
+              Paste markdown text with heading structure. Headings become slide titles and content becomes descriptions.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex-1 overflow-hidden">
+            <Textarea
+              placeholder={`# Main Topic
+Main content description...
+
+## Sub-topic 1
+Details about sub-topic 1...
+
+## Sub-topic 2
+Details about sub-topic 2...`}
+              value={markdownText}
+              onChange={(e) => setMarkdownText(e.target.value)}
+              className="h-full font-mono text-sm"
+            />
+          </div>
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setMarkdownModalOpen(false);
+                setMarkdownText("");
+              }}
+              disabled={markdownParsing}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleImportMarkdown}
+              disabled={markdownParsing || !markdownText.trim()}
+              className="gradient-primary"
+            >
+              {markdownParsing ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Parsing...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="mr-2 h-4 w-4" />
+                  Import & Parse
+                </>
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </AppLayout>
   );
 };

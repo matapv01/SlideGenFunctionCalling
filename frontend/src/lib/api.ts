@@ -235,6 +235,19 @@ export const api = {
       body: JSON.stringify({ session_id: sessionId }),
     }),
 
+  // Markdown Parser endpoints - /api/generate/markdown/*
+  parseMarkdown: (data: { markdown: string; default_title?: string }) =>
+    request<{
+      success: boolean;
+      document_title: string;
+      structure: any[];
+      validation_warnings: string[];
+      node_count: number;
+    }>("/generate/markdown/parse", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
   // Slides endpoints - /api/projects/{project_id}/slides and /api/slides/{slide_id}
   getSlides: (projectId: string | number) =>
     request<SlidesResponse>(`/projects/${projectId}/slides`),
