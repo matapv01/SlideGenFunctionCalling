@@ -161,6 +161,83 @@ def _parse_intro_title_subtitle(raw_content: str, fallback_title: str) -> tuple[
     rest = "\n".join(lines[1:]).strip()
     return first or fallback_title, rest
 
+
+def _create_manual_session_from_idea_data(
+    idea_data: dict,
+    structure_service: StructureService
+) -> dict:
+    """Map idea payload to the same manual structure session model used by StructureEditor."""
+    document_title = _to_idea_text(idea_data.get("title"), "Untitled")
+    slide_chunks = idea_data.get("slide_chunks", [])
+
+    if not slide_chunks:
+        raise HTTPException(status_code=400, detail="Idea session không có slide chunk để chuyển đổi")
+
+    manual_structure = []
+    intro_title = document_title
+    intro_subtitle = ""
+    plain_text_parts = []
+
+    for idx, chunk in enumerate(slide_chunks):
+        title = _to_idea_text(chunk.get("title") or chunk.get("heading"), f"Slide {idx + 1}")
+        content = _to_idea_text(
+            chunk.get("content") or chunk.get("description") or chunk.get("text_content"),
+            ""
+        )
+        slide_type = _to_idea_text(chunk.get("slide_type"), "content").lower()
+
+        if slide_type == "intro":
+            intro_title, intro_subtitle = _parse_intro_title_subtitle(
+                content or title or document_title,
+                document_title,
+            )
+            continue
+
+        plain_text_parts.append(title)
+        if content:
+            plain_text_parts.append(content)
+
+        manual_structure.append({
+            "node_id": f"idea_node_{idx + 1}",
+            "level": 1,
+            "title": title,
+            "content": content,
+            "children": [],
+            "is_transition": slide_type == "transition",
+        })
+
+    full_text = "\n\n".join(plain_text_parts) if plain_text_parts else document_title
+
+    manual_session_id = structure_service.create_session(
+        filename=f"{document_title}.docx",
+        full_text=full_text,
+        paragraphs=[],
+        docx_path=""
+    )
+
+    intro_node = {
+        "node_id": "intro_slide_0",
+        "level": 0,
+        "title": intro_title,
+        "content": intro_subtitle,
+        "children": [],
+        "is_transition": False,
+    }
+
+    structure_with_intro = [intro_node] + manual_structure
+
+    structure_service.update_session_structure(
+        session_id=manual_session_id,
+        structure=structure_with_intro,
+        intro_slide=None
+    )
+
+    return {
+        "success": True,
+        "session_id": manual_session_id,
+        "document_title": document_title,
+    }
+
 # ==========================================
 # 1. GENERATE FROM FILE (DOCX)
 # ==========================================
@@ -377,6 +454,7 @@ async def stream_docx_generation(
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
 
+@router.post("/docx/structure-session", response_model=ManualSessionResponse)
 @router.post("/docx/manual-session", response_model=ManualSessionResponse)
 async def create_manual_session_from_docx(
     file: UploadFile = File(...),
@@ -487,6 +565,51 @@ async def generate_idea_structure(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/idea/structure-session", response_model=ManualSessionResponse)
+@router.post("/idea/manual-session", response_model=ManualSessionResponse)
+async def create_structure_session_from_idea(
+    request: IdeaStructureRequest,
+    current_user: UserResponse = Depends(idea_structure_rate_limiter),
+    idea_service: IdeaService = Depends(get_idea_service),
+    structure_service: StructureService = Depends(get_structure_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
+):
+    """Unified flow: generate idea and return the same StructureEditor session model as manual mode."""
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    subscription_service.check_feature_access(user, "idea_generation")
+    content_length = request.content_length or "standard"
+    subscription_service.check_feature_access(user, "content_length", content_length=content_length)
+
+    try:
+        subscription_service.increment_usage(current_user.id, "idea_generation")
+
+        idea_result = await idea_service.generate_structure(
+            title=request.title.strip(),
+            prompt=request.prompt.strip(),
+            content_length=content_length,
+            enable_transition=request.enable_transition_slides,
+            enable_thank_you=request.enable_thank_you_slide,
+        )
+
+        idea_session_id = idea_result.get("session_id")
+        if not idea_session_id:
+            raise HTTPException(status_code=500, detail="Không nhận được idea session_id")
+
+        idea_data = await SessionManager.read_session_json(idea_session_id, "idea")
+        return _create_manual_session_from_idea_data(idea_data, structure_service)
+
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Idea structure-session error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+@router.post("/idea/structure/{session_id}/structure-session", response_model=ManualSessionResponse)
 @router.post("/idea/structure/{session_id}/manual-session", response_model=ManualSessionResponse)
 async def convert_idea_to_manual_session(
     session_id: str,
@@ -505,77 +628,7 @@ async def convert_idea_to_manual_session(
         logger.error(f"Idea session read error: {e}")
         raise HTTPException(status_code=500, detail="Không thể đọc dữ liệu idea session")
 
-    document_title = _to_idea_text(idea_data.get("title"), "Untitled")
-    slide_chunks = idea_data.get("slide_chunks", [])
-
-    if not slide_chunks:
-        raise HTTPException(status_code=400, detail="Idea session không có slide chunk để chuyển đổi")
-
-    manual_structure = []
-    intro_title = document_title
-    intro_subtitle = ""
-    plain_text_parts = []
-
-    for idx, chunk in enumerate(slide_chunks):
-        title = _to_idea_text(chunk.get("title") or chunk.get("heading"), f"Slide {idx + 1}")
-        content = _to_idea_text(
-            chunk.get("content") or chunk.get("description") or chunk.get("text_content"),
-            ""
-        )
-        slide_type = _to_idea_text(chunk.get("slide_type"), "content").lower()
-
-        if slide_type == "intro":
-            intro_title, intro_subtitle = _parse_intro_title_subtitle(
-                content or title or document_title,
-                document_title,
-            )
-            continue
-
-        plain_text_parts.append(title)
-        if content:
-            plain_text_parts.append(content)
-
-        manual_structure.append({
-            "node_id": f"idea_node_{idx + 1}",
-            "level": 1,
-            "title": title,
-            "content": content,
-            "children": [],
-            "is_transition": slide_type == "transition",
-        })
-
-    full_text = "\n\n".join(plain_text_parts) if plain_text_parts else document_title
-
-    manual_session_id = structure_service.create_session(
-        filename=f"{document_title}.docx",
-        full_text=full_text,
-        paragraphs=[],
-        docx_path=""
-    )
-
-    intro_node = {
-        "node_id": "intro_slide_0",
-        "level": 0,
-        "title": intro_title,
-        "content": intro_subtitle,
-        "children": [],
-        "is_transition": False,
-    }
-
-    # Put intro directly into structure so StructureEditor can render L0 immediately on first load.
-    structure_with_intro = [intro_node] + manual_structure
-
-    structure_service.update_session_structure(
-        session_id=manual_session_id,
-        structure=structure_with_intro,
-        intro_slide=None
-    )
-
-    return {
-        "success": True,
-        "session_id": manual_session_id,
-        "document_title": document_title,
-    }
+    return _create_manual_session_from_idea_data(idea_data, structure_service)
 
 
 @router.get("/idea/stream")

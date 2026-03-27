@@ -239,7 +239,7 @@ const Streaming = () => {
       setIsPreparingIdea(true);
       setActivity(t.streaming_preparing_activity);
       
-      api.generateIdeaStructure({
+      api.generateIdeaStructureSession({
         title: title,
         prompt: description,
         content_length: contentLength,
@@ -247,9 +247,9 @@ const Streaming = () => {
         enable_thank_you_slide: enableThankYou,
       })
         .then((response) => {
-          setIdeaSessionId(response.session_id);
           setIsPreparingIdea(false);
-          toast({ title: t.streaming_toast_ready, description: t.streaming_toast_starting });
+          toast({ title: t.streaming_toast_ready, description: t.slidegen_toast_opening_structure });
+          navigate(`/structure?session=${response.session_id}`, { replace: true });
         })
         .catch((err) => {
           setError(t.streaming_err_prepare);

@@ -65,7 +65,7 @@ const SlideGen = () => {
     try {
       if (workflowMode === "manual") {
         // Manual mode: upload for structure editing
-        const res = await api.uploadDocxForManual(file);
+        const res = await api.uploadDocxForStructureSession(file);
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_opening_structure });
         navigate(`/structure?session=${res.session_id}`);
       } else {
@@ -102,17 +102,14 @@ const SlideGen = () => {
 
     setProcessing(true);
     try {
-      // Generate structure first
-      const response = await api.generateIdeaStructure({
+      // Unified flow: idea and manual use the same structure session model.
+      const manualSession = await api.generateIdeaStructureSession({
         title: ideaTitle.trim(),
         prompt: ideaDescription.trim(),
         content_length: ideaContentLength,
         enable_transition_slides: ideaTransitions,
         enable_thank_you_slide: ideaThankYou
       });
-
-      // Convert idea JSON into manual structure session (L0/L1 blocks) and open StructureEditor.
-      const manualSession = await api.convertIdeaToManualSession(response.session_id);
       toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_opening_structure });
       navigate(`/structure?session=${manualSession.session_id}`);
     } catch (err: any) {

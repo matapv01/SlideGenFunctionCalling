@@ -189,7 +189,18 @@ export const api = {
     return request<{ filename: string }>("/generate/docx/prepare-stream", { method: "POST", body: formData });
   },
 
-  // Upload for manual structure editing workflow
+  // Upload for structure editing workflow (manual/shared)
+  uploadDocxForStructureSession: (file: File) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    return request<{
+      success: boolean;
+      session_id: string;
+      document_title: string;
+    }>("/generate/docx/structure-session", { method: "POST", body: formData });
+  },
+
+  // Backward-compatible alias (deprecated name)
   uploadDocxForManual: (file: File) => {
     const formData = new FormData();
     formData.append("file", file);
@@ -197,7 +208,7 @@ export const api = {
       success: boolean;
       session_id: string;
       document_title: string;
-    }>("/generate/docx/manual-session", { method: "POST", body: formData });
+    }>("/generate/docx/structure-session", { method: "POST", body: formData });
   },
 
   // Structure Editor endpoints - /api/structure/*
@@ -360,6 +371,40 @@ export const api = {
       method: "POST",
       body: JSON.stringify(data),
     }),
+
+    // Unified flow: idea prompt -> StructureEditor session (same model as manual mode)
+    generateIdeaStructureSession: (data: {
+      title?: string;
+      prompt: string;
+      content_length?: string;
+      enable_transition_slides?: boolean;
+      enable_thank_you_slide?: boolean;
+    }) =>
+      request<{
+        success: boolean;
+        session_id: string;
+        document_title: string;
+      }>("/generate/idea/structure-session", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
+
+    // Backward-compatible alias (deprecated name)
+    generateIdeaManualSession: (data: {
+      title?: string;
+      prompt: string;
+      content_length?: string;
+      enable_transition_slides?: boolean;
+      enable_thank_you_slide?: boolean;
+    }) =>
+      request<{
+        success: boolean;
+        session_id: string;
+        document_title: string;
+      }>("/generate/idea/structure-session", {
+        method: "POST",
+        body: JSON.stringify(data),
+      }),
 
     // Convert idea session to manual structure session (L0/L1 editor flow)
     convertIdeaToManualSession: (sessionId: string) =>
