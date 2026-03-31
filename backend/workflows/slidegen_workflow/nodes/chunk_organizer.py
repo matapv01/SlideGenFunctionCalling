@@ -138,8 +138,8 @@ def organize_chunks(state: State) -> State:
     # --- Part 2: Group into Slides (Structure Grouper) ---
     final_slides_content, final_slides_positions, final_slides_context_maps = [], [], []
 
-    # Create intro slide first (if enabled)
-    if enable_intro_slide and document_title:
+    # Create intro slide first
+    if document_title:
         intro_chunk = {
             'position': 0,
             'heading': 'INTRO',
