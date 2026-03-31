@@ -199,6 +199,29 @@ TEAM_PROMPT = """
 Generate professional, READABLE function call.
 """
 
+CHART_PROMPT = """
+🎯 CHART SLIDE - Data visualization!
+
+**CRITICAL: CHART MUST BE CLEAR AND READABLE!**
+⚠️ Text labels must contrast with background
+⚠️ Axis labels and values must be legible
+⚠️ Avoid cluttered data points or overlapping labels
+
+**RULES:**
+1. DATA: Extract series names, values, time points, and metrics from content
+   - Identify multi-series trends if available
+   - Use appropriate axis labels (x: time/category, y: metric)
+2. INSIGHT: Translate the main analytical message into clear language
+   - What trend or pattern should the viewer see?
+   - What makes this data meaningful?
+3. VISUAL: Generate high-quality line/bar/area charts
+   - Use contrasting colors for multiple series
+   - Include grid lines for readability
+   - Ensure proper spacing and sizing
+
+Generate professional, DATA-DRIVEN function call.
+"""
+
 # Map slide types to their specific prompts
 SLIDE_TYPE_PROMPTS = {
     'INTRO_TOOLS': INTRO_PROMPT,
@@ -206,6 +229,7 @@ SLIDE_TYPE_PROMPTS = {
     'CONTENT_TOOLS': CONTENT_PROMPT,
     'THANK_YOU_TOOLS': THANK_YOU_PROMPT,
     'TEAM_TOOLS': TEAM_PROMPT,
+    'CHART_TOOLS': CHART_PROMPT,
 }
 
 HUMAN_PROMPT_TEMPLATE = """
@@ -235,29 +259,48 @@ EVALUATION OF PREVIOUS ATTEMPT:
 SLIDE_PLANNER_SYSTEM_PROMPT = """
 You are an expert presentation designer and slide planner. Your task is to analyze the content for a single slide and create a high-level plan for its visual design and type.
 
-**INSTRUCTIONS:**
+**TOOL CATEGORIES EXPLAINED:**
 
-1.  **Check Slide Number FIRST:** Before anything else, check the SLIDE NUMBER provided.
-2.  **Develop a Creative Vision (`thought`):** Based on the content, describe your vision for the slide.
-    *   What is the key message?
-    *   What layout would be best (e.g., two-column, grid, single image with text)?
-    *   What is the appropriate mood or tone (e.g., professional, playful, minimalist, high-tech)?
-    *   Suggest color themes, font styles, and whether an image or icon would enhance the message.
-3.  **Select the Right Tool Category (`action`):** Based on the slide number and content type, choose the appropriate tool category.
+- **INTRO_TOOLS**: Title/introduction slides (only for slide #1). Features prominent titles, subtitles, and opening visuals.
+- **TRANSITION_TOOLS**: Section dividers or transition slides. Mark chapter breaks or topic shifts in the presentation.
+- **CONTENT_TOOLS**: General content slides for text, points, concepts, explanations, stories, or narrative content. Flexible layout for various information types.
+- **TEAM_TOOLS**: Slides specifically designed for team members, employees, or people profiles with photos and bios.
+- **THANK_YOU_TOOLS**: Closing/thank you slides for the end of the presentation.
+- **CHART_TOOLS**: Data visualization slides. Use when the slide's primary purpose is to display and analyze data through charts, graphs, trends, metrics, comparisons, time-series analysis, or statistical insights.
 
-**CRITICAL RULES FOR TOOL SELECTION:**
-- **SLIDE NUMBER 1 ONLY**: MUST use 'INTRO_TOOLS' - This is the title/introduction slide
-- **SLIDE NUMBER 2+**: Choose based on content:
-  * If content starts with "TRANSITION SLIDE" → use 'TRANSITION_TOOLS'
-  * If content starts with "THANK YOU SLIDE" → use 'THANK_YOU_TOOLS'
-  * If content is about team members → use 'TEAM_TOOLS'
-  * For all other content (main points, details, lists) → use 'CONTENT_TOOLS'
-- **NEVER use INTRO_TOOLS for slides after slide 1**
+**INTELLIGENT ANALYSIS PROCESS:**
 
-**CRITICAL OUTPUT REQUIREMENT:**
-- You MUST return ONLY a single, valid JSON object that strictly follows the required schema.
+1. **Understand the Slide's PRIMARY PURPOSE:**
+   - What is the main goal of this slide? (teach concept, show data trends, introduce person, mark section break, close presentation, set stage?)
+   - Who is the audience and what do they need to understand?
+
+2. **Identify Content Type** (look beyond surface keywords):
+   - **Data-driven content**: Numbers, percentages, metrics, trends over time, year-over-year growth, market analysis, performance comparisons
+     → These belong to **CHART_TOOLS** (visual data presentation is most effective)
+   - **People-focused content**: Team bios, member introductions, names with roles/titles
+     → **TEAM_TOOLS** (specialized for human presentation)
+   - **Narrative/Conceptual**: Stories, explanations, lessons, processes, abstract ideas, text-heavy content
+     → **CONTENT_TOOLS** (flexible for varied information)
+   - **Section breaks**: "Next topic", "Chapter 3", visual dividers between major parts
+     → **TRANSITION_TOOLS** (visual separator)
+   - **Closing moments**: Gratitude, appreciation, final thoughts
+     → **THANK_YOU_TOOLS** (closing aesthetic)
+
+3. **Make Your Choice** (`action`):
+   - **Slide #1 is always INTRO_TOOLS** (presentation opening)
+   - **For all other slides**: Select the category that best serves the slide's primary purpose
+   - Trust your judgment: match content essence to the tool that will make it shine
+   - **NEVER default to CONTENT_TOOLS** just because you're unsure—analyze carefully and choose the specialized tool if it fits
+
+4. **Craft Your Vision** (`thought`): Write 2-3 sentences on:
+   - The visual mood and style that will make this message land
+   - Key layout approach (what goes where)
+   - Any special considerations (bold colors, subtle, high-tech, warm, etc.)
+
+**OUTPUT REQUIREMENT:**
+- Return ONLY a single, valid JSON object that strictly follows the required schema.
 - Do not add any text, explanations, or markdown formatting before or after the JSON object.
-- The 'action' key must be one of the following exact strings: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS'.
+- The 'action' key must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """

@@ -3,7 +3,7 @@ from typing import List, Dict, TypedDict, Any, Literal
 from pydantic import BaseModel, Field
 
 # Define the allowed tool categories based on your TOOLS_DICT keys
-ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS']
+ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS']
 
 
 class Evaluation(BaseModel):

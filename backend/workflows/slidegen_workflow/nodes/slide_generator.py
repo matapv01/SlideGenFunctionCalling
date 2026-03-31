@@ -190,7 +190,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 
     # Get slide type and corresponding prompt
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
-    
+
     # Prepare system prompt based on slide type
     if slide_type == 'CONTENT_TOOLS':
         # Handle highlight color for content slides
@@ -200,19 +200,19 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         else:
             # First content slide - let LLM choose
             highlight_instruction = "- This is the FIRST content slide - choose ONE color from the list and use it consistently"
-        
+
         system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
-    
+
     elif slide_type == 'TRANSITION_TOOLS':
         # Handle previous transition context
         previous_transition = state.get('previous_transition_tool_call', {})
         if previous_transition:
             prev_tool_name = previous_transition.get('name', 'unknown')
             prev_args = previous_transition.get('arguments', {})
-            
+
             # Format arguments as readable text (avoiding JSON braces that confuse LangChain)
             args_text = "\n".join([f"    - {key}: {value}" for key, value in prev_args.items()])
-            
+
             # Extract key styling info from previous transition
             transition_context = f"""* PREVIOUS TRANSITION details:
   - Tool used: {prev_tool_name}
@@ -228,11 +228,14 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 * ONLY change the text content to match the new section heading"""
         else:
             transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-        
+
         system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
-    
+
     else:
-        system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, CONTENT_PROMPT)
+        # For all other slide types (INTRO, CHART, THANK_YOU, TEAM), use prompt as-is
+        # These prompts don't have template variables to format
+        system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, INTRO_PROMPT)
+
     
     slidegen_prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
