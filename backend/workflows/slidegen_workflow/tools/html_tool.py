@@ -20407,13 +20407,13 @@ def generate_line_chart_slide_3(
             }}
             .main-title {{
                 font-family: 'Orbitron', sans-serif;
-                font-size: {main_title_font_size};
+                font-size: 64px;
                 color: {main_title_color};
                 text-transform: uppercase; letter-spacing: 4px; margin: 0;
             }}
             .main-title span {{ color: {accent_color}; }}
             .subtitle {{
-                font-size: {subtitle_font_size};
+                font-size: 28px;
                 color: {subtitle_color}; margin-top: 15px;
             }}
             .content-grid {{
@@ -20433,7 +20433,7 @@ def generate_line_chart_slide_3(
                 background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
                 border: 1px solid rgba(255,255,255,0.1);
                 border-radius: 20px; padding: 35px; margin-bottom: 30px;
-                font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.6;
+                font-size: 30px; color: {insight_text_color}; line-height: 1.6;
             }}
         </style>
     </head>
