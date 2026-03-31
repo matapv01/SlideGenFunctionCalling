@@ -1909,6 +1909,15 @@ class GenerateLineChartSlide3(BaseModel):
         )
     )
 
+    bg_color: str = Field(
+        default="#020617",
+        description=(
+            "Background color of the slide (hex code). "
+            "Default is a very dark navy (#020617) to create a dark-tech theme. "
+            "Example: '#020617', '#0A0A1A', '#1a1a2e', '#FFFFFF'."
+        )
+    )
+
 
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
