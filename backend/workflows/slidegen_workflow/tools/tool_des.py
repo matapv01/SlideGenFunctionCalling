@@ -1882,33 +1882,6 @@ class GenerateLineChartSlide3(BaseModel):
         )
     )
 
-    main_title_font_size: str = Field(
-        default="64px",
-        description=(
-            "Font size of the primary headline. "
-            "Large enough to dominate the slide hierarchy "
-            "and communicate the chart’s key message instantly."
-        )
-    )
-
-    subtitle_font_size: str = Field(
-        default="28px",
-        description=(
-            "Font size of the subtitle or context line. "
-            "Smaller than the main title but clearly visible "
-            "for supporting information."
-        )
-    )
-
-    insight_font_size: str = Field(
-        default="30px",
-        description=(
-            "Font size of the insight paragraph. "
-            "Balanced to ensure analytical commentary is easy to read "
-            "without overpowering the visualization."
-        )
-    )
-
     bg_color: str = Field(
         default="#020617",
         description=(
