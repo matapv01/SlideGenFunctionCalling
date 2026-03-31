@@ -130,7 +130,10 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_creative_thank_you_slide, 
     generate_tech_thank_you_slide,
     generate_minimalist_thank_you_slide_2,
-    generate_elegant_thank_you_slide
+    generate_elegant_thank_you_slide,
+
+    generate_line_chart_slide_3 # slide biểu đồ đường (mhung)
+
      
 )
 
@@ -1699,6 +1702,214 @@ class GenerateElegantThankYouInput(BaseModel):
     overlay_color: str = Field(default="rgba(255, 255, 255, 0.85)", description="Semi-transparent overlay color applied over the background image to ensure text readability (RGBA format).")
     font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
+
+#---LINE CHART SLIDES-------------------------------------------------------------------------    
+
+class GenerateLineChartSlide3(BaseModel):
+    """Schema for generate_line_chart_slide_3"""
+    main_title: str = Field(..., description=(
+            "Main headline communicating the overall direction or competitive "
+            "movement shown in the chart (10–60 characters). "
+            "The title should reflect a meaningful observation rather than "
+            "simply naming the metric. "
+            "Example: EV Sales Momentum Accelerates Across Major Brands"
+        ),
+    )
+
+    subtitle: Optional[str] = Field(..., description=(
+            "Supporting context that clarifies the scope of the dataset, "
+            "such as geographic market, reporting period, or data source. "
+            "This helps viewers interpret the time-series correctly. "
+            "Example: Southeast Asia Market – January to December 2026"
+        )
+    )
+
+    insight: str = Field(..., description=(
+            "Concise analytical commentary summarizing the most important "
+            "patterns observed in the chart. "
+            "This may highlight acceleration, seasonal peaks, widening gaps "
+            "between brands, or emerging leaders. "
+            "The explanation should focus on interpretation and implications, "
+            "not just restating numeric values."
+        )
+    )
+
+    x_axis: str = Field(
+        default="Month",
+        description=(
+            "Label for the horizontal (X) axis, describing the time dimension "
+            "or categorical grouping of the data points. "
+            "Example: 'Month', 'Quarter', 'Week'."
+        )
+    )
+
+    y_axis: str = Field(
+        default="Units Sold",
+        description=(
+            "Label for the vertical (Y) axis, describing the measured metric. "
+            "Example: 'Units Sold', 'Revenue (USD)', 'Market Share (%)'."
+        )
+    )
+
+    unit: str = Field(
+        default="K",
+        description=(
+            "Unit suffix appended to numeric values on the chart axes or data labels. "
+            "Example: 'K' for thousands, 'M' for millions, '%' for percentages."
+        )
+    )
+
+    show_value: bool = Field(
+        default=False,
+        description=(
+            "Whether to display numeric data labels directly on each data point "
+            "along the lines. Useful for dense datasets where exact values matter."
+        )
+    )
+
+    show_legend: bool = Field(
+        default=True,
+        description=(
+            "Whether to display the series legend panel alongside the chart. "
+            "Recommended when there are multiple series to distinguish."
+        )
+    )
+
+    y_axis_min: float = Field(
+        default=20,
+        description=(
+            "Minimum value for the Y axis scale. "
+            "Setting this above zero can emphasize relative differences between series. "
+            "Example: 20 (starts axis at 20 instead of 0)."
+        )
+    )
+
+    y_axis_max: float = Field(
+        default=140,
+        description=(
+            "Maximum value for the Y axis scale. "
+            "Should be set above the highest data value to avoid clipping. "
+            "Example: 140."
+        )
+    )
+
+    data_label_format: str = Field(
+        default="{value}K",
+        description=(
+            "Template string for formatting data point labels when show_value is True. "
+            "Use '{value}' as the placeholder for the numeric value. "
+            "Example: '{value}K', '{value}%', '${value}M'."
+        )
+    )
+
+    colors: List[str] = Field(
+        default=["#00F2FF", "#8B5CF6", "#EC4899"],
+        description=(
+            "Ordered list of hex color codes assigned to each series in the chart. "
+            "Colors are cycled if there are more series than colors provided. "
+            "Each color is used for the line stroke, data point markers, and legend indicator. "
+            "Example: ['#00F2FF', '#8B5CF6', '#EC4899']."
+        )
+    )
+
+    time_points: List[str] = Field(
+        ...,
+        description=(
+            "Ordered list of labels for each point on the X axis, representing "
+            "the time intervals or categories at which data is recorded. "
+            "The length of this list determines the number of data points per series. "
+            "Example: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] "
+            "or ['Q1', 'Q2', 'Q3', 'Q4']."
+        )
+    )
+
+    series: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description=(
+            "List of data series objects to plot on the line chart. "
+            "Each object must contain: "
+            "'name' (str) — the series label shown in the legend; "
+            "'values' (List[float]) — numeric data points corresponding to each time_point in order. "
+            "The length of each 'values' list must match the length of time_points. "
+            "Example: [{'name': 'Tesla', 'values': [45, 60, 90, 130]}, "
+            "{'name': 'BYD', 'values': [40, 48, 52, 58]}, "
+            "{'name': 'VinFast', 'values': [30, 35, 40, 44]}]."
+        )
+    )
+
+    font_family: str = Field(
+        default="Inter, sans-serif",
+        description=(
+            "Font family applied consistently across titles, labels, "
+            "and insight text to maintain stylistic coherence "
+            "in a modern technical presentation."
+        )
+    )
+
+    accent_color: str = Field(
+        default="#00F2FF",
+        description=(
+            "Primary highlight color used for decorative elements, "
+            "emphasis accents, or active markers. "
+            "It should align with the dark-tech theme of the slide."
+        )
+    )
+
+    main_title_color: str = Field(
+        default="#FFFFFF",
+        description=(
+            "Text color of the main title. "
+            "Designed to provide strong contrast against a dark background "
+            "and immediately draw viewer attention."
+        )
+    )
+
+    subtitle_color: str = Field(
+        default="#94A3B8",
+        description=(
+            "Secondary text color used for contextual information. "
+            "It should be visually softer than the main title "
+            "while remaining clearly legible."
+        )
+    )
+
+    insight_text_color: str = Field(
+        default="#E2E8F0",
+        description=(
+            "Color applied to the analytical insight section. "
+            "Optimized for readability in longer explanatory text "
+            "under dark presentation themes."
+        )
+    )
+
+    main_title_font_size: str = Field(
+        default="64px",
+        description=(
+            "Font size of the primary headline. "
+            "Large enough to dominate the slide hierarchy "
+            "and communicate the chart’s key message instantly."
+        )
+    )
+
+    subtitle_font_size: str = Field(
+        default="28px",
+        description=(
+            "Font size of the subtitle or context line. "
+            "Smaller than the main title but clearly visible "
+            "for supporting information."
+        )
+    )
+
+    insight_font_size: str = Field(
+        default="30px",
+        description=(
+            "Font size of the insight paragraph. "
+            "Balanced to ensure analytical commentary is easy to read "
+            "without overpowering the visualization."
+        )
+    )
+
+
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
     StructuredTool.from_function(
@@ -2395,15 +2606,35 @@ THANK_YOU_TOOLS = [
         args_schema=GenerateElegantThankYouInput
     )
 ]
+CHART_TOOLS = [
+    StructuredTool.from_function(
+        func=generate_line_chart_slide_3,
+        name="generate_line_chart_slide_3",
+        description=(
+            "Generates a premium dark-mode Line Chart slide with a futuristic, high-contrast aesthetic.\n"
+            "The visual style blends glowing accents, sharp typography, and grid-based structures "
+            "to deliver a bold technical presentation of multi-series performance over time.\n"
+
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: contains a futuristic high-contrast title with accent colors and a descriptive subtitle.\n"
+            "- Left section (Large): displays a glowing SVG line chart with grid patterns and tech-styled axes.\n"
+            "- Right section (Sidebar): contains a frosted-glass insight box and dynamic legend components.\n"
+            "The layout is designed to present technical data trends with a premium dark-mode aesthetic."
+        ),
+        args_schema=GenerateLineChartSlide3
+    ),
+]
 
 # All available slide generation tools with complete parameter schemas
-ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS
+ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
 
 TOOLS_DICT = {'INTRO_TOOLS': INTRO_TOOLS,
                'TRANSITION_TOOLS': TRANSITION_TOOLS,
                'CONTENT_TOOLS': CONTENT_TOOLS,
                'TEAM_TOOLS': TEAM_TOOLS,
-               'THANK_YOU_TOOLS': THANK_YOU_TOOLS}
+               'THANK_YOU_TOOLS': THANK_YOU_TOOLS,
+                'CHART_TOOLS': CHART_TOOLS
+               }
 
 # Tool utilities
 TOOL_MAP = {tool.name: tool for tool in ALL_TOOLS}
