@@ -20313,12 +20313,9 @@ def generate_line_chart_slide_3(
     insight_text_color: str = "#E2E8F0",
     main_title_font_size: str = "64px",
     subtitle_font_size: str = "28px",
-    insight_font_size: str = "30px"
+    insight_font_size: str = "30px",
+    bg_color: str = "#020617"
 ) -> str:
-    # ===== 1. LẤY THÔNG TIN =====
-    
-    
-
     # ===== 2. SVG CONFIG =====
     svg_w, svg_h = 1100, 600
     margin_top, margin_bottom = 60, 80
@@ -20401,14 +20398,8 @@ def generate_line_chart_slide_3(
             @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
             body {{
                 width: 1920px; height: 1080px; margin: 0; padding: 0;
-                background-color: #020617; color: white;
+                background-color: {bg_color}; color: white;
                 font-family: {font_family}; overflow: hidden;
-                background-image: 
-                    radial-gradient(circle at 20% 20%, #1e1b4b 0%, transparent 40%),
-                    radial-gradient(circle at 80% 80%, #312e81 0%, transparent 40%),
-                    linear-gradient(#0f172a 1px, transparent 1px),
-                    linear-gradient(90deg, #0f172a 1px, transparent 1px);
-                background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
             }}
             .header-container {{
                 padding: 80px 100px 40px 100px;
