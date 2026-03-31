@@ -20311,9 +20311,6 @@ def generate_line_chart_slide_3(
     main_title_color: str = "#FFFFFF",
     subtitle_color: str = "#94A3B8",
     insight_text_color: str = "#E2E8F0",
-    main_title_font_size: str = "64px",
-    subtitle_font_size: str = "28px",
-    insight_font_size: str = "30px",
     bg_color: str = "#020617"
 ) -> str:
     # ===== 2. SVG CONFIG =====
