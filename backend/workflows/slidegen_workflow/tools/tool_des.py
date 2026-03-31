@@ -2620,15 +2620,11 @@ CHART_TOOLS = [
         func=generate_line_chart_slide_3,
         name="generate_line_chart_slide_3",
         description=(
-            "Generates a premium dark-mode Line Chart slide with a futuristic, high-contrast aesthetic.\n"
-            "The visual style blends glowing accents, sharp typography, and grid-based structures "
-            "to deliver a bold technical presentation of multi-series performance over time.\n"
-
+            "Generates a Line Chart slide for presenting multi-series performance data over time.\n"
             "The slide layout is divided into three main sections:\n"
-            "- Upper section: contains a futuristic high-contrast title with accent colors and a descriptive subtitle.\n"
-            "- Left section (Large): displays a glowing SVG line chart with grid patterns and tech-styled axes.\n"
-            "- Right section (Sidebar): contains a frosted-glass insight box and dynamic legend components.\n"
-            "The layout is designed to present technical data trends with a premium dark-mode aesthetic."
+            "- Upper section: title and subtitle.\n"
+            "- Left section (Large): SVG line chart with axes and grid.\n"
+            "- Right section (Sidebar): insight text box and legend.\n"
         ),
         args_schema=GenerateLineChartSlide3
     ),
