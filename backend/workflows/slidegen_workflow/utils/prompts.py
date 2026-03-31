@@ -112,9 +112,11 @@ INTRO_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/347/1600/900) NOT text! Text seeds cause 404s!
-5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
-   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2"></div>`
-   ❌ WRONG: `<math-field>E = mc^2</math-field>` or `$E = mc^2$`
+5. MATH/EQUATIONS: If you need to output math formulas, generate them as editable equation elements:
+   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2" style="position: absolute; left: 100px; top: 200px; width: 400px; height: 80px; font-size: 32px; color: #ffffff;"></div>`
+   ⚠️ REQUIRED: Include position, width, height, font-size, color attributes
+   ❌ WRONG: `<math-field>E = mc^2</math-field>` or bare `<div data-type="equation" data-latex="..."></div>`
+   These elements are EDITABLE in the editor — user can click to modify the LaTeX formula
 6. MATCH previous slide's visual style
 
 Generate clean, HIGHLY READABLE function call.
@@ -163,9 +165,11 @@ CONTENT_PROMPT = """
 4. CONTENT: Concise, no filler words
 5. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
-6. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
-   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2"></div>`
-   ❌ WRONG: `<math-field>E = mc^2</math-field>` or `$E = mc^2$`
+6. MATH/EQUATIONS: If you need to output math formulas, generate them as editable equation elements:
+   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2" style="position: absolute; left: 100px; top: 200px; width: 400px; height: 80px; font-size: 32px; color: #ffffff;"></div>`
+   ⚠️ REQUIRED: Include position, width, height, font-size, color attributes
+   ❌ WRONG: `<math-field>E = mc^2</math-field>` or bare `<div data-type="equation" data-latex="..."></div>`
+   These elements are EDITABLE in the editor — user can click to modify the LaTeX formula
 
 Generate READABLE, professional function call.
 """

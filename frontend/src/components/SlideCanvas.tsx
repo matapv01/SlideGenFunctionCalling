@@ -410,6 +410,17 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         node.dataset.selectable = 'true';
         if (!isReadOnly) node.style.cursor = 'move';
         if (!node.id) node.id = `element_equation_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+
+        // Ensure equation has proper structure for renderEquationsInRoot
+        // If generator created a bare div with data-latex, keep it clean — renderEquationsInRoot will populate it
+        // If it has existing math-field, preserve it
+        const existingMF = node.querySelector('math-field');
+        if (!existingMF && node.innerHTML.trim() === '') {
+          // Bare equation div from generator — leave empty for renderEquationsInRoot to fill
+          // Store latex in data attribute for renderEquationsInRoot to find
+          const latex = node.dataset.latex || 'x = y';
+          node.dataset.latex = latex;
+        }
         return;
       }
 
