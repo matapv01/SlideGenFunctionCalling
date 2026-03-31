@@ -12,6 +12,8 @@ def provide_next_slide(state: State) -> State:
 
     start_time = time.time()
     slide_chunks = state.get('slide_chunks', [])
+    slide_context_maps = state.get('slide_context_maps', [])
+    slide_plans = state.get('slide_plans', [])
 
     # --- THE FIX: SET THE TOTAL LENGTH ON THE FIRST RUN ---
     # Check if length_slide_chunks has been initialized. If not, this is the first slide.
@@ -19,12 +21,19 @@ def provide_next_slide(state: State) -> State:
         state['length_slide_chunks'] = len(slide_chunks)
 
     if slide_chunks:
-        # Get the next slide from the queue
-        # We use pop(0) to remove the item from the list so the queue gets smaller
-        next_chunk = slide_chunks[0]
+        # Get the next slide from the queue - ACTUALLY REMOVE IT
+        next_chunk = slide_chunks.pop(0)
 
         state['current_slide_text'] = next_chunk
-        state['slide_chunks'] = slide_chunks  # Update the state with the shorter list
+
+        # Keep state lists in sync by removing corresponding context map and plan
+        if slide_context_maps:
+            state['current_slide_context_map'] = slide_context_maps[0]
+            state['slide_context_maps'] = slide_context_maps[1:]
+
+        if slide_plans and len(slide_plans) > 0:
+            state['current_slide_plan'] = slide_plans[0]
+            state['slide_plans'] = slide_plans[1:]
 
         # Increment the index for the new slide
         current_index = state.get('current_slide_index', -1)
@@ -38,6 +47,7 @@ def provide_next_slide(state: State) -> State:
     else:
         # This branch will be taken when the queue is empty, signaling the router to end.
         print("Slide chunk queue is empty.")
+        state['current_slide_index'] = state.get('length_slide_chunks', 0)
 
     end_time = time.time()
     print(f"Preparation of next slide took {end_time - start_time:.2f} seconds.")

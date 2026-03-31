@@ -55,6 +55,8 @@ class State(TypedDict, total=False):
     current_slide_index: int
     length_slide_chunks: int
     current_slide_text: str
+    current_slide_plan: Dict
+    current_slide_context_map: str
     current_tool_call: Dict
     current_html_content: str
     current_html_path: str

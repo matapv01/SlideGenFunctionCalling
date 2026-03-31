@@ -120,15 +120,13 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         print("WARNING: No slide text provided. Using default.")
         current_text = "Default slide content"
     
-    if not slide_plans or idx >= len(slide_plans):
-        raise ValueError(f"Missing slide plan for slide index {idx}.")
-        
-    if not slide_context_maps or idx >= len(slide_context_maps):
-        raise ValueError(f"Missing slide context map for slide index {idx}.")
+    current_plan = state.get('current_slide_plan')
+    if not current_plan:
+        raise ValueError(f"Missing current_slide_plan for slide index {idx}.")
 
-    # Get the plan for the current slide
-    current_plan = slide_plans[idx]
-    current_context_map = slide_context_maps[idx]
+    current_context_map = state.get('current_slide_context_map')
+    if not current_context_map:
+        raise ValueError(f"Missing current_slide_context_map for slide index {idx}.")
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
     creative_thought = current_plan.get('thought', '') # This is our query!
 

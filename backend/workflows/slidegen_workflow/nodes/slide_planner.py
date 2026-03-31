@@ -43,28 +43,12 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         return state
 
     # --- AUTO-CREATE INTRO SLIDE IF MISSING ---
-    first_chunk = slide_chunks[0] if slide_chunks else {}
-    if first_chunk.get('position', 0) != 0:
-        print("⚠️  First chunk is not an intro slide. Creating intro slide...")
-
-        # Get title from document structure (handle both dict and list)
-        if isinstance(document_structure, dict):
-            title = document_structure.get('title', 'Presentation Title')
-        elif isinstance(document_structure, list) and len(document_structure) > 0:
-            title = document_structure[0].get('title', 'Presentation Title') if isinstance(document_structure[0], dict) else 'Presentation Title'
-        else:
-            title = 'Presentation Title'
-
-        # Create intro chunk
-        intro_chunk = {
-            'position': 0,
-            'heading': '',
-            'text_content': f"Title: {title}\nSubtitle: Overview"
-        }
-
-        # Insert at beginning
-        slide_chunks.insert(0, intro_chunk)
-        print(f"✅ Created intro slide with title: {title}")
+    # Kiểm tra xem đã có intro slide thực (heading=='INTRO' và position==0) chưa
+    # NOTE: Chỉ log cảnh báo, KHÔNG insert ở đây vì slide_planner chạy TRƯỚC provide_next_slide
+    # Nếu insert ở đây, length_slide_chunks sẽ bị set sai (thiếu 1 slide)
+    has_intro = any(c.get('heading') == 'INTRO' and c.get('position') == 0 for c in slide_chunks)
+    if not has_intro:
+        print("ℹ️  No INTRO slide in chunks (expected for manual mode without explicit intro)")
 
     # --- REMOVE DUPLICATE THANK YOU SLIDES ---
     thank_you_positions = []
@@ -78,6 +62,9 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         for pos in reversed(thank_you_positions[:-1]):
             print(f"   Removing duplicate thank you slide at index {pos}")
             slide_chunks.pop(pos)
+            # IMPORTANT: Also remove corresponding context map to keep arrays in sync
+            if slide_context_maps and pos < len(slide_context_maps):
+                slide_context_maps.pop(pos)
         print("✅ Kept only the last thank you slide")
 
     # Update state with cleaned chunks
@@ -89,17 +76,22 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         slide_context_maps = []
         for i, chunk in enumerate(slide_chunks):
             heading = chunk.get('heading', '')
-            position = chunk.get('position', i)
+            position = chunk.get('position', -99)
+            slide_type = chunk.get('slide_type', '').lower()
 
-            if position == 0 or i == 0:
+            if (position == 0 and heading == 'INTRO') or slide_type == 'intro':
                 context = f"[Slide {i+1}] INTRO SLIDE"
-            elif heading == 'TRANSITION' or position == -1:
+            elif heading == 'TRANSITION' or position == -1 or slide_type == 'transition':
                 context = f"[Slide {i+1}] TRANSITION SLIDE"
-            elif heading == 'THANK_YOU' or position == -2:
+            elif heading == 'THANK_YOU' or position == -2 or slide_type in ('thank_you', 'thankyou'):
                 context = f"[Slide {i+1}] THANK YOU SLIDE"
             else:
-                context = f"[Slide {i+1}] {heading}"
+                context = f"[Slide {i+1}] {heading}" if heading else f"[Slide {i+1}] Content Slide"
             slide_context_maps.append(context)
+
+        # Also clear slide_plans so they get regenerated with correct number of chunks
+        state['slide_plans'] = []
+        print(f"   ✓ Cleared slide_plans for regeneration (will be recreated with correct count)")
 
     prompt = ChatPromptTemplate.from_messages([
         ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
@@ -110,12 +102,40 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
     # --- CHUNKED BATCH PROCESSING LOGIC ---
 
+    # SAFETY CHECK: Ensure arrays are in sync before building inputs
+    if len(slide_chunks) != len(slide_context_maps):
+        print(f"❌ CRITICAL: Array mismatch detected during batch processing!")
+        print(f"   slide_chunks: {len(slide_chunks)}, slide_context_maps: {len(slide_context_maps)}")
+        print(f"   Regenerating context_maps to match chunks...")
+        slide_context_maps = []
+        for i, chunk in enumerate(slide_chunks):
+            heading = chunk.get('heading', '')
+            position = chunk.get('position', -99)
+            slide_type = chunk.get('slide_type', '').lower()
+            if (position == 0 and heading == 'INTRO') or slide_type == 'intro':
+                context = f"[Slide {i+1}] INTRO SLIDE"
+            elif heading == 'TRANSITION' or position == -1 or slide_type == 'transition':
+                context = f"[Slide {i+1}] TRANSITION SLIDE"
+            elif heading == 'THANK_YOU' or position == -2 or slide_type in ('thank_you', 'thankyou'):
+                context = f"[Slide {i+1}] THANK YOU SLIDE"
+            else:
+                context = f"[Slide {i+1}] {heading}" if heading else f"[Slide {i+1}] Content Slide"
+            slide_context_maps.append(context)
+        print(f"   ✓ Context maps regenerated with {len(slide_context_maps)} items")
+
     # 1. Prepare a list of all inputs.
     all_inputs = []
     for i, content in enumerate(slide_chunks):
+        # SAFETY: Verify index exists in context_maps
+        if i >= len(slide_context_maps):
+            print(f"⚠️  WARNING: Index {i} out of bounds for slide_context_maps (length: {len(slide_context_maps)})")
+            context_map = f"[Slide {i+1}] Content Slide"
+        else:
+            context_map = slide_context_maps[i]
+
         all_inputs.append({
             "slide_number": i + 1,  # Add slide number (1-indexed)
-            "slide_context_map": slide_context_maps[i],
+            "slide_context_map": context_map,
             "slide_content": content
         })
 
@@ -138,7 +158,19 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
             batch_results = planner_chain.batch(chunk_inputs, config={"max_concurrency": 5})
 
             # Add the results from this chunk to the main list.
-            chunk_plans = [plan.dict() for plan in batch_results]
+            chunk_plans = []
+            for j, plan in enumerate(batch_results):
+                global_idx = i + j
+                plan_dict = plan.dict()
+                
+                # --- HARD RULE cho Slide 1 ---
+                # Ép slide đầu tiên luôn dùng INTRO_TOOLS vì LLM nhiều lúc bị nhầm
+                if global_idx == 0 and plan_dict.get('action') != 'INTRO_TOOLS':
+                    print(f"  -> 🛡️ OVERRIDE: Forced slide 1 action from '{plan_dict.get('action')}' to 'INTRO_TOOLS'")
+                    plan_dict['action'] = 'INTRO_TOOLS'
+                
+                chunk_plans.append(plan_dict)
+                
             all_slide_plans.extend(chunk_plans)
             print("     ... done.")
 

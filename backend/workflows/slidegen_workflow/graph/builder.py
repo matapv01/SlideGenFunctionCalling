@@ -16,15 +16,18 @@ from langgraph.graph import END
 
 def route_to_task(state: State) -> str:
     """
-    Router chính: Chỉ kiểm tra xem còn slide để xử lý không và định tuyến.
+    Router: kiểm tra còn slide nào cần generate không.
+    Dùng current_slide_index vs length_slide_chunks thay vì kiểm tra queue rỗng
+    vì slide cuối bị pop trước khi route_to_task chạy.
     """
     print("--- Router: route_to_task ---")
-    if state.get('slide_chunks'):
-        # Nếu còn slide, đi đến node chuẩn bị
+    current_index = state.get('current_slide_index', -1)
+    length = state.get('length_slide_chunks', 0)
+
+    if current_index < length:
         return "generate_slide"
     else:
-        # Nếu hết, kết thúc
-        print("Không còn slide nào trong hàng đợi. Kết thúc luồng.")
+        print("Tất cả slides đã được generate. Kết thúc luồng.")
         return END
 
 def route_after_convert(state: State) -> str:

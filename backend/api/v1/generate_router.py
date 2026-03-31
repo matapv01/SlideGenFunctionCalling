@@ -815,11 +815,18 @@ async def stream_manual_generation(
             queue.put_nowait((event_type, safe_data))
 
         async def run_bg():
+            slide_options = {
+                'enable_transition_slides': data.get('enable_transition_slides', False),
+                'enable_thank_you_slide': data.get('enable_thank_you_slide', False),
+            }
+            slide_chunks = data.get('slide_chunks', [])
+            logger.info(f"[Manual Stream] Starting with {len(slide_chunks)} chunks, options={slide_options}")
             res = await slidegen_workflow_service.process_chunks(
-                slide_chunks=data.get('slide_chunks', []),
+                slide_chunks=slide_chunks,
                 title=title,
                 output_folder=str(output_folder),
-                callback=callback
+                callback=callback,
+                slide_options=slide_options
             )
             
             if not res:

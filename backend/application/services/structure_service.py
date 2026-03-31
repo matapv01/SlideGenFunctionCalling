@@ -143,12 +143,16 @@ class StructureService:
                 is_transition_node = node.get('is_transition') is True
 
                 # 3. CONTENT SLIDE (For current node)
-                # Chỉ tạo slide nội dung nếu node có content VÀ (không phải transition HOẶC không có lá/nhánh con)
-                if node.get("content") and not is_transition_node and not has_leaves and not has_sub_trees:
+                # Tạo slide nội dung nếu node không phải transition và không có lá/nhánh con
+                # Kể cả khi content rỗng (chỉ có tiêu đề) vẫn tạo slide
+                if not is_transition_node and not has_leaves and not has_sub_trees:
                     pos = [node.get('index', '')]
                     content = self._render_slide_content("", [node])
+                    # Nếu content rỗng sau khi render, dùng numbered_title làm nội dung
+                    if not content.strip():
+                        content = node.get('numbered_title', node.get('title', ''))
                     context_map = self._create_context_map(ctx['full_structure'], pos)
-                    
+
                     self._add_slide(ctx, content, pos, context_map, 'content')
 
                 # 4. PROCESS LEAVES (Children without children)
@@ -343,18 +347,21 @@ class StructureService:
         converted_chunks = []
         for i, (text, c_type, _) in enumerate(zip(s_chunks, s_types, s_pos)):
             heading = ""
-            position = i
-            
             lines = text.strip().split('\n')
-            
+
             if c_type == 'intro':
-                position = 0; heading = "INTRO"
+                position = 0
+                heading = "INTRO"
             elif c_type == 'transition':
-                position = -1; heading = "TRANSITION"
+                position = -1
+                heading = "TRANSITION"
             elif c_type == 'thank_you':
-                position = -2; heading = "THANK_YOU"
+                position = -2
+                heading = "THANK_YOU"
             else:
-                # Content: lấy dòng đầu, bỏ số thứ tự đầu dòng
+                # Content: position bắt đầu từ 1 để tránh nhầm lẫn với INTRO (position=0)
+                position = i + 1
+                # Lấy dòng đầu, bỏ số thứ tự đầu dòng
                 raw_heading = lines[0] if lines else ''
                 heading = re.sub(r'^\d+(\.\d+)*\.?\s*', '', raw_heading)
 
