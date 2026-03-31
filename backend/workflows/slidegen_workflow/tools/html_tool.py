@@ -20269,3 +20269,204 @@ def generate_elegant_thank_you_slide(
 </html>"""
     return html_code
 
+#------------------------ SLIDE  chart slide
+
+def generate_line_chart_slide_3(
+    main_title: str = "EV Market Leaders Expand the Gap", 
+    subtitle: str = "Southeast Asia EV Sales – Jan to Dec 2026", 
+    insight: str = (
+        "Tesla and BYD maintain strong upward momentum throughout the year, "
+        "with Tesla accelerating sharply in Q3 following new model releases. "
+    ), 
+    x_axis="Month",
+    y_axis="Units Sold",
+    unit="K",
+    show_value=False,
+    show_legend=True,
+    y_axis_min=20,
+    y_axis_max=140,
+    data_label_format="{value}K",
+    colors=["#00F2FF", "#8B5CF6", "#EC4899"],
+
+    time_points= [
+            "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+            "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ],
+    series= [
+        {
+            "name": "Tesla",
+            "values": [45, 50, 55, 60, 68, 75, 90, 105, 115, 120, 125, 130]
+        },
+        {
+            "name": "BYD",
+            "values": [40, 48, 52, 58, 63, 70, 85, 95, 105, 110, 118, 122]
+        },
+        {
+            "name": "VinFast",
+            "values": [30, 35, 40, 44, 50, 55, 60, 66, 70, 72, 74, 76]
+        }
+    ],
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#00F2FF",
+    main_title_color: str = "#FFFFFF",
+    subtitle_color: str = "#94A3B8",
+    insight_text_color: str = "#E2E8F0",
+    main_title_font_size: str = "64px",
+    subtitle_font_size: str = "28px",
+    insight_font_size: str = "30px"
+) -> str:
+    # ===== 1. LẤY THÔNG TIN =====
+    
+    
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1100, 600
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 40
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH MIN MAX =====
+    all_values = [v for s in series for v in s.get("values", [])]
+    if y_axis_max == y_axis_min: 
+        y_axis_max += 1
+
+    # ===== 4. VẼ CHART ELEMENTS =====
+    chart_elements = ""
+    
+    # Grid lines Y & Labels
+    steps = 5
+    for i in range(steps + 1):
+        y_pos = margin_top + (chart_h / steps) * i
+        val = y_axis_max - (y_axis_max - y_axis_min) / steps * i
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_pos}" x2="{svg_w - margin_right}" y2="{y_pos}" 
+              stroke="#ffffff15" stroke-width="1" stroke-dasharray="5,5"/>
+        <text x="{margin_left - 15}" y="{y_pos + 6}" font-size="16" text-anchor="end" 
+              fill="{subtitle_color}">{val:,.0f}</text>
+        '''
+
+    # X-axis Labels
+    num_points = len(time_points)
+    for i, label in enumerate(time_points):
+        x_pos = margin_left + (i / max(num_points - 1, 1)) * chart_w
+        chart_elements += f'''
+        <text x="{x_pos}" y="{svg_h - margin_bottom + 35}" font-size="16" 
+              text-anchor="middle" fill="{subtitle_color}">{label}</text>
+        <line x1="{x_pos}" y1="{svg_h - margin_bottom}" x2="{x_pos}" y2="{svg_h - margin_bottom + 8}" 
+              stroke="{accent_color}" stroke-width="2"/>
+        '''
+
+    # Draw Lines & Points
+    for idx, s in enumerate(series):
+        color = colors[idx % len(colors)]
+        values = s.get("values", [])
+        if not values: continue
+        
+        path_points = []
+        for i, val in enumerate(values):
+            x = margin_left + (i / max(len(time_points) - 1, 1)) * chart_w
+            y = svg_h - margin_bottom - (val - y_axis_min) / (y_axis_max - y_axis_min) * chart_h
+            path_points.append(f"{x},{y}")
+        
+        # Line Path với Glow Effect
+        points_str = " ".join(path_points)
+        chart_elements += f'''
+        <polyline points="{points_str}" fill="none" stroke="{color}" stroke-width="4" 
+                  stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px {color}66);"/>
+        '''
+        
+        # Points
+        for p in path_points:
+            px, py = p.split(',')
+            chart_elements += f'<circle cx="{px}" cy="{py}" r="6" fill="#0F172A" stroke="{color}" stroke-width="3"/>'
+
+    # ===== 5. LAYOUT COMPONENTS =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div style="display:flex;align-items:center;margin-bottom:12px;background:rgba(255,255,255,0.05);padding:10px 20px;border-radius:10px;border-left:4px solid {color};">
+                <span style="font-size:20px;color:#FFFFFF;font-weight:500;">{s.get("name","Series")}</span>
+            </div>
+            '''
+
+    # ===== 6. FINAL HTML =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                background-color: #020617; color: white;
+                font-family: {font_family}; overflow: hidden;
+                background-image: 
+                    radial-gradient(circle at 20% 20%, #1e1b4b 0%, transparent 40%),
+                    radial-gradient(circle at 80% 80%, #312e81 0%, transparent 40%),
+                    linear-gradient(#0f172a 1px, transparent 1px),
+                    linear-gradient(90deg, #0f172a 1px, transparent 1px);
+                background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+            }}
+            .header-container {{
+                padding: 80px 100px 40px 100px;
+                background: linear-gradient(to bottom, rgba(15,23,42,0.8), transparent);
+            }}
+            .main-title {{
+                font-family: 'Orbitron', sans-serif;
+                font-size: {main_title_font_size};
+                color: {main_title_color};
+                text-transform: uppercase; letter-spacing: 4px; margin: 0;
+            }}
+            .main-title span {{ color: {accent_color}; }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                color: {subtitle_color}; margin-top: 15px;
+            }}
+            .content-grid {{
+                display: flex; padding: 0 100px; gap: 60px; height: 700px;
+            }}
+            .chart-area {{
+                flex: 2; background: rgba(15, 23, 42, 0.6);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 24px; padding: 20px;
+                backdrop-filter: blur(10px);
+                display: flex; align-items: center; justify-content: center;
+            }}
+            .insight-area {{
+                flex: 1; display: flex; flex-direction: column; justify-content: flex-start;
+            }}
+            .insight-box {{
+                background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, rgba(255,255,255,0.01) 100%);
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 20px; padding: 35px; margin-bottom: 30px;
+                font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.6;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header-container">
+            <h1 class="main-title">{main_title.split(' ')[0]} <span>{' '.join(main_title.split(' ')[1:])}</span></h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+        <div class="content-grid">
+            <div class="chart-area">
+                <div>
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                        <text x="{svg_w/2}" y="{svg_h-10}" font-size="20" text-anchor="middle" fill="{accent_color}" font-weight="bold">{x_axis}</text>
+                        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-size="20" text-anchor="middle" fill="{accent_color}" font-weight="bold">{y_axis}</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="insight-area">
+                <div class="insight-box">{insight}</div>
+                <div>{legend_html}</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
