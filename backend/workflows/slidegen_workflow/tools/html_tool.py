@@ -19812,7 +19812,7 @@ def generate_line_chart_slide_3(
     <html>
     <head>
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap;
+            @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap');
             body {{
                 width: 1920px; height: 1080px; margin: 0; padding: 0;
                 background-color: {bg_color}; color: white;
