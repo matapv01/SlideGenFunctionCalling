@@ -23,55 +23,7 @@ def organize_chunks(state: State) -> State:
 
         # Even for idea workflows, we need to ensure transition and thank you slides are properly set up
         slide_chunks = state['slide_chunks']
-        slide_options = state.get('slide_options', {})
 
-        # Get options with defaults
-        enable_transition_slides = slide_options.get('enable_transition_slides', True)
-        enable_thank_you_slide = slide_options.get('enable_thank_you_slide', True)
-
-        print(f"✅ Slide options: transitions={enable_transition_slides}, thank_you={enable_thank_you_slide}")
-
-        # Verify and ensure transition/thank you slides match options
-        has_transitions = any(chunk.get('position') == -1 or chunk.get('heading') == 'TRANSITION' for chunk in slide_chunks)
-        has_thank_you = any(chunk.get('position') == -2 or chunk.get('heading') == 'THANK_YOU' for chunk in slide_chunks)
-
-        print(f"   Current state - Transitions: {has_transitions}, Thank you: {has_thank_you}")
-
-        # If transitions disabled but present, remove them
-        if not enable_transition_slides and has_transitions:
-            slide_chunks = [c for c in slide_chunks if c.get('position') != -1 and c.get('heading') != 'TRANSITION']
-            print("   ✓ Removed transition slides (disabled in options)")
-
-        # If thank you disabled but present, remove it
-        if not enable_thank_you_slide and has_thank_you:
-            slide_chunks = [c for c in slide_chunks if c.get('position') != -2 and c.get('heading') != 'THANK_YOU']
-            print("   ✓ Removed thank you slide (disabled in options)")
-
-        # If transitions enabled but MISSING, auto-create one between intro and content
-        if enable_transition_slides and not has_transitions and len(slide_chunks) > 1:
-            # Get first content heading for transition title
-            first_content = next((c for c in slide_chunks if c.get('position', 0) > 0), None)
-            if first_content:
-                heading = first_content.get('heading', 'Content')
-                transition_chunk = {
-                    'position': -1,
-                    'heading': heading,
-                    'text_content': heading,
-                    'is_auto_created': True
-                }
-                slide_chunks.insert(1, transition_chunk)  # After intro
-                print("   ✓ Auto-created transition slide")
-
-        # If thank you enabled but MISSING, add at end
-        if enable_thank_you_slide and not has_thank_you:
-            thank_you_chunk = {
-                'position': -2,
-                'heading': 'THANK_YOU',
-                'text_content': 'Thank you for your attention!',
-                'is_auto_created': True
-            }
-            slide_chunks.append(thank_you_chunk)
-            print("   ✓ Auto-created thank you slide")
 
         state['slide_chunks'] = slide_chunks
 
@@ -107,10 +59,8 @@ def organize_chunks(state: State) -> State:
     print(f"🔧 DEBUG: Type of slide_options: {type(slide_options)}")
 
     # Get options with defaults
-    enable_transition_slides = slide_options.get('enable_transition_slides', True)
-    enable_thank_you_slide = slide_options.get('enable_thank_you_slide', True)
-
-    print(f"✅ Slide options: transitions={enable_transition_slides}, thank_you={enable_thank_you_slide}")
+    print(f"🔧 DEBUG: Raw slide_options from state: {slide_options}")
+    print(f"🔧 DEBUG: Type of slide_options: {type(slide_options)}")
 
     if not document_structure:
         print("Document structure is empty. Skipping slide generation.")
@@ -212,19 +162,6 @@ def organize_chunks(state: State) -> State:
 
     def _traverse_dfs(nodes, is_root_level=False):
         for node in nodes:
-            # Create transition slide for level 1 headings (root level) - if enabled
-            if enable_transition_slides and is_root_level and node.get('level') == 1:
-                transition_chunk = {
-                    'position': -1,  # Special position for transitions
-                    'heading': node.get('numbered_title', node.get('title', '')),
-                    'text_content': node.get('numbered_title', node.get('title', ''))
-                }
-                pos = [f"{node.get('index', '')}.T"]  # Special marker for transition
-                final_slides_content.append(transition_chunk)
-                final_slides_positions.append(pos)
-                final_slides_context_maps.append(_create_context_map(renumbered_structure, [node.get('index', '')]))
-                print(f"Created transition slide for: {node.get('numbered_title', '')}")
-
             if node.get("content"):
                 pos = [node.get('index', '')]
                 content_text = _render_slide_content("", [node])
@@ -244,18 +181,6 @@ def organize_chunks(state: State) -> State:
                 _traverse_dfs(sub_trees, is_root_level=False)
 
     _traverse_dfs(renumbered_structure, is_root_level=True)
-
-    # Add thank you slide at the end (if enabled)
-    if enable_thank_you_slide:
-        thank_you_chunk = {
-            'position': -2,  # Special position for thank you
-            'heading': 'THANK_YOU',
-            'text_content': 'Thank you for your attention!'
-        }
-        final_slides_content.append(thank_you_chunk)
-        final_slides_positions.append(['999'])  # Special position for thank you (always last)
-        final_slides_context_maps.append("THANK YOU SLIDE")
-        print("Created thank you slide.")
 
     print(f"Grouping complete. Generated {len(final_slides_content)} slides (pre-sort).")
 

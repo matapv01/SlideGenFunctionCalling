@@ -47,8 +47,6 @@ interface IdeaStructureData {
   session_id: string;
   title: string;
   slide_chunks: SlideChunk[];
-  enable_transition_slides: boolean;
-  enable_thank_you_slide: boolean;
   metadata?: any;
 }
 
@@ -125,8 +123,6 @@ const IdeaStructure = () => {
       const updatedData = await api.updateIdeaStructure(sessionId!, {
         title: structure.title,
         slide_chunks: structure.slide_chunks,
-        enable_transition_slides: structure.enable_transition_slides,
-        enable_thank_you_slide: structure.enable_thank_you_slide,
       });
       setStructure(updatedData);
       setIsDirty(false);
@@ -432,30 +428,6 @@ const IdeaStructure = () => {
                       onChange={(e) => updateStructure((prev) => ({ ...prev, title: e.target.value }))}
                       className="mt-1"
                     />
-                  </div>
-
-                  <div className="space-y-3">
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="transitions"
-                        checked={structure.enable_transition_slides}
-                        onCheckedChange={(checked) =>
-                          updateStructure((prev) => ({ ...prev, enable_transition_slides: checked }))
-                        }
-                      />
-                      <Label htmlFor="transitions" className="text-sm">Enable Transition Slides</Label>
-                    </div>
-
-                    <div className="flex items-center space-x-2">
-                      <Switch
-                        id="thankyou"
-                        checked={structure.enable_thank_you_slide}
-                        onCheckedChange={(checked) =>
-                          updateStructure((prev) => ({ ...prev, enable_thank_you_slide: checked }))
-                        }
-                      />
-                      <Label htmlFor="thankyou" className="text-sm">Enable Thank You Slide</Label>
-                    </div>
                   </div>
                 </div>
               </div>

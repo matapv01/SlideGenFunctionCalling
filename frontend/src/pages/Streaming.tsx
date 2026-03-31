@@ -230,8 +230,6 @@ const Streaming = () => {
   useEffect(() => {
     const title = location.state?.title;
     const description = location.state?.description;
-    const enableTransitions = location.state?.enableTransitions ?? true;
-    const enableThankYou = location.state?.enableThankYou ?? true;
     const contentLength = location.state?.contentLength || "standard";
 
     // Check if this is an idea workflow
@@ -243,8 +241,6 @@ const Streaming = () => {
         title: title,
         prompt: description,
         content_length: contentLength,
-        enable_transition_slides: enableTransitions,
-        enable_thank_you_slide: enableThankYou,
       })
         .then((response) => {
           setIdeaSessionId(response.session_id);

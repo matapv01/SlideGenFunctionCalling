@@ -178,14 +178,10 @@ export const api = {
   // Upload for streaming workflow
   uploadDocxForStream: (file: File, options: {
     workflow_mode?: string;
-    enable_transition_slides?: boolean;
-    enable_thank_you_slide?: boolean;
   } = {}) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("workflow_mode", options.workflow_mode ?? "auto_no_heading");
-    formData.append("enable_transition_slides", String(options.enable_transition_slides ?? true));
-    formData.append("enable_thank_you_slide", String(options.enable_thank_you_slide ?? true));
     return request<{ filename: string }>("/generate/docx/prepare-stream", { method: "POST", body: formData });
   },
 
@@ -361,8 +357,6 @@ export const api = {
     title?: string;
     prompt: string;
     content_length?: string;
-    enable_transition_slides?: boolean;
-    enable_thank_you_slide?: boolean;
   }) =>
     request<{
       session_id: string;
@@ -390,8 +384,6 @@ export const api = {
       session_id: string;
       title: string;
       slide_chunks: any[];
-      enable_transition_slides: boolean;
-      enable_thank_you_slide: boolean;
       metadata?: any;
     }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`),
 
@@ -399,15 +391,11 @@ export const api = {
   updateIdeaStructure: (sessionId: string, data: {
     title: string;
     slide_chunks: any[];
-    enable_transition_slides: boolean;
-    enable_thank_you_slide: boolean;
   }) =>
     request<{
       session_id: string;
       title: string;
       slide_chunks: any[];
-      enable_transition_slides: boolean;
-      enable_thank_you_slide: boolean;
       metadata?: any;
     }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`, {
       method: "PUT",
