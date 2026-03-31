@@ -528,7 +528,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         width: 100%;
         height: 100%;
         overflow: hidden;
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+        /* NOTE: No default font-family here — let the slide's own CSS control fonts */
       }
 
       .slide-container {
@@ -720,6 +720,27 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     `;
   };
 
+  /**
+   * Inject Google Fonts (and preconnect) <link> tags from the slide HTML into
+   * document.head so that @font-face rules are available at the page level.
+   * Shadow DOM cannot use fonts loaded only inside the shadow tree.
+   * Tags are deduplicated by href to avoid duplicate requests.
+   */
+  const injectFontLinksToDocumentHead = (rawHTML: string) => {
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(rawHTML, 'text/html');
+    const linkEls = Array.from(doc.querySelectorAll('link[rel="stylesheet"], link[rel="preconnect"]'));
+    linkEls.forEach((el) => {
+      const href = el.getAttribute('href');
+      if (!href) return;
+      // Deduplicate — skip if already injected
+      const existing = document.head.querySelector(`link[href="${CSS.escape(href)}"]`);
+      if (existing) return;
+      const clone = el.cloneNode(true) as HTMLLinkElement;
+      document.head.appendChild(clone);
+    });
+  };
+
   useEffect(() => {
     if (!containerRef.current) return;
     let initLogicTimer: ReturnType<typeof setTimeout> | null = null;
@@ -738,6 +759,11 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     try {
       const processedHTML = processHTML(props.htmlContent, props.readOnly);
       shadowRootRef.current.innerHTML = processedHTML;
+
+      // Google Fonts @font-face rules must live at the document level to be
+      // usable inside Shadow DOM. Inject <link> tags into document.head too.
+      injectFontLinksToDocumentHead(props.htmlContent);
+
       // The converter's resize <script> doesn't execute via innerHTML in Shadow DOM,
       // so apply the scale fallback for both readOnly and editor modes.
       applyConverterScaleFallback(shadowRootRef.current);
@@ -785,6 +811,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
   useEffect(() => {
     if (!props.readOnly || !shadowRootRef.current) return;
     shadowRootRef.current.innerHTML = processHTML(props.htmlContent, true);
+    injectFontLinksToDocumentHead(props.htmlContent);
     applyConverterScaleFallback(shadowRootRef.current);
     renderEquationsInRoot(shadowRootRef.current);
   }, [props.htmlContent]); // eslint-disable-line react-hooks/exhaustive-deps

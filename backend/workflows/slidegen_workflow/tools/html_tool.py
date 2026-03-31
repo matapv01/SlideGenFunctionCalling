@@ -1,3 +1,5 @@
+DEFAULT_FONT_FAMILY = "'Be Vietnam Pro', sans-serif"
+
 #---------------------- SLIDE INTRO
 def generate_title_slide(
     main_title="BUSINESS PLAN",
@@ -5,7 +7,6 @@ def generate_title_slide(
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
-    font_family="'Inter', sans-serif",
     show_skyline=True,
     skyline_opacity=0.3,
     triangle_opacity=0.2,
@@ -20,12 +21,10 @@ def generate_title_slide(
     :param bg_color: Primary background color (hex code)
     :param bg_gradient_to: Secondary background color for gradient effect (hex code)
     :param text_color: Color of the title and subtitle text (hex code)
-    :param font_family: Font family for all text elements
     :param show_skyline: Whether to show the city skyline silhouette at the bottom
     :param skyline_opacity: Opacity of the skyline silhouette (0.0 to 1.0)
     :param triangle_opacity: Opacity of the triangle decorative elements (0.0 to 1.0)
-    :param title_font_size: Font size for the main title
-    :param subtitle_font_size: Font size for the subtitle
+
     :param show_border: Whether to show the dashed border frame
     :param custom_css: Additional custom CSS to be included
     :return: A string containing the HTML code for the slide
@@ -37,7 +36,7 @@ def generate_title_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -49,7 +48,7 @@ def generate_title_slide(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -226,7 +225,6 @@ def generate_introduction_slide(
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
-    font_family="'Inter', sans-serif",
     show_decorative_triangles=True,
     triangle_opacity=0.15,
     show_border=True,
@@ -246,7 +244,6 @@ def generate_introduction_slide(
     :param text_color: Color of all text elements (hex code)
     :param title_font_size: Font size for the main title
     :param content_font_size: Font size for the content text
-    :param font_family: Font family for all text elements
     :param show_decorative_triangles: Whether to show decorative triangle elements
     :param triangle_opacity: Opacity of the decorative triangles (0.0 to 1.0)
     :param show_border: Whether to show the dashed border frame
@@ -271,7 +268,7 @@ def generate_introduction_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -283,7 +280,7 @@ def generate_introduction_slide(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -493,8 +490,6 @@ def generate_intro_slide1(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
-    font_family="'Inter', sans-serif",
-    main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"        # Thêm tham số cho URL ảnh
 ):
     """
@@ -514,7 +509,7 @@ def generate_intro_slide1(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_bg_color};
             overflow: hidden;
         }}
@@ -622,7 +617,7 @@ def generate_intro_slide1(
             color: {title_color};
             margin: 0 0 2.5rem 0; 
             font-weight: 800;
-            font-style: {main_title_font_style};
+            font-style: {DEFAULT_FONT_FAMILY};
             line-height: 1.1;
             text-align: center;
             letter-spacing: -0.02em;
@@ -705,7 +700,6 @@ def generate_elegant_intro_slide(
     main_title="My Amazing Presentation",
     subtitle="This is a test slide to demonstrate the improved layout and styling.",
     image_url="https://images.pexels.com/photos/3807735/pexels-photo-3807735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    font_family="'Be Vietnam Pro', sans-serif",
     background_color="#EAE3D9",
     text_color="#4A403A",
     decoration_color_start="#F7DC6F",
@@ -761,14 +755,14 @@ def generate_elegant_intro_slide(
     <title>Elegant Intro Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {background_color};
             color: {text_color};
             overflow: hidden;
@@ -934,7 +928,6 @@ def generate_elegant_intro_slide(
 
 def generate_title_slide_2(
     main_title="THIS IS YOUR<br><span class='highlight'>PRESENTATION</span><br>TITLE",
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#06B6D4",
     shadow_color="#0E7490",
     text_color="#6B7280",
@@ -972,14 +965,14 @@ def generate_title_slide_2(
     <title>Corporate Title Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: #FFFFFF;
         }}
@@ -1065,7 +1058,6 @@ def generate_dynamic_intro_slide(
     subtitle="This is where we outline our core mission and the driving force behind our vision.",
     # ĐÃ THAY ĐỔI: Ảnh nền mới, hiện đại hơn
     image_url="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop",
-    font_family="'Poppins', 'Inter', sans-serif",
     primary_color="#4F46E5",
     secondary_color="#3730A3",
     text_color="#FFFFFF"
@@ -1093,14 +1085,14 @@ def generate_dynamic_intro_slide(
     <title>Dynamic Intro Slide - Large Text</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
 
@@ -1235,7 +1227,6 @@ def generate_big_concept_slide(
     main_title="BIG<br>CONCEPT",
     subtitle="Bring the attention of your audience over a key concept using icons or illustrations",
     icon_name="space",
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -1275,14 +1266,14 @@ def generate_big_concept_slide(
     <title>Big Concept Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -1418,8 +1409,7 @@ def generate_elegant_agenda_slide(
     subtitle_color="#B48E8E",
     text_color="#4B5563", # Medium Gray
     # --- Font chữ ---
-    font_family_title="'Playfair Display', serif",
-    font_family_body="'Montserrat', sans-serif",
+
     custom_css=""
 ):
     """
@@ -1437,12 +1427,12 @@ def generate_elegant_agenda_slide(
     <title>{main_title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{ font-size: 16px; }}
         body, html {{
             margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: {font_family_body};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
         }}
@@ -1494,7 +1484,7 @@ def generate_elegant_agenda_slide(
         }}
         
         .main-title {{
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 5rem;
             font-weight: 600;
             font-style: italic;
@@ -1563,8 +1553,6 @@ def generate_playful_title_slide(
     main_title="Introduction<br>to penguins",
     subtitle="Introduce penguins here. Mention their characteristics and unique behaviors.",
     illustration_character="penguin",
-    font_family_title="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     top_bg_color="#FFC947",
     bottom_bg_color="#E8715D",
     text_color="#2D2D2D",
@@ -1591,7 +1579,7 @@ def generate_playful_title_slide(
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Playful Title Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
@@ -1599,7 +1587,7 @@ def generate_playful_title_slide(
         .slide-container::after {{ content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 15%; background-color: {bottom_bg_color}; z-index: 0; }}
         .text-column {{ z-index: 10; display: flex; flex-direction: column; justify-content: center; }}
         .main-title {{ font-family: 'Patrick Hand', cursive; font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 400; color: #2D2D2D; line-height: 1.15; margin-bottom: 2.5rem; }}
-        .subtitle {{ font-family: {font_family_body}; font-size: 2rem; color: {text_color}; line-height: 1.6; max-width: 45ch; font-weight: 400; }}
+        .subtitle {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2rem; color: {text_color}; line-height: 1.6; max-width: 45ch; font-weight: 400; }}
         .illustration-column {{ z-index: 5; display: flex; align-items: center; justify-content: center; }}
         .illustration-wrapper {{ position: relative; width: 90%; max-width: 450px; }}
         .penguin-svg {{ width: 100%; height: auto; filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.1)); }}
@@ -1624,7 +1612,6 @@ def generate_minimalist_title_slide(
     main_title="This is your presentation title",
     subtitle="A subtitle to provide more context or a tagline",
     author_line="Presented by Your Name / Company",
-    font_family="'Inter', sans-serif",
     bg_color="#111827",
     text_color="#F9FAFB",
     subtitle_color="#E5E7EB",
@@ -1643,7 +1630,7 @@ def generate_minimalist_title_slide(
     <title>Modern Title Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{
             --accent-color: {accent_color};
@@ -1653,7 +1640,7 @@ def generate_minimalist_title_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -1755,7 +1742,6 @@ def generate_mission_slide(
     subtitle="Elaborate on your key message or provide a call to action. This text can be a bit longer.",
     image_url="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", 
     image_alt_text="A team collaborating in a modern office, representing mission and goals",
-    font_family="'Inter', sans-serif",
     background_color_left="#F5EBE0",
     text_color_title="#4E443F",
     text_color_top="#4E443F",
@@ -1786,7 +1772,7 @@ def generate_mission_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             font-size: var(--base-font-size);
         }}
@@ -1925,7 +1911,7 @@ def generate_training_intro_slide(
     title_color="#b8d89f",
     text_color="#e8d7a8",
     image_url="https://images.pexels.com/photos/3587620/pexels-photo-3587620.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    font_family="'Inter', sans-serif",
+
 ):
     """
     Generate a training introduction slide with dark background and bottom image.
@@ -1940,7 +1926,6 @@ def generate_training_intro_slide(
     :param title_color: Color for the main title (hex code, light green by default)
     :param text_color: Color for the description text (hex code, light yellow by default)
     :param image_url: URL of the image to display in bottom section
-    :param font_family: Font family for all text elements
     :param title_font_size: Font size for the main title
     :param text_font_size: Font size for the description text
     :param image_height: Height of the image section (percentage or px)
@@ -1980,7 +1965,7 @@ def generate_training_intro_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -2090,7 +2075,6 @@ def generate_employee_intro_slide(
     circle_color_2="#10855b",
     circle_color_3="#2dd4bf",
     circle_color_4="#FFFFFF",
-    font_family="'Inter', sans-serif",
 ):
     """
     Generate an Employee Introduction slide with decorative geometric circles.
@@ -2114,7 +2098,6 @@ def generate_employee_intro_slide(
         circle_color_2 (str): Second circle color (medium green)
         circle_color_3 (str): Third circle color (light cyan)
         circle_color_4 (str): Fourth circle color (white)
-        font_family (str): Font family for all text
         
     Returns:
         str: Complete HTML code for the slide
@@ -2134,7 +2117,7 @@ def generate_employee_intro_slide(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -2370,7 +2353,7 @@ def generate_research_proposal_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Proposal Presentation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -2622,8 +2605,7 @@ def generate_business_intro_slide(
     main_title_color="#0056d2",
     subtitle_color="#666666",
     accent_color="#0056d2",
-    main_font="Arial, sans-serif",
-    subtitle_font="Arial, sans-serif"
+
 ):
     """
     Generate a clean business presentation intro slide with centered text and decorative side circles.
@@ -2635,7 +2617,6 @@ def generate_business_intro_slide(
         main_title_color (str): Color for main title (default: blue)
         subtitle_color (str): Color for subtitle text
         accent_color (str): Color for decorative circles
-        main_font (str): Font family for main title
         subtitle_font (str): Font family for subtitle
     
     Returns:
@@ -2698,7 +2679,7 @@ def generate_business_intro_slide(
         }}
         
         .main-title {{
-            font-family: {main_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 120px;
             font-weight: 900;
             color: {main_title_color};
@@ -2708,7 +2689,7 @@ def generate_business_intro_slide(
         }}
         
         .subtitle {{
-            font-family: {subtitle_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 28px;
             font-weight: 400;
             color: {subtitle_color};
@@ -2767,7 +2748,6 @@ def generate_title_slide_3(
     bg_color="#F5EBE0",
     text_color="#C41E3A",
     subtitle_color="#3D3D3D",
-    font_family="'Lobster Two', 'Georgia', serif",
     show_top_lights=True,
     show_sparkles=True,
     custom_css=""
@@ -2781,7 +2761,6 @@ def generate_title_slide_3(
     - bg_color: Background color (default: "#F5EBE0")
     - text_color: Main title color (default: "#C41E3A")
     - subtitle_color: Subtitle color (default: "#3D3D3D")
-    - font_family: Font family (default: "'Lobster Two', 'Georgia', serif")
     - show_top_lights: Show Christmas lights at top (default: True)
     - show_sparkles: Show decorative sparkles (default: True)
     - custom_css: Additional custom CSS (default: "")
@@ -2855,7 +2834,7 @@ def generate_title_slide_3(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title.replace('<br>', ' ')}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lobster+Two:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -2869,7 +2848,7 @@ def generate_title_slide_3(
             background: {bg_color};
             position: relative;
             overflow: hidden;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         /* String Lights Top */
@@ -2990,8 +2969,6 @@ def generate_title_slide_3(
 def generate_minimalist_slide(
     title="Your presentation title",
     subtitle="Here is where your presentation begins",
-    font_family_title="Playfair Display, Georgia, serif",
-    font_family_subtitle="Inter, sans-serif",
     background_color="#E8E3DC",
     text_color_title="#1A1A1A",
     text_color_subtitle="#4A4A4A",
@@ -3006,8 +2983,6 @@ def generate_minimalist_slide(
     Args:
         title (str): The main title for the slide (112px serif font, centered at 1600px width)
         subtitle (str): Descriptive text below the title (26px sans-serif font)
-        font_family_title (str): Font family for the title (default: Playfair Display, Georgia, serif)
-        font_family_subtitle (str): Font family for the subtitle (default: Inter, sans-serif)
         background_color (str): The background color of the slide (default: #E8E3DC warm beige)
         text_color_title (str): Color for the title text (default: #1A1A1A dark gray)
         text_color_subtitle (str): Color for the subtitle text (default: #4A4A4A medium gray)
@@ -3026,7 +3001,7 @@ def generate_minimalist_slide(
     <title>{title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -3035,7 +3010,7 @@ def generate_minimalist_slide(
         }}
         
         body {{
-            font-family: {font_family_subtitle};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {background_color};
             width: 1920px;
             height: 1080px;
@@ -3048,7 +3023,7 @@ def generate_minimalist_slide(
             top: 450px;
             left: 160px;
             width: 1600px;
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 112px;
             font-weight: 400;
             color: {text_color_title};
@@ -3062,7 +3037,7 @@ def generate_minimalist_slide(
             top: 620px;
             left: 160px;
             width: 1600px;
-            font-family: {font_family_subtitle};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 26px;
             font-weight: 300;
             color: {text_color_subtitle};
@@ -3130,8 +3105,6 @@ def generate_title_slide_5(
     main_title="Your Title Here",
     bottom_text="Here is where your presentation begins",
     image_path="Image/generate_title_slide_5/Default_1.jpg",
-    font_family="'Arial'",
-    font_family_secondary="'Arial'",
     bg_color="#b8c8d4",
     text_color="#2c3e50",
     show_clover=True,
@@ -3147,8 +3120,6 @@ def generate_title_slide_5(
     - main_title: Main title text (default: "Your Title Here")
     - bottom_text: Text in bottom-right corner (default: "Here is where your presentation begins")
     - image_path: Path to polaroid image (default: "Image/generate_title_slide_5/Default_1.jpg")
-    - font_family: Font for main title (default: "'Arial'")
-    - font_family_secondary: Font for secondary text (default: "'Arial'")
     - bg_color: Background color (default: "#b8c8d4" - soft blue-gray)
     - text_color: Text color (default: "#2c3e50" - dark blue)
     - show_clover: Show four-leaf clover decoration (default: True)
@@ -3205,7 +3176,7 @@ def generate_title_slide_5(
             left: 120px;
             font-size: 30px;
             color: {text_color};
-            font-family: {font_family_secondary};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .top-right {{
@@ -3215,7 +3186,7 @@ def generate_title_slide_5(
             font-size: 24px;
             color: {text_color};
             font-weight: bold;
-            font-family: {font_family_secondary};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .text-content {{
@@ -3231,7 +3202,7 @@ def generate_title_slide_5(
             color: {text_color};
             line-height: 1.2;
             font-weight: 400;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             margin: 0;
         }}
 
@@ -3272,7 +3243,7 @@ def generate_title_slide_5(
             right: 120px;
             font-size: 30px;
             color: {text_color};
-            font-family: {font_family_secondary};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .top-line {{
@@ -3344,7 +3315,7 @@ def generate_title_slide_7(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{main_title}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin:0; padding:0; box-sizing:border-box; }}
             body {{ font-family: 'Poppins', sans-serif; background-color:{bg_color}; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }}
@@ -3543,7 +3514,7 @@ def generate_title_slide_12(
     <title>Elegant Black and White Thesis Defense</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -3703,7 +3674,7 @@ def generate_title_slide_13(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inverse Functions Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -3941,7 +3912,7 @@ def generate_title_slide_15(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Meeting Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -4076,7 +4047,7 @@ def generate_title_slide_17(
     <title>Town Hall Meeting Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -4085,7 +4056,7 @@ def generate_title_slide_17(
         }}
         
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY}, sans-serif;
             overflow: hidden;
         }}
         
@@ -4250,7 +4221,7 @@ def generate_title_slide_18(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minimalist Pattern Meeting Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -4347,7 +4318,6 @@ def generate_title_slide_18(
 def generate_geometric_transition_slide(
     headline="TRANSITION HEADLINE",
     subtitle="Let's start with the first set of slides",
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     primary_text_color="#FFFFFF",
     subtitle_color="#67E8F9"
@@ -4365,14 +4335,14 @@ def generate_geometric_transition_slide(
     <title>Geometric Transition Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {primary_text_color};
@@ -4477,7 +4447,6 @@ def generate_geometric_transition_slide(
 def generate_dusk_transition_slide(
     headline="Transition Headline",
     subtitle="Let's start with the first set of slides",
-    font_family="'Nunito', 'Inter', sans-serif",
     headline_color="#2C3E50",
     subtitle_color="#4A5568",
     number_color="#FDE68A",
@@ -4502,13 +4471,13 @@ def generate_dusk_transition_slide(
     <title>Minimalist Dusk Transition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
 
@@ -4570,8 +4539,6 @@ def generate_dusk_transition_slide(
 def generate_memphis_transition_slide(
     headline="Transition headline",
     subtitle="Let's start with the first set of slides",
-    font_family_headline="'Lora', serif",
-    font_family_body="'Lato', sans-serif",
     top_panel_bg="#19114B",
     bottom_panel_bg="#403271",
     palette=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
@@ -4585,10 +4552,10 @@ def generate_memphis_transition_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Transition Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
-        body, html {{ height: 100vh; width: 100vw; overflow: hidden; font-family: {font_family_body}; }}
+        body, html {{ height: 100vh; width: 100vw; overflow: hidden; font-family: {DEFAULT_FONT_FAMILY}; }}
         .slide-container {{ width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; }}
         .top-panel, .bottom-panel {{ flex: 1; position: relative; overflow: hidden; }}
         .top-panel {{ background-color: {top_panel_bg}; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5rem; }}
@@ -4599,8 +4566,8 @@ def generate_memphis_transition_slide(
             min-width: 50vw;
             min-height: 25vh; 
         }}
-        .section-number {{ font-family: {font_family_headline}; font-size: 3rem; font-weight: 400; color: {palette[3]}; opacity: 0.8; }}
-        .headline {{ font-family: {font_family_headline}; font-size: 4rem; font-weight: 700; margin-bottom: 5rem ; color: #FFFFFF; }}
+        .section-number {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 3rem; font-weight: 400; color: {palette[3]}; opacity: 0.8; }}
+        .headline {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 4rem; font-weight: 700; margin-bottom: 5rem ; color: #FFFFFF; }}
         .subtitle {{font-size: 2rem; font-weight: 500; margin-bottom: 8rem; color: {palette[1]}; }}
         .shape {{ position: absolute; }}
         .shape-tl-1 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: 4rem; left: 6rem; border-radius: 50%; opacity: 0.8; }}
@@ -4629,7 +4596,6 @@ def generate_memphis_transition_slide(
 
 def generate_pushpin_section_header(
     main_title="Add a Section Header",
-    font_family="'Poppins', 'Inter', sans-serif",
     # ĐÃ THAY ĐỔI: Bảng màu mới tối giản và chuyên nghiệp
     bg_color="#FDFCFB",
     text_color="#1F2937",    # Xám đen
@@ -4648,7 +4614,7 @@ def generate_pushpin_section_header(
     <title>Section Header - Minimalist Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
@@ -4667,7 +4633,7 @@ def generate_pushpin_section_header(
             font-size: 16px !important;
             height: 100vh !important;
             width: 100vw !important;
-            font-family: {font_family} !important;
+            font-family: {DEFAULT_FONT_FAMILY} !important;
             overflow: hidden !important;
             display: flex !important;
             justify-content: center !important;
@@ -4681,7 +4647,7 @@ def generate_pushpin_section_header(
         body#body.body, html#html.html {{
             height: 100vh !important;
             width: 100vw !important;
-            font-family: {font_family} !important;
+            font-family: {DEFAULT_FONT_FAMILY} !important;
             overflow: hidden !important;
             display: flex !important;
             justify-content: center !important;
@@ -4772,7 +4738,6 @@ def generate_pushpin_section_header(
 
 def generate_section_header_slide(
     header_text="Add a Section Header",
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     text_color="#1E293B",
     gradient_color_1="#A78BFA",
@@ -4795,14 +4760,14 @@ def generate_section_header_slide(
     <title>Section Header Slide - Geometric shapes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             position: relative;
@@ -4867,8 +4832,6 @@ def generate_intro_slide(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
-    font_family="'Inter', sans-serif",
-    main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"
 ):
     """
@@ -4888,7 +4851,7 @@ def generate_intro_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_bg_color};
             overflow: hidden;
         }}
@@ -4995,7 +4958,7 @@ def generate_intro_slide(
             color: {title_color};
             margin: 0 0 3rem 0;
             font-weight: bold;
-            font-style: {main_title_font_style};
+            font-style: {DEFAULT_FONT_FAMILY};
             line-height: 1.2;
             text-align: center !important;
             display: block;
@@ -5116,7 +5079,7 @@ def generate_research_proposal_transition_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transition Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -5375,8 +5338,7 @@ def generate_business_transition_slide(
     headline_color="#0056d2",
     subtitle_color="#666666",
     accent_color="#0056d2",
-    headline_font="Arial, sans-serif",
-    subtitle_font="Arial, sans-serif"
+
 ):
     """
     Generate a clean business transition slide with centered text and decorative side D-shapes.
@@ -5387,8 +5349,7 @@ def generate_business_transition_slide(
         headline_color (str): Color for headline (default: blue)
         subtitle_color (str): Color for subtitle text
         accent_color (str): Color for decorative D-shapes
-        headline_font (str): Font family for headline
-        subtitle_font (str): Font family for subtitle
+
     
     Returns:
         str: Complete HTML code for the business transition slide
@@ -5450,7 +5411,7 @@ def generate_business_transition_slide(
         }}
         
         .headline {{
-            font-family: {headline_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 140px;
             font-weight: 900;
             color: {headline_color};
@@ -5461,7 +5422,7 @@ def generate_business_transition_slide(
         }}
         
         .subtitle {{
-            font-family: {subtitle_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {subtitle_color};
@@ -5567,7 +5528,7 @@ def generate_section_header_slide_5(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Section Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -5874,7 +5835,7 @@ def generate_section_header_slide_9(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -6044,7 +6005,7 @@ def generate_section_header_slide_10(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{main_title} - Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -6263,7 +6224,7 @@ def generate_section_header_slide_12(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -6352,7 +6313,7 @@ def generate_section_header_slide_15(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Gradient Colorful Title Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -6631,7 +6592,7 @@ def generate_section_header_slide_17(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Schedule Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -6786,7 +6747,7 @@ def generate_section_header_slide_18(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Section Slide - {section_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -6906,7 +6867,6 @@ def generate_content_slide(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     border_width="30px",
-    font_family="Arial, sans-serif",
     num_columns=3,
     num_rows=2,
 ):
@@ -6916,16 +6876,13 @@ def generate_content_slide(
     Parameters:
     - main_title: The main title of the slide
     - items: List of item titles (default is ["Your Title Here"] * 6)
-    - main_title_font_size: Font size for the main title
     - number_font_size: Font size for the item numbers
-    - item_title_font_size: Font size for the item titles
     - main_title_color: Color for the main title
     - number_color: Color for the item numbers
     - item_title_color: Color for the item titles
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - border_width: Width of the border around the slide
-    - font_family: Font family for the slide
     - num_columns: Number of columns in the grid
     - num_rows: Number of rows in the grid
     
@@ -6967,7 +6924,7 @@ def generate_content_slide(
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {accent_color};
             width: 100vw;
             height: 100vh;
@@ -7161,7 +7118,6 @@ def generate_comparison_slide(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     divider_color="#555555",
-    font_family="Arial, sans-serif",
 ):
     """
     Generates an HTML slide with a main title and two comparison columns with icons.
@@ -7186,7 +7142,6 @@ def generate_comparison_slide(
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - divider_color: Color for the divider line
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the comparison slide
@@ -7229,7 +7184,7 @@ def generate_comparison_slide(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color};
             color: {title_color};
             overflow: hidden;
@@ -7382,7 +7337,6 @@ def generate_process_slide(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     border_width="30px",
-    font_family="Arial, sans-serif",
     box_width="380px",
     box_height="350px",
     box_border_radius="5px",
@@ -7407,7 +7361,6 @@ def generate_process_slide(
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - border_width: Width of the border around the slide
-    - font_family: Font family for the slide
     - box_width: Width of each box
     - box_height: Height of each box
     - box_border_radius: Border radius for the boxes
@@ -7426,7 +7379,7 @@ def generate_process_slide(
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {accent_color};
             width: 100vw;
             height: 100vh;
@@ -7623,8 +7576,6 @@ def generate_process_steps_slide(
     title_color="#1F2937",
     text_heading_color="#374151",
     text_body_color="#6B7280",
-    font_family_title="'Playfair Display', serif",
-    font_family_body="'Montserrat', sans-serif",
     custom_css=""
 ):
     """
@@ -7651,12 +7602,11 @@ def generate_process_steps_slide(
     <title>{main_title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{ font-size: 16px; }}
         body, html {{
             margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: {font_family_body};
             overflow: hidden;
             background-color: {bg_color};
         }}
@@ -7683,7 +7633,7 @@ def generate_process_steps_slide(
         }}
         
         .main-title {{
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 6rem;
             font-weight: 500;
             font-style: italic;
@@ -7806,8 +7756,6 @@ def generate_image_cutout_list_slide(
     accent_color="#8A63D2",
     line_color="rgba(255, 255, 255, 0.2)",
     # --- Font chữ ---
-    font_family_title="'Source Serif 4', serif",
-    font_family_body="'Inter', sans-serif",
     custom_css=""
 ):
     """
@@ -7840,7 +7788,7 @@ def generate_image_cutout_list_slide(
     <title>Key Points Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600&family=Inter:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{ font-size: 16px; }}
         body, html {{
@@ -7917,7 +7865,7 @@ def generate_image_cutout_list_slide(
         }}
         
         .item-title {{
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 2.2rem;
             font-weight: 600;
             color: {text_heading_color};
@@ -7925,7 +7873,7 @@ def generate_image_cutout_list_slide(
         }}
         
         .item-description {{
-            font-family: {font_family_body};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 1.6rem;
             color: {text_color};
             line-height: 1.6;
@@ -7957,444 +7905,6 @@ def generate_image_cutout_list_slide(
 
 
 
-def generate_body_slide2(
-    # Main parameters
-    main_title="MainTitle",
-    
-    # Content parameters
-    subtitle1="SubTitle1",
-    content1="Content1",
-    subtitle2="SubTitle2",
-    content2="Content2",
-    subtitle3="SubTitle3",
-    content3="Content3",
-    
-    # Style parameters
-    main_bg_color="#ffffff",  # White background
-    accent_color="#d5e8b9",   # Light green accent
-    title_color="#333333",
-    subtitle_color="#333333",
-    content_color="#555555",
-    font_family="'Inter', sans-serif",
-    image_url="Image/generate_body_slide2/Default_1.png",
-
-    # Icon parameters - SVG paths for each icon
-    icon1="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M12 2v6M12 18v4M14.5 8a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM16.5 13a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0z"></path></svg>""",  # Lightbulb
-    icon2="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>""",  # Target
-    icon3="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>""",  # Bar chart
-):
-    """
-    Generates an HTML slide with a main title, large image on the left,
-    and three content sections with icons on the right - Full viewport design.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    
-    Content parameters:
-    - subtitle1, subtitle2, subtitle3: Subtitles for each content section
-    - content1, content2, content3: Content text for each section
-    
-    Style parameters:
-    - main_bg_color: Background color for the slide
-    - accent_color: Color for accents and icon backgrounds
-    - title_color: Color for the main title
-    - subtitle_color: Color for subtitles
-    - content_color: Color for content text
-    - title_font_size: Font size for the main title
-    - subtitle_font_size: Font size for subtitles
-    - content_font_size: Font size for content text
-    - font_family: Font family for the slide
-    
-    Icon parameters:
-    - icon1, icon2, icon3: SVG code for each icon
-    
-    Returns:
-    - HTML code for the slide
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image with Icons Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Full viewport accent background */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            padding: 3rem 4rem; /* 48px 64px */
-            position: relative;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
-        }}
-        
-        .title-accent {{
-            width: 2.5rem; /* 40px - increased size */
-            height: 2.5rem; /* 40px */
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            margin-right: 1.25rem; /* 20px */
-            border-radius: 0.5rem; /* 8px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-        }}
-        
-        .main-title {{
-            font-size: 3.5rem; 
-            color: {title_color};
-            font-weight: 600;
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1;
-            gap: 2.5rem; /* 40px */
-        }}
-        
-        .image-section {{
-            flex: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem; /* 24px */
-            background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .image-frame {{
-            width: 100%;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 0.75rem; /* 12px */
-        }}
-        
-        .image-accent {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 95%;
-            height: 95%;
-            border: 0.5rem solid {accent_color}; /* 8px */
-            border-radius: 0.75rem; /* 12px */
-            z-index: 1;
-            transition: all 0.3s ease;
-        }}
-        
-        .image-section:hover .image-accent {{
-            border-width: 0.75rem; /* 12px - expand on hover */
-            background: linear-gradient(45deg, {accent_color}20, transparent);
-        }}
-        
-        .image-container {{
-            position: absolute;
-            top: 1.5rem; /* 24px */
-            left: 1.5rem; /* 24px */
-            width: 95%;
-            height: 95%;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            overflow: hidden;
-            z-index: 2;
-            border-radius: 0.75rem; /* 12px */
-            transition: transform 0.3s ease;
-        }}
-        
-        .image-section:hover .image-container {{
-            transform: scale(1.02); /* subtle zoom on hover */
-        }}
-        
-        .image-container img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 0.75rem; /* 12px */
-            transition: transform 0.3s ease;
-        }}
-        
-        .image-section:hover .image-container img {{
-            transform: scale(1.05); /* image zoom effect */
-        }}
-        
-        .content-section {{
-            flex: 3;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 2rem; /* 32px */
-        }}
-        
-        .content-item {{
-            display: flex;
-            align-items: flex-start;
-            background: rgba(255,255,255,0.9);
-            padding: 1.5rem; /* 24px */
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border-left: 0.25rem solid {accent_color}; /* 4px */
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .content-item:hover {{
-            transform: translateX(0.5rem); /* 8px horizontal shift */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
-            border-left-width: 0.5rem; /* 8px - expand border */
-        }}
-        
-        .content-item::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0.25rem; /* 4px */
-            height: 100%;
-            background: linear-gradient(to bottom, {accent_color}, rgba(213, 232, 185, 0.5));
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-            transform-origin: top;
-        }}
-        
-        .content-item:hover::before {{
-            transform: scaleY(1);
-        }}
-        
-        .icon-container {{
-            width: 4rem; /* 64px - increased size */
-            height: 4rem; /* 64px */
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 1.5rem; /* 24px */
-            flex-shrink: 0;
-            border-radius: 0.75rem; /* 12px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .icon-container {{
-            transform: scale(1.1) rotate(5deg); /* hover effect */
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-        }}
-        
-        .icon-container svg {{
-            width: 2rem; /* 32px - increased size */
-            height: 2rem; /* 32px */
-            stroke: #333333;
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .icon-container svg {{
-            stroke: #ffffff;
-            transform: scale(1.1);
-        }}
-        
-        .content-text {{
-            flex: 1;
-        }}
-        
-        .subtitle {{
-            font-size: 2.2rem;
-            color: {subtitle_color};
-            margin: 0 0 0.75rem 0; /* 12px */
-            font-weight: 600;
-            position: relative;
-        }}
-        
-        .subtitle::after {{
-            content: '';
-            position: absolute;
-            bottom: -0.25rem; /* -4px */
-            left: 0;
-            width: 2rem; /* 32px */
-            height: 0.125rem; /* 2px */
-            background: {accent_color};
-            border-radius: 0.0625rem; /* 1px */
-            transition: width 0.3s ease;
-        }}
-        
-        .content-item:hover .subtitle::after {{
-            width: 4rem; /* 64px - expand underline on hover */
-        }}
-        
-        .content {{
-            font-size: 1.5rem;
-            color: {content_color};
-            margin: 0;
-            line-height: 1.6;
-            padding: 0.75rem; /* 12px */
-            background: rgba(213, 232, 185, 0.1);
-            border-radius: 0.5rem; /* 8px */
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .content {{
-            background: rgba(213, 232, 185, 0.2);
-            transform: translateY(-0.125rem); /* -2px */
-        }}
-        
-        /* Responsive design */
-        @media screen and (max-width: 75rem) {{
-            body {{
-                padding: 3rem 5rem;
-            }}
-            
-            .content-layout {{
-                flex-direction: column;
-                gap: 2rem;
-            }}
-            
-            .image-section {{
-                flex: none;
-                height: 20rem;
-            }}
-            
-            .content-section {{
-                flex: none;
-                gap: 1.5rem;
-            }}
-        }}
-        
-        @media screen and (max-width: 50rem) {{
-            body {{
-                padding: 2rem 3rem;
-            }}
-            
-            .slide-inner-container {{
-                padding: 2rem 3rem;
-            }}
-            
-            .content-item {{
-                padding: 1rem;
-            }}
-            
-            .icon-container {{
-                width: 3rem;
-                height: 3rem;
-                margin-right: 1rem;
-            }}
-            
-            .icon-container svg {{
-                width: 1.5rem;
-                height: 1.5rem;
-            }}
-            
-            .main-title {{
-                font-size: 2rem;
-            }}
-            
-            .subtitle {{
-                font-size: 1.25rem;
-            }}
-            
-            .content {{
-                font-size: 1rem;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Image Section -->
-            <div class="image-section">
-                <div class="image-frame">
-                    <div class="image-accent"></div>
-                    <div class="image-container">
-                        <img src="{image_url}" alt="Slide image">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Content Section -->
-            <div class="content-section">
-                <!-- Content Item 1 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon1}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle1}</h3>
-                        <p class="content">{content1}</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 2 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon2}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle2}</h3>
-                        <p class="content">{content2}</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 3 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon3}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle3}</h3>
-                        <p class="content">{content3}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
-
 
 
 def generate_body_slide4(
@@ -8416,7 +7926,6 @@ def generate_body_slide4(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide4/Default_1.png",
     image_url_2="Image/generate_body_slide4/Default_2.png",
     image_url_3="Image/generate_body_slide4/Default_3.png"
@@ -8442,7 +7951,6 @@ def generate_body_slide4(
     - title_font_size: Font size for the main title
     - content_font_size: Font size for content text
     - subtitle_font_size: Font size for subtitles
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the slide
@@ -8469,7 +7977,7 @@ def generate_body_slide4(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -8798,7 +8306,6 @@ def generate_body_slide5(
     title_color="#333333",
     subtitle_color="#6b9d34", # Green color for subtitles
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide5/Default_1.png",
     image_url_2="Image/generate_body_slide5/Default_2.png",
     image_url_3="Image/generate_body_slide5/Default_3.png",
@@ -8824,7 +8331,6 @@ def generate_body_slide5(
     - title_font_size: Font size for the main title
     - subtitle_font_size: Font size for subtitles
     - content_font_size: Font size for content text
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the slide
@@ -8851,7 +8357,7 @@ def generate_body_slide5(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -9190,7 +8696,6 @@ def generate_body_slide7(
     subtitle_color="#333333",
     content_color="#4a90a0",  # Teal/blue color for content
     divider_color="#d5e8b9",  # Light green divider
-    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide7/Default_1.png",
     image_url_2="Image/generate_body_slide7/Default_2.png",
     image_url_3="Image/generate_body_slide7/Default_3.png",
@@ -9217,7 +8722,6 @@ def generate_body_slide7(
     - title_font_size: Font size for the main title
     - subtitle_font_size: Font size for the subtitle
     - content_font_size: Font size for content text
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the slide
@@ -9244,7 +8748,7 @@ def generate_body_slide7(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -9514,7 +9018,6 @@ def generate_body_slide10(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     image_url="Image/generate_body_slide10/Default_1.png",
 
     # Icon parameters - SVG paths for each icon
@@ -9548,7 +9051,7 @@ def generate_body_slide10(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -9861,7 +9364,6 @@ def generate_body_slide11(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     box_height="15.625rem",
     
     # Icon parameters - SVG paths for each icon
@@ -9895,7 +9397,7 @@ def generate_body_slide11(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -10134,7 +9636,6 @@ def generate_body_slide12(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide12/Default_1.png",
     image_url_2="Image/generate_body_slide12/Default_2.png",
     image_url_3="Image/generate_body_slide12/Default_3.png",
@@ -10166,7 +9667,7 @@ def generate_body_slide12(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -10424,7 +9925,6 @@ def generate_body_slide15(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     image_url="Image/generate_body_slide15/Default_1.png",  # Default image path
 ):
     """
@@ -10453,7 +9953,7 @@ def generate_body_slide15(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Accent color cho toàn màn hình */
             width: 100vw;
             height: 100vh;
@@ -10643,16 +10143,13 @@ def generate_body_slide18(
     custom_left_icon="",  # Custom SVG code if left_icon is "custom"
     custom_right_icon="",  # Custom SVG code if right_icon is "custom"
     # Style parameters (đã chuyển sang rem cho consistency)
-    main_title_font_size="3rem",          # THAY ĐỔI: 48px -> 3rem
-    column_title_font_size="2.25rem",     # THAY ĐỔI: 36px -> 2.25rem
-    text_font_size="1.375rem",            # THAY ĐỔI: 22px -> 1.375rem
+          # THAY ĐỔI: 22px -> 1.375rem
     title_color="#555555",
     text_color="#555555",
     icon_color="#a2c4c9",
     background_color="#ffffff",
     accent_color="#a2c4c9",
     divider_color="#555555",
-    font_family="Arial, sans-serif"
 ):
     """
     Generates an HTML slide with a main title and two comparison columns with icons.
@@ -10677,7 +10174,6 @@ def generate_body_slide18(
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - divider_color: Color for the divider line
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the comparison slide
@@ -10720,7 +10216,7 @@ def generate_body_slide18(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color};
             color: {text_color};
             overflow: hidden;
@@ -10872,7 +10368,6 @@ def generate_body_slide19(
     right_text_color="#555555",
     border_color="#a2c4c9",
     icon_color="#a2c4c9",
-    font_family="Arial, sans-serif",
 ):
     """
     Generates an HTML slide with two columns. All size parameters are now in REM.
@@ -10927,7 +10422,7 @@ def generate_body_slide19(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {border_color};
             color: {right_text_color};
             overflow: hidden;
@@ -11124,7 +10619,6 @@ def generate_body_slide20(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     divider_color="#555555",
-    font_family="Arial, sans-serif",
 ):
     """
     Generates an HTML slide with two comparison columns. All size parameters are now in REM.
@@ -11168,7 +10662,7 @@ def generate_body_slide20(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color};
             color: {text_color};
             overflow: hidden;
@@ -11346,7 +10840,6 @@ def generate_main_points_slide(
     point2_description="Briefly elaborate on what you want to discuss.",
     point3_title="ADD A MAIN POINT",
     point3_description="Briefly elaborate on what you want to discuss.",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a completely static main points slide with three columns featuring environmental icons.
@@ -11359,7 +10852,7 @@ def generate_main_points_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Points Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -11370,7 +10863,7 @@ def generate_main_points_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: #111827;
             overflow: hidden;
             position: relative;
@@ -11801,7 +11294,6 @@ def generate_elegant_points_slide(
             "description": "Briefly elaborate on the topic you want to discuss."
         }
     ],
-    font_family="'Be Vietnam Pro', sans-serif",
     bg_color="#FDFCFB",
     card_bg_color="#FFFFFF",
     title_color="#4E443F",
@@ -11842,14 +11334,14 @@ def generate_elegant_points_slide(
     <title>Elegant Points Slide - 1920x1080</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             color: {text_color};
             overflow: hidden;
@@ -11970,7 +11462,6 @@ def generate_corporate_content_slide(
         { "title": "Second Key Point", "description": "And some text to elaborate on the second main idea of your slide." },
         { "title": "Third Key Point", "description": "But remember not to overload your slides with too much content." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     accent_panel_color="#6366F1",
     title_color="#FFFFFF",
@@ -12012,14 +11503,14 @@ def generate_corporate_content_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate Content Slide - Bright Design</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
         }}
@@ -12122,7 +11613,6 @@ def generate_split_content_slide(
         { "icon_name": "bulb", "title": "Title One", "description": "Description for the first column goes here. Elaborate on your point with clear and concise text." },
         { "icon_name": "target", "title": "Title Two", "description": "Description for the second column. This layout is perfect for comparing two ideas side-by-side." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_gradient_start="#0F172A",
     bg_gradient_end="#1E293B",
     title_color="#FFFFFF",
@@ -12160,14 +11650,14 @@ def generate_split_content_slide(
     <title>Split Content Slide - High-Tech Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end});
             color: {text_color};
             overflow: hidden;
@@ -12289,7 +11779,6 @@ def generate_corporate_multicolumn_slide(
         { "title": "Blue", "description": "Is the colour of the clear sky and the deep sea." },
         { "title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#8B5CF6",
     shadow_color="#7C3AED",
     text_color="#4B5563",
@@ -12308,10 +11797,10 @@ def generate_corporate_multicolumn_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Multi-Column Content Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 18px; }}
-        body, html {{ height: 100vh; width: 100vw; font-family: {font_family}; overflow: hidden; background-color: #FFFFFF; }}
+        body, html {{ height: 100vh; width: 100vw; font-family: {DEFAULT_FONT_FAMILY}; overflow: hidden; background-color: #FFFFFF; }}
         .slide-container {{ width: 100%; height: 100%; display: flex; position: relative; border-top: 6px solid #F3F4F6; }}
         .content-area {{ flex: 2; padding: 4rem 5rem; display: flex; flex-direction: column; justify-content: center; }}
         .color-panel {{ flex: 1; position: relative; background: linear-gradient(135deg, {accent_color} 0%, {shadow_color} 100%); clip-path: url(#angled-multi-divider); }}
@@ -12358,7 +11847,6 @@ def generate_corporate_grid_slide(
         { "title": "title", "description": "description." },
         { "title": "title", "description": "description." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#22C55E",
     shadow_color="#16A34A",
     text_color="#6B7280",
@@ -12395,14 +11883,14 @@ def generate_corporate_grid_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grid Content Slide - Adjusted</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 18px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: #FFFFFF;
         }}
@@ -12531,7 +12019,6 @@ def generate_corporate_grid_slide(
 #     icon_color="#FFFFFF",
 #     content_bg_color="#FFFFFF",
 #     content_text_color="#1a4b8c",
-#     font_family="'Inter', sans-serif",
 #     show_border=False,
 #     border_opacity=0.25,
 #     section_spacing="30px",
@@ -12553,7 +12040,6 @@ def generate_corporate_grid_slide(
 #     :param content_text_color: Text color for content sections (hex code)
 #     :param title_font_size: Font size for the main title
 #     :param content_font_size: Font size for section content text
-#     :param font_family: Font family for all text elements
 #     :param show_border: Whether to show the dashed border frame
 #     :param border_opacity: Opacity of the border frame (0.0 to 1.0)
 #     :param section_spacing: Vertical spacing between content sections
@@ -12610,14 +12096,14 @@ def generate_corporate_grid_slide(
 #     <meta charset="UTF-8">
 #     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 #     <title>{main_title}</title>
-#     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+#     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 #     <style>
 #         body, html {{
 #             margin: 0;
 #             padding: 0;
 #             height: 100%;
 #             width: 100%;
-#             font-family: {font_family};
+#             font-family: {DEFAULT_FONT_FAMILY};
 #             overflow: hidden;
 #         }}
         
@@ -12839,7 +12325,6 @@ def generate_vision_mission_slide(
     text_color="#FFFFFF",
     vision_number_color="rgba(74, 123, 200, 0.3)",
     mission_number_color="rgba(26, 75, 140, 0.3)",
-    font_family="'Inter', sans-serif",
     show_border=True,
     border_color="#1a4b8c",
     border_opacity=0.4,
@@ -12862,7 +12347,6 @@ def generate_vision_mission_slide(
     :param number_font_size: Font size for large background numbers
     :param vision_number_color: Color of background numbers in vision section (rgba)
     :param mission_number_color: Color of background numbers in mission section (rgba)
-    :param font_family: Font family for all text elements
     :param show_border: Whether to show the dashed border frame
     :param border_color: Color of the border frame (hex code)
     :param border_opacity: Opacity of the border frame (0.0 to 1.0)
@@ -12914,14 +12398,14 @@ def generate_vision_mission_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{vision_title} & {mission_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body, html {{
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background: linear-gradient(135deg, #e8f4f8 0%, #d1e7dd 100%);
         }}
@@ -13205,7 +12689,6 @@ def generate_service_roadmap_slide(
     card_bg_color="#FFFFFF",
     card_text_color="#2E5BBA",
     card_title_color="#1A4480",
-    font_family="'Inter', sans-serif",
     show_border=True,
     border_color="rgba(255, 255, 255, 0.3)",
     show_decorative_triangles=True,
@@ -13230,7 +12713,6 @@ def generate_service_roadmap_slide(
     :param title_font_size: Font size for the main title
     :param card_title_font_size: Font size for card titles
     :param card_content_font_size: Font size for card content text
-    :param font_family: Font family for all text elements
     :param show_border: Whether to show the dashed border frame
     :param border_color: Color of the border frame (rgba with transparency)
     :param show_decorative_triangles: Whether to show decorative triangle elements
@@ -13281,14 +12763,14 @@ def generate_service_roadmap_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body, html {{
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -13525,7 +13007,6 @@ def generate_financial_projections_slide_dark(
     border_color="rgba(255, 255, 255, 0.3)",
     
     # Typography
-    font_family="'Inter', sans-serif",
     main_title_font_weight="700",
     main_title_letter_spacing="0.05em",
     card_title_font_weight="700",
@@ -13573,7 +13054,6 @@ def generate_financial_projections_slide_dark(
     :param card_title_color: Color of the card titles
     :param card_content_color: Color of the card content text
     :param border_color: Color of the border elements
-    :param font_family: Font family for all text elements
     :param main_title_font_size: Font size of the main title
     :param main_title_font_weight: Font weight of the main title
     :param main_title_letter_spacing: Letter spacing of the main title
@@ -13645,7 +13125,7 @@ def generate_financial_projections_slide_dark(
         
         body, html {{
             height: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -13824,7 +13304,6 @@ def generate_minimalist_tech_list_slide(
         "But remember not to overload your slides with content"
     ],
     concluding_text="Your audience will listen to you or read the content, but won’t do both.",
-    font_family="'Nunito', 'Inter', sans-serif",
     sky_top_color="#ABB0EA",
     sky_bottom_color="#A2CFED",
     grid_dot_color="rgba(0, 0, 0, 0.05)",
@@ -13868,11 +13347,11 @@ def generate_minimalist_tech_list_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bright Tech List Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body, html {{
-            height: 100vh; width: 100vw; font-family: {font_family};
+            height: 100vh; width: 100vw; font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {sky_top_color};
             background-image: 
@@ -13973,7 +13452,6 @@ def generate_split_layout_list_slide(
             "description": "Briefly elaborate on this key point to provide more details and context for your audience."
         }
     ],
-    font_family="'Be Vietnam Pro', sans-serif",
     left_bg_color="#6F6254",
     right_bg_color="#F5F0E8",
     light_text_color="#F5F0E8",
@@ -14025,13 +13503,13 @@ def generate_split_layout_list_slide(
     <title>Split-Layout List Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh; width: 100vw;
-            font-family: {font_family}; overflow: hidden;
+            font-family: {DEFAULT_FONT_FAMILY}; overflow: hidden;
         }}
         .slide-container {{ width: 100%; height: 100%; display: flex; }}
         .left-column {{
@@ -14105,7 +13583,6 @@ def generate_reference_slide(
     ],
     # ĐÃ THAY ĐỔI: Đặt một URL ảnh mặc định chất lượng cao, hoạt động tốt
     image_url="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop",
-    font_family="'Be Vietnam Pro', sans-serif",
     bg_color="#FFFFFF",
     text_color="#1F2937",
     accent_color="#3B82F6"
@@ -14132,14 +13609,14 @@ def generate_reference_slide(
     <title>Reference Slide - Enhanced</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
 
@@ -14254,7 +13731,6 @@ def generate_icon_list_slide(
         { "icon_name": "star", "title": "Add a main point", "description": "Briefly elaborate on what you want to discuss." },
         { "icon_name": "thumbs-up", "title": "Add a main point", "description": "Briefly elaborate on what you want to discuss." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#FFFFFF",
     main_title_color="#111827",
     point_title_color="#1F2937",
@@ -14297,14 +13773,14 @@ def generate_icon_list_slide(
     <title>Icon List Slide - 1920x1080</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -14433,8 +13909,6 @@ def generate_flexible_columns_slide(
             "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."
         }
     ],
-    font_family_heading="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     text_color="#34495E",
     bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png"
 ):
@@ -14461,7 +13935,7 @@ def generate_flexible_columns_slide(
     <title>Minimalist Columns Slide - Positioned Higher</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         * {{
@@ -14489,7 +13963,7 @@ def generate_flexible_columns_slide(
         body#body.body, html#html.html {{
             height: 100vh !important;
             width: 100vw !important;
-            font-family: {font_family_body} !important;
+            font-family: {DEFAULT_FONT_FAMILY} !important;
             color: {text_color} !important;
             overflow: hidden !important;
             background-color: #F8F8F8 !important;
@@ -14513,7 +13987,7 @@ def generate_flexible_columns_slide(
         }}
 
         .main-title {{
-            font-family: 'Patrick Hand', cursive;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: clamp(4rem, 8vw, 5rem); 
             text-transform: uppercase;
             margin-bottom: 10rem; 
@@ -14574,8 +14048,6 @@ def generate_text_with_image_slide(
     title="Tiltle Tiltle TiltleTiltle Tiltle",
     text_content="Content.",
     image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80",
-    font_family_heading="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     text_color="#34495E",
     bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png",
     doodle_border_url="https://i.imgur.com/Qy2O1vN.png"
@@ -14592,14 +14064,14 @@ def generate_text_with_image_slide(
     <title>Text and Image Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family_body};
+            font-family: {DEFAULT_FONT_FAMILY};
             color: {text_color};
             overflow: hidden;
             background-color: #F8F8F8;
@@ -14632,7 +14104,7 @@ def generate_text_with_image_slide(
         }}
 
         .title {{
-            font-family: {font_family_heading};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: clamp(3rem, 4vw, 4rem);
             font-weight: 400;
             text-transform: uppercase;
@@ -14693,7 +14165,6 @@ def generate_geometric_split_content_slide(
             "description": "Is the color of ebony and of outer space. It has been the symbolic color of elegance, solemnity and authority."
         }
     ],
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -14720,14 +14191,14 @@ def generate_geometric_split_content_slide(
     <title>Split Content Slide - Final Fix</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -14836,7 +14307,6 @@ def generate_geometric_split_content_slide_2(
             "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."
         }
     ],
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -14863,14 +14333,14 @@ def generate_geometric_split_content_slide_2(
     <title>Multi-Column Slide - Safe Layout</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -14964,7 +14434,6 @@ def generate_geometric_image_content_slide(
     image_url="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2574&auto=format&fit=crop",
     main_title="A picture is worth a <span class='highlight'>thousand</span> words",
     description="A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.",
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -14991,14 +14460,14 @@ def generate_geometric_image_content_slide(
     <title>Image Content Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -15116,7 +14585,6 @@ def generate_geometric_grid_slide(
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ],
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -15141,14 +14609,14 @@ def generate_geometric_grid_slide(
     <title>Grid Content Slide - Faded Shapes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -15249,8 +14717,6 @@ def generate_memphis_content_slide(
         "But remember not to overload your slides with content"
     ],
     concluding_text="Your audience will listen to you or read the content, but won't do both.",
-    font_family_title="'Lora', serif",
-    font_family_body="'Source Code Pro', monospace",
     top_panel_bg="#19114B",
     bottom_panel_bg="#403271",
     palette=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
@@ -15265,7 +14731,7 @@ def generate_memphis_content_slide(
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Content Slide - 20/80 Layout</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
@@ -15274,11 +14740,11 @@ def generate_memphis_content_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 75rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 3rem; font-weight: 600; text-align: center; }}
-        .content-list {{ font-family: {font_family_body}; list-style: none; margin-bottom: 3rem; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 3rem; font-weight: 600; text-align: center; }}
+        .content-list {{ font-family: {DEFAULT_FONT_FAMILY}; list-style: none; margin-bottom: 3rem; }}
         .content-list li {{ font-size: 2rem; line-height: 1.7; padding-left: 2.5rem; position: relative; margin-bottom: 0.5rem; }}
         .content-list li::before {{ content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid {palette[1]}; }}
-        .concluding-text {{ font-family: {font_family_body}; font-size: 2rem; line-height: 1.7; max-width: 60ch; }}
+        .concluding-text {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2rem; line-height: 1.7; max-width: 60ch; }}
         .shape {{ position: absolute; }}
         .shape-tl-1 {{ width: 4rem; height: 4rem; border: 2px dashed {palette[0]}; top: 2rem; left: 2rem; transform: rotate(-25deg); }}
         .shape-tl-2 {{ width: 0; height: 0; border-left: 1.5rem solid transparent; border-right: 1.5rem solid transparent; border-bottom: 2.5rem solid {palette[0]}; top: 3.5rem; left: 7rem; transform: rotate(20deg); opacity: 0.8; }}
@@ -15315,8 +14781,6 @@ def generate_memphis_multicolumn_slide(
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ],
-    font_family_title="'Lora', serif",
-    font_family_body="'Source Code Pro', monospace",
     top_panel_bg="#19114B",
     bottom_panel_bg="#403271",
     palette=["#F43F5E", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
@@ -15331,7 +14795,7 @@ def generate_memphis_multicolumn_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Multi-Column Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
@@ -15340,10 +14804,10 @@ def generate_memphis_multicolumn_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 80rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 3.5rem; font-weight: 600; text-align: center; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 3.5rem; font-weight: 600; text-align: center; }}
         .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 3rem 5rem; }}
-        .column-title {{ font-family: {font_family_body}; font-size: 2.5rem; font-weight: 600; margin-bottom: 1.5rem; }}
-        .column-description {{ font-family: {font_family_body}; font-size: 1.75rem; line-height: 1.6; }}
+        .column-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2.5rem; font-weight: 600; margin-bottom: 1.5rem; }}
+        .column-description {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.75rem; line-height: 1.6; }}
         .shape {{ position: absolute; }} .pentagon {{ clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
         .shape-tl-1 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.4; top: 1rem; left: 8rem; }}
         .shape-tl-2 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: -1rem; left: 1rem; border-radius: 50%; opacity: 0.8; }}
@@ -15383,8 +14847,6 @@ def generate_memphis_grid_slide(
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ],
-    font_family_title="'Lora', serif",
-    font_family_body="'Source Code Pro', monospace",
     top_panel_bg="#19114B",
     bottom_panel_bg="#403271",
     palette=["#F43F5E", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
@@ -15401,7 +14863,7 @@ def generate_memphis_grid_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Grid Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
@@ -15410,10 +14872,10 @@ def generate_memphis_grid_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 80rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 2.25rem; font-weight: 600; text-align: center; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2.25rem; font-weight: 600; text-align: center; }}
         .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 3rem 4rem; }}
-        .item-title {{ font-family: {font_family_body}; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }}
-        .item-description {{ font-family: {font_family_body}; font-size: 1.1rem; line-height: 1.6; }}
+        .item-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }}
+        .item-description {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.1rem; line-height: 1.6; }}
         .shape {{ position: absolute; }} .pentagon {{ clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
         .shape-tl-1 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.4; top: 1rem; left: 8rem; }}
         .shape-tl-2 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: -1rem; left: 1rem; border-radius: 50%; opacity: 0.8; }}
@@ -15503,7 +14965,7 @@ def generate_company_mission_slide(
         }}
 
         body {{
-            font-family: 'Arial', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             display: flex;
             justify-content: center;
@@ -15657,7 +15119,6 @@ def generate_methodology_slide(
     quantitative_text="Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.",
     image_url="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2340&auto=format&fit=crop",
     bg_color="#F5F5F5",
-    font_family="'Inter', sans-serif",
     custom_css=""
 ):
     """
@@ -15673,7 +15134,6 @@ def generate_methodology_slide(
         quantitative_text: Description text for quantitative methods
         image_url: URL for the right side professional image
         bg_color: Background color
-        font_family: Font family for the text
         custom_css: Additional custom CSS
     
     Returns:
@@ -15694,7 +15154,7 @@ def generate_methodology_slide(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -16116,7 +15576,7 @@ def generate_planning_phase_slide(
         body {{
             width: 1920px;
             height: 1080px;
-            font-family: 'Arial', 'Segoe UI', Tahoma, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {bg_color};
             color: white;
             overflow: hidden;
@@ -16290,7 +15750,6 @@ def generate_timeline_slide(
     bg_color="#1E1E2E",
     accent_color="#F43F5E",
     text_color="#FFFFFF",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a horizontal timeline slide to visualize progress or history.
@@ -16327,10 +15786,10 @@ def generate_timeline_slide(
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background: {bg_color}; overflow: hidden; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background: {bg_color}; overflow: hidden; }}
         </style>
     </head>
     <body>
@@ -16358,7 +15817,6 @@ def generate_quote_slide(
     bg_color="#FAF9F6",
     quote_color="#18181B",
     accent_color="#EA580C",
-    font_family="Playfair Display"
 ):
     """
     Generates an elegant quote slide centered on screen.
@@ -16367,15 +15825,15 @@ def generate_quote_slide(
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            html, body {{ width: 1920px; height: 1080px; font-family: {font_family}, serif; background: {bg_color}; overflow: hidden; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}, serif; background: {bg_color}; overflow: hidden; }}
         </style>
     </head>
     <body>
         <!-- Decorative quotation mark -->
-        <div style="position: absolute; top: 180px; left: 200px; font-size: 300px; color: {accent_color}; opacity: 0.1; font-family: {font_family}, serif; line-height: 1; pointer-events: none;">"</div>
+        <div style="position: absolute; top: 180px; left: 200px; font-size: 300px; color: {accent_color}; opacity: 0.1; font-family: {DEFAULT_FONT_FAMILY}, serif; line-height: 1; pointer-events: none;">"</div>
         
         <!-- Main quote text -->
         <h1 style="position: absolute; top: 300px; left: 300px; width: 1320px; font-size: 80px; font-weight: 700; color: {quote_color}; line-height: 1.3; font-style: italic; text-align: center;">
@@ -16386,10 +15844,10 @@ def generate_quote_slide(
         <div style="position: absolute; top: 610px; left: 910px; width: 100px; height: 4px; background: {accent_color};"></div>
         
         <!-- Author name -->
-        <h3 style="position: absolute; top: 654px; left: 300px; width: 1320px; font-size: 36px; font-weight: 700; color: {quote_color}; font-family: Inter, sans-serif; text-align: center;">{author}</h3>
+        <h3 style="position: absolute; top: 654px; left: 300px; width: 1320px; font-size: 36px; font-weight: 700; color: {quote_color}; font-family: {DEFAULT_FONT_FAMILY}; text-align: center;">{author}</h3>
         
         <!-- Author role -->
-        <p style="position: absolute; top: 708px; left: 300px; width: 1320px; font-size: 24px; color: #71717A; font-family: Inter, sans-serif; text-align: center;">{role}</p>
+        <p style="position: absolute; top: 708px; left: 300px; width: 1320px; font-size: 24px; color: #71717A; font-family: {DEFAULT_FONT_FAMILY}; text-align: center;">{role}</p>
         
         <div style="position: absolute; top: 60px; left: 60px; width: 1800px; height: 960px; border: 2px solid {quote_color}; opacity: 0.1; pointer-events: none;"></div>
     </body>
@@ -16431,10 +15889,10 @@ def generate_classic_content_slide(
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            html, body {{ width: 1920px; height: 1080px; font-family: 'Inter', sans-serif; background: {bg_color}; overflow: hidden; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background: {bg_color}; overflow: hidden; }}
         </style>
     </head>
     <body>
@@ -16484,7 +15942,6 @@ def generate_team_slide(
             "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop"
         }
     ],
-    font_family="'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
     accent_bg_color="#14B8A6",
     main_bg_color="#F8FAFC",
     title_color="#FFFFFF",
@@ -16516,14 +15973,14 @@ def generate_team_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Slide - Dynamic Design</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {main_bg_color};
         }}
@@ -16644,7 +16101,6 @@ def generate_colorful_team_grid_slide(
         { "name": "Aisha Khan", "role": "Project Manager", "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop", "color": "#D93B58" },
         { "name": "Leo Martinez", "role": "Marketing Head", "image_url": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop", "color": "#F3C314" }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     title_color="#111827",
     card_text_color="#1F2937"
@@ -16674,14 +16130,14 @@ def generate_colorful_team_grid_slide(
     <title>Team Members Slide - Spacious Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -16813,8 +16269,6 @@ def generate_corporate_team_slide(
         { "name": "Aisha Khan", "role": "Content Strategist", "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop" },
         { "name": "Leo Martinez", "role": "Illustrator", "image_url": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop" }
     ],
-    font_family_heading="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     text_color="#4A403A",
     role_color="#6B7280",
     bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png"
@@ -16828,7 +16282,7 @@ def generate_corporate_team_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Team Presentation - Polaroid Style</title>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
@@ -16848,7 +16302,7 @@ def generate_corporate_team_slide(
         body#body.body, html#html.html {{
             height: 100vh !important; 
             width: 100vw !important; 
-            font-family: {font_family_body} !important; 
+            font-family: {DEFAULT_FONT_FAMILY} !important; 
             overflow: hidden !important; 
             background-color: #F8F8F8 !important; 
             background-image: url('{bg_url}') !important;
@@ -16865,7 +16319,7 @@ def generate_corporate_team_slide(
             background: transparent !important;
         }}
         .title-section {{ width: 100%; display: flex; justify-content: center; align-items: center; padding: 4rem 4rem 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_heading}; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 400; color: {text_color}; margin: 0; text-align: center; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 400; color: {text_color}; margin: 0; text-align: center; }}
         .content-section {{ flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 0 4rem 4rem 4rem; }}
         .team-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; width: 100%; max-width: 80rem; }}
         .polaroid-card {{
@@ -16878,7 +16332,7 @@ def generate_corporate_team_slide(
         .polaroid-card:nth-child(4n+4) {{ transform: rotate(-2deg); }}
         .member-photo {{ width: 100%; display: block; margin-bottom: 1rem; }}
         .member-info {{ text-align: center; }}
-        .member-name {{ font-family: {font_family_heading}; font-size: 1.75rem; color: {text_color}; margin-bottom: 0.25rem; }}
+        .member-name {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.75rem; color: {text_color}; margin-bottom: 0.25rem; }}
         .member-role {{ font-size: 1rem; color: {role_color}; line-height: 1.5; }}
         @media (max-width: 48rem) {{ body, html {{ height: auto; min-height: 100vh; overflow-y: auto; }} }}
     </style>
@@ -16926,7 +16380,6 @@ def generate_thank_you_slide_3(
     ],
     
     # Typography
-    font_family="'Inter', sans-serif",
     main_title_font_size="6rem",
     main_title_font_weight="700",
     main_title_letter_spacing="0.1em",
@@ -16975,7 +16428,6 @@ def generate_thank_you_slide_3(
     :param contact_icon_color: Color of contact icons
     :param border_color: Color of the border frame
     :param geometric_shape_colors: List of colors for geometric shapes
-    :param font_family: Font family for all text elements
     :param main_title_font_size: Font size of the main title
     :param main_title_font_weight: Font weight of the main title
     :param main_title_letter_spacing: Letter spacing of the main title
@@ -17061,7 +16513,7 @@ def generate_thank_you_slide_3(
         
         body, html {{
             height: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -17284,7 +16736,6 @@ def generate_thank_you_slide_3(
 def generate_corporate_thank_you_slide(
         
     thanks_text="THANK YOU FOR WACTCHING!",
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#F97316",
     shadow_color="#EA580C",
     icon_color="#D1D5DB"
@@ -17323,14 +16774,14 @@ def generate_corporate_thank_you_slide(
     <title>Thank You Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: #FFFFFF;
         }}
@@ -17405,8 +16856,7 @@ def generate_business_thank_you_slide(
     main_text_color="#0056d2",
     subtitle_color="#666666",
     accent_color="#0056d2",
-    main_font="Arial, sans-serif",
-    subtitle_font="Arial, sans-serif"
+
 ):
     """
     Generate a clean business thank you slide with centered text and decorative side D-shapes.
@@ -17418,7 +16868,6 @@ def generate_business_thank_you_slide(
         subtitle_color (str): Color for subtitle text
         contact_color (str): Color for contact information
         accent_color (str): Color for decorative D-shapes
-        main_font (str): Font family for main text
         subtitle_font (str): Font family for subtitle and contact
     
     Returns:
@@ -17481,7 +16930,7 @@ def generate_business_thank_you_slide(
         }}
         
         .main-text {{
-            font-family: {main_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 160px;
             font-weight: 900;
             color: {main_text_color};
@@ -17491,7 +16940,7 @@ def generate_business_thank_you_slide(
         }}
         
         .subtitle {{
-            font-family: {subtitle_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {subtitle_color};
@@ -17549,7 +16998,6 @@ def generate_thank_you_slide_4(
     bg_gradient_to="#A8D8F0",
     text_color="#2C5F8D",
     bubble_bg_color="#FFFFFF",
-    font_family="Arial, sans-serif",
     show_speech_tail=True,
     custom_css=""
 ):
@@ -17562,7 +17010,6 @@ def generate_thank_you_slide_4(
     - bg_gradient_to: Background gradient end color (default: light blue)
     - text_color: Color of the thank you text
     - bubble_bg_color: Background color of the speech bubble
-    - font_family: Font family for the text (default: Arial, sans-serif)
     - show_speech_tail: Whether to show the speech bubble tail
     - custom_css: Additional custom CSS
     
@@ -17634,7 +17081,7 @@ def generate_thank_you_slide_4(
             font-size: 5rem;
             font-weight: 900;
             color: {text_color};
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             text-align: center;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -17780,7 +17227,6 @@ def generate_watercolor_thank_you_slide(
     text_color="#1e3a5f",
     watercolor_color="#4dd0e1",
     watercolor_opacity=0.6,
-    font_family="'Brush Script MT', cursive, serif",
     show_watercolor=True,
     custom_css=""
 ):
@@ -17793,7 +17239,6 @@ def generate_watercolor_thank_you_slide(
     - text_color: Text color (default: "#1e3a5f" - dark blue)
     - watercolor_color: Watercolor splash color (default: "#4dd0e1" - cyan)
     - watercolor_opacity: Opacity of watercolor effect (default: 0.6)
-    - font_family: Font for title (default: cursive/script style)
     - show_watercolor: Show watercolor background effect (default: True)
     - custom_css: Additional custom CSS
     
@@ -17873,7 +17318,7 @@ def generate_watercolor_thank_you_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Thank You Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -17908,7 +17353,7 @@ def generate_watercolor_thank_you_slide(
             }}
             
             .title {{
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 8rem;
                 color: {text_color};
                 font-weight: 700;
@@ -17997,7 +17442,7 @@ def generate_thank_you_slide_5(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geometric Thank You Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Kalam:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -18096,7 +17541,6 @@ def generate_thank_you_slide_6(
     text_color="#1a3a52",
     show_decorative_elements=True,
     show_olive_branches=True,
-    font_family="'Dancing Script', 'Brush Script MT', cursive",
     custom_css=""
 ):
     """
@@ -18108,7 +17552,6 @@ def generate_thank_you_slide_6(
         text_color (str): Text color (default: navy #1a3a52)
         show_decorative_elements (bool): Show sunburst patterns and dots
         show_olive_branches (bool): Show olive branch decorations
-        font_family (str): Font family for the main text
         custom_css (str): Additional custom CSS
     
     Returns:
@@ -18190,7 +17633,7 @@ def generate_thank_you_slide_6(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thank You Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {{
             margin: 0;
@@ -18216,7 +17659,7 @@ def generate_thank_you_slide_6(
             top: 460px;
             left: 0;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 160px;
             color: {text_color};
             font-weight: 400;
@@ -18246,7 +17689,6 @@ def generate_thank_you_slide_7(
     main_text="THANK YOU!",
     bg_color="#F5F3F0",
     text_color="#7A6350",
-    font_family="'Playfair Display', 'Georgia', serif"
 ):
     """
     Generate a thank you slide.
@@ -18255,7 +17697,6 @@ def generate_thank_you_slide_7(
         main_text (str): Main text to display (default: "THANK YOU!")
         bg_color (str): Background color (default: "#F5F3F0" - light warm gray)
         text_color (str): Text color (default: "#7A6350" - brown/taupe)
-        font_family (str): Font family for main text
     
     Returns:
         str: Complete HTML code for the slide
@@ -18267,14 +17708,14 @@ def generate_thank_you_slide_7(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thank You Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {{
             margin: 0;
             padding: 0;
             width: 1920px;
             height: 1080px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {bg_color};
             overflow: hidden;
             position: relative;
@@ -18285,7 +17726,7 @@ def generate_thank_you_slide_7(
             top: 390px;
             left: 0;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 130px;
             font-weight: 400;
             color: {text_color};
@@ -18316,7 +17757,6 @@ def generate_modern_contact_slide(
     contact_text_color="#333333",
     top_image_url="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
     bottom_image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop",
-    font_family="'Roboto', sans-serif",
     show_logo=True
 ):
     """
@@ -18334,7 +17774,6 @@ def generate_modern_contact_slide(
     :param contact_text_color: Color of the contact details on the white background.
     :param top_image_url: URL for the top-right background image (charts/abstract).
     :param bottom_image_url: URL for the bottom-right corner image (team/office).
-    :param font_family: Font family for all text elements.
     :param show_logo: Whether to display the logo placeholder.
     :return: A string containing the HTML code for the slide.
     """
@@ -18378,7 +17817,7 @@ def generate_modern_contact_slide(
         <title>{main_title}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -18390,7 +17829,7 @@ def generate_modern_contact_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 background-color: #FFFFFF;
             }}
@@ -18616,7 +18055,6 @@ def generate_closing_slide(
     bg_color="#FDFBF7",
     primary_color="#263238",
     accent_shape_color="#DDE6ED",
-    font_family="'DM Sans', sans-serif",
     show_sunburst=True,
     show_dots=True,
     custom_css=""
@@ -18632,7 +18070,6 @@ def generate_closing_slide(
     :param bg_color: Background color of the slide (hex code).
     :param primary_color: Color for the text and main graphic elements (hex code).
     :param accent_shape_color: Color for the decorative background shape behind the image (hex code).
-    :param font_family: Font family for the text.
     :param show_sunburst: Whether to show the sunburst/line graphic.
     :param show_dots: Whether to show the dot grid pattern.
     :param custom_css: Additional CSS to override styles.
@@ -18682,7 +18119,7 @@ def generate_closing_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Closing Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -18694,7 +18131,7 @@ def generate_closing_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 background-color: {bg_color};
                 color: {primary_color};
@@ -18866,7 +18303,6 @@ def generate_minimalist_thank_you_slide(
     primary_color="#59664D",
     secondary_color="#E8E8E8",
     bg_color="#FFFFFF",
-    font_family="'Arial', sans-serif",
     show_shapes=True,
     custom_css=""
 ):
@@ -18880,7 +18316,6 @@ def generate_minimalist_thank_you_slide(
     :param primary_color: Main accent color for text and small decorations (Hex code).
     :param secondary_color: Color for the large geometric background blocks (Hex code).
     :param bg_color: Background color of the slide (Hex code).
-    :param font_family: Font family for all text elements.
     :param show_shapes: Whether to show the geometric background blocks.
     :param custom_css: Additional custom CSS to be included.
     :return: A string containing the HTML code for the slide.
@@ -18931,7 +18366,7 @@ def generate_minimalist_thank_you_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Thank You Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -18943,7 +18378,7 @@ def generate_minimalist_thank_you_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 background-color: {bg_color};
                 overflow: hidden;
                 color: {primary_color};
@@ -19051,7 +18486,6 @@ def generate_minimalist_sage_slide(
     accent_color="#FFDAC1",
     shape_color="#E0E7E5",
     text_color="#1A2F28",
-    font_family="'Montserrat', sans-serif",
     show_glow_effects=True
 ):
     """
@@ -19065,7 +18499,6 @@ def generate_minimalist_sage_slide(
     :param accent_color: Color for the glowing accents/orbs (Hex code, usually peach/orange).
     :param shape_color: Color for the large geometric curved shapes (Hex code, usually sage green).
     :param text_color: Color of the text elements (Hex code).
-    :param font_family: Font family to use.
     :param show_glow_effects: Whether to render the soft blurred gradient orbs.
     :return: A string containing the HTML code for the slide.
     """
@@ -19141,7 +18574,7 @@ def generate_minimalist_sage_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Minimalist Sage Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
             
@@ -19149,7 +18582,7 @@ def generate_minimalist_sage_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 background-color: {bg_color};
                 color: {text_color};
                 overflow: hidden;
@@ -19327,7 +18760,6 @@ def generate_thank_you_so_much_slide(
     bg_color="#F9F7F2",
     text_color="#5A6B6D",
     accent_color="#5A6B6D",
-    font_family="'Inter', sans-serif",
     show_corner_accent=True
 ):
     """
@@ -19345,7 +18777,6 @@ def generate_thank_you_so_much_slide(
     :param bg_color: Main background color (Off-white/Cream).
     :param text_color: Main text color (Slate/Grey).
     :param accent_color: Color for icons and graphical elements.
-    :param font_family: Font family to use.
     :param show_corner_accent: Whether to show the geometric arrow in the bottom left.
     :return: A string containing the HTML code for the slide.
     """
@@ -19397,7 +18828,7 @@ def generate_thank_you_so_much_slide(
         <title>Thank You Slide</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
             
@@ -19405,7 +18836,7 @@ def generate_thank_you_so_much_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 background-color: {bg_color};
                 color: {text_color};
                 overflow: hidden;
@@ -19609,9 +19040,7 @@ def generate_brand_collaboration_closing_slide(
     bg_color="#F5F2EB",
     left_image_url="https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1740&auto=format&fit=crop",
     right_image_url="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1740&auto=format&fit=crop",
-    title_font="'Playfair Display', serif",
-    body_font="'DM Sans', sans-serif",
-    script_font="'Mrs Saint Delafield', cursive"
+  
 ):
     """
     Generate a sophisticated 'Thank You' or closing slide with an asymmetrical image layout,
@@ -19629,7 +19058,6 @@ def generate_brand_collaboration_closing_slide(
     :param left_image_url: URL for the large vertical image on the left.
     :param right_image_url: URL for the smaller image on the right.
     :param title_font: Font family for the main title.
-    :param body_font: Font family for body text and headers.
     :param script_font: Font family for the signature text.
     :return: HTML string of the slide.
     """
@@ -19654,7 +19082,7 @@ def generate_brand_collaboration_closing_slide(
         <title>Brand Collaboration Closing Slide</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;700&family=Mrs+Saint+Delafield&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -19669,7 +19097,7 @@ def generate_brand_collaboration_closing_slide(
                 overflow: hidden;
                 background-color: {bg_color};
                 color: {primary_color};
-                font-family: {body_font};
+                font-family: {DEFAULT_FONT_FAMILY};
             }}
 
             body {{
@@ -19748,7 +19176,7 @@ def generate_brand_collaboration_closing_slide(
             }}
 
             .main-title {{
-                font-family: {title_font};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 10rem; /* Huge text */
                 font-weight: 400; /* Serif usually looks better regular/light at this size */
                 line-height: 0.9;
@@ -19758,7 +19186,7 @@ def generate_brand_collaboration_closing_slide(
             }}
 
             .message-block {{
-                font-family: {body_font};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 1.1rem;
                 line-height: 1.6;
                 font-weight: 700;
@@ -19770,7 +19198,7 @@ def generate_brand_collaboration_closing_slide(
             }}
 
             .signature {{
-                font-family: {script_font};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 4rem;
                 font-weight: 400;
                 opacity: 0.9;
@@ -19814,7 +19242,6 @@ def generate_military_thank_you_slide(
     primary_color="#4B5320",
     secondary_color="#556B2F",
     text_color="#000000",
-    font_family="'Arial Black', 'Arial', sans-serif",
     overlay_opacity=0.2
 ):
     """
@@ -19827,7 +19254,6 @@ def generate_military_thank_you_slide(
     :param primary_color: Main olive green color for the diagonal stripes.
     :param secondary_color: Lighter green for the thin separator line.
     :param text_color: Color for the main and description text.
-    :param font_family: Font used for the slide. Bold sans-serif recommended.
     :param overlay_opacity: Opacity of the image background overlay.
     :return: A string containing the HTML code for the slide.
     """
@@ -19842,7 +19268,7 @@ def generate_military_thank_you_slide(
             html {{ width: 1920px; height: 1080px; font-size: 16px; }}
             body {{
                 width: 1920px; height: 1080px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 background-color: #f0f0f0;
             }}
@@ -19969,7 +19395,6 @@ def generate_corporate2_thank_you_slide(
     accent_color="#3B82F6",
     text_color="#1F2937",
     bg_color="#F8FAFC",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a professional corporate Thank You slide with contact information.
@@ -19981,7 +19406,7 @@ def generate_corporate2_thank_you_slide(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background-color: {bg_color}; overflow: hidden; }}
         
         .side-panel {{
             position: absolute;
@@ -20053,7 +19478,6 @@ def generate_creative_thank_you_slide(
     bg_gradient_start="#FFF1F2",
     bg_gradient_end="#FCE7F3",
     accent_color="#BE123C",
-    font_family="'Montserrat', sans-serif"
 ):
     """
     Generates a creative Thank You slide with aurora background shapes and a featured image.
@@ -20065,7 +19489,7 @@ def generate_creative_thank_you_slide(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; 
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; 
                       background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end}); overflow: hidden; }}
         
         .aurora-1 {{
@@ -20122,7 +19546,6 @@ def generate_tech_thank_you_slide(
     social_handle="@tech_studio",
     primary_neon="#00FFFF",
     bg_dark="#1a1a2e",
-    font_family="'Montserrat', sans-serif"
 ):
     """
     Generates a tech-themed Thank You slide with neon glow effects and geometric SVG elements.
@@ -20133,7 +19556,7 @@ def generate_tech_thank_you_slide(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_dark}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background-color: {bg_dark}; overflow: hidden; }}
         
         .grid-bg {{
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -20173,7 +19596,6 @@ def generate_minimalist_thank_you_slide_2(
     footer_note="Copyright 2026 Studio",
     text_color="#000000",
     bg_color="#FFFFFF",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a minimalist Thank You slide focusing on high-end typography and white space.
@@ -20184,7 +19606,7 @@ def generate_minimalist_thank_you_slide_2(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background-color: {bg_color}; overflow: hidden; }}
         
         .main-title {{
             position: absolute; left: 120px; top: 400px;
@@ -20220,7 +19642,6 @@ def generate_elegant_thank_you_slide(
     subtitle="FOR YOUR KIND ATTENTION",
     bg_image="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop",
     overlay_color="rgba(255, 255, 255, 0.85)",
-    font_family="'Playfair Display', serif"
 ):
     """
     Generates an elegant Thank You slide with an image background and a glassmorphism card.
@@ -20229,10 +19650,10 @@ def generate_elegant_thank_you_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; overflow: hidden; }}
         
         .bg-img {{
             position: absolute; width: 100%; height: 100%;
@@ -20306,7 +19727,6 @@ def generate_line_chart_slide_3(
             "values": [30, 35, 40, 44, 50, 55, 60, 66, 70, 72, 74, 76]
         }
     ],
-    font_family: str = "Inter, sans-serif",
     accent_color: str = "#00F2FF",
     main_title_color: str = "#FFFFFF",
     subtitle_color: str = "#94A3B8",
@@ -20392,11 +19812,11 @@ def generate_line_chart_slide_3(
     <html>
     <head>
         <style>
-            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+            @import url('https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap;
             body {{
                 width: 1920px; height: 1080px; margin: 0; padding: 0;
                 background-color: {bg_color}; color: white;
-                font-family: {font_family}; overflow: hidden;
+                font-family: {DEFAULT_FONT_FAMILY}; overflow: hidden;
             }}
             .header-container {{
                 padding: 80px 100px 40px 100px;
