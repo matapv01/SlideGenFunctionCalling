@@ -62,7 +62,6 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_process_slide,  # slide content
     generate_process_steps_slide, # slide content
     generate_image_cutout_list_slide, # slide content
-    generate_body_slide2,  # slide content
     generate_body_slide4,  # slide content
     generate_body_slide5,  # slide content
     generate_body_slide7,  # slide content
@@ -150,7 +149,6 @@ class GenerateTitleSlideInput(BaseModel):
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of the title and subtitle text (hex code).")
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family for all text elements.")
     show_skyline: Optional[bool] = Field(default=True, description="Whether to show the city skyline silhouette at the bottom. Default: True.")
     skyline_opacity: Optional[float] = Field(default=0.3, description="Opacity of the skyline silhouette (0.0 to 1.0). Default: 0.3.")
     triangle_opacity: Optional[float] = Field(default=0.2, description="Opacity of the triangle decorative elements (0.0 to 1.0). Default: 0.2.")
@@ -165,7 +163,6 @@ class GenerateIntroductionSlideInput(BaseModel):
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family for all text elements.")
     show_decorative_triangles: Optional[bool] = Field(default=True, description="Whether to show decorative triangle elements. Default: True.")
     triangle_opacity: Optional[float] = Field(default=0.15, description="Opacity of the decorative triangles (0.0 to 1.0). Default: 0.15.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
@@ -186,7 +183,6 @@ class GenerateIntroSlide1Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
-    font_family: str = Field(default="'Inter', sans-serif", description="CSS font family for the slide.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="Path to the image file for the left side.")
 
@@ -196,7 +192,6 @@ class GenerateElegantIntroSlideInput(BaseModel):
     main_title: str = Field(..., description="The large title displayed in the left column. Default: 'Write Your Topic or Idea Here'.")
     subtitle: str = Field(..., description="The smaller subtitle text below the main title. Default: 'Briefly elaborate on what you want to discuss.'.")
     image_url: str = Field(default="https://images.pexels.com/photos/3807735/pexels-photo-3807735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the main image to be displayed on the right.")
-    font_family: str = Field(default="'Be Vietnam Pro', sans-serif", description="Font family for all text elements.")
     background_color: str = Field(default="#EAE3D9", description="Background color of the slide.")
     text_color: str = Field(default="#4A403A", description="Main text color for titles and descriptions.")
     decoration_color_start: str = Field(default="#F7DC6F", description="The starting color for the gold gradient decorations.")
@@ -206,7 +201,6 @@ class GenerateElegantIntroSlideInput(BaseModel):
 class GenerateTitleSlide2Input(BaseModel):
     """Input schema for generate_title_slide_2."""
     main_title: str = Field(..., description="The entire title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight a specific word. Default: 'THIS IS YOUR<br><span class=\'highlight\'>PRESENTATION</span><br>TITLE'.")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="The font family for all text elements.")
     accent_color: str = Field(default="#06B6D4", description="The primary accent color for the right panel and the highlighted word.")
     shadow_color: str = Field(default="#0E7490", description="The secondary (darker) accent color for the panel behind.")
     text_color: str = Field(default="#6B7280", description="The primary color for the non-highlighted text.")
@@ -217,7 +211,6 @@ class GenerateDynamicIntroSlideInput(BaseModel):
     main_title: str = Field(..., description="The large, bold title for the slide. Default: 'Innovate. Create. Inspire.'.")
     subtitle: str = Field(..., description="The smaller subtitle text below the main title. Default: 'This is where we outline our core mission and the driving force behind our vision.'.")
     image_url: str = Field(default="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop", description="URL for the full-height image on the right.")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="Font family for all text elements.")
     primary_color: str = Field(default="#4F46E5", description="The primary (brighter) color for the main part of the text block.")
     secondary_color: str = Field(default="#3730A3", description="The secondary (darker) color for the footer area of the text block.")
     text_color: str = Field(default="#FFFFFF", description="The color for the text.")
@@ -227,7 +220,6 @@ class GenerateBigConceptSlideInput(BaseModel):
     main_title: str = Field(..., description="The main, large title for the concept. Use <br> for line breaks. Default: 'BIG<br>CONCEPT'.")
     subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Bring the attention of your audience over a key concept using icons or illustrations'.")
     icon_name: str = Field(..., description="Selects a pre-designed illustration scene to display. Default: 'space'.")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for all text elements.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The main color for all text elements.")
 
@@ -249,8 +241,6 @@ class GenerateElegantAgendaSlideInput(BaseModel):
     title_color: str = Field(default="#1F2937", description="Color for the main title (hex code).")
     subtitle_color: str = Field(default="#B48E8E", description="Color for the subtitle text (hex code).")
     text_color: str = Field(default="#4B5563", description="Color for the agenda list items (hex code).")
-    font_family_title: str = Field(default="Playfair Display", description="The font family for the main title. An elegant serif font is recommended.")
-    font_family_body: str = Field(default="Montserrat", description="The font family for all other text. A clean sans-serif is recommended.")
     custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
 class GeneratePlayfulTitleSlideInput(BaseModel):
@@ -258,8 +248,6 @@ class GeneratePlayfulTitleSlideInput(BaseModel):
     main_title: str = Field(..., description="The main title for the slide. Use <br> for line breaks. Default: 'Introduction<br>to penguins'.")
     subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Introduce penguins here. Mention their characteristics and unique behaviors.'.")
     illustration_character: str = Field(default="penguin", description="Selects a pre-drawn character illustration.")
-    font_family_title: str = Field(default="'Patrick Hand', 'Inter', cursive", description="The handwritten-style font for the main title.")
-    font_family_body: str = Field(default="'Lato', 'Inter', sans-serif", description="The clean sans-serif font for the subtitle.")
     top_bg_color: str = Field(default="#FFC947", description="The main background color (yellow).")
     bottom_bg_color: str = Field(default="#E8715D", description="The color of the strip at the bottom.")
     text_color: str = Field(default="#2D2D2D", description="The color for all text.")
@@ -270,7 +258,6 @@ class GenerateMinimalistTitleSlideInput(BaseModel):
     main_title: str = Field(..., description="The main, large presentation title. Default: 'This is your presentation title'.")
     subtitle: str = Field(..., description="A smaller subtitle to provide more context or a tagline. Default: 'A subtitle to provide more context or a tagline'.")
     author_line: str = Field(..., description="A line for the presenter's name or company, displayed at the bottom. Default: 'Presented by Your Name / Company'.")
-    font_family: str = Field(default="'Inter', sans-serif", description="The font family for all text elements.")
     bg_color: str = Field(default="#111827", description="The dark background color of the slide.")
     text_color: str = Field(default="#F9FAFB", description="The color for the main title text.")
     subtitle_color: str = Field(default="#E5E7EB", description="The color for the subtitle and author line.")
@@ -283,7 +270,6 @@ class GenerateMissionSlideInput(BaseModel):
     subtitle: str = Field(..., description="The main descriptive text, displayed in a larger, prominent area below the title. Default: 'Elaborate on your key message or provide a call to action. This text can be a bit longer.'.")
     image_url: str = Field(default="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", description="URL of the image to be displayed in the right column.")
     image_alt_text: str = Field(default="A team collaborating in a modern office, representing mission and goals", description="Alternative text for the image, for accessibility.")
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family for all text elements.")
     background_color_left: str = Field(default="#F5EBE0", description="Background color for the top content area in the left column (warm beige).")
     text_color_title: str = Field(default="#4E443F", description="Text color for the main title (dark brown).")
     text_color_top: str = Field(default="#4E443F", description="Text color for the top subheading (dark brown).")
@@ -298,7 +284,6 @@ class GenerateTrainingIntroSlideInput(BaseModel):
     title_color: str = Field(default="#b8d89f", description="Color for the main title (hex code). Default: '#b8d89f' (light green).")
     text_color: str = Field(default="#e8d7a8", description="Color for the description text (hex code). Default: '#e8d7a8' (light yellow).")
     image_url: str = Field(default="https://images.pexels.com/photos/3587620/pexels-photo-3587620.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL of the image to display in bottom section.")
-    font_family: str = Field(default="'Segoe UI', 'Arial', sans-serif", description="Font family for all text elements.")
 
 class GenerateBusinessIntroSlideInput(BaseModel):
     """Input schema for generate_business_intro_slide."""
@@ -307,8 +292,6 @@ class GenerateBusinessIntroSlideInput(BaseModel):
     main_title_color: str = Field(default="#0056d2", description="Color for main title (default: blue).")
     subtitle_color: str = Field(default="#666666", description="Color for subtitle text.")
     accent_color: str = Field(default="#0056d2", description="Color for decorative D-shapes on sides.")
-    main_font: str = Field(default="Arial, sans-serif", description="Font family for main title.")
-    subtitle_font: str = Field(default="Arial, sans-serif", description="Font family for subtitle.")
 
 class GenerateTitleSlide3Input(BaseModel):
     """Input schema for generate_title_slide_3."""
@@ -317,7 +300,6 @@ class GenerateTitleSlide3Input(BaseModel):
     bg_color: str = Field(default="#F5EBE0", description="The background color of the slide.")
     text_color: str = Field(default="#C41E3A", description="The color for the main title text.")
     subtitle_color: str = Field(default="#3D3D3D", description="The color for the subtitle text.")
-    font_family: str = Field(default="'Lobster Two', 'Georgia', serif", description="The font family for all text elements.")
     show_top_lights: Optional[bool] = Field(default=True, description="Whether to show the Christmas lights at the top. Default: True.")
     show_sparkles: Optional[bool] = Field(default=True, description="Whether to show decorative sparkles on the slide. Default: True.")
     custom_css: str = Field(default="", description="Additional custom CSS to be included.")
@@ -326,8 +308,6 @@ class GenerateMinimalistSlideInput(BaseModel):
     """Input schema for generate_minimalist_slide."""
     title: str = Field(..., description="The main title for the slide. Default: 'Minimalist Business Slides'.")
     subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Here is where your presentation begins'.")
-    font_family_title: str = Field(default="Playfair Display, Georgia, serif", description="The font family for the title text.")
-    font_family_subtitle: str = Field(default="Inter, sans-serif", description="The font family for the subtitle text.")
     background_color: str = Field(default="#E8E3DC", description="The background color of the slide.")
     text_color_title: str = Field(default="#1A1A1A", description="The color for the title text.")
     text_color_subtitle: str = Field(default="#4A4A4A", description="The color for the subtitle text.")
@@ -342,8 +322,6 @@ class GenerateTitleSlide5Input(BaseModel):
     main_title: str = Field(default="Your Title Here", description="The main title text for the notebook cover design.")
     bottom_text: str = Field(default="Here is where your presentation begins", description="Text displayed at the bottom-right of the slide.")
     image_path: str = Field(default="Image/generate_title_slide_5/Default_1.jpg", description="Path to the image displayed in the polaroid frame.")
-    font_family: str = Field(default="'Arial'", description="Font family for all text elements on the slide.")
-    font_family_secondary: str = Field(default="'Arial'", description="Font family for secondary text elements.")
     bg_color: str = Field(default="#b8c8d4", description="Background color of the slide in hex format.")
     text_color: str = Field(default="#2c3e50", description="Color of all text elements in hex format.")
     show_clover: bool = Field(default=True, description="Whether to display the four-leaf clover decoration.")
@@ -425,7 +403,6 @@ class GenerateGeometricTransitionSlideInput(BaseModel):
     """Input schema for generate_geometric_transition_slide."""
     headline: str = Field(..., description="The main, uppercase headline for the transition. Default: 'TRANSITION HEADLINE'.")
     subtitle: str = Field(..., description="The smaller subtitle text displayed below the headline. Default: 'Let's start with the first set of slides'.")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for all text elements.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     primary_text_color: str = Field(default="#FFFFFF", description="The color for the section number and the main headline.")
     subtitle_color: str = Field(default="#67E8F9", description="The accent color for the subtitle text.")
@@ -434,7 +411,6 @@ class GenerateDuskTransitionSlideInput(BaseModel):
     """Input schema for generate_dusk_transition_slide."""
     headline: str = Field(..., description="The main headline for the transition. Default: 'Transition Headline'.")
     subtitle: str = Field(..., description="The smaller subtitle text below the headline. Default: 'Let's start with the first set of slides'.")
-    font_family: str = Field(default="'Nunito', sans-serif", description="The font family for all text elements.")
     headline_color: str = Field(default="#2C3E50", description="The color for the main headline text.")
     subtitle_color: str = Field(default="#4A5568", description="The color for the subtitle text.")
     number_color: str = Field(default="#FDE68A", description="The accent color for the section number.")
@@ -448,8 +424,6 @@ class GenerateMemphisTransitionSlideInput(BaseModel):
     section_number: str = Field(default="1.", description="The number for the new section (e.g., '1.', '02').")
     headline: str = Field(..., description="The main headline for the transition. Default: 'Transition headline'.")
     subtitle: str = Field(..., description="The smaller subtitle text below the headline. Default: 'Let's start with the first set of slides'.")
-    font_family_headline: str = Field(default="'Lora', 'Inter', serif", description="The elegant, serif font for the main headline and number.")
-    font_family_body: str = Field(default="'Lato', 'Inter', sans-serif", description="The clean, sans-serif font for the subtitle.")
     top_panel_bg: str = Field(default="#19114B", description="The background color for the top half of the slide.")
     bottom_panel_bg: str = Field(default="#403271", description="The background color for the bottom half of the slide.")
     palette: List[str] = Field(default=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"], description="A list of 5 colors used for the various decorative shapes and accents. [0: Red/Magenta, 1: Orange/Yellow, 2: Purple, 3: Blue, 4: Green/Teal]")
@@ -457,7 +431,6 @@ class GenerateMemphisTransitionSlideInput(BaseModel):
 class GeneratePushpinSectionHeaderInput(BaseModel):
     """Input schema for generate_pushpin_section_header."""
     main_title: str = Field(..., description="The main text for the section header. It will be displayed in large, uppercase letters. Default: 'Add a Section Header'.")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for the title.")
     bg_color: str = Field(default="#FDFCFB", description="The background color of the slide, with a subtle paper texture overlay.")
     text_color: str = Field(default="#1F2937", description="The color for the main title text.")
     accent_color: str = Field(default="#1F2937", description="The color for the horizontal divider line and the two flanking dots.")
@@ -465,7 +438,6 @@ class GeneratePushpinSectionHeaderInput(BaseModel):
 class GenerateSectionHeaderSlideInput(BaseModel):
     """Input schema for generate_section_header_slide."""
     header_text: str = Field(..., description="The main, large text for the section header. Default: 'Add a Section Header'.")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="Font family for the header text.")
     bg_color: str = Field(default="#F8FAFC", description="The main background color of the slide (typically a very light off-white).")
     text_color: str = Field(default="#1E293B", description="The color for the header text.")
     gradient_color_1: str = Field(default="#A78BFA", description="The first color for the soft aurora gradient background (e.g., light purple).")
@@ -490,8 +462,6 @@ class GenerateBusinessTransitionSlideInput(BaseModel):
     headline_color: str = Field(default="#0056d2", description="Color for headline (default: blue).")
     subtitle_color: str = Field(default="#666666", description="Color for subtitle text.")
     accent_color: str = Field(default="#0056d2", description="Color for decorative D-shapes on sides.")
-    headline_font: str = Field(default="Arial, sans-serif", description="Font family for headline.")
-    subtitle_font: str = Field(default="Arial, sans-serif", description="Font family for subtitle.")
 
 class GenerateIntroSlideInput(BaseModel):
     """Input schema for generate_intro_slide."""
@@ -504,7 +474,6 @@ class GenerateIntroSlideInput(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
-    font_family: str = Field(default="'Inter', sans-serif", description="CSS font family for the slide.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide.")
 
@@ -519,7 +488,6 @@ class GenerateEmployeeIntroSlideInput(BaseModel):
     circle_color_2: str = Field(default="#10855b", description="Second decorative circle color - medium green (hex code). Default: #10855b.")
     circle_color_3: str = Field(default="#2dd4bf", description="Third decorative circle color - light cyan (hex code). Default: #2dd4bf.")
     circle_color_4: str = Field(default="#FFFFFF", description="Fourth decorative circle color - white (hex code). Default: #FFFFFF.")
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family for all text elements on the slide.")
 
 class GenerateResearchProposalSlideInput(BaseModel):
     """Input schema for generate_research_proposal_slide."""
@@ -656,7 +624,6 @@ class GenerateContentSlideInput(BaseModel):
     background_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     accent_color: str = Field(default="#a2c4c9", description="CSS color for corner accents.")
     border_width: str = Field(default="30px", description="CSS width of the slide border.")
-    font_family: str = Field(default="Arial, sans-serif", description="CSS font family for the slide.")
     num_columns: int  = Field(default=3, description="Number of columns in the grid. Default: 3.")
     num_rows: int  = Field(default=2, description="Number of rows in the grid. Default: 2.")
 
@@ -677,7 +644,6 @@ class GenerateComparisonSlideInput(BaseModel):
     background_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     accent_color: str = Field(default="#a2c4c9", description="CSS color for corner accents.")
     divider_color: str = Field(default="#555555", description="CSS color for the divider line.")
-    font_family: str = Field(default="Arial, sans-serif", description="CSS font family for the slide.")
 
 class GenerateProcessSlideInput(BaseModel):
     """Input schema for generate_process_slide."""
@@ -694,7 +660,6 @@ class GenerateProcessSlideInput(BaseModel):
     background_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     accent_color: str = Field(default="#a2c4c9", description="CSS color for corner accents.")
     border_width: str = Field(default="30px", description="CSS width of the slide border.")
-    font_family: str = Field(default="Arial, sans-serif", description="CSS font family for the slide.")
     box_width: str = Field(default="380px", description="CSS width of each box.")
     box_height: str = Field(default="350px", description="CSS height of each box.")
     box_border_radius: str = Field(default="5px", description="CSS border radius for the boxes.")
@@ -724,8 +689,6 @@ class GenerateProcessStepsSlideInput(BaseModel):
     title_color: str = Field(default="#1F2937", description="Color for the main title in the left panel.")
     text_heading_color: str = Field(default="#374151", description="Color for the title of each step.")
     text_body_color: str = Field(default="#6B7280", description="Color for the description text of each step.")
-    font_family_title: str = Field(default="'Playfair Display', 'Inter', serif", description="The font for the main title. An elegant serif font is recommended.")
-    font_family_body: str = Field(default="'Montserrat', 'Inter', sans-serif", description="The font for all other text. A clean sans-serif is recommended.")
     custom_css: str = Field(default="", description="Additional custom CSS.")
 
 class GenerateImageCutoutListSlideInput(BaseModel):
@@ -737,30 +700,7 @@ class GenerateImageCutoutListSlideInput(BaseModel):
     text_color: str = Field(default="#C0C0C0", description="Color for the secondary text (description).")
     accent_color: str = Field(default="#8A63D2", description="The accent color for the bullet points and decorative spinner.")
     line_color: str = Field(default="rgba(255, 255, 255, 0.2)", description="The color of the vertical guide line.")
-    font_family_title: str = Field(default="'Source Serif 4', serif", description="The font family for item titles. A serif font is recommended.")
-    font_family_body: str = Field(default="'Inter', sans-serif", description="The font family for item descriptions. A clean sans-serif is recommended.")
     custom_css: str = Field(default="", description="Additional custom CSS.")
-
-class GenerateBodySlide2Input(BaseModel):
-    """Input schema for generate_body_slide2."""
-    main_title: str = Field(..., description="Main title of the slide. Default: 'MainTitle'.")
-    subtitle1: str = Field(..., description="Subtitle for the first content section. Default: 'SubTitle1'.")
-    content1: str = Field(..., description="Content text for the first section. Default: 'Content1'.")
-    subtitle2: str = Field(..., description="Subtitle for the second content section. Default: 'SubTitle2'.")
-    content2: str = Field(..., description="Content text for the second section. Default: 'Content2'.")
-    subtitle3: str = Field(..., description="Subtitle for the third content section. Default: 'SubTitle3'.")
-    content3: str = Field(..., description="Content text for the third section. Default: 'Content3'.")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    accent_color: str = Field(default="#d5e8b9", description="CSS color for accents and icon backgrounds.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title.")
-    subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
-    content_color: str = Field(default="#555555", description="CSS color for content text.")
-    font_family: str = Field(default="'Inter', sans-serif", description="CSS font family for the slide.")
-    image_url: str = Field(default="Image/generate_body_slide2/Default_1.png", description="Path to the image file for the left side.")
-    icon1: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M12 2v6M12 18v4M14.5 8a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM16.5 13a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0z"></path></svg>', description="SVG code for the first section's icon.")
-    icon2: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>', description="SVG code for the second section's icon.")
-    icon3: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>', description="SVG code for the third section's icon.")
-
 
 class GenerateBodySlide4Input(BaseModel):
     """Input schema for generate_body_slide4."""
@@ -777,7 +717,6 @@ class GenerateBodySlide4Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
     subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
-    font_family: str = Field(default="'Inter', sans-serif", description="CSS font family for the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide4/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide4/Default_2.png", description="Path to the second image file.")
     image_url_3: str = Field(default="Image/generate_body_slide4/Default_3.png", description="Path to the third image file.")
@@ -798,7 +737,6 @@ class GenerateBodySlide5Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#6b9d34", description="CSS color for subtitles.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
-    font_family: str = Field(default="'Inter', sans-serif", description="CSS font family for the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide5/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide5/Default_2.png", description="Path to the second image file.")
     image_url_3: str = Field(default="Image/generate_body_slide5/Default_3.png", description="Path to the third image file.")
@@ -817,7 +755,6 @@ class GenerateBodySlide7Input(BaseModel):
     subtitle_color: str = Field(default="#333333", description="CSS color for the subtitle.")
     content_color: str = Field(default="#4a90a0", description="CSS color for content text.")
     divider_color: str = Field(default="#d5e8b9", description="CSS color for the horizontal divider.")
-    font_family: str = Field(default="'Inter', sans-serif", description="CSS font family for the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide7/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide7/Default_2.png", description="Path to the second image file.")
     image_url_3: str = Field(default="Image/generate_body_slide7/Default_3.png", description="Path to the third image file.")
@@ -836,7 +773,6 @@ class GenerateBodySlide10Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
     subtitle_color: str = Field(default="#333333", description="CSS color for all subtitle text in the three content sections.")
     content_color: str = Field(default="#555555", description="CSS color for all content/body text in the three sections.")
-    font_family: str = Field(default="'Inter', sans-serif", description="The CSS font family for all text on the slide.")
     image_url: str = Field(default="Image/generate_body_slide10/Default_1.png", description="Path to the image file for the left side.")
     icon1: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the first section's icon. Should be a valid SVG element with proper xmlns attribute.")
     icon2: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the second section's icon. Should be a valid SVG element with proper xmlns attribute.")
@@ -860,7 +796,6 @@ class GenerateBodySlide11Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#333333", description="CSS color for subtitles in the boxes.")
     content_color: str = Field(default="#555555", description="CSS color for content text in the boxes.")
-    font_family: str = Field(default="'Inter', sans-serif", description="The CSS font family for all text on the slide.")
     box_height: str = Field(default="15.625rem", description="The CSS height of the content boxes, should be in REM units.")
 
 class GenerateBodySlide12Input(BaseModel):
@@ -878,7 +813,6 @@ class GenerateBodySlide12Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
     content_color: str = Field(default="#555555", description="CSS color for all content/body text including main content and image section content.")
     subtitle_color: str = Field(default="#333333", description="CSS color for all subtitle text in the three image sections.")
-    font_family: str = Field(default="'Inter', sans-serif", description="The CSS font family for all text on the slide.")
     image_url_1: str = Field(default="Image/generate_body_slide12/Default_1.png", description="Path to the first image file.")
     image_url_2: str = Field(default="Image/generate_body_slide12/Default_2.png", description="Path to the second image file.")
     image_url_3: str = Field(default="Image/generate_body_slide12/Default_3.png", description="Path to the third image file.")
@@ -896,7 +830,6 @@ class GenerateBodySlide15Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#333333", description="CSS color for the subtitle.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
-    font_family: str = Field(default="'Inter', sans-serif", description="CSS font family for the slide.")
 
 class GenerateBodySlide18Input(BaseModel):
     """Input schema for generate_body_slide18."""
@@ -915,7 +848,6 @@ class GenerateBodySlide18Input(BaseModel):
     background_color: str = Field(default="#ffffff", description="CSS background color for the main content area.")
     accent_color: str = Field(default="#a2c4c9", description="CSS color for the border/frame background.")
     divider_color: str = Field(default="#555555", description="CSS color for the dashed divider line between columns.")
-    font_family: str = Field(default="Arial, sans-serif", description="The CSS font family for all text on the slide.")
 
 class GenerateBodySlide19Input(BaseModel):
     """Input schema for generate_body_slide19."""
@@ -931,7 +863,6 @@ class GenerateBodySlide19Input(BaseModel):
     right_text_color: str = Field(default="#555555", description="CSS color for the text content in the right column.")
     border_color: str = Field(default="#a2c4c9", description="CSS color for the outer border frame and right column border.")
     icon_color: str = Field(default="#a2c4c9", description="CSS color for the icons displayed in the right column sections.")
-    font_family: str = Field(default="Arial, sans-serif", description="The CSS font family for all text on the slide.")
 
 class GenerateBodySlide20Input(BaseModel):
     """Input schema for generate_body_slide20."""
@@ -950,7 +881,6 @@ class GenerateBodySlide20Input(BaseModel):
     background_color: str = Field(default="#ffffff", description="CSS background color for the main content area.")
     accent_color: str = Field(default="#a2c4c9", description="CSS color for the border/frame background.")
     divider_color: str = Field(default="#555555", description="CSS color for the dashed divider line between columns.")
-    font_family: str = Field(default="Arial, sans-serif", description="The CSS font family for all text on the slide.")
 
 class GenerateMainPointsSlideInput(BaseModel):
     """Input schema for generate_main_points_slide."""
@@ -961,13 +891,11 @@ class GenerateMainPointsSlideInput(BaseModel):
     point2_description: str = Field(..., description="Description text for the second point about water conservation/management. .")
     point3_title: str = Field(..., description="Title for the third point (factory icon) - displayed in uppercase")
     point3_description: str = Field(..., description="Description text for the third point about industrial processes/manufacturing. .")
-    font_family: str = Field(default=None, description="Font family for all text elements")
 
 class GenerateElegantPointsSlideInput(BaseModel):
     """Input schema for generate_elegant_points_slide."""
     main_title: str = Field(..., description="A concise title at the top of the slide, styled to be less prominent than the main content. Default: 'Write Your Topic or Idea Here'.")
     points: List[Dict[str, str]] = Field(..., description="An array of exactly 4 objects, where each object represents a large, prominent content card with an icon, title, and description. Each point should have 'title' and 'description' keys. Default: [{'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}].")
-    font_family: str = Field(default="'Be Vietnam Pro', sans-serif", description="Font family for all text elements.")
     bg_color: str = Field(default="#FDFCFB", description="Overall background color of the slide (off-white).")
     card_bg_color: str = Field(default="#FFFFFF", description="Background color for the four content cards (pure white).")
     title_color: str = Field(default="#4E443F", description="Text color for the main title and card titles (dark brown).")
@@ -979,7 +907,6 @@ class GenerateCorporateContentSlideInput(BaseModel):
     """Input schema for generate_corporate_content_slide."""
     main_title: str = Field(..., description="The main title displayed in the colored panel on the left. To highlight a word, wrap it in `<span class='highlight'>...</span>`. Default: 'THIS IS A <span class=\'highlight\'>SLIDE</span> TITLE'.")
     list_items: List[Dict[str, str]] = Field(..., description="An array of objects, where each object represents a content card with its own title and description. Default: [{'title': 'First Key Point', 'description': 'Here you have a list of items, presented in a modern, card-based format.'}, {'title': 'Second Key Point', 'description': 'And some text to elaborate on the second main idea of your slide.'}, {'title': 'Third Key Point', 'description': 'But remember not to overload your slides with too much content.'}]")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="Font family for all text elements.")
     bg_color: str = Field(default="#F8FAFC", description="The background color for the main content area (typically off-white).")
     accent_panel_color: str = Field(default="#6366F1", description="The background color for the diagonal title panel.")
     title_color: str = Field(default="#FFFFFF", description="Text color for the main title on the colored panel.")
@@ -992,7 +919,6 @@ class GenerateSplitContentSlideInput(BaseModel):
     """Input schema for generate_split_content_slide."""
     main_title: str = Field(..., description="The main title at the top of the slide. Use `<span class='highlight'>...</span>` to color a word with the accent color. Default: 'SPLIT YOUR CONTENT'.")
     columns: List[Dict[str, str]] = Field(..., description="An array of exactly 2 objects, each representing a content card with an icon, title, and description. Default: [{'icon_name': 'bulb', 'title': 'Title One', 'description': 'Description for the first column goes here. Elaborate on your point with clear and concise text.'}, {'icon_name': 'target', 'title': 'Title Two', 'description': 'Description for the second column. This layout is perfect for comparing two ideas side-by-side.'}]")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="Font family for all text elements.")
     bg_gradient_start: str = Field(default="#0F172A", description="The starting color (top) of the dark background gradient.")
     bg_gradient_end: str = Field(default="#1E293B", description="The ending color (bottom) of the dark background gradient.")
     title_color: str = Field(default="#FFFFFF", description="The color for the main title and the card titles.")
@@ -1003,7 +929,6 @@ class GenerateCorporateMulticolumnSlideInput(BaseModel):
     """Input schema for generate_corporate_multicolumn_slide."""
     main_title: str = Field(..., description="The main title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight. Will be displayed in large 2.5rem font. Default: 'IN TWO OR THREE<br><span class=\'highlight\'>COLUMNS</span>'.")
     columns: List[Dict[str, str]] = Field(..., description="An array of 2 or 3 objects, each representing a column. Each column will be displayed as a card with gradient background, rounded corners, and hover effects. Default: [{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}]")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="The font family for all text elements. Enhanced with additional font weights (400, 600, 700, 800).")
     accent_color: str = Field(default="#8B5CF6", description="The primary accent color for the right panel, highlighted text, and card accent borders. Used in gradients for enhanced visual appeal.")
     shadow_color: str = Field(default="#7C3AED", description="The secondary (darker) accent color for the panel behind and gradient effects.")
     text_color: str = Field(default="#4B5563", description="The primary color for the body text.")
@@ -1013,7 +938,6 @@ class GenerateCorporateGridSlideInput(BaseModel):
     """Input schema for generate_corporate_grid_slide."""
     main_title: str = Field(..., description="The main title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight. Will be displayed in large 2.5rem font with uppercase styling. Default: 'LET'S <span class=\'highlight\'>REVIEW</span> SOME<br>CONCEPTS'.")
     grid_items: List[Dict[str, str]] = Field(..., description="An array of exactly 6 objects for the 2x3 grid. Each item will be displayed as a card with gradient background, rounded corners, hover effects, and colored top border. Grid automatically adjusts to 2 columns on smaller screens. Default: [{'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}]")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="The font family for all text elements. Enhanced with additional font weights (400, 600, 700, 800).")
     accent_color: str = Field(default="#22C55E", description="The primary accent color for the right panel, highlighted text, and card accent borders. Used in gradients for enhanced visual appeal.")
     shadow_color: str = Field(default="#16A34A", description="The secondary (darker) accent color for the panel behind and gradient effects.")
     text_color: str = Field(default="#6B7280", description="The primary color for the body text.")
@@ -1030,7 +954,6 @@ class GenerateCorporateGridSlideInput(BaseModel):
 #     icon_color: str = Field(default="#FFFFFF", description="Color of the icons (hex code).")
 #     content_bg_color: str = Field(default="#FFFFFF", description="Background color for content text areas (hex code).")
 #     content_text_color: str = Field(default="#1a4b8c", description="Text color for content sections (hex code).")
-#     font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
 #     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
 #     border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.3.")
 #     section_spacing: str = Field(default="15px", description="Vertical spacing between content sections.")
@@ -1048,7 +971,6 @@ class GenerateVisionMissionSlideInput(BaseModel):
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
     vision_number_color: str = Field(default="rgba(74, 123, 200, 0.3)", description="Color of background numbers in vision section (rgba).")
     mission_number_color: str = Field(default="rgba(26, 75, 140, 0.3)", description="Color of background numbers in mission section (rgba).")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
     border_color: str = Field(default="#1a4b8c", description="Color of the border frame (hex code).")
     border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
@@ -1066,7 +988,6 @@ class GenerateServiceRoadmapSlideInput(BaseModel):
     card_bg_color: str = Field(default="#FFFFFF", description="Background color for content cards (hex code).")
     card_text_color: str = Field(default="#2E5BBA", description="Text color for card content (hex code).")
     card_title_color: str = Field(default="#1A4480", description="Text color for card titles (hex code).")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for all text elements.")
     show_border: Optional[bool] = Field(default=True, description="Whether to show the dashed border frame. Default: True.")
     border_color: str = Field(default="rgba(255, 255, 255, 0.3)", description="Color of the border frame (rgba with transparency).")
     show_decorative_triangles: Optional[bool] = Field(default=True, description="Whether to show decorative triangle elements. Default: True.")
@@ -1086,7 +1007,6 @@ class GenerateFinancialProjectionsSlideDarkInput(BaseModel):
     card_title_color: str = Field(default="#1E3A8A", description="Color of the card titles.")
     card_content_color: str = Field(default="#374151", description="Color of the card content text.")
     border_color: str = Field(default="rgba(255, 255, 255, 0.3)", description="Color of the border elements.")
-    font_family: str = Field(default="Segoe UI, Arial, sans-serif", description="Font family for all text elements.")
     main_title_font_weight: str = Field(default="700", description="Font weight of the main title.")
     main_title_letter_spacing: str = Field(default="0.05em", description="Letter spacing of the main title.")
     card_title_font_weight: str = Field(default="700", description="Font weight of the card titles.")
@@ -1115,7 +1035,6 @@ class GenerateMinimalistTechListSlideInput(BaseModel):
     title_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '3rem') for the main title.")
     list_item_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.5rem') for list items.")
     concluding_text_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.1rem') for the concluding text.")
-    font_family: str = Field(default="'Nunito', sans-serif", description="CSS font-family for the slide.")
     sky_top_color: str = Field(default="#ABB0EA", description="The color for the top of the background gradient.")
     sky_bottom_color: str = Field(default="#A2CFED", description="The color for the bottom of the background gradient.")
     grid_dot_color: str = Field(default="rgba(0, 0, 0, 0.05)", description="The color of the dots in the background grid.")
@@ -1131,7 +1050,6 @@ class GenerateSplitLayoutListSlideInput(BaseModel):
     main_title_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '4rem') for the main title, overriding automatic scaling.")
     point_title_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.25rem') for the point titles, overriding automatic scaling.")
     point_description_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1rem') for the point descriptions, overriding automatic scaling.")
-    font_family: str = Field(default="'Be Vietnam Pro', sans-serif", description="CSS font-family for the slide.")
     left_bg_color: str = Field(default="#6F6254", description="Background color for the left column (hex code).")
     right_bg_color: str = Field(default="#F5F0E8", description="Background color for the right column (hex code).")
     light_text_color: str = Field(default="#F5F0E8", description="Text color for the left column (hex code).")
@@ -1144,7 +1062,6 @@ class GenerateReferenceSlideInput(BaseModel):
     main_title: str = Field(..., description="The main, bold title at the top of the text column. Default: 'CONTENT'.")
     reference_items: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a reference or key point. Each item should have 'title' and 'description' keys. Default: [{'title': 'PRIMARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}, {'title': 'SECONDARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}].")
     image_url: str = Field(default="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop", description="URL for the full-height image in the right column.")
-    font_family: str = Field(default="'Be Vietnam Pro', sans-serif", description="Font family for all text elements.")
     bg_color: str = Field(default="#FFFFFF", description="The background color for the text column.")
     text_color: str = Field(default="#1F2937", description="The main text color for all text elements.")
     accent_color: str = Field(default="#3B82F6", description="The color for the decorative divider below the main title.")
@@ -1153,7 +1070,6 @@ class GenerateIconListSlideInput(BaseModel):
     """Input schema for generate_icon_list_slide."""
     main_title: str = Field(..., description="The supporting title displayed in the smaller, left column. Default: 'Write your topic or idea'.")
     points: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a key point in the main content area. Each point should have 'icon_name', 'title', and 'description' keys. Default: [{ 'icon_name': 'megaphone', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }, { 'icon_name': 'star', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }, { 'icon_name': 'thumbs-up', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }].")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="Font family for all text elements.")
     bg_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
     main_title_color: str = Field(default="#111827", description="Text color for the main title.")
     point_title_color: str = Field(default="#1F2937", description="Text color for the point titles.")
@@ -1164,8 +1080,6 @@ class GenerateFlexibleColumnsSlideInput(BaseModel):
     """Input schema for generate_flexible_columns_slide."""
     main_title: str = Field(..., description="The main title displayed at the top of the slide. Default: 'IN TWO OR THREE COLUMNS'.")
     columns: List[Dict[str, str]] = Field(..., description="An array of 1 to 6 objects, each representing a column with its own title and description. Default: [{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}].")
-    font_family_heading: str = Field(default="'Patrick Hand', 'Inter', cursive", description="The handwritten-style font for the main title.")
-    font_family_body: str = Field(default="'Lato', 'Inter', sans-serif", description="The standard font for the column titles and text.")
     text_color: str = Field(default="#34495E", description="The color for all text elements.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
 
@@ -1174,8 +1088,6 @@ class GenerateTextWithImageSlideInput(BaseModel):
     title: str = Field(..., description="The introductory headline for the text column, styled to be smaller. Default: 'Tiltle'.")
     text_content: str = Field(..., description="The main paragraph or body text, displayed in a large font to be the central focus of the text column. Default: 'Content.'.")
     image_url: str = Field(default="https://images.pexels.com/photos/1778412/pexels-photo-1778412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the full-height image on the right side.")
-    font_family_heading: str = Field(default="'Patrick Hand', 'Inter', cursive", description="The handwritten-style font for the title.")
-    font_family_body: str = Field(default="'Lato', 'Inter', sans-serif", description="The standard font for the body text.")
     text_color: str = Field(default="#34495E", description="The color for all text elements.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
     doodle_border_url: str = Field(default="https://i.imgur.com/Qy2O1vN.png", description="URL for the seamless doodle image used as a border at the bottom.")
@@ -1187,7 +1099,6 @@ class GenerateGeometricSplitContentSlideInput(BaseModel):
         {"title": "White", "description": "Is the color of milk and fresh snow, the color produced by the combination of all the colors of the visible spectrum."},
         {"title": "Black", "description": "Is the color of ebony and of outer space. It has been the symbolic color of elegance, solemnity and authority."}
     ]""")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for all text elements.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The color for all text elements.")
 
@@ -1199,7 +1110,6 @@ class GenerateGeometricSplitContentSlide2Input(BaseModel):
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ]""")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for all text elements.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The color for all text elements.")
 
@@ -1208,7 +1118,6 @@ class GenerateGeometricImageContentSlideInput(BaseModel):
     image_url: str = Field(default="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2574&auto=format&fit=crop", description="The URL for the main image to be displayed in the custom-shaped container.")
     main_title: str = Field(..., description="The main title for the slide. Use a `<span class='highlight'>` tag to highlight a specific word. Default: 'A picture is worth a <span class='highlight'>thousand</span> words'.")
     description: str = Field(..., description="The paragraph of text that describes or complements the image. Default: 'A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.'.")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for all text elements.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The color for the non-highlighted text.")
 
@@ -1224,7 +1133,6 @@ class GenerateGeometricGridSlideInput(BaseModel):
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ]""")
-    font_family: str = Field(default="'Poppins', 'Inter', sans-serif", description="The font family for all text elements.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The color for all text elements.")
 
@@ -1233,8 +1141,6 @@ class GenerateMemphisContentSlideInput(BaseModel):
     main_title: str = Field(..., description="The main title of the slide, displayed in the top panel. Default: 'This is a slide title'.")
     list_items: List[str] = Field(..., description="A list of strings for the bullet points in the bottom panel. Default: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'].")
     concluding_text: str = Field(..., description="A final sentence or paragraph displayed below the list. Default: 'Your audience will listen to you or read the content, but won't do both.'.")
-    font_family_title: str = Field(default="'Lora', 'Inter', serif", description="The elegant, serif font for the main title.")
-    font_family_body: str = Field(default="'Source Code Pro', monospace", description="The monospace font for the body content, giving it a techy feel.")
     top_panel_bg: str = Field(default="#19114B", description="The background color for the top half of the slide.")
     bottom_panel_bg: str = Field(default="#403271", description="The background color for the bottom half of the slide.")
     palette: List[str] = Field(default=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"], description="A list of 5 colors used for the various decorative shapes and accents.")
@@ -1247,8 +1153,6 @@ class GenerateMemphisMulticolumnSlideInput(BaseModel):
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ]""")
-    font_family_title: str = Field(default="'Lora', 'Inter', serif", description="The elegant, serif font for the main title.")
-    font_family_body: str = Field(default="'Source Code Pro', monospace", description="The monospace font for the column content.")
     top_panel_bg: str = Field(default="#19114B", description="The background color for the top panel.")
     bottom_panel_bg: str = Field(default="#403271", description="The background color for the bottom panel.")
     palette: List[str] = Field(default=["#F43F5E", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"], description="A list of 5 colors used for the various decorative shapes and accents.")
@@ -1264,8 +1168,6 @@ class GenerateMemphisGridSlideInput(BaseModel):
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ]""")
-    font_family_title: str = Field(default="'Lora', 'Inter', serif", description="The elegant, serif font for the main title.")
-    font_family_body: str = Field(default="'Source Code Pro', monospace", description="The monospace font for the grid content.")
     top_panel_bg: str = Field(default="#19114B", description="The background color for the top panel.")
     bottom_panel_bg: str = Field(default="#403271", description="The background color for the bottom panel.")
     palette: List[str] = Field(default=["#F43F5E", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"], description="A list of 5 colors used for the various decorative shapes and accents.")
@@ -1284,7 +1186,6 @@ class GenerateMethodologySlideInput(BaseModel):
         description="URL for the professional image displayed on the right side"
     )
     bg_color: str = Field(default="#F5F5F5", description="Background color for the slide")
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family for all text on the slide")
     custom_css: str = Field(default="", description="Additional custom CSS for advanced styling")
 
 class GeneratePlanningPhaseSlideInput(BaseModel):
@@ -1334,10 +1235,6 @@ class GenerateTimelineSlideInput(BaseModel):
         default="#FFFFFF", 
         description="Color for text elements."
     )
-    font_family: str = Field(
-        default="'Inter', sans-serif", 
-        description="Font family string."
-    )
 
 class GenerateQuoteSlideInput(BaseModel):
     """Input schema for generate_quote_slide."""
@@ -1364,10 +1261,6 @@ class GenerateQuoteSlideInput(BaseModel):
     accent_color: str = Field(
         default="#EA580C", 
         description="Accent color for decorative elements (lines, quotation marks)."
-    )
-    font_family: str = Field(
-        default="Playfair Display", 
-        description="Font family (Serif fonts recommended for quotes)."
     )
 
 class GenerateClassicContentSlideInput(BaseModel):
@@ -1412,7 +1305,6 @@ class GenerateTeamSlideInput(BaseModel):
     """Input schema for generate_team_slide."""
     main_title: str = Field(..., description="The main title, displayed in the smaller, diagonal accent area. Default: 'Our Team'.")
     team_members: List[Dict[str, str]] = Field(..., description="Array of team member objects, each displayed in a large, professional card. Each member should have 'name', 'role', and 'image_url' keys. Recommended 3 members for this layout. Default: [{'name': 'Alex Johnson', 'role': 'Lead Developer', 'image_url': 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format=fit=crop'}, {'name': 'Maria Garcia', 'role': 'Product Manager', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'James Smith', 'role': 'UX/UI Designer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}].")
-    font_family: str = Field(default="'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif", description="Font family for all text elements.")
     accent_bg_color: str = Field(default="#14B8A6", description="Background color for the diagonal accent area (teal).")
     main_bg_color: str = Field(default="#F8FAFC", description="Background color for the main content area where team cards are displayed (off-white).")
     title_color: str = Field(default="#FFFFFF", description="Text color for the main title.")
@@ -1424,7 +1316,6 @@ class GenerateColorfulTeamGridSlideInput(BaseModel):
     main_title: str = Field(..., description="The large title displayed in the left column. Default: 'Add a Team Members Page'.")
     subtitle: str = Field(..., description="The smaller subtitle text below the main title.")
     team_members: List[Dict[str, str]] = Field(..., description="An array of exactly 4 objects, each containing details for one team member with 'name', 'role', 'image_url', and 'color' keys. Default: [{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop', 'color': '#8A44A1'}, {'name': 'Ben Carter', 'role': 'Frontend Developer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop', 'color': '#2E9A94'}, {'name': 'Aisha Khan', 'role': 'Project Manager', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop', 'color': '#D93B58'}, {'name': 'Leo Martinez', 'role': 'Marketing Head', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop', 'color': '#F3C314'}].")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="Font family for all text elements.")
     bg_color: str = Field(default="#F8FAFC", description="Background color of the slide.")
     title_color: str = Field(default="#111827", description="Text color for the main title.")
     subtitle_color: str = Field(default=None, description="Text color for the subtitle.")
@@ -1434,8 +1325,6 @@ class GenerateCorporateTeamSlideInput(BaseModel):
     """Input schema for generate_corporate_team_slide."""
     main_title: str = Field(..., description="The main title for the slide, e.g., 'Our Creative Team'. Default: 'Our Creative Team'.")
     team_members: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a team member with their own photo. Default: [{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Ben Carter', 'role': 'Photographer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Aisha Khan', 'role': 'Content Strategist', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Leo Martinez', 'role': 'Illustrator', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop'}]")
-    font_family_heading: str = Field(default="'Patrick Hand', 'Inter', cursive", description="The handwritten-style font for the main title and member names.")
-    font_family_body: str = Field(default="'Lato', 'Inter', sans-serif", description="The standard font for the member roles.")
     text_color: str = Field(default="#4A403A", description="The main text color for names.")
     role_color: str = Field(default="#6B7280", description="The secondary text color for roles.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
@@ -1456,7 +1345,6 @@ class GenerateThankYouSlide3Input(BaseModel):
     contact_icon_color: str = Field(default="#FFFFFF", description="Color of contact icons.")
     border_color: str = Field(default="rgba(255, 255, 255, 0.4)", description="Color of the border frame.")
     geometric_shape_colors: List[str] = Field(default=[], description="List of colors for geometric shapes. Default: 4 rgba colors with transparency.")
-    font_family: str = Field(default="Segoe UI, Arial, sans-serif", description="Font family for all text elements.")
     main_title_font_weight: str = Field(default="700", description="Font weight of the main title.")
     main_title_letter_spacing: str = Field(default="0.1em", description="Letter spacing of the main title.")
     contact_font_weight: str = Field(default="400", description="Font weight of contact information.")
@@ -1476,7 +1364,6 @@ class GenerateThankYouSlide3Input(BaseModel):
 class GenerateCorporateThankYouSlideInput(BaseModel):
     """Input schema for generate_corporate_thank_you_slide."""
     thanks_text: str = Field(default="THANK YOU FOR WACTCHING!", description="The main closing message, e.g., 'THANKS!'. .")
-    font_family: str = Field(default="'Montserrat', 'Inter', sans-serif", description="The font family for the text.")
     accent_color: str = Field(default="#F97316", description="The primary accent color for the right panel and the 'Thanks' text.")
     shadow_color: str = Field(default="#EA580C", description="The secondary (darker) accent color for the panel behind.")
     icon_color: str = Field(default="#D1D5DB", description="The color for the small smiley icon.")
@@ -1488,8 +1375,6 @@ class GenerateBusinessThankYouSlideInput(BaseModel):
     main_text_color: str = Field(default="#0056d2", description="Color for main text (default: blue).")
     subtitle_color: str = Field(default="#666666", description="Color for subtitle text.")
     accent_color: str = Field(default="#0056d2", description="Color for decorative D-shapes.")
-    main_font: str = Field(default="Arial, sans-serif", description="Font family for main text.")
-    subtitle_font: str = Field(default="Arial, sans-serif", description="Font family for subtitle.")
 class GenerateThankYouSlide4Input(BaseModel):
     """Input schema for generate_thank_you_slide_4 (speech bubble thank you slide)."""
     main_text: str = Field(default="THANK YOU!", description="The thank you message text displayed in the speech bubble.")
@@ -1497,7 +1382,6 @@ class GenerateThankYouSlide4Input(BaseModel):
     bg_gradient_to: str = Field(default="#A8D8F0", description="Background gradient end color. Default: light blue.")
     text_color: str = Field(default="#2C5F8D", description="Color of the thank you text.")
     bubble_bg_color: str = Field(default="#FFFFFF", description="Background color of the speech bubble. Default: white.")
-    font_family: str = Field(default="Arial, sans-serif", description="Font family for the thank you text.")
     show_speech_tail: bool = Field(default=True, description="Whether to show the speech bubble tail pointing downward.")
     custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
 
@@ -1518,7 +1402,6 @@ class GenerateWatercolorThankYouSlideInput(BaseModel):
     text_color: str = Field(default="#1e3a5f", description="Color of the main title text. Default: dark blue.")
     watercolor_color: str = Field(default="#4dd0e1", description="Color of the watercolor splash effect. Default: cyan.")
     watercolor_opacity: float = Field(default=0.6, description="Opacity of the watercolor effect (0.0 to 1.0). Default: 0.6.")
-    font_family: str = Field(default="'Brush Script MT', cursive, serif", description="Font family for the title. Default: cursive/script style.")
     show_watercolor: Optional[bool] = Field(default=True, description="Whether to show watercolor background effects. Default: True.")
     custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
     
@@ -1542,7 +1425,6 @@ class GenerateThankYouSlide6Input(BaseModel):
     text_color: str = Field(default="#1a3a52", description="Color of the main text. Default: navy blue (#1a3a52).")
     show_decorative_elements: Optional[bool] = Field(default=True, description="Whether to show sunburst patterns and decorative dots. Default: True.")
     show_olive_branches: Optional[bool] = Field(default=True, description="Whether to show olive branch decorations. Default: True.")
-    font_family: str = Field(default="'Dancing Script', 'Brush Script MT', cursive", description="Font family for the main text. Default: Dancing Script.")
     custom_css: str = Field(default="", description="Additional custom CSS styles to apply.")
 
 class GenerateThankYouSlide7Input(BaseModel):
@@ -1550,7 +1432,6 @@ class GenerateThankYouSlide7Input(BaseModel):
     main_text: str = Field(default="THANK YOU!", description="Main text to display. Default: 'THANK YOU!'.")
     bg_color: str = Field(default="#F5F3F0", description="Background color of the slide. Default: light warm gray (#F5F3F0).")
     text_color: str = Field(default="#7A6350", description="Color of the main text. Default: brown/taupe (#7A6350).")
-    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
 class GenerateModernContactSlideInput(BaseModel):
     """Input schema for generate_modern_contact_slide."""
@@ -1565,7 +1446,6 @@ class GenerateModernContactSlideInput(BaseModel):
     contact_text_color: str = Field(default="#333333", description="Color of the contact details on the white background.")
     top_image_url: str = Field(default="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop", description="URL for the top-right background image (charts/abstract).")
     bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop", description="URL for the bottom-right corner image (team/office).")
-    font_family: str = Field(default="'Roboto', sans-serif", description="Font family for all text elements.")
     show_logo: Optional[bool] = Field(default=True, description="Whether to display the logo placeholder.")
 
 class GenerateClosingSlideInput(BaseModel):
@@ -1577,7 +1457,6 @@ class GenerateClosingSlideInput(BaseModel):
     bg_color: str = Field(default="#FDFBF7", description="Background color of the slide (hex code). Default is a warm off-white.")
     primary_color: str = Field(default="#263238", description="Color for the text and main graphic elements (hex code). Default is dark slate.")
     accent_shape_color: str = Field(default="#DDE6ED", description="Color for the decorative background shape behind the image (hex code).")
-    font_family: str = Field(default="'DM Sans', sans-serif", description="Font family for the text.")
     show_sunburst: Optional[bool] = Field(default=True, description="Whether to show the sunburst/line graphic.")
     show_dots: Optional[bool] = Field(default=True, description="Whether to show the dot grid pattern.")
     custom_css: str = Field(default="", description="Additional custom CSS to be included.")
@@ -1590,7 +1469,6 @@ class GenerateMinimalistThankYouSlideInput(BaseModel):
     primary_color: str = Field(default="#59664D", description="Main accent color for text and decorations (Hex code). Default: Olive Green (#59664D).")
     secondary_color: str = Field(default="#E8E8E8", description="Color for the background geometric blocks (Hex code). Default: Light Gray (#E8E8E8).")
     bg_color: str = Field(default="#FFFFFF", description="Background color of the slide (Hex code). Default: White.")
-    font_family: str = Field(default="'DM Sans', 'Arial', sans-serif", description="Font family for text. Default: DM Sans.")
     show_shapes: Optional[bool] = Field(default=True, description="Whether to show the decorative corner rectangles. Default: True.")
     custom_css: str = Field(default="", description="Additional custom CSS to append to the style block.")
 
@@ -1603,7 +1481,6 @@ class GenerateMinimalistSageSlideInput(BaseModel):
     accent_color: str = Field(default="#FFDAC1", description="Color for the glowing accents/orbs (Hex code). Default: Pastel Peach.")
     shape_color: str = Field(default="#E0E7E5", description="Color for the large geometric curved shapes (Hex code). Default: Sage Green.")
     text_color: str = Field(default="#1A2F28", description="Color of the text elements (Hex code). Default: Dark Green.")
-    font_family: str = Field(default="'Montserrat', sans-serif", description="Font family to use.")
     show_glow_effects: bool = Field(default=True, description="Whether to render the soft blurred gradient orbs.")
 
 class GenerateThankYouSoMuchSlideInput(BaseModel):
@@ -1619,7 +1496,6 @@ class GenerateThankYouSoMuchSlideInput(BaseModel):
     bg_color: str = Field(default="#F9F7F2", description="Primary background color (hex code). Default is a light cream/beige.")
     text_color: str = Field(default="#5A6B6D", description="Primary text color (hex code). Default is a slate grey.")
     accent_color: str = Field(default="#5A6B6D", description="Color for icons and graphical elements.")
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family for the slide text.")
     show_corner_accent: Optional[bool] = Field(default=True, description="Whether to show the decorative geometric arrow in the bottom left corner.")
 
 class GenerateBrandCollaborationClosingSlideInput(BaseModel):
@@ -1644,9 +1520,6 @@ class GenerateBrandCollaborationClosingSlideInput(BaseModel):
         default="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1740&auto=format&fit=crop", 
         description="URL for the smaller image on the right."
     )
-    title_font: str = Field(default="'Playfair Display', serif", description="Font family for the main title.")
-    body_font: str = Field(default="'DM Sans', sans-serif", description="Font family for body text and headers.")
-    script_font: str = Field(default="'Mrs Saint Delafield', cursive", description="Font family for the signature text.")
 
 class GenerateMilitaryThankYouSlideInput(BaseModel):
     """Input schema for generate_military_thank_you_slide."""
@@ -1656,7 +1529,6 @@ class GenerateMilitaryThankYouSlideInput(BaseModel):
     primary_color: str = Field(default="#4B5320", description="The primary olive green/military color for the design accents (Hex).")
     secondary_color: str = Field(default="#556B2F", description="The secondary lighter green or accent color (Hex).")
     text_color: str = Field(default="#000000", description="The color of the typography (Hex).")
-    font_family: str = Field(default="'Arial Black', sans-serif", description="The font family for the slide.")
     overlay_opacity: float = Field(default=0.2, description="The opacity of the white overlay on the background image (0.0 to 1.0).")
 
 class GenerateCorporate2ThankYouInput(BaseModel):
@@ -1669,7 +1541,6 @@ class GenerateCorporate2ThankYouInput(BaseModel):
     accent_color: str = Field(default="#3B82F6", description="Accent color for highlights and secondary elements (Hex code).")
     text_color: str = Field(default="#7A6350", description="Color for the main text content (Hex code).")
     bg_color: str = Field(default="#F5F3F0", description="Background color of the slide (Hex code).")
-    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the text. Default: Playfair Display.")
 
 class GenerateCreativeThankYouInput(BaseModel):
     """Input schema for generate_creative_thank_you_slide ."""
@@ -1679,28 +1550,24 @@ class GenerateCreativeThankYouInput(BaseModel):
     bg_gradient_start: str = Field(default="#F5F3F0", description="Starting color of the background gradient (Hex code).")
     bg_gradient_end: str = Field(default="#F5F3F0", description="Ending color of the background gradient (Hex code).")
     accent_color: str = Field(default="#BE123C", description="Accent color for decorative elements and highlights (Hex code).")
-    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the text. Default: Playfair Display.")
 
 class GenerateTechThankYouInput(BaseModel):
     main_title: str = Field(default="THANK YOU", description="The main title text displayed prominently in large letters (e.g., 'THANK YOU').")
     social_handle: str = Field(default="@tech_studio", description="Social media handle or username to display (e.g., '@tech_studio', '@yourcompany').")
     primary_neon: str = Field(default="#00FFFF", description="Primary neon color for glowing effects and accent elements (Hex code).")
     bg_dark: str = Field(default="#1a1a2e", description="Dark background color of the slide (Hex code).")
-    font_family: str = Field(default="'Montserrat', sans-serif", description="Font family for the main text. Default: Montserrat.")
 
 class GenerateMinimalistThankYouInput2(BaseModel):
     main_title: str = Field(default="END.", description="The main title text displayed prominently in large, bold letters (e.g., 'END.', 'THANK YOU').")
     footer_note: str = Field(default="2026 Portfolio Studio", description="Footer note or information displayed at the bottom of the slide (e.g., '2026 Portfolio Studio', company name, date).")
     text_color: str = Field(default="#000000", description="Text color for all text elements on the slide (Hex code).")
     bg_color: str = Field(default="#FFFFFF", description="Background color of the slide (Hex code).")
-    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
 class GenerateElegantThankYouInput(BaseModel):
     main_title: str = Field(default="Thank You", description="The stylized, decorative thank you text displayed in elegant script or serif font.")
     subtitle: str = Field(default="FOR YOUR KIND ATTENTION", description="Subtitle text displayed below the main title, typically in uppercase letters.")
     bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="URL of the elegant or sophisticated background image to display on the slide.")
     overlay_color: str = Field(default="rgba(255, 255, 255, 0.85)", description="Semi-transparent overlay color applied over the background image to ensure text readability (RGBA format).")
-    font_family: str = Field(default="'Playfair Display', 'Georgia', serif", description="Font family for the main text. Default: Playfair Display.")
 
 
 #---LINE CHART SLIDES-------------------------------------------------------------------------    
@@ -1837,14 +1704,6 @@ class GenerateLineChartSlide3(BaseModel):
         )
     )
 
-    font_family: str = Field(
-        default="Inter, sans-serif",
-        description=(
-            "Font family applied consistently across titles, labels, "
-            "and insight text to maintain stylistic coherence "
-            "in a modern technical presentation."
-        )
-    )
 
     accent_color: str = Field(
         default="#00F2FF",
@@ -2198,12 +2057,6 @@ CONTENT_TOOLS = [
         name="generate_image_cutout_list_slide",
         description="Generates a sophisticated list slide with a unique 'cut-out' effect, where the main content panel appears to sit on top of a continuous background image. Ideal for presenting key points, features, or agenda items in a modern, high-end style.",
         args_schema=GenerateImageCutoutListSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_body_slide2,
-        name="generate_body_slide2",
-        description="Generates an HTML slide with a main title, a large image on the left, and three content sections with icons on the right.",
-        args_schema=GenerateBodySlide2Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide4,
