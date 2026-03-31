@@ -112,7 +112,10 @@ INTRO_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/347/1600/900) NOT text! Text seeds cause 404s!
-5. MATCH previous slide's visual style
+5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
+   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2"></div>`
+   ❌ WRONG: `<math-field>E = mc^2</math-field>` or `$E = mc^2$`
+6. MATCH previous slide's visual style
 
 Generate clean, HIGHLY READABLE function call.
 """
@@ -131,7 +134,8 @@ TRANSITION_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/523/1600/900) NOT text! Text seeds cause 404s!
-4. CONSISTENCY: {previous_transition_context}
+4. MATH/EQUATIONS: If you need formulas, use: `<div data-type="equation" data-latex="formula"></div>`
+5. CONSISTENCY: {previous_transition_context}
 
 Generate BOLD, ULTRA-VISIBLE function call.
 """
@@ -159,9 +163,9 @@ CONTENT_PROMPT = """
 4. CONTENT: Concise, no filler words
 5. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
-6. MATH/EQUATIONS: If you need to output math formulas, you MUST write them in LaTeX and wrap them strictly inside `<math-field>` tags.
-   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
-   ❌ WRONG: `$E = mc^2$` or just `E=mc^2`
+6. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
+   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2"></div>`
+   ❌ WRONG: `<math-field>E = mc^2</math-field>` or `$E = mc^2$`
 
 Generate READABLE, professional function call.
 """
@@ -177,6 +181,7 @@ THANK_YOU_PROMPT = """
 **RULES:**
 1. CONTENT: "Thank You" ONLY
 2. IMAGE: seed/success/1600/900 or gradient
+3. MATH/EQUATIONS: If needed, use: `<div data-type="equation" data-latex="formula"></div>`
 
 Generate simple, HIGHLY VISIBLE function call.
 """
@@ -195,6 +200,7 @@ TEAM_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
 3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/456/1600/900) NOT text! Text seeds cause 404s!
+4. MATH/EQUATIONS: If needed, use: `<div data-type="equation" data-latex="formula"></div>`
 
 Generate professional, READABLE function call.
 """
@@ -218,6 +224,7 @@ CHART_PROMPT = """
    - Use contrasting colors for multiple series
    - Include grid lines for readability
    - Ensure proper spacing and sizing
+4. MATH/EQUATIONS: If needed, use: `<div data-type="equation" data-latex="formula"></div>`
 
 Generate professional, DATA-DRIVEN function call.
 """
