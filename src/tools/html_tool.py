@@ -24173,33 +24173,23 @@ def generate_radar_chart_slide_1(
         "Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. "
         "Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe."
     ),
-    chart_type="radar",
-    chart_options={
-        "unit": "đ",
-        "show_value": True,
-        "data_label_format": "{value}",
-        "show_grid_lines": True,
-        "show_axis_lines": True,
-        "max_value": 10,
-        "num_levels": 5,
-        "colors": {
-            "axis_color": "#D1D5DB",
-            "grid_color": "#E5E7EB",
-            "label_color": "#374151",
-            "accent_color": "#F4A261"
-        }
-    },
-    data_input={
-        "data": {
-            "axes": ["Y tế", "Tâm lý", "Dinh dưỡng", "Vận động", "Công nghệ", "Môi trường"],
-            "series": [
-                {"label": "Hiện tại", "values": [8.5, 9.2, 7.8, 8.0, 6.5, 8.8]},
-                {"label": "Mục tiêu", "values": [9.5, 9.5, 9.0, 8.5, 8.5, 9.5]}
-            ]
-        }
-    },
+    unit = "điểm"  ,
+    show_value = True,
+    data_label_format = "{value}",
+    show_grid_lines = True,
+    show_axis_lines = True,
+    max_value = 10,
+    num_levels = 5,
+    axis_color = "#D1D5DB",
+    grid_color = "#E5E7EB",
+    label_color = "#374151",
+    accent_color = "#F4A261",
+    axes = ["Y tế", "Tâm lý", "Dinh dưỡng", "Vận động", "Công nghệ", "Môi trường"],
+    series = [
+        {"label": "Hiện tại", "values": [8.5, 9.2, 7.8, 8.0, 6.5, 8.8]},
+        {"label": "Mục tiêu", "values": [9.5, 9.5, 9.0, 8.5, 8.5, 9.5]}
+    ],
     font_family="'Inter', sans-serif",
-    accent_color="#F4A261",
     main_title_color="#1D3557",
     subtitle_color="#457B9D",
     insight_text_color="#1D3557",
@@ -24213,17 +24203,14 @@ def generate_radar_chart_slide_1(
     """
 
     # ===== 1. GET & PROCESS DATA =====
-    data = data_input.get("data", {})
-    axes = data.get("axes", [])
-    series = data.get("series", [])
     num_axes = len(axes)
-    
-    options = chart_options
-    max_val = options.get("max_value") or 10
-    num_levels = options.get("num_levels", 5)
-    colors_opt = options.get("colors", {})
-    
-    import math
+
+    max_val = max_value
+    colors_opt = {
+        "axis_color": axis_color,
+        "grid_color": grid_color,
+        "label_color": label_color
+    }
 
     # Cấu hình kích thước SVG
     width, height = 900, 700
@@ -24239,13 +24226,14 @@ def generate_radar_chart_slide_1(
     
     # Grid lines (concentric polygons)
     grid_html = ""
-    for i in range(1, num_levels + 1):
-        level_val = (max_val / num_levels) * i
-        points = []
-        for j in range(num_axes):
-            px, py = get_coords(level_val, j, num_axes)
-            points.append(f"{px},{py}")
-        grid_html += f'<polygon points="{" ".join(points)}" fill="none" stroke="{colors_opt.get("grid_color", "#EEE")}" stroke-width="1" />'
+    if show_grid_lines:
+        for i in range(1, num_levels + 1):
+            level_val = (max_val / num_levels) * i
+            points = []
+            for j in range(num_axes):
+                px, py = get_coords(level_val, j, num_axes)
+                points.append(f"{px},{py}")
+            grid_html += f'<polygon points="{" ".join(points)}" fill="none" stroke="{colors_opt.get("grid_color", "#EEE")}" stroke-width="1" />'
 
     # Axis lines and Labels
     axes_html = ""
@@ -24253,7 +24241,8 @@ def generate_radar_chart_slide_1(
     for i in range(num_axes):
         px, py = get_coords(max_val, i, num_axes)
         # Line from center
-        axes_html += f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="{colors_opt.get("axis_color", "#CCC")}" stroke-width="1" />'
+        if show_axis_lines:
+            axes_html += f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="{colors_opt.get("axis_color", "#CCC")}" stroke-width="1" />'
         
         # Labels placement
         label_r = radius + 40
@@ -24280,34 +24269,25 @@ def generate_radar_chart_slide_1(
         for i, val in enumerate(s_values):
             px, py = get_coords(val, i, num_axes)
             points.append(f"{px},{py}")
-            if options.get("show_value"):
+            if show_value:
                 data_points_html += f'<circle cx="{px}" cy="{py}" r="5" fill="{s_color}" />'
                 vx, vy = px - cx, py - cy
                 norm = math.sqrt(vx * vx + vy * vy) or 1
                 ux, uy = vx / norm, vy / norm
-                label_distance = 24
-                if idx == 0:  # "Hiện tại" -> đặt số vào bên trong polygon
-                    tx, ty = px - ux * label_distance, py - uy * label_distance
-                else:  # "Mục tiêu" -> đặt số ra ngoài polygon
-                    tx, ty = px + ux * label_distance, py + uy * label_distance
+                
+                # Stagger labels based on series index to avoid overlap
+                label_dist = 22 + idx * 20
+                tx = px + ux * label_dist
+                ty = py + uy * label_dist
 
                 anchor = "middle"
-                if idx == 0:
-                    # Label nằm trong: canh ngược chiều trục để text không tràn ra ngoài
-                    if ux > 0.25:
-                        anchor = "end"
-                    elif ux < -0.25:
-                        anchor = "start"
-                else:
-                    # Label nằm ngoài: canh cùng chiều trục
-                    if ux > 0.25:
-                        anchor = "start"
-                    elif ux < -0.25:
-                        anchor = "end"
+                if ux < -0.2: anchor = "end"
+                elif ux > 0.2: anchor = "start"
 
+                display_text = data_label_format.replace("{value}", str(val)).replace("{unit}", unit)
                 data_points_html += (
                     f'<text x="{tx}" y="{ty}" text-anchor="{anchor}" '
-                    f'font-size="16" font-weight="bold" fill="{s_color}">{val}</text>'
+                    f'font-size="16" font-weight="bold" fill="{s_color}">{display_text}</text>'
                 )
         
         data_polygons_html += f"""
@@ -24322,6 +24302,9 @@ def generate_radar_chart_slide_1(
             <span class="legend-label">{s_label}</span>
         </div>
         """
+
+    # Convert hex accent_color to rgb for use in rgba()
+    accent_rgb = f"{int(accent_color[1:3], 16)}, {int(accent_color[3:5], 16)}, {int(accent_color[5:7], 16)}"
 
     # ===== 3. RENDER FINAL HTML =====
     html_code = f"""
@@ -24340,7 +24323,7 @@ def generate_radar_chart_slide_1(
                 background-image: 
                     radial-gradient(circle at 85% 15%, rgba(168, 218, 220, 0.15) 0%, transparent 40%),
                     radial-gradient(circle at 10% 90%, rgba(71, 123, 157, 0.08) 0%, transparent 45%),
-                    radial-gradient(circle at 50% 50%, rgba(244, 162, 97, 0.02) 0%, transparent 50%);
+                    radial-gradient(circle at 50% 50%, rgba({accent_rgb}, 0.02) 0%, transparent 50%);
             }}
             .header {{
                 padding: 80px 100px 40px 100px;
@@ -24368,7 +24351,7 @@ def generate_radar_chart_slide_1(
                 box-shadow: 0 8px 24px rgba(29, 53, 87, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
                 font-size: {insight_font_size}; color: {insight_text_color};
                 line-height: 1.7; border-left: 4px solid #457B9D;
-                border-top: 4px solid rgba(244, 162, 97, 0.3);
+                border-top: 4px solid rgba({accent_rgb}, 0.3);
                 margin-bottom: 50px; font-weight: 500; letter-spacing: 0.3px;
             }}
             .legend-container {{
@@ -24459,7 +24442,217 @@ def generate_radar_chart_slide_1(
     """
     return html_code
 
+def generate_radar_chart_slide_2(
+    main_title="European Cultural Dimensions",
+    subtitle="Analysis of Heritage, Arts, and Lifestyle Metrics across Regions",
+    insight=(
+        "Southern Europe leads in Gastronomy and Heritage preservation, while Northern regions "
+        "show higher indices in Modern Art and Digital Innovation. Central Europe maintains "
+        "a balanced profile across traditional and contemporary cultural pillars."
+    ),
+    chart_type="radar",
+    unit= " pts",
+    show_value= True,
+    data_label_format= "{value}",
+    show_grid_lines= True,
+    show_axis_lines= True,
+    max_value= 100,
+    num_levels = 5,
+    axis_color = "#5E6472",
+    grid_color = "#D1D5DB",
+    label_color = "#264653",
+    accent_color = "#E76F51",
+    axes = ["Heritage", "Gastronomy", "Fine Arts", "Modern Art", "Music", "Festivals"],
+    series = [
+        {"label": "Southern Europe", "values": [95, 98, 85, 70, 88, 92]},
+        {"label": "Northern Europe", "values": [75, 72, 80, 94, 90, 78]},
+        {"label": "Central Europe", "values": [88, 85, 92, 78, 95, 82]}
+    ],
+    font_family="'Playfair Display', serif, 'Inter', sans-serif",
+    main_title_color="#264653",
+    subtitle_color="#5E6472",
+    insight_text_color="#333333",
+    main_title_font_size="70px",
+    subtitle_font_size="30px",
+    insight_font_size="28px"
+) -> str:
+    """
+    Generates a professional Radar Chart slide with an elegant European aesthetic.
+    Suitable for cultural analysis, regional comparisons, or multivariate performance data.
+    """
 
+    # ===== 1. GET DATA & OPTIONS =====
+    num_axes = len(axes)
+    max_val = max_value
+
+    
+    # Palette inspired by European Streets (Terracotta, Navy, Gold, Cream)
+    series_colors = ["#E76F51", "#264653", "#C79A22", "#2A9D8F", "#F4A261"]
+
+    # ===== 2. RADAR CALCULATIONS =====
+    cx, cy = 500, 500
+    radius = 380
+    
+    def get_coords(value, index, total):
+        angle = (2 * math.pi * index / total) - (math.pi / 2)
+        r = (value / max_val) * radius
+        return cx + r * math.cos(angle), cy + r * math.sin(angle)
+
+    # Grid Lines (Concentric polygons)
+    grid_html = ""
+    if show_grid_lines:
+        for i in range(1, num_levels + 1):
+            level_val = (max_val / num_levels) * i
+            points = [get_coords(level_val, j, num_axes) for j in range(num_axes)]
+            path_data = "M " + " L ".join(f"{p[0]},{p[1]}" for p in points) + " Z"
+            grid_html += f'<path d="{path_data}" fill="none" stroke="{grid_color}" stroke-width="1" />'
+
+    # Axis Lines & Labels
+    axes_html = ""
+    labels_html = ""
+    for i, axis_name in enumerate(axes):
+        x_end, y_end = get_coords(max_val, i, num_axes)
+        if show_axis_lines:
+            axes_html += f'<line x1="{cx}" y1="{cy}" x2="{x_end}" y2="{y_end}" stroke="{axis_color}" stroke-width="1" stroke-dasharray="4,4" />'
+        
+        # Calculate label position (slightly outside the radius)
+        lx, ly = get_coords(max_val + 15, i, num_axes)
+        anchor = "middle"
+        if lx < cx - 10: anchor = "end"
+        elif lx > cx + 10: anchor = "start"
+        
+        labels_html += f'<text x="{lx}" y="{ly}" text-anchor="{anchor}" fill="{label_color}" font-size="25px" font-weight="600">{axis_name}</text>'
+
+    # Data Polygons
+    data_polygons_html = ""
+    legend_items_html = ""
+    for idx, s in enumerate(series):
+        s_color = series_colors[idx % len(series_colors)]
+        s_values = s.get("values", [])
+        points = [get_coords(v, i, num_axes) for i, v in enumerate(s_values)]
+        path_data = "M " + " L ".join(f"{p[0]},{p[1]}" for p in points) + " Z"
+        
+        data_polygons_html += f"""
+            <path d="{path_data}" fill="{s_color}" fill-opacity="0.25" stroke="{s_color}" stroke-width="4" />
+        """
+        
+        # Points and Values
+        if show_value:
+            for i, p in enumerate(points):
+                data_polygons_html += f'<circle cx="{p[0]}" cy="{p[1]}" r="6" fill="{s_color}" />'
+                val_text = data_label_format.replace("{value}", str(s_values[i])).replace("{unit}", unit)
+
+                # Calculate radial vector for label positioning
+                vx, vy = p[0] - cx, p[1] - cy
+                norm = math.sqrt(vx * vx + vy * vy) or 1
+                ux, uy = vx / norm, vy / norm
+                
+                # Stagger labels based on series index to avoid overlap
+                label_dist = 25 + idx * 22
+                tx = p[0] + ux * label_dist
+                ty = p[1] + uy * label_dist
+                
+                # Adjust text anchor based on radial direction
+                anchor = "middle"
+                if ux < -0.2: anchor = "end"
+                elif ux > 0.2: anchor = "start"
+
+                data_polygons_html += f'<text x="{tx}" y="{ty}" text-anchor="{anchor}" fill="{s_color}" font-size="25px" font-weight="bold">{val_text}</text>'
+
+        # Legend building
+        legend_items_html += f"""
+        <div style="display: flex; align-items: center; margin-bottom: 15px;">
+            <div style="width: 25px; height: 25px; background: {s_color}; border-radius: 4px; margin-right: 15px;"></div>
+            <div style="font-size: 24px; color: {subtitle_color}; font-weight: 500;">{s.get('label')}</div>
+        </div>
+        """
+
+    # ===== 3. FINAL SVG ASSEMBLY =====
+    radar_svg = f"""
+    <div style="width: 850px; height: 850px;">
+        <svg viewBox="0 0 1000 1000" width="100%" height="100%">
+            {grid_html}
+            {axes_html}
+            {data_polygons_html}
+            {labels_html}
+        </svg>
+    </div>
+    """
+
+    # Convert hex accent_color to rgb for use in rgba()
+    accent_rgb = f"{int(accent_color[1:3], 16)}, {int(accent_color[3:5], 16)}, {int(accent_color[5:7], 16)}"
+
+    # ===== 4. RENDER HTML =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+        <style>
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
+                font-family: {font_family}; background-color: #FDF6E3;
+                background-image: linear-gradient(rgba({accent_rgb}, 0.03) 1px, transparent 1px), 
+                                  linear-gradient(90deg, rgba({accent_rgb}, 0.03) 1px, transparent 1px);
+                background-size: 60px 60px;
+            }}
+            .title-section {{
+                position: absolute; top: 80px; left: 100px; width: 1720px;
+            }}
+            .main-title {{
+                font-size: {main_title_font_size}; color: {main_title_color}; font-weight: 900; 
+                margin: 0; text-transform: uppercase; letter-spacing: -1px;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; font-weight: 500;
+            }}
+            .insight-box {{
+                position: absolute; left: 60px; top: 320px; width: 400px;
+                padding: 35px; background: white; border-top: 10px solid {accent_color};
+                box-shadow: 20px 20px 60px rgba(0,0,0,0.05); border-radius: 0 0 15px 15px;
+                font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.6;
+            }}
+            .legend-box {{
+                position: absolute; right: 80px; top: 320px; width: 300px;
+            }}
+            .chart-container {{
+                position: absolute; left: 50%; top: 180px; transform: translateX(-50%);
+            }}
+            .decor-line {{
+                position: absolute; top: 0; left: 0; width: 100%; height: 15px; background: {accent_color};
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="decor-line"></div>
+        
+        <div class="title-section">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+
+        <div class="insight-box">
+            {insight}
+        </div>
+
+        <div class="legend-box">
+            {legend_items_html}
+        </div>
+
+        <div class="chart-container">
+            {radar_svg}
+        </div>
+        
+        <!-- Decorative SVG Arch -->
+        <div style="position: absolute; bottom: -50px; right: -50px; width: 400px; height: 400px; opacity: 0.05; pointer-events: none;">
+            <svg viewBox="0 0 200 200" fill="{main_title_color}">
+                <path d="M20,180 L20,100 C20,55.8 55.8,20 100,20 C144.2,20 180,55.8 180,100 L180,180 L160,180 L160,100 C160,66.8 133.2,40 100,40 C66.8,40 40,66.8 40,100 L40,180 Z" />
+            </svg>
+        </div>
+    </body>
+    </html>
+    """
 
 #-------TABLE CHART SLIDES------------------------------------------------------------------
 
@@ -24909,6 +25102,854 @@ def generate_treemap_chart_slide_1(
         <div style="position: absolute; bottom: 40px; right: 60px; font-size: 18px; color: #475569;">
             Wardiere Finance | Internal Strategy Document
         </div>
+    </body>
+    </html>
+    """
+
+#-------PIE CHART SLIDES------------------------------------------------------------------
+
+def generate_pie_chart_slide_1(
+    main_title = "Quarterly Revenue Breakdown",
+    subtitle = "Data Source: Financial Year 2025 Reports",
+    insight = "AI Services now account for nearly half of total revenue growth.",
+    chart_type = "pie",
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    data_label_format = "{value}{unit}",
+    colors = ["#818CF8", "#2DD4BF", "#FBBF24", "#FB7185"],
+    items = [
+        {"label": "AI Services", "value": 45},
+        {"label": "Cloud Hosting", "value": 25},
+        {"label": "Consulting", "value": 20},
+        {"label": "Support", "value": 10}
+    ],
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#F472B6",
+    main_title_color: str = "#38BDF8",
+    subtitle_color: str = "#CCCCCC",
+    insight_text_color: str = "#FFFFFF",
+    main_title_font_size: str = "70px",
+    subtitle_font_size: str = "32px",
+    insight_font_size: str = "34px",
+    legend_font_size: str = "25px",
+    background_color: str = "#0F172A"
+) -> str:
+    """
+    Generates a high-impact HTML slide featuring a pie chart, 
+    designed with a teal-accented dark theme.
+    """
+    
+    # Calculate SVG Pie Chart Slices
+    total = sum(item['value'] for item in items)
+    cumulative_percent = 0
+    svg_paths = ""
+    legend_html = ""
+
+    for i, item in enumerate(items):
+        color = colors[i % len(colors)]
+        percent = (item['value'] / total) * 100
+        
+        # Simple SVG Circle sector calculation logic
+        start_angle = (cumulative_percent / 100) * 360
+        end_angle = ((cumulative_percent + percent) / 100) * 360
+        
+        # For simplicity in a single-file HTML output, we use a stroke-dasharray approach
+        offset = 100 - cumulative_percent + 25 # Start from top
+        svg_paths += f'<circle r="15.9" cx="21" cy="21" fill="transparent" stroke="{color}" stroke-width="8" stroke-dasharray="{percent} {100-percent}" stroke-dashoffset="{offset}" />'
+        
+        cumulative_percent += percent
+        
+        if show_legend:
+            formatted_value = data_label_format.format(value=item['value'], unit=unit) if show_value else ""
+            label_suffix = f" ({formatted_value})" if show_value else ""
+            legend_html += f'''
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: {legend_font_size}; height: {legend_font_size}; background: {color}; margin-right: 10px; border-radius: 3px;"></div>
+                <span style="color: white; font-size: {legend_font_size};">{item['label']}{label_suffix}</span>
+            </div>'''
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body {{
+                margin: 0;
+                background-color: {background_color};
+                font-family: {font_family};
+                color: white;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }}
+            .upper-section {{
+                padding: 60px 80px 20px 80px;
+            }}
+            .main-title {{
+                font-size: {main_title_font_size};
+                color: {main_title_color};
+                font-weight: 800;
+                margin: 0;
+                text-transform: uppercase;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                color: {subtitle_color};
+                opacity: 0.8;
+                margin-top: 10px;
+            }}
+            .main-content {{
+                display: flex;
+                flex: 1;
+                padding: 0 80px 60px 80px;
+                align-items: center;
+            }}
+            .left-section {{
+                flex: 1;
+                padding-right: 40px;
+            }}
+            .insight-box {{
+                border-left: 5px solid {accent_color};
+                padding: 20px 30px;
+                background: rgba(255, 255, 255, 0.05);
+                font-size: {insight_font_size};
+                color: {insight_text_color};
+                margin-bottom: 40px;
+                line-height: 1.4;
+            }}
+            .right-section {{
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }}
+            .chart-container {{
+                width: 450px;
+                height: 450px;
+            }}
+            svg {{
+                transform: rotate(-90deg);
+                border-radius: 50%;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="upper-section">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-section">
+                <div class="insight-box">
+                    {insight}
+                </div>
+                <div class="legend">
+                    {legend_html}
+                </div>
+            </div>
+            
+            <div class="right-section">
+                <div class="chart-container">
+                    <svg viewBox="0 0 42 42" width="100%" height="100%">
+                        {svg_paths}
+                        {f'<circle r="12" cx="21" cy="21" fill="{background_color}" />' if chart_type == "donut" else ""}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
+
+def generate_pie_chart_slide_2_setDonut(
+    main_title: str = "Technology Market Share 2024",
+    subtitle: str = "Source: Global Tech Market Report",
+    insight: str = (
+        "AI services dominate the market with nearly half of the total share, "
+        "while cloud infrastructure and cybersecurity continue to grow steadily."
+    ),
+    chart_type: str = "donut",
+    unit: str = "%",
+    show_value: bool = True,
+    show_legend: bool = True,
+    data_label_format: str = "{value}{unit}",
+    colors: list = ["#32CD32",  # xanh lục 
+                    "#FF7F50",  # cam coral
+                    "#FFD700",  # vàng gold
+                    "#8A2BE2"],  # tím blueviolet
+    items = [
+        {"label": "AI Services", "value": 45},
+        {"label": "Cloud Infrastructure", "value": 25},
+        {"label": "Cybersecurity", "value": 18},
+        {"label": "IoT Platforms", "value": 12}
+    ],
+    font_family: str = "Inter, sans-serif",
+    accent_color: str = "#5FD9D3",
+    main_title_color: str = "#5FD9D3",
+    subtitle_color: str = "#FFFFFF",
+    insight_text_color: str = "#FFFFFF",
+    main_title_font_size: str = "70px",
+    subtitle_font_size: str = "32px",
+    insight_font_size: str = "34px"
+) -> str:
+
+    items = items or []
+    # ===== SVG CONFIG =====
+    svg_w, svg_h = 1000, 700
+    center_x, center_y = svg_w / 2, svg_h / 2
+
+    radius = 280
+    inner_radius = radius * 0.6 if chart_type == "donut" else 0
+
+    total = sum(item.get("value", 0) for item in items)
+    if total == 0:
+        total = 1
+
+    chart_elements = ""
+    current_angle = -90
+
+    for idx, item in enumerate(items):
+
+        value = item.get("value", 0)
+        percentage = (value / total) * 100
+        slice_angle = (value / total) * 360
+        color = colors[idx % len(colors)]
+
+        start_rad = math.radians(current_angle)
+        end_rad = math.radians(current_angle + slice_angle)
+
+        x1 = center_x + radius * math.cos(start_rad)
+        y1 = center_y + radius * math.sin(start_rad)
+
+        x2 = center_x + radius * math.cos(end_rad)
+        y2 = center_y + radius * math.sin(end_rad)
+
+        large_arc = 1 if slice_angle > 180 else 0
+
+        if chart_type == "donut":
+
+            ix1 = center_x + inner_radius * math.cos(start_rad)
+            iy1 = center_y + inner_radius * math.sin(start_rad)
+
+            ix2 = center_x + inner_radius * math.cos(end_rad)
+            iy2 = center_y + inner_radius * math.sin(end_rad)
+
+            path_data = (
+                f"M {x1} {y1} "
+                f"A {radius} {radius} 0 {large_arc} 1 {x2} {y2} "
+                f"L {ix2} {iy2} "
+                f"A {inner_radius} {inner_radius} 0 {large_arc} 0 {ix1} {iy1} Z"
+            )
+
+        else:
+
+            path_data = (
+                f"M {center_x} {center_y} "
+                f"L {x1} {y1} "
+                f"A {radius} {radius} 0 {large_arc} 1 {x2} {y2} Z"
+            )
+
+        chart_elements += f'''
+        <path d="{path_data}" fill="{color}" stroke="#5FD9D3" stroke-width="3"/>
+        '''
+
+        if show_value and slice_angle > 15:
+
+            mid_rad = math.radians(current_angle + slice_angle / 2)
+
+            label_r = (radius + inner_radius) / 2 if chart_type == "donut" else radius * 0.7
+
+            lx = center_x + label_r * math.cos(mid_rad)
+            ly = center_y + label_r * math.sin(mid_rad)
+
+            label_text = data_label_format.replace("{value}", f"{percentage:.1f}").replace("{unit}", unit)
+
+            chart_elements += f'''
+            <text x="{lx}" y="{ly}" fill="white"
+            font-size="20" font-weight="bold"
+            text-anchor="middle"
+            dominant-baseline="middle">
+            {label_text}
+            </text>
+            '''
+
+        current_angle += slice_angle
+
+    # ===== LEGEND =====
+    legend_html = ""
+
+    if show_legend:
+
+        for i, item in enumerate(items):
+
+            color = colors[i % len(colors)]
+            perc = (item.get("value", 0) / total) * 100
+
+            legend_html += f'''
+            <div style="display:flex;align-items:center;margin-bottom:20px;">
+                <div style="width:24px;height:24px;background:{color};
+                border-radius:4px;margin-right:15px;
+                box-shadow:0 0 10px {color}66;"></div>
+
+                <div style="color:white;font-size:24px;">
+                {item.get("label","")}
+                <span style="color:{accent_color};opacity:0.8;">
+                ({perc:.1f}%)
+                </span>
+                </div>
+            </div>
+            '''
+
+    # ===== HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+
+    <style>
+
+    html,body{{
+        width:1920px;
+        height:1080px;
+        margin:0;
+        padding:0;
+        overflow:hidden;
+        font-family:{font_family};
+        background: linear-gradient(135deg, #020c24, #1a2a4a, #5FD9D3);
+        color:white;
+    }}
+
+    .bg-decoration{{
+        position:absolute;
+        width:100%;
+        height:100%;
+        z-index:0;
+        background:radial-gradient(circle at 90% 90%, #1a2a4a 0%, transparent 50%);
+    }}
+
+    .container{{
+    position:relative;
+    z-index:1;
+    padding:80px 100px;
+    height:920px;
+    display:flex;
+    flex-direction:column;
+    }}
+
+    .header-box{{
+    margin-bottom:60px;
+    border-left:10px solid {accent_color};
+    padding-left:35px;
+    }}
+
+    h1{{
+        font-size:{main_title_font_size};
+        color:{main_title_color};
+        margin:0;
+        text-transform:uppercase;
+        letter-spacing:2px;
+    }}
+
+    .subtitle{{
+        font-size:{subtitle_font_size};
+        color:{subtitle_color};
+        margin-top:10px;
+        opacity:0.8;
+    }}
+
+    .content-grid{{
+    display:flex;
+    flex:1;
+    gap:80px;
+    align-items:center;
+    }}
+
+    .left-col{{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    }}
+
+    .insight-box{{
+        background:rgba(255,255,255,0.05);
+        border:2px solid #5FD9D3;
+        border-radius:25px;
+        box-shadow:0 0 15px #5FD9D3AA;
+        padding:35px;
+        margin-bottom:40px;
+        font-size:{insight_font_size};
+        color:{insight_text_color};
+        line-height:1.5;
+    }}
+
+    .right-col{{
+    flex:1.2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    }}
+
+    .right-col svg{{
+    max-width:100%;
+    height:auto;
+    }}
+
+    </style>
+    </head>
+
+    <body>
+
+    <div class="bg-decoration"></div>
+
+    <div class="container">
+
+    <div class="header-box">
+    <h1>{main_title}</h1>
+    <div class="subtitle">{subtitle}</div>
+    </div>
+
+    <div class="content-grid">
+
+    <div class="left-col">
+
+    <div class="insight-box">
+    {insight}
+    </div>
+
+    <div class="legend-container">
+    {legend_html}
+    </div>
+
+    </div>
+
+    <div class="right-col">
+
+    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+    {chart_elements}
+    </svg>
+
+    </div>
+
+    </div>
+
+    </div>
+
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_pie_chart_slide_3_setDonut(
+    main_title: str = "MILITARY ALLOCATION",
+    subtitle: str = "Regional Force Distribution & Resource Management",
+    insight: str = (
+        "The majority of forces are concentrated in regional units to ensure "
+        "rapid response, while specialized corps maintain technical superiority "
+        "across all major military routes."
+    ),
+    chart_type: str = "donut",
+    unit: str = "%",
+    show_value: bool = False,
+    show_legend: bool = True,
+    data_label_format: str = "{value}{unit}",
+    colors: list = ["#c0935d", "#8e6d45", "#5c482e", "#d4af37", "#a67c00"],
+    items: list = [
+        {"label": "Regional Units", "value": 40},
+        {"label": "Specialized Corps", "value": 25},
+        {"label": "Supply Division", "value": 20},
+        {"label": "Scouting Network", "value": 15}
+    ],
+    font_family: str = "'Cormorant Garamond', serif",
+    accent_color: str = "#c0935d",
+    main_title_color: str = "#f0f0f0",
+    subtitle_color: str = "#c0935d",
+    insight_text_color: str = "#ffffff",
+    main_title_font_size: str = "100px",
+    subtitle_font_size: str = "32px",
+    insight_font_size: str = "30px"
+) -> str:
+    """
+    Hàm sinh HTML cho slide biểu đồ tròn phong cách Ingoude.
+    Sử dụng màu xanh lục bảo đậm và màu vàng cát làm điểm nhấn.
+    """
+    
+    items = items or []
+    # ===== SVG CONFIG =====
+    svg_w, svg_h = 700, 700
+    center_x, center_y = svg_w / 2, svg_h / 2
+    radius = 280
+    inner_radius = radius * 0.65 if chart_type == "donut" else 0
+
+    total = sum(item.get("value", 0) for item in items)
+    if total == 0: total = 1
+
+    chart_elements = ""
+    current_angle = -90
+
+    for idx, item in enumerate(items):
+        value = item.get("value", 0)
+        percentage = (value / total) * 100
+        slice_angle = (value / total) * 360
+        color = colors[idx % len(colors)]
+
+        start_rad = math.radians(current_angle)
+        end_rad = math.radians(current_angle + slice_angle)
+
+        x1 = center_x + radius * math.cos(start_rad)
+        y1 = center_y + radius * math.sin(start_rad)
+        x2 = center_x + radius * math.cos(end_rad)
+        y2 = center_y + radius * math.sin(end_rad)
+
+        large_arc = 1 if slice_angle > 180 else 0
+
+        if chart_type == "donut":
+            ix1 = center_x + inner_radius * math.cos(start_rad)
+            iy1 = center_y + inner_radius * math.sin(start_rad)
+            ix2 = center_x + inner_radius * math.cos(end_rad)
+            iy2 = center_y + inner_radius * math.sin(end_rad)
+            path_data = (
+                f"M {x1} {y1} A {radius} {radius} 0 {large_arc} 1 {x2} {y2} "
+                f"L {ix2} {iy2} A {inner_radius} {inner_radius} 0 {large_arc} 0 {ix1} {iy1} Z"
+            )
+        else:
+            path_data = (
+                f"M {center_x} {center_y} L {x1} {y1} "
+                f"A {radius} {radius} 0 {large_arc} 1 {x2} {y2} Z"
+            )
+
+        chart_elements += f'<path d="{path_data}" fill="{color}" stroke="#1a2e26" stroke-width="4"/>'
+
+        if show_value and slice_angle > 15:
+            mid_rad = math.radians(current_angle + slice_angle / 2)
+            label_r = (radius + inner_radius) / 2 if chart_type == "donut" else radius * 0.7
+            lx, ly = center_x + label_r * math.cos(mid_rad), center_y + label_r * math.sin(mid_rad)
+            label_text = data_label_format.replace("{value}", f"{percentage:.1f}").replace("{unit}", unit)
+            chart_elements += f'<text x="{lx}" y="{ly}" fill="white" font-size="22" font-weight="bold" text-anchor="middle" dominant-baseline="middle">{label_text}</text>'
+
+        current_angle += slice_angle
+
+    # Trang trí tâm biểu đồ (Donut)
+    if chart_type == "donut":
+        chart_elements += f'''
+        <circle cx="{center_x}" cy="{center_y}" r="{inner_radius - 5}" fill="none" stroke="{accent_color}" stroke-width="1" stroke-dasharray="10,5" opacity="0.5"/>
+        <text x="{center_x}" y="{center_y}" fill="{accent_color}" font-size="40" text-anchor="middle" dominant-baseline="middle" font-family="{font_family}">100%</text>
+        '''
+
+    # ===== LEGEND =====
+    legend_html = ""
+    if show_legend:
+        for i, item in enumerate(items):
+            color = colors[i % len(colors)]
+            perc = (item.get("value", 0) / total) * 100
+            legend_html += f'''
+            <div style="display:flex; align-items:center; margin-bottom:25px;">
+                <div style="width:18px; height:18px; background:{color}; margin-right:15px; border:1px solid rgba(255,255,255,0.3);"></div>
+                <div style="color:white; font-size:24px; font-weight:300; letter-spacing:1px;">
+                    {item.get("label","").upper()} <span style="color:{accent_color}; margin-left:10px;">{perc:.1f}%</span>
+                </div>
+            </div>
+            '''
+
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;600&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
+                font-family: {font_family}; background-color: #1a2e26; color: white;
+            }}
+            .main-container {{
+                position: relative; width: 100%; height: 100%;
+                display: flex; flex-direction: column; padding: 80px 100px; box-sizing: border-box;
+            }}
+            .top-border {{
+                position: absolute; top: 0; left: 0; width: 100%; height: 15px; background: {accent_color};
+            }}
+            .header-section {{
+                margin-bottom: 50px;
+            }}
+            h1 {{
+                font-size: {main_title_font_size}; color: {main_title_color}; margin: 0;
+                font-weight: 300; letter-spacing: 5px; line-height: 1; text-transform: uppercase;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 15px;
+                text-transform: uppercase; letter-spacing: 3px; font-family: 'Inter', sans-serif;
+            }}
+            .content-grid {{
+                display: flex; flex: 1; gap: 100px; align-items: flex-start; margin-top: 40px;
+            }}
+            .left-panel {{
+                flex: 1; display: flex; flex-direction: column;
+            }}
+            .insight-card {{
+                background: rgba(192, 147, 93, 0.05); border: 1px solid rgba(192, 147, 93, 0.3);
+                padding: 40px; margin-bottom: 50px; position: relative;
+            }}
+            .insight-card::before {{
+                content: '❈'; position: absolute; top: -15px; left: 20px; background: #1a2e26;
+                padding: 0 10px; color: {accent_color}; font-size: 24px;
+            }}
+            .insight-text {{
+                font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.6; font-style: italic;
+            }}
+            .right-panel {{
+                flex: 1.2; display: flex; justify-content: center; align-items: flex-start;
+                background: radial-gradient(circle, rgba(192,147,93,0.05) 0%, transparent 70%);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="top-border"></div>
+        <div class="main-container">
+            <div class="header-section">
+                <h1>{main_title}</h1>
+                <div class="subtitle">{subtitle}</div>
+            </div>
+            <div class="content-grid">
+                <div class="left-panel">
+                    <div class="insight-card">
+                        <div class="insight-text">{insight}</div>
+                    </div>
+                    <div class="legend-box">
+                        {legend_html}
+                    </div>
+                </div>
+                <div class="right-panel">
+                    <div class="svg-wrapper">
+                        <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                            {chart_elements}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_pie_chart_slide_4(
+    main_title = "Global Ecosystem Distribution",
+    subtitle = "Source: International Nature Conservation Report",
+    insight = (
+        "Forests make up the largest share of Earth's ecosystems, "
+        "supporting the highest biodiversity, while oceans and wetlands "
+        "play crucial roles in climate regulation and wildlife habitats."
+    ),
+    chart_type = "pie",
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    data_label_format = "{value}{unit}",
+    colors = ["#5FD9D3", "#4ABFB9", "#36A6A0", "#248C87"],
+    items = [
+            {"label": "Forests", "value": 40},
+            {"label": "Oceans", "value": 30},
+            {"label": "Grasslands", "value": 18},
+            {"label": "Wetlands", "value": 12}
+        ],
+    font_family="Inter, sans-serif",
+    accent_color="#38B2AC",
+    main_title_color="#2C7A7B",
+    subtitle_color="#4A5568",
+    insight_text_color="#2D3748",
+    main_title_font_size="70px",
+    subtitle_font_size="32px",
+    insight_font_size="34px"
+) -> str:
+    """
+    Tạo slide biểu đồ tròn hoặc donut với bố cục hiện đại.
+    Phù hợp để trình bày tỷ lệ phần trăm, phân bổ ngân sách hoặc thị phần.
+    """
+
+    # ===== 1. LẤY THÔNG TIN =====
+    # (Variables are provided as function arguments)
+
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 800, 800
+    center_x, center_y = svg_w / 2, svg_h / 2
+    radius = 320
+    inner_radius = radius * 0.6 if chart_type == "donut" else 0
+
+    # ===== 3. TÍNH TỔNG & PHẦN TRĂM =====
+    total = sum(item.get("value", 0) for item in items)
+    if total == 0: total = 1
+
+    # ===== 4. VẼ CHART =====
+    chart_elements = ""
+    current_angle = -90 
+    
+    for idx, item in enumerate(items):
+        label = item.get("label", "")
+        value = item.get("value", 0)
+        percentage = (value / total) * 100
+        color = colors[idx % len(colors)]
+        slice_angle = (value / total) * 360
+        
+        start_angle_rad = math.radians(current_angle)
+        end_angle_rad = math.radians(current_angle + slice_angle)
+        
+        # Điểm ngoài
+        x1 = center_x + radius * math.cos(start_angle_rad)
+        y1 = center_y + radius * math.sin(start_angle_rad)
+        x2 = center_x + radius * math.cos(end_angle_rad)
+        y2 = center_y + radius * math.sin(end_angle_rad)
+        
+        large_arc = 1 if slice_angle > 180 else 0
+        
+        if chart_type == "donut":
+            # Điểm trong
+            ix1 = center_x + inner_radius * math.cos(start_angle_rad)
+            iy1 = center_y + inner_radius * math.sin(start_angle_rad)
+            ix2 = center_x + inner_radius * math.cos(end_angle_rad)
+            iy2 = center_y + inner_radius * math.sin(end_angle_rad)
+            
+            path_data = f"M {x1} {y1} A {radius} {radius} 0 {large_arc} 1 {x2} {y2} L {ix2} {iy2} A {inner_radius} {inner_radius} 0 {large_arc} 0 {ix1} {iy1} Z"
+        else:
+            path_data = f"M {center_x} {center_y} L {x1} {y1} A {radius} {radius} 0 {large_arc} 1 {x2} {y2} Z"
+        
+        chart_elements += f'<path d="{path_data}" fill="{color}" stroke="#ffffff" stroke-width="3" />'
+        
+        # Nhãn giá trị trên lát cắt
+        if show_value and slice_angle > 15:
+            mid_angle = math.radians(current_angle + slice_angle / 2)
+            label_r = (radius + inner_radius) / 2 if chart_type == "donut" else radius * 0.7
+            lx = center_x + label_r * math.cos(mid_angle)
+            ly = center_y + label_r * math.sin(mid_angle)
+            
+            display_text = data_label_format.replace("{label}", label).replace("{value}", f"{percentage:.1f}").replace("{unit}", unit)
+            chart_elements += f'<text x="{lx}" y="{ly}" fill="white" font-size="24" font-weight="bold" text-anchor="middle" dominant-baseline="middle">{display_text}</text>'
+            
+        current_angle += slice_angle
+
+    # ===== 5. LEGEND & INSIGHT =====
+    legend_items = ""
+    if show_legend:
+        for idx, item in enumerate(items):
+            color = colors[idx % len(colors)]
+            perc = (item.get("value", 0) / total) * 100
+            legend_items += f'''
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <div style="width:24px; height:24px; background:{color}; border-radius:6px; margin-right:15px;"></div>
+                <div style="font-size:24px; color:{insight_text_color};">
+                    <strong>{item.get("label")}</strong>: {item.get("value")}{unit} ({perc:.1f}%)
+                </div>
+            </div>'''
+
+    # ===== 6. HTML RENDER =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+    body {{
+        width:1920px;
+        height:1080px;
+        margin:0;
+        padding:0;
+        font-family:'{font_family}', sans-serif;
+        background: linear-gradient(135deg,#e0f7f1 0%,#f7f3ff 100%);
+        position:relative;
+        overflow:hidden;
+    }}
+
+    .blob {{
+        position:absolute;
+        filter:blur(40px);
+        opacity:0.6;
+    }}
+
+    .title-block {{
+        position:absolute;
+        top:80px;
+        left:100px;
+        font-size:{main_title_font_size};
+        color:{main_title_color};
+        font-weight:800;
+    }}
+
+    .subtitle-block {{
+        position:absolute;
+        top:160px;
+        left:100px;
+        font-size:{subtitle_font_size};
+        color:{subtitle_color};
+    }}
+
+    .insight-block {{
+        position:absolute;
+        top:260px;
+        left:100px;
+        width:520px;
+        background:rgba(255,255,255,0.5);
+        backdrop-filter:blur(10px);
+        border-radius:30px;
+        padding:40px;
+        font-size:{insight_font_size};
+        color:{insight_text_color};
+        line-height:1.6;
+    }}
+
+    .legend-block {{
+        position:absolute;
+        top:700px;
+        left:100px;
+        width:520px;
+    }}
+
+    .chart-block {{
+        position:absolute;
+        top:160px;
+        right:120px;
+        width:800px;
+        height:800px;
+    }}
+    </style>
+    </head>
+
+    <body>
+
+    <div class="blob" style="width:600px;height:600px;background:#63E6BE;top:-200px;left:-100px;border-radius:40% 60% 70% 30%;"></div>
+
+    <div class="blob" style="width:500px;height:500px;background:#B197FC;bottom:-100px;right:-100px;border-radius:30% 70% 50% 50%;"></div>
+
+    <div class="title-block">
+    {main_title}
+    </div>
+
+    <div class="subtitle-block">
+    {subtitle}
+    </div>
+
+    <div class="insight-block">
+    {insight}
+    </div>
+
+    <div class="legend-block">
+    {legend_items}
+    </div>
+
+    <div class="chart-block">
+    <svg viewBox="0 0 800 800" width="100%" height="100%">
+    {chart_elements}
+    {f'<circle cx="400" cy="400" r="{inner_radius}" fill="transparent"/>' if chart_type == "donut" else ""}
+    </svg>
+    </div>
+
     </body>
     </html>
     """

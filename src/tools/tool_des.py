@@ -139,6 +139,10 @@ from src.tools.html_tool import (
     generate_line_chart_slide_1, # slide biểu đồ đường (mhung)
     generate_line_chart_slide_2, # slide biểu đồ đường (mhung)
     generate_line_chart_slide_3, # slide biểu đồ đường (mhung)
+    generate_pie_chart_slide_1, # slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_2_setDonut, # slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_3_setDonut, # slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_4, # slide biểu đồ tròn (mhung)
 )
 
 # ===========================================================================================
@@ -2918,80 +2922,113 @@ class GenerateFunnelChartSlide1(BaseModel):
     subtitle_font_size: str = Field(default="34px", description="CSS font size for the subtitle")
     insight_font_size: str = Field(default="28px", description="CSS font size for insight text")
 
+
+#---RADAR CHART SLIDES-------------------------------------------------------------------------    
+
+class RadarSeriesItem(TypedDict):
+    label: str
+    values: List[float]
+    
 class GenerateRadarChartSlide1(BaseModel):
     """
-    Input schema for generate_radar_chart_slide_1.
-    This schema defines parameters used to generate a radar chart slide
-    with a professional, warm style suitable for healthcare service reports and multidimensional analysis.
+    Input schema strictly matching generate_radar_chart_slide_1 function.
+    This schema describes parameters used to generate a radar chart slide
     """
-    main_title: str = Field(..., description="Main title of the healthcare service radar chart slide (10–60 characters). Example: Care Service Quality Index")
-    subtitle: str = Field(..., description="Subtitle or data source related to healthcare/service analysis. Example: Customer Experience Report Q1/2026")
-    insight: str = Field(default="", description="Key insight or analysis derived from the care service radar chart (e.g., strengths, weaknesses, improvement areas)")
-    chart_type: str = Field(default="radar", description="Type of chart. Must be 'radar' for care service multidimensional analysis")
-    chart_options: Dict[str, Any] = Field(
-        description="""
-            # Chart options define how the healthcare radar chart is displayed and styled.
-            # These options are tailored for service quality evaluation and patient experience metrics.
-
-            "chart_options": {
-                "unit": "string | null",              # Optional unit (e.g., score, /10, %, level)
-
-                "show_value": boolean,                # Show score values on each axis point
-                "show_legend": boolean,               # Display legend for current vs target comparison
-
-                "data_label_format": "string | null", # Example: "{value}/10", "{value}%"
-
-                "show_grid_lines": boolean,           # Show background grid (quality levels)
-                "show_axis_lines": boolean,           # Show axes for each service dimension
-
-                "max_value": "number | null",         # Max score (typically 10 in healthcare scoring systems)
-                "num_levels": "number",               # Number of levels (e.g., 5 levels: poor → excellent)
-
-                "colors": {
-                    "axis_color": "string",           # Axis line color
-                    "grid_color": "string",           # Grid background color
-                    "data_fill": "string",            # Fill color for actual performance
-                    "data_stroke": "string",          # Border color for data polygon
-                    "label_color": "string",          # Axis label color
-                    "accent_color": "string"          # Highlight color for emphasis
-                }
-            }
+    # ===== CONTENT =====
+    main_title: str = Field(..., description="Main title of the radar chart slide.")
+    subtitle: str = Field(..., description="Subtitle providing context such as report source or timeframe.")
+    insight: str = Field(..., description="Key takeaway or analysis derived from the radar chart.")
+    # ===== DISPLAY OPTIONS =====
+    unit: str = Field(default="", description="Unit of measurement (e.g., điểm, %, level).")
+    show_value: bool = Field(default=True, description="Show value labels on each data point.")
+    data_label_format: str = Field(default="{value}", description="Format string for data labels (e.g., {value}/10).")
+    # ===== RADAR STRUCTURE =====
+    axes: List[str] = Field(..., description="List of dimensions (axes). Example: ['Medical', 'Psychological', 'Nutrition']")
+    series: List[RadarSeriesItem] = Field(..., description=
+        """
+        List of data series. Each series contains a label and values array. Values length must match axes length.
+        Example:
+        [
+            {
+                "label": "Current",
+                "values": [8, 7, 9, 6, 8]
+            },
+        ]   
         """
     )
-    data_input: Dict[str, Any] = Field(
+    # ===== RADAR CONFIG =====
+    max_value: float = Field(default=10, description="Maximum value of the radar scale.")
+    num_levels: int = Field(default=5, description="Number of grid levels (rings).")
+    show_grid_lines: bool = Field(default=True, description="Show background grid levels.")
+    show_axis_lines: bool = Field(default=True, description="Show axis lines.")
+    # ===== COLORS =====
+    axis_color: str = Field(default="#D1D5DB", description="Color of axis lines.")
+    grid_color: str = Field(default="#E5E7EB", description="Color of grid lines.")
+    label_color: str = Field(default="#374151", description="Color of axis labels.")
+    accent_color: str = Field(default="#F4A261", description="Primary accent color.")
+    # ===== STYLE =====
+    font_family: str = Field(default="Inter, sans-serif", description="Font family used in the slide.")
+    main_title_color: str = Field(default="#1D3557", description="Color of main title.")
+    subtitle_color: str = Field(default="#457B9D", description="Color of subtitle.")
+    insight_text_color: str = Field(default="#1D3557", description="Color of insight text.")
+    main_title_font_size: str = Field(default="64px", description="Font size for main title.")
+    subtitle_font_size: str = Field(default="28px", description="Font size for subtitle.")
+    insight_font_size: str = Field(default="30px", description="Font size for insight.")
+
+class GenerateRadarChartSlide2(BaseModel):
+    """
+    Input schema strictly matching generate_radar_chart_slide_2 function.
+    This schema is optimized for elegant cultural / regional radar chart visualization,
+    focusing on multivariate comparison across dimensions.
+    """
+    # ===== CONTENT =====
+    main_title: str = Field(..., description="Main title of the radar chart slide (e.g., European Cultural Dimensions).")
+    subtitle: str = Field(..., description="Subtitle describing context, scope, or data source.")
+    insight: str = Field(..., description="Key insight or narrative derived from the radar chart.")
+    # ===== CHART TYPE =====
+    chart_type: str = Field(default="radar", description="Type of chart (fixed as radar for this slide).")
+    # ===== DISPLAY OPTIONS =====
+    unit: str = Field(default="", description="Unit of measurement (e.g., pts, %, index).")
+    show_value: bool = Field(default=True, description="Show values at each data point.")
+    data_label_format: str = Field(default="{value}", description="Format string for data labels (e.g., {value} pts).")
+    # ===== RADAR STRUCTURE =====
+    axes: List[str] = Field(..., description="List of dimensions (axes). Example: ['Heritage', 'Gastronomy', 'Fine Arts', 'Music']")
+    series: List[RadarSeriesItem] = Field(...,
         description="""
-            # Radar chart data for healthcare service evaluation.
-            # Each axis represents a care-related dimension.
+        List of data series for comparison across regions or categories.
 
-            "data": {
-                "axes": [
-                    "string"     # Example: Medical, Psychological, Nutrition, Physical Activity, Technology, Environment
-                ],
-
-                "series": [
-                    {
-                        "label": "string",             # Example: Current, Target
-                        "values": ["number"]           # Scores per axis (must match axes length)
-                    }
-                ]
-            }
-
-            # Rules:
-            # - Each axis represents a healthcare/service quality dimension
-            # - Values should be normalized (recommended: 0–10 scale)
-            # - Length of values must match number of axes
-            # - Multiple series allow comparison (e.g., current vs target performance)
+        Example:
+        [
+            {
+                "label": "Southern Europe",
+                "values": [95, 98, 85, 70, 88, 92]
+            },
+        ]
+        Rules:
+        - Values must match axes length
         """
     )
-    font_family: str = Field(default="Inter, sans-serif", description="Main font family for the slide")
-    accent_color: str = Field(default="#F4A261", description="Warm accent color suitable for healthcare visuals")
-    main_title_color: str = Field(default="#1D3557", description="Color of the main title (professional and trustworthy tone)")
-    subtitle_color: str = Field(default="#457B9D", description="Color of subtitle text")
-    insight_text_color: str = Field(default="#1D3557", description="Color of insight/analysis text")
-    main_title_font_size: str = Field(default="64px", description="Font size for main title")
-    subtitle_font_size: str = Field(default="28px", description="Font size for subtitle")
-    insight_font_size: str = Field(default="30px", description="Font size for insight text")
+    # ===== RADAR CONFIG =====
+    max_value: float = Field(default=100, description="Maximum value of the radar scale (e.g., 100 for index-based data).")
+    num_levels: int = Field(default=5, description="Number of grid levels (rings).")
+    show_grid_lines: bool = Field(default=True, description="Display concentric grid levels.")
+    show_axis_lines: bool = Field(default=True, description="Display radial axis lines.")
+    # ===== COLORS (EUROPEAN AESTHETIC) =====
+    axis_color: str = Field(default="#5E6472", description="Color of axis lines.")
+    grid_color: str = Field(default="#D1D5DB", description="Color of grid lines.")
+    label_color: str = Field(default="#264653", description="Color of axis labels.")
+    accent_color: str = Field(default="#E76F51", description="Primary accent color (e.g., terracotta tone).")
+    # ===== STYLE =====
+    font_family: str = Field(default="'Playfair Display', serif, 'Inter', sans-serif", description="Font family combining serif (elegance) and sans-serif (readability).")
+    main_title_color: str = Field(default="#264653", description="Main title color (deep classic tone).")
+    subtitle_color: str = Field(default="#5E6472", description="Subtitle color (neutral refined tone).")
+    insight_text_color: str = Field(default="#333333", description="Insight text color (readable dark gray).")
+    main_title_font_size: str = Field(default="70px", description="Font size for main title.")
+    subtitle_font_size: str = Field(default="30px", description="Font size for subtitle.")
+    insight_font_size: str = Field(default="28px", description="Font size for insight text.")
 
+
+#---TABLE CHART SLIDES-------------------------------------------------------------------------    
 
 class GenerateTableSlide1(BaseModel):
     """
@@ -3132,6 +3169,160 @@ class GenerateTreemapChartSlide(BaseModel):
     subtitle_font_size: str = Field(default="28px", description="Font size for the subtitle")
     insight_font_size: str = Field(default="26px", description="Font size for the insight text")
 
+
+#---PIE CHART SLIDES-------------------------------------------------------------------------    
+
+
+class PieChartItem(TypedDict):
+    label: str
+    value: float
+
+class GeneratePieChartSlide1(BaseModel):
+    """
+    Input schema for generating a pie chart slide.
+    This schema defines all visual and content elements required to render the slide,
+    including titles, data, styling, and display options.
+    """
+    main_title: str = Field(..., description="Primary heading of the slide. Should clearly describe what the pie chart represents.")
+    subtitle: str = Field(..., description="Secondary text displayed below the main title. Typically used for data source, timeframe, or additional context.")
+    insight: str = Field(..., description="Short analytical takeaway or key message derived from the chart data. Should highlight the most important insight.")
+    chart_type: str = Field(default="pie", description="Type of chart: 'pie' (full) or 'donut' (ring-style with center space).")
+    unit: str = Field(default="%", description="Unit of measurement for the values (e.g., %, $, users). This may be displayed in labels or legends.")
+    show_value: bool = Field(default=True, description="Controls whether numeric values are displayed directly on the pie chart slices.")
+    show_legend: bool = Field(default=True, description="Controls whether the legend (mapping colors to labels) is displayed on the slide.")
+    data_label_format: str = Field(default="{value}{unit}", description="Template string for formatting data labels on the chart. Use placeholders like {value}, {label}, or {unit}.")
+    colors: List[str] = Field(default=["#5FD9D3", "#4ABFB9", "#36A6A0", "#248C87"], description="List of colors for pie chart slices. Each color corresponds to an item in 'items' by index order.")
+    items: List[PieChartItem] = Field(..., 
+        description=(
+            "List of data points for the pie chart. "
+            "Each item must be an object with 'label' (string) and 'value' (number). "
+            "Example: {\"label\": \"AI Services\", \"value\": 45}"
+        )
+    )
+    font_family: str = Field(default="Inter, sans-serif", description="Font family for all text on the slide.")
+    accent_color: str = Field(default="#5FD9D3", description="Primary accent color used for highlights and borders.")
+    main_title_color: str = Field(default="#5FD9D3", description="Color of the main title.")
+    subtitle_color: str = Field(default="#FFFFFF", description="Color of the subtitle.")
+    insight_text_color: str = Field(default="#FFFFFF", description="Color of the insight text.")
+    main_title_font_size: str = Field(default="70px", description="Font size of the main title.")
+    subtitle_font_size: str = Field(default="32px", description="Font size of the subtitle.")
+    insight_font_size: str = Field(default="34px", description="Font size of the insight text.")
+    legend_font_size: str = Field(default="25px", description="Font size of the legend.")
+    background_color: str = Field(default="#0F172A", description="Background color of the slide.")
+
+
+class GeneratePieChartSlide2_setDonut(BaseModel):
+    """
+    Input schema for generate_pie_chart_slide_2_setDonut.
+    This schema defines all visual and content elements required to render the slide,
+    including titles, data, styling, and display options.
+    """
+    main_title: str = Field(..., description="Main title of the slide. Example: Technology Market Share 2024")
+    subtitle: str = Field(..., description="Subtitle or data source displayed below the title. Example: Source: Global Tech Market Report")
+    insight: str = Field(..., description="Short analytical insight or key takeaway describing the key message of the chart.")
+    chart_type: str = Field(default="donut", description="Type of pie chart: 'pie' for full pie chart, 'donut' for ring-style chart.")
+    unit: str = Field(default="%", description="Unit of measurement for the values (e.g., %, $, users).")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed on the slices.")
+    show_legend: bool = Field(default=True, description="Whether the legend (mapping colors to labels) is displayed.")
+    data_label_format: str = Field(default="{value}{unit}", description="Template string for formatting data labels on the chart. Use placeholders like {value}, {label}, or {unit}.")
+    colors: List[str] = Field(default=["#5FD9D3", "#4ABFB9", "#36A6A0", "#248C87"], description="List of colors for pie chart slices. Each color corresponds to an item in 'items' by index order.")
+    
+    # Data
+    items: List[PieChartItem] = Field(..., 
+        description=(
+            "List of data points for the pie chart. "
+            "Each item must be an object with 'label' (string) and 'value' (number). "
+            "Example: {\"label\": \"AI Services\", \"value\": 45}"
+        )
+    )
+    
+    # Styling
+    font_family: str = Field(default="Inter, sans-serif", description="Font family for all text on the slide.")
+    accent_color: str = Field(default="#5FD9D3", description="Primary accent color used for highlights and borders.")
+    main_title_color: str = Field(default="#5FD9D3", description="Color of the main title.")
+    subtitle_color: str = Field(default="#FFFFFF", description="Color of the subtitle.")
+    insight_text_color: str = Field(default="#FFFFFF", description="Color of the insight text.")
+    main_title_font_size: str = Field(default="70px", description="Font size of the main title.")
+    subtitle_font_size: str = Field(default="32px", description="Font size of the subtitle.")
+    insight_font_size: str = Field(default="34px", description="Font size of the insight text.")
+    legend_font_size: str = Field(default="25px", description="Font size of the legend.")
+    background_color: str = Field(default="#0F172A", description="Background color of the slide.")
+
+
+class GeneratePieChartSlide3_setDonut(BaseModel):
+    """
+    Input schema for generate_pie_chart_slide_3.
+    This schema defines all content, styling, and chart configuration
+    used to render a military-themed elegant visualization.
+    """
+
+    # ===== CONTENT =====
+    main_title: str = Field(..., description="Primary heading of the slide. Should reflect the strategic or thematic focus of the chart.")
+    subtitle: str = Field(..., description="Secondary text providing context such as scope, dataset, or analytical dimension.")
+    insight: str = Field(..., description="Key analytical takeaway summarizing the distribution shown in the chart.")
+    # ===== CHART CONFIG =====
+    chart_type: str = Field(default="donut", description="Type of chart: 'pie' (full) or 'donut' (ring-style with center space).")
+    unit: str = Field(default="%", description="Unit of measurement for values (e.g., %, $, units).")
+    show_value: bool = Field(default=False, description="Whether percentage values are displayed on chart slices.")
+    show_legend: bool = Field(default=True, description="Whether the legend (labels + percentages) is displayed.")
+    data_label_format: str = Field(default="{value}{unit}", description="Format string for slice labels. Supports {value}, {label}, {unit}.")
+    colors: List[str] = Field(default=["#c0935d", "#8e6d45", "#5c482e", "#d4af37", "#a67c00"], description="Color palette for slices, following an earthy gold military aesthetic.")
+    # ===== DATA =====
+    items: List[PieChartItem] = Field(
+        default=[
+            {"label": "Regional Units", "value": 40},
+            {"label": "Specialized Corps", "value": 25},
+            {"label": "Supply Division", "value": 20},
+            {"label": "Scouting Network", "value": 15}
+        ],
+        description=(
+            "List of data points. Each item includes 'label' and 'value'. "
+            "Values will be normalized into percentages."
+        )
+    )
+    # ===== STYLING =====
+    font_family: str = Field(default="'Cormorant Garamond', serif", description="Primary font used for the slide. Serif style enhances the classical military aesthetic.")
+    accent_color: str = Field(default="#c0935d", description="Accent color used for highlights, borders, and emphasis.")
+    main_title_color: str = Field(default="#f0f0f0", description="Color of the main title.")
+    subtitle_color: str = Field(default="#c0935d", description="Color of the subtitle.")    
+    insight_text_color: str = Field(default="#ffffff", description="Color of the insight text.")
+    main_title_font_size: str = Field(default="100px", description="Font size of the main title.")
+    subtitle_font_size: str = Field(default="32px", description="Font size of the subtitle.")
+    insight_font_size: str = Field(default="30px", description="Font size of the insight text.")
+    legend_font_size: str = Field(default="24px", description="Font size of legend items.")
+    background_color: str = Field(default="#1a2e26", description="Background color of the slide (deep emerald tone).")
+
+
+class GeneratePieChartSlide4(BaseModel):
+    """
+    Input schema for generate_pie_chart_slide_4.
+    This schema defines all parameters required to generate
+    a modern pie/donut chart slide with SVG rendering.
+    """
+    main_title: str = Field(..., description="Main title of the slide (10–60 characters).")
+    subtitle: str = Field(..., description="Subtitle or data source displayed below the title.")
+    insight: str = Field(..., description="Short analytical insight highlighting the key takeaway from the chart.")
+    chart_type: str = Field(default="pie", description="Chart type: 'pie' or 'donut'. Determines whether the center is hollow.")
+    unit: str = Field(default="%", description="Unit displayed in values (%, $, users, etc.).")
+    show_value: bool = Field(default=True, description="Whether to display percentage values on chart slices.")
+    show_legend: bool = Field(default=True, description="Whether to display the legend block.")
+    data_label_format: str = Field(default="{value}{unit}", description="Template for slice labels. Supports {label}, {value}, {unit}.")
+    colors: List[str] = Field(default=["#5FD9D3", "#4ABFB9", "#36A6A0", "#248C87"], description="List of colors used for chart slices.")
+    items: List[PieChartItem] = Field(..., 
+        description=(
+            "List of data points for the pie chart. "
+            "Each item must be an object with 'label' (string) and 'value' (number). "
+            "Example: {\"label\": \"AI Services\", \"value\": 45}"
+        )
+    )
+    font_family: str = Field(default="Inter, sans-serif", description="Font family used across the slide.")
+    accent_color: str = Field(default="#38B2AC", description="Accent color for decorative elements.")
+    main_title_color: str = Field(default="#2C7A7B", description="Color of the main title.")
+    subtitle_color: str = Field(default="#4A5568", description="Color of the subtitle.")
+    insight_text_color: str = Field(default="#2D3748", description="Color of the insight text.")
+    main_title_font_size: str = Field(default="70px", description="Font size of the main title.")
+    subtitle_font_size: str = Field(default="32px", description="Font size of the subtitle.")
+    insight_font_size: str = Field(default="34px", description="Font size of the insight text.")
 
 
 INTRO_TOOLS = [
@@ -3990,6 +4181,22 @@ CHART_TOOLS = [
         args_schema=GenerateRadarChartSlide1
     ),
     StructuredTool.from_function(
+        func=generate_radar_chart_slide_2,
+        name="generate_radar_chart_slide_2",
+        description=(
+            "The slide layout is structured with a refined European aesthetic:\n"
+            "- A full-width decorative accent line at the very top.\n"
+            "- A title section positioned at the upper-left, displaying a large uppercase main title "
+            "and a subtitle beneath it.\n"
+            "- A floating insight card on the left side below the title, styled as a white box with a "
+            "colored top border and soft shadow.\n"
+            "- A legend panel on the right side, vertically listing series with color indicators.\n"
+            "- A large centered radar chart occupying the middle area of the slide.\n"
+            "- A subtle decorative SVG element placed at the bottom-right corner for visual balance."
+        ),
+        args_schema=GenerateRadarChartSlide2
+    ),
+    StructuredTool.from_function(
         func=generate_table_slide_1,
         name="generate_table_slide_1",
         description=(
@@ -4014,7 +4221,54 @@ CHART_TOOLS = [
             "The layout is designed to balance qualitative insights with hierarchical data visualization and tabular comparison."
         ),
         args_schema=GenerateTreemapChartSlide
-    )
+    ),
+       StructuredTool.from_function(
+        func=generate_pie_chart_slide_1,
+        name="generate_pie_chart_slide_1",
+        description=(
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: Displays a large, bold main title in Teal and a white subtitle.\n"
+            "- Left section: Contains a highlighted insight box with an accent border and a legend.\n"
+            "- Right section: Features a high-contrast SVG pie or donut chart.\n"
+        ),
+        args_schema=GeneratePieChartSlide1
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_2_setDonut,
+        name="generate_pie_chart_slide_2_setDonut",
+        description=(
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: Contains the main title with a heavy left accent border and a cyan subtitle.\n"
+            "- Left section: Reserved for a stylistic insight box with a semi-transparent background and a vertical list of legend items with glow effects.\n"
+            "- Right section: Features a large, high-contrast SVG pie or donut chart centered in the space.\n"
+            "The layout uses a dark tech-inspired theme (#020c24) for professional data visualization."
+        ),
+        args_schema=GeneratePieChartSlide2
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_3_setDonut,
+        name="generate_pie_chart_slide_3_setDonut",
+        description=(
+            "The slide layout consists of three main sections:\n"
+            "- Top: A full-width header with a large main title and a subtitle displayed directly beneath it.\n"
+            "- Left column: An insight card containing the main explanatory text, followed by a vertical legend listing chart items with color indicators and percentage values.\n"
+            "- Right column: A centered SVG pie or donut chart displayed inside a panel with a subtle radial gradient background.\n"
+            "A thin horizontal accent bar is placed at the very top of the slide."
+        ),
+        args_schema=GeneratePieChartSlideDonutSlide3
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_4,
+        name="generate_pie_chart_slide_4",
+        description=(
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: Reserved for the main title and subtitle with a large, bold aesthetic.\n"
+            "- Left section: Reserved for descriptive insights and a detailed legend explaining the data categories.\n"
+            "- Right section: Reserved for the visual SVG pie or donut chart, designed with a clean, high-contrast style.\n\n"
+            "The layout is designed to emphasize proportional data through a modern, pastel-themed interface."
+        ),
+        args_schema=GeneratePieChartSlide4
+    ),
 ]
 
 # All available slide generation tools with complete parameter schemas
@@ -4054,3 +4308,5 @@ def execute_tool(tool_call: dict):
             return None
         print(f"Tool '{name}' not found.")
         return None
+
+
