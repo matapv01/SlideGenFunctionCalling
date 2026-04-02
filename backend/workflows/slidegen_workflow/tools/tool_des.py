@@ -64,7 +64,6 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_image_cutout_list_slide, # slide content
     generate_body_slide4,  # slide content
     generate_body_slide5,  # slide content
-    generate_body_slide7,  # slide content
     generate_body_slide10,  # slide content
     generate_body_slide11,  # slide content
     generate_body_slide12,  # slide content
@@ -742,22 +741,6 @@ class GenerateBodySlide5Input(BaseModel):
     image_url_3: str = Field(default="Image/generate_body_slide5/Default_3.png", description="Path to the third image file.")
     image_url_4: str = Field(default="Image/generate_body_slide5/Default_4.png", description="Path to the fourth image file.")
 
-
-class GenerateBodySlide7Input(BaseModel):
-    """Input schema for generate_body_slide7."""
-    main_title: str = Field(..., description="Main title of the slide. Default: 'MainTitle'.")
-    subtitle: str = Field(..., description="Subtitle for the right column. Default: 'SubTitle'.")
-    content1: str = Field(..., description="First content text section. Default: 'Content1'.")
-    content2: str = Field(..., description="Second content text section. Default: 'Content2'.")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    accent_color: str = Field(default="#d5e8b9", description="CSS color for accents, such as the title accent block.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title.")
-    subtitle_color: str = Field(default="#333333", description="CSS color for the subtitle.")
-    content_color: str = Field(default="#4a90a0", description="CSS color for content text.")
-    divider_color: str = Field(default="#d5e8b9", description="CSS color for the horizontal divider.")
-    image_url_1: str = Field(default="Image/generate_body_slide7/Default_1.png", description="Path to the first image file.")
-    image_url_2: str = Field(default="Image/generate_body_slide7/Default_2.png", description="Path to the second image file.")
-    image_url_3: str = Field(default="Image/generate_body_slide7/Default_3.png", description="Path to the third image file.")
 
 class GenerateBodySlide10Input(BaseModel):
     """Input schema for generate_body_slide10."""
@@ -2069,12 +2052,6 @@ CONTENT_TOOLS = [
         name="generate_body_slide5",
         description="Generates an HTML slide with a main title, a 2x2 image grid on the left, and four content sections on the right.",
         args_schema=GenerateBodySlide5Input
-    ),
-    StructuredTool.from_function(
-        func=generate_body_slide7,
-        name="generate_body_slide7",
-        description="Generates an HTML slide with a main title, three vertical images on the left, and a subtitle with two content sections on the right, separated by a divider.",
-        args_schema=GenerateBodySlide7Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide10,
