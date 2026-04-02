@@ -130,8 +130,6 @@ export const useKeyboardShortcuts = ({
           // Flush any unsaved properties-panel DOM changes into history before undoing
           slideCanvasRef.current?.saveHistory(true);
           slideCanvasRef.current?.undo();
-          // Re-sync React state (properties panel) from the restored DOM
-          if (selectedElementId) slideCanvasRef.current?.reselectById(selectedElementId);
         }
         return;
       }
@@ -147,8 +145,6 @@ export const useKeyboardShortcuts = ({
         if (!isEditingInShadow && !isTypingInRegularField) {
           e.preventDefault();
           slideCanvasRef.current?.redo();
-          // Re-sync React state (properties panel) from the restored DOM
-          if (selectedElementId) slideCanvasRef.current?.reselectById(selectedElementId);
         }
       }
     };

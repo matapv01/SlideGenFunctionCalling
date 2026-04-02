@@ -2,9 +2,15 @@
 export const HistoryMixin = {
 
     saveHistory(silent = false) {
-        // Clone and strip transient guide elements so they don't get baked into history
+        // Clone and strip transient UI state so it doesn't get baked into history snapshots
         const _clone = this.canvas.cloneNode(true);
         _clone.querySelectorAll('.smart-guide').forEach(el => el.remove());
+        _clone.querySelectorAll('.selected').forEach((el) => {
+            el.classList.remove('selected');
+            el.querySelectorAll('.resize-handle, .drag-handle').forEach((h) => h.remove());
+        });
+        _clone.querySelectorAll('math-field[data-inline-equation].inline-equation-selected')
+            .forEach((el) => el.classList.remove('inline-equation-selected'));
         const currentHTML = _clone.innerHTML;
 
         // Skip if nothing changed since the last snapshot
@@ -35,12 +41,27 @@ export const HistoryMixin = {
         if (el) this.selectElement(el);
     },
 
+    resetTransientSelectionState() {
+        this.canvas.querySelectorAll('.selected').forEach((el) => {
+            el.classList.remove('selected');
+            el.querySelectorAll('.resize-handle, .drag-handle').forEach((h) => h.remove());
+        });
+        this.canvas.querySelectorAll('math-field[data-inline-equation].inline-equation-selected')
+            .forEach((el) => el.classList.remove('inline-equation-selected'));
+
+        this.selectedElements = [];
+        this.selectedElementId = null;
+        this._selectedInlineMathField = null;
+    },
+
     undo() {
         if (this.historyIndex > 0) {
             this.historyIndex--;
             this.canvas.innerHTML = this.history[this.historyIndex].html;
             this.makeElementsSelectable();
-            this.deselectAll();
+            this.resetTransientSelectionState();
+            if (this.onElementSelect) this.onElementSelect(null);
+            if (this.onRerenderEquations) this.onRerenderEquations();
             if (this.onChange) this.onChange();
         }
     },
@@ -50,9 +71,24 @@ export const HistoryMixin = {
             this.historyIndex++;
             this.canvas.innerHTML = this.history[this.historyIndex].html;
             this.makeElementsSelectable();
-            this.deselectAll();
+            this.resetTransientSelectionState();
+            if (this.onElementSelect) this.onElementSelect(null);
+            if (this.onRerenderEquations) this.onRerenderEquations();
             if (this.onChange) this.onChange();
         }
+    },
+
+    getHistoryState() {
+        return {
+            history: this.history,
+            historyIndex: this.historyIndex,
+        };
+    },
+
+    restoreHistoryState(state) {
+        if (!state || !Array.isArray(state.history)) return;
+        this.history = state.history;
+        this.historyIndex = Math.max(0, Math.min(state.historyIndex, state.history.length - 1));
     },
 
     canUndo() {

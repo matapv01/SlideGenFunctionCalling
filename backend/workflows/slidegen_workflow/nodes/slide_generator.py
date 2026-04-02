@@ -12,7 +12,8 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     TRANSITION_PROMPT,
     SLIDE_TYPE_PROMPTS,
     HUMAN_PROMPT_TEMPLATE,
-    INTRO_PROMPT
+    INTRO_PROMPT,
+    MATH_EQUATION_RULES
 )
 import time
 
@@ -234,6 +235,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         # These prompts don't have template variables to format
         system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, INTRO_PROMPT)
 
+    # Prepend MATH_EQUATION_RULES to all prompts for consistent equation handling
+    system_prompt = MATH_EQUATION_RULES + "\n\n" + system_prompt
     
     slidegen_prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),

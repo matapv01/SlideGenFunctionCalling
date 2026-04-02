@@ -274,4 +274,41 @@ export const ElementAPIMixin = {
         });
         return _clone.innerHTML;
     },
+
+    getCursorPositionInCanvas() {
+        const selection = window.getSelection();
+        if (!selection || selection.rangeCount === 0) {
+            console.warn('[SlideLogicCore] No selection found for cursor position');
+            return null;
+        }
+
+        const range = selection.getRangeAt(0);
+        const rect = range.getBoundingClientRect();
+        
+        if (!this.canvas) {
+            console.warn('[SlideLogicCore] Canvas not available');
+            return null;
+        }
+
+        const canvasRect = this.canvas.getBoundingClientRect();
+        
+        // Calculate position relative to canvas
+        const x = rect.left - canvasRect.left;
+        const y = rect.top - canvasRect.top;
+        
+        // Handle collapsed range (cursor position) vs selection
+        const isCollapsed = range.collapsed;
+        
+        console.log('[SlideLogicCore] Cursor position calculated', {
+            x,
+            y,
+            isCollapsed,
+            rectLeft: rect.left,
+            rectTop: rect.top,
+            canvasLeft: canvasRect.left,
+            canvasTop: canvasRect.top,
+        });
+
+        return { x, y, isCollapsed, range, canvasRect };
+    },
 };

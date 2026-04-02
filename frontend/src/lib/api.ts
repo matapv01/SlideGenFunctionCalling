@@ -245,8 +245,8 @@ export const api = {
     }),
 
   // Slides endpoints - /api/projects/{project_id}/slides and /api/slides/{slide_id}
-  getSlides: (projectId: string | number) =>
-    request<SlidesResponse>(`/projects/${projectId}/slides`),
+  getSlides: (projectId: string | number, limit?: number) =>
+    request<SlidesResponse>(`/projects/${projectId}/slides${limit ? `?limit=${limit}` : ''}`),
 
   getSlidesByProjectName: (projectName: string) =>
     request<{ project_name: string; project_id: number; slides: any[]; count: number }>(

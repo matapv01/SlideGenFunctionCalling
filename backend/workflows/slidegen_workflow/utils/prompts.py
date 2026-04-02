@@ -94,6 +94,25 @@ Provide detailed feedback on what works well and what needs improvement, then ma
 
 # ================================= SLIDE GENERATION PROMPTS =================================
 
+# Critical rule for math/equations - include in all slide prompts
+# NOTE: Use {{ and }} to escape braces for LangChain template
+MATH_EQUATION_RULES = """
+🔢 **CRITICAL - MATH/EQUATIONS FORMAT:**
+⚠️ ALL mathematical expressions MUST be written in LaTeX and wrapped strictly inside `<math-field>` tags.
+
+❌ **ABSOLUTELY FORBIDDEN - DO NOT USE:**
+   - Unicode superscripts: ², ³, ⁴, ⁵, ⁿ
+   - Unicode subscripts: ₀, ₁, ₂, ₃, ₙ  
+   - Unicode fractions: ½, ¼, ⅓
+   - Unicode math symbols as text: √, ∫, ∑, ∏, ∞
+   - Plain text like "x^2" or "a_1"
+   - `$E = mc^2$` or `\(E=mc^2\)`
+
+✅ **CORRECT EXAMPLES:**
+   - Quadratic: `<math-field>ax^2 + bx + c = 0</math-field>`
+   - Fraction: `<math-field>\\frac{{-b \\pm \\sqrt{{b^2-4ac}}}}{{2a}}</math-field>`
+"""
+
 INTRO_PROMPT = """
 🎯 INTRO SLIDE - Title slide, first impression!
 
@@ -112,11 +131,9 @@ INTRO_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/347/1600/900) NOT text! Text seeds cause 404s!
-5. MATH/EQUATIONS: If you need to output math formulas, generate them as editable equation elements:
-   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2" style="position: absolute; left: 100px; top: 200px; width: 400px; height: 80px; font-size: 32px; color: #ffffff;"></div>`
-   ⚠️ REQUIRED: Include position, width, height, font-size, color attributes
-   ❌ WRONG: `<math-field>E = mc^2</math-field>` or bare `<div data-type="equation" data-latex="..."></div>`
-   These elements are EDITABLE in the editor — user can click to modify the LaTeX formula
+5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
+   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
+   ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
 6. MATCH previous slide's visual style
 
 Generate clean, HIGHLY READABLE function call.
@@ -136,7 +153,8 @@ TRANSITION_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/523/1600/900) NOT text! Text seeds cause 404s!
-4. MATH/EQUATIONS: If you need formulas, use: `<div data-type="equation" data-latex="formula"></div>`
+4. MATH/EQUATIONS: If you need formulas, use: `<math-field>formula</math-field>`
+   ❌ FORBIDDEN: Unicode superscripts/subscripts like ², ³, ₂, ₃ — use LaTeX instead!
 5. CONSISTENCY: {previous_transition_context}
 
 Generate BOLD, ULTRA-VISIBLE function call.
@@ -165,11 +183,9 @@ CONTENT_PROMPT = """
 4. CONTENT: Concise, no filler words
 5. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
-6. MATH/EQUATIONS: If you need to output math formulas, generate them as editable equation elements:
-   ✅ CORRECT: `<div data-type="equation" data-latex="E = mc^2" style="position: absolute; left: 100px; top: 200px; width: 400px; height: 80px; font-size: 32px; color: #ffffff;"></div>`
-   ⚠️ REQUIRED: Include position, width, height, font-size, color attributes
-   ❌ WRONG: `<math-field>E = mc^2</math-field>` or bare `<div data-type="equation" data-latex="..."></div>`
-   These elements are EDITABLE in the editor — user can click to modify the LaTeX formula
+6. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
+   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
+   ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
 
 Generate READABLE, professional function call.
 """
@@ -185,7 +201,7 @@ THANK_YOU_PROMPT = """
 **RULES:**
 1. CONTENT: "Thank You" ONLY
 2. IMAGE: seed/success/1600/900 or gradient
-3. MATH/EQUATIONS: If needed, use: `<div data-type="equation" data-latex="formula"></div>`
+3. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
 
 Generate simple, HIGHLY VISIBLE function call.
 """
@@ -204,7 +220,7 @@ TEAM_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
 3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/456/1600/900) NOT text! Text seeds cause 404s!
-4. MATH/EQUATIONS: If needed, use: `<div data-type="equation" data-latex="formula"></div>`
+4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
 
 Generate professional, READABLE function call.
 """
@@ -228,7 +244,7 @@ CHART_PROMPT = """
    - Use contrasting colors for multiple series
    - Include grid lines for readability
    - Ensure proper spacing and sizing
-4. MATH/EQUATIONS: If needed, use: `<div data-type="equation" data-latex="formula"></div>`
+4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
 
 Generate professional, DATA-DRIVEN function call.
 """

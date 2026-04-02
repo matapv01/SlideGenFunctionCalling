@@ -33,8 +33,11 @@ export interface SlideCanvasHandle {
   isTextEditing: () => boolean;
   activateEquationById: (id: string) => void;
   insertMath: (latex: string) => void;
+  insertEquationAtCursor: () => void;
   saveHistory: (silent?: boolean) => void;
   reselectById: (id: string) => void;
+  getHistoryState: () => any;
+  restoreHistoryState: (state: any) => void;
 }
 
 export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((props, ref) => {
@@ -150,19 +153,38 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       const logic: any = logicInstanceRef.current;
       if (!logic) return;
 
-      // Find the selected element on canvas
+      // Highest priority: inline equation selected via Properties-panel flow
+      const selectedInlineMf = logic._selectedInlineMathField as any;
+      if (selectedInlineMf && selectedInlineMf.isConnected) {
+        selectedInlineMf.removeAttribute('read-only');
+        selectedInlineMf.mathVirtualKeyboardPolicy = 'manual';
+        selectedInlineMf.insert(latex, { focus: true });
+        selectedInlineMf.setAttribute('value', selectedInlineMf.value);
+        selectedInlineMf.setAttribute('read-only', 'true');
+        logic.saveHistory();
+        return;
+      }
+
+      // Try to find an active inline math-field first (from activateInlineEquationEditor)
+      const inlineMf = shadowRootRef.current?.querySelector<any>('math-field[data-inline-equation][read-only="false"], math-field[data-inline-equation]:not([read-only])');
+      if (inlineMf) {
+        inlineMf.insert(latex, { focus: true });
+        inlineMf.setAttribute('value', inlineMf.value);
+        logic.saveHistory();
+        return;
+      }
+
+      // Fall back to structured equation div
       const selectedEl = logic.getSelectedElement();
       if (!selectedEl || selectedEl.getAttribute('data-type') !== 'equation') return;
 
       const mf = selectedEl.querySelector('math-field') as any;
       if (mf) {
-        // If mf is found, insert LaTeX
         mf.insert(latex, { focus: true });
         selectedEl.dataset.latex = mf.value;
         mf.setAttribute('value', mf.value);
         logic.saveHistory();
       } else {
-        // If mf not upgraded yet, we might need to wait or activate it
         logic.activateEquationEditor(selectedEl);
         setTimeout(() => {
           const newMf = selectedEl.querySelector('math-field') as any;
@@ -175,11 +197,74 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         }, 50);
       }
     },
+    insertEquationAtCursor: async () => {
+      const logic: any = logicInstanceRef.current;
+      if (!logic) {
+        console.warn('[SlideCanvas] insertEquationAtCursor: logic not initialized');
+        return;
+      }
+
+      // Get cursor position BEFORE any DOM changes
+      const cursorPos = logic.getCursorPositionInCanvas?.();
+      if (!cursorPos) {
+        console.warn('[SlideCanvas] insertEquationAtCursor: no cursor position found');
+        return;
+      }
+
+      const { x, y } = cursorPos;
+
+      // Blur the active text element
+      const activeElement = document.activeElement;
+      if (activeElement instanceof HTMLElement && activeElement.hasAttribute('contenteditable')) {
+        activeElement.blur();
+      }
+
+      // Create equation element at cursor position
+      // DON'T create math-field here - let activateEquationEditor() handle it
+      const eqDiv = document.createElement('div');
+      eqDiv.setAttribute('data-type', 'equation');
+      eqDiv.setAttribute('data-latex', '');
+      eqDiv.style.cssText = `
+        position: absolute;
+        left: ${Math.max(0, x)}px;
+        top: ${Math.max(0, y)}px;
+        width: 300px;
+        height: 80px;
+        font-size: 32px;
+        color: #ffffff;
+      `;
+
+      // Add to canvas
+      if (!logic.canvas) {
+        console.warn('[SlideCanvas] insertEquationAtCursor: canvas not available');
+        return;
+      }
+
+      logic.canvas.appendChild(eqDiv);
+      logic.normalizeElementForCanvas(eqDiv);
+
+      console.log('[SlideCanvas] Equation element created', { id: eqDiv.id, x, y });
+
+      // Activate equation editor - this will create math-field and focus it
+      // activateEquationEditor() handles: import mathlive, create math-field, focus, attach handlers
+      if (logic.activateEquationEditor) {
+        logic.activateEquationEditor(eqDiv);
+      }
+
+      // Save to history
+      logic.saveHistory();
+    },
     saveHistory: (silent = false) => {
       logicInstanceRef.current?.saveHistory(silent);
     },
     reselectById: (id: string) => {
       logicInstanceRef.current?.reselectById(id);
+    },
+    getHistoryState: () => {
+      return logicInstanceRef.current?.getHistoryState?.() ?? null;
+    },
+    restoreHistoryState: (state: any) => {
+      logicInstanceRef.current?.restoreHistoryState?.(state);
     },
   }));
 
@@ -253,26 +338,31 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
    * Works in both editor (static display) and readOnly (presentation) modes.
    */
   const renderEquationsInRoot = async (root: ShadowRoot | HTMLElement) => {
-    const allEquationNodes = Array.from(
-      root.querySelectorAll<HTMLElement>('[data-type="equation"]')
-    );
-    if (!allEquationNodes.length) return;
-
+    // Load MathLive to register the <math-field> custom element globally.
+    // This is needed for BOTH `[data-type="equation"]` divs AND bare inline `<math-field>` tags.
     try {
-      await import('mathlive'); // registers <math-field> custom element globally
+      const ml = await import('mathlive') as any; // registers <math-field> custom element globally
+      
+      // Robust font path — use absolute URL to ensure we hit /fonts on the server
+      const fontsUrl = window.location.origin + '/fonts';
+      console.log('[SlideCanvas] Setting fontsDirectory to:', fontsUrl);
+      
+      if (ml && ml.setOptions) {
+        ml.setOptions({ fontsDirectory: fontsUrl });
+      } else if ((window as any).MathLive?.setOptions) {
+        (window as any).MathLive.setOptions({ fontsDirectory: fontsUrl });
+      }
     } catch (e) {
-      console.warn('[SlideCanvas] mathlive unavailable, using text fallback:', e);
-      allEquationNodes.forEach(node => {
-        const latex = node.dataset.latex || '';
-        node.innerHTML = `<span style="font-family:monospace;font-size:24px;color:inherit;">${latex}</span>`;
-      });
+      console.warn('[SlideCanvas] mathlive unavailable:', e);
       return;
     }
 
+    // --- Render structured equation elements (from Add Equation tool) ---
+    const allEquationNodes = Array.from(
+      root.querySelectorAll<HTMLElement>('[data-type="equation"]')
+    );
     allEquationNodes.forEach(node => {
       let mf = node.querySelector('math-field') as HTMLElement & { value?: string };
-      
-      // 1. Create math-field if it doesn't exist (e.g. initial load from raw HTML)
       if (!mf) {
         const latex = node.dataset.latex || '';
         node.innerHTML = '';
@@ -281,7 +371,7 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         mf.style.cssText = [
           'width:fit-content',
           'max-width:100%',
-          'min-height:60px',
+          'min-height:30px',
           'border:none',
           'background:transparent',
           'font-size:inherit',
@@ -289,14 +379,60 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
           'outline:none',
         ].join(';');
         node.appendChild(mf);
-        mf.value = latex;
+        (mf as any).value = latex;
       }
-
-      // 2. Ensure an overlay exists for selection shadowing
       if (!node.querySelector('.equation-overlay')) {
         const overlay = document.createElement('div');
         overlay.className = 'equation-overlay';
         node.insertBefore(overlay, mf);
+      }
+    });
+
+    // --- Render bare inline math-field tags (from LLM-generated content) ---
+    // These are NOT inside [data-type="equation"] wrappers.
+    // MathLive is now registered so the custom element will upgrade automatically.
+    // We just need to ensure read-only and styling.
+    root.querySelectorAll<HTMLElement>('math-field').forEach(mf => {
+      const parent = mf.parentElement;
+      if (parent && parent.getAttribute('data-type') === 'equation') {
+        return; // handled above
+      }
+      // Ensure read-only for display
+      mf.setAttribute('read-only', 'true');
+      mf.setAttribute('data-inline-equation', 'true');
+      mf.style.display = 'inline-block';
+      mf.style.verticalAlign = 'middle';
+      mf.style.cursor = 'pointer';
+      mf.style.border = '1px solid transparent';
+      mf.style.background = 'transparent';
+      mf.style.borderRadius = '4px';
+      mf.style.padding = '2px 4px';
+      mf.style.margin = '0 1px';
+      mf.style.fontSize = 'inherit';
+      mf.style.color = 'inherit';
+      mf.style.pointerEvents = 'auto';
+      // Attach robust pointer handlers directly to math-field so it works with
+      // MathLive shadow DOM and regardless of click synthesis quirks.
+      const mfAny = mf as any;
+      if (!mfAny._inlineClickHandler) {
+        mfAny._inlineClickHandler = (ev?: Event) => {
+          // Let browser/MathLive place caret at exact click position.
+          // Only bootstrap selection when NOT already in active equation edit mode.
+          if (mf.hasAttribute('read-only')) {
+            ev?.stopPropagation?.();
+          } else {
+            return; // already editing: let MathLive handle mouse/caret naturally
+          }
+          mf.dispatchEvent(new CustomEvent('inline-equation-click', {
+            bubbles: true,
+            composed: true,
+            detail: { mathField: mf, originalEventType: ev?.type },
+          }));
+        };
+        // Pointerdown/mousedown prioritize equation over textbox selection.
+        mf.addEventListener('pointerdown', mfAny._inlineClickHandler, true);
+        mf.addEventListener('mousedown', mfAny._inlineClickHandler, true);
+        mf.addEventListener('touchstart', mfAny._inlineClickHandler, true);
       }
     });
   };
@@ -369,6 +505,118 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     // .content-wrapper / .outer-wrapper from the converter also get enhanced.
     const tempContainer = document.createElement('div');
     tempContainer.innerHTML = doc.body.innerHTML;
+
+    // --- 5a. Convert plain Unicode math text snippets to inline <math-field> ---
+    // Example: "ax² + bx + c = 0" -> <math-field value="ax^2 + bx + c = 0">
+    const SUPERSCRIPT_MAP: Record<string, string> = {
+      '⁰': '0', '¹': '1', '²': '2', '³': '3', '⁴': '4',
+      '⁵': '5', '⁶': '6', '⁷': '7', '⁸': '8', '⁹': '9',
+      '⁺': '+', '⁻': '-', '⁼': '=', '⁽': '(', '⁾': ')', 'ⁿ': 'n',
+    };
+    const SUBSCRIPT_MAP: Record<string, string> = {
+      '₀': '0', '₁': '1', '₂': '2', '₃': '3', '₄': '4',
+      '₅': '5', '₆': '6', '₇': '7', '₈': '8', '₉': '9',
+      '₊': '+', '₋': '-', '₌': '=', '₍': '(', '₎': ')',
+    };
+
+    const toLatexFromUnicodeMath = (input: string): string => {
+      let out = input;
+      out = out.replace(/([A-Za-z0-9\)\]])([⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿ]+)/g, (_, base, sup) => {
+        const supText = [...sup].map((c) => SUPERSCRIPT_MAP[c] ?? c).join('');
+        return `${base}^${supText}`;
+      });
+      out = out.replace(/([A-Za-z0-9\)\]])([₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎]+)/g, (_, base, sub) => {
+        const subText = [...sub].map((c) => SUBSCRIPT_MAP[c] ?? c).join('');
+        return `${base}_${subText}`;
+      });
+      out = out.replace(/√\s*([A-Za-z0-9_]+)/g, String.raw`\sqrt{$1}`);
+      out = out.replace(/∞/g, String.raw`\infty`);
+      out = out.replace(/≤/g, String.raw`\leq`);
+      out = out.replace(/≥/g, String.raw`\geq`);
+      out = out.replace(/≠/g, String.raw`\neq`);
+      out = out.replace(/±/g, String.raw`\pm`);
+      return out.trim();
+    };
+
+    const looksLikeFormula = (s: string): boolean => {
+      const text = s.trim();
+      if (text.length < 3 || text.length > 140) return false;
+      const hasUnicodeMath = /[₀-₉⁰¹²³⁴⁵⁶⁷⁸⁹√∞≤≥≠±∫∑∏]/.test(text);
+      const hasEquationShape = /[A-Za-z]\s*[\^_]?\s*[0-9₀-₉⁰¹²³⁴⁵⁶⁷⁸⁹]|\=/.test(text);
+      const hasMathOps = /[=+\-*]/.test(text);
+      return (hasUnicodeMath || hasEquationShape) && hasMathOps;
+    };
+
+    const formulaCandidateRegex = /([A-Za-zÀ-ỹΑ-Ωα-ω0-9₀-₉⁰¹²³⁴⁵⁶⁷⁸⁹\(\)\[\]\{\}\s+\-*/=<>≤≥≠±√∞∫∑∏.,]{3,})/g;
+    const walker = doc.createTreeWalker(tempContainer, NodeFilter.SHOW_TEXT);
+    const textNodes: Text[] = [];
+    let cur = walker.nextNode();
+    while (cur) {
+      textNodes.push(cur as Text);
+      cur = walker.nextNode();
+    }
+    textNodes.forEach((textNode) => {
+      const parent = textNode.parentElement;
+      if (!parent) return;
+      if (parent.closest('math-field, style, script, [data-type="equation"]')) return;
+      const raw = textNode.nodeValue || '';
+      if (!/[₀-₉⁰¹²³⁴⁵⁶⁷⁸⁹√∞≤≥≠±=]/.test(raw)) return;
+
+      const frag = document.createDocumentFragment();
+      let last = 0;
+      const matches = [...raw.matchAll(formulaCandidateRegex)];
+      if (!matches.length) return;
+
+      matches.forEach((m) => {
+        const full = m[0];
+        const start = m.index ?? 0;
+        const end = start + full.length;
+        if (start > last) frag.appendChild(document.createTextNode(raw.slice(last, start)));
+
+        if (looksLikeFormula(full)) {
+          const mf = document.createElement('math-field');
+          const latex = toLatexFromUnicodeMath(full);
+          mf.setAttribute('value', latex);
+          mf.setAttribute('read-only', 'true');
+          mf.setAttribute('data-inline-equation', 'true');
+          mf.style.display = 'inline-block';
+          mf.style.verticalAlign = 'middle';
+          mf.style.cursor = 'pointer';
+          mf.style.border = 'none';
+          mf.style.background = 'transparent';
+          mf.style.fontSize = 'inherit';
+          mf.style.color = 'inherit';
+          mf.style.pointerEvents = 'auto';
+          mf.style.minWidth = '1.2em';
+          frag.appendChild(mf);
+        } else {
+          frag.appendChild(document.createTextNode(full));
+        }
+        last = end;
+      });
+      if (last < raw.length) frag.appendChild(document.createTextNode(raw.slice(last)));
+      textNode.parentNode?.replaceChild(frag, textNode);
+    });
+
+    // --- 5b. Convert <math-field> tags ---
+    // AI sometimes generates <math-field>latex</math-field> directly inline.
+    // We strictly keep these inline so they flow correctly in text elements or grid layouts.
+    // Only elements generated by the "Add Equation" tool are wrapped in `data-type="equation"`.
+    tempContainer.querySelectorAll('math-field').forEach((mf) => {
+      const parent = mf.parentElement;
+      if (parent && parent.getAttribute('data-type') === 'equation') {
+        // Already a structured canvas equation (e.g. from Add Equation tool)
+        return; 
+      }
+      
+      // Keep math-field inline exactly where LLM placed it, render read-only
+      // Click on it will open equation editor (handled by EventHandlersMixin)
+      (mf as HTMLElement).setAttribute('read-only', 'true');
+      (mf as HTMLElement).setAttribute('data-inline-equation', 'true');
+      (mf as HTMLElement).style.display = 'inline-block';
+      (mf as HTMLElement).style.verticalAlign = 'middle';
+      (mf as HTMLElement).style.cursor = 'pointer';
+    });
 
     // Layout containers: skip these (don't tag as elements), but their
     // children still get iterated/processed by querySelectorAll('*').
@@ -663,6 +911,11 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         display: none !important;
         visibility: hidden;
       }
+      math-field::part(menu-toggle),
+      math-field::part(virtual-keyboard-toggle) {
+        display: none !important;
+        visibility: hidden;
+      }
       /* MathLive static markup sizing and colors */
       [data-type="equation"] math-field,
       [data-type="equation"] .ML__base,
@@ -682,6 +935,21 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       [contenteditable="true"]:empty:before {
         content: attr(data-placeholder);
         color: #999;
+      }
+
+      /* Inline equation visual affordance inside text */
+      math-field[data-inline-equation] {
+        transition: border-color .15s ease, box-shadow .15s ease, background-color .15s ease;
+      }
+      math-field[data-inline-equation]:hover {
+        border-color: #3b82f6 !important;
+        background-color: rgba(59, 130, 246, 0.08) !important;
+        box-shadow: 0 0 0 1px rgba(59, 130, 246, 0.25) inset;
+      }
+      math-field[data-inline-equation].inline-equation-selected {
+        border-color: #2563eb !important;
+        background-color: rgba(37, 99, 235, 0.12) !important;
+        box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.35) inset;
       }
       `}
       ${isReadOnly ? `
@@ -798,7 +1066,8 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
         logicInstanceRef.current = new SlideEditorLogic(
           shadowRootRef.current!,
           (data: any) => onElementSelectRef.current?.(data),
-          () => onChangeRef.current?.()
+          () => onChangeRef.current?.(),
+          () => renderEquationsInRoot(shadowRootRef.current!)
         );
         logicInstanceRef.current.setScale(zoomRef.current);
       } catch (e) {

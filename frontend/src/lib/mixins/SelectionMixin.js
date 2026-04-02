@@ -191,6 +191,9 @@ export const SelectionMixin = {
             el.classList.remove('selected');
             el.querySelectorAll('.resize-handle, .drag-handle').forEach(h => h.remove());
         });
+        this.root.querySelectorAll('math-field[data-inline-equation].inline-equation-selected')
+            .forEach((el) => el.classList.remove('inline-equation-selected'));
+        this._selectedInlineMathField = null;
 
         this.selectedElements = [];
         this.selectedElementId = null;

@@ -75,13 +75,16 @@ async def delete_project(
 @router.get("/{project_id}/slides")
 async def get_project_slides_list(
     project_id: int,
+    limit: int | None = None,
     current_user: UserResponse = Depends(get_current_active_user),
     service: ProjectService = Depends(get_project_service)
 ):
-    """Get all slides belonging to a project"""
+    """Get slides belonging to a project. Use limit=1 for preview thumbnail."""
     data = service.get_project_details(project_id, current_user.id)
     slides = data.slides
-    return {"slides": slides, "total": len(slides)}
+    if limit is not None and limit > 0:
+        slides = slides[:limit]
+    return {"slides": slides, "total": len(data.slides)}
 
 
 @router.post("/{project_id}/slides", response_model=CreateResourceResponse)

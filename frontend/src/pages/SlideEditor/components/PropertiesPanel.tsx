@@ -204,7 +204,7 @@ export const PropertiesPanel = ({
 
   if (!el) {
     return (
-      <div className="w-72 border-l bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground px-8">
+      <div data-properties-panel="true" className="w-72 border-l bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground px-8">
         <div className="rounded-2xl bg-muted/60 p-5 flex items-center justify-center">
           <MousePointer className="h-7 w-7 opacity-30" />
         </div>
@@ -245,6 +245,7 @@ export const PropertiesPanel = ({
   return (
     <TooltipProvider>
     <div
+      data-properties-panel="true"
       className="w-72 border-l bg-background flex flex-col h-full overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden"
       style={{ scrollbarWidth: "none" }}
     >

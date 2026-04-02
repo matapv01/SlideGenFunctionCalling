@@ -100,8 +100,20 @@ const SlideEditor = () => {
         onDeselectElement={() => setSelectedElementId(null)}
         onSetDraggedItem={setDraggedItem}
         onDeleteElement={selectedElementId ? () => deleteElement(selectedElementId) : undefined}
-        onPresentFromStart={() => navigate(`/present/${projectId}?slide=0`)}
-        onPresentFromCurrent={() => navigate(`/present/${projectId}?slide=${currentSlideIndex}`)}
+        onPresentFromStart={() => {
+          const historyState = slideCanvasRef.current?.getHistoryState?.();
+          if (historyState && projectId) {
+            sessionStorage.setItem(`slide-history-${projectId}`, JSON.stringify(historyState));
+          }
+          navigate(`/present/${projectId}?slide=0`);
+        }}
+        onPresentFromCurrent={() => {
+          const historyState = slideCanvasRef.current?.getHistoryState?.();
+          if (historyState && projectId) {
+            sessionStorage.setItem(`slide-history-${projectId}`, JSON.stringify(historyState));
+          }
+          navigate(`/present/${projectId}?slide=${currentSlideIndex}`);
+        }}
         onExport={() => setIsExportModalOpen(true)}
       />
 

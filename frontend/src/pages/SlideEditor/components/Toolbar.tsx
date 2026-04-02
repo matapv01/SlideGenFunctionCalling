@@ -135,7 +135,10 @@ export const Toolbar = ({
             size="icon"
             disabled={!canUndo}
             className="h-8 w-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
-            onClick={() => slideCanvasRef.current?.undo()}
+            onClick={() => {
+              slideCanvasRef.current?.saveHistory?.(true);
+              slideCanvasRef.current?.undo();
+            }}
           >
             <Undo2 className="h-4 w-4" />
           </Button>
@@ -146,7 +149,10 @@ export const Toolbar = ({
             size="icon"
             disabled={!canRedo}
             className="h-8 w-8 text-muted-foreground hover:text-foreground disabled:opacity-30"
-            onClick={() => slideCanvasRef.current?.redo()}
+            onClick={() => {
+              slideCanvasRef.current?.saveHistory?.(true);
+              slideCanvasRef.current?.redo();
+            }}
           >
             <Redo2 className="h-4 w-4" />
           </Button>

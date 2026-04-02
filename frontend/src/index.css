@@ -148,7 +148,8 @@
   }
 
   .glass {
-    @apply bg-card/80 backdrop-blur-xl border border-border/50;
+    @apply bg-card border border-border/50;
+    /* backdrop-blur-xl disabled - causes severe performance issues with many cards */
   }
 
   .animate-float {
