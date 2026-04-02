@@ -1,6 +1,8 @@
 # File: backend/infrastructure/rag/gemini_provider.py
 
 import os
+import json
+import hashlib
 from typing import List, Dict, Any, Tuple
 from langchain_community.vectorstores import FAISS
 from collections import deque
@@ -40,21 +42,27 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
             shutil.rmtree(index_path)
 
         if os.path.exists(index_path):
-            print(f"Found existing index at '{index_path}'. Loading retrievers from disk...")
+            print(f"Found existing index at '{index_path}'. Checking for updates...")
             for category in tools_dict.keys():
                 category_index_path = os.path.join(index_path, category)
+                metadata_path = os.path.join(category_index_path, "metadata.json")
+                
                 if os.path.exists(category_index_path):
                     try:
-                        vector_store = FAISS.load_local(
-                            folder_path=category_index_path,
-                            embeddings=self.embeddings,
-                            allow_dangerous_deserialization=True
-                        )
-                        self.retrievers[category] = vector_store.as_retriever()
-                        self.vector_stores[category] = vector_store
-                        print(f"  - Successfully loaded retriever for '{category}'.")
+                        # Always check for incremental updates
+                        self._build_and_save_retriever(category, tools_dict[category], index_path)
+                        
+                        # Load the index (either cached or updated)
+                        if category not in self.vector_stores:
+                            vector_store = FAISS.load_local(
+                                folder_path=category_index_path,
+                                embeddings=self.embeddings,
+                                allow_dangerous_deserialization=True
+                            )
+                            self.retrievers[category] = vector_store.as_retriever()
+                            self.vector_stores[category] = vector_store
                     except Exception as e:
-                        print(f"  - FAILED to load retriever for '{category}': {e}. Will rebuild it.")
+                        print(f"  - FAILED to process retriever for '{category}': {e}. Will rebuild it.")
                         self._build_and_save_retriever(category, tools_dict[category], index_path)
                 else:
                     self._build_and_save_retriever(category, tools_dict[category], index_path)
@@ -70,16 +78,99 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         print("ToolRetriever initialized successfully.")
 
     def _build_and_save_retriever(self, category: str, tools: List[Any], base_index_path: str):
+        """Build FAISS index for a category with incremental update support."""
         if not tools: return
+        
         category_index_path = os.path.join(base_index_path, category)
+        metadata_path = os.path.join(category_index_path, "metadata.json")
+        
+        # Compute current tools metadata (name → hash of description)
+        current_tools_meta = {}
+        for tool in tools:
+            desc_hash = hashlib.md5(tool.description.encode()).hexdigest()
+            current_tools_meta[tool.name] = desc_hash
+        
+        # Load existing metadata if available
+        existing_meta = {}
+        if os.path.exists(metadata_path):
+            try:
+                with open(metadata_path, 'r') as f:
+                    existing_meta = json.load(f)
+            except:
+                pass
+        
+        # Detect changes
+        new_tools = [t for t in tools if t.name not in existing_meta]
+        changed_tools = [t for t in tools if t.name in existing_meta and existing_meta.get(t.name) != current_tools_meta[t.name]]
+        deleted_tool_names = set(existing_meta.keys()) - set(current_tools_meta.keys())
+        
+        # If no changes and index exists, skip
+        if not new_tools and not changed_tools and not deleted_tool_names and os.path.exists(category_index_path):
+            print(f"  - No changes detected for '{category}'. Skipping rebuild.")
+            return
+        
+        print(f"  - Building retriever for category '{category}'...")
+        if new_tools:
+            print(f"    • {len(new_tools)} new tools")
+        if changed_tools:
+            print(f"    • {len(changed_tools)} changed tools")
+        if deleted_tool_names:
+            print(f"    • {len(deleted_tool_names)} deleted tools")
+        
         try:
-            print(f"  - Building retriever for category '{category}'...")
-            documents = [Document(page_content=tool.description, metadata={"name": tool.name}) for tool in tools]
-            vector_store = FAISS.from_documents(documents, self.embeddings)
-            self.retrievers[category] = vector_store.as_retriever()
-            self.vector_stores[category] = vector_store  # Store for MMR
-            vector_store.save_local(folder_path=category_index_path)
-            print(f"  - Built and saved retriever for '{category}' at '{category_index_path}'.")
+            # Determine if we need full rebuild or can do incremental
+            needs_full_rebuild = bool(changed_tools or deleted_tool_names)
+            
+            if needs_full_rebuild:
+                # Full rebuild: changed or deleted tools require rebuilding entire index
+                # (FAISS add_documents() only appends, cannot update/delete)
+                if changed_tools:
+                    print(f"    • {len(changed_tools)} changed tools - full rebuild required")
+                if deleted_tool_names:
+                    print(f"    • {len(deleted_tool_names)} deleted tools - full rebuild required")
+                
+                documents = [Document(page_content=tool.description, metadata={"name": tool.name}) for tool in tools]
+                vector_store = FAISS.from_documents(documents, self.embeddings)
+                print(f"    • Rebuilt index with {len(tools)} tools")
+                
+            elif new_tools:
+                # Incremental: only new tools, can safely append
+                vector_store = None
+                if os.path.exists(category_index_path):
+                    try:
+                        vector_store = FAISS.load_local(
+                            folder_path=category_index_path,
+                            embeddings=self.embeddings,
+                            allow_dangerous_deserialization=True
+                        )
+                        print(f"    • Loaded existing index for incremental update")
+                    except Exception as e:
+                        print(f"    • Failed to load existing index: {e}. Rebuilding from scratch.")
+                        vector_store = None
+                
+                documents = [Document(page_content=tool.description, metadata={"name": tool.name}) for tool in new_tools]
+                
+                if vector_store is None:
+                    # Create new index
+                    vector_store = FAISS.from_documents(documents, self.embeddings)
+                else:
+                    # Safely append new tools only
+                    vector_store.add_documents(documents)
+                
+                print(f"    • Added {len(new_tools)} new tools to index")
+            else:
+                # Should not reach here (would have been skipped earlier)
+                return
+            
+            # Save index and metadata
+            if vector_store is not None:
+                self.retrievers[category] = vector_store.as_retriever()
+                self.vector_stores[category] = vector_store
+                vector_store.save_local(folder_path=category_index_path)
+                with open(metadata_path, 'w') as f:
+                    json.dump(current_tools_meta, f, indent=2)
+                print(f"  - Built and saved retriever for '{category}' at '{category_index_path}'.")
+            
         except Exception as e:
             print(f"  - FAILED to build and save retriever for '{category}': {e}")
 
