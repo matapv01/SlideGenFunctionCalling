@@ -37,7 +37,7 @@ export const EventHandlersMixin = {
             }
         }
         
-        if (target instanceof HTMLElement) {
+        if (target instanceof Element) {
             // Fallback: check if target is inside a math-field
             const mathField = target.closest?.('math-field');
             if (mathField) return mathField;
@@ -107,6 +107,37 @@ export const EventHandlersMixin = {
         snapshots.forEach(({ el, bounds }) => {
             this.ensureElementAbsolutePosition(el, bounds);
         });
+    },
+
+    resolveSelectableTarget(target) {
+        if (!(target instanceof Element)) return null;
+
+        const tagged = target.closest('[data-selectable="true"]');
+        if (tagged && this.canvas.contains(tagged)) return tagged;
+
+        // SVG children often don't carry data-selectable; fallback to absolute ancestor.
+        let current = target;
+        while (current && current !== this.root) {
+            if (current instanceof HTMLElement) {
+                if (this.isCanvasChromeElement?.(current)) {
+                    current = current.parentElement;
+                    continue;
+                }
+
+                if (window.getComputedStyle(current).position === 'absolute' && this.canvas.contains(current)) {
+                    if (!current.hasAttribute('data-selectable')) {
+                        current.setAttribute('data-selectable', 'true');
+                    }
+                    if (!current.style.cursor) {
+                        current.style.cursor = 'move';
+                    }
+                    return current;
+                }
+            }
+            current = current.parentElement;
+        }
+
+        return null;
     },
 
     handleDoubleClick(e) {
@@ -664,7 +695,7 @@ export const EventHandlersMixin = {
             }
         }
 
-        let targetElement = target.closest('[data-selectable="true"]');
+        let targetElement = this.resolveSelectableTarget(target);
         if ((isResizeHandle || isDragHandle) && !targetElement) {
             // Handles always belong to a selectable parent; if not, ignore.
             return;
@@ -688,12 +719,10 @@ export const EventHandlersMixin = {
             return;
         }
 
-        const normalizedTarget = targetElement.closest('[data-selectable="true"]');
-        if (!normalizedTarget || !this.canvas.contains(normalizedTarget)) {
+        if (!this.canvas.contains(targetElement)) {
             this.deselectAll();
             return;
         }
-        targetElement = normalizedTarget;
 
         // RESIZE: grab handle info and prepare
         if (isResizeHandle && this.selectedElements.length > 0) {
