@@ -1,3 +1,4 @@
+import math
 DEFAULT_FONT_FAMILY = "'Be Vietnam Pro', sans-serif"
 
 #---------------------- SLIDE INTRO
@@ -1586,7 +1587,7 @@ def generate_playful_title_slide(
         .slide-container {{ width: 100%; height: 100%; background-color: {top_bg_color}; position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 4rem 5rem; }}
         .slide-container::after {{ content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 15%; background-color: {bottom_bg_color}; z-index: 0; }}
         .text-column {{ z-index: 10; display: flex; flex-direction: column; justify-content: center; }}
-        .main-title {{ font-family: 'Patrick Hand', cursive; font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 400; color: #2D2D2D; line-height: 1.15; margin-bottom: 2.5rem; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 400; color: #2D2D2D; line-height: 1.15; margin-bottom: 2.5rem; }}
         .subtitle {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2rem; color: {text_color}; line-height: 1.6; max-width: 45ch; font-weight: 400; }}
         .illustration-column {{ z-index: 5; display: flex; align-items: center; justify-content: center; }}
         .illustration-wrapper {{ position: relative; width: 90%; max-width: 450px; }}
@@ -2362,7 +2363,7 @@ def generate_research_proposal_slide(
         }}
         
         body {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -2397,7 +2398,7 @@ def generate_research_proposal_slide(
         }}
         
         .title {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 110px;
             font-weight: 900;
             color: {title_color};
@@ -2407,7 +2408,7 @@ def generate_research_proposal_slide(
         }}
         
         .subtitle {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 28px;
             font-weight: 500;
             color: {subtitle_color};
@@ -2889,7 +2890,7 @@ def generate_title_slide_3(
         .subtitle {{
             font-size: 32px;
             color: {subtitle_color};
-            font-family: 'Georgia', serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-weight: 400;
             font-style: italic;
             margin: 0;
@@ -2981,8 +2982,6 @@ def generate_minimalist_slide(
     Removes all responsive elements (flexbox, vw/vh units, @media queries) for reliable conversion.
     
     Args:
-        title (str): The main title for the slide (112px serif font, centered at 1600px width)
-        subtitle (str): Descriptive text below the title (26px sans-serif font)
         background_color (str): The background color of the slide (default: #E8E3DC warm beige)
         text_color_title (str): Color for the title text (default: #1A1A1A dark gray)
         text_color_subtitle (str): Color for the subtitle text (default: #4A4A4A medium gray)
@@ -3159,7 +3158,7 @@ def generate_title_slide_5(
         }}
         
         body {{
-            font-family: 'Courier New', monospace;
+            font-family: {DEFAULT_FONT_FAMILY};
             width: 1920px;
             height: 1080px;
             overflow: hidden;
@@ -3318,7 +3317,7 @@ def generate_title_slide_7(
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin:0; padding:0; box-sizing:border-box; }}
-            body {{ font-family: 'Poppins', sans-serif; background-color:{bg_color}; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }}
+            body {{ font-family: {DEFAULT_FONT_FAMILY}; background-color:{bg_color}; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }}
             .text-frame {{ width:1100px; padding:60px 80px; border-radius:24px; background:{card_bg_color}; border:5px solid {border_color}; box-shadow:0 12px 36px rgba(0,0,0,0.12); text-align:center; position:relative; }}
             .main-title {{ font-size:56px; font-weight:900; color:{title_color}; margin:0; }}
             .subtitle {{ font-size:34px; color:{subtitle_color}; margin-top:12px; line-height:1.2; }}
@@ -3384,7 +3383,7 @@ def generate_title_slide_11(
         }}
         
         body {{
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background: linear-gradient(90deg, {bg_left_color} 0%, {bg_left_color} 50%, {bg_right_color} 50%, {bg_right_color} 100%);
             overflow: hidden;
             width: 100vw;
@@ -3419,7 +3418,7 @@ def generate_title_slide_11(
         }}
         
         .title {{
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 110px;
             font-weight: 400;
             color: {text_color};
@@ -3428,7 +3427,7 @@ def generate_title_slide_11(
         }}
         
         .subtitle {{
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {text_color};
@@ -3523,7 +3522,7 @@ def generate_title_slide_12(
         }}
         
         body {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -3571,7 +3570,7 @@ def generate_title_slide_12(
         }}
         
         .main-title {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 88px;
             font-weight: 900;
             color: {text_color};
@@ -3581,7 +3580,7 @@ def generate_title_slide_12(
         }}
         
         .subtitle {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {text_color};
@@ -3683,7 +3682,7 @@ def generate_title_slide_13(
         }}
 
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background: linear-gradient(135deg, {bg_color} 0%, #D4E8F0 100%);
         }}
@@ -3715,7 +3714,7 @@ def generate_title_slide_13(
         }}
 
         .main-title {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-weight: 800;
             font-size: 100px;
             color: {text_color};
@@ -3725,7 +3724,7 @@ def generate_title_slide_13(
         }}
         
         .subtitle {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-weight: 400;
             font-size: 40px;
             color: {text_color};
@@ -3921,7 +3920,7 @@ def generate_title_slide_15(
         }}
 
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {background_color};
             overflow: hidden;
             width: 1920px;
@@ -4056,7 +4055,7 @@ def generate_title_slide_17(
         }}
         
         body {{
-            font-family: {DEFAULT_FONT_FAMILY}, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -4230,7 +4229,7 @@ def generate_title_slide_18(
         }}
         
         body {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             width: 1920px;
             height: 1080px;
@@ -4265,7 +4264,7 @@ def generate_title_slide_18(
         }}
         
         .main-title {{
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 110px;
             font-weight: 400;
             color: {title_color};
@@ -4280,7 +4279,7 @@ def generate_title_slide_18(
         }}
         
         .subtitle {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {subtitle_color};
@@ -4314,135 +4313,6 @@ def generate_title_slide_18(
     return html_code
 
 #----------------------SLIDE CHUYỂN SLIDE
-
-def generate_geometric_transition_slide(
-    headline="TRANSITION HEADLINE",
-    subtitle="Let's start with the first set of slides",
-    bg_color="#0F172A",
-    primary_text_color="#FFFFFF",
-    subtitle_color="#67E8F9"
-):
-    """
-    Generates a modern, dynamic transition slide with colorful geometric shapes.
-    Features a dark background with high-contrast, centered text. Ideal for tech
-    or creative presentations.
-    """
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geometric Transition Slide</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {DEFAULT_FONT_FAMILY};
-            overflow: hidden;
-            background-color: {bg_color};
-            color: {primary_text_color};
-        }}
-
-        .slide-container {{
-            width: 100%; height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            position: relative;
-        }}
-
-        .text-content {{
-            z-index: 10;
-            max-width: 90%;
-            width: 100%;
-        }}
-
-        .headline {{
-            font-size: clamp(6rem, 10vw, 8rem) !important;
-            font-weight: 700;
-            text-transform: uppercase;
-            line-height: 1.25;
-            margin-bottom: 3rem;
-            display: block;
-            width: 100%;
-        }}
-
-        .subtitle {{
-            font-size: 3.5rem !important;
-            font-weight: 500;
-            color: {subtitle_color};
-            line-height: 1.5;
-            display: block;
-            width: 100%;
-        }}
-
-        /* --- Geometric Shapes --- */
-        .shape-cluster {{
-            position: absolute;
-            width: 40%;
-            height: 40%;
-            pointer-events: none;
-        }}
-
-        .shape-cluster.top-right {{
-            top: 0;
-            right: 0;
-        }}
-
-        .shape-cluster.bottom-left {{
-            bottom: 0;
-            left: 0;
-        }}
-
-        .shape {{
-            position: absolute;
-            transform-origin: center center;
-            transform: skewX(-20deg) rotate(15deg);
-        }}
-
-        /* Top-Right Shapes Palette */
-        .shape-tr-1 {{ width: 10rem; height: 10rem; background-color: #34D399; opacity: 0.9; top: 6rem; right: 5rem; z-index: 2; }}
-        .shape-tr-2 {{ width: 12rem; height: 12rem; background-color: #6366F1; opacity: 0.8; top: 10rem; right: 9rem; z-index: 1; }}
-        .shape-tr-3 {{ width: 8rem; height: 8rem; background: linear-gradient(45deg, #F87171, #FBBF24); opacity: 1; top: 16rem; right: 5rem; z-index: 3; }}
-        .shape-tr-4 {{ width: 9rem; height: 9rem; background-color: #1E3A8A; opacity: 0.5; top: 3rem; right: 13rem; z-index: 0; }}
-
-        /* Bottom-Left Shapes Palette */
-        .shape-bl-1 {{ width: 8rem; height: 8rem; background-color: #34D399; opacity: 0.7; bottom: 10rem; left: 3rem; z-index: 2; }}
-        .shape-bl-2 {{ width: 7rem; height: 7rem; background-color: #FBBF24; opacity: 0.9; bottom: 7rem; left: 8rem; z-index: 3; }}
-        .shape-bl-3 {{ width: 11rem; height: 11rem; background-color: #A78BFA; opacity: 1; bottom: 2rem; left: 11rem; z-index: 2; }}
-        .shape-bl-4 {{ width: 10rem; height: 10rem; background: linear-gradient(45deg, #EF4444, #FB923C); opacity: 1; bottom: 2rem; left: 5rem; z-index: 4; }}
-        .shape-bl-5 {{ width: 9rem; height: 9rem; background-color: #1E3A8A; opacity: 0.8; bottom: 9rem; left: 7rem; z-index: 1; }}
-        .shape-bl-6 {{ width: 6rem; height: 6rem; background-color: #60A5FA; opacity: 0.4; bottom: 14rem; left: 2rem; z-index: 0; }}
-
-        @media (max-width: 48rem) {{
-            .shape-cluster {{ transform: scale(0.7); }}
-            .top-right {{ top: -5rem; right: -5rem; }}
-            .bottom-left {{ bottom: -5rem; left: -5rem; }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <div class="shape-cluster top-right">
-            <div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div><div class="shape shape-tr-4"></div>
-        </div>
-        <div class="shape-cluster bottom-left">
-            <div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div><div class="shape shape-bl-4"></div><div class="shape shape-bl-5"></div><div class="shape shape-bl-6"></div>
-        </div>
-        <div class="text-content">
-            <h2 class="headline">{headline}</h2>
-            <p class="subtitle">{subtitle}</p>
-        </div>
-    </div>
-</body>
-</html>"""
-    return html_code
 
 def generate_dusk_transition_slide(
     headline="Transition Headline",
@@ -4534,64 +4404,6 @@ def generate_dusk_transition_slide(
 </body>
 </html>"""
     
-    return html_code
-
-def generate_memphis_transition_slide(
-    headline="Transition headline",
-    subtitle="Let's start with the first set of slides",
-    top_panel_bg="#19114B",
-    bottom_panel_bg="#403271",
-    palette=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
-):
-    """
-    Generates a vibrant, retro, and STATIC 'Memphis-style' transition slide.
-    The rotating icon animation has been removed.
-    """
-    svg_patterns = f"""<svg width="0" height="0" style="position:absolute;"><defs><pattern id="pattern-dots" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="{palette[3]}" /></pattern><pattern id="pattern-stripes" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="{palette[0]}" stroke-width="4" /></pattern></defs></svg>"""
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Transition Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
-        body, html {{ height: 100vh; width: 100vw; overflow: hidden; font-family: {DEFAULT_FONT_FAMILY}; }}
-        .slide-container {{ width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; }}
-        .top-panel, .bottom-panel {{ flex: 1; position: relative; overflow: hidden; }}
-        .top-panel {{ background-color: {top_panel_bg}; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5rem; }}
-        .bottom-panel {{ background-color: {bottom_panel_bg}; }}
-        .text-content {{
-            text-align: center;
-            transform: scale(1.3);
-            min-width: 50vw;
-            min-height: 25vh; 
-        }}
-        .section-number {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 3rem; font-weight: 400; color: {palette[3]}; opacity: 0.8; }}
-        .headline {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 4rem; font-weight: 700; margin-bottom: 5rem ; color: #FFFFFF; }}
-        .subtitle {{font-size: 2rem; font-weight: 500; margin-bottom: 8rem; color: {palette[1]}; }}
-        .shape {{ position: absolute; }}
-        .shape-tl-1 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: 4rem; left: 6rem; border-radius: 50%; opacity: 0.8; }}
-        .shape-tl-2 {{ width: 0; height: 0; border-left: 3rem solid transparent; border-right: 3rem solid transparent; border-bottom: 5rem solid {palette[0]}; top: 12rem; left: 3rem; transform: rotate(-25deg); }}
-        .shape-tl-3 {{ width: 5rem; height: 5rem; border: 3px solid {palette[4]}; top: 2rem; left: 1rem; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
-        .shape-tr-1 {{ width: 7rem; height: 7rem; border-radius: 50%; border: 3px dashed {palette[1]}; top: 3rem; right: 8rem; }}
-        .shape-tr-2 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.5; top: 1rem; right: 2rem; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); transform: rotate(20deg); }}
-        .shape-tr-3 {{ width: 9rem; height: 9rem; background: url(#pattern-stripes); border-radius: 50%; top: 8rem; right: 3rem; transform: rotate(45deg); opacity: 0.9; }}
-        .shape-bl-1 {{ width: 0; height: 0; border-left: 4rem solid transparent; border-right: 4rem solid transparent; border-bottom: 7rem solid {palette[1]}; bottom: 2rem; left: 1rem; transform: rotate(15deg) scaleX(-1); }}
-        .shape-bl-2 {{ width: 6rem; height: 6rem; border: 3px dashed {palette[2]}; border-radius: 50%; bottom: 8rem; left: 9rem; }}
-        .shape-bl-3 {{ width: 4rem; height: 4rem; background-color: {palette[0]}; bottom: 1rem; left: 12rem; transform: rotate(30deg); }}
-        .shape-br-1 {{ width: 5rem; height: 5rem; background-color: {palette[3]}; border-radius: 50%; bottom: 2rem; right: 1rem; }}
-        .shape-br-2 {{ width: 9rem; height: 9rem; background: url(#pattern-dots); bottom: 6rem; right: 5rem; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); transform: rotate(-15deg); }}
-        .shape-br-3 {{ width: 0; height: 0; border-left: 2rem solid transparent; border-right: 2rem solid transparent; border-bottom: 3.5rem solid {palette[4]}; bottom: 1rem; right: 10rem; transform: rotate(45deg); opacity: 0.7;}}
-    </style>
-</head>
-<body>
-    {svg_patterns}
-    <div class="slide-container">
-        <div class="top-panel"><div class="text-content"><h2 class="headline">{headline}</h2><p class="subtitle">{subtitle}</p></div><div class="shape shape-tl-1"></div><div class="shape shape-tl-2"></div><div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div></div>
-        <div class="bottom-panel"><div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div><div class="shape shape-br-1"></div><div class="shape shape-br-2"></div><div class="shape shape-br-3"></div></div>
-    </div>
-</body>
-</html>"""
     return html_code
 
 def generate_pushpin_section_header(
@@ -5088,7 +4900,7 @@ def generate_research_proposal_transition_slide(
         }}
         
         body {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -5124,7 +4936,7 @@ def generate_research_proposal_transition_slide(
         }}
         
         .headline {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 90px;
             font-weight: 900;
             color: {headline_color};
@@ -5135,7 +4947,7 @@ def generate_research_proposal_transition_slide(
         }}
         
         .subtitle {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 32px;
             font-weight: 500;
             color: {subtitle_color};
@@ -5544,7 +5356,7 @@ def generate_section_header_slide_5(
             body {{
                 width: 1920px;
                 height: 1080px;
-                font-family: 'Playfair Display', serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 background: {bg_color};
                 color: {text_color};
                 position: relative;
@@ -5658,7 +5470,7 @@ def generate_section_header_slide_6(
         }}
         
         body {{
-            font-family: 'Arial', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background: linear-gradient(to bottom, {bg_color} 0%, {bg_gradient_to} 100%);
             min-height: 100vh;
             display: flex;
@@ -5753,7 +5565,7 @@ def generate_section_header_slide_8(
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            font-family: 'Arial', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             margin: 0;
             padding: 0;
@@ -5846,7 +5658,7 @@ def generate_section_header_slide_9(
         body {{
             margin: 0;
             padding: 0 120px;
-            font-family: 'Roboto', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             width: 1920px;
             height: 1080px;
@@ -5886,7 +5698,7 @@ def generate_section_header_slide_9(
         }}
         
         .main-title {{
-            font-family: 'Roboto Condensed', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 4rem;
             font-weight: 900;
             color: {text_color};
@@ -5896,7 +5708,7 @@ def generate_section_header_slide_9(
         }}
         
         .subtitle {{
-            font-family: 'Roboto', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 2rem;
             font-weight: 300;
             color: {text_color};
@@ -6016,7 +5828,7 @@ def generate_section_header_slide_10(
             body {{
                 margin: 0;
                 padding: 0;
-                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
             }}
             
@@ -6116,7 +5928,7 @@ def generate_section_header_slide_10(
                 font-size: 4rem;
                 font-weight: 900;
                 color: #4A4A4A;
-                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
             }}
             
             .main-title {{
@@ -6125,7 +5937,7 @@ def generate_section_header_slide_10(
                 color: {title_color};
                 text-align: center;
                 margin-bottom: 50px;
-                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 letter-spacing: 1px;
                 width: 100%;
                 max-width: 1200px;
@@ -6138,7 +5950,7 @@ def generate_section_header_slide_10(
                 color: {subtitle_color};
                 text-align: center;
                 line-height: 1.6;
-                font-family: 'Noto Sans', 'Roboto', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 width: 100%;
                 max-width: 1200px;
                 z-index: 3;
@@ -6233,7 +6045,7 @@ def generate_section_header_slide_12(
         }}
         
         body {{
-            font-family: 'Roboto', 'Noto Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             width: 1920px;
             height: 1080px;
             background: {bg_color};
@@ -6322,7 +6134,7 @@ def generate_section_header_slide_15(
             }}
             
             body {{
-                font-family: 'Inter', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 background: {bg_color};
                 color: {text_color};
                 overflow: hidden;
@@ -6601,7 +6413,7 @@ def generate_section_header_slide_17(
         }}
         
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -6756,7 +6568,7 @@ def generate_section_header_slide_18(
         }}
         
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             width: 1920px;
             height: 1080px;
@@ -9000,347 +8812,7 @@ def generate_body_slide7(
 # sửa biến trong tool
 
 
-def generate_body_slide10(
-    # Main parameters
-    main_title="MainTitle",
-    
-    # Content parameters
-    subtitle1="SubTitle1",
-    content1="Content1",
-    subtitle2="SubTitle2",
-    content2="Content2",
-    subtitle3="SubTitle3",
-    content3="Content3",
-    
-    # Style parameters
-    main_bg_color="#ffffff",
-    accent_color="#d5e8b9",
-    title_color="#333333",
-    subtitle_color="#333333",
-    content_color="#555555",
-    image_url="Image/generate_body_slide10/Default_1.png",
 
-    # Icon parameters - SVG paths for each icon
-    icon1="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M12 2v6M12 18v4M14.5 8a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM16.5 13a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0z"></path></svg>""",  # Lightbulb
-    icon2="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>""",  # Target
-    icon3="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>""",  # Bar chart
-):
-    """
-    Generates an HTML slide with a main title, large image on the left,
-    and three content sections with icons on the right - Full viewport design.
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image with Icons Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {DEFAULT_FONT_FAMILY};
-            background-color: {accent_color}; /* Full viewport accent background */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            padding: 3rem 4rem; /* 48px 64px */
-            position: relative;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 2rem;
-        }}
-        
-        .title-accent {{
-            width: 2.5rem; /* 40px - tăng kích thước */
-            height: 2.5rem; /* 40px */
-            background-color: {accent_color};
-            margin-right: 1.25rem; /* 20px */
-            border-radius: 0.5rem; /* 8px */
-        }}
-        
-        .main-title {{
-            font-size: 4.5rem;
-            color: {title_color};
-            font-weight: 600;
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1;
-            gap: 2.5rem; /* 40px - gap giữa image và content */
-        }}
-        
-        .image-section {{
-            flex: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            padding: 2rem; /* 32px */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
-        }}
-        
-        .image-frame {{
-            width: 100%;
-            height: 100%;
-            position: relative;
-            max-height: 28rem; /* 448px */
-            border-radius: 0.75rem; /* 12px */
-            overflow: hidden;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-        }}
-        
-        .image-accent {{
-            position: absolute;
-            top: -0.5rem; /* -8px */
-            left: -0.5rem; /* -8px */
-            width: calc(100% + 1rem);
-            height: calc(100% + 1rem);
-            border: 0.25rem solid {accent_color}; /* 4px */
-            border-radius: 1rem; /* 16px */
-            box-sizing: border-box;
-            z-index: 1;
-        }}
-        
-        .image-container {{
-            position: relative;
-            width: 100%;
-            height: 100%;
-            z-index: 2;
-            border-radius: 0.75rem; /* 12px */
-            overflow: hidden;
-        }}
-        
-        .image-container img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }}
-        
-        .image-section:hover .image-container img {{
-            transform: scale(1.05); /* zoom effect on hover */
-        }}
-        
-        .content-section {{
-            flex: 3;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 1.5rem;
-        }}
-        
-        .content-item {{
-            display: flex;
-            align-items: flex-start;
-            background: rgba(255,255,255,0.9);
-            border-radius: 0.75rem; /* 12px */
-            padding: 1.5rem;
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border-left: 0.25rem solid {accent_color}; /* accent border */
-        }}
-        
-        .content-item:hover {{
-            transform: translateX(0.5rem); /* 8px - hover effect */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
-        }}
-        
-        .icon-container {{
-            width: 5rem;
-            height: 5rem;
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 1.5rem; /* 24px */
-            flex-shrink: 0;
-            border-radius: 0.75rem; /* 12px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .icon-container {{
-            transform: scale(1.1) rotate(5deg); /* hover animation */
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-        }}
-        
-        .icon-container svg {{
-            width: 2.5rem;
-            height: 2.5rem;
-            stroke: #333333;
-            filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1));
-        }}
-        
-        .content-text {{
-            flex: 1;
-        }}
-        
-        .subtitle {{
-            font-size: 2rem;
-            color: {subtitle_color};
-            margin: 0 0 0.5rem 0;
-            font-weight: 600;
-        }}
-        
-        .content {{
-            font-size: 1.6rem;
-            color: {content_color};
-            margin: 0;
-            line-height: 1.5;
-        }}
-        
-        /* Responsive design */
-        @media screen and (max-width: 75rem) {{
-            body {{
-                padding: 3rem 5rem;
-            }}
-            
-            .content-layout {{
-                flex-direction: column;
-                gap: 2rem;
-            }}
-            
-            .image-section {{
-                flex: none;
-                height: 20rem;
-            }}
-            
-            .content-section {{
-                flex: none;
-                gap: 1.5rem;
-            }}
-        }}
-        
-        @media screen and (max-width: 50rem) {{
-            body {{
-                padding: 2rem 3rem;
-            }}
-            
-            .slide-inner-container {{
-                padding: 2rem 3rem;
-            }}
-            
-            .content-item {{
-                flex-direction: column;
-                text-align: center;
-            }}
-            
-            .icon-container {{
-                margin-right: 0;
-                margin-bottom: 1rem;
-            }}
-            
-            .title-font-size {{
-                font-size: 2rem;
-            }}
-            
-            .subtitle-font-size {{
-                font-size: 1.25rem;
-            }}
-            
-            .content-font-size {{
-                font-size: 1rem;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Image Section -->
-            <div class="image-section">
-                <div class="image-frame">
-                    <div class="image-accent"></div>
-                    <div class="image-container">
-                        <img src="{image_url}" alt="Slide image">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Content Section -->
-            <div class="content-section">
-                <!-- Content Item 1 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon1}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle1}</h3>
-                        <p class="content">{content1}</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 2 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon2}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle2}</h3>
-                        <p class="content">{content2}</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 3 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon3}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle3}</h3>
-                        <p class="content">{content3}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-# sửa biến trong tool
 
 
 
@@ -12978,324 +12450,6 @@ def generate_service_roadmap_slide(
 
 
 
-def generate_financial_projections_slide_dark(
-    # Main title
-    main_title="FINANCIAL PROJECTIONS",
-    
-    # Card content
-    cards=[
-        {
-            "title": "REVENUE FORECASTS",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. Nunc sed lorem aliquam, malesuada lectus eu, placerat lorem. Proin at aliquet sapien, vitae elementum mi."
-        },
-        {
-            "title": "EXPENSE PROJECTIONS", 
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. Nunc sed lorem aliquam, malesuada lectus eu, placerat lorem. Proin at aliquet sapien, vitae elementum mi."
-        },
-        {
-            "title": "FUNDING REQUIREMENTS",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. Nunc sed lorem aliquam, malesuada lectus eu, placerat lorem. Proin at aliquet sapien, vitae elementum mi."
-        }
-    ],
-    
-    # Colors - Dark Theme
-    background_color="#1E3A8A",  # Deep blue
-    main_title_color="#FFFFFF",
-    card_background_color="rgba(255, 255, 255, 0.95)",
-    card_title_color="#1E3A8A",
-    card_content_color="#374151",
-    border_color="rgba(255, 255, 255, 0.3)",
-    
-    # Typography
-    main_title_font_weight="700",
-    main_title_letter_spacing="0.05em",
-    card_title_font_weight="700",
-    card_title_letter_spacing="0.02em",
-    card_content_line_height="1.6",
-    card_content_font_weight="400",
-    
-    # Layout
-    slide_padding="60px",
-    main_title_margin_bottom="80px",
-    cards_gap="40px",
-    card_padding="40px",
-    card_border_radius="12px",
-    card_shadow="0 8px 32px rgba(0, 0, 0, 0.2)",
-    card_title_margin_bottom="25px",
-    
-    # Border frame
-    show_border_frame=True,
-    frame_border_style="3px dashed",
-    frame_border_color="rgba(255, 255, 255, 0.4)",
-    frame_border_radius="12px",
-    frame_padding="80px",
-    
-    # Responsive
-    mobile_title_font_size="2.8rem",
-    mobile_card_title_font_size="1.4rem",
-    mobile_card_content_font_size="0.9rem",
-    mobile_cards_gap="20px",
-    mobile_card_padding="25px",
-    mobile_slide_padding="30px",
-    mobile_frame_padding="40px",
-    
-    # Additional styling
-    additional_css=""
-):
-    """
-    Generate an HTML slide for financial projections with dark blue theme and three cards.
-    
-    :param main_title: Main title displayed at the top of the slide
-    :param cards: List of dictionaries with 'title' and 'content' keys for each card,
-                 or list of lists where first element is title and second is content
-    :param background_color: Solid background color (dark blue)
-    :param main_title_color: Color of the main title text
-    :param card_background_color: Background color of the cards
-    :param card_title_color: Color of the card titles
-    :param card_content_color: Color of the card content text
-    :param border_color: Color of the border elements
-    :param main_title_font_size: Font size of the main title
-    :param main_title_font_weight: Font weight of the main title
-    :param main_title_letter_spacing: Letter spacing of the main title
-    :param card_title_font_size: Font size of the card titles
-    :param card_title_font_weight: Font weight of the card titles
-    :param card_title_letter_spacing: Letter spacing of the card titles
-    :param card_content_font_size: Font size of the card content
-    :param card_content_line_height: Line height of the card content
-    :param card_content_font_weight: Font weight of the card content
-    :param slide_padding: Padding around the entire slide
-    :param main_title_margin_bottom: Bottom margin below the main title
-    :param cards_gap: Gap between the cards
-    :param card_padding: Internal padding within each card
-    :param card_border_radius: Border radius of the cards
-    :param card_shadow: Box shadow of the cards
-    :param card_title_margin_bottom: Bottom margin below card titles
-    :param show_border_frame: Whether to show dashed border frame
-    :param frame_border_style: Style of the border frame
-    :param frame_border_color: Color of the border frame
-    :param frame_border_radius: Border radius of the frame
-    :param frame_padding: Padding inside the border frame
-    :param mobile_title_font_size: Main title font size on mobile
-    :param mobile_card_title_font_size: Card title font size on mobile
-    :param mobile_card_content_font_size: Card content font size on mobile
-    :param mobile_cards_gap: Gap between cards on mobile
-    :param mobile_card_padding: Card padding on mobile
-    :param mobile_slide_padding: Slide padding on mobile
-    :param mobile_frame_padding: Frame padding on mobile
-    :param additional_css: Additional CSS to include
-    :return: A string containing the HTML code for the slide
-    """
-    
-    # Generate cards HTML
-    cards_html = ""
-    for card in cards:
-        # Handle both dictionary and list formats
-        if isinstance(card, list):
-            # Assume list format: [title, content]
-            title = card[0] if len(card) > 0 else ""
-            content = card[1] if len(card) > 1 else ""
-        else:
-            # Original dictionary format
-            title = card.get('title', '')
-            content = card.get('content', '')
-        
-        cards_html += f"""
-        <div class="financial-card">
-            <h2 class="card-title">{title}</h2>
-            <p class="card-content">{content}</p>
-        </div>
-        """
-    
-    # Generate border frame
-    frame_class = "content-frame" if show_border_frame else "content-frame no-border"
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{main_title}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        body, html {{
-            height: 100%;
-            font-family: {DEFAULT_FONT_FAMILY};
-            overflow: hidden;
-        }}
-        
-        .slide-container {{
-            width: 100vw;
-            height: 100vh;
-            background-color: {background_color};
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: {slide_padding};
-            position: relative;
-            box-sizing: border-box;
-        }}
-        
-        .content-frame {{
-            width: 100%;
-            max-width: 1400px;
-            padding: {frame_padding};
-            position: relative;
-            text-align: center;
-        }}
-        
-        .content-frame:not(.no-border) {{
-            border: {frame_border_style} {frame_border_color};
-            border-radius: {frame_border_radius};
-        }}
-        
-        .main-title {{
-            font-size: 4.5rem;
-            font-weight: {main_title_font_weight};
-            color: {main_title_color};
-            margin-bottom: {main_title_margin_bottom};
-            letter-spacing: {main_title_letter_spacing};
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }}
-        
-        .cards-container {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: {cards_gap};
-            width: 100%;
-        }}
-        
-        .financial-card {{
-            background-color: {card_background_color};
-            padding: {card_padding};
-            border-radius: {card_border_radius};
-            box-shadow: {card_shadow};
-            text-align: left;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            backdrop-filter: blur(10px);
-        }}
-        
-        .financial-card:hover {{
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-        }}
-        
-        .card-title {{
-            font-size: 2.3rem;
-            font-weight: {card_title_font_weight};
-            color: {card_title_color};
-            margin-bottom: {card_title_margin_bottom};
-            letter-spacing: {card_title_letter_spacing};
-            text-align: center;
-        }}
-        
-        .card-content {{
-            font-size: 1.5rem;
-            line-height: {card_content_line_height};
-            color: {card_content_color};
-            font-weight: {card_content_font_weight};
-            margin: 0;
-        }}
-        
-        /* Responsive Design */
-        @media (max-width: 1200px) {{
-            .cards-container {{
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 30px;
-            }}
-            
-            .main-title {{
-                font-size: 3.5rem;
-            }}
-            
-            .content-frame {{
-                padding: 60px;
-            }}
-        }}
-        
-        @media (max-width: 768px) {{
-            .slide-container {{
-                padding: {mobile_slide_padding};
-            }}
-            
-            .content-frame {{
-                padding: {mobile_frame_padding};
-            }}
-            
-            .main-title {{
-                font-size: {mobile_title_font_size};
-                margin-bottom: 50px;
-            }}
-            
-            .cards-container {{
-                grid-template-columns: 1fr;
-                gap: {mobile_cards_gap};
-            }}
-            
-            .financial-card {{
-                padding: {mobile_card_padding};
-            }}
-            
-            .card-title {{
-                font-size: {mobile_card_title_font_size};
-            }}
-            
-            .card-content {{
-                font-size: {mobile_card_content_font_size};
-            }}
-        }}
-        
-        @media (max-width: 480px) {{
-            .main-title {{
-                font-size: 2.2rem;
-                margin-bottom: 40px;
-            }}
-            
-            .card-title {{
-                font-size: 1.2rem;
-            }}
-            
-            .card-content {{
-                font-size: 0.85rem;
-            }}
-            
-            .financial-card {{
-                padding: 20px;
-            }}
-            
-            .content-frame {{
-                padding: 30px 20px;
-            }}
-        }}
-        
-        {additional_css}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <div class="{frame_class}">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="cards-container">
-                {cards_html}
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>"""
-    
-    return html_code
-
-
-
 def generate_minimalist_tech_list_slide(
     title="This is a slide title",
     list_items=[
@@ -15828,12 +14982,12 @@ def generate_quote_slide(
         <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}, serif; background: {bg_color}; overflow: hidden; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background: {bg_color}; overflow: hidden; }}
         </style>
     </head>
     <body>
         <!-- Decorative quotation mark -->
-        <div style="position: absolute; top: 180px; left: 200px; font-size: 300px; color: {accent_color}; opacity: 0.1; font-family: {DEFAULT_FONT_FAMILY}, serif; line-height: 1; pointer-events: none;">"</div>
+        <div style="position: absolute; top: 180px; left: 200px; font-size: 300px; color: {accent_color}; opacity: 0.1; font-family: {DEFAULT_FONT_FAMILY}; line-height: 1; pointer-events: none;">"</div>
         
         <!-- Main quote text -->
         <h1 style="position: absolute; top: 300px; left: 300px; width: 1320px; font-size: 80px; font-weight: 700; color: {quote_color}; line-height: 1.3; font-style: italic; text-align: center;">
@@ -17040,7 +16194,7 @@ def generate_thank_you_slide_4(
         }}
         
         body {{
-            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -17182,7 +16336,7 @@ def generate_thank_you_decorative_slide(
             background: linear-gradient(135deg, {bg_color} 0%, {bg_gradient_to} 100%);
             overflow: hidden;
             position: relative;
-            font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .main-text {{
@@ -17327,7 +16481,7 @@ def generate_watercolor_thank_you_slide(
             }}
             
             body {{
-                font-family: Arial, sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 margin: 0;
                 padding: 0;
@@ -17451,7 +16605,7 @@ def generate_thank_you_slide_5(
         }}
         
         body {{
-            font-family: 'Caveat', cursive;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             margin: 0;
             padding: 0;
@@ -19044,7 +18198,6 @@ def generate_brand_collaboration_closing_slide(
 ):
     """
     Generate a sophisticated 'Thank You' or closing slide with an asymmetrical image layout,
-    elegant typography mixing serif and script fonts, and a textured paper background feel.
 
     :param main_title: The large central title text (e.g., "Thank you").
     :param message_text: The uppercase body paragraph below the title.
@@ -19178,7 +18331,6 @@ def generate_brand_collaboration_closing_slide(
             .main-title {{
                 font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 10rem; /* Huge text */
-                font-weight: 400; /* Serif usually looks better regular/light at this size */
                 line-height: 0.9;
                 margin-bottom: 3rem;
                 letter-spacing: -0.02em;
@@ -19691,6 +18843,243 @@ def generate_elegant_thank_you_slide(
     return html_code
 
 #------------------------ SLIDE  chart slide
+def generate_line_chart_slide_2(
+    main_title: str = "Model Accuracy Converges with Minor Overfitting",
+    subtitle: str = "ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)", 
+    insight: str = (
+        "Training and validation accuracy both increase steadily during the first 15 epochs, "
+        "indicating effective learning and rapid convergence. After epoch 20, training accuracy "
+        "continues to improve while validation accuracy plateaus, suggesting mild overfitting. "
+        "The gap remains controlled, implying overall stable generalization performance."
+    ),
+    x_axis = "Epoch",
+    y_axis = "Accuracy",
+    unit = "%",
+    show_value = False,
+    show_legend= True,
+    y_axis_min = 40,
+    y_axis_max = 100,
+    data_label_format= None,
+    colors = ["#4F46E5", "#22C55E"],
+    time_points = [
+        "Epoch 1", "Epoch 5", "Epoch 10",
+        "Epoch 15", "Epoch 20", "Epoch 25", "Epoch 30"
+    ],
+    series= [
+            {
+                "name": "Training Accuracy",
+                "values": [45, 62, 75, 84, 90, 94, 97]
+            },
+            {
+                "name": "Validation Accuracy",
+                "values": [43, 60, 73, 82, 87, 88, 88]
+            }
+        ],
+    accent_color: str = "#4F46E5",
+    main_title_color: str = "#1F2937",
+    subtitle_color: str = "#4B5563",
+    insight_text_color: str = "#374151",
+    body_background_color: str = "#ffffff",
+    left_shape_background_color: str = "#f1fcf4",
+    right_panel_background_color: str = "rgba(255, 255, 255, 0.6)",
+    insight_background_color: str = "#f8fafc",
+) -> str:
+    """
+    Generate a premium line chart HTML slide using the Global Economy theme.
+    Refactored to accept explicit parameters instead of a raw dictionary.
+    """
+
+    # ===== 1. DATA EXTRACTION =====
+
+
+
+    # ===== 2. CHART CONFIG =====
+    svg_w, svg_h = 1000, 500
+    margin = {"top": 60, "bottom": 60, "left": 80, "right": 40}
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    all_vals = [v for s in series for v in s.get("values", [])]
+
+
+    def get_x(i):
+        return (
+            margin["left"] + (i * chart_w / (len(time_points) - 1))
+            if len(time_points) > 1
+            else margin["left"] + chart_w / 2
+        )
+
+    def get_y(v):
+        return svg_h - margin["bottom"] - ((v - y_axis_min) / (y_axis_max - y_axis_min) * chart_h)
+
+    # ===== 3. SVG DRAWING =====
+    chart_elements = ""
+
+    # Horizontal grid lines
+    for i in range(5):
+        y_val = svg_h - margin["bottom"] - (i * chart_h / 4)
+        chart_elements += (
+            f'<line x1="{margin["left"]}" y1="{y_val}" '
+            f'x2="{svg_w - margin["right"]}" y2="{y_val}" '
+            f'stroke="#e2e8f0" stroke-width="1" />'
+        )
+
+    # Lines + areas
+    for idx, s in enumerate(series):
+        color = colors[idx % len(colors)]
+        values = s.get("values", [])
+
+        if not values:
+            continue
+
+        d_path = f"M {get_x(0)} {get_y(values[0])}"
+        d_area = f"M {get_x(0)} {svg_h - margin['bottom']} L {get_x(0)} {get_y(values[0])}"
+
+        for i in range(1, len(values)):
+            d_path += f" L {get_x(i)} {get_y(values[i])}"
+            d_area += f" L {get_x(i)} {get_y(values[i])}"
+
+        d_area += f" L {get_x(len(values) - 1)} {svg_h - margin['bottom']} Z"
+
+        chart_elements += f'<path d="{d_area}" fill="{color}" fill-opacity="0.1" />'
+        chart_elements += (
+            f'<path d="{d_path}" fill="none" stroke="{color}" '
+            f'stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />'
+        )
+
+        for i, v in enumerate(values):
+            chart_elements += (
+                f'<circle cx="{get_x(i)}" cy="{get_y(v)}" r="8" '
+                f'fill="white" stroke="{color}" stroke-width="4" />'
+            )
+            if show_value:
+                chart_elements += (
+                    f'<text x="{get_x(i)}" y="{get_y(v) - 25}" '
+                    f'font-size="18" text-anchor="middle" '
+                    f'fill="#1e293b" font-weight="bold">{v}{unit}</text>'
+                )
+
+    # X-axis labels
+    for i, label in enumerate(time_points):
+        chart_elements += (
+            f'<text x="{get_x(i)}" y="{svg_h - 20}" '
+            f'font-size="18" text-anchor="middle" fill="#64748b">{label}</text>'
+        )
+
+    # ===== 4. HTML OUTPUT =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: {DEFAULT_FONT_FAMILY};
+                background-color: {body_background_color}; overflow: hidden;
+            }}
+            
+            /* Decorative Elements */
+            .left-shape {{
+                position: absolute;
+                width: 1200px;
+                height: 1200px;
+                background-color: {left_shape_background_color};
+                border-radius: 50%;
+                left: -450px;
+                top: -100px;
+                z-index: 0;
+            }}
+            .dot-grid {{
+                position: absolute;
+                top: 80px;
+                left: 350px;
+                display: grid;
+                grid-template-columns: repeat(10, 15px);
+                gap: 15x;
+                z-index: 1;
+            }}
+  
+            
+            /* Header */
+            .header {{
+                margin-bottom: 40px;
+                padding: 80px 100px 0 100px;
+                position: relative;
+                z-index: 2;
+            }}
+            h1 {{
+                font-size: 64px;
+                font-weight: 800;
+                color: {main_title_color};
+                margin: 0;
+            }}
+            .subtitle {{
+                font-size: 30px;
+                color: {subtitle_color};
+                margin-top: 15px;
+            }}
+            
+            /* Main Content Flex */
+            .main-flex {{
+                display: flex;
+                height: calc(100vh - 300px);
+                gap: 60px;
+                padding: 0 100px 80px 100px;
+                position: relative;
+                z-index: 2;
+            }}
+            .left-panel {{
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+            }}
+            .right-panel {{
+                flex: 1.5;
+                background: {right_panel_background_color};
+                border-radius: 40px;
+                padding: 40px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }}
+            .insight {{
+                font-size: 28px;
+                color: {insight_text_color};
+                line-height: 1.7;
+                background: {insight_background_color};
+                border-left: 5px solid {accent_color};
+                padding: 35px 40px;
+                border-radius: 16px;
+            }}
+        </style>
+    </head>
+    <body>
+        <!-- Decorative Background Elements -->
+        <div class="left-shape"></div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-flex">
+            <div class="left-panel">
+                <div class="insight">{insight}</div>
+            </div>
+            <div class="right-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
 
 def generate_line_chart_slide_3(
     main_title: str = "EV Market Leaders Expand the Gap", 
@@ -19823,7 +19212,7 @@ def generate_line_chart_slide_3(
                 background: linear-gradient(to bottom, rgba(15,23,42,0.8), transparent);
             }}
             .main-title {{
-                font-family: 'Orbitron', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 64px;
                 color: {main_title_color};
                 text-transform: uppercase; letter-spacing: 4px; margin: 0;
@@ -19877,4 +19266,1015 @@ def generate_line_chart_slide_3(
     </body>
     </html>
     """
+
+
+
+def generate_radar_chart_slide_1(
+    main_title="Chỉ Số Đánh Giá Chất Lượng Dịch Vụ Chăm Sóc",
+    subtitle="Báo cáo phân tích trải nghiệm khách hàng Q1/2026",
+    insight="Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe.",
+    unit = "điểm"  ,
+    show_value = True,
+    data_label_format = "{value}",
+    show_grid_lines = True,
+    show_axis_lines = True,
+    max_value = 10,
+    num_levels = 5,
+    axis_color = "#D1D5DB",
+    grid_color = "#E5E7EB",
+    label_color = "#374151",
+    accent_color = "#F4A261",
+    axes = ["Y tế", "Tâm lý", "Dinh dưỡng", "Vận động", "Công nghệ", "Môi trường"],
+    series = [
+        {"label": "Hiện tại", "values": [8, 8, 9, 9, 9, 9]},
+        {"label": "Mục tiêu", "values": [9.5, 9.5, 9.0, 8.5, 8.5, 9.5]}
+    ],
+    main_title_color="#1D3557",
+    subtitle_color="#457B9D",
+    insight_text_color="#1D3557",
+    background="#F8F8F8",
+    background_image="none",
+    insight_box_background="rgba(71, 123, 157, 0.10)",
+    legend_background="#FFFFFF",
+    legend_swatch_current_background="#1D3557",
+    legend_swatch_target_background="#F4A261",
+) -> str:
+    """
+    Create a radar chart slide with a professional, warm style.
+    Suitable for healthcare service reports, medical care, or multidimensional analysis
+    """
+
+    # ===== 1. GET & PROCESS DATA =====
+    num_axes = len(axes)
+
+    max_val = max_value
+    colors_opt = {
+        "axis_color": axis_color,
+        "grid_color": grid_color,
+        "label_color": label_color
+    }
+
+    # Cấu hình kích thước SVG
+    width, height = 900, 700
+    cx, cy = width / 2, height / 2
+    radius = 280
+
+    def get_coords(value, index, total):
+        angle = (math.pi * 2 * index / total) - (math.pi / 2)
+        r = (value / max_val) * radius
+        return cx + r * math.cos(angle), cy + r * math.sin(angle)
+
+    # ===== 2. RENDER RADAR SVG COMPONENTS =====
+    
+    # Grid lines (concentric polygons)
+    grid_html = ""
+    if show_grid_lines:
+        for i in range(1, num_levels + 1):
+            level_val = (max_val / num_levels) * i
+            points = []
+            for j in range(num_axes):
+                px, py = get_coords(level_val, j, num_axes)
+                points.append(f"{px},{py}")
+            grid_html += f'<polygon points="{" ".join(points)}" fill="none" stroke="{colors_opt.get("grid_color", "#EEE")}" stroke-width="1" />'
+
+    # Axis lines and Labels
+    axes_html = ""
+    labels_html = ""
+    for i in range(num_axes):
+        px, py = get_coords(max_val, i, num_axes)
+        # Line from center
+        if show_axis_lines:
+            axes_html += f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="{colors_opt.get("axis_color", "#CCC")}" stroke-width="1" />'
+        
+        # Labels placement
+        label_r = radius + 40
+        lx = cx + label_r * math.cos((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        ly = cy + label_r * math.sin((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        anchor = "middle"
+        if lx < cx - 20: anchor = "end"
+        elif lx > cx + 20: anchor = "start"
+        
+        labels_html += f'<text x="{lx}" y="{ly}" text-anchor="{anchor}" font-size="20" fill="{colors_opt.get("label_color", "#333")}" font-weight="600">{axes[i]}</text>'
+
+    # Data Polygons (Series)
+    series_colors = ["#1D3557", "#F4A261", "#2A9D8F", "#E76F51"]
+    data_polygons_html = ""
+    legend_items_html = ""
+    placed_value_labels = []
+
+    def estimate_text_box(text, font_size):
+        text_width = max(20, len(text) * font_size * 0.58)
+        text_height = font_size * 1.25
+        return text_width, text_height
+    
+    for idx, s in enumerate(series):
+        s_color = series_colors[idx % len(series_colors)]
+        s_values = s.get("values", [])
+        s_label = s.get("label", "Series")
+        series_center = (len(series) - 1) / 2
+        
+        points = []
+        data_points_html = ""
+        for i, val in enumerate(s_values):
+            px, py = get_coords(val, i, num_axes)
+            points.append(f"{px},{py}")
+            if show_value:
+                data_points_html += f'<circle cx="{px}" cy="{py}" r="5" fill="{s_color}" />'
+                vx, vy = px - cx, py - cy
+                norm = math.sqrt(vx * vx + vy * vy) or 1
+                ux, uy = vx / norm, vy / norm
+                point_r = math.sqrt((px - cx) ** 2 + (py - cy) ** 2)
+                display_text = data_label_format.replace("{value}", str(val)).replace("{unit}", unit)
+
+                # Enforce deterministic placement and auto-adjust to avoid overlap.
+                tangent_x, tangent_y = -uy, ux
+                tangent_offset = (idx - series_center) * 20
+                if idx == 0:
+                    # Always place dark-series text inside radar, regardless of data values.
+                    inside_r = max(16, point_r - 40)
+                    tx = cx + ux * inside_r + tangent_x * tangent_offset
+                    ty = cy + uy * inside_r + tangent_y * tangent_offset
+                else:
+                    # Place target text outside, but keep it away from axis titles.
+                    outside_r = min(radius + 16, point_r + 30)
+                    tx = cx + ux * outside_r + tangent_x * tangent_offset
+                    ty = cy + uy * outside_r + tangent_y * tangent_offset
+
+                anchor = "middle"
+                if idx != 0:
+                    if ux < -0.2: anchor = "end"
+                    elif ux > 0.2: anchor = "start"
+
+                font_size = 14
+                text_w, text_h = estimate_text_box(display_text, font_size)
+                move_sign = -1 if idx == 0 else 1
+
+                # Collision pass: shift and shrink a bit until no overlap with placed labels.
+                for _ in range(6):
+                    overlap = False
+                    for ox, oy, ow, oh in placed_value_labels:
+                        if abs(tx - ox) < (text_w + ow) / 2 and abs(ty - oy) < (text_h + oh) / 2:
+                            overlap = True
+                            break
+                    if not overlap:
+                        break
+                    tx += tangent_x * 8 * move_sign
+                    ty += tangent_y * 8 * move_sign
+                    if idx != 0:
+                        tx += ux * 3
+                        ty += uy * 3
+                    font_size = max(11, font_size - 0.5)
+                    text_w, text_h = estimate_text_box(display_text, font_size)
+
+                # Final safety clamp to preserve inside/outside rule after adjustments.
+                dist = math.sqrt((tx - cx) ** 2 + (ty - cy) ** 2) or 1
+                if idx == 0:
+                    max_inside = max(14, point_r - 14)
+                    if dist > max_inside:
+                        scale = max_inside / dist
+                        tx = cx + (tx - cx) * scale
+                        ty = cy + (ty - cy) * scale
+                else:
+                    min_outside = point_r + 10
+                    if dist < min_outside:
+                        scale = min_outside / dist
+                        tx = cx + (tx - cx) * scale
+                        ty = cy + (ty - cy) * scale
+
+                placed_value_labels.append((tx, ty, text_w, text_h))
+
+                data_points_html += (
+                    f'<text x="{tx}" y="{ty}" text-anchor="{anchor}" '
+                    f'font-size="{font_size:.1f}" font-weight="bold" fill="{s_color}">{display_text}</text>'
+                )
+        
+        data_polygons_html += f"""
+            <polygon points="{" ".join(points)}" fill="{s_color}" fill-opacity="0.2" stroke="{s_color}" stroke-width="3" />
+            {data_points_html}
+        """
+        
+        legend_variant_class = "legend-swatch-current" if idx == 0 else "legend-swatch-target" if idx == 1 else ""
+        legend_items_html += f"""
+        <div class="legend-item">
+            <span class="legend-swatch {legend_variant_class}"></span>
+            <span class="legend-label">{s_label}</span>
+        </div>
+        """
+
+    # Convert hex accent_color to rgb for use in rgba()
+    accent_rgb = f"{int(accent_color[1:3], 16)}, {int(accent_color[3:5], 16)}, {int(accent_color[5:7], 16)}"
+    background_image = background_image.replace("{accent_rgb}", accent_rgb)
+
+    # ===== 3. RENDER FINAL HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                overflow: hidden; font-family: {DEFAULT_FONT_FAMILY};
+                background: {background};
+            }}
+            .slide-container {{
+                position: relative; width: 100%; height: 100%;
+                background-image: {background_image};
+            }}
+            .header {{
+                padding: 80px 100px 40px 100px;
+            }}
+            h1 {{
+                font-size: 64px; color: {main_title_color};
+                margin: 0; font-weight: 800; letter-spacing: -1px;
+            }}
+            .subtitle {{
+                font-size: 28px; color: {subtitle_color};
+                margin-top: 15px; font-weight: 500;
+            }}
+            .content-flex {{
+                display: flex; padding: 0 100px; gap: 80px; align-items: flex-start;
+            }}
+            .left-col {{
+                flex: 1; margin-top: 40px;
+            }}
+            .right-col {{
+                flex: 1.5; display: flex; justify-content: center;
+            }}
+            .insight-box {{
+                background: {insight_box_background};
+                padding: 40px; border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(29, 53, 87, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                font-size: 30; color: {insight_text_color};
+                line-height: 1.7; border-left: 4px solid #457B9D;
+                border-top: 4px solid rgba({accent_rgb}, 0.3);
+                margin-bottom: 50px; font-weight: 500; letter-spacing: 0.3px;
+            }}
+            .legend-container {{
+                background: {legend_background};
+                padding: 26px 28px;
+                border-radius: 18px;
+                display: inline-block;
+                border: 1px solid rgba(69, 123, 157, 0.18);
+                box-shadow: 0 10px 24px rgba(29, 53, 87, 0.12);
+                backdrop-filter: blur(2px);
+            }}
+            .legend-title {{
+                font-size: 16px;
+                text-transform: uppercase;
+                color: #2F5D78;
+                margin-bottom: 14px;
+                font-weight: 800;
+                letter-spacing: 1.2px;
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                margin-bottom: 12px;
+            }}
+            .legend-swatch {{
+                width: 22px;
+                height: 22px;
+                display: inline-block;
+                flex-shrink: 0;
+                border-radius: 999px;
+                margin-right: 12px;
+                border: 2px solid rgba(255,255,255,0.9);
+                box-shadow: 0 0 0 1px rgba(69, 123, 157, 0.2);
+            }}
+            .legend-swatch-current {{
+                background: {legend_swatch_current_background};
+            }}
+            .legend-swatch-target {{
+                background: {legend_swatch_target_background};
+            }}
+            .legend-label {{
+                font-size: 21px;
+                font-weight: 650;
+                color: #24465E;
+            }}
+            .chart-wrapper {{
+                width: {width}px; height: {height}px;
+            }}
+            .background-blob {{
+                position: absolute; bottom: -260px; left: -140px;
+                width: 460px; height: 460px; background: rgba(168, 218, 220, 0.26);
+                border-radius: 50%; z-index: -1; pointer-events: none;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="header">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">{insight}</div>
+                    <div class="legend-container">
+                        <div class="legend-title">Chú thích</div>
+                        {legend_items_html}
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="chart-wrapper">
+                        <svg viewBox="0 0 {width} {height}" width="100%" height="100%">
+                            {grid_html}
+                            {axes_html}
+                            {data_polygons_html}
+                            {labels_html}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="background-blob"></div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_pie_chart_slide_1(
+    main_title = "Quarterly Revenue Breakdown",
+    subtitle = "Data Source: Financial Year 2025 Reports",
+    insight = "AI Services now account for nearly half of total revenue growth.",
+    chart_type = "pie",
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    data_label_format = "{value}{unit}",
+    colors = ["#818CF8", "#2DD4BF", "#FBBF24", "#FB7185"],
+    items = [
+        {"label": "AI Services", "value": 55},
+        {"label": "Cloud Hosting", "value": 25},
+        {"label": "Consulting", "value": 20},
+        {"label": "Support", "value": 10}
+    ],
+    accent_color: str = "#F472B6",
+    main_title_color: str = "#38BDF8",
+    subtitle_color: str = "#CCCCCC",
+    insight_text_color: str = "#FFFFFF",
+    background_color: str = "#0F172A"
+) -> str:
+    """
+    Generates a high-impact HTML slide featuring a pie chart, 
+    designed with a teal-accented dark theme.
+    """
+    
+    # Calculate SVG Pie Chart Slices
+    total = sum(item['value'] for item in items)
+    cumulative_percent = 0
+    svg_paths = ""
+    legend_html = ""
+
+    for i, item in enumerate(items):
+        color = colors[i % len(colors)]
+        percent = (item['value'] / total) * 100
+        
+        # Simple SVG Circle sector calculation logic
+        start_angle = (cumulative_percent / 100) * 360
+        end_angle = ((cumulative_percent + percent) / 100) * 360
+        
+        # For simplicity in a single-file HTML output, we use a stroke-dasharray approach
+        offset = 100 - cumulative_percent + 25 # Start from top
+        svg_paths += f'<circle r="15.9" cx="21" cy="21" fill="transparent" stroke="{color}" stroke-width="8" stroke-dasharray="{percent} {100-percent}" stroke-dashoffset="{offset}" />'
+        
+        cumulative_percent += percent
+        
+        if show_legend:
+            formatted_value = data_label_format.format(value=item['value'], unit=unit) if show_value else ""
+            label_suffix = f" ({formatted_value})" if show_value else ""
+            legend_html += f'''
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: 25px; height: 25px; background: {color}; margin-right: 10px; border-radius: 3px;"></div>
+                <div style="color: white; font-size: 25px; margin: 0;">{item['label']}{label_suffix}</div>
+            </div>'''
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body {{
+                margin: 0;
+                background-color: {background_color};
+                font-family: {DEFAULT_FONT_FAMILY};
+                color: white;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }}
+            .upper-section {{
+                padding: 60px 80px 20px 80px;
+            }}
+            .main-title {{
+                font-size: 70px;
+                color: {main_title_color};
+                font-weight: 800;
+                margin: 0;
+                text-transform: uppercase;
+            }}
+            .subtitle {{
+                font-size: 32px;
+                color: {subtitle_color};
+                opacity: 0.8;
+                margin-top: 10px;
+            }}
+            .main-content {{
+                display: flex;
+                flex: 1;
+                padding: 0 80px 60px 80px;
+                align-items: center;
+            }}
+            .left-section {{
+                flex: 1;
+                padding-right: 40px;
+            }}
+            .insight-box {{
+                border-left: 5px solid {accent_color};
+                padding: 20px 30px;
+                background: rgba(255, 255, 255, 0.05);
+                font-size: 34px;
+                color: {insight_text_color};
+                margin-bottom: 40px;
+                line-height: 1.4;
+            }}
+            .right-section {{
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }}
+            .chart-container {{
+                width: 450px;
+                height: 450px;
+            }}
+            svg {{
+                transform: rotate(-90deg);
+                border-radius: 50%;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="upper-section">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-section">
+                <div class="insight-box">
+                    {insight}
+                </div>
+                <div class="legend">
+                    {legend_html}
+                </div>
+            </div>
+            
+            <div class="right-section">
+                <div class="chart-container">
+                    <svg viewBox="0 0 42 42" width="100%" height="100%">
+                        {svg_paths}
+                        {f'<circle r="12" cx="21" cy="21" fill="{background_color}" />' if chart_type == "donut" else ""}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
+
+def generate_scatter_plot_chart_slide_2(
+    main_title: str = "Relationship Between Travel Distance and Spending",
+    subtitle: str = "Source: Tourist Behavior Survey 2024 | Sample: 200 Trips",
+    insight: str = (
+        "The scatter plot indicates a strong positive correlation between travel distance "
+        "and total spending."
+    ),
+
+    x_axis= "Travel Distance (km)",
+    y_axis = "Total Travel Spending (USD)",
+    unit = "USD",
+    show_value = False,
+    show_legend = True,
+    x_axis_min = 0,
+    x_axis_max = 12000,
+    y_axis_min = 0,
+    y_axis_max = 6000,
+    colors= ["#008080", "#FFB347"],
+    background_color: str = "#FEF9E1",
+    insight_box_background_color: str = "#FFFFFF",
+    chart_panel_background_color: str = "rgba(255, 255, 255, 0.5)",
+    series = [
+        {
+            "name": "Domestic Travelers",
+            "points": [
+                {"x": 150, "y": 300},
+                {"x": 300, "y": 450},
+                {"x": 500, "y": 700},
+                {"x": 800, "y": 900},
+                {"x": 1200, "y": 1100},
+                {"x": 2000, "y": 1500}
+            ]
+        },
+        {
+            "name": "International Travelers",
+            "points": [
+                {"x": 3000, "y": 2500},
+                {"x": 5000, "y": 3200},
+                {"x": 7000, "y": 4000},
+                {"x": 9000, "y": 4800},
+                {"x": 11000, "y": 5500},
+                {"x": 2500, "y": 5000}  # outlier
+            ]
+        }
+    ],
+    accent_color: str = "#008080",
+    main_title_color: str = "#005F5F",
+    subtitle_color: str = "#556B2F",
+    insight_text_color: str = "#2C3E50",
+) -> str:
+    """
+    Sinh HTML cho slide biểu đồ phân tán với phong cách 'Travel Plan'.
+    Phân tích mối tương quan giữa các biến dựa trên tọa độ X và Y.
+    """
+
+    # ===== 1. LẤY THÔNG TIN VÀ XỬ LÝ DỮ LIỆU =====
+
+
+    # ===== 2. TÍNH TOÁN MIN MAX VÀ SCALE =====
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    # Đảm bảo không chia cho 0
+    if x_axis_max == x_axis_min: x_axis_max += 1
+    if y_axis_max == y_axis_min: y_axis_max += 1
+
+    # ===== 3. SVG CONFIG =====
+    svg_w, svg_h = 1100, 700
+    margin = {"top": 70, "bottom": 100, "left": 120, "right": 40}
+    
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    chart_elements = ""
+
+    # Vẽ Grid Y và Label Trục Y
+    steps = 5
+    for i in range(steps + 1):
+        y_val_raw = y_axis_min + (y_axis_max - y_axis_min) * (i / steps)
+        y_pos = svg_h - margin["bottom"] - (i / steps) * chart_h
+        
+        # Grid line
+        chart_elements += f'<line x1="{margin["left"]}" y1="{y_pos}" x2="{svg_w - margin["right"]}" y2="{y_pos}" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" />'
+        # Label
+        chart_elements += f'<text x="{margin["left"] - 15}" y="{y_pos + 8}" font-size="20" text-anchor="end" fill="{subtitle_color}">{y_val_raw:g}</text>'
+
+    # Vẽ Trục X (Labels)
+    for i in range(steps + 1):
+        x_val_raw = x_axis_min + (x_axis_max - x_axis_min) * (i / steps)
+        x_pos = margin["left"] + (i / steps) * chart_w
+        chart_elements += f'<text x="{x_pos}" y="{svg_h - margin["bottom"] + 40}" font-size="20" text-anchor="middle" fill="{subtitle_color}">{x_val_raw:g}</text>'
+
+    # Vẽ Trục chính
+    chart_elements += f'''
+        <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
+        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
+    '''
+
+    # Vẽ Scatter Points
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            px = margin["left"] + ((p["x"] - x_axis_min) / (x_axis_max - x_axis_min)) * chart_w
+            py = svg_h - margin["bottom"] - ((p["y"] - y_axis_min) / (y_axis_max - y_axis_min)) * chart_h
+            
+            # Point với hiệu ứng viền trắng để nổi bật
+            chart_elements += f'<circle cx="{px}" cy="{py}" r="12" fill="{color}" stroke="white" stroke-width="3" opacity="0.9" />'
+            
+            if show_value:
+                chart_elements += f'<text x="{px}" y="{py - 20}" font-size="16" text-anchor="middle" fill="{insight_text_color}" font-weight="bold">{p["y"]}{unit}</text>'
+
+    # Axis Labels
+    chart_elements += f'''
+        <text x="{margin["left"] + chart_w/2}" y="{svg_h - 20}" font-size="26" text-anchor="middle" font-weight="600" fill="{main_title_color}">{x_axis}</text>
+        <text transform="rotate(-90)" x="{-margin["top"] - chart_h/2}" y="35" font-size="26" text-anchor="middle" font-weight="600" fill="{main_title_color}">{y_axis}</text>
+    '''
+
+    # ===== 4. LEGEND & INSIGHT =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <p style="display:flex; align-items:center; margin:0 0 15px 0;">
+                <span style="display:inline-block; width:24px; height:24px; border-radius:50%; background:{color}; border:3px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:15px;"></span>
+                <span style="font-size:24px; font-weight:500; color:{insight_text_color};">{s.get("name", "Series")}</span>
+            </p>
+            '''
+
+    # ===== 5. FINAL HTML RENDER =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: {DEFAULT_FONT_FAMILY}; background-color: {background_color}; color: {insight_text_color};
+                display: grid; 
+                grid-template-rows: 280px 1fr;
+                grid-template-columns: 1fr;
+                row-gap: 20px;
+                overflow: hidden;
+            }}
+            .header-section {{
+                padding: 20px 100px 20px 100px;
+            }}
+            h1 {{
+                font-size: 72px; color: {main_title_color}; margin: 0; font-weight: 800; 
+                text-transform: uppercase; letter-spacing: -1px;
+                border-left: 12px solid {accent_color}; padding-left: 35px;
+            }}
+            .subtitle {{
+                font-size: 32px; color: {subtitle_color}; margin: 10px 0 0 47px; font-weight: 400;
+            }}
+            .content-area {{
+                display: grid; 
+                grid-template-columns: 500px 1fr;
+                gap: 80px;
+                padding: 10px 100px 60px 100px;
+                position: center;
+            }}
+            .left-panel {{
+                display: grid;
+                grid-template-rows: auto auto;
+                gap: 40px;
+                align-content: space-around;
+            }}
+            .insight-box {{
+                background: {insight_box_background_color}; padding: 30px; border-radius: 30px; 
+                box-shadow: 15px 15px 0px rgba(0, 128, 128, 0.1);
+                border: 3px solid {accent_color}; font-size: 28px; line-height: 1.5;
+            }}
+            .legend-area {{
+                padding-left: 10px;
+            }}
+            .right-panel {{
+                display: flex; align-items: center; justify-content: center;
+                background: {chart_panel_background_color}; border-radius: 40px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header-section">
+            <h1>{main_title}</h1>
+            <div class="subtitle">{subtitle if subtitle else ""}</div>
+        </div>
+        <div class="content-area">
+            <div class="left-panel">
+                <div class="insight-box">
+                    {insight}
+                </div>
+                <div class="legend-area">
+                    {legend_items}
+                </div>
+            </div>
+            <div class="right-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html> 
+    """
+    return html_code
+
+def generate_bar_chart_slide_2(
+    main_title: str = "Ocean Temperature Variation by Depth", 
+    subtitle: str = "Unit: °C | Data Source: Marine Research Institute 2025", 
+    insight: str = "The chart reveals a clear decline in average ocean temperatures as depth increases, with the Pacific Ocean consistently warmer than the Atlantic at all measured depths.",
+    x_axis: str = "Ocean Depth (meters)",
+    y_axis: str = "Average Temperature (°C)",
+    unit: str = "°C",
+    show_value: bool = True,
+    show_legend: bool = True,
+    y_axis_min: float = 0,
+    y_axis_max: float  = None,
+    data_label_format: str  = None,
+    colors: list[str] =["#00695C", "#26A69A"], 
+    background_color: str = "#E0F7FA",
+    insight_box_background_color: str = "rgba(255, 255, 255, 0.5)",
+    chart_panel_background_color: str = "rgba(255, 255, 255, 0.6)",
+    categories = ["Surface", "50m", "100m", "200m", "500m"],
+    series = [
+            {
+                "name": "Pacific Ocean",
+                "values": [28, 22, 18, 12, 5]
+            },
+            {
+                "name": "Atlantic Ocean",
+                "values": [26, 21, 17, 11, 4]
+            }
+        ],
+    accent_color: str = "#A67C52",
+    main_title_color: str = "#3D4E5D",
+    subtitle_color: str = "#6B7280",
+    insight_text_color: str = "#374151",
+) -> str:
+    """
+    Generates an Ocean-themed Bubble Chart slide based on the provided data and style.
+    """
+    
+
+
+
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1100, 700
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 60
+
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH TOÁN MIN/MAX =====
+    # Lấy tất cả giá trị từ các series
+    all_values = []
+    for s in series:
+        all_values.extend(s.get("values", []))
+    
+    if not all_values:
+        all_values = [0]
+
+    # Lấy min/max từ option hoặc tự tính
+    y_min_opt = y_axis_min
+    y_max_opt = y_axis_max
+
+    y_min = y_min_opt if y_min_opt is not None else 0
+    y_max = y_max_opt if y_max_opt is not None else max(all_values)
+
+    # Padding nhẹ cho trục Y
+    if y_max_opt is None:
+        y_max = y_max * 1.1  # Thêm 10% padding
+
+    # 🛡 Tránh chia cho 0
+    if y_max <= y_min:
+        y_max = y_min + 10
+
+    # ===== 4. VẼ CHART (SVG GENERATION) =====
+    chart_elements = ""
+
+    # -- Background Chart Decor --
+    chart_elements += f'''
+    <rect x="{margin_left}" y="{margin_top}" width="{chart_w}" height="{chart_h}" 
+          fill="white" fill-opacity="0.3" rx="20" ry="20" />
+    '''
+
+    # -- Grid Lines (Nét đứt mềm mại) --
+    num_ticks = 5
+    for i in range(num_ticks + 1):
+        # Grid ngang (Y-axis)
+        val_y = y_min + (y_max - y_min) * (i / num_ticks)
+        pos_y = svg_h - margin_bottom - (i / num_ticks) * chart_h
+        
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{pos_y}" x2="{svg_w - margin_right}" y2="{pos_y}" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        '''
+        # Label Y
+        chart_elements += f'''
+        <text x="{margin_left - 15}" y="{pos_y + 5}" font-family="{DEFAULT_FONT_FAMILY}" 
+              font-size="16" fill="{subtitle_color}" text-anchor="end">{int(val_y) if val_y == int(val_y) else f"{val_y:.1f}"}</text>
+        '''
+
+    # -- Axis Labels --
+    # X Label
+    if x_axis:
+        chart_elements += f'''
+        <text x="{margin_left + chart_w/2}" y="{svg_h - 20}" font-family="{DEFAULT_FONT_FAMILY}" 
+              font-size="20" fill="{main_title_color}" font-weight="bold" text-anchor="middle">{x_axis}</text>
+        '''
+    # Y Label
+    if y_axis:
+        chart_elements += f'''
+        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-family="{DEFAULT_FONT_FAMILY}" 
+              font-size="20" fill="{main_title_color}" font-weight="bold" text-anchor="middle">{y_axis}</text>
+        '''
+
+    # -- Grouped Bar Chart --
+    num_categories = len(categories)
+    num_series = len(series)
+    
+    if num_categories > 0 and num_series > 0:
+        # Tính toán kích thước và khoảng cách
+        group_width = chart_w / num_categories * 0.8  # 80% của không gian dành cho mỗi nhóm
+        bar_width = group_width / num_series * 0.85   # 85% của không gian nhóm chia đều cho các cột
+        group_spacing = chart_w / num_categories
+        
+        for cat_idx, category in enumerate(categories):
+            # Vị trí trung tâm của nhóm cột
+            group_center_x = margin_left + (cat_idx + 0.5) * group_spacing
+            
+            # Vẽ các cột trong nhóm
+            for series_idx, s in enumerate(series):
+                values = s.get("values", [])
+                if cat_idx < len(values):
+                    value = values[cat_idx]
+                    color = colors[series_idx % len(colors)]
+                    
+                    # Tính toán vị trí và chiều cao của cột
+                    bar_height = (value - y_min) / (y_max - y_min) * chart_h
+                    bar_x = group_center_x - group_width/2 + series_idx * (group_width / num_series) + (group_width / num_series - bar_width) / 2
+                    bar_y = svg_h - margin_bottom - bar_height
+                    
+                    # Vẽ cột với bo góc
+                    chart_elements += f'''
+                    <rect x="{bar_x}" y="{bar_y}" width="{bar_width}" height="{bar_height}" 
+                          fill="{color}" rx="5" ry="5"/>
+                    '''
+                    
+                    # Hiển thị giá trị trên cột (nếu bật)
+                    if show_value:
+                        chart_elements += f'''
+                        <text x="{bar_x + bar_width/2}" y="{bar_y - 8}" font-family="{DEFAULT_FONT_FAMILY}" 
+                              font-size="14" fill="{main_title_color}" text-anchor="middle" font-weight="bold">{value}{unit}</text>
+                        '''
+            
+            # Nhãn danh mục (category) trên trục X
+            chart_elements += f'''
+            <text x="{group_center_x}" y="{svg_h - margin_bottom + 25}" font-family="{DEFAULT_FONT_FAMILY}" 
+                  font-size="16" fill="{main_title_color}" text-anchor="middle">{category}</text>
+            '''
+
+    # ===== LEGEND (HTML) =====
+    legend_html = ""
+    if show_legend:
+        legend_html = '<div class="legend-container">'
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div class="legend-item">
+                <div class="legend-dot" style="background-color:{color}; box-shadow: 0 0 0 1px {color};"></div>
+                <div class="legend-label">{s.get("name", "Series")}</div>
+            </div>
+            '''
+        legend_html += '</div>'
+
+    # ===== INSIGHT (HTML) =====
+
+    # ===== 5. HTML RENDER =====
+    # Cấu trúc: Header + 2 Cột (Left: Insight/Legend - Right: Chart)
+    # Background có thêm vài bong bóng trang trí bằng CSS thuần (border-radius)
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        html, body {{
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: {DEFAULT_FONT_FAMILY};
+            background-color: {background_color};
+            /* Hiệu ứng gradient nhẹ giống nước */
+            background: linear-gradient(135deg, {background_color} 0%, #B2EBF2 100%);
+        }}
+
+        .container {{
+            position: relative;
+            z-index: 1;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-sizing: border-box;
+        }}
+
+        .header {{
+            margin-bottom: 40px;
+        }}
+
+        h1 {{
+            font-size: 60px;
+            color: {main_title_color};
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }}
+
+        .subtitle {{
+            font-size: 26px;
+            color: {subtitle_color};
+            margin-top: 15px;
+            font-weight: 500;
+        }}
+
+        .content-flex {{
+            display: flex;
+            flex: 1;
+            gap: 60px;
+            align-items: center; 
+        }}
+
+        .left-col {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+
+        .right-col {{
+            flex: 1.6;
+            background: {chart_panel_background_color};
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 137, 123, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }}
+        
+        .insight-box {{
+            font-size: 28px;
+            color: {insight_text_color};
+            font-family: {DEFAULT_FONT_FAMILY};
+            line-height: 1.6;
+            background: {insight_box_background_color};
+            padding: 30px;
+            border-radius: 20px;
+            border-left: 6px solid {accent_color};
+        }}
+        
+        .legend-container {{
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            margin-top: 28px;
+            width: 100%;
+        }}
+        
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 30px;
+        }}
+        
+        .legend-dot {{
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid white;
+        }}
+        
+        .legend-label {{
+            font-size: 20px;
+            color: {main_title_color};
+            font-family: {DEFAULT_FONT_FAMILY};
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }}
+
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">{insight}</div>
+                    {legend_html}
+                </div>
+
+                <div class="right-col">
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
 
