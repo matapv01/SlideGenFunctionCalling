@@ -62,7 +62,7 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_image_cutout_list_slide, # slide content
     generate_body_slide4,  # slide content
     generate_body_slide5,  # slide content
-    generate_body_slide7,  # slide content
+    generate_body_slide10,  # slide content
     generate_body_slide11,  # slide content
     generate_body_slide12,  # slide content
     generate_body_slide15,  # slide content
@@ -725,22 +725,24 @@ class GenerateBodySlide5Input(BaseModel):
     image_url_4: str = Field(default="Image/generate_body_slide5/Default_4.png", description="Path to the fourth image file.")
 
 
-class GenerateBodySlide7Input(BaseModel):
-    """Input schema for generate_body_slide7."""
-    main_title: str = Field(..., description="Main title of the slide. Default: 'MainTitle'.")
-    subtitle: str = Field(..., description="Subtitle for the right column. Default: 'SubTitle'.")
-    content1: str = Field(..., description="First content text section. Default: 'Content1'.")
-    content2: str = Field(..., description="Second content text section. Default: 'Content2'.")
-    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
-    accent_color: str = Field(default="#d5e8b9", description="CSS color for accents, such as the title accent block.")
-    title_color: str = Field(default="#333333", description="CSS color for the main title.")
-    subtitle_color: str = Field(default="#333333", description="CSS color for the subtitle.")
-    content_color: str = Field(default="#4a90a0", description="CSS color for content text.")
-    divider_color: str = Field(default="#d5e8b9", description="CSS color for the horizontal divider.")
-    image_url_1: str = Field(default="Image/generate_body_slide7/Default_1.png", description="Path to the first image file.")
-    image_url_2: str = Field(default="Image/generate_body_slide7/Default_2.png", description="Path to the second image file.")
-    image_url_3: str = Field(default="Image/generate_body_slide7/Default_3.png", description="Path to the third image file.")
-
+class GenerateBodySlide10Input(BaseModel):
+    """Input schema for generate_body_slide10."""
+    main_title: str = Field(..., description="Main title of the slide displayed prominently at the top (e.g., 'Key Features Overview').")
+    subtitle1: str = Field(..., description="Subtitle for the first content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., '<b>Innovation</b> & Technology').")
+    content1: str = Field(..., description="Content text for the first section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'This covers <b>key innovations</b> in <i>modern technology</i>: <ul><li>Advanced <u>algorithms</u></li><li>Smart <span style=\"color: #e74c3c;\">automation</span></li><li>Enhanced user experience</li></ul>'")
+    subtitle2: str = Field(..., description="Subtitle for the second content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Market <u>Analysis</u>').")
+    content2: str = Field(..., description="Content text for the second section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Comprehensive analysis of <b>market trends</b>: <ul><li>Consumer <i>behavior patterns</i></li><li>Emerging <u>market opportunities</u></li><li>Competitive <span style=\"color: #27ae60;\">advantages</span></li></ul>'")
+    subtitle3: str = Field(..., description="Subtitle for the third content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Future <b>Roadmap</b>').")
+    content3: str = Field(..., description="Content text for the third section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Strategic planning for <b>sustainable growth</b>: <ul><li>Short-term <i>objectives</i></li><li>Long-term <u>vision</u></li><li>Resource <span style=\"color: #3498db;\">allocation</span></li></ul>'")
+    main_bg_color: str = Field(default="#ffffff", description="CSS background color for the entire slide.")
+    accent_color: str = Field(default="#d5e8b9", description="CSS color for accent elements including icon backgrounds and decorative elements.")
+    title_color: str = Field(default="#333333", description="CSS color for the main title text.")
+    subtitle_color: str = Field(default="#333333", description="CSS color for all subtitle text in the three content sections.")
+    content_color: str = Field(default="#555555", description="CSS color for all content/body text in the three sections.")
+    image_url: str = Field(default="Image/generate_body_slide10/Default_1.png", description="Path to the image file for the left side.")
+    icon1: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the first section's icon. Should be a valid SVG element with proper xmlns attribute.")
+    icon2: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the second section's icon. Should be a valid SVG element with proper xmlns attribute.")
+    icon3: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the third section's icon. Should be a valid SVG element with proper xmlns attribute.")
 
 class GenerateBodySlide11Input(BaseModel):
     """Input schema for generate_body_slide11."""
@@ -2399,12 +2401,11 @@ CONTENT_TOOLS = [
         args_schema=GenerateBodySlide5Input
     ),
     StructuredTool.from_function(
-        func=generate_body_slide7,
-        name="generate_body_slide7",
-        description="Generates an HTML slide with a main title, three vertical images on the left, and a subtitle with two content sections on the right, separated by a divider.",
-        args_schema=GenerateBodySlide7Input
+        func=generate_body_slide10,
+        name="generate_body_slide10",
+        description="Generates an HTML slide with a main title, a large image on the left, and three content sections with icons on the right.",
+        args_schema=GenerateBodySlide10Input
     ),
-
     StructuredTool.from_function(
         func=generate_body_slide11,
         name="generate_body_slide11",

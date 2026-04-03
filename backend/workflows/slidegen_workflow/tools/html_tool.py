@@ -8491,52 +8491,34 @@ def generate_body_slide5(
 
 
 
-
-def generate_body_slide7(
+def generate_body_slide10(
     # Main parameters
     main_title="MainTitle",
-    subtitle="SubTitle",
-  
+    
     # Content parameters
+    subtitle1="SubTitle1",
     content1="Content1",
+    subtitle2="SubTitle2",
     content2="Content2",
+    subtitle3="SubTitle3",
+    content3="Content3",
     
     # Style parameters
-    main_bg_color="#ffffff",  # White background
-    accent_color="#d5e8b9",   # Light green accent
+    main_bg_color="#ffffff",
+    accent_color="#d5e8b9",
     title_color="#333333",
     subtitle_color="#333333",
-    content_color="#4a90a0",  # Teal/blue color for content
-    divider_color="#d5e8b9",  # Light green divider
-    image_url_1="Image/generate_body_slide7/Default_1.png",
-    image_url_2="Image/generate_body_slide7/Default_2.png",
-    image_url_3="Image/generate_body_slide7/Default_3.png",
+    content_color="#555555",
+    image_url="Image/generate_body_slide10/Default_1.png",
 
+    # Icon parameters - SVG paths for each icon
+    icon1="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M12 2v6M12 18v4M14.5 8a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM16.5 13a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0z"></path></svg>""",  # Lightbulb
+    icon2="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>""",  # Target
+    icon3="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>""",  # Bar chart
 ):
     """
-    Generates an HTML slide with a main title, three vertical images on the left,
-    and content with subtitle on the right - Full viewport design.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    - subtitle: The subtitle on the right side
-    
-    Content parameters:
-    - content1, content2: Content text sections
-    
-    Style parameters:
-    - main_bg_color: Background color for the slide
-    - accent_color: Color for accents
-    - title_color: Color for the main title
-    - subtitle_color: Color for the subtitle
-    - content_color: Color for content text
-    - divider_color: Color for the horizontal divider
-    - title_font_size: Font size for the main title
-    - subtitle_font_size: Font size for the subtitle
-    - content_font_size: Font size for content text
-    
-    Returns:
-    - HTML code for the slide
+    Generates an HTML slide with a main title, large image on the left,
+    and three content sections with icons on the right - Full viewport design.
     """
     
     html_code = f"""<!DOCTYPE html>
@@ -8544,7 +8526,7 @@ def generate_body_slide7(
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertical Images Slide</title>
+    <title>Image with Icons Slide</title>
     <style>
         * {{
             margin: 0;
@@ -8587,16 +8569,15 @@ def generate_body_slide7(
         .title-section {{
             display: flex;
             align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
+            margin-bottom: 2rem;
         }}
         
         .title-accent {{
-            width: 2.5rem; /* 40px - increased size */
+            width: 2.5rem; /* 40px - tăng kích thước */
             height: 2.5rem; /* 40px */
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            background-color: {accent_color};
             margin-right: 1.25rem; /* 20px */
             border-radius: 0.5rem; /* 8px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
         }}
         
         .main-title {{
@@ -8610,37 +8591,49 @@ def generate_body_slide7(
             display: flex;
             width: 100%;
             flex: 1;
-            gap: 2.5rem; /* 40px */
+            gap: 2.5rem; /* 40px - gap giữa image và content */
         }}
         
         .image-section {{
             flex: 2;
             display: flex;
-            flex-direction: column;
-            gap: 1rem; /* 16px */
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
         }}
         
-        .image-card {{
-            flex: 1;
-            background: rgba(255,255,255,0.9);
+        .image-frame {{
+            width: 100%;
+            height: 100%;
+            position: relative;
+            max-height: 28rem; /* 448px */
             border-radius: 0.75rem; /* 12px */
             overflow: hidden;
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            border-left: 0.25rem solid {accent_color}; /* accent border */
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
         }}
         
-        .image-card:hover {{
-            transform: translateX(0.5rem) scale(1.02); /* hover effect */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+        .image-accent {{
+            position: absolute;
+            top: -0.5rem; /* -8px */
+            left: -0.5rem; /* -8px */
+            width: calc(100% + 1rem);
+            height: calc(100% + 1rem);
+            border: 0.25rem solid {accent_color}; /* 4px */
+            border-radius: 1rem; /* 16px */
+            box-sizing: border-box;
+            z-index: 1;
         }}
         
         .image-container {{
+            position: relative;
             width: 100%;
             height: 100%;
+            z-index: 2;
+            border-radius: 0.75rem; /* 12px */
             overflow: hidden;
-            position: relative;
         }}
         
         .image-container img {{
@@ -8650,17 +8643,8 @@ def generate_body_slide7(
             transition: transform 0.3s ease;
         }}
         
-        .image-card:hover .image-container img {{
+        .image-section:hover .image-container img {{
             transform: scale(1.05); /* zoom effect on hover */
-        }}
-        
-        .image-overlay {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0.25rem; /* 4px */
-            background: linear-gradient(90deg, {accent_color}, rgba(213, 232, 185, 0.8));
         }}
         
         .content-section {{
@@ -8668,51 +8652,67 @@ def generate_body_slide7(
             display: flex;
             flex-direction: column;
             justify-content: center;
+            gap: 1.5rem;
+        }}
+        
+        .content-item {{
+            display: flex;
+            align-items: flex-start;
             background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            padding: 3rem;
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            border-radius: 0.75rem; /* 12px */
+            padding: 1.5rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
             border-left: 0.25rem solid {accent_color}; /* accent border */
         }}
         
-        .subtitle {{
-            font-size: 2.5rem;
-            color: {subtitle_color};
-            margin: 0 0 2rem 0;
-            font-weight: 600;
-            position: relative;
+        .content-item:hover {{
+            transform: translateX(0.5rem); /* 8px - hover effect */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
         }}
         
-        .subtitle::after {{
-            content: '';
-            position: absolute;
-            bottom: -0.5rem; /* -8px */
-            left: 0;
-            width: 4rem; /* 64px */
-            height: 0.25rem; /* 4px */
-            background: linear-gradient(90deg, {divider_color}, rgba(213, 232, 185, 0.6));
-            border-radius: 0.125rem; /* 2px */
-        }}
-        
-        .content {{
-            font-size: 2rem;
-            color: {content_color};
-            margin: 0 0 2rem 0;
-            line-height: 1.6;
-            padding: 1.25rem;
-            background: rgba(74, 144, 160, 0.05); /* content color with low opacity */
-            border-radius: 0.5rem; /* 8px */
-            border-left: 0.25rem solid {content_color}; /* content accent */
+        .icon-container {{
+            width: 5rem;
+            height: 5rem;
+            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin-right: 1.5rem; /* 24px */
+            flex-shrink: 0;
+            border-radius: 0.75rem; /* 12px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
             transition: all 0.3s ease;
         }}
         
-        .content:hover {{
-            background: rgba(74, 144, 160, 0.1);
-            transform: translateX(0.25rem); /* 4px */
+        .content-item:hover .icon-container {{
+            transform: scale(1.1) rotate(5deg); /* hover animation */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
         }}
         
-        .content:last-child {{
-            margin-bottom: 0;
+        .icon-container svg {{
+            width: 2.5rem;
+            height: 2.5rem;
+            stroke: #333333;
+            filter: drop-shadow(0 0.125rem 0.25rem rgba(0,0,0,0.1));
+        }}
+        
+        .content-text {{
+            flex: 1;
+        }}
+        
+        .subtitle {{
+            font-size: 2rem;
+            color: {subtitle_color};
+            margin: 0 0 0.5rem 0;
+            font-weight: 600;
+        }}
+        
+        .content {{
+            font-size: 1.6rem;
+            color: {content_color};
+            margin: 0;
+            line-height: 1.5;
         }}
         
         /* Responsive design */
@@ -8729,11 +8729,11 @@ def generate_body_slide7(
             .image-section {{
                 flex: none;
                 height: 20rem;
-                flex-direction: row;
             }}
             
             .content-section {{
                 flex: none;
+                gap: 1.5rem;
             }}
         }}
         
@@ -8746,20 +8746,25 @@ def generate_body_slide7(
                 padding: 2rem 3rem;
             }}
             
-            .image-section {{
+            .content-item {{
                 flex-direction: column;
-                height: 15rem;
+                text-align: center;
             }}
             
-            .main-title {{
+            .icon-container {{
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }}
+            
+            .title-font-size {{
                 font-size: 2rem;
             }}
             
-            .subtitle {{
-                font-size: 1.5rem;
+            .subtitle-font-size {{
+                font-size: 1.25rem;
             }}
             
-            .content {{
+            .content-font-size {{
                 font-size: 1rem;
             }}
         }}
@@ -8777,31 +8782,48 @@ def generate_body_slide7(
         <div class="content-layout">
             <!-- Image Section -->
             <div class="image-section">
-                <div class="image-card">
+                <div class="image-frame">
+                    <div class="image-accent"></div>
                     <div class="image-container">
-                        <img src="{image_url_1}" alt="Image 1">
-                        <div class="image-overlay"></div>
-                    </div>
-                </div>
-                <div class="image-card">
-                    <div class="image-container">
-                        <img src="{image_url_2}" alt="Image 2">
-                        <div class="image-overlay"></div>
-                    </div>
-                </div>
-                <div class="image-card">
-                    <div class="image-container">
-                        <img src="{image_url_3}" alt="Image 3">
-                        <div class="image-overlay"></div>
+                        <img src="{image_url}" alt="Slide image">
                     </div>
                 </div>
             </div>
             
             <!-- Content Section -->
             <div class="content-section">
-                <h2 class="subtitle">{subtitle}</h2>
-                <p class="content">{content1}</p>
-                <p class="content">{content2}</p>
+                <!-- Content Item 1 -->
+                <div class="content-item">
+                    <div class="icon-container">
+                        {icon1}
+                    </div>
+                    <div class="content-text">
+                        <h3 class="subtitle">{subtitle1}</h3>
+                        <p class="content">{content1}</p>
+                    </div>
+                </div>
+                
+                <!-- Content Item 2 -->
+                <div class="content-item">
+                    <div class="icon-container">
+                        {icon2}
+                    </div>
+                    <div class="content-text">
+                        <h3 class="subtitle">{subtitle2}</h3>
+                        <p class="content">{content2}</p>
+                    </div>
+                </div>
+                
+                <!-- Content Item 3 -->
+                <div class="content-item">
+                    <div class="icon-container">
+                        {icon3}
+                    </div>
+                    <div class="content-text">
+                        <h3 class="subtitle">{subtitle3}</h3>
+                        <p class="content">{content3}</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -8810,9 +8832,6 @@ def generate_body_slide7(
     
     return html_code
 # sửa biến trong tool
-
-
-
 
 
 
