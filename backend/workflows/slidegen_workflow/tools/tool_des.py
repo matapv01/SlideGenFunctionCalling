@@ -2098,62 +2098,62 @@ INTRO_TOOLS = [
     StructuredTool.from_function(
         func=generate_title_slide,
         name="generate_title_slide",
-        description="Generates a professional title slide with a blue gradient background, geometric shapes, and optional city skyline.",
+        description="""Generates a professional and corporate Title Slide featuring a centered text alignment within a dashed geometric frame. This slide utilizes a 135-degree linear gradient background layered with exactly four floating decorative triangles and an optional silhouette city skyline at the base. Ideal for Business Plans, Annual Reports, or Project Proposals where a structured and authoritative visual identity is required.""",
         args_schema=GenerateTitleSlideInput
     ),
     StructuredTool.from_function(
         func=generate_introduction_slide,
         name="generate_introduction_slide",
-        description="Generates a professional introduction slide with gradient background and decorative elements.",
+        description="""Generates a professional and minimalist Introduction Slide featuring a centered content frame enclosed in a dashed border. Adorned with 4 floating decorative triangles and a subtle 3-shape geometric cluster over a dual-color gradient background. Ideal for opening presentations or setting the tone for a high-level executive summary.""",
         args_schema=GenerateIntroductionSlideInput
     ),
     StructuredTool.from_function(
         func=generate_intro_slide1,
         name="generate_intro_slide1",
-        description="Generates an HTML introduction slide with a  main title section on the left and an image on the right.",
+        description="Generates a modern and marketing-focused Split-Screen Slide with a 60/40 asymmetrical layout. Features a floating rounded content box on the left balanced by a framed image container and dual horizontal accent bars. Ideal for brand introductions or marketing pitches where visual balance is key.",
         args_schema=GenerateIntroSlide1Input
     ),
     StructuredTool.from_function(
         func=generate_elegant_intro_slide,
         name="generate_elegant_intro_slide",
-        description="Generates an elegant Introduction or Title slide, featuring an asymmetrical two-column layout with a large title on the left and a framed image on the right. Its unique features are the beautiful, golden botanical frame that adorns the image's bottom-right corner and a subtle cluster of stars at the top-left, creating a warm and celebratory feel. Ideal for presentation openers, chapter dividers, personal introductions, or event invitations.",
+        description="""Generates an elegant and sophisticated Media Intro Slide utilizing a balanced 2-column grid. Defined by a unique botanical frame SVG and a 3-star gold gradient cluster decorating a 16:9 image wrapper. Ideal for creative portfolios, lifestyle presentations, or luxury brand stories where aesthetics are paramount.""",
         args_schema=GenerateElegantIntroSlideInput
     ),
 
     StructuredTool.from_function(
         func=generate_title_slide_2,
         name="generate_title_slide_2",
-        description="Generates a Introductory or Title Slide. It's ideal for starting a business, technology, or data-focused presentation. Its unique characteristics include a sharp diagonal split and a layered color panel. The title can optionally contain a highlighted word by using HTML tags.",
+        description="""Generates a corporate and dynamic Title Slide featuring a sharp vertical diagonal split layout. Incorporates a shadow-offset color panel and a 3-row minimalist line-chart icon for technical emphasis. Ideal for corporate quarterly reports or high-stakes business strategy sessions.""",
         args_schema=GenerateTitleSlide2Input
     ),
     StructuredTool.from_function(
         func=generate_business_intro_slide,
         name="generate_business_intro_slide",
-        description="Generates a clean business presentation intro slide with centered text, decorative D-shapes on sides, and subtle grid background pattern.",
+        description="Generates a high-impact and energetic Vision Slide using a bold angled polygon divider. Detailed with a decorative footer containing a 2x2 geometric dot grid and concentric arc patterns alongside a full-bleed image. Ideal for mission statements, startup pitch decks, or motivational segments.",
         args_schema=GenerateBusinessIntroSlideInput
     ),
     StructuredTool.from_function(
         func=generate_dynamic_intro_slide,
         name="generate_dynamic_intro_slide",
-        description="Generates a  Introductory or Title slide. This is a great slide for opening a presentation or starting a new section. Its unique characteristics include a bold, asymmetrical layout with a full-height image on the right, and a solid color block on the left that features an angled cutout. The color block contains a large title, a subtitle, and abstract geometric decorations in the footer area (arcs and dots).",
+        description="Generates a bold and creative Concept Highlight Slide arranged in a 1.2:1 grid layout. Showcases a custom space-themed vector set including a blue planet and 3 yellow stars, framed by a 7-piece layered geometric shape cluster in the corners. Ideal for brainstorming sessions or emphasizing a single revolutionary key takeaway.",
         args_schema=GenerateDynamicIntroSlideInput
     ),
     StructuredTool.from_function(
         func=generate_big_concept_slide,
         name="generate_big_concept_slide",
-        description="Generates a high-impact **Content Slide** of the 'Big Concept' or 'Emphasis' type. It is designed to highlight a single, major idea using a very large title and a prominent thematic illustration (e.g., a planet and stars), while maintaining the 'geometric theme'. This slide is perfect for introducing key pillars, core values, or pivotal moments in a presentation.",
+        description="Generates a minimalist and sophisticated Table of Contents Slide featuring a 2-column centered layout. Distinguishable by a signature Dusty Rose accent-block backdrop that offsets a single framed image against a clean list of agenda items. Ideal for outlining meeting roadmaps or providing a structured overview of presentation topics.",
         args_schema=GenerateBigConceptSlideInput
     ),
     StructuredTool.from_function(
         func=generate_elegant_agenda_slide,
         name="generate_elegant_agenda_slide",
-        description="Generates an elegant, minimalist agenda or table of contents slide. Features a two-column layout with a framed image on the left and a text list on the right. The design uses a classic serif font for the title and a clean sans-serif for the body, making it ideal for professional, corporate, or academic presentations.",
+        description="Generates a whimsical and educational Character Title Slide featuring a 50/50 vertical split with a colored 15% bottom horizon bar. Centered around a unique hand-drawn penguin SVG doodle and 4 organic star-wave scribbles. Ideal for children's education, storytelling, or lighthearted workshop introductions.",
         args_schema=GenerateElegantAgendaSlideInput
     ),
     StructuredTool.from_function(
         func=generate_playful_title_slide,
         name="generate_playful_title_slide",
-        description="Generates a friendly, hand-drawn style title slide. Features a large, charming illustration (like a penguin) and playful typography. The layout consists of a main colored panel and a smaller strip at the bottom. Perfect for educational content, children's presentations, or any topic needing a warm, approachable feel.",
+        description="Generates a whimsical and friendly Hand-drawn Title Slide featuring a 50/50 vertical split with a hand-drawn penguin SVG, organic star-wave scribbles, and a 15% height bottom horizon bar. Ideal for children's education or lighthearted storytelling topics where a charming and approachable feel is needed.",
         args_schema=GeneratePlayfulTitleSlideInput
     ),
     StructuredTool.from_function(
@@ -2215,44 +2215,44 @@ INTRO_TOOLS = [
     StructuredTool.from_function(
         func=generate_title_slide_7,
         name="generate_title_slide_7",
-        description="Generates a centered title slide with a single decorative bandage element and a centered text frame containing title and subtitle.",
+        description="""Generates a playful and crafty Title Slide featuring a centered 1100px text frame with a thick border. Distinguished by a single floating 220x70px bandage-core element anchored above the frame to create a unique "pasted" look. Ideal for casual team syncs or creative project workshops.""",
         args_schema=GenerateTitleSlide7Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_11,
         name="generate_title_slide_11",
-        description="Generates an ultra-minimalist title slide with split background colors (left/right). Features large centered title in Georgia serif and subtle subtitle, perfect for clean, professional presentations.",
+        description="""Generates an ultra-minimalist Introduction Slide featuring a sharp 50/50 vertical split background. Defined by its massive 110px serif typography and a clean bisection of two solid colors without any additional geometric noise. Ideal for formal thesis defenses or academic presentations requiring high clarity.""",
         args_schema=GenerateTitleSlide11Input
     )
     ,
     StructuredTool.from_function(
         func=generate_title_slide_12,
         name="generate_title_slide_12",
-        description="Generates an elegant black and white minimalist title slide with decorative circle and border frame. Features bold Montserrat title, clean layout with left-aligned text, perfect for formal academic presentations.",
+        description="Generates an elegant and sophisticated Thesis Slide featuring a centered content area enclosed within a 160px inset border frame. Defined by a massive 700px decorative circle anchored to the right edge, bleeding off the slide for a modern asymmetrical touch. Ideal for high-end project proposals or artistic portfolios.",
         args_schema=GenerateTitleSlide12Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_13,
         name="generate_title_slide_13",
-        description="Generates a modern geometric title slide with diagonal gradient background and 8 rotated decorative elements (rounded rectangles and circle). Features centered Montserrat typography with flexible layout, perfect for contemporary and creative presentations.",
+        description="Generates a geometric and math-inspired Functional Slide featuring a centered text layout over a diagonal composition. Characterized by a set of 7 rounded rectangles (pill shapes) rotated at precisely -45 degrees in a multi-layered corner arrangement. Ideal for scientific lectures, logic-based tutorials, or mathematics presentations.",
         args_schema=GenerateTitleSlide13Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_15,
         name="generate_title_slide_15",
-        description="Generates a clean and simple meeting title slide with large decorative circles in corners. Features Montserrat bold typography with centered layout, perfect for minimalist business presentations and meeting slides.",
+        description="Generates a simple and vibrant Meeting Slide featuring a centered 100px bold title layout. Anchored by two giant 700px diameter corner circles positioned at the top-left and bottom-right extremities to frame the content. Ideal for general business meetings or high-energy project kick-offs.",
         args_schema=GenerateTitleSlide15Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_17,
         name="generate_title_slide_17",
-        description="Generates a title slide with centered text content and decorative circles positioned at four corners. Features Montserrat typography with customizable colors for background, title, subtitle, and three decorative circle colors. Perfect for meetings, town halls, and minimalist presentations.",
+        description="Generates a clean and modern Town Hall Slide featuring a centered 1400px wide text group. Distinctive for its symmetrical 4-corner decoration, consisting of 8 identical 150px semi-visible circles paired at every corner of the slide. Ideal for all-hands company meetings or collaborative announcement headers.",
         args_schema=GenerateTitleSlide17Input
     ),
     StructuredTool.from_function(
         func=generate_title_slide_18,
         name="generate_title_slide_18",
-        description="Generates a minimalist title slide with centered card containing title and subtitle on full-slide geometric cube pattern background. Features Bebas Neue font for title, customizable pattern and card colors. Perfect for modern, minimalist presentations and meetings.",
+        description="Generates a textured and architectural Title Slide featuring a floating 850x650px content card. Set against a complex 3D isometric cube pattern background generated via custom SVG with exactly 80x140px pattern units. Ideal for strategic planning, architectural overviews, or design-heavy presentations.",
         args_schema=GenerateTitleSlide18Input
     ),
 
@@ -2361,103 +2361,115 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
         func=generate_content_slide,
         name="generate_content_slide",
-        description="Generates an HTML slide with a main title and a grid of numbered items, ideal for listing topics or points.",
+        description="Generates a clean and minimalist Content Slide featuring a configurable NxM grid of numbered cards with top-edge accent gradients. This layout utilizes a central focal title and structural content cards with soft shadow depth and subtle border outlines. Ideal for Table of Contents, Agenda Overviews, or Key Takeaway summaries where clear information hierarchy and systematic categorization are required.",
         args_schema=GenerateContentSlideInput
     ),
     StructuredTool.from_function(
         func=generate_comparison_slide,
         name="generate_comparison_slide",
-        description="Generates an HTML slide with a main title, two comparison columns with icons, and a matching border design.",
+        description="""Generates a symmetrical Comparison Slide featuring two vertical content columns separated by a central dashed vertical divider. This layout integrates two distinct SVG icons (defaulting to gavel and scales) centered above paired headings and descriptive body text. Ideal for Pros and Cons analysis, Legal or Ethical comparisons, and "Before vs. After" scenarios where a balanced visual weight between two opposing or complementary concepts is essential.""",
         args_schema=GenerateComparisonSlideInput
     ),
     StructuredTool.from_function(
         func=generate_process_slide,
         name="generate_process_slide",
-        description="Generates an HTML slide with a main title and two process boxes connected by an arrow.",
+        description="Generates a dynamic Process Flow Slide featuring two large, rounded content boxes bridged by a central circular floating arrow. This structure utilizes a horizontal bilateral layout with customizable primary and secondary box colors and high-contrast typography. Ideal for Sequential Workflows, Input-Output diagrams, or Strategic Transitions where a clear directional movement from one phase to the next is the primary intent.",
         args_schema=GenerateProcessSlideInput
     ),
     StructuredTool.from_function(
         func=generate_process_steps_slide,
         name="generate_process_steps_slide",
-        description="Generates a structured, multi-step process or plan slide. Features a three-column layout with a main title on a colored side panel, a vertical 'film strip' of images, and corresponding text descriptions for each step. The design is clean, elegant, and ideal for outlining strategies or project phases.",
+        description="Generates a structured and elegant Multi-step Process Slide featuring a 30/70 vertical split with a colored title panel. This layout utilizes a vertical image strip of exactly three square thumbnails paired with italicized serif typography for a refined aesthetic. Ideal for detailing implementation plans, digital transformation roadmaps, or chronological project phases.",
         args_schema=GenerateProcessStepsSlideInput
     ),
     StructuredTool.from_function(
         func=generate_image_cutout_list_slide,
         name="generate_image_cutout_list_slide",
-        description="Generates a sophisticated list slide with a unique 'cut-out' effect, where the main content panel appears to sit on top of a continuous background image. Ideal for presenting key points, features, or agenda items in a modern, high-end style.",
+        description="Generates a sophisticated and modern Key Points List Slide featuring a 70% width right-aligned content panel layered over a full-bleed background. This design includes a unique rotating geometric spinner and a vertical guide line with distinct spherical bullet points for high-end readability. Ideal for showcasing core business values, primary strategic objectives, or executive summary points.",
         args_schema=GenerateImageCutoutListSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_body_slide2,
+        name="generate_body_slide2",
+        description="Generates a clean and professional Image & Features Slide featuring a horizontal layout with a large framed image on the left and three stacked icon-based content sections. It incorporates square title accents and an offset bordered image frame to create a modern, layered look. Ideal for highlighting specific product features, service benefits, or core organizational pillars.",
+        args_schema=GenerateBodySlide2Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide4,
         name="generate_body_slide4",
-        description="Generates an HTML slide with a main title, a horizontal content bar, and three images with subtitles and content text.",
+        description="Generates a dynamic and engaging Image Gallery Slide featuring a full-width gradient content bar positioned above a horizontal row of exactly three vertical cards. Each card contains an image with a distinct left-side color border and a centered subtitle for clear categorization. Ideal for portfolio showcases, team member introductions, or comparing three separate product categories.",
         args_schema=GenerateBodySlide4Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide5,
         name="generate_body_slide5",
-        description="Generates an HTML slide with a main title, a 2x2 image grid on the left, and four content sections on the right.",
+        description="Generates an organized and comprehensive Visual Grid Slide featuring a symmetrical 2x2 image grid on the left and a 2x2 text grid on the right. This layout uses color-coded image overlays and vertical border-left accents to maintain a clear and systematic information hierarchy. Ideal for quarterly performance reviews, multi-departmental status updates, or complex four-point conceptual breakdowns.",
         args_schema=GenerateBodySlide5Input
+    ),
+    StructuredTool.from_function(
+        func=generate_body_slide7,
+        name="generate_body_slide7",
+        description="Generates a modern and asymmetrical Content Slide featuring a vertical stack of exactly three image cards on the left paired with a structured text panel on the right. This layout utilizes teal-tinted content blocks and a linear-gradient title accent for a sophisticated look. Ideal for Case Studies, Portfolio Highlights, or Multi-faceted Project Descriptions where visual variety and textual depth must coexist.",
+        args_schema=GenerateBodySlide7Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide10,
         name="generate_body_slide10",
-        description="Generates an HTML slide with a main title, a large image on the left, and three content sections with icons on the right.",
+        description="Generates a clean and authoritative Feature Slide featuring a large, left-aligned image frame with a double-layered accent border and three stacked icon-based content items on the right. Each content section includes an interactive hover-lift effect and custom SVG icons in rounded-gradient containers. Ideal for Product Features, Service Offerings, or Key Pillars where high-impact imagery balances detailed bullet points.",
         args_schema=GenerateBodySlide10Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide11,
         name="generate_body_slide11",
-        description="Generates an HTML slide with a main title and three content boxes with icons. Content fields support rich HTML formatting.",
+        description="Generates a bold and systematic Three-column Info Slide featuring exactly three vertical content boxes, each crowned by a floating circular SVG icon. This structure uses a top-heavy visual hierarchy with uppercase subtitles and centered body text within soft-gradient containers. Ideal for Core Values, Strategic Goals, or High-level Process Summaries where parity between three distinct concepts is required.",
         args_schema=GenerateBodySlide11Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide12,
         name="generate_body_slide12",
-        description="Generates an HTML slide with a main title, a horizontal content bar, and three images with subtitles and content text.",
+        description="Generates a professional and descriptive Image Gallery Slide featuring a full-width horizontal gradient content bar above a 1x3 row of vertical image cards. Each card is uniquely identified by an all-around accent border and a bottom-aligned text area for concise descriptions. Ideal for Market Segments, Team Introductions, or Product Comparisons where a horizontal overview leads into specific categorical details.",
         args_schema=GenerateBodySlide12Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide15,
         name="generate_body_slide15",
-        description="Generates an HTML slide with a main title, three vertical images on the left, and a subtitle with two content sections on the right, separated by a divider.",
+        description="""Generates a sleek and list-oriented Content Slide featuring a 2.5/2.5 horizontal split with two stacked bulleted list sections on the left and a large portrait image on the right. This layout utilizes colored "subtitle-containers" and custom dot bullets to categorize complex information clearly. Ideal for Executive Summaries, Key Findings, or Detailed Capabilities lists where structured text needs a strong visual anchor.""",
         args_schema=GenerateBodySlide15Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide18,
         name="generate_body_slide18",
-        description="Generates an HTML slide with a main title and two comparison columns separated by a dashed divider. Each column has an icon, title, and text content. The slide features a border design with accent color background.",
+        description="""Generates a balanced and corporate Comparison Slide featuring two symmetrical vertical columns separated by a central divider line. Each side integrates a large-scale SVG icon (defaulting to gavel and scales) above centered headings and descriptive body text. Ideal for Legal Frameworks, Pro-and-Con Analysis, or "This vs. That" scenarios requiring a high-contrast, professional comparison layout.""",
         args_schema=GenerateBodySlide18Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide19,
         name="generate_body_slide19",
-        description="Generates an HTML slide with two columns containing multiple sections each. The left column has a colored background, while the right column is white with a border and includes icons for each section.",
+        description="Generates a high-contrast and divided Informational Slide featuring a blue-background left column for primary text and a white-background right column for icon-supplemented sections. This layout uses absolute-flat positioning and distinct color blocking to separate two primary content streams. Ideal for Comparing Internal vs. External factors, Policy Summaries, or Two-part Strategic Overviews with functional icons.",
         args_schema=GenerateBodySlide19Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide20,
         name="generate_body_slide20",
-        description="Generates an HTML slide with a main title and two comparison columns separated by a dashed divider. Each column has an icon, title, and text content. The slide features a border design with accent color background.",
+        description="Generates a minimalist and elegant Comparison Slide featuring two vertical columns with icons housed in exactly two rounded-square translucent containers. The layout is anchored by a central thin vertical divider with 40% opacity and a large centered main title. Ideal for Executive Comparisons, Decision Matrix highlights, or Core Concept dualities where a clean, airy aesthetic is paramount.",
         args_schema=GenerateBodySlide20Input
     ),
     StructuredTool.from_function(
         func=generate_main_points_slide,
         name="generate_main_points_slide",
-        description="Generate a professional main points slide with three columns featuring environmental/industrial icons (plastic bag, faucet, factory). Perfect for environmental presentations, sustainability topics, industrial processes, waste management discussions, or any three-point presentation requiring modern visual appeal.",
+        description="""Generates a high-impact and industrial Main Points Slide featuring a balanced 3-column horizontal layout with specialized environmental CSS icons (bag, faucet, and factory) inside glowing teal glassmorphism orbs set against a dark navy canvas. Ideal for sustainability reports, ecological impact discussions, or green initiative pitches where thematic visual consistency is required.""",
         args_schema=GenerateMainPointsSlideInput
     ),
     StructuredTool.from_function(
         func=generate_elegant_points_slide,
         name="generate_elegant_points_slide",
-        description="Generates a Content Slide designed to present four key points. This slide features an adjusted layout that intentionally de-emphasizes the main title to make the four content cards below the central focus. The visual style is bright, warm, and elegant, using an off-white background, floating cards with soft shadows, and decorative icons to introduce each point. It is ideal for presenting core values, key features, or strategic pillars where the details of the four points are most important.",
+        description="""Generates an elegant and refined Key Points Slide featuring exactly 4 vertical columns of content cards optimized for high-resolution displays. This layout incorporates a unique visual DNA of central gold-accented icon-dividers and elevated soft-shadow cards with sophisticated serif headings. Ideal for luxury branding presentations, high-end strategic summaries, or core philosophy overviews where premium aesthetics are essential.""",
         args_schema=GenerateElegantPointsSlideInput
     ),
     StructuredTool.from_function(
         func=generate_corporate_content_slide,
         name="generate_corporate_content_slide",
-        description="Generates a bright and professional **Content Slide** with a dynamic diagonal layout. It features a large title on a vibrant, colored panel on the left, while the main content on the right is presented as a series of modern, numbered cards. The layout is **optimized for 2 to 4 items** to maintain a clean, balanced look. This slide is ideal for breaking down topics, listing key features, or presenting arguments in a structured, high-end, and visually engaging way.",
+        description="""Generates a professional and bright Content Slide featuring an asymmetrical split layout with an angled title panel and a vertical right-hand list column. It utilizes a sharp geometric clip-path angled panel and large-scale ghosted numbering on content cards for a modern corporate look. Ideal for onboarding guides, business strategy pitches, or structured service descriptions requiring a clean and authoritative hierarchy.""",
         args_schema=GenerateCorporateContentSlideInput
     ),
     StructuredTool.from_function(
@@ -2469,13 +2481,13 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
         func=generate_corporate_multicolumn_slide,
         name="generate_corporate_multicolumn_slide",
-        description="Generates a professional Content Slide, designed for presenting information in two or three parallel columns. This tool maintains the modern corporate aesthetic with a dynamic diagonal split and a layered color panel. The main content area features a title with an icon, followed by the columns displayed in elegant cards with hover effects. Enhanced with larger typography, gradient backgrounds, and improved spacing for better visual impact. It's ideal for comparing features, presenting different viewpoints, or breaking down a topic into 2 or 3 key areas.",
+        description="""Generates a clean and minimalist Multi-column Slide featuring a flexible 2 or 3 column horizontal layout paired with a decorative right-aligned color panel. This design is defined by an angled right-side clip-path divider and content modules anchored by vibrant top-edge gradient accent bars. Ideal for comparative feature lists, project pillar descriptions, or high-level category breakdowns in a corporate setting.""",
         args_schema=GenerateCorporateMulticolumnSlideInput
     ),
     StructuredTool.from_function(
         func=generate_corporate_grid_slide,
         name="generate_corporate_grid_slide",
-        description="Generates a Content Slide designed for presenting multiple items in a 2x3 grid layout. This tool maintains the modern corporate aesthetic with a dynamic diagonal split and a layered color panel. The main content area features a title with an icon, followed by a grid of six items displayed as interactive cards. Enhanced with larger typography, gradient backgrounds, hover effects, and improved spacing for better visual impact. This layout is optimized for presenting exactly six items, making it perfect for reviewing key concepts, displaying product features, or listing data points in an organized format.",
+        description="Generates a systematic and organized Concept Review Grid featuring a 3x2 matrix of six content cards paired with a right-aligned geometric accent panel. This tool uses a unique double-layered angled clip-path background element and oversized bold typography to emphasize key terminology. Ideal for recap sessions, concept glossaries, or multi-point tactical checklists where high information density must remain legible.",
         args_schema=GenerateCorporateGridSlideInput
     ),
     # StructuredTool.from_function(
@@ -2487,92 +2499,98 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
         func=generate_vision_mission_slide,
         name="generate_vision_mission_slide",
-        description="Generates a professional vision and mission slide with split layout and numbered points.",
+        description="Generates a professional and balanced Vision & Mission Slide featuring a 50/50 symmetrical vertical split layout. This slide incorporates large oversized ghosted background numbers and an intricate geometric background pattern layered with exactly two decorative triangles. Ideal for corporate strategy overviews, organizational goal setting, or establishing institutional core values where a dual-focus information hierarchy is required.",
         args_schema=GenerateVisionMissionSlideInput
     ),
     StructuredTool.from_function(
         func=generate_service_roadmap_slide,
         name="generate_service_roadmap_slide",
-        description="Generates a professional service roadmap slide with gradient background and decorative elements.",
+        description="Generates a modern and structured Service Roadmap Slide featuring a balanced 2x2 grid of exactly four floating content cards. This design utilizes a unique four-corner decorative triangle frame and cards anchored by top-edge linear gradient accent bars against a bold gradient background. Ideal for project implementation phases, service evolution roadmaps, or multi-stage strategic planning where sequential progress must be clearly visualized.",
         args_schema=GenerateServiceRoadmapSlideInput
+    ),
+    StructuredTool.from_function(
+        func=generate_financial_projections_slide_dark,
+        name="generate_financial_projections_slide_dark",
+        description="Generates an authoritative and corporate Financial Projections Slide featuring a structured row of exactly three vertical content cards encased within a 3px dashed geometric border frame. The layout employs a deep blue high-contrast aesthetic with soft-shadowed cards and centered bold headings for numerical clarity. Ideal for revenue forecasting, expense projections, or investor funding pitches requiring a stable and professional quantitative outlook.",
+        args_schema=GenerateFinancialProjectionsSlideDarkInput
     ),
     StructuredTool.from_function(
         func=generate_minimalist_tech_list_slide,
         name="generate_minimalist_tech_list_slide",
-        description="Generates a bright, clean, and professional **Content Slide**. This slide is characterized by its large, highly-legible fonts and a modern, tech-inspired aesthetic. Key features include a subtle dot-grid background over a light gradient, a prominent decorative border on the left, and stylized circular bullet points. It's ideal for presenting key information, features, or principles in corporate or technology presentations where clarity and a polished look are paramount.",
+        description="Generates a clean and minimalist Tech List Slide featuring a left-aligned vertical bulleted list paired with a distinct italicized concluding text block. This design is characterized by a background radial dot grid overlay and a full-height solid vertical accent bar that anchors the left margin. Ideal for technical product specifications, engineering feature summaries, or concise software development checklists where readability is the primary intent.",
         args_schema=GenerateMinimalistTechListSlideInput
     ),
 
     StructuredTool.from_function(
         func=generate_split_layout_list_slide,
         name="generate_split_layout_list_slide",
-        description="Generates a professional Split-Layout List slide with a high-contrast design. Offers smart responsive font scaling by default, with optional overrides for fixed font sizes.",
+        description="Generates a minimalist and sophisticated Split-Layout List Slide featuring a 35/65 asymmetrical horizontal split between a solid-colored left title panel and a right content pane. The right-side column utilizes horizontal hairline dividers to separate expanded key points with uppercase bold headings and detailed descriptions. Ideal for strategic priority lists, core concept elaborations, or topical deep-dives where a stark visual separation between the main topic and supporting details is paramount.",
         args_schema=GenerateSplitLayoutListSlideInput
     ),
     StructuredTool.from_function(
         func=generate_reference_slide,
         name="generate_reference_slide",
-        description="Generates a modern and professional Content Slide. It features a high-contrast, two-column layout with a large text area on the left and a full-height image on the right. With its large, bold fonts and a vibrant accent divider, this slide is perfect for presenting key takeaways, sources, or contact information in a clear and visually engaging way.",
+        description="Generates a professional and corporate Reference Slide featuring a 60/40 horizontal split between a left-aligned text panel and a full-bleed right-aligned image column. This design is anchored by a high-contrast horizontal title-divider and oversized bold headings for maximum impact. Ideal for detailing research citations, bibliographies, or key supporting evidence where a strong visual anchor is required.",
         args_schema=GenerateReferenceSlideInput
     ),
     StructuredTool.from_function(
         func=generate_icon_list_slide,
         name="generate_icon_list_slide",
-        description="Generates a modern Content Slide with a two-column layout, specifically adjusted to emphasize a list of key points. The design features a smaller, minimalist title on the left and a prominent list of items on the right, where each point is highlighted by a large, uniformly colored icon. This slide is ideal for presenting core values, features, or steps where the details of the list are the primary focus.",
+        description="Generates a minimalist and modern Icon List Slide featuring a grid-based layout with a distinct title column on the left and a vertical list of points on the right. It utilizes large spherical accent-colored icon containers and a 1:1.2 structural ratio to emphasize categorical content. Ideal for highlighting top three strategic priorities, core benefits, or multifaceted concept breakdowns.",
         args_schema=GenerateIconListSlideInput
     ),
     StructuredTool.from_function(
         func=generate_flexible_columns_slide,
         name="generate_flexible_columns_slide",
-        description="Generates a versatile Content Slide, designed for the main body of a presentation. It is ideal for comparing products, listing features, or presenting multiple ideas side-by-side. Its clean, minimalist design features a notebook paper texture, top-aligned content, and a flexible grid that supports up to six columns, ensuring information is presented in a clear and organized manner.",
+        description="""Generates a creative and airy Multi-column Slide featuring a flexible 2-to-3 column horizontal layout positioned in the upper half of the screen. This slide utilizes a unique visual DNA of cursive "Patrick Hand" typography set against a subtle lined-paper texture background with significant bottom-page negative space. Ideal for informal brainstorming summaries, creative comparative lists, or content requiring a sketchbook aesthetic.""",
         args_schema=GenerateFlexibleColumnsSlideInput
     ),
     StructuredTool.from_function(
         func=generate_text_with_image_slide,
         name="generate_text_with_image_slide",
-        description="Generates a Content Slide for the main body of a presentation, featuring a doodle/notebook paper theme. This layout is specifically adjusted to emphasize a large block of text content on the left, with a smaller, handwritten-style title acting as an introduction. The right side features a full-height image. It's ideal for storytelling, educational content, or explaining a concept alongside a supporting visual.",
+        description="""Generates a creative and airy Text with Image Slide featuring a 35/65 asymmetrical horizontal split between a left-aligned text panel and a right-aligned image column. This design utilizes a unique visual DNA of cursive "Patrick Hand" typography set against a subtle lined-paper texture background with significant bottom-page negative space. Ideal for informal brainstorming summaries, creative comparative lists, or content requiring a sketchbook aesthetic.Generates an artistic and layered Text-Image Slide featuring a 1.5:1 ratio horizontal split with descriptive content on the left and a full-height portrait image on the right. It is defined by a unique dual-texture background where the text column sits on a "paper pattern" overlay while the image column remains clean. Ideal for visual storytelling, editorial-style project overviews, or human-centric business commentary.""",
         args_schema=GenerateTextWithImageSlideInput
     ),
     StructuredTool.from_function(
         func=generate_geometric_split_content_slide,
         name="generate_geometric_split_content_slide",
-        description="Generates a **Content Slide** for comparing items in multiple columns (typically 2 or 3). This slide maintains the 'geometric theme' with a main title and a grid of content below. The layout is robustly designed to ensure decorative elements never overlap with the text, making it ideal for breaking down concepts, comparing features, or listing pros and cons.",
+        description="""Generates a bold and high-tech Split Content Slide featuring a symmetric horizontal layout housed within a designated central "safe zone" to prevent overlap. This tool utilizes a unique visual DNA of multi-layered translucent geometric rectangle clusters in opposing corners and a deep navy canvas. Ideal for high-tech product comparisons, futuristic business briefings, or strategic two-point analytical summaries.""",
         args_schema=GenerateGeometricSplitContentSlideInput
     ),
     StructuredTool.from_function(
         func=generate_geometric_split_content_slide_2,
         name="generate_geometric_split_content_slide_2",
-        description="Generates a **Content Slide** for comparing items in multiple columns (typically 2 or 3). This slide maintains the 'geometric theme' with a main title and a grid of content below. The layout is robustly designed to ensure decorative elements never overlap with the text, making it ideal for breaking down concepts, comparing features, or listing pros and cons.",
+        description="Generates a vibrant and structured Multi-column Slide featuring a wide content wrapper optimized for exactly three horizontal columns. The design incorporates distinct clusters of floating colorful geometric polygons and horizontal separation to ensure maximum legibility against a dark backdrop. Ideal for triple-threat comparative analysis, outlining multifaceted strategic pillars, or complex categorization in a high-tech environment.",
         args_schema=GenerateGeometricSplitContentSlide2Input
     ),
     StructuredTool.from_function(
         func=generate_geometric_image_content_slide,
         name="generate_geometric_image_content_slide",
-        description="Generates a **Content Slide** with a prominent, custom-shaped image on the left and text on the right. This slide is part of the 'geometric theme' but uses more compact and subtle decorative shapes in the corners. It is ideal for visually illustrating a point or concept described in the text.",
+        description="""Generates a modern and avant-garde Image Content Slide featuring a horizontal split between a custom-shaped image on the left and a focused text panel on the right. It utilizes a unique geometric clip-path polygon for the image frame and compact corner-aligned shape clusters to maintain thematic consistency. Ideal for high-impact visionary quotes, defining a core brand concept, or showcasing hero imagery with a technological edge.""",
         args_schema=GenerateGeometricImageContentSlideInput
     ),
     StructuredTool.from_function(
         func=generate_geometric_grid_slide,
         name="generate_geometric_grid_slide",
-        description="Generates a **Content Slide** featuring a 2x3 grid, perfect for presenting six related concepts. This slide uses the 'geometric theme' with highly transparent decorative shapes to ensure they do not distract from the main text content. The layout is robust and prevents any overlap.",
+        description="""Generates a clean and focused Geometric Grid Slide featuring a 2x3 matrix of six content items housed within a central safe zone. This layout utilizes a unique visual DNA of faded shape clusters in the corners with low-opacity transparent geometric overlays to maintain a modern, high-tech aesthetic without distracting from the text. Ideal for concept reviews, multi-point definitions, or categorized summaries where clarity and information density are paramount.""",
         args_schema=GenerateGeometricGridSlideInput
     ),
     StructuredTool.from_function(
         func=generate_memphis_content_slide,
         name="generate_memphis_content_slide",
-        description="Generates a  Content Slide with a distinctive 20/80 top-to-bottom panel ratio. The title is centered in the smaller top panel, while the main content is aligned to the top of the larger bottom panel. The slide is decorated with playful, retro geometric shapes, precisely positioned to match the sample.",
+        description="""Generates a vibrant and eclectic Memphis-style Content Slide featuring a dramatic 20/80 vertical layout split. This design utilizes precisely positioned geometric shape clusters—including dashed squares, floating triangles, and circles—set against a dual-toned deep purple background. Ideal for high-impact concluding statements or key takeaway summaries where a bold, retro-modern visual statement is required.""",
         args_schema=GenerateMemphisContentSlideInput
     ),
     StructuredTool.from_function(
         func=generate_memphis_multicolumn_slide,
         name="generate_memphis_multicolumn_slide",
-        description="Generates a multi-column Content Slide with a 20/80 layout split. It's designed to present information in 2 or 3 columns within the larger bottom panel, while the title occupies the smaller top panel. The slide is decorated with an array of playful shapes, perfect for creative presentations.",
+        description="""Generates a bold and structured Memphis-style Multi-column Slide featuring exactly three horizontal content columns positioned within a tiered 20/80 layout. It incorporates unique SVG pattern fills, such as dots and stripes, alongside specialized "pentagon" clip-path geometric elements in the panel corners. Ideal for comparative feature lists or triple strategic pillar overviews that require a sophisticated artistic edge.""",
         args_schema=GenerateMemphisMulticolumnSlideInput
     ),
     StructuredTool.from_function(
         func=generate_memphis_grid_slide,
         name="generate_memphis_grid_slide",
-        description="Generates a 'Memphis-style' content slide featuring a 2x3 grid. It uses the signature 20/80 panel layout and is specifically designed to display exactly six items. The playful decorative shapes are arranged to not interfere with the content, making it perfect for reviewing multiple concepts in a creative presentation.",
+        description="Generates an energetic and organized Memphis-style Grid Slide featuring a symmetrical 2x3 matrix of exactly six content items. This layout utilizes a unique visual DNA of pattern-filled circular overlays, dashed-line shapes, and a dark tiered background split to anchor dense information. Ideal for concept reviews or multifaceted project summaries where high information density must be paired with high-energy design.",
         args_schema=GenerateMemphisGridSlideInput
     ),
     StructuredTool.from_function(
@@ -2584,25 +2602,25 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
         func=generate_planning_phase_slide,
         name="generate_planning_phase_slide",
-        description="Generates a Planning Phase slide with timeline and icon markers. This slide shows 4 stages represented by pin markers containing line art icons (brain, checklist, design, puzzle), each with its own timeline dot, title, and description. The markers are displayed horizontally above the timeline items, creating a visual flow. Perfect for presenting project phases, process steps, strategic planning stages, or any sequential workflow with 4 key stages. Features customizable colors for markers and timeline elements.",
+        description="Generates a strategic and sleek Planning Phase Slide featuring a linear horizontal timeline connecting exactly four large circular pin markers. This structure utilizes a unique visual DNA of high-contrast spherical markers containing custom line-art SVGs—brain, checklist, design, and puzzle—aligned atop a dotted progress track. Ideal for project lifecycles, implementation phases, or sequential strategic planning milestones where a clear roadmap is essential.",
         args_schema=GeneratePlanningPhaseSlideInput
     ),
     StructuredTool.from_function(
         func=generate_timeline_slide,
         name="generate_timeline_slide",
-        description="Generates a horizontal timeline slide to visualize progress, history, or future roadmap.",
+        description="""Generates a professional and chronological Timeline Slide featuring a horizontal progress axis with multiple milestone nodes. This layout utilizes a vibrant accent-colored line with glowing circular nodes and a large translucent background circular watermark for added depth. Ideal for visualizing company history, project roadmaps, or product evolution over specific yearly intervals.""",
         args_schema=GenerateTimelineSlideInput
     ),
     StructuredTool.from_function(
     func=generate_quote_slide,
     name="generate_quote_slide",
-    description="Generates an elegant, centered quote slide to highlight a key message or testimonial.",
+    description="""Generates an elegant and minimalist Quote Slide featuring a centered large-format italicized quote with a matching author attribution and role. It incorporates a unique large-scale translucent decorative quotation mark backdrop and a thin outer border frame for a sophisticated, high-end look. Ideal for showcasing executive visions, customer testimonials, or inspirational industry insights.""",
     args_schema=GenerateQuoteSlideInput
     ),
     StructuredTool.from_function(
     func=generate_classic_content_slide,
     name="generate_classic_content_slide",
-    description="Generates a standard content slide with a title, paragraph, bullet points on the left, and a large image on the right.",
+    description="""Generates a classic and informative Content Slide featuring a 50/50 horizontal split layout with a text-heavy left column and a large rounded-corner image on the right. This slide is defined by a distinctive vertical theme-color accent bar above the title and color-coded circular bullet points for clear readability. Ideal for detailed business explanations, market opportunity analysis, or capability overviews.""",
     args_schema=GenerateClassicContentSlideInput
     ),
 
