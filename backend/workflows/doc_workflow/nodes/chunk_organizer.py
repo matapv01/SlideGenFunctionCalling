@@ -4,44 +4,6 @@ from typing import Any, Dict, List, Tuple
 from backend.config import THRESHOLD_CHAR_LIMIT
 from backend.workflows.doc_workflow.graph.stage import State
 
-
-def _is_intro_slide(chunk: Dict[str, Any], index: int, intro_mode: str) -> bool:
-    heading = str(chunk.get("heading", "")).upper()
-    position = chunk.get("position", -99)
-    slide_type = str(chunk.get("slide_type", "")).lower()
-
-    if intro_mode == "first_slide":
-        return index == 0
-
-    return (position == 0 and heading == "INTRO") or slide_type == "intro"
-
-
-def build_slide_context_maps(
-    slide_chunks: List[Dict[str, Any]],
-    intro_mode: str = "detect",
-) -> List[str]:
-    context_maps: List[str] = []
-
-    for i, chunk in enumerate(slide_chunks):
-        heading = str(chunk.get("heading", ""))
-        heading_upper = heading.upper()
-        position = chunk.get("position", -99)
-        slide_type = str(chunk.get("slide_type", "")).lower()
-
-        if _is_intro_slide(chunk, i, intro_mode=intro_mode):
-            context = f"[Slide {i + 1}] INTRO SLIDE"
-        elif heading_upper == "TRANSITION" or position == -1 or slide_type == "transition":
-            context = f"[Slide {i + 1}] TRANSITION SLIDE"
-        elif heading_upper == "THANK_YOU" or position == -2 or slide_type in ("thank_you", "thankyou"):
-            context = f"[Slide {i + 1}] THANK YOU SLIDE"
-        else:
-            context = f"[Slide {i + 1}] {heading}" if heading else f"[Slide {i + 1}] Content Slide"
-
-        context_maps.append(context)
-
-    return context_maps
-
-
 def organize_chunks(state: State) -> State:
     """
     Renumber document structure and group content into ordered slide chunks.
@@ -60,10 +22,8 @@ def organize_chunks(state: State) -> State:
             or not state["slide_context_maps"]
             or len(state.get("slide_context_maps", [])) != len(slide_chunks)
         ):
-            state["slide_context_maps"] = build_slide_context_maps(
-                slide_chunks,
-                intro_mode="first_slide",
-            )
+            # Defer generic context-map generation to planning node.
+            state["slide_context_maps"] = []
 
         return state
 
