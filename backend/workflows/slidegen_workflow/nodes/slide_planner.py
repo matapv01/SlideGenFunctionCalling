@@ -1,12 +1,50 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_planner.py
 
+from typing import Dict, List
+
 from langchain_core.prompts import ChatPromptTemplate
 from backend.workflows.slidegen_workflow.graph.stage import State, SlidePlan
 from langchain_core.runnables import RunnableConfig
 from backend.config import PLANNING_BATCH_SIZE
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
-from backend.workflows.shared.context_map_utils import build_slide_context_maps
 import time
+
+
+def _is_intro_slide(chunk: Dict, index: int, intro_mode: str) -> bool:
+    heading = str(chunk.get("heading", "")).upper()
+    position = chunk.get("position", -99)
+    slide_type = str(chunk.get("slide_type", "")).lower()
+
+    if intro_mode == "first_slide":
+        return index == 0
+
+    return (position == 0 and heading == "INTRO") or slide_type == "intro"
+
+
+def build_slide_context_maps(
+    slide_chunks: List[Dict],
+    intro_mode: str = "detect",
+) -> List[str]:
+    context_maps: List[str] = []
+
+    for i, chunk in enumerate(slide_chunks):
+        heading = str(chunk.get("heading", ""))
+        heading_upper = heading.upper()
+        position = chunk.get("position", -99)
+        slide_type = str(chunk.get("slide_type", "")).lower()
+
+        if _is_intro_slide(chunk, i, intro_mode=intro_mode):
+            context = f"[Slide {i + 1}] INTRO SLIDE"
+        elif heading_upper == "TRANSITION" or position == -1 or slide_type == "transition":
+            context = f"[Slide {i + 1}] TRANSITION SLIDE"
+        elif heading_upper == "THANK_YOU" or position == -2 or slide_type in ("thank_you", "thankyou"):
+            context = f"[Slide {i + 1}] THANK YOU SLIDE"
+        else:
+            context = f"[Slide {i + 1}] {heading}" if heading else f"[Slide {i + 1}] Content Slide"
+
+        context_maps.append(context)
+
+    return context_maps
 
 
 def planning_slide(state: State, config: RunnableConfig) -> State:
