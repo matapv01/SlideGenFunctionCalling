@@ -6,6 +6,8 @@ import time
 import logging
 from typing import Optional, Callable, Dict, Any, Tuple
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
+from backend.workflows.doc_workflow.main import run_doc_workflow
+from backend.workflows.manual_workflow.main import run_manual_workflow
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.domain.ports.capture_provider import CaptureProvider
@@ -87,9 +89,28 @@ async def main_workflow(
         }
 
         _slide_options = slide_options or {}
+
+        # 4. Run document preprocessing workflow (conversion, structure, split, chunk organize)
+        doc_state = await run_doc_workflow(
+            docx_file=docx_file,
+            workflow_mode=_slide_options.get("workflow_mode", "auto_no_heading"),
+            slide_options=_slide_options,
+            graph_config=graph_config,
+        )
+
+        if not doc_state or not doc_state.get("slide_chunks"):
+            raise ValueError("Document preprocessing produced no slide chunks")
+
+        # 5. Feed preprocessing results into planning/generation workflow
         initial_input = {
             "docx_file": docx_file,
             "workflow_mode": _slide_options.get("workflow_mode", "auto_no_heading"),
+            "document_title": doc_state.get("document_title"),
+            "document_structure": doc_state.get("document_structure", []),
+            "document_outline": doc_state.get("document_outline", []),
+            "slide_chunks": doc_state.get("slide_chunks", []),
+            "slide_positions": doc_state.get("slide_positions", []),
+            "slide_context_maps": doc_state.get("slide_context_maps", []),
             "current_slide_index": -1,
             "retry_count": 0,
             "final_slides": [],
@@ -98,7 +119,7 @@ async def main_workflow(
             "slide_options": _slide_options
         }
 
-        # Run
+        # Run planning and generation workflow
         print("\n🚀 Running Workflow with Singleton Infrastructure...")
         final_state = await app.ainvoke(initial_input, config=graph_config)
         print("\n🚀 Workflow completed.")
@@ -163,7 +184,6 @@ async def main_workflow_from_chunks(
 
         initial_input = {
             "docx_file": None,
-            "slide_chunks": slide_chunks,
             "document_structure": {"title": title},
             "current_slide_index": -1,
             "retry_count": 0,
@@ -172,6 +192,18 @@ async def main_workflow_from_chunks(
             "vlm_decision": "accept",
             "slide_options": slide_options
         }
+
+        # Run standalone manual workflow first to normalize chunks/context maps.
+        manual_state = await run_manual_workflow(
+            slide_chunks=slide_chunks,
+            title=title,
+            slide_options=slide_options,
+            graph_config=graph_config,
+        )
+
+        initial_input["slide_chunks"] = manual_state.get("slide_chunks", slide_chunks)
+        initial_input["slide_context_maps"] = manual_state.get("slide_context_maps", [])
+        initial_input["document_structure"] = manual_state.get("document_structure", {"title": title})
 
         # --- EXECUTION ---
         print(f"\n🚀 Starting Workflow (Idea Mode - {len(slide_chunks)} chunks)...")

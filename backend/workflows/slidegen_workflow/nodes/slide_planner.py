@@ -5,6 +5,7 @@ from backend.workflows.slidegen_workflow.graph.stage import State, SlidePlan
 from langchain_core.runnables import RunnableConfig
 from backend.config import PLANNING_BATCH_SIZE
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT, SLIDE_PLANNER_HUMAN_PROMPT
+from backend.workflows.shared.context_map_utils import build_slide_context_maps
 import time
 
 
@@ -73,21 +74,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
     # Recreate or update context maps to match current chunks
     if not slide_context_maps or len(slide_context_maps) != len(slide_chunks):
         print(f"⚠️  Context maps mismatch (maps: {len(slide_context_maps)}, chunks: {len(slide_chunks)}). Regenerating...")
-        slide_context_maps = []
-        for i, chunk in enumerate(slide_chunks):
-            heading = chunk.get('heading', '')
-            position = chunk.get('position', -99)
-            slide_type = chunk.get('slide_type', '').lower()
-
-            if (position == 0 and heading == 'INTRO') or slide_type == 'intro':
-                context = f"[Slide {i+1}] INTRO SLIDE"
-            elif heading == 'TRANSITION' or position == -1 or slide_type == 'transition':
-                context = f"[Slide {i+1}] TRANSITION SLIDE"
-            elif heading == 'THANK_YOU' or position == -2 or slide_type in ('thank_you', 'thankyou'):
-                context = f"[Slide {i+1}] THANK YOU SLIDE"
-            else:
-                context = f"[Slide {i+1}] {heading}" if heading else f"[Slide {i+1}] Content Slide"
-            slide_context_maps.append(context)
+        slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode='detect')
 
         # Also clear slide_plans so they get regenerated with correct number of chunks
         state['slide_plans'] = []
@@ -107,20 +94,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
         print(f"❌ CRITICAL: Array mismatch detected during batch processing!")
         print(f"   slide_chunks: {len(slide_chunks)}, slide_context_maps: {len(slide_context_maps)}")
         print(f"   Regenerating context_maps to match chunks...")
-        slide_context_maps = []
-        for i, chunk in enumerate(slide_chunks):
-            heading = chunk.get('heading', '')
-            position = chunk.get('position', -99)
-            slide_type = chunk.get('slide_type', '').lower()
-            if (position == 0 and heading == 'INTRO') or slide_type == 'intro':
-                context = f"[Slide {i+1}] INTRO SLIDE"
-            elif heading == 'TRANSITION' or position == -1 or slide_type == 'transition':
-                context = f"[Slide {i+1}] TRANSITION SLIDE"
-            elif heading == 'THANK_YOU' or position == -2 or slide_type in ('thank_you', 'thankyou'):
-                context = f"[Slide {i+1}] THANK YOU SLIDE"
-            else:
-                context = f"[Slide {i+1}] {heading}" if heading else f"[Slide {i+1}] Content Slide"
-            slide_context_maps.append(context)
+        slide_context_maps = build_slide_context_maps(slide_chunks, intro_mode='detect')
         print(f"   ✓ Context maps regenerated with {len(slide_context_maps)} items")
 
     # 1. Prepare a list of all inputs.
