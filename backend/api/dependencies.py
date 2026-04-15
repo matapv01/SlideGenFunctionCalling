@@ -39,6 +39,7 @@ from backend.application.services.capture_service import CaptureService
 from backend.application.services.conversion_service import ConversionService
 from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
+from backend.application.services.doc_workflow_service import DocWorkflowService
 from backend.application.services.idea_workflow_service import IdeaWorkflowService
 from backend.application.services.manual_workflow_service import ManualWorkflowService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
@@ -97,12 +98,18 @@ _manual_workflow_service = ManualWorkflowService(
     project_dir=str(PROJECT_DIR)
 )
 
+_doc_workflow_service = DocWorkflowService(
+    project_dir=str(PROJECT_DIR),
+    llm_provider=_slidegen_llm,
+)
+
 _slidegen_workflow_service = SlideGenWorkflowService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
     capture_provider=_capture_infra,
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,
+    doc_workflow_service=_doc_workflow_service,
     conversion_service=_conversion_service
 )
 
@@ -140,6 +147,10 @@ def get_idea_workflow_service() -> IdeaWorkflowService:
 
 def get_manual_workflow_service() -> ManualWorkflowService:
     return _manual_workflow_service
+
+
+def get_doc_workflow_service() -> DocWorkflowService:
+    return _doc_workflow_service
 
 
 def get_idea_service(

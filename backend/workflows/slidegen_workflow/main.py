@@ -6,7 +6,6 @@ import time
 import logging
 from typing import Optional, Callable, Dict, Any, Tuple
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
-from backend.workflows.doc_workflow.main import run_doc_workflow
 from backend.workflows.manual_workflow.main import run_manual_workflow
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 from backend.domain.ports.llm_provider import LLMProvider
@@ -48,6 +47,7 @@ async def main_workflow(
     router_flags: bool,
     docx_file: str,
     output_folder: str,
+    doc_state: Dict[str, Any],
     infra_providers: Dict[str, Any], # 🟢 NHẬN TỪ WORKFLOW SERVICE
     max_retries_per_slide: int = 1,
     callback: Optional[Callable[[str, Dict[Any, Any]], None]] = None,
@@ -90,18 +90,10 @@ async def main_workflow(
 
         _slide_options = slide_options or {}
 
-        # 4. Run document preprocessing workflow (conversion, structure, split, chunk organize)
-        doc_state = await run_doc_workflow(
-            docx_file=docx_file,
-            workflow_mode=_slide_options.get("workflow_mode", "auto_no_heading"),
-            slide_options=_slide_options,
-            graph_config=graph_config,
-        )
-
+        # 4. Feed preprocessed doc state into planning/generation workflow
         if not doc_state or not doc_state.get("slide_chunks"):
-            raise ValueError("Document preprocessing produced no slide chunks")
+            raise ValueError("Preprocessed document state has no slide chunks")
 
-        # 5. Feed preprocessing results into planning/generation workflow
         initial_input = {
             "docx_file": docx_file,
             "workflow_mode": _slide_options.get("workflow_mode", "auto_no_heading"),
