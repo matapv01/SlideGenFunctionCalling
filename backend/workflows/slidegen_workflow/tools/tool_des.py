@@ -2389,12 +2389,6 @@ CONTENT_TOOLS = [
         args_schema=GenerateImageCutoutListSlideInput
     ),
     StructuredTool.from_function(
-        func=generate_body_slide2,
-        name="generate_body_slide2",
-        description="Generates a clean and professional Image & Features Slide featuring a horizontal layout with a large framed image on the left and three stacked icon-based content sections. It incorporates square title accents and an offset bordered image frame to create a modern, layered look. Ideal for highlighting specific product features, service benefits, or core organizational pillars.",
-        args_schema=GenerateBodySlide2Input
-    ),
-    StructuredTool.from_function(
         func=generate_body_slide4,
         name="generate_body_slide4",
         description="Generates a dynamic and engaging Image Gallery Slide featuring a full-width gradient content bar positioned above a horizontal row of exactly three vertical cards. Each card contains an image with a distinct left-side color border and a centered subtitle for clear categorization. Ideal for portfolio showcases, team member introductions, or comparing three separate product categories.",
@@ -2405,12 +2399,6 @@ CONTENT_TOOLS = [
         name="generate_body_slide5",
         description="Generates an organized and comprehensive Visual Grid Slide featuring a symmetrical 2x2 image grid on the left and a 2x2 text grid on the right. This layout uses color-coded image overlays and vertical border-left accents to maintain a clear and systematic information hierarchy. Ideal for quarterly performance reviews, multi-departmental status updates, or complex four-point conceptual breakdowns.",
         args_schema=GenerateBodySlide5Input
-    ),
-    StructuredTool.from_function(
-        func=generate_body_slide7,
-        name="generate_body_slide7",
-        description="Generates a modern and asymmetrical Content Slide featuring a vertical stack of exactly three image cards on the left paired with a structured text panel on the right. This layout utilizes teal-tinted content blocks and a linear-gradient title accent for a sophisticated look. Ideal for Case Studies, Portfolio Highlights, or Multi-faceted Project Descriptions where visual variety and textual depth must coexist.",
-        args_schema=GenerateBodySlide7Input
     ),
     StructuredTool.from_function(
         func=generate_body_slide10,
@@ -2507,12 +2495,6 @@ CONTENT_TOOLS = [
         name="generate_service_roadmap_slide",
         description="Generates a modern and structured Service Roadmap Slide featuring a balanced 2x2 grid of exactly four floating content cards. This design utilizes a unique four-corner decorative triangle frame and cards anchored by top-edge linear gradient accent bars against a bold gradient background. Ideal for project implementation phases, service evolution roadmaps, or multi-stage strategic planning where sequential progress must be clearly visualized.",
         args_schema=GenerateServiceRoadmapSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_financial_projections_slide_dark,
-        name="generate_financial_projections_slide_dark",
-        description="Generates an authoritative and corporate Financial Projections Slide featuring a structured row of exactly three vertical content cards encased within a 3px dashed geometric border frame. The layout employs a deep blue high-contrast aesthetic with soft-shadowed cards and centered bold headings for numerical clarity. Ideal for revenue forecasting, expense projections, or investor funding pitches requiring a stable and professional quantitative outlook.",
-        args_schema=GenerateFinancialProjectionsSlideDarkInput
     ),
     StructuredTool.from_function(
         func=generate_minimalist_tech_list_slide,
