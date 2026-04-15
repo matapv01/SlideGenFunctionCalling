@@ -3,6 +3,7 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 import logging
 import os
+import json
 import uuid
 from pathlib import Path
 
@@ -16,6 +17,7 @@ from backend.api.schemas.auth_schema import UserResponse
 from backend.api.dependencies import get_structure_service, get_current_active_user
 from backend.application.services.structure_service import StructureService
 from backend.config import TEMP_DIR
+from backend.workflows.manual_workflow.main import run_manual_approve_workflow, run_manual_update_workflow
 
 router = APIRouter(prefix="/structure", tags=["STRUCTURE"])
 logger = logging.getLogger("SlideGen-Structure")
@@ -98,10 +100,26 @@ async def get_current_structure(
     if not session_data:
         raise HTTPException(status_code=404, detail="Session không tồn tại hoặc đã hết hạn")
 
+    document_title = session_data.get("document_title", "Untitled")
+    document_structure = session_data.get("document_structure", [])
+
+    # Prefer persisted structure from update-workflow when available.
+    structure_file = TEMP_DIR / f"structure_{session_id}.json"
+    if structure_file.exists():
+        try:
+            with open(structure_file, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            document_title = data.get("document_title", document_title)
+            document_structure = data.get("document_structure", document_structure)
+            session_data["document_title"] = document_title
+            session_data["document_structure"] = document_structure
+        except Exception as exc:
+            logger.warning("Failed to read persisted structure for session %s: %s", session_id, exc)
+
     return {
-        "document_title": session_data.get("document_title", "Untitled"),
+        "document_title": document_title,
         "document_text": session_data.get("document_text", ""),
-        "document_structure": session_data.get("document_structure", []),
+        "document_structure": document_structure,
         "can_edit": True
     }
 
@@ -109,17 +127,24 @@ async def get_current_structure(
 @router.put("/update")
 async def update_structure(
     request: StructureUpdateRequest,
-    _: UserResponse = Depends(get_current_active_user),
-    service: StructureService = Depends(get_structure_service)
+    _: UserResponse = Depends(get_current_active_user)
 ):
     """Lưu thay đổi cấu trúc từ người dùng"""
     try:
-        service.update_session_structure(
+        workflow_state = await run_manual_update_workflow(
             session_id=request.session_id,
-            structure=[node.model_dump() for node in request.document_structure],
-            intro_slide=request.intro_slide.model_dump() if request.intro_slide else None
+            document_structure=[node.model_dump() for node in request.document_structure],
+            intro_slide=request.intro_slide.model_dump() if request.intro_slide else None,
+            graph_config={}
         )
-        return {"success": True, "message": "Cấu trúc đã được lưu"}
+
+        result = workflow_state.get("update_result")
+        if not result:
+            raise HTTPException(status_code=500, detail="Không thể lưu cấu trúc qua manual workflow")
+
+        return result
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi cập nhật: {str(e)}")
 
@@ -127,15 +152,34 @@ async def update_structure(
 @router.post("/approve", response_model=ApprovedStructureResponse)
 async def approve_structure(
     request: StructureApproveRequest,
-    _: UserResponse = Depends(get_current_active_user),
-    service: StructureService = Depends(get_structure_service)
+    _: UserResponse = Depends(get_current_active_user)
 ):
-    """Xác nhận cấu trúc và chuẩn bị dữ liệu cho AI Workflow"""
+    """Xác nhận cấu trúc và chuẩn bị dữ liệu cho AI Workflow qua manual_workflow."""
     try:
-        # Service thực hiện thuật toán Tree -> Flattened List
-        result = service.approve_structure(request.session_id)
+        file_path = TEMP_DIR / f"structure_{request.session_id}.json"
+        if not file_path.exists():
+            raise HTTPException(status_code=404, detail="Không tìm thấy file cấu trúc tạm thời")
+
+        with open(file_path, "r", encoding="utf-8") as f:
+            data = json.load(f)
+
+        document_title = data.get("document_title", "Untitled")
+        document_structure = data.get("document_structure", [])
+
+        workflow_state = await run_manual_approve_workflow(
+            session_id=request.session_id,
+            document_title=document_title,
+            document_structure=document_structure,
+            slide_options={},
+            graph_config={}
+        )
+
+        result = workflow_state.get("approved_result")
+        if not result:
+            raise HTTPException(status_code=500, detail="Không thể tạo dữ liệu approve từ manual workflow")
+
         return result
-    except FileNotFoundError:
-        raise HTTPException(status_code=404, detail="Không tìm thấy file cấu trúc tạm thời")
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Lỗi khi xử lý cấu trúc: {str(e)}")

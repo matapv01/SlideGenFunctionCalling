@@ -218,7 +218,6 @@ export const api = {
   approveStructure: (sessionId: string) =>
     request<{
       success: boolean;
-      message: string;
       session_id: string;
       document_title: string;
       document_outline: any[];

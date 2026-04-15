@@ -387,16 +387,12 @@ const StructureEditor = () => {
     try {
       await api.updateStructure(sessionId, parsedStructureRef.current);
       const result = await api.approveStructure(sessionId);
-      
-      if (result.success) {
-        toast({
-          title: "Đã duyệt cấu trúc!",
-          description: `${result.slide_types?.length || 0} slides đã chuẩn bị`,
-        });
-        navigate(`/streaming/manual`, { state: { sessionId, documentTitle } });
-      } else {
-        toast({ title: "Lỗi duyệt", description: result.message, variant: "destructive" });
-      }
+
+      toast({
+        title: "Đã duyệt cấu trúc!",
+        description: `${result.slide_types?.length || 0} slides đã chuẩn bị`,
+      });
+      navigate(`/streaming/manual`, { state: { sessionId, documentTitle } });
     } catch (err: any) {
       toast({ title: "Lỗi", description: err.message, variant: "destructive" });
     } finally {

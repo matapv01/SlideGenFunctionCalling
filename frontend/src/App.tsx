@@ -13,7 +13,6 @@ import Register from "./pages/Register";
 import Projects from "./pages/Projects";
 import Streaming from "./pages/Streaming";
 import StructureEditor from "./pages/StructureEditor";
-import IdeaStructure from "./pages/IdeaStructure";
 import SlideEditor from "./pages/SlideEditor";
 import PresentationMode from "./pages/PresentationMode";
 import ViewProject from "./pages/ViewProject";
@@ -53,7 +52,6 @@ const router = createBrowserRouter([
       { path: "structure", element: <ProtectedRoute><StructureEditor /></ProtectedRoute> },
       { path: "structure/:projectId", element: <ProtectedRoute><StructureEditor /></ProtectedRoute> },
       { path: "structure/*", element: <ProtectedRoute><StructureEditor /></ProtectedRoute> },
-      { path: "idea/structure/:sessionId", element: <ProtectedRoute><IdeaStructure /></ProtectedRoute> },
       { path: "editor/:projectId", element: <ProtectedRoute><SlideEditor /></ProtectedRoute> },
       { path: "present/:projectId", element: <ProtectedRoute><PresentationMode /></ProtectedRoute> },
       { path: "view/:projectId", element: <ProtectedRoute><ViewProject /></ProtectedRoute> },
