@@ -351,6 +351,10 @@ const Streaming = () => {
   }, [isPresentMode]);
 
   const finalProjectId = streamProjectIdRef.current || projectId;
+  const displayTotalSlides =
+    typeof totalSlides === "number" && totalSlides <= 0
+      ? Math.max(slides.length, 1)
+      : totalSlides;
 
   const startPresentation = async (startIndex: number = 0) => {
     setCurrentSlideIndex(startIndex);
@@ -551,7 +555,7 @@ const Streaming = () => {
                 <FileText className="h-4 w-4 text-white" />
               </div>
               <h2 className="text-lg font-semibold">
-                {t.streaming_slides_header} {slides.length}/{totalSlides}
+                {t.streaming_slides_header} {slides.length}/{displayTotalSlides}
               </h2>
             </div>
             

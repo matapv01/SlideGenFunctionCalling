@@ -40,6 +40,7 @@ from backend.application.services.conversion_service import ConversionService
 from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
 from backend.application.services.idea_workflow_service import IdeaWorkflowService
+from backend.application.services.manual_workflow_service import ManualWorkflowService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
 from backend.application.services.subscription_service import SubscriptionService
 
@@ -92,6 +93,10 @@ _idea_workflow_service = IdeaWorkflowService(
     conversion_service=_conversion_service
 )
 
+_manual_workflow_service = ManualWorkflowService(
+    project_dir=str(PROJECT_DIR)
+)
+
 _slidegen_workflow_service = SlideGenWorkflowService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
@@ -131,6 +136,10 @@ def get_user_service(user_repo: UserRepository = Depends(get_user_repo)) -> User
 
 def get_idea_workflow_service() -> IdeaWorkflowService:
     return _idea_workflow_service
+
+
+def get_manual_workflow_service() -> ManualWorkflowService:
+    return _manual_workflow_service
 
 
 def get_idea_service(

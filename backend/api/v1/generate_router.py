@@ -844,10 +844,23 @@ async def stream_manual_generation(
 
             workflow_temp_dir = str(output_folder)
 
+            # Derive actual generated slide count from output HTML files to avoid 0-total regressions.
+            actual_slide_count = 0
+            try:
+                _out = Path(output_folder)
+                _html_dir = (_out / "output" / "html") if (_out / "output" / "html").exists() else (_out / "html")
+                if _html_dir.exists():
+                    actual_slide_count = len(list(_html_dir.glob("*.html")))
+            except Exception as count_err:
+                logger.warning(f"[Manual Stream] Could not count generated slides: {count_err}")
+
+            if actual_slide_count <= 0:
+                actual_slide_count = len(data.get('slide_chunks', []))
+
             await queue.put((EventTypes.COMPLETE, {
                 'project_id': pid,
                 'project_name': title,
-                'total_slides': len(data.get('slide_chunks', [])),
+                'total_slides': actual_slide_count,
                 'temp_dir': workflow_temp_dir
             }))
 

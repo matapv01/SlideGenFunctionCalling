@@ -3,7 +3,6 @@
 from fastapi import APIRouter, HTTPException, Depends, UploadFile, File
 import logging
 import os
-import json
 import uuid
 from pathlib import Path
 
@@ -14,10 +13,10 @@ from backend.api.schemas.edit_schema import (
     ApprovedStructureResponse
 )
 from backend.api.schemas.auth_schema import UserResponse
-from backend.api.dependencies import get_structure_service, get_current_active_user
+from backend.api.dependencies import get_current_active_user, get_manual_workflow_service, get_structure_service
+from backend.application.services.manual_workflow_service import ManualWorkflowService
 from backend.application.services.structure_service import StructureService
 from backend.config import TEMP_DIR
-from backend.workflows.manual_workflow.main import run_manual_approve_workflow, run_manual_update_workflow
 
 router = APIRouter(prefix="/structure", tags=["STRUCTURE"])
 logger = logging.getLogger("SlideGen-Structure")
@@ -93,7 +92,8 @@ async def create_manual_session(
 async def get_current_structure(
     session_id: str,
     _: UserResponse = Depends(get_current_active_user),
-    service: StructureService = Depends(get_structure_service)
+    service: StructureService = Depends(get_structure_service),
+    manual_workflow_service: ManualWorkflowService = Depends(get_manual_workflow_service),
 ):
     """Lấy cấu trúc hiện tại để biên tập"""
     session_data = service.get_session(session_id)
@@ -103,14 +103,11 @@ async def get_current_structure(
     document_title = session_data.get("document_title", "Untitled")
     document_structure = session_data.get("document_structure", [])
 
-    # Prefer persisted structure from update-workflow when available.
-    structure_file = TEMP_DIR / f"structure_{session_id}.json"
-    if structure_file.exists():
+    persisted = manual_workflow_service.get_persisted_structure(session_id)
+    if persisted:
         try:
-            with open(structure_file, "r", encoding="utf-8") as f:
-                data = json.load(f)
-            document_title = data.get("document_title", document_title)
-            document_structure = data.get("document_structure", document_structure)
+            document_title = persisted.get("document_title", document_title)
+            document_structure = persisted.get("document_structure", document_structure)
             session_data["document_title"] = document_title
             session_data["document_structure"] = document_structure
         except Exception as exc:
@@ -127,22 +124,20 @@ async def get_current_structure(
 @router.put("/update")
 async def update_structure(
     request: StructureUpdateRequest,
-    _: UserResponse = Depends(get_current_active_user)
+    _: UserResponse = Depends(get_current_active_user),
+    manual_workflow_service: ManualWorkflowService = Depends(get_manual_workflow_service),
 ):
     """Lưu thay đổi cấu trúc từ người dùng"""
     try:
-        workflow_state = await run_manual_update_workflow(
+        result = await manual_workflow_service.update_structure(
             session_id=request.session_id,
             document_structure=[node.model_dump() for node in request.document_structure],
             intro_slide=request.intro_slide.model_dump() if request.intro_slide else None,
-            graph_config={}
         )
 
-        result = workflow_state.get("update_result")
-        if not result:
-            raise HTTPException(status_code=500, detail="Không thể lưu cấu trúc qua manual workflow")
-
         return result
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
@@ -152,33 +147,16 @@ async def update_structure(
 @router.post("/approve", response_model=ApprovedStructureResponse)
 async def approve_structure(
     request: StructureApproveRequest,
-    _: UserResponse = Depends(get_current_active_user)
+    _: UserResponse = Depends(get_current_active_user),
+    manual_workflow_service: ManualWorkflowService = Depends(get_manual_workflow_service),
 ):
     """Xác nhận cấu trúc và chuẩn bị dữ liệu cho AI Workflow qua manual_workflow."""
     try:
-        file_path = TEMP_DIR / f"structure_{request.session_id}.json"
-        if not file_path.exists():
-            raise HTTPException(status_code=404, detail="Không tìm thấy file cấu trúc tạm thời")
-
-        with open(file_path, "r", encoding="utf-8") as f:
-            data = json.load(f)
-
-        document_title = data.get("document_title", "Untitled")
-        document_structure = data.get("document_structure", [])
-
-        workflow_state = await run_manual_approve_workflow(
-            session_id=request.session_id,
-            document_title=document_title,
-            document_structure=document_structure,
-            slide_options={},
-            graph_config={}
-        )
-
-        result = workflow_state.get("approved_result")
-        if not result:
-            raise HTTPException(status_code=500, detail="Không thể tạo dữ liệu approve từ manual workflow")
-
-        return result
+        return await manual_workflow_service.approve_structure_from_session(request.session_id)
+    except FileNotFoundError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=500, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
