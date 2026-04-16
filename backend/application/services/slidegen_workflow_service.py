@@ -2,6 +2,7 @@
 
 import logging
 from typing import Optional, Dict, Any
+from pathlib import Path
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.domain.ports.capture_provider import CaptureProvider
 from backend.domain.ports.parser_provider import ParserProvider
@@ -61,6 +62,14 @@ class SlideGenWorkflowService(BaseWorkflowService):
                 slide_options=_slide_options,
                 callback=_stream_callback,
             )
+
+            # Persist extracted markdown for "view markdown" feature.
+            # doc_state["plain_text"] is the Markdown text produced by doc_workflow.
+            if output_folder and doc_state and doc_state.get("plain_text"):
+                md_dir = Path(output_folder) / "markdown"
+                md_dir.mkdir(parents=True, exist_ok=True)
+                md_path = md_dir / "source.md"
+                md_path.write_text(doc_state["plain_text"], encoding="utf-8")
 
             # Step 2: Run slidegen_workflow only after doc_workflow finished.
             # Hàm main_workflow trả về đường dẫn file ZIP

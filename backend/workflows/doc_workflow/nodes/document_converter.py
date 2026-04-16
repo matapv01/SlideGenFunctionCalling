@@ -3,9 +3,11 @@ import os
 import re
 import time
 from typing import Any, Dict, List, Optional, Tuple
+from pathlib import Path
 
 from langchain_core.runnables import RunnableConfig
 from markitdown import MarkItDown
+from docling.document_converter import DocumentConverter
 
 from backend.workflows.doc_workflow.graph.stage import State
 
@@ -66,7 +68,7 @@ def parse_markdown_to_hierarchical_json(markdown_text: str) -> Tuple[str, List[D
 
 
 def convert_document(state: State, config: Optional[RunnableConfig] = None) -> State:
-    """Convert DOCX to markdown and detect heading-based structure."""
+    """Convert document (DOCX/PDF) to markdown and detect heading-based structure."""
     print("\n---------------- Executing Node: convert_document ----------------")
 
     if state.get("slide_chunks"):
@@ -91,10 +93,18 @@ def convert_document(state: State, config: Optional[RunnableConfig] = None) -> S
             )
 
     if not os.path.exists(docx_file):
-        raise FileNotFoundError(f"The specified DOCX file was not found: {docx_file}")
+        raise FileNotFoundError(f"The specified document file was not found: {docx_file}")
 
-    converter = MarkItDown()
-    markdown_text = converter.convert(docx_file).text_content
+    file_ext = Path(docx_file).suffix.lower()
+    if file_ext == ".pdf":
+        # Docling can export PDF content to Markdown (used for auto/manual structure generation).
+        doc_converter = DocumentConverter()
+        docling_result = doc_converter.convert(docx_file)
+        markdown_text = docling_result.document.export_to_markdown()
+    else:
+        # Default DOCX path: keep existing behavior.
+        converter = MarkItDown()
+        markdown_text = converter.convert(docx_file).text_content
 
     title, structure = parse_markdown_to_hierarchical_json(markdown_text)
 

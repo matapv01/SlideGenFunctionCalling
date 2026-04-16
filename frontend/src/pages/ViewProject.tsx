@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate } from "react-router-dom";
-import { Edit, Save, ArrowLeft, Play, X, ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
+import { Edit, Save, ArrowLeft, Play, X, ChevronLeft, ChevronRight, Trash2, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
@@ -25,6 +25,9 @@ const ViewProject = () => {
   const [isPresentMode, setIsPresentMode] = useState(false);
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [deleteSlideId, setDeleteSlideId] = useState<string | null>(null);
+  const [markdownOpen, setMarkdownOpen] = useState(false);
+  const [markdownText, setMarkdownText] = useState<string>("");
+  const [loadingMarkdown, setLoadingMarkdown] = useState(false);
 
   useEffect(() => {
     loadSlides();
@@ -124,6 +127,19 @@ const ViewProject = () => {
     }
   };
 
+  const handleViewMarkdown = async () => {
+    try {
+      setLoadingMarkdown(true);
+      const res = await api.getProjectMarkdown(projectId!);
+      setMarkdownText(res.markdown || "");
+      setMarkdownOpen(true);
+    } catch (err: any) {
+      toast({ title: "Không tải được markdown", variant: "destructive" });
+    } finally {
+      setLoadingMarkdown(false);
+    }
+  };
+
   const handleSave = async () => {
     try {
       // Use slide ID directly (not project-scoped)
@@ -159,9 +175,14 @@ const ViewProject = () => {
             <h1 className="text-2xl font-bold">{projectName}</h1>
           </div>
           {slides.length > 0 && (
-            <Button onClick={() => startPresentation(0)}>
-              <Play className="mr-2 h-4 w-4" /> {t.view_present}
-            </Button>
+            <div className="flex items-center gap-2">
+              <Button onClick={() => startPresentation(0)}>
+                <Play className="mr-2 h-4 w-4" /> {t.view_present}
+              </Button>
+              <Button variant="outline" onClick={handleViewMarkdown} disabled={loadingMarkdown}>
+                <FileText className="mr-2 h-4 w-4" /> {loadingMarkdown ? "Loading..." : "Markdown"}
+              </Button>
+            </div>
           )}
         </div>
 
@@ -246,6 +267,24 @@ const ViewProject = () => {
           <DialogFooter>
             <Button variant="outline" onClick={() => setDeleteSlideId(null)}>{t.view_cancel}</Button>
             <Button variant="destructive" onClick={handleDeleteSlide}>{t.view_delete}</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Markdown dialog */}
+      <Dialog open={markdownOpen} onOpenChange={setMarkdownOpen}>
+        <DialogContent className="max-w-4xl max-h-[80vh]">
+          <DialogHeader>
+            <DialogTitle>Markdown</DialogTitle>
+            <DialogDescription>Nội dung markdown được trích xuất từ file gốc.</DialogDescription>
+          </DialogHeader>
+          <div className="rounded-lg border bg-muted/30 p-3 overflow-auto max-h-[70vh]">
+            <pre className="whitespace-pre-wrap text-xs font-mono">{markdownText}</pre>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setMarkdownOpen(false)}>
+              Close
+            </Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

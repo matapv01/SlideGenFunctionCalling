@@ -204,11 +204,17 @@ class ProjectService:
             )
 
             # 2. Save Metadata
+            markdown_file = output_folder / "markdown" / "source.md"
+            generation_params: dict = {}
+            if markdown_file.exists():
+                # Store absolute path so frontend can request markdown later.
+                generation_params["markdown_path"] = str(markdown_file)
+
             self.repo.save_metadata(
                 project_id=project_id,
                 slide_options=slide_options,
                 workflow_config={},
-                generation_params={}
+                generation_params=generation_params
             )
 
             # 3. Handle File Extraction & Conversion

@@ -1,6 +1,6 @@
 # File: backend/api/v1/project_router.py
 
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from backend.api.schemas.auth_schema import UserResponse
 from backend.api.schemas.project_schema import (
@@ -10,6 +10,8 @@ from backend.api.schemas.project_schema import (
 )
 from backend.api.dependencies import get_current_active_user, get_project_service
 from backend.application.services.project_service import ProjectService
+from backend.config import OUTPUT_DIR
+from pathlib import Path
 
 router = APIRouter(prefix="/projects", tags=["PROJECTS"])
 
@@ -45,6 +47,37 @@ async def get_project_detail(
 ):
     """Get project details & metadata"""
     return service.get_project_details(project_id, current_user.id)
+
+@router.get("/{project_id}/markdown")
+async def get_project_markdown(
+    project_id: int,
+    current_user: UserResponse = Depends(get_current_active_user),
+    service: ProjectService = Depends(get_project_service),
+):
+    """
+    Return extracted Markdown (DOCX/PDF -> Markdown) used for auto-structure.
+    """
+    details = service.get_project_details(project_id, current_user.id)
+    metadata = details.metadata or {}
+    md_path = metadata.get("markdown_path")
+    if not md_path:
+        raise HTTPException(status_code=404, detail="Markdown not found for this project")
+
+    md_file = Path(md_path)
+    try:
+        resolved = md_file.resolve()
+        base = Path(OUTPUT_DIR).resolve()
+        if not resolved.is_relative_to(base):
+            raise HTTPException(status_code=403, detail="Access denied to markdown file")
+    except FileNotFoundError:
+        # If resolve() fails because file doesn't exist, handle below.
+        pass
+
+    if not md_file.exists() or not md_file.is_file():
+        raise HTTPException(status_code=404, detail="Markdown file not found")
+
+    markdown_text = md_file.read_text(encoding="utf-8")
+    return JSONResponse({"success": True, "markdown": markdown_text})
 
 
 @router.put("/{project_id}")

@@ -75,6 +75,18 @@ def _check_docx_slide_limit(temp_path, subscription_service, user):
         logger.warning(f"Could not estimate slide count: {e}")
         subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
 
+def _check_pdf_slide_limit(temp_path, subscription_service, user):
+    """Estimate slide count from PDF (best-effort) and validate subscription limits."""
+    try:
+        # Fast heuristic: estimate based on file size.
+        # (We convert anyway inside the doc_workflow; this is only to guard subscription limits early.)
+        size_bytes = os.path.getsize(temp_path)
+        approx_slides = max(1, min(50, int(size_bytes // 300000)))  # ~300KB/slide baseline
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=approx_slides)
+    except Exception as e:
+        logger.warning(f"Could not estimate PDF slide count: {e}")
+        subscription_service.check_feature_access(user, "docx_upload", slide_count=25)
+
 def prepare_output_folder(name: str):
     """Helper to create unique output folder"""
     raw_name = str(name or "Untitled")
@@ -287,6 +299,51 @@ async def prepare_docx_stream(
 
     return {"filename": file.filename}
 
+@router.post("/pdf/prepare-stream", response_model=DocxPrepareResponse)
+async def prepare_pdf_stream(
+    file: UploadFile = File(...),
+    workflow_mode: str = Form("auto_no_heading"),
+    enable_transition_slides: str = Form("true"),
+    enable_thank_you_slide: str = Form("true"),
+    current_user: UserResponse = Depends(get_current_active_user),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
+):
+    """
+    [Step 1 Stream] Upload PDF & Save Options -> Return Filename
+    """
+    if not file.filename.lower().endswith('.pdf'):
+        raise HTTPException(400, "Chỉ chấp nhận tệp PDF")
+
+    # Get full user from repository with subscription data
+    user_repo = SqliteUserRepository()
+    user = user_repo.get_by_id(current_user.id)
+
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Check subscription limits for PDF upload (currently mapped to docx_upload counters)
+    subscription_service.check_feature_access(user, "docx_upload")
+
+    _cleanup_temp_dir()
+
+    temp_path = TEMP_DIR / file.filename
+    content = await file.read()
+    with open(temp_path, "wb") as f:
+        f.write(content)
+
+    # Estimate slide count and validate subscription limits
+    _check_pdf_slide_limit(temp_path, subscription_service, user)
+
+    options = {
+        "workflow_mode": workflow_mode.strip() or "auto_no_heading",
+        "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
+        "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on')
+    }
+    with open(TEMP_DIR / f"{file.filename}.options.json", "w") as f:
+        json.dump(options, f)
+
+    return {"filename": file.filename}
+
 
 # ==========================================
 # MARKDOWN PARSER - Reusable for Manual & Idea
@@ -394,6 +451,94 @@ async def stream_docx_generation(
             )
 
             # Lấy số lượng slide thực tế từ kết quả workflow thay vì slide_options
+            actual_slide_count = 0
+            _html_dir = output_folder / "output" / "html"
+            if not _html_dir.exists():
+                _html_dir = output_folder / "html"
+            if _html_dir.exists():
+                actual_slide_count = len(list(_html_dir.glob("*.html")))
+
+            workflow_temp_dir = str(output_folder)
+
+            await queue.put((EventTypes.COMPLETE, {
+                'project_id': pid,
+                'project_name': project_name,
+                'total_slides': actual_slide_count,
+                'temp_dir': workflow_temp_dir
+            }))
+
+        asyncio.create_task(run_bg())
+
+        # Common streaming loop
+        while True:
+            try:
+                ev = await asyncio.wait_for(queue.get(), timeout=1.0)
+                yield f"event: {ev[0]}\ndata: {json.dumps(ev[1])}\n\n"
+                if ev[0] in [EventTypes.COMPLETE, EventTypes.ERROR_EVENT]: break
+            except asyncio.TimeoutError:
+                yield ": keepalive\n\n"
+        
+        # Cleanup input file after stream
+        if temp_path.exists(): temp_path.unlink()
+
+    return StreamingResponse(event_generator(), media_type="text/event-stream")
+
+@router.get("/pdf/stream")
+async def stream_pdf_generation(
+    filename: str = Query(..., description="PDF filename"),
+    current_user: UserResponse = Depends(get_current_user_from_token_param),
+    project_service: ProjectService = Depends(get_project_service),
+    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
+    subscription_service: SubscriptionService = Depends(get_subscription_service)
+):
+    """
+    [Step 2 Stream] SSE Generation for PDF
+    """
+    temp_path = TEMP_DIR / os.path.basename(filename)
+    if not temp_path.exists(): raise HTTPException(400, "Tệp không tồn tại hoặc đã hết hạn")
+
+    # Increment usage counter (actual processing starts here)
+    subscription_service.increment_usage(current_user.id, "docx_upload")
+
+    # Load options
+    options_path = TEMP_DIR / f"{filename}.options.json"
+    slide_options = {}
+    if options_path.exists():
+        with open(options_path, "r") as f: slide_options = json.load(f)
+
+    project_name = os.path.splitext(filename)[0]
+    output_folder = prepare_output_folder(project_name)
+
+    async def event_generator():
+        queue = asyncio.Queue()
+        
+        def callback(event_type, data):
+            safe_data = sanitize_event_data(event_type, data)
+            queue.put_nowait((event_type, safe_data))
+
+        async def run_bg():
+            res = await slidegen_workflow_service.process_docx(
+                docx_path=str(temp_path),
+                output_folder=str(output_folder),
+                router_flags=False,
+                callback=callback,
+                slide_options=slide_options
+            )
+            
+            if not res:
+                await queue.put((EventTypes.ERROR_EVENT, {'message': "Workflow failed"}))
+                return
+
+            pid = project_service.import_project_from_workflow(
+                user_id=current_user.id,
+                project_name=project_name,
+                source_type='pdf',
+                source_data={'filename': filename},
+                slide_options=slide_options,
+                output_folder=output_folder
+            )
+
+            # Get actual slide count from output HTML
             actual_slide_count = 0
             _html_dir = output_folder / "output" / "html"
             if not _html_dir.exists():

@@ -152,6 +152,10 @@ export const api = {
 
   getProject: (id: string | number) => request<any>(`/projects/${id}`),
 
+  // Markdown extracted from DOCX/PDF conversion
+  getProjectMarkdown: (projectId: string | number) =>
+    request<{ success: boolean; markdown: string }>(`/projects/${projectId}/markdown`),
+
   updateProject: (id: string | number, data: { title?: string; description?: string; status?: string }) =>
     request<{ message: string }>(`/projects/${id}`, {
       method: "PUT",
@@ -183,6 +187,16 @@ export const api = {
     formData.append("file", file);
     formData.append("workflow_mode", options.workflow_mode ?? "auto_no_heading");
     return request<{ filename: string }>("/generate/docx/prepare-stream", { method: "POST", body: formData });
+  },
+
+  // Upload for streaming workflow (PDF)
+  uploadPdfForStream: (file: File, options: {
+    workflow_mode?: string;
+  } = {}) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("workflow_mode", options.workflow_mode ?? "auto_no_heading");
+    return request<{ filename: string }>("/generate/pdf/prepare-stream", { method: "POST", body: formData });
   },
 
   // Upload for manual structure editing workflow
@@ -337,6 +351,11 @@ export const api = {
   streamUrl: (filename: string) => {
     const token = localStorage.getItem("token");
     return `${API_BASE_URL}/generate/docx/stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token || "")}`;
+  },
+
+  pdfStreamUrl: (filename: string) => {
+    const token = localStorage.getItem("token");
+    return `${API_BASE_URL}/generate/pdf/stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token || "")}`;
   },
 
   // SSE streaming for manual structure workflow
