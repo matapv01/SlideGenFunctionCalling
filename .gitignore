@@ -35,3 +35,4 @@ logs/
 context/
 web/
 **/context
+backend/infrastructure/faiss_tool_retriever_index/
