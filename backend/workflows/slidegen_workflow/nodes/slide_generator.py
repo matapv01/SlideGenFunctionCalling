@@ -185,6 +185,46 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         print(f"  -> CRITICAL WARNING: No tools found for category '{tool_category}'. Using default content tools.")
         my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
 
+    # --- IMAGE-AWARE TOOL FILTERING ---
+    # If the chunk contains local image references (from DOCX), filter to only
+    # tools that have image_url or image_path parameters so the LLM is forced
+    # to pick a layout that can display the image.
+    import re as _re
+    _IMG_REF_RE = _re.compile(r'!\[[^\]]*\]\(([^)]+)\)')
+    _chunk_image_paths = [
+        p for p in _IMG_REF_RE.findall(str(current_text))
+        if not p.startswith("data:") and not p.startswith("http")
+    ]
+
+    if _chunk_image_paths:
+        def _tool_has_image_field(tool) -> bool:
+            """Check if a tool's input schema has any image_url or image_path field."""
+            try:
+                schema = tool.args_schema.schema() if hasattr(tool, 'args_schema') else {}
+                props = schema.get("properties", {})
+                return any("image_url" in k or "image_path" in k for k in props)
+            except Exception:
+                return False
+
+        image_capable = [t for t in my_tools if _tool_has_image_field(t)]
+
+        if image_capable:
+            print(f"  -> 🖼️  [IMG FILTER] Chunk has {len(_chunk_image_paths)} image(s). "
+                  f"Filtered {len(my_tools)} tools → {len(image_capable)} image-capable: "
+                  f"{[t.name for t in image_capable]}")
+            my_tools = image_capable
+        else:
+            # No image-capable tools in retrieved set → try all CONTENT_TOOLS
+            all_content = all_tools_dict.get('CONTENT_TOOLS', [])
+            image_capable_all = [t for t in all_content if _tool_has_image_field(t)]
+            if image_capable_all:
+                print(f"  -> 🖼️  [IMG FILTER] No image tools in retrieved set. "
+                      f"Falling back to {len(image_capable_all)} image-capable CONTENT_TOOLS: "
+                      f"{[t.name for t in image_capable_all]}")
+                my_tools = image_capable_all
+            else:
+                print(f"  -> ⚠️  [IMG] Chunk has images but NO tools have image_url/image_path field!")
+
     llm_with_tools = llm.bind_tools(my_tools)
 
     # Get slide type and corresponding prompt
@@ -307,6 +347,22 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             "name": tool_name,
             "arguments": tool_args
         }
+
+        # --- INJECT LOCAL IMAGE PATH ---
+        # Override image_url/image_path in tool_args with local paths from chunk
+        if _chunk_image_paths:
+            _img_fields = [k for k in tool_args if "image_url" in k or "image_path" in k]
+            if _img_fields:
+                for fi, field in enumerate(_img_fields):
+                    path = _chunk_image_paths[fi] if fi < len(_chunk_image_paths) else _chunk_image_paths[-1]
+                    old_val = tool_args.get(field, "")
+                    # Override if LLM used a default/stock path (not already a static URL)
+                    if "/static/" not in str(old_val):
+                        tool_args[field] = path
+                        print(f"  -> 🖼️  [IMG INJECT] {field}: '{str(old_val)[:60]}' → '{path}'")
+                tool_call_dict["arguments"] = tool_args
+            else:
+                print(f"  -> ⚠️  [IMG] Tool '{tool_name}' has no image_url/image_path field for {_chunk_image_paths}")
 
         # ❌ 3. Execution failure
         try:
