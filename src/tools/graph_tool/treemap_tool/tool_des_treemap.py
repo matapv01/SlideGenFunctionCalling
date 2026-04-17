@@ -1,4 +1,6 @@
-from typing import List, TypedDict
+from pydantic import BaseModel, Field
+from langchain_core.tools import StructuredTool
+from typing import Optional 
 from html_lib_treemap import (
     generate_treemap_chart_slide_1,
     generate_treemap_chart_slide_2,
@@ -250,7 +252,7 @@ class GenerateTreemapChartSlide4(BaseModel):
     accent_color: str = Field(default="#fdf9c4", description="Accent color used for decorative elements and table background.")
     border_color: str = Field(default="#ffffff", description="Border color for treemap rectangles.")
     text_color: str = Field(default="#ffffff", description="Text color inside treemap blocks.")
-    data: list[dict[str, Any]] = Field(
+    data: list[dict[str, str | int | list[dict]]] = Field(
         ...,
         description="""
             Treemap data in hierarchical format.
@@ -322,7 +324,7 @@ class GenerateTreemapChartSlide5(BaseModel):
     accent_color_chart: str = Field(default="#f4be52", description="Accent color used for highlighting chart elements and table headers.")
     border_color: str = Field(default="#4c234a", description="Border color for treemap rectangles.")
     text_color: str = Field(default="#fce7cf", description="Text color inside treemap blocks.")
-    data: list[dict[str, Any]] = Field(
+    data: list[dict[str, str | int | list[dict]]] = Field(
         ...,
         description="""
             Treemap data in hierarchical format.
