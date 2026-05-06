@@ -1,6 +1,7 @@
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 from typing import Optional 
+from typing import List, Dict, Optional
 from html_lib_scatter import (
     generate_scatter_plot_chart_slide_1,
     generate_scatter_plot_chart_slide_2,
@@ -13,20 +14,18 @@ from html_lib_scatter import (
 
 class GenerateScatterPlotChart1(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_1."""
-    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Sales Performance Analysis'")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Q3 2024'")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Sales performance improved in Q3 2024'")
-    x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Study Time (Hours)').")
-    y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Exam Score (%)').")
-    unit: str = Field(..., description="Unit displayed with values (e.g., '%', 'kg', 'points').")
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Early Childhood Development Analysis'")
+    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Correlation between Play Time and Social Skill Scores'")
+    insight: Optional[str] = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot.")
+    x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Play Time (Hours)').")
+    y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Social Skill Score (0-100)').")
+    unit: str = Field(..., description="Unit displayed with values (e.g., 'pts', 'points').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
-    data_label_format: str = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
     x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
     x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
     y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
     y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
-    colors: list[str] = Field(default=["#3D4E5D", "#A67C52", "#B5B191", "#D6C5B0"], description="List of colors applied to scatter series. Colors cycle if there are more series than colors.")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
         description="""
@@ -45,24 +44,15 @@ class GenerateScatterPlotChart1(BaseModel):
             Example:
             [
                 {
-                    "name": "Students",
+                    "name": "Group A (Ages 3-4)",
                     "points": [
-                        {"x": 1, "y": 50},
-                        {"x": 2, "y": 55},
-                        {"x": 3, "y": 60}
+                        {"x": 2, "y": 45},
+                        {"x": 3.5, "y": 58}
                     ]
                 }
             ]
         """
     )
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family applied to the entire slide.")
-    accent_color: str = Field(default="#A67C52", description="Accent color used for header decoration.")
-    main_title_color: str = Field(default="#3D4E5D", description="Color of the main title.")
-    subtitle_color: str = Field(default="#6B7280", description="Color of the subtitle.")
-    insight_text_color: str = Field(default="#374151", description="Color of the insight text.")
-    main_title_font_size: str = Field(default="60px", description="Font size of the main title (e.g., '60px').")
-    subtitle_font_size: str = Field(default="26px", description="Font size of the subtitle.")
-    insight_font_size: str = Field(default="28px", description="Font size of the insight text.")
 
 class GenerateScatterPlotChartSlide2(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_2"""
@@ -78,10 +68,6 @@ class GenerateScatterPlotChartSlide2(BaseModel):
     x_axis_max: float = Field(default=12000, description="Maximum value for the X-axis scale. Example: 12000.")
     y_axis_min: float = Field(default=0, description="Minimum value for the Y-axis scale. Example: 0.")
     y_axis_max: float = Field(default=6000, description="Maximum value for the Y-axis scale. Example: 6000.")
-    colors: List[str] = Field(default=["#008080", "#FFB347"], description="Color palette applied to scatter series points in order. Example: ['#008080', '#FFB347'].")
-    background_color: str = Field(default="#FEF9E1", description="Background color of the full slide. Example: #FEF9E1.")
-    insight_box_background_color: str = Field(default="#FFFFFF", description="Background color of the insight text box. Example: #FFFFFF.")
-    chart_panel_background_color: str = Field(default="rgba(255, 255, 255, 0.5)", description="Background color of the chart container panel. Example: rgba(255, 255, 255, 0.5).")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
         description=(
@@ -90,10 +76,6 @@ class GenerateScatterPlotChartSlide2(BaseModel):
             "Example: [{'name': 'Domestic Travelers', 'points': [{'x': 150, 'y': 300}, {'x': 1200, 'y': 1100}]}]."
         )
     )
-    accent_color: str = Field(default="#008080", description="Primary accent color (CSS value) used for decorative and emphasis elements. Example: #008080.")
-    main_title_color: str = Field(default="#005F5F", description="Text color for the main title, designed to stand out against the slide background. Example: #005F5F.")
-    subtitle_color: str = Field(default="#556B2F", description="Text color for the subtitle or data source information. Example: #556B2F.")
-    insight_text_color: str = Field(default="#2C3E50", description="Text color for the insight section, ensuring clarity and neutral tone. Example: #2C3E50.")
 
 class GenerateScatterPlotChartSlide3(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_3."""
@@ -106,10 +88,10 @@ class GenerateScatterPlotChartSlide3(BaseModel):
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
     data_label_format: Optional[str] = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
-    x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
-    x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
-    y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
-    y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=20, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=50, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=100, description="Maximum value for Y-axis. If not provided, it is computed from data.")
     colors: list[str] = Field(default=["#3D5A80", "#EE6C4D"], description="List of colors applied to scatter series. Colors cycle if there are more series than colors.")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
@@ -137,31 +119,23 @@ class GenerateScatterPlotChartSlide3(BaseModel):
                 }
             ]
         """
-    ) 
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family applied to the entire slide.")
-    accent_color: str = Field(default="#7B8FB3", description="Accent color used for header decoration.")
-    main_title_color: str = Field(default="#4A5E7B", description="Color of the main title.")
-    subtitle_color: str = Field(default="#8E97A4", description="Color of the subtitle.")
-    insight_text_color: str = Field(default="#4A5E7B", description="Color of the insight text.")
-    main_title_font_size: str = Field(default="65px", description="Font size of the main title (e.g., '65px').")
-    subtitle_font_size: str = Field(default="28px", description="Font size of the subtitle.")
-    insight_font_size: str = Field(default="30px", description="Font size of the insight text.")
+    )
 
 class GenerateScatterPlotChartSlide4(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_4."""   
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Study Effort Drives Skill Mastery'")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Online Course Analysis – Q4 2024'")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Higher weekly study hours generally lead to better skill assessment scores.'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Online Course Analysis – Q4 2024'")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Higher weekly study hours generally lead to better skill assessment scores.'")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Study Hours').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Final Skill Assessment Score').")
     unit: str = Field(..., description="Unit displayed with values (e.g., 'points', '%', 'USD').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
     data_label_format: Optional[str] = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
-    x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
-    x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
-    y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
-    y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=25, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=40, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=100, description="Maximum value for Y-axis. If not provided, it is computed from data.")
     colors: list[str] = Field(default=["#4F46E5", "#F59E0B"], description="List of colors applied to scatter series. Colors cycle if there are more series than colors.")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
@@ -190,31 +164,21 @@ class GenerateScatterPlotChartSlide4(BaseModel):
             ]
         """
     )
-    font_family: str = Field(default="'Inter', sans-serif", description="Font family applied to the entire slide.")
-    accent_color: str = Field(default="#FFB347", description="Accent color used for header decoration.")
-    main_title_color: str = Field(default="#333333", description="Color of the main title.")
-    subtitle_color: str = Field(default="#666666", description="Color of the subtitle.")
-    insight_text_color: str = Field(default="#444444", description="Color of the insight text.")    
-    main_title_font_size: str = Field(default="64px", description="Font size of the main title (e.g., '64px').")
-    subtitle_font_size: str = Field(default="28px", description="Font size of the subtitle.")
-    insight_font_size: str = Field(default="30px", description="Font size of the insight text.")
 
 class GenerateScatterPlotChartSlide5(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_5."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Relationship Between App Usage Time and Monthly Spending'")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Source: Mobile App Analytics Report 2024 | Sample: 200 Users'")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Higher app usage correlates with increased digital spending among both user segments'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Source: Mobile App Analytics Report 2024 | Sample: 200 Users'")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Higher app usage correlates with increased digital spending among both user segments'")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Daily App Usage Time (minutes)').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Monthly Digital Spending (USD)').")
     unit: str = Field(..., description="Unit displayed with values (e.g., 'USD', '%', 'points').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
-    data_label_format: str = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
-    x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
-    x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
-    y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
-    y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
-    colors: list[str] = Field(default=["#008080", "#FFB347"], description="List of colors applied to scatter series. Colors cycle if there are more series than colors.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. Example: 0.")
+    x_axis_max: float = Field(default=600, description="Maximum value for X-axis. Example: 600.")
+    y_axis_min: float = Field(default=0, description="Minimum value for Y-axis. Example: 0.")
+    y_axis_max: float = Field(default=500, description="Maximum value for Y-axis. Example: 500.")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
         description="""
@@ -242,30 +206,22 @@ class GenerateScatterPlotChartSlide5(BaseModel):
             ]
         """
     )
-    font_family: str = Field(default="'Segoe UI', Roboto, Helvetica, Arial, sans-serif", description="Font family applied to the entire slide.")
-    accent_color: str = Field(default="#009688", description="Accent color used for header decoration.")
-    main_title_color: str = Field(default="#FFFFFF", description="Color of the main title.")
-    subtitle_color: str = Field(default="rgba(255, 255, 255, 0.7)", description="Color of the subtitle.")
-    insight_text_color: str = Field(default="#FFFFFF", description="Color of the insight text.")
-    main_title_font_size: str = Field(default="65px", description="Font size of the main title (e.g., '65px').")
-    subtitle_font_size: str = Field(default="32px", description="Font size of the subtitle.")
-    insight_font_size: str = Field(default="30px", description="Font size of the insight text.")
+
 
 class GenerateScatterPlotChartSlide6(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_6."""
     main_title: str = Field(..., description="Main title displayed prominently in the header section (10–60 characters). Example: 'Relationship Between Study Time and Academic Performance'")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed on the top-right of the header, typically indicating data source or context. Example: 'Source: Education Analytics Report 2024'")
-    insight: Optional[str] = Field(..., description="Key analytical insight displayed in a highlighted box on the left panel, summarizing trends or correlations in the scatter plot. Example: 'High achievers tend to study more, but optimal study time varies among students.'")
+    subtitle: str = Field(..., description="Subtitle displayed on the top-right of the header, typically indicating data source or context. Example: 'Source: Education Analytics Report 2024'")
+    insight: str = Field(..., description="Key analytical insight displayed in a highlighted box on the left panel, summarizing trends or correlations in the scatter plot. Example: 'High achievers tend to study more, but optimal study time varies among students.'")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Daily Study Time (minutes)').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Exam Score (Points)').")
     unit: str = Field(..., description="Unit displayed with values (e.g., '%', 'points', 'USD').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
-    x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
-    x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
-    y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
-    y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
-    colors: list[str] = Field(default=["#008080", "#FFB347"], description="List of colors applied to scatter series. Colors cycle if there are more series than colors.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=600, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=0, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=500, description="Maximum value for Y-axis. If not provided, it is computed from data.")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
         description="""
@@ -293,30 +249,21 @@ class GenerateScatterPlotChartSlide6(BaseModel):
             ]
         """
     )
-    font_family: str = Field(default="'Montserrat', sans-serif", description="Font family applied to the entire slide.")
-    accent_color: str = Field(default="#008080", description="Accent color used for decorative elements and highlights.")
-    main_title_color: str = Field(default="#005F5F", description="Color of the main title.")
-    subtitle_color: str = Field(default="#556B2F", description="Color of the subtitle.")
-    insight_text_color: str = Field(default="#2C3E50", description="Color of the insight text.")
-    main_title_font_size: str = Field(default="80px", description="Font size of the main title (e.g., '80px').")
-    subtitle_font_size: str = Field(default="30px", description="Font size of the subtitle.")
-    insight_font_size: str = Field(default="28px", description="Font size of the insight text.")
 
 class GenerateScatterPlotChartSlide7(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_7."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Relationship Between App Usage Time and Monthly Spending'")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Source: Mobile App Analytics Report 2024'")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot. Example: 'Power users tend to spend significantly more than casual users.'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Source: Mobile App Analytics Report 2024'")
+    insight: str = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot. Example: 'Power users tend to spend significantly more than casual users.'")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'App Usage Time (minutes/day)').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Monthly Digital Spending (USD)').")
     unit: str = Field(..., description="Unit displayed with values (e.g., '%', 'USD', 'points').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
-    x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
-    x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
-    y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
-    y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
-    colors: list[str] = Field(default=["#a06d4f", "#6b8e23"], description="List of colors applied to scatter series. Colors cycle if there are more series than colors.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=400, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=0, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=300, description="Maximum value for Y-axis. If not provided, it is computed from data.")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
         description="""
@@ -344,17 +291,6 @@ class GenerateScatterPlotChartSlide7(BaseModel):
             ]
         """
     )
-    background_color: str = Field(default="#efe5d8", description="Background color of the entire slide.")
-    insight_box_background_color: str = Field(default="rgba(255, 255, 255, 0.3)", description="Background color of the insight panel.")
-    chart_panel_background_color: str = Field(default="transparent", description="Background color of the chart panel.")
-    font_family: str = Field(default="'Playfair Display', serif", description="Font family applied to the entire slide.")
-    accent_color: str = Field(default="#a06d4f", description="Accent color used for borders, axes, and decorative elements.")
-    main_title_color: str = Field(default="#3e2f25", description="Color of the main title.")
-    subtitle_color: str = Field(default="#5a4638", description="Color of the subtitle.")
-    insight_text_color: str = Field(default="#3e2f25", description="Color of the insight text.")
-    main_title_font_size: str = Field(default="60px", description="Font size of the main title (e.g., '60px').")
-    subtitle_font_size: str = Field(default="28px", description="Font size of the subtitle.")
-    insight_font_size: str = Field(default="30px", description="Font size of the insight text.")
 
 
 SCATTER_PLOT_TOOLS = [

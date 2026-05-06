@@ -7,11 +7,10 @@ def generate_scatter_plot_chart_slide_1(
     unit = "pts",
     show_value = False,
     show_legend = True,
-    x_axis_min = None,
-    x_axis_max = None,
-    y_axis_min = None,
-    y_axis_max = None,
-    colors = ["#FF6B6B", "#4ECDC4", "#FFE66D", "#FF9F43"],
+    x_axis_min = 0,
+    x_axis_max = 8,
+    y_axis_min = 30,
+    y_axis_max = 200,
     series = [
         {
             "name": "Group A (Ages 3-4)",
@@ -21,28 +20,32 @@ def generate_scatter_plot_chart_slide_1(
             "name": "Group B (Ages 5-6)",
             "points": [{"x": 1.5, "y": 40}, {"x": 4, "y": 65}, {"x": 5.5, "y": 78}, {"x": 7, "y": 92}]
         }
-    ], 
-    font_family = "'Montserrat', sans-serif",
-    accent_color = "#ffffff",
-    main_title_color = "#ffffff",
-    subtitle_color = "#3d4a85",
-    insight_text_color = "#3d4a85",
-    main_title_font_size = "70px",
-    subtitle_font_size: str = "32px",
-    insight_font_size: str = "28px"
+    ]
 ) -> str:
     """
     Function to generate HTML for a scatter plot chart slide in a preschool educational style.
     Uses a blue color theme, decorative stickers, and a flat layout optimized for rendering.
     """
 
+    # ===== STYLE CONFIGURATION =====
+    colors = ["#FF6B6B", "#4ECDC4", "#FFE66D", "#FF9F43"]
+    font_family = "'Montserrat', sans-serif"
+    accent_color = "#ffffff"
+    main_title_color = "#ffffff"
+    subtitle_color = "#3d4a85"
+    insight_text_color = "#3d4a85"
+    main_title_font_size = "70px"
+    subtitle_font_size = "32px"
+    insight_font_size = "28px"
+    bg_color = "#7b92f7"
+
     # ===== 1. TÍNH TOÁN MIN/MAX ĐỂ SCALE BIỂU ĐỒ =====
     all_x = [p["x"] for s in series for p in s.get("points", [])]
     all_y = [p["y"] for s in series for p in s.get("points", [])]
 
-    x_min = x_axis_min if x_axis_min is not None else (min(all_x) if all_x else 0)
+    x_min = x_axis_min if x_axis_min is not None else 0
     x_max = x_axis_max if x_axis_max is not None else (max(all_x) if all_x else 100)
-    y_min = y_axis_min if y_axis_min is not None else (min(all_y) if all_y else 0)
+    y_min = y_axis_min if y_axis_min is not None else 0
     y_max = y_axis_max if y_axis_max is not None else (max(all_y) if all_y else 100)
 
     # Tránh chia cho 0
@@ -107,7 +110,7 @@ def generate_scatter_plot_chart_slide_1(
             @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
             body {{
                 width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
-                background-color: #7b92f7; font-family: {font_family};
+                background-color: {bg_color}; font-family: {font_family};
                 background-image: radial-gradient({accent_color} 2px, transparent 2px); background-size: 60px 60px;
             }}
             .header-box {{
@@ -178,7 +181,6 @@ def generate_scatter_plot_chart_slide_2(
         "The scatter plot indicates a strong positive correlation between travel distance "
         "and total spending."
     ),
-
     x_axis= "Travel Distance (km)",
     y_axis = "Total Travel Spending (USD)",
     unit = "USD",
@@ -188,10 +190,6 @@ def generate_scatter_plot_chart_slide_2(
     x_axis_max = 12000,
     y_axis_min = 0,
     y_axis_max = 6000,
-    colors= ["#008080", "#FFB347"],
-    background_color: str = "#FEF9E1",
-    insight_box_background_color: str = "#FFFFFF",
-    chart_panel_background_color: str = "rgba(255, 255, 255, 0.5)",
     series = [
         {
             "name": "Domestic Travelers",
@@ -212,30 +210,38 @@ def generate_scatter_plot_chart_slide_2(
                 {"x": 7000, "y": 4000},
                 {"x": 9000, "y": 4800},
                 {"x": 11000, "y": 5500},
-                {"x": 2500, "y": 5000}  # outlier
+                {"x": 2500, "y": 5000}
             ]
         }
-    ],
-    accent_color: str = "#008080",
-    main_title_color: str = "#005F5F",
-    subtitle_color: str = "#556B2F",
-    insight_text_color: str = "#2C3E50",
+    ]
 ) -> str:
     """
     Sinh HTML cho slide biểu đồ phân tán với phong cách 'Travel Plan'.
     Phân tích mối tương quan giữa các biến dựa trên tọa độ X và Y.
     """
 
-    # ===== 1. LẤY THÔNG TIN VÀ XỬ LÝ DỮ LIỆU =====
-
+    # ===== 1. STYLE CONFIGURATION =====
+    colors = ["#008080", "#FFB347"]
+    background_color = "#FEF9E1"
+    insight_box_background_color = "#FFFFFF"
+    chart_panel_background_color = "rgba(255, 255, 255, 0.5)"
+    accent_color = "#008080"
+    main_title_color = "#005F5F"
+    subtitle_color = "#556B2F"
+    insight_text_color = "#2C3E50"
+    font_family = "'Inter', sans-serif"
 
     # ===== 2. TÍNH TOÁN MIN MAX VÀ SCALE =====
     all_x = [p["x"] for s in series for p in s.get("points", [])]
     all_y = [p["y"] for s in series for p in s.get("points", [])]
 
-    # Đảm bảo không chia cho 0
-    if x_axis_max == x_axis_min: x_axis_max += 1
-    if y_axis_max == y_axis_min: y_axis_max += 1
+    x_min_val = x_axis_min if x_axis_min is not None else 0
+    x_max_val = x_axis_max if x_axis_max is not None else (max(all_x) if all_x else 100)
+    y_min_val = y_axis_min if y_axis_min is not None else 0
+    y_max_val = y_axis_max if y_axis_max is not None else (max(all_y) if all_y else 100)
+
+    if x_max_val == x_min_val: x_max_val += 1
+    if y_max_val == y_min_val: y_max_val += 1
 
     # ===== 3. SVG CONFIG =====
     svg_w, svg_h = 1100, 700
@@ -246,37 +252,34 @@ def generate_scatter_plot_chart_slide_2(
 
     chart_elements = ""
 
-    # Vẽ Grid Y và Label Trục Y
+    # Grid Y và Label Trục Y
     steps = 5
     for i in range(steps + 1):
-        y_val_raw = y_axis_min + (y_axis_max - y_axis_min) * (i / steps)
+        y_val_raw = y_min_val + (y_max_val - y_min_val) * (i / steps)
         y_pos = svg_h - margin["bottom"] - (i / steps) * chart_h
         
-        # Grid line
         chart_elements += f'<line x1="{margin["left"]}" y1="{y_pos}" x2="{svg_w - margin["right"]}" y2="{y_pos}" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" />'
-        # Label
         chart_elements += f'<text x="{margin["left"] - 15}" y="{y_pos + 8}" font-size="20" text-anchor="end" fill="{subtitle_color}">{y_val_raw:g}</text>'
 
-    # Vẽ Trục X (Labels)
+    # Trục X Labels
     for i in range(steps + 1):
-        x_val_raw = x_axis_min + (x_axis_max - x_axis_min) * (i / steps)
+        x_val_raw = x_min_val + (x_max_val - x_min_val) * (i / steps)
         x_pos = margin["left"] + (i / steps) * chart_w
         chart_elements += f'<text x="{x_pos}" y="{svg_h - margin["bottom"] + 40}" font-size="20" text-anchor="middle" fill="{subtitle_color}">{x_val_raw:g}</text>'
 
-    # Vẽ Trục chính
+    # Trục chính
     chart_elements += f'''
         <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
         <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
     '''
 
-    # Vẽ Scatter Points
+    # Scatter Points
     for i, s in enumerate(series):
         color = colors[i % len(colors)]
         for p in s.get("points", []):
-            px = margin["left"] + ((p["x"] - x_axis_min) / (x_axis_max - x_axis_min)) * chart_w
-            py = svg_h - margin["bottom"] - ((p["y"] - y_axis_min) / (y_axis_max - y_axis_min)) * chart_h
+            px = margin["left"] + ((p["x"] - x_min_val) / (x_max_val - x_min_val)) * chart_w
+            py = svg_h - margin["bottom"] - ((p["y"] - y_min_val) / (y_max_val - y_min_val)) * chart_h
             
-            # Point với hiệu ứng viền trắng để nổi bật
             chart_elements += f'<circle cx="{px}" cy="{py}" r="12" fill="{color}" stroke="white" stroke-width="3" opacity="0.9" />'
             
             if show_value:
@@ -310,7 +313,7 @@ def generate_scatter_plot_chart_slide_2(
             @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
             body {{
                 width: 1920px; height: 1080px; margin: 0; padding: 0;
-                font-family: {DEFAULT_FONT_FAMILY}; background-color: {background_color}; color: {insight_text_color};
+                font-family: {font_family}; background-color: {background_color}; color: {insight_text_color};
                 display: grid; 
                 grid-template-rows: 280px 1fr;
                 grid-template-columns: 1fr;
@@ -421,20 +424,23 @@ def generate_scatter_plot_chart_slide_3(
                 {"x": 15, "y": 94}
             ]
         }
-    ],
-    font_family = "Inter, sans-serif",
-    accent_color = "#7B8FB3",
-    main_title_color = "#4A5E7B",
-    subtitle_color = "#8E97A4",
-    insight_text_color = "#4A5E7B",
-    main_title_font_size = "65px",
-    subtitle_font_size: str = "28px",
-    insight_font_size: str = "30px"
+    ]
 ) -> str:
     """
     Generates a professional scatter plot chart slide with a clean, 
     modern aesthetic inspired by educational and organic themes.
     """
+
+    # ===== 0. STYLE CONFIGURATION (MOVED FROM PARAMETERS) =====
+    font_family = "Inter, sans-serif"
+    accent_color = "#7B8FB3"
+    main_title_color = "#4A5E7B"
+    subtitle_color = "#8E97A4"
+    insight_text_color = "#4A5E7B"
+    main_title_font_size = "65px"
+    subtitle_font_size = "28px"
+    insight_font_size = "30px"
+    background_color = "#E8F5E9"
 
     # ===== 1. DATA PREPARATION =====
     x_label = x_axis
@@ -452,9 +458,9 @@ def generate_scatter_plot_chart_slide_3(
     all_x = [p["x"] for p in all_points] or [0]
     all_y = [p["y"] for p in all_points] or [0]
 
-    x_min = x_axis_min if x_axis_min is not None else min(all_x)
+    x_min = x_axis_min if x_axis_min is not None else 0
     x_max = x_axis_max if x_axis_max is not None else max(all_x)
-    y_min = y_axis_min if y_axis_min is not None else min(all_y)
+    y_min = y_axis_min if y_axis_min is not None else 0
     y_max = y_axis_max if y_axis_max is not None else max(all_y)
 
     # Add padding to boundaries if auto-calculated
@@ -532,7 +538,7 @@ def generate_scatter_plot_chart_slide_3(
                 padding: 60px 80px;
                 overflow: hidden;
                 font-family: {font_family};
-                background-color: #E8F5E9; /* Light green from theme */
+                background-color: {background_color};
                 box-sizing: border-box;
                 display: flex;
                 flex-direction: column;
@@ -647,15 +653,7 @@ def generate_scatter_plot_chart_slide_4(
                 {"x": 20, "y": 97}
             ]
         }
-    ],
-    font_family: str = "Inter, sans-serif",
-    accent_color: str = "#FFB347",
-    main_title_color: str = "#333333",
-    subtitle_color: str = "#666666",
-    insight_text_color: str = "#444444",
-    main_title_font_size: str = "64px",
-    subtitle_font_size: str = "28px",
-    insight_font_size: str = "30px"
+    ]
 ) -> str:
     """
     Generates a professional scatter plot chart slide with a creative layout.
@@ -663,11 +661,21 @@ def generate_scatter_plot_chart_slide_4(
     and a clean SVG scatter plot on the right.
     """
 
-    # ===== 1. DATA PROCESSING =====
+    # ===== 1. HARDCODED STYLES & OPTIONS =====
+    font_family = "'Inter', sans-serif"
+    accent_color = "#F59E0B"
+    main_title_color = "#1F2937"
+    subtitle_color = "#6B7280"
+    insight_text_color = "#374151"
+    main_title_font_size = "64px"
+    subtitle_font_size = "28px"
+    insight_font_size = "26px"
+
+    # ===== 2. DATA PROCESSING =====
     x_label = x_axis
     y_label = y_axis
 
-    # ===== 2. SVG & CHART CALCULATIONS =====
+    # ===== 3. SVG & CHART CALCULATIONS =====
     svg_w, svg_h = 1100, 700
     margin = {"top": 60, "right": 60, "bottom": 100, "left": 100}
     chart_w = svg_w - margin["left"] - margin["right"]
@@ -677,16 +685,16 @@ def generate_scatter_plot_chart_slide_4(
     all_x = [p["x"] for s in series for p in s.get("points", [])]
     all_y = [p["y"] for s in series for p in s.get("points", [])]
 
-    x_min = x_axis_min if x_axis_min is not None else (min(all_x) if all_x else 0)
+    x_min = x_axis_min if x_axis_min is not None else 0
     x_max = x_axis_max if x_axis_max is not None else (max(all_x) if all_x else 100)
-    y_min = y_axis_min if y_axis_min is not None else (min(all_y) if all_y else 0)
+    y_min = y_axis_min if y_axis_min is not None else 0
     y_max = y_axis_max if y_axis_max is not None else (max(all_y) if all_y else 100)
 
     # Padding for min/max to prevent points on the edge
     if x_max == x_min: x_max += 1
     if y_max == y_min: y_max += 1
 
-    # ===== 3. RENDER SVG ELEMENTS =====
+    # ===== 4. RENDER SVG ELEMENTS =====
     chart_elements = ""
 
     # Background Grid (Y-axis)
@@ -729,11 +737,11 @@ def generate_scatter_plot_chart_slide_4(
 
     # Axis Titles
     chart_elements += f'''
-    <text x="{margin["left"] + chart_w/2}" y="{svg_h - 20}" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{x_label}</text>
-    <text transform="rotate(-90)" x="{-margin["top"] - chart_h/2}" y="30" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
+    <text x="{margin['left'] + chart_w/2}" y="{svg_h - 20}" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{x_label}</text>
+    <text transform="rotate(-90)" x="{-margin['top'] - chart_h/2}" y="30" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
     '''
 
-    # ===== 4. LEGEND & INSIGHT HTML =====
+    # ===== 5. LEGEND & INSIGHT HTML =====
     legend_items = ""
     if show_legend:
         for i, s in enumerate(series):
@@ -745,7 +753,7 @@ def generate_scatter_plot_chart_slide_4(
             </div>
             '''
 
-    # ===== 5. FINAL HTML CONSTRUCT =====
+    # ===== 6. FINAL HTML CONSTRUCT =====
     return f"""
     <!DOCTYPE html>
     <html lang="en">
@@ -833,8 +841,6 @@ def generate_scatter_plot_chart_slide_5(
     y_axis_min: float = 0,
     y_axis_max: float = 500,
 
-    colors: list = ["#008080", "#FFB347"],
-
     series: list = [
         {
             "name": "Casual Users",
@@ -858,48 +864,48 @@ def generate_scatter_plot_chart_slide_5(
                 {"x": 200, "y": 450}
             ]
         }
-    ],
-
-    font_family: str = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif",
-    accent_color: str = "#009688",
-    main_title_color: str = "#FFFFFF",
-    subtitle_color: str = "rgba(255, 255, 255, 0.7)",
-    insight_text_color: str = "#FFFFFF",
-    main_title_font_size: str = "65px",
-    subtitle_font_size: str = "32px",
-    insight_font_size: str = "30px"
+    ]
 ) -> str:
     """
     Generates a professional scatter plot chart slide with a futuristic tech startup theme.
     """
 
-    # ===== 1. DATA EXTRACTION =====
-    # (Refactor: không còn chart_options + data_input)
-    
+    # ===== 1. STYLE CONFIGURATION =====
+    font_family = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
+    accent_color = "#009688"
+    main_title_color = "#FFFFFF"
+    subtitle_color = "rgba(255, 255, 255, 0.7)"
+    insight_text_color = "#FFFFFF"
+    main_title_font_size = "65px"
+    subtitle_font_size = "32px"
+    insight_font_size = "30px"
+    colors = ["#008080", "#FFB347"]
+
+    # ===== 2. DATA EXTRACTION =====
     x_axis_label = x_axis
     y_axis_label = y_axis
 
-    # ===== 2. SVG CONFIGURATION =====
+    # ===== 3. SVG CONFIGURATION =====
     svg_w, svg_h = 1100, 700
     margin_t, margin_b, margin_l, margin_r = 60, 100, 100, 60
     
     chart_w = svg_w - margin_l - margin_r
     chart_h = svg_h - margin_t - margin_b
 
-    # ===== 3. SCALE CALCULATION =====
+    # ===== 4. SCALE CALCULATION =====
     all_x = [p["x"] for s in series for p in s.get("points", [])]
     all_y = [p["y"] for s in series for p in s.get("points", [])]
 
-    x_min = x_axis_min if x_axis_min is not None else (min(all_x) * 0.9 if all_x else 0)
-    x_max = x_axis_max if x_axis_max is not None else (max(all_x) * 1.1 if all_x else 100)
+    x_min = x_axis_min if x_axis_min is not None else 0
+    x_max = x_axis_max if x_axis_max is not None else (max(all_x) if all_x else 100)
     
-    y_min = y_axis_min if y_axis_min is not None else (min(all_y) * 0.9 if all_y else 0)
-    y_max = y_axis_max if y_axis_max is not None else (max(all_y) * 1.1 if all_y else 100)
+    y_min = y_axis_min if y_axis_min is not None else 0
+    y_max = y_axis_max if y_axis_max is not None else (max(all_y) if all_y else 100)
 
     if x_max == x_min: x_max += 1
     if y_max == y_min: y_max += 1
 
-    # ===== 4. RENDER SVG ELEMENTS =====
+    # ===== 5. RENDER SVG ELEMENTS =====
     chart_elements = ""
 
     for i in range(6):
@@ -937,7 +943,7 @@ def generate_scatter_plot_chart_slide_5(
     <text transform="rotate(-90)" x="{-margin_t - chart_h/2}" y="30" font-size="22" text-anchor="middle" fill="{main_title_color}" font-weight="bold">{y_axis_label}</text>
     '''
 
-    # ===== 5. LEGEND & INSIGHT =====
+    # ===== 6. LEGEND & INSIGHT =====
     legend_html = ""
     if show_legend:
         for i, s in enumerate(series):
@@ -955,7 +961,7 @@ def generate_scatter_plot_chart_slide_5(
     </div>
     '''
 
-    # ===== 6. FINAL HTML (GIỮ NGUYÊN) =====
+    # ===== 7. FINAL HTML =====
     return f"""
     <!DOCTYPE html>
     <html>
@@ -1058,8 +1064,6 @@ def generate_scatter_plot_chart_slide_6(
     y_axis_min: int = 0,
     y_axis_max: int = 500,
 
-    colors: list = ["#008080", "#FFB347"],
-
     series: list = [
         {
             "name": "Average Students",
@@ -1083,23 +1087,25 @@ def generate_scatter_plot_chart_slide_6(
                 {"x": 200, "y": 450}
             ]
         }
-    ],
-
-    font_family: str = "'Montserrat', sans-serif",
-    accent_color: str = "#008080",
-    main_title_color: str = "#005F5F",
-    subtitle_color: str = "#556B2F",
-    insight_text_color: str = "#2C3E50",
-    main_title_font_size: str = "80px",
-    subtitle_font_size: str = "30px",
-    insight_font_size: str = "28px"
+    ]
 ) -> str:
     """
     Hàm tạo slide biểu đồ phân tán (Scatter Plot) với theme 'AI In Education'.
     Sử dụng phong cách thiết kế hiện đại, các hình khối vuông trang trí và dải sóng nền.
     """
 
-    # ===== 1. LẤY THÔNG TIN & CẤU HÌNH DỮ LIỆU =====
+    # ===== 1. STYLE CONFIGURATION (MOVED FROM PARAMETERS) =====
+    font_family = "'Montserrat', sans-serif"
+    accent_color = "#008080"
+    main_title_color = "#005F5F"
+    subtitle_color = "#556B2F"
+    insight_text_color = "#2C3E50"
+    main_title_font_size = "80px"
+    subtitle_font_size = "30px"
+    insight_font_size = "28px"
+    colors = ["#008080", "#FFB347"]
+
+    # ===== 2. LẤY THÔNG TIN & CẤU HÌNH DỮ LIỆU =====
     options = {
         "unit": unit,
         "show_value": show_value,
@@ -1109,8 +1115,7 @@ def generate_scatter_plot_chart_slide_6(
         "x_axis_min": x_axis_min,
         "x_axis_max": x_axis_max,
         "y_axis_min": y_axis_min,
-        "y_axis_max": y_axis_max,
-        "colors": colors
+        "y_axis_max": y_axis_max
     }
 
     data = {
@@ -1126,9 +1131,7 @@ def generate_scatter_plot_chart_slide_6(
     x_label = options.get("x_axis", "X Axis")
     y_label = options.get("y_axis", "Y Axis")
 
-    colors = options.get("colors", ["#4b2659", "#ae91cf", "#7c5a94", "#d7bcf5"])
-
-    # ===== 2. SVG CONFIG & TÍNH TOÁN TỌA ĐỘ =====
+    # ===== 3. SVG CONFIG & TÍNH TOÁN TỌA ĐỘ =====
     svg_w, svg_h = 1000, 600
     m_top, m_bottom, m_left, m_right = 60, 80, 100, 60
     
@@ -1139,16 +1142,16 @@ def generate_scatter_plot_chart_slide_6(
     all_x = [p["x"] for s in series for p in s.get("points", [])]
     all_y = [p["y"] for s in series for p in s.get("points", [])]
 
-    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else (min(all_x) if all_x else 0)
+    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else 0
     x_max = options.get("x_axis_max") if options.get("x_axis_max") is not None else (max(all_x) if all_x else 100)
-    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else (min(all_y) if all_y else 0)
+    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else 0
     y_max = options.get("y_axis_max") if options.get("y_axis_max") is not None else (max(all_y) if all_y else 100)
 
     # Tránh chia cho 0
     dx = (x_max - x_min) if x_max != x_min else 1
     dy = (y_max - y_min) if y_max != y_min else 1
 
-    # ===== 3. VẼ BIỂU ĐỒ (SVG ELEMENTS) =====
+    # ===== 4. VẼ BIỂU ĐỒ (SVG ELEMENTS) =====
     chart_elements = ""
     
     # Grid lines (Y-axis)
@@ -1175,7 +1178,7 @@ def generate_scatter_plot_chart_slide_6(
         <text transform="rotate(-90)" x="{-svg_h/2 + 10}" y="40" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
     '''
 
-    # ===== 4. LEGEND & INSIGHT HTML =====
+    # ===== 5. LEGEND & INSIGHT HTML =====
     legend_items = ""
     if show_legend:
         for i, s in enumerate(series):
@@ -1186,7 +1189,7 @@ def generate_scatter_plot_chart_slide_6(
                 <span style="font-size:22px; color:{main_title_color}; font-weight:bold;">{s.get("name")}</span>
             </div>'''
 
-    # ===== 5. GENERATE FINAL HTML =====
+    # ===== 6. GENERATE FINAL HTML =====
     return f"""
     <!DOCTYPE html>
     <html>
@@ -1276,7 +1279,6 @@ def generate_scatter_plot_chart_slide_7(
     main_title: str = "Relationship Between App Usage Time and Monthly Spending",
     subtitle: str = "Source: Mobile App Analytics Report 2024 | Sample: 200 Users",
     insight: str = "",
-
     x_axis= "App Usage Time (minutes/day)",
     y_axis = "Monthly Digital Spending (USD)",
     unit = "USD",
@@ -1286,12 +1288,6 @@ def generate_scatter_plot_chart_slide_7(
     x_axis_max = 400,
     y_axis_min = 0,
     y_axis_max = 300,
-    colors= ["#a06d4f", "#6b8e23"],
-
-    background_color: str = "#efe5d8",
-    insight_box_background_color: str = "rgba(255, 255, 255, 0.3)",
-    chart_panel_background_color: str = "transparent",
-
     series = [
         {
             "name": "Casual Users",
@@ -1309,24 +1305,25 @@ def generate_scatter_plot_chart_slide_7(
                 {"x": 360, "y": 250}
             ]
         }
-    ],
-
-    accent_color: str = "#a06d4f",
-    main_title_color: str = "#3e2f25",
-    subtitle_color: str = "#5a4638",
-    insight_text_color: str = "#3e2f25",
-
-    font_family: str = "'Playfair Display', serif",
-    main_title_font_size: str = "60px",
-    subtitle_font_size: str = "28px",
-    insight_font_size: str = "30px"
+    ]
 ) -> str:
     """
     Hàm sinh HTML cho slide biểu đồ phân tán với phong cách Renaissance cổ điển.
     Sử dụng SVG thuần và CSS Layout phẳng để tối ưu hóa việc render.
     """
 
-    # ===== 1. TRÍCH XUẤT DỮ LIỆU =====
+    # ===== 1. STYLE CONFIGURATION =====
+    colors = ["#a06d4f", "#6b8e23"]
+    accent_color = "#a06d4f"
+    main_title_color = "#3e2f25"
+    subtitle_color = "#5a4638"
+    insight_text_color = "#3e2f25"
+    font_family = "'Playfair Display', serif"
+    main_title_font_size = "60px"
+    subtitle_font_size = "28px"
+    insight_font_size = "30px"
+
+    # ===== 2. TRÍCH XUẤT DỮ LIỆU =====
     data_input = {
         "series": series
     }
@@ -1340,8 +1337,7 @@ def generate_scatter_plot_chart_slide_7(
         "x_axis_min": x_axis_min,
         "x_axis_max": x_axis_max,
         "y_axis_min": y_axis_min,
-        "y_axis_max": y_axis_max,
-        "colors": colors
+        "y_axis_max": y_axis_max
     }
 
     series = data_input.get("series", [])
@@ -1350,24 +1346,23 @@ def generate_scatter_plot_chart_slide_7(
     unit = options.get("unit", "")
     show_value = options.get("show_value", False)
     show_legend = options.get("show_legend", True)
-    colors = options.get("colors", ["#a06d4f", "#6b8e23", "#4682b4", "#d2691e"])
     
     x_label = options.get("x_axis", "X Axis")
     y_label = options.get("y_axis", "Y Axis")
 
-    # ===== 2. TÍNH TOÁN MIN/MAX ĐỂ SCALE BIỂU ĐỒ =====
+    # ===== 3. TÍNH TOÁN MIN/MAX ĐỂ SCALE BIỂU ĐỒ =====
     all_x = [p["x"] for s in series for p in s.get("points", [])]
     all_y = [p["y"] for s in series for p in s.get("points", [])]
 
-    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else (min(all_x) if all_x else 0)
+    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else 0
     x_max = options.get("x_axis_max") if options.get("x_axis_max") is not None else (max(all_x) if all_x else 100)
-    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else (min(all_y) if all_y else 0)
+    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else 0
     y_max = options.get("y_axis_max") if options.get("y_axis_max") is not None else (max(all_y) if all_y else 100)
 
     if x_max == x_min: x_max += 1
     if y_max == y_min: y_max += 1
 
-    # ===== 3. CẤU HÌNH SVG =====
+    # ===== 4. CẤU HÌNH SVG =====
     svg_w, svg_h = 1100, 700
     margin_t, margin_b, margin_l, margin_r = 60, 80, 100, 40
     chart_w = svg_w - margin_l - margin_r

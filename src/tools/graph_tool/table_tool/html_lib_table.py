@@ -9,10 +9,6 @@ def generate_table_slide_1(
     unit = " GW",
     show_value = True,
     data_label_format = "{value}",
-    header_bg = "#76C2B4",
-    grid_color = "#D1D5DB",
-    text_color = "#333333",
-    highlight_bg = "#E6F4F1",
     columns =  ["Solar", "Wind", "Hydro"],
     rows = [
         {"label": "Asia", "values": [620, 430, 510]},
@@ -20,19 +16,25 @@ def generate_table_slide_1(
         {"label": "North America", "values": [290, 340, 300]},
         {"label": "South America", "values": [150, 120, 380]}
     ],
-    font_family="Inter, Arial, sans-serif",
-    accent_color="#76C2B4",
-    main_title_color="#333333",
-    subtitle_color="#666666",
-    insight_text_color="#444444",
-    main_title_font_size="72px",
-    subtitle_font_size="32px",
-    insight_font_size="28px"
 )->str:
     """
     Slide deck with a Science Lab style.
     Suitable for research reports, group projects, or technical data analysis.
     """
+    
+    # ===== COLOR & FONT VARIABLES =====
+    header_bg = "#76C2B4"
+    grid_color = "#D1D5DB"
+    text_color = "#333333"
+    highlight_bg = "#E6F4F1"
+    accent_color = "#76C2B4"
+    main_title_color = "#333333"
+    subtitle_color = "#666666"
+    insight_text_color = "#444444"
+    font_family = "Inter, Arial, sans-serif"
+    main_title_font_size = "72px"
+    subtitle_font_size = "32px"
+    insight_font_size = "28px"
 
     # ===== 1. DATA PREPARATION =====
     # Using parameters directly instead of data_input and chart_options
@@ -226,34 +228,35 @@ def generate_table_slide_2(
         unit = "%",    
         show_value = True,
         data_label_format = "{value}%",
-        header_bg = "#3B3781",
-        grid_color = "#D1D5DB",
-        text_color = "#1F2937",
-        highlight_bg = "#F3F4F6",
-        accent_color = "#FFB300",
         columns = ["Purity Level", "Solubility", "Reaction Yield"],
         rows = [
             {"label": "Ethanol (C2H5OH)", "values": [99.8, 100, 92]},
             {"label": "Sulfuric Acid (H2SO4)", "values": [98.5, 100, 88]},
             {"label": "Sodium Chloride (NaCl)", "values": [99.9, 36, 95]},
             {"label": "Silver Nitrate (AgNO3)", "values": [99.5, 216, 84]}
-        ],
-        font_family="'Inter', sans-serif",
-        main_title_color="#3B3781",
-        subtitle_color="#6B7280",
-        insight_text_color="#1F2937",
-        main_title_font_size="72px",
-        subtitle_font_size="30px",
-        insight_font_size="28px"
+        ]
     ) -> str:
     """
     Generates a professional table slide with a Chemistry Lab theme.
     Features a clean layout, purple/yellow accents, and stylized table borders.
     """
+    
+    # ===== COLOR & FONT VARIABLES =====
+    header_bg = "#3B3781"
+    grid_color = "#D1D5DB"
+    text_color = "#1F2937"
+    highlight_bg = "#F3F4F6"
+    accent_color = "#FFB300"
+    main_title_color = "#3B3781"
+    subtitle_color = "#6B7280"
+    insight_text_color = "#1F2937"
+    font_family = "'Inter', sans-serif"
+    main_title_font_size = "72px"
+    subtitle_font_size = "30px"
+    insight_font_size = "28px"
 
     # ===== 1. DATA PREPARATION =====
     # Using parameters directly instead of data_input and chart_options
-    accent_color_theme = accent_color
 
     # ===== 2. TABLE DATA PROCESSING =====
     table_rows_html = ""
@@ -300,7 +303,7 @@ def generate_table_slide_2(
     <table style="border-collapse:collapse; width:100%; border-radius:20px; overflow:hidden; box-shadow:0 15px 35px rgba(59,55,129,0.1);">
         <thead>
             <tr>
-                <th style="padding:25px 30px; background:{header_bg}; color:{accent_color_theme}; font-size:26px; font-weight:800; text-align:left;">
+                <th style="padding:25px 30px; background:{header_bg}; color:{accent_color}; font-size:26px; font-weight:800; text-align:left;">
                     Element/Exp
                 </th>
                 {header_cells}
@@ -313,14 +316,13 @@ def generate_table_slide_2(
     """
 
     # ===== 3. DECORATIVE SVG (Chemistry Style) =====
-    # SVG minh họa ống nghiệm/bình tam giác đơn giản
     beaker_svg = f"""
     <div style="position:absolute; bottom:120px; right:80px; width:150px; height:150px; opacity:0.6;">
         <svg viewBox="0 0 100 100" fill="none">
             <path d="M30 20 L30 80 Q30 90 40 90 L60 90 Q70 90 70 80 L70 20 Z" stroke="{header_bg}" stroke-width="3"/>
             <path d="M30 40 L70 40" stroke="{header_bg}" stroke-width="2" stroke-dasharray="4 2"/>
-            <path d="M30 65 L70 65" stroke="{accent_color_theme}" stroke-width="5"/>
-            <circle cx="45" cy="55" r="3" fill="{accent_color_theme}"/>
+            <path d="M30 65 L70 65" stroke="{accent_color}" stroke-width="5"/>
+            <circle cx="45" cy="55" r="3" fill="{accent_color}"/>
             <circle cx="55" cy="48" r="2" fill="{header_bg}"/>
         </svg>
     </div>
@@ -340,7 +342,7 @@ def generate_table_slide_2(
       padding:0;
       overflow:hidden;
       font-family:{font_family};
-      background-color:#FDFCFE; /* Nền hơi ánh tím rất nhẹ */
+      background-color:#FDFCFE;
     }}
     .slide-container {{
       width:100%;
@@ -352,7 +354,7 @@ def generate_table_slide_2(
     }}
     .header-section {{
       margin-bottom:60px;
-      border-left:12px solid {accent_color_theme};
+      border-left:12px solid {accent_color};
       padding-left:35px;
     }}
     h1 {{
@@ -386,7 +388,7 @@ def generate_table_slide_2(
       background: white;
       padding: 35px;
       border-radius: 16px;
-      border-left: 10px solid {accent_color_theme};
+      border-left: 10px solid {accent_color};
       font-size: {insight_font_size};
       color: {insight_text_color};
       line-height: 1.6;
@@ -394,7 +396,7 @@ def generate_table_slide_2(
     }}
     .top-blob {{
       position:absolute; top:-100px; right:-100px; width:400px; height:400px; 
-      background: {accent_color_theme}; opacity: 0.1; border-radius: 50%;
+      background: {accent_color}; opacity: 0.1; border-radius: 50%;
     }}
     </style>
     </head>
@@ -427,36 +429,37 @@ def generate_table_slide_2(
 def generate_table_slide_3(
         main_title="Islamic Cultural Contributions by Region",
         subtitle="Global Islamic Heritage Study – 2024",
-        insight="",  # <-- yêu cầu để rỗng
+        insight="",
         unit = "",
         show_value = True,
         data_label_format = "{value}",
-        header_bg = "linear-gradient(135deg, #D4AF37, #AA7C11)", # Gold gradient
-        grid_color = "rgba(212, 175, 55, 0.2)",
-        text_color = "#FFFFFF",
-        highlight_bg = "rgba(10, 52, 39, 0.4)",
         columns = ["Mosques", "Scholars", "Cultural Sites"],
         rows = [
             {"label": "Middle East", "values": [1200, 850, 400]},
             {"label": "Southeast Asia", "values": [900, 300, 150]},
             {"label": "South Asia", "values": [1100, 500, 220]},
             {"label": "North Africa", "values": [800, 450, 300]}
-        ],
-        font_family="'Outfit', sans-serif",
-        accent_color="#D4AF37", # Luxury Gold
-        main_title_color="#D4AF37",
-        subtitle_color="#E0E0E0",
-        insight_text_color="#FFFFFF",
-        main_title_font_size="64px",
-        subtitle_font_size="28px",
-        insight_font_size="28px"
+        ]
     ) -> str:
     """
     Tạo slide bảng với phong cách Hồi giáo trang nhã sang trọng.
     """
+    
+    # ===== COLOR & FONT VARIABLES =====
+    header_bg = "linear-gradient(135deg, #D4AF37, #AA7C11)"
+    grid_color = "rgba(212, 175, 55, 0.2)"
+    text_color = "#FFFFFF"
+    highlight_bg = "rgba(10, 52, 39, 0.4)"
+    accent_color = "#D4AF37"
+    main_title_color = "#D4AF37"
+    subtitle_color = "#E0E0E0"
+    insight_text_color = "#FFFFFF"
+    font_family = "'Outfit', sans-serif"
+    main_title_font_size = "64px"
+    subtitle_font_size = "28px"
+    insight_font_size = "28px"
 
     # ===== 1. LẤY THÔNG TIN VÀ XỬ LÝ DỮ LIỆU =====
-    # Using parameters directly
 
     # ===== 2. XỬ LÝ HTML TABLE =====
     table_rows_html = ""
@@ -499,7 +502,6 @@ def generate_table_slide_3(
     </table>"""
 
     # ===== 3. HỌA TIẾT TRANG TRÍ (SVG) =====
-    # Đèn lồng (Lantern) Animated
     lantern_svg = f"""
     <div class="lantern-container">
     <svg width="100" height="150" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -528,8 +530,8 @@ def generate_table_slide_3(
     <style>
         html, body {{
             width:1920px; height:1080px; margin:0; padding:0; overflow:hidden;
-            font-family: {font_family}, 'Outfit', 'Segoe UI', sans-serif; 
-            background-color: #123C2A; /* Brighter rich green */
+            font-family: {font_family}; 
+            background-color: #123C2A;
             background-image: 
                 radial-gradient(circle at top, rgba(212, 175, 55, 0.15) 0%, transparent 60%),
                 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23D4AF37' stroke-width='1.5' stroke-opacity='0.12'%3E%3Cpath d='M40 0L80 40L40 80L0 40zm0 20L60 40 40 60 20 40z'/%3E%3Ccircle cx='40' cy='40' r='10'/%3E%3Cpath d='M0 0h80v80H0z' stroke-opacity='0.05'/%3E%3C/g%3E%3C/svg%3E");
@@ -548,9 +550,8 @@ def generate_table_slide_3(
         }}
         h1 {{
             font-family: 'Cinzel', Georgia, 'Times New Roman', serif;
-            font-size:{main_title_font_size}; color:#D4AF37; margin:0; font-weight:700; text-transform:uppercase;
+            font-size:{main_title_font_size}; color:{main_title_color}; margin:0; font-weight:700; text-transform:uppercase;
             letter-spacing: 3px;
-            /* Remove gradient or clip that makes it blurry in some renderers */
             text-shadow: 0px 2px 4px rgba(0,0,0,0.6);
         }}
         .subtitle {{
@@ -586,12 +587,7 @@ def generate_table_slide_3(
             box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
         }}
         .lantern-container {{
-            animation: float 4s ease-in-out; /* Removed infinite to prevent converter.js from hanging */
             filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
-        }}
-        @keyframes float {{
-            0% {{ transform: translateY(0px) rotate(0deg); }}
-            100% {{ transform: translateY(-8px) rotate(0.8deg); }}
         }}
         .decoration-bottom {{
             position:absolute; bottom:120px; left:140px; right:140px; height:2px;
@@ -612,7 +608,7 @@ def generate_table_slide_3(
 
             <div class="main-content">
                 {f'<div class="insight-panel">{insight}</div>' if insight else ''}
-                <div class="table-panel" table-layout:fixed>
+                <div class="table-panel">
                     {table_html}
                 </div>
             </div>
@@ -625,39 +621,29 @@ def generate_table_slide_3(
     return html_code
 
 def generate_table_slide_4(
-        main_title: str = "Average Blood Pressure by Age Group", 
-        subtitle: str = "Unit: mmHg | Data Source: National Health Survey 2025", 
-        insight: str = "Healthcare is important, Keep your health in check!",
-        x_axis: str = "Age Group",
-        y_axis: str = "Average Blood Pressure (mmHg)",
-        unit: str = "mmHg",
-        show_value: bool = True,
-        show_legend: bool = True,
-        y_axis_min: float = 0,
-        y_axis_max: float = None,
-        data_label_format: str = None,
-        colors: list[str] = ["#C62828", "#1565C0"], 
-        categories = ["18-25", "26-35", "36-45", "46-60", "60+"],
-        series = [
-            {
-                "name": "Male",
-                "values": [118, 122, 128, 135, 142]
-            },
-            {
-                "name": "Female",
-                "values": [112, 118, 124, 130, 138]
-            }
-        ],
-        chart_options: dict = None, 
-        data_input: dict = None,
-        font_family: str = "Inter, sans-serif",
-        accent_color: str = "#10B981",
-        main_title_color: str = "#4ADE80",
-        subtitle_color: str = "#64748B",
-        insight_text_color: str = "#2DD4BF",
-        main_title_font_size: str = "70px",
-        subtitle_font_size: str = "30px",
-        insight_font_size: str = "28px"
+    main_title: str = "Average Blood Pressure by Age Group", 
+    subtitle: str = "Unit: mmHg | Data Source: National Health Survey 2025", 
+    insight: str = "Healthcare is important, Keep your health in check!",
+    x_axis: str = "Age Group",
+    y_axis: str = "Average Blood Pressure (mmHg)",
+    unit: str = "mmHg",
+    show_value: bool = True,
+    show_legend: bool = True,
+    y_axis_min: float = 0,
+    y_axis_max: float = None,
+    data_label_format: str = None,
+    colors: list[str] = ["#C62828", "#1565C0"], 
+    categories = ["18-25", "26-35", "36-45", "46-60", "60+"],
+    series = [
+        {
+        "name": "Male",
+        "values": [118, 122, 128, 135, 142]
+        },
+        {
+        "name": "Female",
+        "values": [112, 118, 124, 130, 138]
+        }
+    ],
     ) -> str:
     """
     Tạo slide bảng chuyên nghiệp với phong cách thiết kế hiện đại, 
@@ -665,24 +651,23 @@ def generate_table_slide_4(
     """
 
     # Thiết lập giá trị mặc định cho chart_options và data_input nếu không được cung cấp
-    if chart_options is None:
-        chart_options = {
-            "unit": unit,
-            "show_value": show_value,
-            "show_legend": show_legend,
-            "y_axis_min": y_axis_min,
-            "y_axis_max": y_axis_max,
-            "data_label_format": data_label_format,
-            "colors": colors,
-            "x_axis": x_axis,
-            "y_axis": y_axis
-        }
-    
-    if data_input is None:
-        data_input = {
-            "categories": categories,
-            "series": series
-        }
+
+    chart_options = {
+        "unit": unit,
+        "show_value": show_value,
+        "show_legend": show_legend,
+        "y_axis_min": y_axis_min,
+        "y_axis_max": y_axis_max,
+        "data_label_format": data_label_format,
+        "colors": colors,
+        "x_axis": x_axis,
+        "y_axis": y_axis
+    }
+
+    data_input = {
+        "categories": categories,
+        "series": series
+    }
 
     # ===== 1. LẤY THÔNG TIN DỮ LIỆU =====
     columns = data_input.get("columns", [])
@@ -707,26 +692,6 @@ def generate_table_slide_4(
     show_value = options.get("show_value", True)
     data_label_format = options.get("data_label_format") or "{value}"
 
-    # Cấu hình màu sắc từ options hoặc mặc định theo theme ảnh
-    colors_option = options.get("colors")
-    if isinstance(colors_option, dict):
-        colors_config = colors_option
-    else:
-        colors_config = {}
-        
-    colors_config = {
-        "header_bg": colors_config.get("header_bg", "#5D3B6B"),
-        "grid_color": colors_config.get("grid_color", "rgba(255, 255, 255, 0.1)"),
-        "text_color": colors_config.get("text_color", "#FFFFFF"),
-        "highlight_bg": colors_config.get("highlight_bg", "rgba(232, 156, 180, 0.15)"),
-        "accent_color": colors_config.get("accent_color", "#E89CB4")
-    }
-
-    header_bg = colors_config.get("header_bg", "#2E7D32")
-    grid_color = colors_config.get("grid_color", "rgba(255, 255, 255, 0.1)")
-    text_color = colors_config.get("text_color", "#FFFFFF")
-    highlight_bg = colors_config.get("highlight_bg", "rgba(232, 156, 180, 0.15)")
-
     # ===== 2. XỬ LÝ DỮ LIỆU BẢNG (ROWS) =====
     table_rows_html = ""
     for row in rows:
@@ -740,42 +705,42 @@ def generate_table_slide_4(
                 formatted_value += unit
 
             cells_html += f"""
-            <td style="padding:25px; border-bottom:1px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
-                {formatted_value}
-            </td>
-            """
+        <td style="padding:25px; border-bottom:1px solid var(--grid-color); text-align:center; font-size:24px; color:var(--text-color);">
+        {formatted_value}
+        </td>
+        """
 
         table_rows_html += f"""
-        <tr style="transition: background 0.3s;">
-            <td style="padding:25px; border-bottom:1px solid {grid_color}; font-weight:600; font-size:24px; color:{accent_color}; background:{highlight_bg};">
-                {label}
-            </td>
-            {cells_html}
-        </tr>
-        """
+    <tr style="transition: background 0.3s;">
+        <td style="padding:25px; border-bottom:1px solid var(--grid-color); font-weight:600; font-size:24px; color:var(--accent-color); background:var(--highlight-bg);">
+        {label}
+        </td>
+        {cells_html}
+    </tr>
+    """
 
     # ===== 3. XỬ LÝ TIÊU ĐỀ BẢNG (HEADER) =====
     header_cells = ""
     for col in columns:
         header_cells += f"""
-        <th style="padding:25px; background:{header_bg}; border-bottom:2px solid {accent_color}; font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
-            {col}
-        </th>
-        """
+    <th style="padding:25px; background:var(--header-bg); border-bottom:2px solid var(--accent-color); font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
+        {col}
+    </th>
+    """
 
     table_html = f"""
     <table style="border-collapse:collapse; width:100%; background:rgba(255,255,255,0.05); border-radius:20px; overflow:hidden; backdrop-filter:blur(10px);">
-        <thead>
-            <tr>
-                <th style="padding:25px; background:{header_bg}; border-bottom:2px solid {accent_color}; font-size:22px; color:#FFFFFF; text-transform:uppercase; text-align:left;">
-                    Metric / Category
-                </th>
-                {header_cells}
-            </tr>
-        </thead>
-        <tbody>
-            {table_rows_html}
-        </tbody>
+    <thead>
+        <tr>
+        <th style="padding:25px; background:var(--header-bg); border-bottom:2px solid var(--accent-color); font-size:22px; color:#FFFFFF; text-transform:uppercase; text-align:left;">
+            Metric / Category
+        </th>
+        {header_cells}
+        </tr>
+    </thead>
+    <tbody>
+        {table_rows_html}
+    </tbody>
     </table>
     """
 
@@ -786,13 +751,28 @@ def generate_table_slide_4(
     <head>
     <meta charset="UTF-8">
     <style>
+    :root {{
+      --font-family: 'Inter', sans-serif;
+      --header-bg: #5D3B6B;
+      --grid-color: rgba(255, 255, 255, 0.1);
+      --text-color: #FFFFFF;
+      --highlight-bg: rgba(232, 156, 180, 0.15);
+      --accent-color: #E89CB4;
+      --main-title-color: #4ADE80;
+      --subtitle-color: #64748B;
+      --insight-text-color: #2DD4BF;
+      --main-title-font-size: 70px;
+      --subtitle-font-size: 30px;
+      --insight-font-size: 28px;
+    }}
+
     html, body {{
       width:1920px;
       height:1080px;
       margin:0;
       padding:0;
       overflow:hidden;
-      font-family:{font_family};
+      font-family: var(--font-family);
       background: radial-gradient(circle at 20% 20%, #4A2B52 0%, #2D1B33 100%);
       color: white;
     }}
@@ -818,22 +798,22 @@ def generate_table_slide_4(
 
     .header-section {{
       margin-bottom: 60px;
-      border-left: 12px solid {accent_color};
+      border-left: 12px solid var(--accent-color);
       padding-left: 40px;
     }}
 
     h1 {{
-      font-size: {main_title_font_size};
+      font-size: var(--main-title-font-size);
       font-weight: 800;
-      color: {main_title_color};
+      color: var(--main-title-color);
       margin: 0;
       text-transform: uppercase;
       letter-spacing: -1px;
     }}
 
     .subtitle {{
-      font-size: {subtitle_font_size};
-      color: {subtitle_color};
+      font-size: var(--subtitle-font-size);
+      color: var(--subtitle-color);
       margin-top: 15px;
       font-weight: 300;
     }}
@@ -861,8 +841,8 @@ def generate_table_slide_4(
     }}
 
     .insight-text {{
-      font-size: {insight_font_size};
-      color: {insight_text_color};
+      font-size: var(--insight-font-size);
+      color: var(--insight-text-color);
       line-height: 1.6;
       font-style: italic;
     }}
@@ -874,7 +854,7 @@ def generate_table_slide_4(
     .accent-bar {{
       width: 80px;
       height: 6px;
-      background: {accent_color};
+      background: var(--accent-color);
       margin-bottom: 30px;
       border-radius: 3px;
     }}
@@ -882,64 +862,52 @@ def generate_table_slide_4(
     </style>
     </head>
     <body>
-        <div class="medical-pattern"></div>
-        <div class="content-container">
-            <div class="header-section">
-                <h1>{main_title}</h1>
-                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+    <div class="medical-pattern"></div>
+    <div class="content-container">
+        <div class="header-section">
+        <h1>{main_title}</h1>
+        {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+        </div>
+
+        <div class="main-grid">
+        <div class="left-column">
+            <div class="insight-panel">
+            <div class="accent-bar"></div>
+            <div class="insight-text">
+                "{insight}"
             </div>
-
-            <div class="main-grid">
-                <div class="left-column">
-                    <div class="insight-panel">
-                        <div class="accent-bar"></div>
-                        <div class="insight-text">
-                            "{insight}"
-                        </div>
-                    </div>
-                    <div class="medical-svg" style="display:flex; justify-content:center; align-items:center; flex:1; opacity: 0.3;">
-                        <svg width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="{accent_color}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
-                        </svg>
-                    </div>
-                </div>
-
-                <div class="table-panel">
-                    {table_html}
-                </div>
+            </div>
+            <div class="medical-svg" style="display:flex; justify-content:center; align-items:center; flex:1; opacity: 0.3;">
+            <svg width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="var(--accent-color)" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
             </div>
         </div>
+
+        <div class="table-panel">
+            {table_html}
+        </div>
+        </div>
+    </div>
     </body>
     </html>
     """
     return html_code
 
 def generate_table_slide_5(
-        main_title: str = "Vietnamese Cultural Heritage by Region",
-        subtitle: str = "Traditional Values & Cultural Assets across Vietnam",
-        insight: str = "Vietnam's rich cultural heritage is deeply rooted in its regional diversity, with the North known for its vibrant festivals, the Central region for its historical sites, and the South for its traditional crafts. This slide highlights the unique cultural assets of each region, showcasing the importance of preserving these traditions for future generations.",
-        unit: str = "",
-        show_value: bool = True,
-        data_label_format: str = "{value}",
-        header_bg: str = "linear-gradient(135deg, #8B0000, #5D0E0E)",
-        grid_color: str = "#D4AF37",
-        text_color: str = "#FFFFFF",
-        highlight_bg: str = "rgba(93, 14, 14, 0.6)",
-        columns = ["Festivals", "Historical Sites", "Traditional Crafts"],
-        rows = [
-            {"label": "Northern Vietnam", "values": [120, 85, 60]},
-            {"label": "Central Vietnam", "values": [95, 70, 55]},
-            {"label": "Southern Vietnam", "values": [80, 60, 40]}
-        ],
-        font_family: str = "'Times New Roman', serif",
-        accent_color: str = "#FFD700",
-        main_title_color: str = "#FFD700",
-        subtitle_color: str = "#E0E0E0",
-        insight_text_color: str = "#FFFFFF",
-        main_title_font_size: str = "64px",
-        subtitle_font_size: str = "28px",
-        insight_font_size: str = "28px"
-    ) -> str:
+    main_title: str = "Vietnamese Cultural Heritage by Region",
+    subtitle: str = "Traditional Values & Cultural Assets across Vietnam",
+    insight: str = "Vietnam's rich cultural heritage is deeply rooted in its regional diversity, with the North known for its vibrant festivals, the Central region for its historical sites, and the South for its traditional crafts. This slide highlights the unique cultural assets of each region, showcasing the importance of preserving these traditions for future generations.",
+    unit: str = "",
+    show_value: bool = True,
+    data_label_format: str = "{value}",
+    columns = ["Festivals", "Historical Sites", "Traditional Crafts"],
+    rows = [
+        {"label": "Northern Vietnam", "values": [120, 85, 60]},
+        {"label": "Central Vietnam", "values": [95, 70, 55]},
+        {"label": "Southern Vietnam", "values": [80, 60, 40]}
+    ]
+) -> str:
 
     # ===== TABLE =====
     table_rows_html = ""
@@ -956,15 +924,15 @@ def generate_table_slide_5(
                     formatted_value += unit
 
             cells_html += f"""
-            <td style="padding:18px; border:1px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
-                {formatted_value}
+            <td style="padding:18px; border:1px solid var(--grid-color); text-align:center; font-size:24px; color:var(--text-color);">
+            {formatted_value}
             </td>
             """
 
         table_rows_html += f"""
         <tr style="background: rgba(139, 0, 0, 0.2);">
-            <td style="padding:18px; border:1px solid {grid_color}; font-weight:bold; font-size:24px; color:{accent_color}; background:{highlight_bg};">
-                {label}
+            <td style="padding:18px; border:1px solid var(--grid-color); font-weight:bold; font-size:24px; color:var(--accent-color); background:var(--highlight-bg);">
+            {label}
             </td>
             {cells_html}
         </tr>
@@ -973,22 +941,22 @@ def generate_table_slide_5(
     header_cells = ""
     for col in columns:
         header_cells += f"""
-        <th style="padding:22px; background:{header_bg}; border:2px solid {grid_color}; font-size:24px; color:{accent_color}; text-transform:uppercase;">
-            {col}
-        </th>
-        """
+    <th style="padding:22px; background:var(--header-bg); border:2px solid var(--grid-color); font-size:24px; color:var(--accent-color); text-transform:uppercase;">
+        {col}
+    </th>
+    """
 
     table_html = f"""
-    <table style="border-collapse:collapse; width:100%; border:2px solid {grid_color}; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
-        <thead>
-            <tr>
-                <th style="padding:22px; background:{header_bg}; border:2px solid {grid_color}; font-size:24px; color:{accent_color};">CATEGORY</th>
-                {header_cells}
-            </tr>
-        </thead>
-        <tbody>
-            {table_rows_html}
-        </tbody>
+    <table style="border-collapse:collapse; width:100%; border:2px solid var(--grid-color); box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <thead>
+        <tr>
+        <th style="padding:22px; background:var(--header-bg); border:2px solid var(--grid-color); font-size:24px; color:var(--accent-color);">CATEGORY</th>
+        {header_cells}
+        </tr>
+    </thead>
+    <tbody>
+        {table_rows_html}
+    </tbody>
     </table>
     """
 
@@ -999,13 +967,28 @@ def generate_table_slide_5(
     <head>
     <meta charset="UTF-8">
     <style>
+    :root {{
+      --header-bg: linear-gradient(135deg, #8B0000, #5D0E0E);
+      --grid-color: #D4AF37;
+      --text-color: #FFFFFF;
+      --highlight-bg: rgba(93, 14, 14, 0.6);
+      --accent-color: #FFD700;
+      --main-title-color: #FFD700;
+      --subtitle-color: #E0E0E0;
+      --insight-text-color: #FFFFFF;
+      --font-family: 'Times New Roman', serif;
+      --main-title-font-size: 64px;
+      --subtitle-font-size: 28px;
+      --insight-font-size: 28px;
+    }}
+
     html, body {{
       width:1920px; height:1080px; margin:0;
-      font-family: {font_family};
+      font-family: var(--font-family);
       background-color: #4A0404;
       background-image: 
-        radial-gradient(circle at 50% 50%, rgba(212,175,55,0.1) 0%, transparent 70%),
-        url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg stroke='rgba(212,175,55,0.15)' stroke-width='1.5' fill='none'%3E%3Ccircle cx='60' cy='60' r='50'/%3E%3Ccircle cx='60' cy='60' r='35'/%3E%3Cpath stroke-linejoin='round' d='M60,10 L70,45 L105,60 L70,75 L60,110 L50,75 L15,60 L50,45 Z'/%3E%3Ccircle cx='60' cy='60' r='15' fill='rgba(212,175,55,0.05)'/%3E%3Cpath d='M0,0 L120,120 M120,0 L0,120' stroke='rgba(212,175,55,0.05)'/%3E%3C/g%3E%3C/svg%3E");
+    radial-gradient(circle at 50% 50%, rgba(212,175,55,0.1) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg stroke='rgba(212,175,55,0.15)' stroke-width='1.5' fill='none'%3E%3Ccircle cx='60' cy='60' r='50'/%3E%3Ccircle cx='60' cy='60' r='35'/%3E%3Cpath stroke-linejoin='round' d='M60,10 L70,45 L105,60 L70,75 L60,110 L50,75 L15,60 L50,45 Z'/%3E%3Ccircle cx='60' cy='60' r='15' fill='rgba(212,175,55,0.05)'/%3E%3Cpath d='M0,0 L120,120 M120,0 L0,120' stroke='rgba(212,175,55,0.05)'/%3E%3C/g%3E%3C/svg%3E");
       background-size: 100% 100%, 120px 120px;
       color: #FFFFFF;
     }}
@@ -1015,30 +998,30 @@ def generate_table_slide_5(
       display: flex;
       flex-direction: column;
       padding: 60px 100px;
-      border: 20px solid {grid_color};
+      border: 20px solid var(--grid-color);
       box-sizing: border-box;
     }}
 
     h1 {{
-      font-size: {main_title_font_size};
-      color: {main_title_color};
+      font-size: var(--main-title-font-size);
+      color: var(--main-title-color);
       margin: 0;
       text-transform: uppercase;
     }}
 
     .subtitle {{
-      font-size: {subtitle_font_size};
-      color: {subtitle_color};
+      font-size: var(--subtitle-font-size);
+      color: var(--subtitle-color);
       margin-top: 10px;
     }}
 
     .insight-box {{
       margin-top: 40px;
-      font-size: {insight_font_size};
-      color: {insight_text_color};
+      font-size: var(--insight-font-size);
+      color: var(--insight-text-color);
       background: rgba(0,0,0,0.3);
       padding: 30px 40px;
-      border-left: 10px solid {grid_color};
+      border-left: 10px solid var(--grid-color);
       line-height: 1.6;
     }}
 
@@ -1050,52 +1033,39 @@ def generate_table_slide_5(
     </head>
 
     <body>
-        <div class="container">
-            <h1>{main_title}</h1>
-            <div class="subtitle">{subtitle}</div>
+    <div class="container">
+        <h1>{main_title}</h1>
+        <div class="subtitle">{subtitle}</div>
 
-            <!-- Insight trên -->
-            <div class="insight-box">
-                {insight}
-            </div>
-
-            <!-- Table dưới -->
-            <div class="table-container">
-                {table_html}
-            </div>
+        <!-- Insight trên -->
+        <div class="insight-box">
+        {insight}
         </div>
+
+        <!-- Table dưới -->
+        <div class="table-container">
+        {table_html}
+        </div>
+    </div>
     </body>
     </html>
     """
-
     return html_code
 
 def generate_table_slide_6(
-        main_title="Bức Tranh Làng Quê Việt Nam",
-        subtitle="Đơn vị: Khu vực | Nguồn: Khảo sát nông thôn Việt Nam 2025",
-        insight="Khu vực nông thôn Việt Nam thể hiện sự đa dạng trong hoạt động kinh tế, từ nông nghiệp đến chăn nuôi và thủ công.",  # <-- yêu cầu để rỗng
-        unit="",
-        show_value=True,
-        data_label_format="{value}",
-        header_bg="linear-gradient(135deg, #2D6A4F, #1B4332)",
-        grid_color="rgba(183, 228, 199, 0.35)",
-        text_color="#081C15",
-        highlight_bg="rgba(247, 241, 227, 0.9)",
-        columns=["Nông nghiệp", "Chăn nuôi", "Thủ công"],
-        rows=[
-            {"label": "Đồng bằng", "values": [1200, 850, 400]},
-            {"label": "Trung du", "values": [900, 600, 300]},
-            {"label": "Miền núi", "values": [700, 500, 450]},
-            {"label": "Ven biển", "values": [800, 650, 200]}
-        ],
-        font_family="'Inter', sans-serif",
-        accent_color="#D4AF37",
-        main_title_color="#1B4332",
-        subtitle_color="#2D6A4F",
-        insight_text_color="#40916C",
-        main_title_font_size="65px",
-        subtitle_font_size="28px",
-        insight_font_size="30px"
+    main_title="Bức Tranh Làng Quê Việt Nam",
+    subtitle="Đơn vị: Khu vực | Nguồn: Khảo sát nông thôn Việt Nam 2025",
+    insight="Khu vực nông thôn Việt Nam thể hiện sự đa dạng trong hoạt động kinh tế, từ nông nghiệp đến chăn nuôi và thủ công.",
+    unit="",
+    show_value=True,
+    data_label_format="{value}",
+    columns=["Nông nghiệp", "Chăn nuôi", "Thủ công"],
+    rows=[
+        {"label": "Đồng bằng", "values": [1200, 850, 400]},
+        {"label": "Trung du", "values": [900, 600, 300]},
+        {"label": "Miền núi", "values": [700, 500, 450]},
+        {"label": "Ven biển", "values": [800, 650, 200]}
+    ]
     ) -> str:
     """
     Hàm sinh slide bảng với phong cách Làng quê Việt Nam.
@@ -1123,28 +1093,28 @@ def generate_table_slide_6(
 
             cells_html += f"""
             <td style="
-                padding: 20px 25px;
-                border-bottom: 1px solid {grid_color};
-                text-align: center;
-                font-size: 24px;
-                color: {text_color};
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--grid-color);
+            text-align: center;
+            font-size: 24px;
+            color: var(--text-color);
             ">
-                {formatted_value}
+            {formatted_value}
             </td>
             """
 
         table_rows_html += f"""
         <tr style="transition: background 0.3s;">
             <td style="
-                padding: 20px 25px;
-                border-bottom: 1px solid {grid_color};
-                font-weight: 700;
-                font-size: 24px;
-                color: {main_title_color};
-                background: {highlight_bg};
-                border-left: 5px solid {accent_color};
+            padding: 20px 25px;
+            border-bottom: 1px solid var(--grid-color);
+            font-weight: 700;
+            font-size: 24px;
+            color: var(--main-title-color);
+            background: var(--highlight-bg);
+            border-left: 5px solid var(--accent-color);
             ">
-                {label}
+            {label}
             </td>
             {cells_html}
         </tr>
@@ -1156,13 +1126,13 @@ def generate_table_slide_6(
         header_cells += f"""
         <th style="
             padding: 22px 25px;
-            background: {header_bg};
+            background: var(--header-bg);
             color: #FFFFFF;
             font-size: 24px;
             font-weight: 600;
             text-transform: uppercase;
             letter-spacing: 1px;
-            border-bottom: 3px solid {accent_color};
+            border-bottom: 3px solid var(--accent-color);
         ">
             {col}
         </th>
@@ -1170,62 +1140,62 @@ def generate_table_slide_6(
 
     table_html = f"""
     <table style="
-        border-collapse: collapse;
-        width: 100%;
-        background: rgba(255, 255, 255, 0.82);
-        border-radius: 15px 15px 0 0;
-        overflow: hidden;
-        box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+    border-collapse: collapse;
+    width: 100%;
+    background: rgba(255, 255, 255, 0.82);
+    border-radius: 15px 15px 0 0;
+    overflow: hidden;
+    box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     ">
-        <thead>
-            <tr>
-                <th style="
-                    padding: 22px 25px;
-                    background: {header_bg};
-                    color: #FFFFFF;
-                    font-size: 24px;
-                    border-bottom: 3px solid {accent_color};
-                    text-align: left;
-                ">
-                    Danh mục
-                </th>
-                {header_cells}
-            </tr>
-        </thead>
-        <tbody>
-            {table_rows_html}
-        </tbody>
+    <thead>
+        <tr>
+        <th style="
+            padding: 22px 25px;
+            background: var(--header-bg);
+            color: #FFFFFF;
+            font-size: 24px;
+            border-bottom: 3px solid var(--accent-color);
+            text-align: left;
+        ">
+            Danh mục
+        </th>
+        {header_cells}
+        </tr>
+    </thead>
+    <tbody>
+        {table_rows_html}
+    </tbody>
     </table>
     """
 
     # ===== 4. INSIGHT BOX =====
     insight_html = f"""
     <div style="
-        padding: 40px;
-        background: white;
-        border-radius: 20px;
-        border-right: 10px solid {accent_color};
-        box-shadow: 10px 10px 0px {grid_color};
-        min-height: 220px;
+    padding: 40px;
+    background: white;
+    border-radius: 20px;
+    border-right: 10px solid var(--accent-color);
+    box-shadow: 10px 10px 0px var(--grid-color);
+    min-height: 220px;
     ">
-        <div style="
-            font-size: 18px;
-            color: {accent_color};
-            font-weight: 800;
-            text-transform: uppercase;
-            margin-bottom: 15px;
-            letter-spacing: 2px;
-        ">
-            Nhận định chuyên gia
-        </div>
-        <div style="
-            font-size: {insight_font_size};
-            color: {insight_text_color};
-            line-height: 1.6;
-            font-style: italic;
-        ">
-            "{insight}"
-        </div>
+    <div style="
+        font-size: 18px;
+        color: var(--accent-color);
+        font-weight: 800;
+        text-transform: uppercase;
+        margin-bottom: 15px;
+        letter-spacing: 2px;
+    ">
+        Nhận định chuyên gia
+    </div>
+    <div style="
+        font-size: var(--insight-font-size);
+        color: var(--insight-text-color);
+        line-height: 1.6;
+        font-style: italic;
+    ">
+        "{insight}"
+    </div>
     </div>
     """
 
@@ -1236,113 +1206,372 @@ def generate_table_slide_6(
     <head>
     <meta charset="UTF-8">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap');
 
-        html, body {{
-            width: 1920px;
-            height: 1080px;
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
-            font-family: {font_family};
-            background-color: #F0F4F0;
-            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg stroke='rgba(45,106,79,0.08)' stroke-width='2' fill='none' stroke-linecap='round'%3E%3Cpath d='M40,80 C40,60 40,40 40,20 C30,30 25,45 40,50 C50,30 55,45 40,50 M30,60 C20,50 15,65 30,70 M50,60 C60,50 65,65 50,70'/%3E%3C/g%3E%3C/svg%3E");
-            background-size: 80px 80px;
-        }}
+    :root {{
+        --header-bg: linear-gradient(135deg, #2D6A4F, #1B4332);
+        --grid-color: rgba(183, 228, 199, 0.35);
+        --text-color: #081C15;
+        --highlight-bg: rgba(247, 241, 227, 0.9);
+        --accent-color: #D4AF37;
+        --main-title-color: #1B4332;
+        --subtitle-color: #2D6A4F;
+        --insight-text-color: #40916C;
+        --font-family: 'Inter', sans-serif;
+        --main-title-font-size: 65px;
+        --subtitle-font-size: 28px;
+        --insight-font-size: 30px;
+    }}
 
-        .container {{
-            padding: 80px 100px;
-            height: 100%;
-            box-sizing: border-box;
-            display: flex;
-            flex-direction: column;
-        }}
+    html, body {{
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: var(--font-family);
+        background-color: #F0F4F0;
+        background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg stroke='rgba(45,106,79,0.08)' stroke-width='2' fill='none' stroke-linecap='round'%3E%3Cpath d='M40,80 C40,60 40,40 40,20 C30,30 25,45 40,50 C50,30 55,45 40,50 M30,60 C20,50 15,65 30,70 M50,60 C60,50 65,65 50,70'/%3E%3C/g%3E%3C/svg%3E");
+        background-size: 80px 80px;
+    }}
 
-        .header-section {{
-            margin-bottom: 60px;
-            position: relative;
-        }}
+    .container {{
+        padding: 80px 100px;
+        height: 100%;
+        box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+    }}
 
-        .header-section::before {{
-            content: "";
-            position: absolute;
-            left: -30px;
-            top: 0;
-            width: 12px;
-            height: 100%;
-            background: {accent_color};
-            border-radius: 6px;
-        }}
+    .header-section {{
+        margin-bottom: 60px;
+        position: relative;
+    }}
 
-        h1 {{
-            font-size: {main_title_font_size};
-            color: {main_title_color};
-            margin: 0;
-            font-weight: 800;
-            letter-spacing: -1px;
-        }}
+    .header-section::before {{
+        content: "";
+        position: absolute;
+        left: -30px;
+        top: 0;
+        width: 12px;
+        height: 100%;
+        background: var(--accent-color);
+        border-radius: 6px;
+    }}
 
-        .subtitle {{
-            font-size: {subtitle_font_size};
-            color: {subtitle_color};
-            margin-top: 15px;
-            font-weight: 400;
-        }}
+    h1 {{
+        font-size: var(--main-title-font-size);
+        color: var(--main-title-color);
+        margin: 0;
+        font-weight: 800;
+        letter-spacing: -1px;
+    }}
 
-        .content-layout {{
-            display: flex;
-            gap: 60px;
-            align-items: flex-start;
-        }}
+    .subtitle {{
+        font-size: var(--subtitle-font-size);
+        color: var(--subtitle-color);
+        margin-top: 15px;
+        font-weight: 400;
+    }}
 
-        .table-wrapper {{
-            flex: 1.5;
-        }}
+    .content-layout {{
+        display: flex;
+        gap: 60px;
+        align-items: flex-start;
+    }}
 
-        .insight-wrapper {{
-            flex: 1;
-        }}
+    .table-wrapper {{
+        flex: 1.5;
+    }}
 
-
+    .insight-wrapper {{
+        flex: 1;
+    }}
     </style>
     </head>
     <body>
-        <div class="container">
-            <div class="header-section">
-                <h1>{main_title}</h1>
-                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
-            </div>
+    <div class="container">
+        <div class="header-section">
+        <h1>{main_title}</h1>
+        {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+        </div>
 
-            <div class="content-layout">
-                <div class="insight-wrapper">
-                    {insight_html}
-                    <div style="
-                        margin-top: 40px;
-                        display: flex;
-                        justify-content: center;
-                        align-items: center;
-                        height: 300px;
-                        width: 100%;
-                        opacity: 0.4;
-                        gap: 20px;
-                    ">
-                        <!-- Conical Hat SVG -->
-                        <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <path d="M50 10L10 80C10 80 30 90 50 90C70 90 90 80 90 80L50 10Z" fill="{main_title_color}" opacity="0.8"/>
-                            <path d="M20 73C30 80 40 82 50 82C60 82 70 80 80 73" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                            <path d="M30 55C40 60 45 62 50 62C55 62 60 60 70 55" stroke="white" stroke-width="2" stroke-linecap="round"/>
-                        </svg>
-                        </svg>
-                    </div>
-                </div>
-
-                <div class="table-wrapper">
-                    {table_html}
-                </div>
+        <div class="content-layout">
+        <div class="insight-wrapper">
+            {insight_html}
+            <div style="
+            margin-top: 40px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 300px;
+            width: 100%;
+            opacity: 0.4;
+            gap: 20px;
+            ">
+            <!-- Conical Hat SVG -->
+            <svg width="120" height="120" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M50 10L10 80C10 80 30 90 50 90C70 90 90 80 90 80L50 10Z" fill="var(--main-title-color)" opacity="0.8"/>
+                <path d="M20 73C30 80 40 82 50 82C60 82 70 80 80 73" stroke="white" stroke-width="2" stroke-linecap="round"/>
+                <path d="M30 55C40 60 45 62 50 62C55 62 60 60 70 55" stroke="white" stroke-width="2" stroke-linecap="round"/>
+            </svg>
             </div>
         </div>
 
+        <div class="table-wrapper">
+            {table_html}
+        </div>
+        </div>
+    </div>
 
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_table_slide_7(
+    main_title="ELEGANCE CLASSY",
+    subtitle="Minimalist Table Infographics",
+    show_legend=True,
+    legend_items=[
+        {"label": "Marketing", "color": "#9a7a63"},
+        {"label": "Financial", "color": "#b7b9ab"},
+        {"label": "Sales", "color": "#faeaaa"}
+    ],
+    columns=["Mon", "Tue", "Wed", "Thu", "Fri"],
+    rows=[
+        {
+            "label": "Week 1",
+            "cells": [None, "Financial", None, None, None]
+        },
+        {
+            "label": "Week 2",
+            "cells": [None, None, None, "Sales", None]
+        },
+        {
+            "label": "Week 3",
+            "cells": ["Marketing", None, None, None, None]
+        },
+    ],
+) -> str:
+    """
+    Generates a minimalist, elegant HTML table slide with brand decorative elements.
+    Uses legend_items labels instead of color codes for automatic color mapping.
+    """
+    bg_light="#fefaf4"
+    bg_dark="#3a3730"
+    
+    # Create a color mapping from legend labels to colors
+    color_map = {item['label']: item['color'] for item in legend_items} if legend_items else {}
+    
+    # ===== STYLE VARIABLES =====
+    header_bg = bg_light
+    grid_color = "#9a7a6344"
+    text_color = bg_dark
+    font_family = "Outfit, sans-serif"
+    main_title_color = bg_dark
+    subtitle_color = f"{bg_dark}aa"
+    main_title_font_size = "100px"
+    subtitle_font_size = "36px"
+    text_col_default = "#6f7067"
+
+    # ===== 1. DATA PROCESSING =====
+    header_html = ""
+    for col_label in columns:
+        label = col_label if isinstance(col_label, str) else col_label.get("label", str(col_label))
+        header_html += f'<th style="padding: 30px 20px; border: 1px solid {grid_color}; text-align: center; color: {text_col_default}; background: {bg_light}; font-weight: 700; font-size: 40px; min-width: 200px;">{label}</th>'
+
+    table_rows_html = ""
+    for row in rows:
+        row_label = row.get("label", "")
+        cells = row.get("cells", [])
+        
+        cells_html = ""
+        for cell in cells:
+            # cell can be: None (light bg) or a legend label string
+            if cell and cell in color_map:
+                bg = color_map[cell]
+                text_col = "white" if cell == "Marketing" else text_col_default
+            else:
+                bg = bg_light
+                text_col = text_col_default
+            
+            cell_style = f"padding: 25px 20px; border: 1px solid {grid_color}; text-align: center; color: {text_col}; font-size: 28px; line-height: 1.2; background: {bg};"
+            cells_html += f'<td style="{cell_style}"></td>'
+
+        table_rows_html += f"""
+        <tr>
+            <td style="padding: 30px 20px; border: 1px solid {grid_color}; font-weight: 700; color: {text_col_default}; background: {bg_light}; font-size: 40px; text-align: center;">
+                {row_label}
+            </td>
+            {cells_html}
+        </tr>
+        """
+
+    legend_html = ""
+    if show_legend and legend_items:
+        items_html = ""
+        for item in legend_items:
+            items_html += f"""
+            <div class="legend-item">
+                <div class="legend-circle" style="background-color: {item['color']};"></div>
+                <span class="legend-label">{item['label']}</span>
+            </div>
+            """
+        legend_html = f'<div class="legend-container">{items_html}</div>'
+
+    # ===== 2. FINAL HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+        <style>
+            :root {{
+                --bg-light: {bg_light};
+                --bg-dark: {bg_dark};
+                --grid-line: {grid_color};
+                --text-default: {text_col_default};
+            }}
+            body {{
+                margin: 0;
+                padding: 0;
+                background-color: var(--bg-light);
+                font-family: {font_family};
+                color: var(--text-default);
+                width: 1920px;
+                height: 1080px;
+                overflow: hidden;
+                position: relative;
+            }}
+            .left-bar {{
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 650px;
+                width: 70px;
+                background-color: #c9b09a;
+            }}
+            .top-box-mini {{
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 483px;
+                height: 50px;
+                background-color: #b7b9ab;
+            }}
+            .bottom-left-box {{
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                width: 235px;
+                height: 77px;
+                background-color: #b7b9ab;
+            }}
+            .bottom-right-box {{
+                position: absolute;
+                right: 70px;
+                bottom: 0;
+                width: 374px;
+                height: 58px;
+                background-color: #b7b9ab;
+            }}
+            .container {{
+                padding: 80px 100px 80px 170px;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                box-sizing: border-box;
+            }}
+            .header {{
+                margin-bottom: 20px;
+            }}
+            .main-title {{
+                font-size: {main_title_font_size};
+                font-weight: 700;
+                margin: 0;
+                line-height: 1.1;
+                letter-spacing: -2px;
+                color: {main_title_color};
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                font-weight: 300;
+                margin-top: 5px;
+                opacity: 0.8;
+                color: {subtitle_color};
+            }}
+            .legend-container {{
+                display: flex;
+                gap: 60px;
+                margin: 40px 0;
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                gap: 20px;
+            }}
+            .legend-circle {{
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                border: 2px solid var(--grid-line);
+            }}
+            .legend-label {{
+                font-size: 42px;
+                font-weight: 700;
+                color: var(--text-default);
+                letter-spacing: -0.5px;
+            }}
+            .content-layout {{
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }}
+            .table-wrapper {{
+                width: 100%;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                background: white;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                border: 1px solid var(--grid-line);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="left-bar"></div>
+        <div class="top-box-mini"></div>
+        <div class="bottom-left-box"></div>
+        <div class="bottom-right-box"></div>
+        
+        <div class="container">
+            <div class="header">
+                <h1 class="main-title">{main_title}</h1>
+                <div class="subtitle">{subtitle}</div>
+            </div>
+            
+            {legend_html}
+            
+            <div class="content-layout">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="padding: 20px; border: 1px solid {grid_color}; text-align: left; background: {bg_light};"></th>
+                                {header_html}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows_html}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
     </body>
     </html>
     """
