@@ -40,6 +40,7 @@ from backend.application.services.conversion_service import ConversionService
 from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
 from backend.application.services.doc_workflow_service import DocWorkflowService
+from backend.application.services.pdf_workflow_service import PdfWorkflowService
 from backend.application.services.idea_workflow_service import IdeaWorkflowService
 from backend.application.services.manual_workflow_service import ManualWorkflowService
 from backend.application.services.slidegen_workflow_service import SlideGenWorkflowService
@@ -103,6 +104,11 @@ _doc_workflow_service = DocWorkflowService(
     llm_provider=_slidegen_llm,
 )
 
+_pdf_workflow_service = PdfWorkflowService(
+    project_dir=str(PROJECT_DIR),
+    llm_provider=_slidegen_llm,
+)
+
 _slidegen_workflow_service = SlideGenWorkflowService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
@@ -110,6 +116,7 @@ _slidegen_workflow_service = SlideGenWorkflowService(
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,
     doc_workflow_service=_doc_workflow_service,
+    pdf_workflow_service=_pdf_workflow_service,
     conversion_service=_conversion_service
 )
 

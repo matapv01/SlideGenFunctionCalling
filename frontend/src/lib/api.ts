@@ -185,6 +185,16 @@ export const api = {
     return request<{ filename: string }>("/generate/docx/prepare-stream", { method: "POST", body: formData });
   },
 
+  // Upload for streaming workflow (PDF)
+  uploadPdfForStream: (file: File, options: {
+    workflow_mode?: string;
+  } = {}) => {
+    const formData = new FormData();
+    formData.append("file", file);
+    formData.append("workflow_mode", options.workflow_mode ?? "auto_no_heading");
+    return request<{ filename: string }>("/generate/pdf/prepare-stream", { method: "POST", body: formData });
+  },
+
   // Upload for manual structure editing workflow
   uploadDocxForManual: (file: File) => {
     const formData = new FormData();
@@ -326,6 +336,12 @@ export const api = {
   getTempFileUrl: (path: string) =>
     `${API_BASE_URL}/temp/file?path=${encodeURIComponent(path)}`,
 
+  // Resolve arbitrary absolute path starting with /api
+  resolveUrl: (path: string) => {
+    const base = API_BASE_URL.replace(/\/api\/v1\/?$/, "");
+    return `${base}${path.startsWith('/') ? path : '/' + path}`;
+  },
+
   // Cleanup temp directory
   cleanupTemp: (tempDir: string) =>
     request<{ success: boolean }>("/temp/cleanup", {
@@ -333,10 +349,30 @@ export const api = {
       body: JSON.stringify({ temp_dir: tempDir }),
     }),
 
+  // Upload an image for a manual structure session
+  uploadManualImage: (sessionId: string, file: File): Promise<{
+    success: boolean;
+    session_id: string;
+    filename: string;
+    rel_path: string;
+    url: string;
+    preview_url: string;
+  }> => {
+    const formData = new FormData();
+    formData.append("session_id", sessionId);
+    formData.append("file", file);
+    return request("/temp/upload-image", { method: "POST", body: formData });
+  },
+
   // SSE streaming URLs - requires token in query param for EventSource
   streamUrl: (filename: string) => {
     const token = localStorage.getItem("token");
     return `${API_BASE_URL}/generate/docx/stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token || "")}`;
+  },
+
+  pdfStreamUrl: (filename: string) => {
+    const token = localStorage.getItem("token");
+    return `${API_BASE_URL}/generate/pdf/stream?filename=${encodeURIComponent(filename)}&token=${encodeURIComponent(token || "")}`;
   },
 
   // SSE streaming for manual structure workflow

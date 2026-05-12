@@ -25,6 +25,7 @@ const SlideGen = () => {
   ];
 
   const docxRef = useRef<HTMLInputElement>(null);
+  const pdfRef = useRef<HTMLInputElement>(null);
 
 
   const [workflowMode, setWorkflowMode] = useState("auto_heading");
@@ -72,6 +73,40 @@ const SlideGen = () => {
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_starting });
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
       }
+    } catch (err: any) {
+      const isRateLimit = err.status === 429;
+      const rawMsg = (err.message || "").toLowerCase();
+      const isAuth = rawMsg.includes('authentication') || rawMsg.includes('unauthorized') || rawMsg.includes('not auth');
+      toast({
+        title: isRateLimit ? t.error_rate_limit_title : t.error_upload_title,
+        description: isRateLimit ? t.error_rate_limit_desc : (isAuth ? t.error_auth_required : undefined),
+        variant: "destructive"
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const handlePdfUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (workflowMode === "manual") {
+      toast({
+        title: "PDF chỉ hỗ trợ chế độ auto",
+        description: "Vui lòng chọn auto_heading hoặc auto_no_heading để tạo slide từ PDF.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsUploading(true);
+    try {
+      const res = await api.uploadPdfForStream(file, {
+        workflow_mode: workflowMode,
+      });
+      toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_starting });
+      navigate(`/streaming/pdf`, { state: { filename: res.filename, fileType: "pdf" } });
     } catch (err: any) {
       const isRateLimit = err.status === 429;
       const rawMsg = (err.message || "").toLowerCase();
@@ -183,6 +218,27 @@ const SlideGen = () => {
                 <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
                 <Button className="w-full gradient-primary text-primary-foreground" disabled={isUploading} onClick={() => docxRef.current?.click()}>
                   {isUploading ? t.slidegen_uploading : t.slidegen_choose_file} <Upload className="ml-2 h-4 w-4" />
+                </Button>
+              </CardContent>
+            </Card>
+
+            {/* Create from PDF (Auto only) */}
+            <Card className="group glass transition-all hover:shadow-xl">
+              <CardHeader>
+                <div className="mb-3 flex h-12 w-12 items-center justify-center rounded-xl gradient-primary">
+                  <Upload className="h-6 w-6 text-primary-foreground" />
+                </div>
+                <CardTitle>Create from PDF</CardTitle>
+                <CardDescription>Upload PDF and generate slides in auto mode</CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-5">
+                <input ref={pdfRef} type="file" accept=".pdf" className="hidden" onChange={handlePdfUpload} />
+                <Button
+                  className="w-full gradient-primary text-primary-foreground"
+                  disabled={isUploading}
+                  onClick={() => pdfRef.current?.click()}
+                >
+                  {isUploading ? t.slidegen_uploading : "Upload PDF"} <Upload className="ml-2 h-4 w-4" />
                 </Button>
               </CardContent>
             </Card>

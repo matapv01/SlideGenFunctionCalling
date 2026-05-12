@@ -92,6 +92,7 @@ const Streaming = () => {
 
     // Get parameters from location state
     const filename = location.state?.filename;
+    const fileType = location.state?.fileType || "docx";
     const sessionId = location.state?.sessionId || ideaSessionId;
     const isFromStructure = location.state?.isFromStructure;
 
@@ -112,8 +113,8 @@ const Streaming = () => {
       // Manual structure workflow
       url = api.manualStreamUrl(sessionId);
     } else {
-      // DOCX workflow
-      url = api.streamUrl(filename);
+      // Document workflow
+      url = fileType === "pdf" ? api.pdfStreamUrl(filename) : api.streamUrl(filename);
     }
 
     const es = new EventSource(url);

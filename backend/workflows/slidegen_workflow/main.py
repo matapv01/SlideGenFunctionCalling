@@ -225,6 +225,61 @@ def _save_markdown_source(output_folder: str, markdown_content: str, docx_path: 
         logger.error(f"Error saving markdown source: {e}")
 
 
+def _extract_data_uri_images_to_local(markdown_content: str, images_dir: str) -> Tuple[str, List[dict]]:
+    """
+    Extract markdown data URI images to local files and replace links.
+
+    Used for non-DOCX sources (e.g. PDF Marker output) where images are embedded in markdown.
+    """
+    import base64
+    import re
+
+    pattern = re.compile(r'!\[(?P<alt>[^\]]*)\]\(data:(?P<mime>image\/[^;]+);base64,(?P<b64>[^)]+)\)')
+    os.makedirs(images_dir, exist_ok=True)
+
+    image_infos: List[dict] = []
+    idx = [0]
+
+    def _replace(match: re.Match) -> str:
+        idx[0] += 1
+        alt = match.group("alt") or ""
+        mime = (match.group("mime") or "image/png").lower()
+        b64_data = match.group("b64") or ""
+
+        ext_map = {
+            "image/png": ".png",
+            "image/jpeg": ".jpg",
+            "image/jpg": ".jpg",
+            "image/webp": ".webp",
+            "image/gif": ".gif",
+            "image/bmp": ".bmp",
+            "image/tiff": ".tif",
+        }
+        ext = ext_map.get(mime, ".png")
+        filename = f"image_{idx[0]:03d}{ext}"
+        file_path = os.path.join(images_dir, filename)
+
+        try:
+            with open(file_path, "wb") as f:
+                f.write(base64.b64decode(b64_data))
+            rel_path = f"images/{filename}"
+            image_infos.append(
+                {
+                    "filename": filename,
+                    "rel_path": rel_path,
+                    "alt": alt,
+                    "source": "data_uri",
+                }
+            )
+            return f"![{alt}]({rel_path})"
+        except Exception as e:
+            logger.warning(f"Could not decode data URI image #{idx[0]}: {e}")
+            return ""
+
+    processed = pattern.sub(_replace, markdown_content or "")
+    return processed, image_infos
+
+
 def _generate_markdown_from_chunks(title: str, slide_chunks: list) -> str:
     """Generate markdown text from a list of slide chunks (Idea/Manual mode)."""
     lines = []
@@ -318,102 +373,172 @@ async def main_workflow(
             "slide_options": _slide_options
         }
 
-        # --- Save markdown + extract images (python-docx ground truth) ---
+        # --- Save markdown + extract images ---
         plain_text = doc_state.get("plain_text", "")
 
-        # 1. Extract images from DOCX → save to markdown/images/
-        #    Returns image_infos with rel_paths (e.g. "images/image_001.png")
+        # Determine source type
         md_dir = os.path.join(output_folder, "markdown")
         images_dir = os.path.join(md_dir, "images")
         os.makedirs(images_dir, exist_ok=True)
 
+        is_docx_source = bool(docx_file and str(docx_file).lower().endswith(".docx"))
+        is_pdf_source = bool(docx_file and str(docx_file).lower().endswith(".pdf"))
+
         image_infos: List[dict] = []
-        print(f"\n🖼️  [IMAGE] docx_file={docx_file!r}, exists={os.path.exists(docx_file) if docx_file else False}")
-        if docx_file and os.path.exists(docx_file):
+        processed_text = plain_text or ""
+
+        print(f"\n🖼️  [IMAGE] source_file={docx_file!r}, is_docx={is_docx_source}, is_pdf={is_pdf_source}")
+
+        if is_docx_source and docx_file and os.path.exists(docx_file):
+            # ── DOCX: extract images via python-docx (ground truth) ──────────
             image_infos = _extract_images_with_positions(docx_file, images_dir)
             print(f"🖼️  [IMAGE] python-docx found {len(image_infos)} image(s)")
             if image_infos:
                 import json as _json
                 with open(os.path.join(md_dir, "images_map.json"), "w", encoding="utf-8") as _f:
                     _json.dump(image_infos, _f, indent=2, ensure_ascii=False)
-                logger.info(f"Extracted {len(image_infos)} image(s) + saved images_map.json")
+                logger.info(f"Extracted {len(image_infos)} DOCX image(s) + saved images_map.json")
 
-        # 2. Replace data: URIs → local paths in plain_text & save source.md
-        if plain_text:
-            import re as _re2
-            _n_uri = len(_re2.findall(r'!\[[^\]]*\]\(data:[^)]+\)', plain_text, _re2.DOTALL))
-            print(f"🖼️  [IMAGE] plain_text has {_n_uri} data: URI(s), will replace with {len(image_infos)} local paths")
-            processed_text = _replace_base64_with_local_paths(plain_text, image_infos, images_dir)
+            # plain_text from markitdown may contain base64 data URIs
+            if plain_text:
+                processed_text = _replace_base64_with_local_paths(plain_text, image_infos, images_dir)
+
+        elif is_pdf_source:
+            # ── PDF: images already extracted & markdown already patched by pdf_workflow ──
+            # doc_state.image_infos contains the final image_infos list.
+            # images are already copied to <output_folder>/markdown/images/ by pdf_converter.py.
+            # plain_text already has canonical relative paths (images/image_001.png).
+            pdf_image_infos = doc_state.get("image_infos") or []
+            print(f"🖼️  [IMAGE] PDF mode: {len(pdf_image_infos)} image(s) already extracted by pdf_workflow")
+
+            if pdf_image_infos:
+                # Verify images landed in the correct final location.
+                # pdf_converter wrote them to <output_folder>/markdown/images/ already
+                # (it uses slide_options.output_folder). If not, try fallback:
+                missing = [i for i in pdf_image_infos
+                           if not os.path.exists(os.path.join(images_dir, i["filename"]))]
+                if missing:
+                    logger.warning(f"[PDF] {len(missing)} image file(s) missing in final images_dir – "
+                                   "pdf_converter may have used a different path; skipping copy")
+
+                image_infos = pdf_image_infos
+                import json as _json
+                with open(os.path.join(md_dir, "images_map.json"), "w", encoding="utf-8") as _f:
+                    _json.dump(image_infos, _f, indent=2, ensure_ascii=False)
+                logger.info(f"Saved images_map.json ({len(image_infos)} PDF image(s))")
+            else:
+                # Fallback: try extracting from data URIs in plain_text
+                if plain_text:
+                    import re as _re2
+                    _n_uri = len(_re2.findall(r'!\[[^\]]*\]\(data:[^)]+\)', plain_text, _re2.DOTALL))
+                    if _n_uri:
+                        print(f"🖼️  [IMAGE] PDF fallback: {_n_uri} data URI(s) found, extracting...")
+                        processed_text, image_infos = _extract_data_uri_images_to_local(plain_text, images_dir)
+                        if image_infos:
+                            import json as _json
+                            with open(os.path.join(md_dir, "images_map.json"), "w", encoding="utf-8") as _f:
+                                _json.dump(image_infos, _f, indent=2, ensure_ascii=False)
+
+            # plain_text is already patched (marker paths → images/image_NNN)
+            processed_text = plain_text
+
+        else:
+            # ── Other sources (no images expected) ───────────────────────────
+            if plain_text:
+                import re as _re2
+                _n_uri = len(_re2.findall(r'!\[[^\]]*\]\(data:[^)]+\)', plain_text, _re2.DOTALL))
+                if _n_uri:
+                    processed_text, image_infos = _extract_data_uri_images_to_local(plain_text, images_dir)
+
+        # Save source.md
+        if processed_text:
             with open(os.path.join(md_dir, "source.md"), "w", encoding="utf-8") as _f:
                 _f.write(processed_text)
             print(f"🖼️  [IMAGE] source.md saved → {os.path.join(md_dir, 'source.md')}")
-        else:
+        elif not plain_text:
             md_text = _generate_markdown_from_chunks(
                 doc_state.get("document_title", "Untitled"),
                 initial_input["slide_chunks"]
             )
-            processed_text = md_text
             with open(os.path.join(md_dir, "source.md"), "w", encoding="utf-8") as _f:
                 _f.write(md_text)
 
-        # 3. Update slide_chunks content: replace data: URIs with FULL STATIC URLs
-        #    e.g. /static/output/{doc_name}/markdown/images/image_001.png
+        # 3. Patch slide_chunks to replace image references with full static URLs
         if image_infos:
             import re as _re
-            DATA_URI_RE = _re.compile(r'!\[([^\]]*)\]\(data:[^)]+\)', _re.DOTALL)
 
             # Build the URL-accessible base for images
             _STATIC_ROOT = "/app/static"
             if output_folder.replace("\\", "/").startswith(_STATIC_ROOT):
                 _url_base = "/static" + output_folder.replace("\\", "/")[len(_STATIC_ROOT):]
             else:
-                # fallback: try to extract /static/ portion
                 _folder_norm = output_folder.replace("\\", "/")
                 _idx = _folder_norm.find("/static/")
                 _url_base = _folder_norm[_idx:] if _idx >= 0 else _folder_norm
             images_url_base = f"{_url_base}/markdown/images"
             print(f"🖼️  [IMAGE] images_url_base = {images_url_base}")
 
+            # Build name→full_url map
+            name_to_url = {
+                info["filename"]: f"{images_url_base}/{info['filename']}"
+                for info in image_infos
+            }
+
+            # Patterns to match:
+            # 1. data: URI  (DOCX)  -> replace Nth occurrence
+            # 2. images/image_NNN.ext  (PDF marker canonical path) -> replace by name
+            DATA_URI_RE = _re.compile(r'!\[([^\]]*)\]\(data:[^)]+\)', _re.DOTALL)
+            MARKER_REL_RE = _re.compile(r'!\[([^\]]*)\]\((images/[^)]+)\)', _re.IGNORECASE)
+
             def _patch_chunks(chunks: list, img_infos: list) -> list:
-                nth = [0]
-                def _repl(m: _re.Match) -> str:
-                    idx = nth[0]; nth[0] += 1
+                # counter for DOCX data-URI replacement
+                nth_docx = [0]
+
+                def _repl_data_uri(m: _re.Match) -> str:
+                    idx = nth_docx[0]; nth_docx[0] += 1
                     if idx < len(img_infos):
-                        # Use full static URL so browser can resolve the image
-                        img_name = img_infos[idx]['rel_path'].split('/')[-1]
-                        full_url = f"{images_url_base}/{img_name}"
-                        return f"![{m.group(1)}]({full_url})"
+                        fname = img_infos[idx]["filename"]
+                        return f"![{m.group(1)}]({images_url_base}/{fname})"
                     return ""
+
+                def _repl_marker_rel(m: _re.Match) -> str:
+                    alt = m.group(1)
+                    rel = m.group(2)              # e.g.  images/image_001.jpg
+                    fname = rel.split("/")[-1]    # image_001.jpg
+                    if fname in name_to_url:
+                        return f"![{alt}]({name_to_url[fname]})"
+                    return m.group(0)
 
                 patched = []
                 for chunk in chunks:
                     c = dict(chunk)
-                    # Patch ALL text fields that may contain image references
                     for field in ("text_content", "content", "description"):
                         if c.get(field):
-                            c[field] = DATA_URI_RE.sub(_repl, str(c[field]))
+                            val = str(c[field])
+                            val = DATA_URI_RE.sub(_repl_data_uri, val)
+                            val = MARKER_REL_RE.sub(_repl_marker_rel, val)
+                            c[field] = val
                     patched.append(c)
                 return patched
 
             patched_chunks = _patch_chunks(initial_input["slide_chunks"], image_infos)
             initial_input["slide_chunks"] = patched_chunks
 
-            # --- LOG: Print full content of patched chunks ---
+            # Debug log
             TEXT_FIELDS = ("text_content", "content", "description")
-            IMG_URL_MARKER = images_url_base.split("/")[-3] if "/" in images_url_base else "images"
             print("\n" + "="*60)
             print(f"🖼️  [PATCHED SLIDE CHUNKS] {len(patched_chunks)} total chunks")
             print("="*60)
             for i, c in enumerate(patched_chunks):
-                label  = c.get("heading") or c.get("title") or f"chunk[{i}]"
+                label = c.get("heading") or c.get("title") or f"chunk[{i}]"
                 text = next((str(c.get(f, "")) for f in TEXT_FIELDS if c.get(f)), "(empty)")
                 has_img = any("/static/" in str(c.get(f, "")) for f in TEXT_FIELDS)
-                marker = "🖼️ " if has_img else "   "
-                print(f"\n{marker}--- Chunk [{i}] '{label}' ---")
+                marker_sym = "🖼️ " if has_img else "   "
+                print(f"\n{marker_sym}--- Chunk [{i}] '{label}' ---")
                 print(text)
             print("="*60 + "\n")
 
-            # Save full slide_chunks to markdown/slide_chunks_debug.json
+            # Save debug JSON
             import json as _json2
             debug_path = os.path.join(md_dir, "slide_chunks_debug.json")
             with open(debug_path, "w", encoding="utf-8") as _f2:
@@ -506,9 +631,103 @@ async def main_workflow_from_chunks(
         initial_input["slide_context_maps"] = manual_state.get("slide_context_maps", [])
         initial_input["document_structure"] = manual_state.get("document_structure", {"title": title})
 
+        # ── Copy manual-uploaded images to output folder ─────────────────────
+        # Images saved at TEMP_DIR/manual_images/<session_id>/image_NNN.ext
+        # Copy to <output_folder>/markdown/images/ then patch slide_chunks URLs.
+        from backend.config import TEMP_DIR as _TEMP_DIR
+        import shutil as _shutil
+        import json as _json_manual
+
+        _session_id = (slide_options or {}).get("session_id", "")
+        _md_dir = os.path.join(output_folder, "markdown")
+        _images_dir = os.path.join(_md_dir, "images")
+        os.makedirs(_images_dir, exist_ok=True)
+
+        manual_image_infos: List[dict] = []
+
+        if _session_id:
+            _manual_img_src = os.path.join(str(_TEMP_DIR), "manual_images", _session_id)
+            if os.path.isdir(_manual_img_src):
+                _IMG_EXTS = {".png", ".jpg", ".jpeg", ".gif", ".bmp", ".webp", ".tif", ".tiff", ".svg"}
+                for _fname in sorted(os.listdir(_manual_img_src)):
+                    if os.path.splitext(_fname)[1].lower() in _IMG_EXTS:
+                        _src_path = os.path.join(_manual_img_src, _fname)
+                        _dest_path = os.path.join(_images_dir, _fname)
+                        try:
+                            _shutil.copy2(_src_path, _dest_path)
+                            manual_image_infos.append({
+                                "filename": _fname,
+                                "rel_path": f"images/{_fname}",
+                                "source": "manual_upload",
+                            })
+                            logger.info(f"[Manual] Copied image: {_fname}")
+                        except Exception as _copy_err:
+                            logger.warning(f"[Manual] Could not copy {_fname}: {_copy_err}")
+
+                if manual_image_infos:
+                    _map_path = os.path.join(_md_dir, "images_map.json")
+                    with open(_map_path, "w", encoding="utf-8") as _mf:
+                        _json_manual.dump(manual_image_infos, _mf, indent=2, ensure_ascii=False)
+                    logger.info(f"[Manual] images_map.json saved ({len(manual_image_infos)} image(s))")
+
+        # ── Patch slide_chunks: temp preview URLs → static URLs ─────────────────
+        if manual_image_infos:
+            import re as _re_manual
+            _folder_norm = output_folder.replace("\\", "/")
+            _idx_static = _folder_norm.find("/static/")
+            _url_base = _folder_norm[_idx_static:] if _idx_static >= 0 else _folder_norm
+            _images_url_base = f"{_url_base}/markdown/images"
+            _name_to_url = {
+                info["filename"]: f"{_images_url_base}/{info['filename']}"
+                for info in manual_image_infos
+            }
+            # Pattern 1: Absolute path inserted by frontend (e.g. C:\... or /usr/...)
+            _TEMP_URL_RE = _re_manual.compile(
+                r'!\[([^\]]*)\]\(([^)]*manual_images[^)]*)\)', _re_manual.IGNORECASE
+            )
+            # Pattern 2: canonical relative path  images/image_NNN.ext
+            _CANONICAL_RE = _re_manual.compile(r'!\[([^\]]*)\]\((images/[^\)]+)\)', _re_manual.IGNORECASE)
+            _nth = [0]
+
+            def _repl_temp(m: _re_manual.Match) -> str:
+                alt = m.group(1)
+                raw_url = m.group(2)
+                import urllib.parse
+                # URL contains ?path=C:\...\image_001.png or similar.
+                # Extract the actual filename
+                unquoted = urllib.parse.unquote(raw_url).replace('\\', '/')
+                fname = unquoted.split('/')[-1].split('?')[0].split('&')[0]
+                
+                if fname in _name_to_url:
+                    return f"![{alt}]({_name_to_url[fname]})"
+                
+                # Fallback if parsing fails (should rarely happen)
+                idx = _nth[0]; _nth[0] += 1
+                if idx < len(manual_image_infos):
+                    return f"![{alt}]({_images_url_base}/{manual_image_infos[idx]['filename']})"
+                return m.group(0)
+
+            def _repl_canonical(m: _re_manual.Match) -> str:
+                alt = m.group(1)
+                fname = m.group(2).split("/")[-1]
+                return f"![{alt}]({_name_to_url[fname]})" if fname in _name_to_url else m.group(0)
+
+            _patched: list = []
+            for _chunk in initial_input["slide_chunks"]:
+                _c = dict(_chunk)
+                for _field in ("text_content", "content", "description"):
+                    if _c.get(_field):
+                        _val = str(_c[_field])
+                        _val = _TEMP_URL_RE.sub(_repl_temp, _val)
+                        _val = _CANONICAL_RE.sub(_repl_canonical, _val)
+                        _c[_field] = _val
+                _patched.append(_c)
+            initial_input["slide_chunks"] = _patched
+            logger.info(f"[Manual] Patched {len(_patched)} chunks with {len(manual_image_infos)} image(s)")
+
         # Save markdown representation
         md_text = _generate_markdown_from_chunks(
-            initial_input["document_structure"].get("title", title), 
+            initial_input["document_structure"].get("title", title),
             initial_input["slide_chunks"]
         )
         _save_markdown_source(output_folder, md_text)

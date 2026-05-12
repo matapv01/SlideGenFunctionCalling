@@ -27,7 +27,7 @@ async def create_manual_session(
     file: UploadFile = File(...),
     service: StructureService = Depends(get_structure_service)
 ):
-    """Upload DOCX và khởi tạo session cho trình chỉnh sửa thủ công"""
+    """Upload DOCX, persist images locally, normalize markdown, and create manual editor session."""
     filename = file.filename or "document.docx"
     if not filename.lower().endswith(".docx"):
         raise HTTPException(status_code=400, detail="Chỉ chấp nhận tệp DOCX")
@@ -41,46 +41,57 @@ async def create_manual_session(
     try:
         file_bytes = await file.read()
         temp_path.write_bytes(file_bytes)
-        from docx import Document
-    except ImportError as exc:
-        logger.error("python-docx chưa được cài đặt: %s", exc)
-        raise HTTPException(status_code=500, detail="Thiếu thư viện python-docx")
     except Exception as exc:
         logger.error("Không thể lưu tệp DOCX: %s", exc)
         raise HTTPException(status_code=500, detail="Không thể xử lý tệp tải lên")
 
     try:
-        doc = Document(temp_path)
-        full_text = ""
-        paragraphs_data = []
-        for idx, para in enumerate(doc.paragraphs):
-            text = para.text.strip()
-            if not text:
-                continue
-            start_pos = len(full_text)
-            full_text += text + "\n\n"
-            paragraphs_data.append({
-                "index": idx,
-                "text": text,
-                "start_pos": start_pos,
-                "end_pos": len(full_text)
-            })
+        from markitdown import MarkItDown
+        from backend.workflows.doc_workflow.nodes.document_converter import parse_markdown_to_hierarchical_json
+        from backend.workflows.slidegen_workflow.main import _extract_images_with_positions, _replace_base64_with_local_paths
+
+        converter = MarkItDown()
+        markdown_text = converter.convert(str(temp_path)).text_content or ""
 
         session_id = service.create_session(
             filename=safe_name,
-            full_text=full_text,
-            paragraphs=paragraphs_data,
+            full_text=markdown_text,
+            paragraphs=[],
             docx_path=str(temp_path)
         )
 
-        logger.info("✅ Manual session created: %s (%s paragraphs)", session_id, len(paragraphs_data))
+        session_temp_dir = TEMP_DIR / f"slidegen_{session_id}"
+        session_temp_dir.mkdir(parents=True, exist_ok=True)
+        images_dir = session_temp_dir / "images"
+        images_dir.mkdir(parents=True, exist_ok=True)
+
+        image_infos = _extract_images_with_positions(str(temp_path), str(images_dir))
+        normalized_markdown = _replace_base64_with_local_paths(markdown_text, image_infos, str(images_dir))
+        normalized_markdown = normalized_markdown.replace("images/", f"{session_temp_dir.as_posix()}/images/")
+
+        document_title, document_structure = parse_markdown_to_hierarchical_json(normalized_markdown)
+        if not document_title.strip():
+            document_title = Path(safe_name).stem
+
+        service._sessions[session_id]["document_title"] = document_title
+        service._sessions[session_id]["document_text"] = normalized_markdown
+        service._sessions[session_id]["document_structure"] = document_structure
+        service._sessions[session_id]["manual_images_dir"] = str(images_dir)
+
+        service.update_session_structure(
+            session_id=session_id,
+            structure=document_structure,
+            intro_slide=None,
+        )
+
+        logger.info("✅ Manual session created: %s (%s image(s))", session_id, len(image_infos))
 
         return {
             "success": True,
             "session_id": session_id,
-            "document_title": Path(safe_name).stem,
-            "text_length": len(full_text),
-            "paragraph_count": len(paragraphs_data)
+            "document_title": document_title,
+            "text_length": len(normalized_markdown),
+            "paragraph_count": len(document_structure)
         }
     except HTTPException:
         raise

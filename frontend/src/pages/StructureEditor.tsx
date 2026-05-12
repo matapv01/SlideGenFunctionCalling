@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useSearchParams, useNavigate, useParams } from "react-router-dom";
 import {
   Check, Loader2, FileText, ArrowLeft, XCircle, Sparkles, AlertCircle,
-  Bold, Italic, List, ListOrdered, Quote, Code, Heading1, Heading2, Minus
+  Bold, Italic, List, ListOrdered, Quote, Code, Heading1, Heading2, Minus, Image
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -69,6 +69,8 @@ interface ParsedSlidePreview {
   title: string;
   content: string;
   bullets: Array<{ text: string; level: number }>;
+  images: Array<{ alt: string; src: string; title?: string }>;
+  rawMarkdown?: string;
 }
 
 interface ManualSlideNode {
@@ -78,6 +80,7 @@ interface ManualSlideNode {
   content: string;
   children: ManualSlideNode[];
   is_transition?: boolean;
+  rawMarkdown?: string;
 }
 
 // ============ MAIN COMPONENT ============
@@ -101,10 +104,12 @@ const StructureEditor = () => {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [leftWidth, setLeftWidth] = useState(70);
+  const [uploadingImage, setUploadingImage] = useState(false);
 
   const parsedStructureRef = useRef<any[] | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
 
   const startResizing = (mouseDownEvent: React.MouseEvent) => {
     mouseDownEvent.preventDefault();
@@ -209,6 +214,60 @@ const StructureEditor = () => {
     }, 0);
   };
 
+  // Handle image file selection and upload
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !sessionId) return;
+
+    // Reset input so same file can be re-selected
+    e.target.value = "";
+
+    setUploadingImage(true);
+    try {
+      const result = await api.uploadManualImage(sessionId, file);
+      if (!result.success) throw new Error("Upload failed");
+
+      const alt = file.name.replace(/\.[^.]+$/, "");
+      // preview_url is already properly URL-encoded by the backend
+      // e.g. /api/v1/temp/file?path=n%3A%5C...%5Cimage_001.png
+      const mdImage = `![${alt}](${result.preview_url})`;
+
+      // Insert at cursor position
+      const textarea = textareaRef.current;
+      if (textarea) {
+        const start = textarea.selectionStart;
+        const end = textarea.selectionEnd;
+        const newText =
+          markdownContent.substring(0, start) +
+          "\n" + mdImage + "\n" +
+          markdownContent.substring(end);
+        setMarkdownContent(newText);
+        setIsDirty(true);
+        setTimeout(() => {
+          textarea.focus();
+          const pos = start + mdImage.length + 2;
+          textarea.setSelectionRange(pos, pos);
+        }, 0);
+      } else {
+        setMarkdownContent((prev) => prev + "\n" + mdImage + "\n");
+        setIsDirty(true);
+      }
+
+      toast({
+        title: "Ảnh đã tải lên",
+        description: `${result.filename} — chèn vào slide thành công`,
+      });
+    } catch (err: any) {
+      toast({
+        title: "Lỗi tải ảnh",
+        description: err.message || "Không thể tải ảnh lên",
+        variant: "destructive",
+      });
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   // Convert structure back to markdown for editing
   const convertStructureToMarkdown = (nodes: any[], depth: number = 1): string => {
     let markdown = "";
@@ -233,6 +292,7 @@ const StructureEditor = () => {
     title: title || "Untitled",
     content: "",
     children: [],
+    rawMarkdown: "",
   });
 
   // Accept heading syntax without space, e.g. "#Title" -> "# Title"
@@ -243,22 +303,32 @@ const StructureEditor = () => {
       .join("\n");
   };
 
-  // Parse markdown with strict rule:
-  // - only lines with leading # become slide titles
-  // - other lines become content of current slide
-  // - content without a slide is ignored (must start with # heading)
+  const extractMarkdownImages = (markdown: string) => {
+    const images: Array<{ alt: string; src: string; title?: string }> = [];
+    const pattern = /!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g;
+    let match: RegExpExecArray | null;
+    while ((match = pattern.exec(markdown)) !== null) {
+      images.push({
+        alt: match[1] || "",
+        src: match[2] || "",
+        title: match[3] || undefined,
+      });
+    }
+    return images;
+  };
+
+  const removeMarkdownImages = (markdown: string) => markdown.replace(/!\[[^\]]*\]\((?:[^)]+)\)/g, "");
+
+  // Parse markdown with improved block preservation for realtime preview.
   const parseMarkdownToLevel1Slides = (markdown: string): ManualSlideNode[] => {
     const normalized = normalizeMarkdownForParsing(markdown).replace(/\r\n?/g, "\n");
     const lines = normalized.split("\n");
     const slides: ManualSlideNode[] = [];
     let currentSlide: ManualSlideNode | null = null;
 
-    const appendContentLine = (line: string) => {
-      // Only append content if we have a current slide (i.e., after a # heading)
-      if (currentSlide) {
-        currentSlide.content = currentSlide.content ? `${currentSlide.content}\n${line}` : line;
-      }
-      // Otherwise ignore orphaned content before first heading
+    const appendRawLine = (line: string) => {
+      if (!currentSlide) return;
+      currentSlide.rawMarkdown = currentSlide.rawMarkdown ? `${currentSlide.rawMarkdown}\n${line}` : line;
     };
 
     for (const rawLine of lines) {
@@ -271,29 +341,36 @@ const StructureEditor = () => {
           currentSlide = createManualSlide(headingText);
           slides.push(currentSlide);
         } else {
-          // Lower heading levels are not titles; keep them as content lines.
-          appendContentLine(`• ${headingText}`);
+          appendRawLine(rawLine);
         }
         continue;
       }
 
-      appendContentLine(rawLine);
+      appendRawLine(rawLine);
     }
 
-    return slides.map((slide) => ({
-      ...slide,
-      content: slide.content
+    return slides.map((slide) => {
+      const raw = (slide.rawMarkdown || "")
         .split("\n")
         .map((line) => line.replace(/\s+$/g, ""))
         .join("\n")
         .replace(/\n{3,}/g, "\n\n")
-        .trim(),
-    }));
+        .trim();
+      return {
+        ...slide,
+        rawMarkdown: raw,
+        // Keep images in content so backend structure_approver can include
+        // them in slide_chunks text_content for downstream image patching.
+        // Preview display handles images separately via rawMarkdown + extractMarkdownImages.
+        content: raw,
+      };
+    });
   };
 
   const buildSlidePreviewFromStructure = (structure: ManualSlideNode[]): ParsedSlidePreview[] => {
     return (structure || []).map((node, idx) => {
-      const lines = (node.content || "").split("\n").map((line) => line.trimEnd());
+      const rawMarkdown = node.rawMarkdown || node.content || "";
+      const lines = removeMarkdownImages(rawMarkdown).split("\n").map((line) => line.trimEnd());
 
       const contentLines: string[] = [];
       const bulletsFromContent: Array<{ text: string; level: number }> = [];
@@ -317,6 +394,8 @@ const StructureEditor = () => {
         title: node.title || "Untitled",
         content: contentLines.join("\n"),
         bullets: bulletsFromContent,
+        images: extractMarkdownImages(rawMarkdown),
+        rawMarkdown,
       };
     });
   };
@@ -461,6 +540,32 @@ const StructureEditor = () => {
                 </div>
               </div>
 
+              {/* Image Upload Toolbar */}
+              <div className="flex items-center gap-1.5">
+                <button
+                  type="button"
+                  title="Insert image"
+                  disabled={uploadingImage || !sessionId}
+                  onClick={() => imageInputRef.current?.click()}
+                  className="flex items-center gap-1.5 rounded-md border border-border bg-muted/50 px-2.5 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-muted disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {uploadingImage
+                    ? <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    : <Image className="h-3.5 w-3.5" />}
+                  {uploadingImage ? "Uploading..." : "Insert Image"}
+                </button>
+                <span className="text-xs text-muted-foreground">PNG, JPG, GIF, WebP — max 20 MB</span>
+              </div>
+
+              {/* Hidden image file input */}
+              <input
+                ref={imageInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={handleImageUpload}
+              />
+
               {/* Editor Textarea */}
               <div className="relative flex-1">
                 <Textarea
@@ -558,7 +663,31 @@ Note: Each # heading creates a new slide`}
                           </div>
 
                           {/* Content Area */}
-                          <div className="flex flex-[0.75] flex-col px-8 py-2 overflow-hidden">
+                          <div className="flex flex-[0.75] flex-col px-8 py-2 overflow-hidden gap-2">
+                            {slide.images.length > 0 && (
+                              <div className="grid gap-2">
+                                {slide.images.slice(0, 2).map((image, idx) => (
+                                  <div key={`${slide.index}-img-${idx}`} className="overflow-hidden rounded-md border border-gray-200 bg-gray-50">
+                                    <img
+                                      src={
+                                        image.src.startsWith("http") || image.src.startsWith("data:")
+                                          ? image.src
+                                          : image.src.startsWith("/api/")
+                                            ? api.resolveUrl(image.src)
+                                            : api.getTempFileUrl(image.src)
+                                      }
+                                      alt={image.alt || "image"}
+                                      title={image.title}
+                                      className="max-h-28 w-full object-contain"
+                                    />
+                                  </div>
+                                ))}
+                                {slide.images.length > 2 && (
+                                  <p className="text-[9px] text-gray-400 italic">+{slide.images.length - 2} more images...</p>
+                                )}
+                              </div>
+                            )}
+
                             {paragraphs.length > 0 && (
                               <div className="space-y-1">
                                 {paragraphs.slice(0, 3).map((paragraph, idx) => (
@@ -589,7 +718,7 @@ Note: Each # heading creates a new slide`}
                               </ul>
                             )}
 
-                            {paragraphs.length === 0 && bullets.length === 0 && (
+                            {paragraphs.length === 0 && bullets.length === 0 && slide.images.length === 0 && (
                               <div className="flex h-full items-center justify-center rounded border border-dashed border-gray-200 bg-gray-50/50 text-[10px] text-gray-400">
                                 No content
                               </div>

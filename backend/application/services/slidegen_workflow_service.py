@@ -8,6 +8,7 @@ from backend.domain.ports.parser_provider import ParserProvider
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 from backend.application.services.base_workflow_service import BaseWorkflowService
 from backend.application.services.doc_workflow_service import DocWorkflowService
+from backend.application.services.pdf_workflow_service import PdfWorkflowService
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         parser_provider: ParserProvider,
         tool_retriever: ToolRetrieveProvider,
         doc_workflow_service: DocWorkflowService,
+        pdf_workflow_service: PdfWorkflowService,
         conversion_service=None
     ):
         super().__init__(project_dir)
@@ -33,6 +35,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         self.parser_provider = parser_provider
         self.tool_retriever = tool_retriever
         self.doc_workflow_service = doc_workflow_service
+        self.pdf_workflow_service = pdf_workflow_service
         self.conversion_service = conversion_service
 
     def _get_providers(self) -> Dict[str, Any]:
@@ -105,6 +108,49 @@ class SlideGenWorkflowService(BaseWorkflowService):
 
         raw_result, temp_dir = await self._execute_workflow_logic(run_logic, "chunk", **kwargs)
         
+        if raw_result and isinstance(raw_result, str):
+            return raw_result
+        elif temp_dir:
+            return str(temp_dir)
+        return None
+
+    async def process_pdf(self, pdf_path: str, output_folder: str = None, **kwargs) -> Optional[str]:
+        """Tạo slide từ file PDF (luồng preprocess PDF riêng)."""
+        from backend.workflows.slidegen_workflow.main import main_workflow
+
+        async def run_logic(output_folder, **kw):
+            _slide_options = dict(kw.get('slide_options', {}))  # mutable copy
+            _workflow_mode = _slide_options.get('workflow_mode', 'auto_no_heading')
+            _stream_callback = kw.get('callback')
+
+            # Inject output_folder so pdf_converter.py can write images to the
+            # correct final directory (<output_folder>/markdown/images/).
+            _slide_options['output_folder'] = output_folder
+
+            # Step 1: Run dedicated pdf_workflow service first.
+            doc_state = await self.pdf_workflow_service.preprocess_pdf(
+                pdf_file=pdf_path,
+                workflow_mode=_workflow_mode,
+                slide_options=_slide_options,
+                callback=_stream_callback,
+            )
+
+            # Step 2: Run slidegen_workflow after pdf_workflow finished.
+            return await main_workflow(
+                docx_file=pdf_path,  # keep existing slidegen state compatibility
+                output_folder=output_folder,
+                doc_state=doc_state,
+                infra_providers=self._get_providers(),
+                router_flags=kw.get('router_flags', False),
+                callback=_stream_callback,
+                slide_options=_slide_options
+            )
+
+        if output_folder:
+            kwargs['output_folder'] = output_folder
+
+        raw_result, temp_dir = await self._execute_workflow_logic(run_logic, "pdf", **kwargs)
+
         if raw_result and isinstance(raw_result, str):
             return raw_result
         elif temp_dir:
