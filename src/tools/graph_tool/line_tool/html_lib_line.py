@@ -1077,33 +1077,10 @@ def generate_line_chart_slide_5(
     main_title_font_size: str = "60px"  # Tăng từ 48px lên 60px
     subtitle_font_size: str = "18px"   # Giảm nhẹ để tạo thanh mảnh
     insight_font_size: str = "25px"
-    chart_options = {
-        "unit": unit,
-        "show_value": show_value,
-        "show_legend": show_legend,
-        "colors": colors,
-        "x_axis": x_axis,
-        "y_axis": y_axis,
-        "y_axis_min": y_axis_min,
-        "y_axis_max": y_axis_max
-    }
-    
-    data_input = {
-        "time_points": categories,
-        "series": series
-    }
-
     # ===== 1. DATA INFORMATION EXTRACTION =====
-    data = data_input.get("data", data_input)
-    time_points = data.get("time_points", [])
-    series = data.get("series", [])
-    options = chart_options
-    unit = options.get("unit", "")
-    show_value = options.get("show_value", False)
-    show_legend = options.get("show_legend", True)
-    colors = options.get("colors", ["#E53935", "#1E88E5", "#43A047", "#FFB300"])
-    x_axis_label = options.get("x_axis", "Time")
-    y_axis_label = options.get("y_axis", "Value")
+    time_points = categories
+    x_axis_label = x_axis
+    y_axis_label = y_axis
 
     # ===== 2. SVG CONFIGURATION =====
     svg_w, svg_h = 1000, 600
@@ -1112,8 +1089,8 @@ def generate_line_chart_slide_5(
     chart_h = svg_h - margin_t - margin_b
     
     all_values = [v for s in series for v in s.get("values", [])]
-    y_min_input = options.get("y_axis_min")
-    y_max_input = options.get("y_axis_max")
+    y_min_input = y_axis_min
+    y_max_input = y_axis_max
     y_min = float(y_min_input) if y_min_input is not None else (min(all_values) * 0.9 if all_values else 0)
     y_max = float(y_max_input) if y_max_input is not None else (max(all_values) * 1.1 if all_values else 100)
     if y_max == y_min:

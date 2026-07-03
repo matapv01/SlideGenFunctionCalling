@@ -453,7 +453,7 @@ def generate_pie_chart_slide_2(
     """
     return html_code
 
-def generate_pie_chart_donut_slide_3(
+def generate_pie_chart_slide_3(
     main_title: str = "MILITARY ALLOCATION",
     subtitle: str = "Regional Force Distribution & Resource Management",
     insight: str = (

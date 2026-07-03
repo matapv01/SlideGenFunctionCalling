@@ -1,14 +1,15 @@
 from pydantic import BaseModel, Field, List, Dict, Any
 from langchain_core.tools import StructuredTool
 from typing import Optional 
-from html_lib_piechart import (
-    generate_pie_chart_slide_8,
+from .html_lib_piechart import (
     generate_pie_chart_slide_1,
     generate_pie_chart_slide_2,
     generate_pie_chart_slide_3,
     generate_pie_chart_slide_4,
     generate_pie_chart_slide_5,
-    generate_pie_chart_slide_6
+    generate_pie_chart_slide_6,
+    generate_pie_chart_slide_7,
+    generate_pie_chart_slide_8
 )
 
 
@@ -81,7 +82,7 @@ class GeneratePieChartSlide2(BaseModel):
         """
     )
 
-class GeneratePieChartSlide3Donut(BaseModel):
+class GeneratePieChartSlide3(BaseModel):
     """
     Input schema for generating a pie chart slide.
     """

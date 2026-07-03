@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 from typing import Optional 
-from html_lib_treemap import (
+from .html_lib_treemap import (
     generate_treemap_chart_slide_1,
     generate_treemap_chart_slide_2,
     generate_treemap_chart_slide_3,

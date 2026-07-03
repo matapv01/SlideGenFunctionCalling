@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional, Union, Any
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
-from html_lib_line import (
+from .html_lib_line import (
     generate_line_chart_slide_1,
     generate_line_chart_slide_2,
     generate_line_chart_slide_3,
@@ -148,13 +148,12 @@ class GenerateLineChartSlide4(BaseModel):
     show_legend: bool = Field(default=True, description="Whether legend is displayed.")
     y_axis_min: float = Field(default=50, description="Minimum value of Y-axis (auto if None).")
     y_axis_max: float = Field(default=260, description="Maximum value of Y-axis (auto if None).")
-    data_label_format: str = Field(default=None, description="Format string for values (e.g., '{value}', '{value} units'). If None, uses default formatting.")
+    data_label_format: Optional[str] = Field(default=None, description="Format string for values (e.g., '{value}', '{value} units'). If None, uses default formatting.")
     colors: List[str] = Field(default=["#FF8C00", "#4A90E2"], description="List of colors for each line series.")
     time_points: List[str] = Field(..., description="List of time points (e.g., ['2019', '2020', '2021', '2022', '2023', '2024']).")
     series: List[Dict[str, Union[str, List[float]]]] = Field(
-        ..., 
-        description=
-        """
+        ...,
+        description="""
         Line chart series data.
 
         Structure:

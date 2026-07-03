@@ -1,7 +1,7 @@
 from typing import List, Dict, Optional, Union, Any
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
-from html_lib_table import (
+from .html_lib_table import (
     generate_table_slide_1,
     generate_table_slide_2,
     generate_table_slide_3,
