@@ -170,8 +170,8 @@ class GenerateTreemapChartSlide3(BaseModel):
 class GenerateTreemapChartSlide4(BaseModel):
     """Input schema for generate_treemap_chart_slide_4."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters).")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source.")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the left panel, usually summarizing trends or highlights from the data.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source.")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel, usually summarizing trends or highlights from the data.")
     unit: str = Field(..., description="Unit displayed with values (e.g., 'M', '%', '$').")
     show_value: bool = Field(True, description="Whether numeric values are displayed inside treemap blocks.")
     show_label: bool = Field(True, description="Whether category labels are displayed inside treemap blocks.")

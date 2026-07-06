@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 from typing import Optional, Union
-from typing import List, Dict, Optional
+from typing import List, Dict
 from .html_lib_scatter import (
     generate_scatter_plot_chart_slide_1,
     generate_scatter_plot_chart_slide_2,
@@ -15,8 +15,8 @@ from .html_lib_scatter import (
 class GenerateScatterPlotChart1(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_1."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Early Childhood Development Analysis'")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Correlation between Play Time and Social Skill Scores'")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Correlation between Play Time and Social Skill Scores'")
+    insight: str = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot.")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Play Time (Hours)').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Social Skill Score (0-100)').")
     unit: str = Field(..., description="Unit displayed with values (e.g., 'pts', 'points').")
@@ -80,14 +80,14 @@ class GenerateScatterPlotChartSlide2(BaseModel):
 class GenerateScatterPlotChartSlide3(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_3."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Study Time and Exam Performance Trend'")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Education Performance Study 2026'")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Students attending guided revision sessions consistently outperform independent learners.'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Education Performance Study 2026'")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Students attending guided revision sessions consistently outperform independent learners.'")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Self-Study Hours').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Final Exam Score').")
     unit: str = Field(..., description="Unit displayed with values (e.g., 'points', '%', 'USD').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
-    data_label_format: Optional[str] = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
+    data_label_format: str = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
     x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
     x_axis_max: float = Field(default=20, description="Maximum value for X-axis. If not provided, it is computed from data.")
     y_axis_min: float = Field(default=50, description="Minimum value for Y-axis. If not provided, it is computed from data.")
@@ -131,7 +131,7 @@ class GenerateScatterPlotChartSlide4(BaseModel):
     unit: str = Field(..., description="Unit displayed with values (e.g., 'points', '%', 'USD').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
-    data_label_format: Optional[str] = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
+    data_label_format: str = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
     x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
     x_axis_max: float = Field(default=25, description="Maximum value for X-axis. If not provided, it is computed from data.")
     y_axis_min: float = Field(default=40, description="Minimum value for Y-axis. If not provided, it is computed from data.")

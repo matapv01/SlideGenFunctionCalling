@@ -926,7 +926,7 @@ def generate_line_chart_slide_4(
                 position: absolute; top: 50px; left: 50px;
                 width: 1820px; height: 980px;
                 background: transparent;
-                border-radius: 20px;Optional[
+                border-radius: 20px;
      
             }}
             .header-box {{
