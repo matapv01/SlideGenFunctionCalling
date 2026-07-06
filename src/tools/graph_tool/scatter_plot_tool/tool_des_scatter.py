@@ -1,6 +1,6 @@
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
-from typing import Optional 
+from typing import Optional, Union
 from typing import List, Dict, Optional
 from .html_lib_scatter import (
     generate_scatter_plot_chart_slide_1,

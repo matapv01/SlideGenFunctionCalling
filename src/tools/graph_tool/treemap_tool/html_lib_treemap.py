@@ -656,7 +656,6 @@ def generate_treemap_chart_slide_4(
     unit = "M",
     show_value = True,
     show_label = True,
-    data_label_format = "{label}: ${value}{unit}",
     data = [
             {
                 "label": "STEM",
@@ -687,12 +686,7 @@ def generate_treemap_chart_slide_4(
         ],
 
 ) -> str:
-    """
-    Generates a professional Treemap chart slide with a refined academic aesthetic.
-    The treemap uses a 'Slice-and-Dice' algorithm to partition space hierarchically.
-    """
-
-    # ===== 1. GET DATA & OPTIONS =====
+    # ===== GET DATA & OPTIONS =====
     padding = 4
     border_radius = 8
     base_color = "#1a5073"
@@ -711,7 +705,7 @@ def generate_treemap_chart_slide_4(
     rect_text_color = text_color
     radius = border_radius
 
-    # ===== 2. TREEMAP CALCULATION (SLICE-AND-DICE) =====
+    # ===== TREEMAP CALCULATION (SLICE-AND-DICE) =====
     # SVG Viewbox: 1100 x 600
     svg_w = 1100
     svg_h = 600
@@ -724,10 +718,8 @@ def generate_treemap_chart_slide_4(
 
     rects_html = ""
     total_val = sum(item.get("value", 0) for item in data)
-    
     current_x = 0
     total_data_len = len(data)
-    
     for i, parent in enumerate(data):
         p_val = parent.get("value", 0)
         p_label = parent.get("label", "")
@@ -754,12 +746,7 @@ def generate_treemap_chart_slide_4(
             for j, child in enumerate(children):
                 c_val = child.get("value", 0)
                 c_label = child.get("label", "")
-                
-                # Height of child block
-                c_height = (c_val / p_total_children) * svg_h if p_total_children > 0 else 0
-                
-                display_text = data_label_format.format(label=c_label, value=c_val, unit=unit)
-                
+                c_height = (c_val / p_total_children) * svg_h if p_total_children > 0 else 0                
                 rects_html += f"""
                 <g>
                     <rect x="{current_x + padding}" y="{current_y + padding}" width="{p_width - 2*padding}" height="{c_height - 2*padding}" 
@@ -783,7 +770,7 @@ def generate_treemap_chart_slide_4(
     </div>
     """
 
-    # ===== 3. TABLE SECTION =====
+    # ===== TABLE SECTION =====
     table_rows = ""
     for item in data:
         table_rows += f"""
@@ -807,7 +794,7 @@ def generate_treemap_chart_slide_4(
     </table>
     """
 
-    # ===== 4. FINAL ASSEMBLY =====
+    # ===== FINAL ASSEMBLY =====
     return f"""
     <html>
     <head>
@@ -890,12 +877,8 @@ def generate_treemap_chart_slide_5(
         ],
 
 ) -> str:
-    """
-    Generates a professional Treemap Chart slide with a biological/educational theme.
-    Layout: Title at top, Chart on the left, Insight and Table on the right.
-    """
 
-    # ===== 1. GET DATA & OPTIONS =====
+    # ===== GET DATA & OPTIONS =====
     padding = 6
     border_radius = 8
     base_color = "#d86c9e"
@@ -1001,7 +984,7 @@ def generate_treemap_chart_slide_5(
     </div>
     """
 
-    # ===== 3. RENDER TABLE =====
+    # ===== RENDER TABLE =====
     table_rows = ""
     for item in data:
         table_rows += f"""

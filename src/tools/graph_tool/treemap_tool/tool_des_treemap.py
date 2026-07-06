@@ -112,8 +112,8 @@ class GenerateTreemapChartSlide2(BaseModel):
 class GenerateTreemapChartSlide3(BaseModel):
     """Input schema for generate_treemap_chart_slide_3."""
     main_title: str = Field(..., description="Main title of the slide (10–60 characters).")
-    subtitle: Optional[str] = Field(..., description="Subtitle or data source displayed below the main title.")
-    insight: Optional[str] = Field(..., description="Narrative insight or key takeaway derived from the treemap.")
+    subtitle: str = Field(..., description="Subtitle or data source displayed below the main title.")
+    insight: str = Field(..., description="Narrative insight or key takeaway derived from the treemap.")
     unit: str = Field(..., description="Unit displayed with values (e.g., %, $, J, M).")
     show_value: bool = Field(default=True, description="Whether to display numeric values inside treemap blocks.")
     show_label: bool = Field(default=True, description="Whether to display labels inside treemap blocks.")
@@ -175,7 +175,6 @@ class GenerateTreemapChartSlide4(BaseModel):
     unit: str = Field(..., description="Unit displayed with values (e.g., 'M', '%', '$').")
     show_value: bool = Field(True, description="Whether numeric values are displayed inside treemap blocks.")
     show_label: bool = Field(True, description="Whether category labels are displayed inside treemap blocks.")
-    data_label_format: str = Field(default="{label}: ${value}{unit}", description="Template string for formatting labels inside blocks. Example: '{label}: ${value}{unit}'.")
     data: list[dict[str, str | int | list[dict]]] = Field(
         ...,
         description="""
@@ -228,8 +227,8 @@ class GenerateTreemapChartSlide4(BaseModel):
 class GenerateTreemapChartSlide5(BaseModel):
     """Input schema for generate_treemap_chart_slide_5."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters).")
-    subtitle: Optional[str] = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source.")
-    insight: Optional[str] = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or observations from the data.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source.")
+    insight:str = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or observations from the data.")
     unit: str = Field(..., description="Unit displayed with values (e.g., '%', 'USD', 'units').")
     show_value: bool = Field(True, description="Whether numeric values are displayed inside treemap blocks.")
     show_label: bool = Field(True, description="Whether category labels are displayed inside treemap blocks.")

@@ -16,11 +16,6 @@ def generate_pie_chart_slide_1(
         {"label": "Support", "value": 10}
     ]
 ) -> str:
-    """
-    Generates a high-impact HTML slide featuring a pie chart, 
-    designed with a teal-accented dark theme.
-    """
-    
     # Color and font configuration
     colors = ["#818CF8", "#2DD4BF", "#FBBF24", "#FB7185"]
     font_family = "Inter, sans-serif"
@@ -43,11 +38,7 @@ def generate_pie_chart_slide_1(
     for i, item in enumerate(items):
         color = colors[i % len(colors)]
         percent = (item['value'] / total) * 100
-        
-        # Simple SVG Circle sector calculation logic
-        start_angle = (cumulative_percent / 100) * 360
-        end_angle = ((cumulative_percent + percent) / 100) * 360
-        
+           
         # For simplicity in a single-file HTML output, we use a stroke-dasharray approach
         offset = 100 - cumulative_percent + 25
         svg_paths += f'<circle r="15.9" cx="21" cy="21" fill="transparent" stroke="{color}" stroke-width="8" stroke-dasharray="{percent} {100-percent}" stroke-dashoffset="{offset}" />'
@@ -1645,16 +1636,16 @@ def generate_pie_chart_slide_7(
     return html_content
 
 def generate_pie_chart_slide_8(
-    main_title = "Business Inforgraphic", 
-    subtitle = "This is subtitle",     
-    unit = "%",
-    categories = ["North America", "Europe", "Asia"],
-    insights = [
-        "North America's shipment volume increased by 55% compared to last year.",
-        "Europe experienced a significant growth of 76% in shipment volume.",
-        "Asia had a steady increase of 43% in shipment volume.",
-    ],
-    series = [55, 76, 43]
+        main_title = "Business Inforgraphic", 
+        subtitle = "This is subtitle",     
+        unit = "%",
+        categories = ["North America", "Europe", "Asia"],
+        insights = [
+            "North America's shipment volume increased by 55% compared to last year.",
+            "Europe experienced a significant growth of 76% in shipment volume.",
+            "Asia had a steady increase of 43% in shipment volume.",
+        ],
+        series = [55, 76, 43]
     ) -> str:
     """
     Generates a generic HTML slide with a Grouped Bar Chart using the "Logistic Company" theme.

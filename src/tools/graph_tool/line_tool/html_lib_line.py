@@ -25,9 +25,6 @@ def generate_line_chart_slide_1(
         }
     ],
 ) -> str:
-    """Tạo slide biểu đồ đường với phong cách 'Playful Stamp' vui nhộn, 
-    phù hợp cho các báo cáo giáo dục, trò chơi hoặc kết quả thi đấu.
-    """
     main_title_color = "#333333"
     subtitle_color = "#666666"
     insight_text_color = "#444444"
@@ -579,7 +576,7 @@ def generate_line_chart_slide_3(
     ],
 
 ) -> str:
-    # ===== 1. LẤY THÔNG TIN =====
+    # ===== LẤYTHÔNG TIN =====
     font_family: str = "Inter, sans-serif"
     accent_color: str = "#00F2FF"
     main_title_color: str = "#FFFFFF"
@@ -589,21 +586,21 @@ def generate_line_chart_slide_3(
     subtitle_font_size: str = "28px"
     insight_font_size: str = "30px"   
     
-    # ===== 2. SVG CONFIG =====
+    # ===== SVG CONFIG =====
     svg_w, svg_h = 1100, 600
     margin_top, margin_bottom = 60, 80
     margin_left, margin_right = 100, 40
     chart_w = svg_w - margin_left - margin_right
     chart_h = svg_h - margin_top - margin_bottom
 
-    # ===== 3. TÍNH MIN MAX =====
+    # ===== TÍNH MIN MAX =====
     all_values = [v for s in series for v in s.get("values", [])]
     y_min = y_axis_min or (min(all_values) * 0.9 if all_values else 0)
     y_max = y_axis_max or (max(all_values) * 1.1 if all_values else 100)
     if y_max == y_min: 
         y_max += 1
 
-    # ===== 4. VẼ CHART ELEMENTS =====
+    # ===== VẼ CHART ELEMENTS =====
     chart_elements = ""
     
     # Grid lines Y & Labels (with optional unit suffix)
@@ -670,7 +667,7 @@ def generate_line_chart_slide_3(
                       paint-order="stroke">{label_text}</text>
                 '''
 
-    # ===== 5. LAYOUT COMPONENTS =====
+    # ===== LAYOUT COMPONENTS =====
     legend_html = ""
     if show_legend:
         for i, s in enumerate(series):
@@ -684,7 +681,7 @@ def generate_line_chart_slide_3(
     # Build axis titles with unit if provided
     y_axis_title = f"{y_axis} ({unit})" if unit else y_axis
 
-    # ===== 6. FINAL HTML =====
+    # ===== FINAL HTML =====
     return f"""
     <!DOCTYPE html>
     <html>
@@ -785,10 +782,6 @@ def generate_line_chart_slide_4(
         }
     ],
 ) -> str:
-    """
-    Tạo slide biểu đồ đường với phong cách 'Playful Stamp' vui nhộn,
-    phù hợp cho các báo cáo giáo dục, trò chơi hoặc kết quả thi đấu.
-    """
     font_family = "Arial, sans-serif"  # FIXED: removed trailing comma
     accent_color = "#FF8C00"
     main_title_color = "#E2E2E2"
@@ -933,7 +926,7 @@ def generate_line_chart_slide_4(
                 position: absolute; top: 50px; left: 50px;
                 width: 1820px; height: 980px;
                 background: transparent;
-                border-radius: 20px;
+                border-radius: 20px;Optional[
      
             }}
             .header-box {{
@@ -1064,9 +1057,6 @@ def generate_line_chart_slide_5(
         { "name": "Female", "values": [80, 110, 100, 130, 138] }
     ],
 ) -> str:
-    """
-    Generates HTML code for a medical-themed line chart slide with modern healthcare aesthetics.
-    """
     # ===== ADAPT INPUT → MAINTAIN EXISTING LOGIC =====
     font_family: str = "'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif"
     accent_color: str = "#1068B0FF"
@@ -1076,7 +1066,7 @@ def generate_line_chart_slide_5(
     legend_color: str = "#D4DCEA"
     main_title_font_size: str = "60px"  # Tăng từ 48px lên 60px
     subtitle_font_size: str = "18px"   # Giảm nhẹ để tạo thanh mảnh
-    insight_font_size: str = "25px"
+    insight_font_size: str = "5px"
     # ===== 1. DATA INFORMATION EXTRACTION =====
     time_points = categories
     x_axis_label = x_axis

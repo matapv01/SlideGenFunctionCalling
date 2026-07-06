@@ -21,8 +21,7 @@ def generate_bar_chart_slide_1(
     """
     Generates a generic HTML slide with a Grouped Bar Chart using the "Logistic Company" theme.
     """
-
-    # ===== 1. LẤY THÔNG TIN =====
+    # ===== LẤY THÔNG TIN =====
     title = main_title
     sub = subtitle
     insight_text = insight
@@ -40,19 +39,15 @@ def generate_bar_chart_slide_1(
     fs_title = main_title_font_size
     fs_sub = subtitle_font_size
     fs_insight = insight_font_size
-    x_axis_label = ""
     y_axis_min = 0
     y_axis_max = None
-
-    # ===== 2. SVG CONFIG =====
+    # ===== SVG CONFIG =====
     svg_w, svg_h = 1150, 650
     margin_top, margin_bottom = 60, 80
     margin_left, margin_right = 100, 50
-
     chart_w = svg_w - margin_left - margin_right
     chart_h = svg_h - margin_top - margin_bottom
-
-    # ===== 3. TÍNH TOÁN DATA =====
+    # ===== TÍNH TOÁN DATA =====
     # Find max value for Y scaling
     all_values = []
     for s in series:
@@ -62,30 +57,23 @@ def generate_bar_chart_slide_1(
     if val_max is None:
         val_max = max(all_values) if all_values else 100
         val_max = val_max * 1.1 # Add top padding
-
     val_min = y_axis_min
-    
     if val_max == val_min:
         val_max += 10
-
     # Grid calculations
     num_grid_lines = 5
-    
     # Bar calculations
     num_cats = len(categories) if categories else 1
     num_series = len(series) if series else 1
-    
     # Calculate widths
     # Slot width = space allocated for one category
     slot_width = chart_w / num_cats
     padding_group = slot_width * 0.2 # 20% padding between groups
     group_width = slot_width - padding_group
     bar_width = group_width / num_series
-
-    # ===== 4. VẼ CHART =====
+    # ===== VẼ CHART =====
     chart_elements = ""
-
-    # -- Background Grid --
+    # Background Grid
     for i in range(num_grid_lines + 1):
         y_ratio = i / num_grid_lines
         y_pos = svg_h - margin_bottom - (y_ratio * chart_h)
@@ -357,18 +345,14 @@ def generate_bar_chart_slide_2(
             {"name": "2023", "values": [120, 85, 60, 45]},
             {"name": "2024", "values": [135, 90, 65, 50]}
         ],
-        accent_color = "#00897B",
         main_title_color = "#104c64",
         subtitle_color = "#457b8c",
         insight_text_color = "#2c5f70",
-
-
     ) -> str:
     """
     Generates an Ocean-themed Grouped Bar Chart slide based on the provided data and style.
     """
-
-    # ===== 1. LẤY THÔNG TIN & XỬ LÝ DỮ LIỆU =====
+    # ===== LẤY THÔNG TIN & XỬ LÝ DỮ LIỆU =====
     title = main_title
     sub = subtitle
     ins = insight
@@ -379,54 +363,43 @@ def generate_bar_chart_slide_2(
     # ===== STYLE CONFIG (OCEAN THEME) =====
     font_family = "'Quicksand', 'Varela Round', 'Verdana', sans-serif",
     bg_color = "#E0F7FA" # Light Cyan background like the water
-    accent = accent_color
     title_col = main_title_color
     sub_col = subtitle_color
     ins_col = insight_text_color
     title_fs = "80px"
     sub_fs = "36px"
     ins_fs = "28px"
-
-    # ===== 2. SVG CONFIG =====
+    # ===== SVG CONFIG =====
     svg_w, svg_h = 1100, 700
     margin_top, margin_bottom = 60, 80
     margin_left, margin_right = 100, 60
-
     chart_w = svg_w - margin_left - margin_right
     chart_h = svg_h - margin_top - margin_bottom
-
-    # ===== 3. TÍNH TOÁN MIN/MAX =====
+    # ===== TÍNH TOÁN MIN/MAX =====
     # Lấy tất cả giá trị từ các series
     all_values = []
     for s in series:
         all_values.extend(s.get("values", []))
-    
     if not all_values:
         all_values = [0]
-
     y_min = y_axis_min if y_axis_min is not None else 0
     y_max = y_axis_max if y_axis_max is not None else (max(all_values) * 1.1 if all_values else 100)
-
-    # 🛡 Tránh chia cho 0
+    # Tránh chia cho 0
     if y_max <= y_min:
         y_max = y_min + 10
-
-    # ===== 4. VẼ CHART (SVG GENERATION) =====
+    # ===== VẼ CHART (SVG GENERATION) =====
     chart_elements = ""
-
-    # -- Background Chart Decor --
+    # Background Chart Decor
     chart_elements += f'''
     <rect x="{margin_left}" y="{margin_top}" width="{chart_w}" height="{chart_h}" 
           fill="white" fill-opacity="0.3" rx="20" ry="20" />
     '''
-
-    # -- Grid Lines (Nét đứt mềm mại) --
+    # Grid Lines (Nét đứt mềm mại)
     num_ticks = 5
     for i in range(num_ticks + 1):
         # Grid ngang (Y-axis)
         val_y = y_min + (y_max - y_min) * (i / num_ticks)
         pos_y = svg_h - margin_bottom - (i / num_ticks) * chart_h
-        
         chart_elements += f'''
         <line x1="{margin_left}" y1="{pos_y}" x2="{svg_w - margin_right}" y2="{pos_y}" 
               stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
@@ -436,8 +409,7 @@ def generate_bar_chart_slide_2(
         <text x="{margin_left - 15}" y="{pos_y + 5}" font-family="{font_family}" 
               font-size="16" fill="{sub_col}" text-anchor="end">{int(val_y) if val_y == int(val_y) else f"{val_y:.1f}"}</text>
         '''
-
-    # -- Axis Labels --
+    # Axis Labels
     # X Label
     if x_axis_label:
         chart_elements += f'''
@@ -450,21 +422,17 @@ def generate_bar_chart_slide_2(
         <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-family="{font_family}" 
               font-size="20" fill="{title_col}" font-weight="bold" text-anchor="middle">{y_axis_label}</text>
         '''
-
-    # -- Grouped Bar Chart --
+    # Grouped Bar Chart
     num_categories = len(categories)
     num_series = len(series)
-    
     if num_categories > 0 and num_series > 0:
         # Tính toán kích thước và khoảng cách
         group_width = chart_w / num_categories * 0.8  # 80% của không gian dành cho mỗi nhóm
         bar_width = group_width / num_series * 0.85   # 85% của không gian nhóm chia đều cho các cột
         group_spacing = chart_w / num_categories
-        
         for cat_idx, category in enumerate(categories):
             # Vị trí trung tâm của nhóm cột
             group_center_x = margin_left + (cat_idx + 0.5) * group_spacing
-            
             # Vẽ các cột trong nhóm
             for series_idx, s in enumerate(series):
                 values = s.get("values", [])
@@ -488,8 +456,7 @@ def generate_bar_chart_slide_2(
                         chart_elements += f'''
                         <text x="{bar_x + bar_width/2}" y="{bar_y - 8}" font-family="{font_family}" 
                               font-size="14" fill="{title_col}" text-anchor="middle" font-weight="bold">{value}{unit}</text>
-                        '''
-            
+                        '''          
             # Nhãn danh mục (category) trên trục X
             chart_elements += f'''
             <text x="{group_center_x}" y="{svg_h - margin_bottom + 25}" font-family="{font_family}" 
@@ -510,12 +477,6 @@ def generate_bar_chart_slide_2(
             '''
         legend_html += '</div>'
 
-    # ===== INSIGHT (HTML) =====
-    insight_html = ins
-
-    # ===== 5. HTML RENDER =====
-    # Cấu trúc: Header + 2 Cột (Left: Insight/Legend - Right: Chart)
-    # Background có thêm vài bong bóng trang trí bằng CSS thuần (border-radius)
     html_code = f"""
     <!DOCTYPE html>
     <html>

@@ -17,11 +17,6 @@ def generate_table_slide_1(
         {"label": "South America", "values": [150, 120, 380]}
     ],
 )->str:
-    """
-    Slide deck with a Science Lab style.
-    Suitable for research reports, group projects, or technical data analysis.
-    """
-    
     # ===== COLOR & FONT VARIABLES =====
     header_bg = "#76C2B4"
     grid_color = "#D1D5DB"
@@ -236,11 +231,6 @@ def generate_table_slide_2(
             {"label": "Silver Nitrate (AgNO3)", "values": [99.5, 216, 84]}
         ]
     ) -> str:
-    """
-    Generates a professional table slide with a Chemistry Lab theme.
-    Features a clean layout, purple/yellow accents, and stylized table borders.
-    """
-    
     # ===== COLOR & FONT VARIABLES =====
     header_bg = "#3B3781"
     grid_color = "#D1D5DB"
@@ -441,9 +431,6 @@ def generate_table_slide_3(
             {"label": "North Africa", "values": [800, 450, 300]}
         ]
     ) -> str:
-    """
-    Tạo slide bảng với phong cách Hồi giáo trang nhã sang trọng.
-    """
     
     # ===== COLOR & FONT VARIABLES =====
     header_bg = "linear-gradient(135deg, #D4AF37, #AA7C11)"
@@ -459,9 +446,7 @@ def generate_table_slide_3(
     subtitle_font_size = "28px"
     insight_font_size = "28px"
 
-    # ===== 1. LẤY THÔNG TIN VÀ XỬ LÝ DỮ LIỆU =====
-
-    # ===== 2. XỬ LÝ HTML TABLE =====
+    # ===== XỬ LÝ HTML TABLE =====
     table_rows_html = ""
     for row in rows:
         label = row.get("label", "")
@@ -501,7 +486,7 @@ def generate_table_slide_3(
         <tbody>{table_rows_html}</tbody>
     </table>"""
 
-    # ===== 3. HỌA TIẾT TRANG TRÍ (SVG) =====
+    # ===== HỌA TIẾT TRANG TRÍ (SVG) =====
     lantern_svg = f"""
     <div class="lantern-container">
     <svg width="100" height="150" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -624,15 +609,9 @@ def generate_table_slide_4(
     main_title: str = "Average Blood Pressure by Age Group", 
     subtitle: str = "Unit: mmHg | Data Source: National Health Survey 2025", 
     insight: str = "Healthcare is important, Keep your health in check!",
-    x_axis: str = "Age Group",
-    y_axis: str = "Average Blood Pressure (mmHg)",
     unit: str = "mmHg",
     show_value: bool = True,
-    show_legend: bool = True,
-    y_axis_min: float = 0,
-    y_axis_max: float = None,
     data_label_format: str = None,
-    colors: list[str] = ["#C62828", "#1565C0"], 
     categories = ["18-25", "26-35", "36-45", "46-60", "60+"],
     series = [
         {
@@ -645,52 +624,19 @@ def generate_table_slide_4(
         }
     ],
     ) -> str:
-    """
-    Tạo slide bảng chuyên nghiệp với phong cách thiết kế hiện đại, 
-    lấy cảm hứng từ lĩnh vực y tế/điều dưỡng.
-    """
-
-    # Thiết lập giá trị mặc định cho chart_options và data_input nếu không được cung cấp
-
-    chart_options = {
-        "unit": unit,
-        "show_value": show_value,
-        "show_legend": show_legend,
-        "y_axis_min": y_axis_min,
-        "y_axis_max": y_axis_max,
-        "data_label_format": data_label_format,
-        "colors": colors,
-        "x_axis": x_axis,
-        "y_axis": y_axis
-    }
-
-    data_input = {
-        "categories": categories,
-        "series": series
-    }
-
     # ===== 1. LẤY THÔNG TIN DỮ LIỆU =====
-    columns = data_input.get("columns", [])
-    rows = data_input.get("rows", [])
+    rows = []
+    for item in series:
+        row_data = {
+            "label": item["name"],
+            "values": item["values"]
+        }
+        rows.append(row_data)
 
-    # Nếu không có rows từ data_input, tạo từ series
-    if not rows:
-        rows = []
-        for item in series:
-            row_data = {
-                "label": item["name"],
-                "values": item["values"]
-            }
-            rows.append(row_data)
+    columns = categories
 
-    # Nếu không có columns từ data_input, tạo từ categories
-    if not columns:
-        columns = categories
-
-    options = chart_options 
-    unit = options.get("unit", "")
-    show_value = options.get("show_value", True)
-    data_label_format = options.get("data_label_format") or "{value}"
+    if not data_label_format:
+        data_label_format = "{value}"
 
     # ===== 2. XỬ LÝ DỮ LIỆU BẢNG (ROWS) =====
     table_rows_html = ""
@@ -1067,10 +1013,6 @@ def generate_table_slide_6(
         {"label": "Ven biển", "values": [800, 650, 200]}
     ]
     ) -> str:
-    """
-    Hàm sinh slide bảng với phong cách Làng quê Việt Nam.
-    Sử dụng tông màu xanh lá cây và vàng lúa, lấy cảm hứng từ thiên nhiên và sự mộc mạc.
-    """
 
     # ===== 1. XỬ LÝ DỮ LIỆU =====
     columns = columns or []
@@ -1354,10 +1296,6 @@ def generate_table_slide_7(
         },
     ],
 ) -> str:
-    """
-    Generates a minimalist, elegant HTML table slide with brand decorative elements.
-    Uses legend_items labels instead of color codes for automatic color mapping.
-    """
     bg_light="#fefaf4"
     bg_dark="#3a3730"
     
@@ -1365,9 +1303,7 @@ def generate_table_slide_7(
     color_map = {item['label']: item['color'] for item in legend_items} if legend_items else {}
     
     # ===== STYLE VARIABLES =====
-    header_bg = bg_light
     grid_color = "#9a7a6344"
-    text_color = bg_dark
     font_family = "Outfit, sans-serif"
     main_title_color = bg_dark
     subtitle_color = f"{bg_dark}aa"

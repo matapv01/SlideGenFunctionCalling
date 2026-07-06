@@ -1,4 +1,4 @@
-from typing import List, Dict, Optional, Union, Any
+from typing import List, Dict, Optional, Union
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 from .html_lib_line import (
@@ -11,7 +11,7 @@ from .html_lib_line import (
 
 
 class GenerateLineChartSlide1(BaseModel):
-    """Input schema for generate_line_chart_slide_1 - Playful Stamp themed chart for educational/renewable energy reports."""
+    """Input schema for generate_line_chart_slide_1"""
     main_title: str = Field(...,description="Main title displayed at the top of the slide (10-60 characters). Example: 'Accelerating Growth of Renewable Energy Capacity'")
     subtitle: str = Field(...,description="Subtitle displayed below the main title, typically indicating report name and time period.")
     insight: str = Field(...,description="Text insight displayed in the left panel, providing key observations about the data (100-300 characters).")
@@ -24,7 +24,7 @@ class GenerateLineChartSlide1(BaseModel):
     y_axis_max: float = Field(default=260, description="Maximum value of Y-axis. If None, auto-calculated from data with default padding.")
     colors: List[str] = Field(..., description="List of colors for each line series. Playful theme defaults to orange (#FF8C00) and blue (#4A90E2).")
     time_points: List[str] = Field(..., description="List of time points on X-axis (e.g., years, months, quarters). Example: ['2019', '2020', '2021', '2022', '2023', '2024']")
-    series: List[Dict[str, Union[str, List[float]]]] = Field(
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
         description="""
         Line chart series data for comparing different energy sources or metrics.
@@ -53,7 +53,7 @@ class GenerateLineChartSlide1(BaseModel):
     )
 
 class GenerateLineChartSlide2(BaseModel):
-    """Input schema for generate_line_chart_slide_2 - ML/AI model training convergence chart."""
+    """Input schema for generate_line_chart_slide_2"""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters). Example: 'Model Accuracy Converges with Minor Overfitting'")
     subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating model, dataset, and training duration.")
     insight: str = Field(..., description="Text insight displayed in the left panel, providing key observations about model training behavior (200-500 characters).")
@@ -66,7 +66,7 @@ class GenerateLineChartSlide2(BaseModel):
     data_label_format: str = Field(default=None, description="Format for data labels. Special value 'percentage' formats as '{value}%'. Otherwise uses simple concatenation with unit.")
     colors: List[str] = Field(default=["#4F46E5", "#22C55E"], description="List of colors for each line series. ML theme defaults to indigo (#4F46E5) for training and green (#22C55E) for validation.")
     time_points: List[str] = Field(..., description="List of time points on X-axis. Can be unevenly spaced (e.g., epochs 1,5,10,15...). Example: ['Epoch 1', 'Epoch 5', 'Epoch 10']")
-    series: List[Dict[str, Union[str, List[float]]]] = Field(
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
         description="""
         Line chart series data for model performance metrics.
@@ -113,16 +113,13 @@ class GenerateLineChartSlide3(BaseModel):
         ...,
         description="""
         Line chart series data.
-
         Structure:
         - series: list of series objects
             - name: series name (e.g., 'Tesla', 'BYD')
             - values: list of numeric values matching time_points length
-
         Rules:
         - Each series must have same length as time_points
         - Values should be positive numbers
-
         Example:
         [
             {
@@ -148,10 +145,10 @@ class GenerateLineChartSlide4(BaseModel):
     show_legend: bool = Field(default=True, description="Whether legend is displayed.")
     y_axis_min: float = Field(default=50, description="Minimum value of Y-axis (auto if None).")
     y_axis_max: float = Field(default=260, description="Maximum value of Y-axis (auto if None).")
-    data_label_format: Optional[str] = Field(default=None, description="Format string for values (e.g., '{value}', '{value} units'). If None, uses default formatting.")
+    data_label_format: str = Field(default=None, description="Format string for values (e.g., '{value}', '{value} units'). If None, uses default formatting.")
     colors: List[str] = Field(default=["#FF8C00", "#4A90E2"], description="List of colors for each line series.")
     time_points: List[str] = Field(..., description="List of time points (e.g., ['2019', '2020', '2021', '2022', '2023', '2024']).")
-    series: List[Dict[str, Union[str, List[float]]]] = Field(
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
         description="""
         Line chart series data.
@@ -175,7 +172,7 @@ class GenerateLineChartSlide4(BaseModel):
     )
 
 class GenerateLineChartSlide5(BaseModel):
-    """Input schema for generate_line_chart_slide_5 - Medical-themed line chart for healthcare data."""
+    """Input schema for generate_line_chart_slide_5"""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters). Example: 'Average Blood Pressure by Age Group'")
     subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating unit and data source. Example: 'Unit: mmHg | Data Source: National Health Survey 2025'")
     insight: str = Field(..., description="Clinical insight text displayed in the right panel (100-300 characters). If empty, a default medical insight will be shown.")
@@ -185,10 +182,10 @@ class GenerateLineChartSlide5(BaseModel):
     show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart points.")
     show_legend: bool = Field(default=True,description="Whether legend is displayed in the insight area showing demographic/patient groups.")
     y_axis_min: float = Field(default=0,description="Minimum value of Y-axis. If 0, uses data minimum with 10% padding.")
-    y_axis_max: Optional[float] = Field(default=None,description="Maximum value of Y-axis. If None, auto-calculated from data with 10% padding.")
+    y_axis_max: float = Field(default=None,description="Maximum value of Y-axis. If None, auto-calculated from data with 10% padding.")
     colors: List[str] = Field(default=["#E53935", "#1E88E5"],description="List of colors for each line series. Medical theme defaults to red (#E53935) and blue (#1E88E5).")
     categories: List[str] = Field(default=["18-25", "26-35", "36-45", "46-60", "60+"], description="List of categories on X-axis (e.g., age groups, time points). Example: ['18-25', '26-35', '36-45', '46-60', '60+']")
-    series: List[Dict[str, Union[str, List[float]]]] = Field(
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
         description="""
         Line chart series data for different demographics.
@@ -275,11 +272,9 @@ LINE_TOOLS = [
         name="generate_line_chart_slide_4",
         description=(
             "Generates a line chart slide with a two-column layout.\n\n"
-
             "- Top: main title and subtitle.\n"
             "- Left: legend panel with decorative illustrations.\n"
             "- Right: line chart visualization.\n\n"
-
             "- Chart includes axes, grid lines, multiple line series, and optional value labels."
         ),
         args_schema=GenerateLineChartSlide4

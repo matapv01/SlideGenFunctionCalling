@@ -22,10 +22,6 @@ def generate_scatter_plot_chart_slide_1(
         }
     ]
 ) -> str:
-    """
-    Function to generate HTML for a scatter plot chart slide in a preschool educational style.
-    Uses a blue color theme, decorative stickers, and a flat layout optimized for rendering.
-    """
 
     # ===== STYLE CONFIGURATION =====
     colors = ["#FF6B6B", "#4ECDC4", "#FFE66D", "#FF9F43"]
@@ -215,10 +211,6 @@ def generate_scatter_plot_chart_slide_2(
         }
     ]
 ) -> str:
-    """
-    Sinh HTML cho slide biểu đồ phân tán với phong cách 'Travel Plan'.
-    Phân tích mối tương quan giữa các biến dựa trên tọa độ X và Y.
-    """
 
     # ===== 1. STYLE CONFIGURATION =====
     colors = ["#008080", "#FFB347"]
@@ -426,11 +418,6 @@ def generate_scatter_plot_chart_slide_3(
         }
     ]
 ) -> str:
-    """
-    Generates a professional scatter plot chart slide with a clean, 
-    modern aesthetic inspired by educational and organic themes.
-    """
-
     # ===== 0. STYLE CONFIGURATION (MOVED FROM PARAMETERS) =====
     font_family = "Inter, sans-serif"
     accent_color = "#7B8FB3"
@@ -655,12 +642,6 @@ def generate_scatter_plot_chart_slide_4(
         }
     ]
 ) -> str:
-    """
-    Generates a professional scatter plot chart slide with a creative layout.
-    The slide features a header section, an insight/legend panel on the left, 
-    and a clean SVG scatter plot on the right.
-    """
-
     # ===== 1. HARDCODED STYLES & OPTIONS =====
     font_family = "'Inter', sans-serif"
     accent_color = "#F59E0B"
@@ -866,10 +847,6 @@ def generate_scatter_plot_chart_slide_5(
         }
     ]
 ) -> str:
-    """
-    Generates a professional scatter plot chart slide with a futuristic tech startup theme.
-    """
-
     # ===== 1. STYLE CONFIGURATION =====
     font_family = "'Segoe UI', Roboto, Helvetica, Arial, sans-serif"
     accent_color = "#009688"
@@ -1089,11 +1066,6 @@ def generate_scatter_plot_chart_slide_6(
         }
     ]
 ) -> str:
-    """
-    Hàm tạo slide biểu đồ phân tán (Scatter Plot) với theme 'AI In Education'.
-    Sử dụng phong cách thiết kế hiện đại, các hình khối vuông trang trí và dải sóng nền.
-    """
-
     # ===== 1. STYLE CONFIGURATION (MOVED FROM PARAMETERS) =====
     font_family = "'Montserrat', sans-serif"
     accent_color = "#008080"
@@ -1307,10 +1279,6 @@ def generate_scatter_plot_chart_slide_7(
         }
     ]
 ) -> str:
-    """
-    Hàm sinh HTML cho slide biểu đồ phân tán với phong cách Renaissance cổ điển.
-    Sử dụng SVG thuần và CSS Layout phẳng để tối ưu hóa việc render.
-    """
 
     # ===== 1. STYLE CONFIGURATION =====
     colors = ["#a06d4f", "#6b8e23"]

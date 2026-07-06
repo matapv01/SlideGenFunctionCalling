@@ -12,15 +12,15 @@ from .html_lib_bar import (
 
 class GenerateBarChartSlide1(BaseModel):
     """Input schema for generate_bar_chart_slide_1"""
-    main_title: str = Field(default="Quarterly Logistics Performance", description="Main title displayed at the top of the slide (10-60 characters).")
-    subtitle: str = Field(default="Performance metrics across key operational hubs", description="Subtitle displayed below the main title.")
-    insight: str = Field(default="Import volumes have seen a significant 20% surge in Q3 compared to previous quarters.", description="Text insight or general description.")
-    categories: List[str] = Field(default=["Q1", "Q2", "Q3", "Q4"], description="List of categories for the X-axis.")
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters).")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Text insight or general description.")
+    categories: List[str] = Field(..., description="List of categories for the X-axis.")
     series: List[float] = Field(
         ...,
         description="List of numeric values corresponding to each category for the bar sizes and labels. Example: [45, 52, 68, 58]"
     )
-    unit: str = Field(default=" tons", description="Unit appended to values (e.g., '%', 'M').")
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
     show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed on the left panel.")
     colors: List[str] = Field(default=["#1B2559", "#FF6B35", "#4B5563", "#9CA3AF"], description="List of hex colors for the bars and icons.")
@@ -32,23 +32,22 @@ class GenerateBarChartSlide1(BaseModel):
 
 class GenerateBarChartSlide2(BaseModel):
     """Input schema for generate_bar_chart_slide_2"""
-    main_title: str = Field(default="Global Trade Analysis", description="Main title displayed at the top of the slide (10-60 characters).")
-    subtitle: str = Field(default="Maritime shipping volume across major regions", description="Subtitle displayed below the main title.")
-    insight: str = Field(default="The Pacific region continues to dominate maritime shipping, driven by strong export growth in East Asia.", description="Text insight or general description.")
-    x_axis: str = Field(default="Regions", description="Label for X-axis.")
-    y_axis: str = Field(default="Shipping Volume (TEU)", description="Label for Y-axis.")
-    unit: str = Field(default="M", description="Unit appended to values (e.g., '%', 'M').")
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters).")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Text insight or general description.")
+    x_axis: str = Field(..., description="Label for X-axis.")
+    y_axis: str = Field(..., description="Label for Y-axis.")
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
     show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed.")
     y_axis_min: float = Field(default=0, description="Minimum value of Y-axis.")
-    y_axis_max: Optional[float] = Field(default=None, description="Maximum value of Y-axis. If None, auto-calculated.")
+    y_axis_max: float = Field(default=None, description="Maximum value of Y-axis. If None, auto-calculated.")
     colors: List[str] = Field(default=["#00695C", "#26A69A", "#4DD0E1", "#0277BD", "#00838F"], description="List of hex colors for the bars and icons.")
     categories: List[str] = Field(default=["Pacific", "Atlantic", "Indian Ocean", "Mediterranean"], description="List of categories or regions to display.")
     series: List[float] = Field(
         ...,
         description="List of numeric values corresponding to each category for the bar sizes and labels. Example: [120, 85, 60, 45]"
     )
-    accent_color: str = Field(default="#00897B", description="Hex color for the accent elements.")
     main_title_color: str = Field(default="#104c64", description="Hex color for the main title part.")
     subtitle_color: str = Field(default="#457b8c", description="Hex color for the subtitle text.")
     insight_text_color: str = Field(default="#2c5f70", description="Hex color for the insights description text.")
@@ -59,7 +58,7 @@ class GenerateBarChartSlide3(BaseModel):
     subtitle: str = Field(..., description="Subtitle displayed below the main title.")
     x_axis: str = Field(..., description="Label for X-axis.")
     y_axis: str = Field(..., description="Label for Y-axis.")
-    unit: str = Field(default="", description="Unit appended to values (e.g., '%', 'M').")
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
     show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed on the left panel.")
     y_axis_min: float = Field(default=0, description="Minimum value of Y-axis.")
@@ -85,7 +84,7 @@ class GenerateBarChartSlide4(BaseModel):
     insight: str = Field(..., description="Text insight or general description.")
     x_axis: str = Field(..., description="Label for X-axis (e.g., 'Regions').")
     y_axis: str = Field(..., description="Label for Y-axis (e.g., 'Percentage').")
-    unit: str = Field(default="%", description="Unit appended to values (e.g., '%', 'M').")
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
     show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed on the left and right panels.")
     y_axis_min: float = Field(default=0, description="Minimum value of Y-axis.")
@@ -114,11 +113,11 @@ class GenerateBarChartSlide5(BaseModel):
     )
     insights: List[str] = Field(
         ...,
-        description="List of text descriptions or insights corresponding to each category. Must have the same length as categories."
+        description="List of text descriptions or insights corresponding to each category. Must have the same length as categories. Example: ['Strong market presence with 30% growth', 'Steady performance with 5% increase']"
     )
     series: List[float] = Field(
         ...,
-        description="List of numeric values corresponding to each category for the bar sizes and labels. Must have the same length as categories."
+        description="List of numeric values corresponding to each category for the bar sizes and labels. Must have the same length as categories. Example: [45, 52, 68, 58, 34]"
     )
     accent_color: str = Field(default="#FF6B35", description="Hex color for the accent elements (e.g., orange).")
     main_title_color: str = Field(default="#1B2559", description="Hex color for the main title part (e.g., navy).")

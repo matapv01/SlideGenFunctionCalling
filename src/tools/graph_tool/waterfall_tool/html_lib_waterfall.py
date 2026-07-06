@@ -16,14 +16,11 @@ def generate_waterfall_chart_slide_1(
     insight_text_color: str = "#34495E",
     y_axis_label: str = "Amount",
 ) -> str:
-    """
-    Generates a generic HTML slide with a Waterfall Chart.
-    """
+
     title = main_title
     sub = subtitle
     insight_text = insight
     f_family = "Arial, sans-serif"
-    
     # SVG CONFIG
     svg_w, svg_h = 1150, 650
     margin_top, margin_bottom = 60, 80
@@ -31,7 +28,6 @@ def generate_waterfall_chart_slide_1(
 
     chart_w = svg_w - margin_left - margin_right
     chart_h = svg_h - margin_top - margin_bottom
-
     # DATA PROCESSING
     # Calculate cumulative sums to find min and max for Y-axis
     cumulative = 0
@@ -286,9 +282,7 @@ def generate_waterfall_chart_slide_2(
     second_insight: str = "",
     image_url: str = "https://online.uj.ac.za/hs-fs/hubfs/young-colleagues-discussing-business-and-price-cha-2023-11-27-05-05-15-utc.jpg?width=850&height=475&name=young-colleagues-discussing-business-and-price-cha-2023-11-27-05-05-15-utc.jpg",
 ) -> str:
-    """
-    Generates a generic HTML slide with a Waterfall Chart.
-    """
+
     title = main_title
     sub = subtitle
     insight_text = insight
@@ -622,9 +616,7 @@ def generate_waterfall_chart_slide_3(
     second_insight: str = "This highlights potential areas for cost reduction next year.",
     image_url: str = "https://taca.com.vn/wp-content/uploads/2025/01/du-bao-tai-chinh-1200x675.jpg"
 ) -> str:
-    """
-    Generates a generic HTML slide with a Waterfall Chart.
-    """
+
     title = main_title
     sub = subtitle
     insight_text = insight

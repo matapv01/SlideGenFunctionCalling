@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field, List, Dict, Any
+from pydantic import BaseModel, Field, List, Dict, Union
 from langchain_core.tools import StructuredTool
 from typing import Optional 
 from .html_lib_piechart import (
@@ -25,7 +25,7 @@ class GeneratePieChartSlide1(BaseModel):
     show_value: bool = Field(default=True, description="Whether to display numeric values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to display the legend.")
     data_label_format: str = Field(default="{value}{unit}", description="Template for data labels.")
-    items: List[Dict[str, float]] = Field(
+    items: List[Dict[str, str | float]] = Field(
     ...,
     description="""
         List of data items.
@@ -60,7 +60,7 @@ class GeneratePieChartSlide2(BaseModel):
     show_value: bool = Field(default=True, description="Whether to display numeric values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to display the legend.")
     data_label_format: str = Field(default="{value}{unit}", description="Template for data labels.")
-    items: List[Dict[str, float]] = Field(
+    items: List[Dict[str, str | float]] = Field(
         ...,
         description="""
         List of data items.
@@ -94,7 +94,7 @@ class GeneratePieChartSlide3(BaseModel):
     show_value: bool = Field(default=False, description="Whether to display numeric values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to display the legend.")
     data_label_format: str = Field(default="{value}{unit}", description="Template for data labels.")
-    items: List[Dict[str, Any]] = Field(
+    items: List[Dict[str, str | float]] = Field(
         ...,
         description="""
         List of data items.
@@ -131,7 +131,7 @@ class GeneratePieChartSlide4(BaseModel):
     show_value: bool = Field(default=True, description="Whether to display percentage values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to display the legend block.")
     data_label_format: str = Field(default="{value}{unit}", description="Template for slice labels. Supports {label}, {value}, {unit}.")
-    items: List[Dict[str, Any]] = Field(
+    items: List[Dict[str, str | float]] = Field(
         ..., 
         description="""
         List of data items.
@@ -167,7 +167,7 @@ class GeneratePieChartSlide5(BaseModel):
     show_value: bool = Field(default=True, description="Whether to display percentage values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to display the legend block.")
     data_label_format: str = Field(default="{value}{unit}", description="Template for slice labels. Supports {label}, {value}, {unit}.")
-    items: List[Dict[str, Any]] = Field(
+    items: List[Dict[str, str | float]] = Field(
         ..., 
         description="""
         List of data items.
@@ -226,7 +226,7 @@ class GeneratePieChartSlide6(BaseModel):
         default="{value}{unit}",
         description="Template for slice labels, e.g. '{value}%' or '{label}: {value}%'"
     )
-    items: List[Dict[str, Any]] = Field(
+    items: List[Dict[str, str | float]] = Field(
         ...,
         description="""
         List of data items.
@@ -263,7 +263,7 @@ class GeneratePieChartSlide7(BaseModel):
     show_value: bool = Field(default=True, description="Whether to display percentage values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to render the legend block beside the chart.")
     data_label_format: str = Field(default="{value}{unit}", description="Template for slice labels, e.g. '{value}%' or '{label}: {value}%'")
-    pie1_items: List[Dict[str, Any]] = Field(
+    pie1_items: List[Dict[str, str | float]] = Field(
         ...,
         description="""
         List of data items for the first pie chart.
@@ -279,7 +279,7 @@ class GeneratePieChartSlide7(BaseModel):
         ]
         """
     )
-    pie2_items: List[Dict[str, Any]] = Field(
+    pie2_items: List[Dict[str, str | float]] = Field(
         ...,
         description="""
         List of data items for the second pie chart.
@@ -295,7 +295,7 @@ class GeneratePieChartSlide7(BaseModel):
         ]
         """
     )
-    pie3_items: List[Dict[str, Any]] = Field(
+    pie3_items: List[Dict[str, str | float]] = Field(
         ...,
         description="""
         List of data items for the third pie chart.
@@ -392,6 +392,18 @@ GRAPH_TOOLS = [
             "The layout uses a professional cream and gold-brown palette, ideal for financial stability and security topics."
         ),
         args_schema=GeneratePieChartSlide6
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_7,
+        name="generate_pie_chart_slide_7",
+        description=(
+            "The slide layout is an elegant minimalist design featuring three pie charts arranged horizontally.\n"
+            "- Top section: A clear header with a bold main title and a subtle subtitle.\n"
+            "- Main content: A row of three distinct pie/donut charts.\n"
+            "- Each chart is accompanied by a category label above and a dedicated insight text below.\n"
+            "The layout uses a refined color palette with warm neutral tones, perfect for style, agency, or minimalist infographics."
+        ),
+        args_schema=GeneratePieChartSlide7
     ),
     StructuredTool.from_function(
         func=generate_pie_chart_slide_8,

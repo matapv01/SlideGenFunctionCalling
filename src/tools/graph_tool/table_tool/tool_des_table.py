@@ -28,7 +28,17 @@ class GenerateTableSlide1(BaseModel):
             - rows: list of row objects
                 - label: name of the row
                 - values: list of numeric values corresponding to each column
-
+            Example:
+            [
+                {
+                    "label": "Row 1",
+                    "values": [1, 2, 3]
+                },
+                {
+                    "label": "Row 2",
+                    "values": [4, 5, 6]
+                }
+            ]
             Notes:
             - Each row must have the same number of values as columns
         """
@@ -52,11 +62,22 @@ class GenerateTableSlide2(BaseModel):
             - rows: list of row objects
                 - label: name of the row
                 - values: list of numeric values corresponding to each column
-
+            Example:
+            [
+                {
+                    "label": "Row 1",
+                    "values": [1, 2, 3]
+                },
+                {
+                    "label": "Row 2",
+                    "values": [4, 5, 6]
+                }
+            ]
             Notes:
             - Each row must have the same number of values as columns
-        """
-    )
+
+            """
+        )
 
 class GenerateTableSlide3(BaseModel):
     """Input schema for generate_table_slide_3."""
@@ -84,14 +105,14 @@ class GenerateTableSlide3(BaseModel):
 
 class GenerateTableSlide4(BaseModel):
     """Input schema for generate_table_slide_4."""
-    main_title: str = Field(default="Average Blood Pressure by Age Group", description="Main title displayed at the top of the slide.")
-    subtitle: str = Field(default="Unit: mmHg | Data Source: National Health Survey 2025", description="Subtitle displayed below the main title.")
-    insight: str = Field(default="Healthcare is important, Keep your health in check!", description="Key analytical insight shown in the left panel.")
-    unit: str = Field(default="mmHg", description="Optional unit appended to each value (e.g., 'mmHg', '%').")
+    main_title: str = Field(..., description="Main title displayed at the top of the slide.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel.")
+    unit: str = Field(..., description="Optional unit appended to each value (e.g., 'mmHg', '%').")
     show_value: bool = Field(default=True, description="Whether numeric values are displayed inside table cells.")
     data_label_format: str = Field(default="{value}", description="Format string used to display values (e.g., '{value}', '{value} mmHg').")
-    categories: List[str] = Field(default=["18-25", "26-35", "36-45", "46-60", "60+"], description="List of category labels for columns.")
-    series: List[Dict[str, Any]] = Field(
+    categories: List[str] = Field(..., description="List of category labels for columns.")
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
         description="""
             Series data with names and values.
@@ -100,7 +121,17 @@ class GenerateTableSlide4(BaseModel):
             - series: list of series objects
                 - name: name of the series (e.g., 'Male', 'Female')
                 - values: list of numeric values corresponding to each category
-
+            Example:
+            [
+                {
+                    "name": "Male",
+                    "values": [120, 80, 140]
+                },
+                {
+                    "name": "Female",
+                    "values": [110, 75, 130]
+                }
+            ]
             Notes:
             - Each series must have the same number of values as categories
         """
@@ -124,7 +155,17 @@ class GenerateTableSlide5(BaseModel):
             - rows: list of row objects
                 - label: name of the row
                 - values: list of numeric values corresponding to each column
-
+            Example:
+            [
+                {
+                    "label": "Row 1",
+                    "values": [1, 2, 3]
+                },
+                {
+                    "label": "Row 2",
+                    "values": [4, 5, 6]
+                }
+            ]
             Notes:
             - Each row must have the same number of values as columns
         """
@@ -173,7 +214,7 @@ class GenerateTableSlide7(BaseModel):
         ]"""
     )
     columns: List[str] = Field(..., description="List of column header labels (e.g., ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']).")
-    rows: List[Dict] = Field(
+    rows: List[Dict[str, str | List[str | None]]] = Field(
         ...,
         description="""Table row data with cells mapped to legend labels.
         Structure:
