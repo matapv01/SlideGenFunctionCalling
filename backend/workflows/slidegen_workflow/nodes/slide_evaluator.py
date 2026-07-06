@@ -1,4 +1,4 @@
-# File: src/nodes/slide_evaluator.py
+# File: backend/workflows/slidegen_workflow/nodes/slide_evaluator.py
 
 import json
 from langchain_core.messages import HumanMessage
@@ -11,7 +11,7 @@ from backend.workflows.slidegen_workflow.utils.prompts import EVALUATION_PROMPT
 def slide_evaluator(state: State) -> State:
     """
     Sử dụng VLM và with_structured_output
-    để đảm bảo phản hồi có cấu trúc.
+    đảm bảo phản hồi có cấu trúc.
     """
     retry_count = state.get('retry_count', 0)
     idx = state['current_slide_index']
@@ -71,31 +71,26 @@ def slide_evaluator(state: State) -> State:
     # Use structured output with the LLM
     llm = state['llm']
 
-    while True:
-        structured_llm = llm.with_structured_output(Evaluation)
+    structured_llm = llm.with_structured_output(Evaluation)
 
-        print("Sending request to VLM with structured_output...")
-        response: Evaluation = structured_llm.invoke([vlm_message])
+    print("Sending request to VLM with structured_output...")
+    response: Evaluation = structured_llm.invoke([vlm_message])
 
-        print(f"Response: {response}")
+    print(f"Response: {response}")
 
-        print(f"VLM Decision: {response.decision}")
-        print(f"VLM Feedback: {response.feedback}")
+    print(f"VLM Decision: {response.decision}")
+    print(f"VLM Feedback: {response.feedback}")
 
-        # if response['completion_tokens'] == 0:
-        #     llm._rotate_key_and_recreate_instance()
-        #     continue
+    state['vlm_decision'] = response.decision
+    state['vlm_feedback'] = response.feedback
 
-        state['vlm_decision'] = response.decision
-        state['vlm_feedback'] = response.feedback
+    # Update retry count if decision is 'deny'
+    if state['vlm_decision'] == 'deny':
+        state['retry_count'] = retry_count + 1
+        print(f"Slide rejected. Increasing retry_count to {state['retry_count']}")
+    else:
+        # Reset retry count on successful acceptance
+        state['retry_count'] = 0
+        print("Slide accepted.")
 
-        # Update retry count if decision is 'deny'
-        if state['vlm_decision'] == 'deny':
-            state['retry_count'] = retry_count + 1
-            print(f"Slide rejected. Increasing retry_count to {state['retry_count']}")
-        else:
-            # Reset retry count on successful acceptance
-            state['retry_count'] = 0
-            print("Slide accepted.")
-
-        return state
+    return state

@@ -50,25 +50,25 @@ API_PORT = 12008
 
 # --- LLM Configuration ---
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
-LLM_MODEL = "gemini-3-flash-preview"
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3-flash-preview")
 # Base URL cho API endpoint
-LLM_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/"
+LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
-LLM_TEMPERATURE = 0.5
+LLM_TEMPERATURE = float(os.getenv("LLM_TEMPERATURE", "0.5"))
 # Max tokens trong response (Gemini Flash hỗ trợ lên đến 8k output tokens)
-LLM_MAX_TOKENS = 20000
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "20000"))
 # Top-p sampling (nucleus sampling) - khuyến nghị giữ 1.0 cho tool calling
-LLM_TOP_P = 1.0
+LLM_TOP_P = float(os.getenv("LLM_TOP_P", "1.0"))
 # Số lần retry tối đa khi gọi LLM thất bại (network error, timeout, v.v.)
-MAX_REMAKE = 3
+MAX_REMAKE = int(os.getenv("MAX_REMAKE", "3"))
 
 # --- Idea Structure LLM Configuration ---
 # Model cho việc tạo cấu trúc slide từ idea (create with idea feature)
-IDEA_STRUCTURE_LLM_MODEL = "gemini-2.5-flash"
+IDEA_STRUCTURE_LLM_MODEL = os.getenv("IDEA_STRUCTURE_LLM_MODEL", "gemini-2.5-flash")
 # Temperature cao hơn để sáng tạo structure (0.7 = khá creative nhưng vẫn có logic)
-IDEA_STRUCTURE_LLM_TEMPERATURE = 0.7
+IDEA_STRUCTURE_LLM_TEMPERATURE = float(os.getenv("IDEA_STRUCTURE_LLM_TEMPERATURE", "0.7"))
 # Max tokens cho structure generation (cần ít hơn vì chỉ gen JSON structure)
-IDEA_STRUCTURE_LLM_MAX_TOKENS = 4096
+IDEA_STRUCTURE_LLM_MAX_TOKENS = int(os.getenv("IDEA_STRUCTURE_LLM_MAX_TOKENS", "4096"))
 
 # --- Content Splitting ---
 # Giới hạn ký tự cho mỗi slide (vượt quá sẽ không split nữa)

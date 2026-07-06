@@ -3,6 +3,8 @@ __pycache__/
 **/__pycache__/
 **/*.pyc
 .venv/
+env/
+env
 *.egg-info/
 .pytest_cache/
 
@@ -36,3 +38,11 @@ context/
 web/
 **/context
 backend/infrastructure/faiss_tool_retriever_index/
+
+# Local LLM Models, Checkpoints and Datasets
+rl/model/
+model/
+*.pt
+*.bin
+*.csv
+*.pt.tmp
