@@ -69,8 +69,23 @@ model = AutoModelForCausalLM.from_pretrained(
 
 
 # ==============================================================================
-# 3. CẤU HÌNH & KHỞI CHẠY GRPO TRAINER
+# 3. CẤU HÌNH & KHỞI CHẠY GRPO TRAINER VỚI LORA & GRADIENT CHECKPOINTING
 # ==============================================================================
+from peft import LoraConfig
+
+# Cấu hình LoRA (PEFT) để tiết kiệm VRAM (chỉ cập nhật ~1% trọng số)
+peft_config = LoraConfig(
+    r=8,
+    lora_alpha=16,
+    target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+    lora_dropout=0.05,
+    bias="none",
+    task_type="CAUSAL_LM",
+)
+
+# Tự động phát hiện kiểu độ chính xác tối ưu của GPU
+use_bf16 = torch.cuda.is_bf16_supported()
+
 training_args = GRPOConfig(
     output_dir="./qwen_slidegen_grpo",
     learning_rate=1e-6,
@@ -82,6 +97,9 @@ training_args = GRPOConfig(
     report_to="none",
     num_generations=4,      # G: Số mẫu sinh ra cho mỗi prompt để chấm điểm
     max_completion_length=1024,
+    bf16=use_bf16,          # Sử dụng bfloat16 nếu GPU hỗ trợ
+    fp16=not use_bf16,      # Sử dụng float16 làm fallback
+    gradient_checkpointing=True, # Tiết kiệm VRAM cực mạnh bằng cách tính toán lại activation
 )
 
 trainer = GRPOTrainer(
@@ -90,6 +108,7 @@ trainer = GRPOTrainer(
     reward_funcs=[slide_aesthetics_reward, content_preservation_reward],
     args=training_args,
     train_dataset=dataset,
+    peft_config=peft_config, # Kích hoạt LoRA
 )
 
 print("Starting GRPO training loop...")
