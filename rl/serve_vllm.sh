@@ -12,14 +12,26 @@ if [[ "$MODEL" == *"-AWQ"* || "$MODEL" == *"-awq"* ]]; then
     ARGS+=(--quantization awq)
 fi
 
+# Tự động phát hiện và sử dụng Python trong virtualenv của dự án để tránh lỗi thiếu thư viện
+if [ -f "$SCRIPT_DIR/../.venv/bin/python" ]; then
+    PYTHON_BIN="$SCRIPT_DIR/../.venv/bin/python"
+elif [ -f "$SCRIPT_DIR/../env/bin/python" ]; then
+    PYTHON_BIN="$SCRIPT_DIR/../env/bin/python"
+elif command -v uv &> /dev/null; then
+    PYTHON_BIN="uv run python3"
+else
+    PYTHON_BIN="python3"
+fi
+
 echo "--------------------------------------------------------"
 echo "Starting vLLM Server..."
 echo "Model target: $MODEL"
+echo "Python binary: $PYTHON_BIN"
 echo "Port: 8000"
 echo "--------------------------------------------------------"
 
 # Khởi chạy vLLM Server
-python3 -m vllm.entrypoints.openai.api_server \
+$PYTHON_BIN -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --port 8000 \
     --trust-remote-code \
