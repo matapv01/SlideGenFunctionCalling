@@ -3,9 +3,31 @@ import sys
 import json
 import httpx
 
-# Thư mục chứa vLLM endpoint (mặc định trỏ sang cổng 8008)
+# Đảm bảo PYTHONPATH nhận diện được backend của dự án
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+
+# Thư mục chứa vLLM endpoint
 vllm_base_url = "http://localhost:8008/v1"
 vllm_url = f"{vllm_base_url}/chat/completions"
+
+# Xây dựng bảng tra cứu nhanh tên tool sang đối tượng LangChain Tool thật
+flat_tools = {}
+for category, tools_list in TOOLS_DICT.items():
+    for tool in tools_list:
+        flat_tools[tool.name] = tool
+
+def format_tool_for_qwen(tool):
+    """Chuyển đổi một LangChain tool sang định dạng JSON Schema mà Qwen3 yêu cầu"""
+    return {
+        "type": "function",
+        "function": {
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": tool.args
+        }
+    }
 
 def get_active_model_name():
     """Truy vấn vLLM để lấy tên mô hình đang được phục vụ thực tế"""
@@ -17,24 +39,27 @@ def get_active_model_name():
         print(f"Detected active served model: {model_name}")
         return model_name
     except Exception as e:
-        # Fallback về tên mặc định nếu không lấy được
         default_model = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
-        print(f"Could not fetch active model name ({e}). Falling back to default payload model name: {default_model}")
+        print(f"Could not fetch active model name ({e}). Falling back to default: {default_model}")
         return default_model
 
-def generate_batch(model_name, batch_size=40, batch_idx=1):
-    """Gọi local Qwen để sinh một batch prompts nhỏ"""
+def generate_batch(model_name, batch_size=10, batch_idx=1):
+    """Gọi local Qwen để sinh một batch prompts nhỏ (chỉ trả về tên tool để tiết kiệm tokens)"""
     print(f"Generating Batch {batch_idx} ({batch_size} samples) via local LLM ({model_name})...")
     
-    # Prompt hướng dẫn sinh bằng tiếng Việt
+    # Liệt kê danh sách tên các công cụ có sẵn để LLM chọn lựa
+    available_tool_names = list(flat_tools.keys())
+    tools_list_str = ", ".join([f"'{name}'" for name in available_tool_names])
+
     system_prompt = (
-        "You are a dataset generator. You must output ONLY a raw JSON list containing synthetic "
-        "slide generation requests. All content, text guidelines, messages, and user queries MUST be written in Vietnamese (tiếng Việt). "
+        "You are a dataset generator. You must output ONLY a raw JSON object containing a list under the key 'samples'. "
+        "All content, text guidelines, messages, and user queries MUST be written in Vietnamese (tiếng Việt). "
+        f"For the 'tools' field, choose ONLY from these available tool names: [{tools_list_str}]. "
         "Each item in the list MUST have this exact format:\n"
         "{\n"
         "  \"system_prompt\": \"Specific layout guidelines in Vietnamese based on the slide type (e.g. intro, content, transition). Include typography and mathematical equation rules in Vietnamese.\",\n"
         "  \"user_prompt\": \"Detailed human prompt in Vietnamese specifying the context, slide index, and content.\",\n"
-        "  \"tools\": [List of tool schemas representing visual templates recommended by FAISS (e.g. title_and_bullets_layout)]\n"
+        "  \"tools\": [\"tool_name_1\", \"tool_name_2\", ...]\n"
         "}"
     )
     
@@ -45,9 +70,8 @@ def generate_batch(model_name, batch_size=40, batch_idx=1):
         "- Doanh nghiệp & Kinh tế Việt Nam (ví dụ: hành trình VinFast toàn cầu hóa, tập đoàn FPT, Viettel, Vietcombank, thị trường chứng khoán Việt Nam, startup công nghệ).\n"
         "- Địa lý & Du lịch Việt Nam (ví dụ: Vịnh Hạ Long, du lịch Hà Nội, văn hóa ẩm thực sông nước miền Tây, Phong Nha - Kẻ Bàng).\n"
         "- Giáo dục & Xã hội Việt Nam.\n"
-        "Mỗi mẫu phải bao gồm đầy đủ system_prompt thiết kế bằng tiếng Việt, user_prompt yêu cầu cụ thể bằng tiếng Việt, "
-        "và danh sách tools gợi ý tương ứng (chứa JSON schema của các layout như title_and_bullets_layout, list_layout, intro_layout, v.v.). "
-        "Chỉ trả về JSON list thô, không viết thêm bất kỳ chữ giải thích nào."
+        "Đảm bảo định dạng đầu ra chỉ chứa danh sách tên các công cụ (tools) gợi ý ở dạng string. "
+        "Chỉ trả về JSON thô, không giải thích."
     )
     
     payload = {
@@ -56,8 +80,9 @@ def generate_batch(model_name, batch_size=40, batch_idx=1):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_query}
         ],
-        "temperature": 0.85, # Tăng nhẹ sáng tạo giữa các batch để đa dạng
-        "max_tokens": 4096   # Phù hợp với 1 batch 40 mẫu
+        "temperature": 0.85,
+        "max_tokens": 4096,
+        "response_format": {"type": "json_object"} # Bắt buộc vLLM trả về JSON hợp lệ
     }
     
     response = httpx.post(vllm_url, json=payload, timeout=120.0)
@@ -65,18 +90,29 @@ def generate_batch(model_name, batch_size=40, batch_idx=1):
     result = response.json()
     raw_text = result["choices"][0]["message"]["content"].strip()
     
-    # Làm sạch markdown codeblock
-    if "```json" in raw_text:
-        raw_text = raw_text.split("```json")[1].split("```")[0].strip()
-    elif "```" in raw_text:
-        raw_text = raw_text.split("```")[1].split("```")[0].strip()
+    # Parse JSON
+    parsed_res = json.loads(raw_text)
+    samples = parsed_res.get("samples", [])
+    
+    # Bước cực kỳ quan trọng: Điền ngược cấu trúc JSON Schema thật cho từng tool name
+    enriched_samples = []
+    for sample in samples:
+        tool_names = sample.get("tools", [])
+        real_schemas = []
+        for name in tool_names:
+            if name in flat_tools:
+                real_schemas.append(format_tool_for_qwen(flat_tools[name]))
         
-    return json.loads(raw_text)
+        # Tạo sample hoàn chỉnh chứa schema thật
+        enriched_samples.append({
+            "system_prompt": sample.get("system_prompt", ""),
+            "user_prompt": sample.get("user_prompt", ""),
+            "tools": real_schemas
+        })
+        
+    return enriched_samples
 
-def generate_prompts_via_qwen(total_samples=200, batch_size=40):
-    """
-    Hàm lặp chạy nhiều batch để gom đủ dữ liệu huấn luyện mà không bị tràn max_tokens.
-    """
+def generate_prompts_via_qwen(total_samples=200, batch_size=10):
     model_name = get_active_model_name()
     all_samples = []
     num_batches = (total_samples + batch_size - 1) // batch_size
@@ -106,21 +142,7 @@ def generate_prompts_via_qwen(total_samples=200, batch_size=40):
                 "system_prompt": "You are a helpful assistant. You must respond ONLY with a JSON tool call.",
                 "user_prompt": "Hãy tạo 1 slide giới thiệu về dự án SlideGen với tiêu đề 'Giới thiệu' và 3 mục tiêu chính.",
                 "tools": [
-                    {
-                        "type": "function",
-                        "function": {
-                            "name": "title_and_bullets_layout",
-                            "description": "Intro slide layout with title and bullet points.",
-                            "parameters": {
-                                "type": "object",
-                                "properties": {
-                                    "title": {"type": "string"},
-                                    "bullets": {"type": "array", "items": {"type": "string"}}
-                                },
-                                "required": ["title", "bullets"]
-                            }
-                        }
-                    }
+                    format_tool_for_qwen(flat_tools["title_and_bullets_layout"])
                 ]
             }
         ]
@@ -129,4 +151,4 @@ def generate_prompts_via_qwen(total_samples=200, batch_size=40):
         print("[Prompt Generator] Saved fallback sample dataset due to generation failure.")
 
 if __name__ == "__main__":
-    generate_prompts_via_qwen(total_samples=200, batch_size=40)
+    generate_prompts_via_qwen(total_samples=200, batch_size=10)
