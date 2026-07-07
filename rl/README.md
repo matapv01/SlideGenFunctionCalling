@@ -30,39 +30,27 @@ Mọi prompt sinh ra tự động đều được giới hạn ở **tiếng Vi�
 
 ---
 
-## 1. Hướng dẫn tải mô hình (Download Model)
+## 1. Cơ chế tải mô hình (Hugging Face Hub Direct Loading)
 
-Chạy lệnh `uv` độc lập để tải mô hình **Qwen3-30B-A3B-Instruct-2507-AWQ** từ Hugging Face về thư mục `rl/model`:
+Hệ thống đã được cấu hình để nạp mô hình trực tiếp từ Hugging Face Hub. Khi bạn chạy kịch bản phục vụ API hoặc huấn luyện lần đầu tiên, thư viện sẽ tự động tải các file trọng số về máy và lưu vào thư mục cache mặc định (`~/.cache/huggingface/hub`). 
 
-```bash
-uv run --no-project --python 3.12 --with huggingface-hub python3 -c "
-from huggingface_hub import snapshot_download
-import os
-
-model_dir = '/home/MinhPV/SlideGenFunctionCalling/rl/model'
-os.makedirs(model_dir, exist_ok=True)
-
-print(f'Bắt đầu tải mô hình về {model_dir}...')
-snapshot_download(
-    repo_id='ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ',
-    local_dir=model_dir,
-    ignore_patterns=['*.msgpack', '*.h5', '*.ot']
-)
-print('Tải thành công!')
-"
-```
+Bạn **không cần** chạy bất kỳ script tải mô hình thủ công nào nữa!
 
 ---
 
-## 2. Kiểm tra Local Inference
+## 2. Kiểm tra Local Inference trực tiếp từ Hugging Face
 
-Xác minh tính đúng đắn của trọng số đã tải và sức tải của GPU bằng cách chạy kiểm tra cục bộ:
+Bạn có thể chạy thử tính năng sinh Layout (Function Calling) trực tiếp bằng mô hình trên Hugging Face để xác minh GPU và môi trường chạy:
 
 ```bash
-# 1. Cài đặt các thư viện cần thiết cho AWQ (nếu chưa có)
+# 1. Cài đặt các thư viện cần thiết cho mô hình (nếu chưa có)
 uv pip install autoawq transformers accelerate
 
-# 2. Khởi chạy script test sinh JSON layout
+# 2. Chạy thử nghiệm với mô hình 1.5B/2B mặc định (Hugging Face tự tải về)
+python3 infer.py
+
+# Hoặc chạy thử nghiệm với mô hình Qwen3 30B AWQ lớn:
+export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
 python3 infer.py
 ```
 
@@ -70,15 +58,23 @@ python3 infer.py
 
 ## 3. Triển khai API Server bằng vLLM (Production & Generation)
 
-Khởi động vLLM Server để phục vụ API OpenAI-Compatible tại cổng `8000`:
+vLLM hỗ trợ nạp trực tiếp mô hình từ Hugging Face repo ID và tự động lưu cache. Chạy lệnh sau để khởi động vLLM Server:
 
-```bash
-python3 -m vllm.entrypoints.openai.api_server \
-    --model /home/MinhPV/SlideGenFunctionCalling/rl/model \
-    --quantization awq \
-    --port 8000 \
-    --trust-remote-code
-```
+*   **Chạy mô hình nhỏ (1.5B - Mặc định):**
+    ```bash
+    python3 -m vllm.entrypoints.openai.api_server \
+        --model Qwen/Qwen2.5-Coder-1.5B-Instruct \
+        --port 8000 \
+        --trust-remote-code
+    ```
+*   **Chạy mô hình lớn (30B AWQ):**
+    ```bash
+    python3 -m vllm.entrypoints.openai.api_server \
+        --model ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ \
+        --quantization awq \
+        --port 8000 \
+        --trust-remote-code
+    ```
 
 ---
 

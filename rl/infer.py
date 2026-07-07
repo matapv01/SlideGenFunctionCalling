@@ -1,33 +1,33 @@
 import os
+import sys
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
-model_dir = "/home/MinhPV/SlideGenFunctionCalling/rl/model"
+# Cho phép chỉ định model ID qua biến môi trường để kiểm thử
+# Mặc định sử dụng mô hình nhỏ 1.5B/2B để chạy test nhẹ
+model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-1.5B-Instruct")
 
-if not os.path.exists(model_dir) or not os.listdir(model_dir):
-    print(f"Error: Model directory '{model_dir}' is empty or does not exist. Please make sure the download completes first.")
-    exit(1)
+print(f"Loading model '{model_id}' directly from Hugging Face...")
 
-print(f"Loading local Qwen3 model from '{model_dir}'...")
-
-# Determine device
+# Xác định GPU/CPU
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"Using device: {device}")
 
 # Load tokenizer
-tokenizer = AutoTokenizer.from_pretrained(model_dir)
+tokenizer = AutoTokenizer.from_pretrained(model_id)
 
-# Load model (optimized for AWQ 4-bit)
-# AutoModelForCausalLM automatically detects the AWQ config and loads it using autoawq
+# Load model (tự động phát hiện kiểu lượng tử hóa như AWQ nếu là mô hình 30B AWQ)
+torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+
 model = AutoModelForCausalLM.from_pretrained(
-    model_dir,
-    torch_dtype="auto",
+    model_id,
+    torch_dtype=torch_dtype,
     device_map="auto"
 )
 
 print("Model loaded successfully!")
 
-# Define test prompt for SlideGen function calling
+# Định nghĩa prompt test slidegen function calling
 prompt = "Hãy tạo 1 slide giới thiệu về dự án SlideGen với tiêu đề 'Giới thiệu' và 3 mục tiêu chính."
 system_prompt = (
     "You are a helpful assistant. You must respond ONLY with a JSON tool call in this format:\n"
@@ -58,14 +58,15 @@ print("----------------------------")
 inputs = tokenizer([text], return_tensors="pt").to(device)
 
 print("Running local inference...")
-generated_ids = model.generate(
-    **inputs,
-    max_new_tokens=512,
-    temperature=0.1,  # Low temperature for stable structure
-    do_sample=False
-)
+with torch.no_grad():
+    generated_ids = model.generate(
+        **inputs,
+        max_new_tokens=512,
+        temperature=0.1,
+        do_sample=False
+    )
 
-# Strip the prompt tokens
+# Cắt bỏ phần prompt tokens trong đầu ra
 generated_ids = [
     output_ids[len(input_ids):] for input_ids, output_ids in zip(inputs.input_ids, generated_ids)
 ]
