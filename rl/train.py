@@ -14,14 +14,22 @@ from rl.rewards import slide_aesthetics_reward, content_preservation_reward
 # ==============================================================================
 # 1. KHỞI TẠO TOKENIZER & LOAD DATASET TỪ FILE JSON
 # ==============================================================================
-model_dir = "./model"
-tokenizer = AutoTokenizer.from_pretrained(model_dir)
+# Cho phép override model ID qua biến môi trường để linh hoạt đổi kích thước mô hình
+# Mặc định sử dụng Qwen 1.5B/2B để chạy test nhẹ, ít tốn VRAM
+model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-1.5B-Instruct")
+
+# Nếu thư mục local ./model tồn tại và không rỗng, và người dùng không chỉ định cụ thể TRAINING_MODEL_ID
+if os.path.exists("./model") and os.listdir("./model") and "TRAINING_MODEL_ID" not in os.environ:
+    model_id = "./model"
+
+print(f"Loading tokenizer for model: '{model_id}'...")
+tokenizer = AutoTokenizer.from_pretrained(model_id)
 tokenizer.pad_token = tokenizer.eos_token
 
 dataset_path = "./slidegen_rl_dataset.json"
 
 if not os.path.exists(dataset_path):
-    print(f"Error: Dataset '{dataset_path}' not found. Please run 'generate_dataset.py' first.")
+    print(f"Error: Dataset '{dataset_path}' not found. Please run 'generate_synthetic_prompts.py' first.")
     sys.exit(1)
 
 print(f"Loading raw dataset from '{dataset_path}'...")
@@ -51,12 +59,16 @@ print(f"Dataset prepared successfully! Created {len(dataset)} training samples."
 
 
 # ==============================================================================
-# 2. KHỞI TẠO MÔ HÌNH GENERATOR (QWEN3) CHẠY TRÊN GPU
+# 2. KHỞI TẠO MÔ HÌNH GENERATOR CHẠY TRÊN GPU
 # ==============================================================================
-print(f"Loading Generator LLM (Qwen3) from '{model_dir}' into memory...")
+print(f"Loading Generator LLM ({model_id}) into memory...")
+
+# Kiểm tra GPU thích hợp để sử dụng dtype tối ưu
+torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
+
 model = AutoModelForCausalLM.from_pretrained(
-    model_dir,
-    torch_dtype=torch.bfloat16,
+    model_id,
+    torch_dtype=torch_dtype,
     device_map="auto"
 )
 
@@ -65,7 +77,7 @@ model = AutoModelForCausalLM.from_pretrained(
 # 3. CẤU HÌNH & KHỞI CHẠY GRPO TRAINER
 # ==============================================================================
 training_args = GRPOConfig(
-    output_dir="./qwen3_slidegen_grpo",
+    output_dir="./qwen_slidegen_grpo",
     learning_rate=1e-6,
     per_device_train_batch_size=1,
     gradient_accumulation_steps=16,

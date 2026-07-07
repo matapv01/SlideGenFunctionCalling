@@ -82,26 +82,35 @@ python3 -m vllm.entrypoints.openai.api_server \
 
 ---
 
-## 4. Quy trình các bước thực thi huấn luyện GRPO
+## 4. Quy trình huấn luyện Agent với GRPO
 
-Thực hiện tuần tự 3 bước sau để bắt đầu huấn luyện:
+Để tối ưu hóa tài nguyên VRAM trên một GPU duy nhất (tránh việc nạp mô hình Qwen hai lần song song), quy trình huấn luyện được thực hiện theo 3 bước tuần tự dưới đây. 
 
-### Bước 4.1: Bật vLLM Server phục vụ tạo dữ liệu
-Mở terminal riêng và chạy:
-```bash
-cd rl
-./serve_vllm.sh
-```
+Mặc định, các script đã được tối ưu hóa để sử dụng mô hình nhỏ **Qwen/Qwen2.5-Coder-1.5B-Instruct (~1.5B/2B)** giúp bạn chạy thử nghiệm toàn bộ luồng huấn luyện cực kỳ nhẹ nhàng và nhanh chóng. Khi muốn huấn luyện mô hình 30B lớn, bạn chỉ cần thay đổi tham số chỉ định mô hình.
 
-### Bước 4.2: Tạo tập dữ liệu Prompt (0 USD)
-Mở terminal mới và chọn một trong hai cách:
+### Bước 4.1: Khởi động API Server phục vụ workflow
+Mở một terminal riêng và chạy script để khởi động vLLM Server:
+
+*   **Chạy thử mô hình nhỏ (1.5B - Mặc định):**
+    ```bash
+    cd rl
+    ./serve_vllm.sh
+    ```
+*   **Chạy mô hình lớn (30B local đã tải ở Mục 1):**
+    ```bash
+    cd rl
+    ./serve_vllm.sh local
+    ```
+
+### Bước 4.2: Chuẩn bị dữ liệu prompt đầu vào
+Mở một terminal mới (vẫn giữ vLLM Server đang bật ở Bước 4.1):
 
 *   **Cách A (Khuyên dùng - Tự động sinh dữ liệu tiếng Việt miễn phí):**
     ```bash
     cd rl
     python3 generate_synthetic_prompts.py
     ```
-    *Script này sẽ gọi vLLM local để sinh ra 200 mẫu prompt slide tiếng Việt chất lượng cao về chủ đề Việt Nam.*
+    *Script này sẽ truy vấn trực tiếp model đang chạy trên vLLM để tự sinh ra 200 mẫu prompt slide tiếng Việt chất lượng cao.*
 *   **Cách B (Trích xuất từ file Docx có sẵn):**
     Cấu hình đường dẫn file Word mẫu của bạn trong `generate_dataset.py` và chạy:
     ```bash
@@ -110,15 +119,26 @@ Mở terminal mới và chọn một trong hai cách:
     ```
 
 > [!IMPORTANT]
-> **HÀNH ĐỘNG BẮT BUỘC:** Sau khi file `slidegen_rl_dataset.json` được lưu thành công ra đĩa, bạn phải **tắt vLLM Server** ở Bước 4.1 (ấn `Ctrl + C`) để giải phóng hoàn toàn bộ nhớ GPU trước khi chạy lệnh train ở Bước 4.3.
+> **HÀNH ĐỘNG BẮT BUỘC:** Sau khi file `slidegen_rl_dataset.json` được lưu thành công ra đĩa, bạn phải **tắt vLLM Server** ở Bước 4.1 (ấn `Ctrl + C` trên terminal đó) để giải phóng hoàn toàn bộ nhớ GPU trước khi chạy lệnh train ở Bước 4.3.
 
 ### Bước 4.3: Khởi chạy huấn luyện GRPO
 Tiến hành chạy huấn luyện tối ưu hóa Agent:
-```bash
-# Cài đặt thư viện (nếu chưa có)
-uv pip install trl peft
 
-# Chạy train
-python3 train.py
-```
+*   **Huấn luyện mô hình nhỏ (1.5B - Mặc định):**
+    ```bash
+    # Cài đặt thư viện (nếu chưa có)
+    uv pip install trl peft
+    
+    # Chạy train
+    python3 train.py
+    ```
+*   **Huấn luyện mô hình lớn (30B local đã tải ở Mục 1):**
+    ```bash
+    # Cấu hình biến môi trường trỏ vào model 30B
+    export TRAINING_MODEL_ID="./model"
+    
+    # Chạy train
+    python3 train.py
+    ```
+
 Sau khi hoàn tất, trọng số tối ưu nhất sẽ được lưu tại thư mục `./qwen3_slidegen_grpo`. Bạn chỉ cần khởi động lại vLLM trỏ vào thư mục này để đưa Agent đã tinh chỉnh vào chạy chính thức cho Backend.

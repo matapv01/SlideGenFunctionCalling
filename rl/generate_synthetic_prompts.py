@@ -4,11 +4,27 @@ import json
 import httpx
 
 # Thư mục chứa vLLM endpoint
-vllm_url = "http://localhost:8000/v1/chat/completions"
+vllm_base_url = "http://localhost:8000/v1"
+vllm_url = f"{vllm_base_url}/chat/completions"
 
-def generate_batch(batch_size=40, batch_idx=1):
-    """Gọi local Qwen3 để sinh một batch prompts nhỏ"""
-    print(f"Generating Batch {batch_idx} ({batch_size} samples) via local Qwen3...")
+def get_active_model_name():
+    """Truy vấn vLLM để lấy tên mô hình đang được phục vụ thực tế"""
+    try:
+        response = httpx.get(f"{vllm_base_url}/models", timeout=10.0)
+        response.raise_for_status()
+        models_data = response.json()
+        model_name = models_data["data"][0]["id"]
+        print(f"Detected active served model: {model_name}")
+        return model_name
+    except Exception as e:
+        # Fallback về tên mặc định nếu không lấy được
+        default_model = "Qwen/Qwen2.5-Coder-1.5B-Instruct"
+        print(f"Could not fetch active model name ({e}). Falling back to default payload model name: {default_model}")
+        return default_model
+
+def generate_batch(model_name, batch_size=40, batch_idx=1):
+    """Gọi local Qwen để sinh một batch prompts nhỏ"""
+    print(f"Generating Batch {batch_idx} ({batch_size} samples) via local LLM ({model_name})...")
     
     # Prompt hướng dẫn sinh bằng tiếng Việt
     system_prompt = (
@@ -35,7 +51,7 @@ def generate_batch(batch_size=40, batch_idx=1):
     )
     
     payload = {
-        "model": "ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ",
+        "model": model_name,
         "messages": [
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_query}
@@ -61,6 +77,7 @@ def generate_prompts_via_qwen(total_samples=200, batch_size=40):
     """
     Hàm lặp chạy nhiều batch để gom đủ dữ liệu huấn luyện mà không bị tràn max_tokens.
     """
+    model_name = get_active_model_name()
     all_samples = []
     num_batches = (total_samples + batch_size - 1) // batch_size
     
@@ -68,7 +85,7 @@ def generate_prompts_via_qwen(total_samples=200, batch_size=40):
     
     for i in range(1, num_batches + 1):
         try:
-            batch_data = generate_batch(batch_size=batch_size, batch_idx=i)
+            batch_data = generate_batch(model_name=model_name, batch_size=batch_size, batch_idx=i)
             if isinstance(batch_data, list):
                 all_samples.extend(batch_data)
                 print(f"-> Batch {i} added {len(batch_data)} samples. Current total: {len(all_samples)}")
