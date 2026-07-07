@@ -44,9 +44,12 @@ Bạn có thể chạy thử tính năng sinh Layout (Function Calling) trực t
 
 ```bash
 # 1. Cài đặt các thư viện cần thiết cho mô hình (nếu chưa có)
-uv pip install autoawq transformers accelerate
+uv pip install autoawq transformers accelerate playwright
 
-# 2. Chạy thử nghiệm với mô hình 1.5B/2B mặc định (Hugging Face tự tải về)
+# 2. Tải trình duyệt Chromium cho Playwright (bắt buộc để chụp ảnh slide chấm điểm thẩm mỹ)
+uv run playwright install chromium
+
+# 3. Chạy thử nghiệm với mô hình 1.5B/2B mặc định (Hugging Face tự tải về)
 uv run python3 infer.py
 
 # Hoặc chạy thử nghiệm với mô hình Qwen3 30B AWQ lớn:
@@ -128,23 +131,32 @@ Lựa chọn cách chạy phù hợp với GPU của bạn:
 
 *   **Cách A: Chạy trên GPU hạn chế VRAM (như RTX 3090/4090 - Mặc định):**
     ```bash
-    # 1. Cài đặt thư viện huấn luyện (nếu chưa có)
-    uv pip install trl peft
+    # 1. Cài đặt các thư viện cần thiết & Playwright (nếu chưa có)
+    uv pip install trl peft playwright
     
-    # 2. Chạy huấn luyện (sẽ tự động dùng LoRA + Gradient Checkpointing để chỉ tốn ~6GB VRAM)
+    # 2. Tải trình duyệt Chromium cho Playwright (bắt buộc để chụp ảnh slide chấm điểm)
+    uv run playwright install chromium
+    
+    # 3. Chạy huấn luyện (sẽ tự động dùng LoRA + Gradient Checkpointing để chỉ tốn ~6GB VRAM)
     uv run python3 train.py
     ```
 
 *   **Cách B: Chạy trên GPU cao cấp (H100/A100) để tối ưu chất lượng & hiệu suất cao nhất:**
     ```bash
-    # 1. Tắt LoRA để chạy Full Fine-Tuning và tắt Gradient Checkpointing để tăng tốc
+    # 1. Cài đặt các thư viện cần thiết & Playwright (nếu chưa có)
+    uv pip install trl peft playwright
+    
+    # 2. Tải trình duyệt Chromium cho Playwright
+    uv run playwright install chromium
+    
+    # 3. Thiết lập biến môi trường: Tắt LoRA để chạy Full Fine-Tuning và tắt Gradient Checkpointing để tăng tốc
     export USE_LORA="False"
     export USE_GRAD_CHECKPOINT="False"
     
     # Nếu muốn dùng mô hình 30B lớn của Hugging Face:
     export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
     
-    # 2. Khởi chạy huấn luyện
+    # 4. Khởi chạy huấn luyện
     uv run python3 train.py
     ```
 
