@@ -83,6 +83,8 @@ def slide_aesthetics_reward(prompts, completions, **kwargs):
                 cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
             
             tool_call = json.loads(cleaned_text)
+            if isinstance(tool_call, list) and len(tool_call) > 0:
+                tool_call = tool_call[0]
             
             # B. Thực thi tool dựng HTML
             html_content = execute_tool(tool_call)
