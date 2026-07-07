@@ -26,7 +26,7 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 print(f"\n[Reward Module] Loading Frozen ViT Reward Model on {device} from '{reward_model_path}'...")
 vit_model = ViTForImageClassification.from_pretrained(
-    'WinKawaks/vit-small-patch16-224',
+    'google/vit-base-patch16-224',
     num_labels=1,
     ignore_mismatched_sizes=True
 )
