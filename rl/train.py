@@ -14,13 +14,8 @@ from rl.rewards import slide_aesthetics_reward, content_preservation_reward
 # ==============================================================================
 # 1. KHỞI TẠO TOKENIZER & LOAD DATASET TỪ FILE JSON
 # ==============================================================================
-# Cho phép override model ID qua biến môi trường để linh hoạt đổi kích thước mô hình
-# Mặc định sử dụng Qwen 1.5B/2B để chạy test nhẹ, ít tốn VRAM
+# Load trực tiếp từ Hugging Face qua Model ID (mặc định là mô hình nhỏ 1.5B/2B để test nhẹ)
 model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-1.5B-Instruct")
-
-# Nếu thư mục local ./model tồn tại và không rỗng, và người dùng không chỉ định cụ thể TRAINING_MODEL_ID
-if os.path.exists("./model") and os.listdir("./model") and "TRAINING_MODEL_ID" not in os.environ:
-    model_id = "./model"
 
 print(f"Loading tokenizer for model: '{model_id}'...")
 tokenizer = AutoTokenizer.from_pretrained(model_id)
