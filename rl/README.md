@@ -118,22 +118,33 @@ Mở một terminal mới (vẫn giữ vLLM Server đang bật ở Bước 4.1):
 > **HÀNH ĐỘNG BẮT BUỘC:** Sau khi file `slidegen_rl_dataset.json` được lưu thành công ra đĩa, bạn phải **tắt vLLM Server** ở Bước 4.1 (ấn `Ctrl + C` trên terminal đó) để giải phóng hoàn toàn bộ nhớ GPU trước khi chạy lệnh train ở Bước 4.3.
 
 ### Bước 4.3: Khởi chạy huấn luyện GRPO
-Tiến hành chạy huấn luyện tối ưu hóa Agent:
+Tiến hành chạy huấn luyện tối ưu hóa Agent. 
 
-*   **Huấn luyện mô hình nhỏ (1.5B - Mặc định):**
+Kịch bản hỗ trợ cấu hình linh hoạt thông qua 2 biến môi trường:
+*   `USE_LORA` (Mặc định `True`): Sử dụng kỹ thuật tối ưu hóa trọng số thấp (PEFT LoRA). Đặt `False` để chạy Full-Parameter Fine-Tuning.
+*   `USE_GRAD_CHECKPOINT` (Mặc định `True`): Sử dụng Gradient Checkpointing để tiết kiệm VRAM. Đặt `False` trên các GPU mạnh như H100 để tăng ~30% tốc độ huấn luyện.
+
+Lựa chọn cách chạy phù hợp với GPU của bạn:
+
+*   **Cách A: Chạy trên GPU hạn chế VRAM (như RTX 3090/4090 - Mặc định):**
     ```bash
-    # Cài đặt thư viện (nếu chưa có)
+    # 1. Cài đặt thư viện huấn luyện (nếu chưa có)
     uv pip install trl peft
     
-    # Chạy train
+    # 2. Chạy huấn luyện (sẽ tự động dùng LoRA + Gradient Checkpointing để chỉ tốn ~6GB VRAM)
     uv run python3 train.py
     ```
-*   **Huấn luyện mô hình lớn (30B AWQ trực tiếp từ Hugging Face):**
+
+*   **Cách B: Chạy trên GPU cao cấp (H100/A100) để tối ưu chất lượng & hiệu suất cao nhất:**
     ```bash
-    # Cấu hình biến môi trường trỏ vào model 30B của Hugging Face
+    # 1. Tắt LoRA để chạy Full Fine-Tuning và tắt Gradient Checkpointing để tăng tốc
+    export USE_LORA="False"
+    export USE_GRAD_CHECKPOINT="False"
+    
+    # Nếu muốn dùng mô hình 30B lớn của Hugging Face:
     export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
     
-    # Chạy train
+    # 2. Khởi chạy huấn luyện
     uv run python3 train.py
     ```
 
