@@ -49,7 +49,7 @@ uv pip install autoawq transformers accelerate playwright
 # 2. Tải trình duyệt Chromium cho Playwright (bắt buộc để chụp ảnh slide chấm điểm thẩm mỹ)
 uv run playwright install chromium
 
-# 3. Chạy thử nghiệm với mô hình 1.5B/2B mặc định (Hugging Face tự tải về)
+# 3. Chạy thử nghiệm với mô hình 0.5B mặc định (Hugging Face tự tải về)
 uv run python3 infer.py
 
 # Hoặc chạy thử nghiệm với mô hình Qwen3 30B AWQ lớn:
@@ -63,10 +63,10 @@ uv run python3 infer.py
 
 vLLM hỗ trợ nạp trực tiếp mô hình từ Hugging Face repo ID và tự động lưu cache. Chạy lệnh sau để khởi động vLLM Server:
 
-*   **Chạy mô hình nhỏ (1.5B - Mặc định):**
+*   **Chạy mô hình nhỏ (0.5B - Mặc định):**
     ```bash
     uv run python3 -m vllm.entrypoints.openai.api_server \
-        --model Qwen/Qwen2.5-Coder-1.5B-Instruct \
+        --model Qwen/Qwen2.5-Coder-0.5B-Instruct \
         --port 8008 \
         --trust-remote-code
     ```
@@ -85,12 +85,12 @@ vLLM hỗ trợ nạp trực tiếp mô hình từ Hugging Face repo ID và tự
 
 Để tối ưu hóa tài nguyên VRAM trên một GPU duy nhất (tránh việc nạp mô hình Qwen hai lần song song), quy trình huấn luyện được thực hiện theo 3 bước tuần tự dưới đây. 
 
-Mặc định, các script đã được tối ưu hóa để sử dụng mô hình nhỏ **Qwen/Qwen2.5-Coder-1.5B-Instruct (~1.5B/2B)** giúp bạn chạy thử nghiệm toàn bộ luồng huấn luyện cực kỳ nhẹ nhàng và nhanh chóng. Khi muốn huấn luyện mô hình 30B lớn, bạn chỉ cần thay đổi tham số chỉ định mô hình.
+Mặc định, các script đã được tối ưu hóa để sử dụng mô hình nhỏ **Qwen/Qwen2.5-Coder-0.5B-Instruct (~0.5B)** giúp bạn chạy thử nghiệm toàn bộ luồng huấn luyện cực kỳ nhẹ nhàng và nhanh chóng. Khi muốn huấn luyện mô hình 30B lớn, bạn chỉ cần thay đổi tham số chỉ định mô hình.
 
 ### Bước 4.1: Khởi động API Server phục vụ workflow
 Mở một terminal riêng và chạy script để khởi động vLLM Server:
 
-*   **Chạy thử mô hình nhỏ (1.5B - Mặc định):**
+*   **Chạy thử mô hình nhỏ (0.5B - Mặc định):**
     ```bash
     cd rl
     ./serve_vllm.sh

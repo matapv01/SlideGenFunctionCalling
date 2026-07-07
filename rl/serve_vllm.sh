@@ -8,9 +8,9 @@ export VLLM_WORKER_MULTIPROC_METHOD=spawn
 
 
 
-# Nhận tên mô hình từ tham số đầu tiên, mặc định là mô hình nhỏ 1.5B/2B để test nhẹ
+# Nhận tên mô hình từ tham số đầu tiên, mặc định là mô hình siêu nhỏ 0.5B để tránh OOM bộ nhớ
 # Mô hình sẽ được tải trực tiếp từ Hugging Face Hub và lưu vào cache của hệ thống
-MODEL="${1:-Qwen/Qwen2.5-Coder-1.5B-Instruct}"
+MODEL="${1:-Qwen/Qwen2.5-Coder-0.5B-Instruct}"
 
 # Tự động phát hiện quantization dựa trên tên mô hình
 ARGS=()

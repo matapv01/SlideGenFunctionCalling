@@ -4,8 +4,8 @@ import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 
 # Cho phép chỉ định model ID qua biến môi trường để kiểm thử
-# Mặc định sử dụng mô hình nhỏ 1.5B/2B để chạy test nhẹ
-model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-1.5B-Instruct")
+# Mặc định sử dụng mô hình siêu nhỏ 0.5B để chạy nhẹ nhàng tránh OOM
+model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-0.5B-Instruct")
 
 print(f"Loading model '{model_id}' directly from Hugging Face...")
 
