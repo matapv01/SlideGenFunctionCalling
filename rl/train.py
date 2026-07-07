@@ -64,11 +64,33 @@ print(f"Loading Generator LLM ({model_id}) into memory...")
 # Kiểm tra GPU thích hợp để sử dụng dtype tối ưu
 torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
 
-model = AutoModelForCausalLM.from_pretrained(
-    model_id,
-    torch_dtype=torch_dtype,
-    device_map="auto"
-)
+# Kiểm tra xem bitsandbytes có sẵn không để tự động kích hoạt QLoRA 4-bit giúp tiết kiệm tối đa VRAM
+try:
+    from transformers import BitsAndBytesConfig
+    from peft import prepare_model_for_kbit_training
+    
+    print("bitsandbytes detected! Activating 4-bit QLoRA to minimize VRAM usage (~250MB weight footprint)...")
+    bnb_config = BitsAndBytesConfig(
+        load_in_4bit=True,
+        bnb_4bit_use_double_quant=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=torch_dtype
+    )
+    
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        quantization_config=bnb_config,
+        device_map="auto"
+    )
+    model = prepare_model_for_kbit_training(model)
+except ImportError:
+    print("Warning: bitsandbytes is not installed. Loading model in standard precision.")
+    print("-> Tip: Install it via 'uv pip install bitsandbytes' to enable 4-bit QLoRA and save massive VRAM!")
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        torch_dtype=torch_dtype,
+        device_map="auto"
+    )
 
 
 # ==============================================================================
