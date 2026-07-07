@@ -123,7 +123,8 @@ Mở một terminal mới (vẫn giữ vLLM Server đang bật ở Bước 4.1):
 ### Bước 4.3: Khởi chạy huấn luyện GRPO
 Tiến hành chạy huấn luyện tối ưu hóa Agent. 
 
-Kịch bản hỗ trợ cấu hình linh hoạt thông qua 3 biến môi trường:
+Kịch bản hỗ trợ cấu hình linh hoạt thông qua các biến môi trường:
+*   `LIMIT_GPU_MEM` (Mặc định không giới hạn): Giới hạn lượng VRAM tối đa PyTorch được phép sử dụng trên GPU (ví dụ: `"4GiB"`, `"6GiB"`), phần còn lại của mô hình sẽ tự động được **offload sang RAM thường (CPU)**.
 *   `USE_CPU` (Mặc định `False`): Đặt `True` để ép chạy hoàn toàn trên CPU (tiêu tốn **0 MB VRAM**).
 *   `USE_LORA` (Mặc định `True`): Sử dụng kỹ thuật tối ưu hóa trọng số thấp (PEFT LoRA). Đặt `False` để chạy Full-Parameter Fine-Tuning.
 *   `USE_GRAD_CHECKPOINT` (Mặc định `True`): Sử dụng Gradient Checkpointing để tiết kiệm VRAM. Đặt `False` trên các GPU mạnh như H100 để tăng ~30% tốc độ huấn luyện.
@@ -139,6 +140,8 @@ Lựa chọn cách chạy phù hợp với GPU của bạn:
     uv run playwright install chromium
     
     # 3. Chạy huấn luyện (sẽ tự động dùng LoRA + Gradient Checkpointing để chỉ tốn ~6GB VRAM)
+    # Mẹo: Bạn có thể đặt LIMIT_GPU_MEM để ép offload bớt sang CPU nếu GPU quá đầy (ví dụ: limit 3GB VRAM)
+    export LIMIT_GPU_MEM="3GiB"
     uv run python3 train.py
     ```
 
