@@ -73,15 +73,25 @@ model = AutoModelForCausalLM.from_pretrained(
 # ==============================================================================
 from peft import LoraConfig
 
-# Cấu hình LoRA (PEFT) để tiết kiệm VRAM (chỉ cập nhật ~1% trọng số)
-peft_config = LoraConfig(
-    r=8,
-    lora_alpha=16,
-    target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-    lora_dropout=0.05,
-    bias="none",
-    task_type="CAUSAL_LM",
-)
+# Đọc cấu hình môi trường để hỗ trợ huấn luyện chất lượng cao trên H100
+USE_LORA = os.getenv("USE_LORA", "True").lower() == "true"
+USE_GRAD_CHECKPOINT = os.getenv("USE_GRAD_CHECKPOINT", "True").lower() == "true"
+
+print(f"Training strategy configuration:")
+print(f"-> Use LoRA (PEFT): {USE_LORA}")
+print(f"-> Use Gradient Checkpointing: {USE_GRAD_CHECKPOINT}")
+
+# Cấu hình LoRA (PEFT) nếu được bật
+peft_config = None
+if USE_LORA:
+    peft_config = LoraConfig(
+        r=8,
+        lora_alpha=16,
+        target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
+        lora_dropout=0.05,
+        bias="none",
+        task_type="CAUSAL_LM",
+    )
 
 # Tự động phát hiện kiểu độ chính xác tối ưu của GPU
 use_bf16 = torch.cuda.is_bf16_supported()
@@ -99,7 +109,7 @@ training_args = GRPOConfig(
     max_completion_length=1024,
     bf16=use_bf16,          # Sử dụng bfloat16 nếu GPU hỗ trợ
     fp16=not use_bf16,      # Sử dụng float16 làm fallback
-    gradient_checkpointing=True, # Tiết kiệm VRAM cực mạnh bằng cách tính toán lại activation
+    gradient_checkpointing=USE_GRAD_CHECKPOINT, # Tiết kiệm VRAM nếu bật
 )
 
 trainer = GRPOTrainer(
@@ -108,7 +118,7 @@ trainer = GRPOTrainer(
     reward_funcs=[slide_aesthetics_reward, content_preservation_reward],
     args=training_args,
     train_dataset=dataset,
-    peft_config=peft_config, # Kích hoạt LoRA
+    peft_config=peft_config, # Kích hoạt LoRA nếu peft_config không phải None
 )
 
 print("Starting GRPO training loop...")
