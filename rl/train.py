@@ -84,13 +84,13 @@ training_args = GRPOConfig(
     max_completion_length=1024,
 )
 
-# trainer = GRPOTrainer(
-#     model=model,
-#     processing_class=tokenizer,
-#     reward_funcs=[slide_aesthetics_reward, content_preservation_reward],
-#     args=training_args,
-#     train_dataset=dataset,
-# )
+trainer = GRPOTrainer(
+    model=model,
+    processing_class=tokenizer,
+    reward_funcs=[slide_aesthetics_reward, content_preservation_reward],
+    args=training_args,
+    train_dataset=dataset,
+)
 
-print("GRPO training script ready. Uncomment trainer to run training.")
-# trainer.train()
+print("Starting GRPO training loop...")
+trainer.train()
