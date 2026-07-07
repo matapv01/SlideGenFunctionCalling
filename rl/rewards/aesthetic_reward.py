@@ -13,9 +13,13 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
 
-# Xác định đường dẫn tuyệt đối đến file best_model_pairwise.pt ở root thư mục
+# Xác định đường dẫn tuyệt đối đến file best_model_pairwise.pt
 project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 reward_model_path = os.path.join(project_root, "best_model_pairwise.pt")
+
+# Fallback tìm trong thư mục rl/model/ nếu không thấy ở root
+if not os.path.exists(reward_model_path):
+    reward_model_path = os.path.join(project_root, "rl", "model", "best_model_pairwise.pt")
 
 # Khởi tạo thiết bị chạy và nạp Reward Model (ViT)
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
