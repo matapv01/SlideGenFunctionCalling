@@ -1,6 +1,10 @@
 #!/bin/bash
 # File: rl/serve_vllm.sh
 
+# Bắt buộc vLLM sử dụng động cơ ổn định v0 thay vì v1 thử nghiệm (tránh lỗi Engine core initialization failed)
+export VLLM_USE_V1=0
+
+
 # Nhận tên mô hình từ tham số đầu tiên, mặc định là mô hình nhỏ 1.5B/2B để test nhẹ
 # Mô hình sẽ được tải trực tiếp từ Hugging Face Hub và lưu vào cache của hệ thống
 MODEL="${1:-Qwen/Qwen2.5-Coder-1.5B-Instruct}"
