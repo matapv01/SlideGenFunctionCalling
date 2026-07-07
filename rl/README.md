@@ -123,7 +123,8 @@ Mở một terminal mới (vẫn giữ vLLM Server đang bật ở Bước 4.1):
 ### Bước 4.3: Khởi chạy huấn luyện GRPO
 Tiến hành chạy huấn luyện tối ưu hóa Agent. 
 
-Kịch bản hỗ trợ cấu hình linh hoạt thông qua 2 biến môi trường:
+Kịch bản hỗ trợ cấu hình linh hoạt thông qua 3 biến môi trường:
+*   `USE_CPU` (Mặc định `False`): Đặt `True` để ép chạy hoàn toàn trên CPU (tiêu tốn **0 MB VRAM**).
 *   `USE_LORA` (Mặc định `True`): Sử dụng kỹ thuật tối ưu hóa trọng số thấp (PEFT LoRA). Đặt `False` để chạy Full-Parameter Fine-Tuning.
 *   `USE_GRAD_CHECKPOINT` (Mặc định `True`): Sử dụng Gradient Checkpointing để tiết kiệm VRAM. Đặt `False` trên các GPU mạnh như H100 để tăng ~30% tốc độ huấn luyện.
 
@@ -157,6 +158,19 @@ Lựa chọn cách chạy phù hợp với GPU của bạn:
     export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
     
     # 4. Khởi chạy huấn luyện
+    uv run python3 train.py
+    ```
+
+*   **Cách C: Phương án chống cháy - Chạy hoàn toàn trên CPU (Không tốn VRAM GPU):**
+    Nếu GPU của bạn hoàn toàn bị chiếm dụng bởi các tiến trình khác và bạn không thể giải phóng VRAM, bạn có thể ép toàn bộ chương trình chạy trên CPU:
+    ```bash
+    # 1. Tải trình duyệt cho Playwright (bản Chromium)
+    uv run playwright install chromium
+    
+    # 2. Thiết lập biến môi trường chạy trên CPU
+    export USE_CPU="True"
+    
+    # 3. Khởi chạy huấn luyện
     uv run python3 train.py
     ```
 
