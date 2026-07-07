@@ -64,7 +64,7 @@ vLLM hỗ trợ nạp trực tiếp mô hình từ Hugging Face repo ID và tự
     ```bash
     python3 -m vllm.entrypoints.openai.api_server \
         --model Qwen/Qwen2.5-Coder-1.5B-Instruct \
-        --port 8000 \
+        --port 8008 \
         --trust-remote-code
     ```
 *   **Chạy mô hình lớn (30B AWQ):**
@@ -72,7 +72,7 @@ vLLM hỗ trợ nạp trực tiếp mô hình từ Hugging Face repo ID và tự
     python3 -m vllm.entrypoints.openai.api_server \
         --model ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ \
         --quantization awq \
-        --port 8000 \
+        --port 8008 \
         --trust-remote-code
     ```
 

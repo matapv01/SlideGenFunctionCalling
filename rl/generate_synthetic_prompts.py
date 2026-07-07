@@ -3,8 +3,8 @@ import sys
 import json
 import httpx
 
-# Thư mục chứa vLLM endpoint
-vllm_base_url = "http://localhost:8000/v1"
+# Thư mục chứa vLLM endpoint (mặc định trỏ sang cổng 8008)
+vllm_base_url = "http://localhost:8008/v1"
 vllm_url = f"{vllm_base_url}/chat/completions"
 
 def get_active_model_name():

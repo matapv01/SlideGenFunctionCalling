@@ -23,16 +23,19 @@ else
     PYTHON_BIN="python3"
 fi
 
+# Thiết lập cổng chạy vLLM (mặc định chuyển sang 8008 để tránh xung đột cổng 8000)
+VLLM_PORT="${VLLM_PORT:-8008}"
+
 echo "--------------------------------------------------------"
 echo "Starting vLLM Server..."
 echo "Model target: $MODEL"
 echo "Python binary: $PYTHON_BIN"
-echo "Port: 8000"
+echo "Port: $VLLM_PORT"
 echo "--------------------------------------------------------"
 
 # Khởi chạy vLLM Server
 $PYTHON_BIN -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
-    --port 8000 \
+    --port "$VLLM_PORT" \
     --trust-remote-code \
     "${ARGS[@]}"
