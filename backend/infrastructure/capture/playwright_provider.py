@@ -15,7 +15,11 @@ class PlaywrightCaptureProvider(CaptureProvider):
     async def generate_slide_from_html(self, html_content: str, output_path: str) -> str:
         """Chụp ảnh từ HTML content"""
         async with async_playwright() as p:
-            browser = await p.chromium.launch(headless=True)
+            # Tắt tăng tốc phần cứng GPU để tránh Chromium tranh chấp VRAM với PyTorch
+            browser = await p.chromium.launch(
+                headless=True,
+                args=["--disable-gpu", "--disable-software-rasterizer"]
+            )
             page = await browser.new_page(viewport=self.viewport)
             
             await page.set_content(html_content)
