@@ -92,10 +92,10 @@ Mở một terminal riêng và chạy script để khởi động vLLM Server:
     cd rl
     ./serve_vllm.sh
     ```
-*   **Chạy mô hình lớn (30B local đã tải ở Mục 1):**
+*   **Chạy mô hình lớn (30B AWQ trực tiếp từ Hugging Face):**
     ```bash
     cd rl
-    ./serve_vllm.sh local
+    ./serve_vllm.sh ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ
     ```
 
 ### Bước 4.2: Chuẩn bị dữ liệu prompt đầu vào
@@ -128,10 +128,10 @@ Tiến hành chạy huấn luyện tối ưu hóa Agent:
     # Chạy train
     python3 train.py
     ```
-*   **Huấn luyện mô hình lớn (30B local đã tải ở Mục 1):**
+*   **Huấn luyện mô hình lớn (30B AWQ trực tiếp từ Hugging Face):**
     ```bash
-    # Cấu hình biến môi trường trỏ vào model 30B
-    export TRAINING_MODEL_ID="./model"
+    # Cấu hình biến môi trường trỏ vào model 30B của Hugging Face
+    export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
     
     # Chạy train
     python3 train.py
