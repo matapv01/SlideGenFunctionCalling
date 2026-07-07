@@ -2,6 +2,9 @@ import os
 import sys
 import json
 import torch
+
+# Hạn chế phân mảnh bộ nhớ VRAM của PyTorch
+os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from trl import GRPOTrainer, GRPOConfig
 from datasets import Dataset
@@ -105,8 +108,8 @@ training_args = GRPOConfig(
     save_steps=100,
     logging_steps=10,
     report_to="none",
-    num_generations=4,      # G: Số mẫu sinh ra cho mỗi prompt để chấm điểm
-    max_completion_length=1024,
+    num_generations=2,      # Giảm xuống 2 để tiết kiệm tối đa VRAM khi sinh mẫu
+    max_completion_length=384, # Giảm chiều dài tối đa (vì JSON Layout ngắn, chỉ cần <384 tokens)
     bf16=use_bf16,          # Sử dụng bfloat16 nếu GPU hỗ trợ
     fp16=not use_bf16,      # Sử dụng float16 làm fallback
     gradient_checkpointing=USE_GRAD_CHECKPOINT, # Tiết kiệm VRAM nếu bật
