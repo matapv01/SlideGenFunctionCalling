@@ -47,11 +47,11 @@ Bạn có thể chạy thử tính năng sinh Layout (Function Calling) trực t
 uv pip install autoawq transformers accelerate
 
 # 2. Chạy thử nghiệm với mô hình 1.5B/2B mặc định (Hugging Face tự tải về)
-python3 infer.py
+uv run python3 infer.py
 
 # Hoặc chạy thử nghiệm với mô hình Qwen3 30B AWQ lớn:
 export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
-python3 infer.py
+uv run python3 infer.py
 ```
 
 ---
@@ -62,14 +62,14 @@ vLLM hỗ trợ nạp trực tiếp mô hình từ Hugging Face repo ID và tự
 
 *   **Chạy mô hình nhỏ (1.5B - Mặc định):**
     ```bash
-    python3 -m vllm.entrypoints.openai.api_server \
+    uv run python3 -m vllm.entrypoints.openai.api_server \
         --model Qwen/Qwen2.5-Coder-1.5B-Instruct \
         --port 8008 \
         --trust-remote-code
     ```
 *   **Chạy mô hình lớn (30B AWQ):**
     ```bash
-    python3 -m vllm.entrypoints.openai.api_server \
+    uv run python3 -m vllm.entrypoints.openai.api_server \
         --model ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ \
         --quantization awq \
         --port 8008 \
@@ -104,14 +104,14 @@ Mở một terminal mới (vẫn giữ vLLM Server đang bật ở Bước 4.1):
 *   **Cách A (Khuyên dùng - Tự động sinh dữ liệu tiếng Việt miễn phí):**
     ```bash
     cd rl
-    python3 generate_synthetic_prompts.py
+    uv run python3 generate_synthetic_prompts.py
     ```
     *Script này sẽ truy vấn trực tiếp model đang chạy trên vLLM để tự sinh ra 200 mẫu prompt slide tiếng Việt chất lượng cao.*
 *   **Cách B (Trích xuất từ file Docx có sẵn):**
     Cấu hình đường dẫn file Word mẫu của bạn trong `generate_dataset.py` và chạy:
     ```bash
     cd rl
-    python3 generate_dataset.py
+    uv run python3 generate_dataset.py
     ```
 
 > [!IMPORTANT]
@@ -126,7 +126,7 @@ Tiến hành chạy huấn luyện tối ưu hóa Agent:
     uv pip install trl peft
     
     # Chạy train
-    python3 train.py
+    uv run python3 train.py
     ```
 *   **Huấn luyện mô hình lớn (30B AWQ trực tiếp từ Hugging Face):**
     ```bash
@@ -134,7 +134,7 @@ Tiến hành chạy huấn luyện tối ưu hóa Agent:
     export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
     
     # Chạy train
-    python3 train.py
+    uv run python3 train.py
     ```
 
 Sau khi hoàn tất, trọng số tối ưu nhất sẽ được lưu tại thư mục `./qwen3_slidegen_grpo`. Bạn chỉ cần khởi động lại vLLM trỏ vào thư mục này để đưa Agent đã tinh chỉnh vào chạy chính thức cho Backend.
