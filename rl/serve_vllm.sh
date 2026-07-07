@@ -33,16 +33,21 @@ fi
 # Thiết lập cổng chạy vLLM (mặc định chuyển sang 8008 để tránh xung đột cổng 8000)
 VLLM_PORT="${VLLM_PORT:-8008}"
 
+# Khai báo mức sử dụng tối đa VRAM (mặc định là 0.3 để chạy vừa khít trong bộ nhớ còn trống khi test)
+GPU_MEM_UTIL="${GPU_MEMORY_UTILIZATION:-0.3}"
+
 echo "--------------------------------------------------------"
 echo "Starting vLLM Server..."
 echo "Model target: $MODEL"
 echo "Python binary: $PYTHON_BIN"
 echo "Port: $VLLM_PORT"
+echo "GPU Memory Util: $GPU_MEM_UTIL"
 echo "--------------------------------------------------------"
 
 # Khởi chạy vLLM Server
 $PYTHON_BIN -m vllm.entrypoints.openai.api_server \
     --model "$MODEL" \
     --port "$VLLM_PORT" \
+    --gpu-memory-utilization "$GPU_MEM_UTIL" \
     --trust-remote-code \
     "${ARGS[@]}"
