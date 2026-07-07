@@ -69,6 +69,17 @@ USE_GRAD_CHECKPOINT = os.getenv("USE_GRAD_CHECKPOINT", "True").lower() == "true"
 # Kiểm tra GPU thích hợp để sử dụng dtype tối ưu
 torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
 
+# Đọc cấu hình giới hạn VRAM GPU và offload sang CPU nếu có
+LIMIT_GPU_MEM = os.getenv("LIMIT_GPU_MEM", "")
+offload_args = {}
+if LIMIT_GPU_MEM and not USE_CPU:
+    print(f"Limiting GPU VRAM usage to {LIMIT_GPU_MEM} and offloading remaining layers to CPU RAM...")
+    os.makedirs("./offload", exist_ok=True)
+    offload_args = {
+        "max_memory": {0: LIMIT_GPU_MEM, "cpu": "32GiB"},
+        "offload_folder": "./offload"
+    }
+
 if USE_CPU:
     print("USE_CPU is enabled! Forcing CPU execution (0 VRAM footprint)...")
     torch_dtype = torch.float32
@@ -95,7 +106,8 @@ else:
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             quantization_config=bnb_config,
-            device_map="auto"
+            device_map="auto",
+            **offload_args
         )
         model = prepare_model_for_kbit_training(model)
     except ImportError:
@@ -104,7 +116,8 @@ else:
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             torch_dtype=torch_dtype,
-            device_map="auto"
+            device_map="auto",
+            **offload_args
         )
 
 
