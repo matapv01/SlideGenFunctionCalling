@@ -61,36 +61,51 @@ print(f"Dataset prepared successfully! Created {len(dataset)} training samples."
 # ==============================================================================
 print(f"Loading Generator LLM ({model_id}) into memory...")
 
+# Đọc cấu hình môi trường để hỗ trợ huấn luyện chất lượng cao trên H100 hoặc chạy CPU để tránh OOM
+USE_CPU = os.getenv("USE_CPU", "False").lower() == "true"
+USE_LORA = os.getenv("USE_LORA", "True").lower() == "true"
+USE_GRAD_CHECKPOINT = os.getenv("USE_GRAD_CHECKPOINT", "True").lower() == "true"
+
 # Kiểm tra GPU thích hợp để sử dụng dtype tối ưu
 torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
 
-# Kiểm tra xem bitsandbytes có sẵn không để tự động kích hoạt QLoRA 4-bit giúp tiết kiệm tối đa VRAM
-try:
-    from transformers import BitsAndBytesConfig
-    from peft import prepare_model_for_kbit_training
-    
-    print("bitsandbytes detected! Activating 4-bit QLoRA to minimize VRAM usage (~250MB weight footprint)...")
-    bnb_config = BitsAndBytesConfig(
-        load_in_4bit=True,
-        bnb_4bit_use_double_quant=True,
-        bnb_4bit_quant_type="nf4",
-        bnb_4bit_compute_dtype=torch_dtype
-    )
-    
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        quantization_config=bnb_config,
-        device_map="auto"
-    )
-    model = prepare_model_for_kbit_training(model)
-except ImportError:
-    print("Warning: bitsandbytes is not installed. Loading model in standard precision.")
-    print("-> Tip: Install it via 'uv pip install bitsandbytes' to enable 4-bit QLoRA and save massive VRAM!")
+if USE_CPU:
+    print("USE_CPU is enabled! Forcing CPU execution (0 VRAM footprint)...")
+    torch_dtype = torch.float32
+    # Load model hoàn toàn trên CPU
     model = AutoModelForCausalLM.from_pretrained(
         model_id,
         torch_dtype=torch_dtype,
-        device_map="auto"
+        device_map={"": "cpu"}
     )
+else:
+    # Kiểm tra xem bitsandbytes có sẵn không để tự động kích hoạt QLoRA 4-bit giúp tiết kiệm tối đa VRAM
+    try:
+        from transformers import BitsAndBytesConfig
+        from peft import prepare_model_for_kbit_training
+        
+        print("bitsandbytes detected! Activating 4-bit QLoRA to minimize VRAM usage (~250MB weight footprint)...")
+        bnb_config = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_use_double_quant=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch_dtype
+        )
+        
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            quantization_config=bnb_config,
+            device_map="auto"
+        )
+        model = prepare_model_for_kbit_training(model)
+    except ImportError:
+        print("Warning: bitsandbytes is not installed. Loading model in standard precision.")
+        print("-> Tip: Install it via 'uv pip install bitsandbytes' to enable 4-bit QLoRA and save massive VRAM!")
+        model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch_dtype,
+            device_map="auto"
+        )
 
 
 # ==============================================================================
@@ -98,11 +113,8 @@ except ImportError:
 # ==============================================================================
 from peft import LoraConfig
 
-# Đọc cấu hình môi trường để hỗ trợ huấn luyện chất lượng cao trên H100
-USE_LORA = os.getenv("USE_LORA", "True").lower() == "true"
-USE_GRAD_CHECKPOINT = os.getenv("USE_GRAD_CHECKPOINT", "True").lower() == "true"
-
 print(f"Training strategy configuration:")
+print(f"-> Run on CPU: {USE_CPU}")
 print(f"-> Use LoRA (PEFT): {USE_LORA}")
 print(f"-> Use Gradient Checkpointing: {USE_GRAD_CHECKPOINT}")
 
@@ -132,9 +144,10 @@ training_args = GRPOConfig(
     report_to="none",
     num_generations=2,      # Giảm xuống 2 để tiết kiệm tối đa VRAM khi sinh mẫu
     max_completion_length=384, # Giảm chiều dài tối đa (vì JSON Layout ngắn, chỉ cần <384 tokens)
-    bf16=use_bf16,          # Sử dụng bfloat16 nếu GPU hỗ trợ
-    fp16=not use_bf16,      # Sử dụng float16 làm fallback
-    gradient_checkpointing=USE_GRAD_CHECKPOINT, # Tiết kiệm VRAM nếu bật
+    use_cpu=USE_CPU,        # Ép chạy trên CPU nếu được cấu hình
+    bf16=use_bf16 if not USE_CPU else False,
+    fp16=not use_bf16 if not USE_CPU else False,
+    gradient_checkpointing=USE_GRAD_CHECKPOINT if not USE_CPU else False, # Tiết kiệm VRAM nếu bật
 )
 
 trainer = GRPOTrainer(
