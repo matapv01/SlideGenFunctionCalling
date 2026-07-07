@@ -3,6 +3,9 @@
 
 # Bắt buộc vLLM sử dụng động cơ ổn định v0 thay vì v1 thử nghiệm (tránh lỗi Engine core initialization failed)
 export VLLM_USE_V1=0
+# Sử dụng phương pháp 'spawn' cho multiprocessing để tránh xung đột CUDA GPU context
+export VLLM_WORKER_MULTIPROC_METHOD=spawn
+
 
 
 # Nhận tên mô hình từ tham số đầu tiên, mặc định là mô hình nhỏ 1.5B/2B để test nhẹ
