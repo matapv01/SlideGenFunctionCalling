@@ -44,7 +44,7 @@ def get_active_model_name():
         return default_model
 
 def generate_batch(model_name, batch_size=10, batch_idx=1):
-    """Gọi local Qwen để sinh một batch prompts nhỏ (chỉ trả về tên tool để tiết kiệm tokens)"""
+    """Gọi local Qwen để sinh một batch prompts nhỏ kèm Few-Shot Example"""
     print(f"Generating Batch {batch_idx} ({batch_size} samples) via local LLM ({model_name})...")
     
     # Liệt kê danh sách tên các công cụ có sẵn để LLM chọn lựa
@@ -54,18 +54,25 @@ def generate_batch(model_name, batch_size=10, batch_idx=1):
     system_prompt = (
         "You are a dataset generator. You must output ONLY a raw JSON object containing a list under the key 'samples'. "
         "All content, text guidelines, messages, and user queries MUST be written in Vietnamese (tiếng Việt). "
-        f"For the 'tools' field, choose ONLY from these available tool names: [{tools_list_str}]. "
-        "Each item in the list MUST have this exact format:\n"
+        "Each item represents a slide generation request. "
+        "The 'user_prompt' MUST be a request to design a specific slide, specifying slide index, layout requirement, and actual Vietnamese content (such as VinFast, FPT, or Vietnam history).\n"
+        "It MUST NOT be a chatbot greeting or conversation.\n"
+        f"For the 'tools' field, choose ONLY from these available tool names: [{tools_list_str}].\n\n"
+        "VÍ DỤ MẪU HỢP LỆ (FEW-SHOT EXAMPLE):\n"
         "{\n"
-        "  \"system_prompt\": \"Specific layout guidelines in Vietnamese based on the slide type (e.g. intro, content, transition). Include typography and mathematical equation rules in Vietnamese.\",\n"
-        "  \"user_prompt\": \"Detailed human prompt in Vietnamese specifying the context, slide index, and content.\",\n"
-        "  \"tools\": [\"tool_name_1\", \"tool_name_2\", ...]\n"
+        "  \"samples\": [\n"
+        "    {\n"
+        "      \"system_prompt\": \"Bạn là chuyên gia thiết kế slide chuyên nghiệp. Hãy tạo mã HTML tương ứng...\",\n"
+        "      \"user_prompt\": \"Thiết kế slide 2/5 giới thiệu 'Tập đoàn FPT'. Nội dung: thành lập năm 1988, dẫn đầu lĩnh vực công nghệ thông tin và chuyển đổi số tại Việt Nam. Sử dụng layout có tiêu đề chính và các gạch đầu dòng.\",\n"
+        "      \"tools\": [\"title_and_bullets_layout\", \"list_layout\"]\n"
+        "    }\n"
+        "  ]\n"
         "}"
     )
     
     user_query = (
-        f"Hãy sinh ra một danh sách gồm đúng {batch_size} mẫu dữ liệu thiết kế slide dạng JSON bằng TIẾNG VIỆT 100%. "
-        "Nội dung các slide phải tập trung hoàn toàn vào dữ liệu, chủ đề của Việt Nam như:\n"
+        f"Hãy sinh ra một danh sách gồm đúng {batch_size} mẫu dữ liệu thiết kế slide dạng JSON bằng TIẾNG VIỆT 100% dựa theo định dạng ví dụ trên. "
+        "Nội dung của 'user_prompt' phải là yêu cầu thiết kế một slide cụ thể về Việt Nam như:\n"
         "- Lịch sử Việt Nam (ví dụ: chiến thắng Điện Biên Phủ, vương triều nhà Trần, di sản cố đô Huế).\n"
         "- Doanh nghiệp & Kinh tế Việt Nam (ví dụ: hành trình VinFast toàn cầu hóa, tập đoàn FPT, Viettel, Vietcombank, thị trường chứng khoán Việt Nam, startup công nghệ).\n"
         "- Địa lý & Du lịch Việt Nam (ví dụ: Vịnh Hạ Long, du lịch Hà Nội, văn hóa ẩm thực sông nước miền Tây, Phong Nha - Kẻ Bàng).\n"
@@ -140,7 +147,7 @@ def generate_prompts_via_qwen(total_samples=200, batch_size=10):
         fallback_data = [
             {
                 "system_prompt": "You are a helpful assistant. You must respond ONLY with a JSON tool call.",
-                "user_prompt": "Hãy tạo 1 slide giới thiệu về dự án SlideGen với tiêu đề 'Giới thiệu' và 3 mục tiêu chính.",
+                "user_prompt": "Hãy thiết kế slide số 1/5 về 'Hành trình VinFast' với nội dung giới thiệu lịch sử thành lập năm 2017 và mục tiêu vươn tầm toàn cầu. Sử dụng layout có tiêu đề chính và các gạch đầu dòng.",
                 "tools": [
                     format_tool_for_qwen(flat_tools["title_and_bullets_layout"])
                 ]
