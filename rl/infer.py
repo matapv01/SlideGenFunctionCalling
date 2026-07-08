@@ -170,6 +170,11 @@ try:
         normalized_name = tool_name.strip().lower().replace(" ", "_")
         tool_call["name"] = normalized_name
         
+    # Loại bỏ các tham số có giá trị None để tránh lỗi validation của Pydantic (để Pydantic sử dụng default value)
+    arguments = tool_call.get("arguments", {})
+    if isinstance(arguments, dict):
+        tool_call["arguments"] = {k: v for k, v in arguments.items() if v is not None}
+        
     print(f"Parsed tool call (normalized): {json.dumps(tool_call, indent=2, ensure_ascii=False)}")
     
     # Thực thi tool dựng HTML
