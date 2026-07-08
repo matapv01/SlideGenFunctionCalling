@@ -22,7 +22,9 @@ if not os.path.exists(reward_model_path):
     reward_model_path = os.path.join(project_root, "rl", "model", "best_model_pairwise.pt")
 
 # Khởi tạo thiết bị chạy và nạp Reward Model (ViT)
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+# Mặc định sử dụng CPU để tránh chiếm dụng VRAM quý giá của GPU đang huấn luyện LLM
+reward_device_str = os.getenv("REWARD_MODEL_DEVICE", "cpu")
+device = torch.device(reward_device_str)
 
 print(f"\n[Reward Module] Loading Frozen ViT Reward Model on {device} from '{reward_model_path}'...")
 vit_model = ViTForImageClassification.from_pretrained(
@@ -78,6 +80,9 @@ def slide_aesthetics_reward(prompts, completions, **kwargs):
     temp_dir = os.path.join(project_root, "rl", "temp_rl_renders")
     os.makedirs(temp_dir, exist_ok=True)
 
+    error_count = 0
+    sample_errors = []
+
     for idx, completion in enumerate(completions):
         temp_img_path = os.path.join(temp_dir, f"render_{idx}.png")
         try:
@@ -85,6 +90,8 @@ def slide_aesthetics_reward(prompts, completions, **kwargs):
             cleaned_text = completion.strip()
             if "```json" in cleaned_text:
                 cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
+            elif "```" in cleaned_text:
+                cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
             
             tool_call = json.loads(cleaned_text)
             if isinstance(tool_call, list) and len(tool_call) > 0:
@@ -109,9 +116,14 @@ def slide_aesthetics_reward(prompts, completions, **kwargs):
             rewards.append(score)
             
         except Exception as e:
-            print(f"[Reward Module] Error evaluating generation {idx}: {e}")
+            error_count += 1
+            if len(sample_errors) < 3:
+                sample_errors.append(f"Gen {idx}: {str(e)}")
             if os.path.exists(temp_img_path):
                 os.remove(temp_img_path)
             rewards.append(0.0)
+            
+    if error_count > 0:
+        print(f"[Reward Module] {error_count}/{len(completions)} generations failed JSON parsing/evaluation (normal in early epochs). Examples: {', '.join(sample_errors)}")
             
     return rewards

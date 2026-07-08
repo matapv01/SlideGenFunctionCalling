@@ -1,5 +1,24 @@
 import os
 import sys
+
+# Đảm bảo chỉ sử dụng 1 GPU để tránh lỗi DataParallel/NCCL khi huấn luyện mô hình quantized (QLoRA)
+if "CUDA_VISIBLE_DEVICES" not in os.environ:
+    import subprocess
+    try:
+        res = subprocess.run(
+            ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,nounits,noheader"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=2
+        )
+        free_mems = [int(x) for x in res.stdout.strip().split("\n") if x.strip().isdigit()]
+        if free_mems:
+            best_gpu = free_mems.index(max(free_mems))
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(best_gpu)
+            print(f"[System] Automatically selected GPU {best_gpu} with the most free VRAM ({free_mems[best_gpu]} MiB).")
+        else:
+            os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    except Exception:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 import json
 import torch
 
@@ -69,17 +88,6 @@ USE_GRAD_CHECKPOINT = os.getenv("USE_GRAD_CHECKPOINT", "True").lower() == "true"
 # Kiểm tra GPU thích hợp để sử dụng dtype tối ưu
 torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
 
-# Đọc cấu hình giới hạn VRAM GPU và offload sang CPU nếu có
-LIMIT_GPU_MEM = os.getenv("LIMIT_GPU_MEM", "")
-offload_args = {}
-if LIMIT_GPU_MEM and not USE_CPU:
-    print(f"Limiting GPU VRAM usage to {LIMIT_GPU_MEM} and offloading remaining layers to CPU RAM...")
-    os.makedirs("./offload", exist_ok=True)
-    offload_args = {
-        "max_memory": {0: LIMIT_GPU_MEM, "cpu": "32GiB"},
-        "offload_folder": "./offload"
-    }
-
 if USE_CPU:
     print("USE_CPU is enabled! Forcing CPU execution (0 VRAM footprint)...")
     torch_dtype = torch.float32
@@ -90,25 +98,34 @@ if USE_CPU:
         device_map={"": "cpu"}
     )
 else:
+    # Xác định device_map phù hợp cho huấn luyện
+    device_map = {"": torch.cuda.current_device()} if torch.cuda.is_available() else "auto"
+
     # Kiểm tra xem bitsandbytes có sẵn không để tự động kích hoạt QLoRA 4-bit giúp tiết kiệm tối đa VRAM
     try:
         from transformers import BitsAndBytesConfig
         from peft import prepare_model_for_kbit_training
         
-        print("bitsandbytes detected! Activating 4-bit QLoRA to minimize VRAM usage (~250MB weight footprint)...")
-        bnb_config = BitsAndBytesConfig(
-            load_in_4bit=True,
-            bnb_4bit_use_double_quant=True,
-            bnb_4bit_quant_type="nf4",
-            bnb_4bit_compute_dtype=torch_dtype
-        )
-        
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            quantization_config=bnb_config,
-            device_map="auto",
-            **offload_args
-        )
+        is_awq_or_gptq = "awq" in model_id.lower() or "gptq" in model_id.lower()
+        if is_awq_or_gptq:
+            print(f"Pre-quantized model detected ('{model_id}'). Loading directly in quantized precision...")
+            model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                device_map=device_map
+            )
+        else:
+            print("bitsandbytes detected! Activating 4-bit QLoRA to minimize VRAM usage (~250MB weight footprint)...")
+            bnb_config = BitsAndBytesConfig(
+                load_in_4bit=True,
+                bnb_4bit_use_double_quant=True,
+                bnb_4bit_quant_type="nf4",
+                bnb_4bit_compute_dtype=torch_dtype
+            )
+            model = AutoModelForCausalLM.from_pretrained(
+                model_id,
+                quantization_config=bnb_config,
+                device_map=device_map
+            )
         model = prepare_model_for_kbit_training(model)
     except ImportError:
         print("Warning: bitsandbytes is not installed. Loading model in standard precision.")
@@ -116,8 +133,7 @@ else:
         model = AutoModelForCausalLM.from_pretrained(
             model_id,
             torch_dtype=torch_dtype,
-            device_map="auto",
-            **offload_args
+            device_map=device_map
         )
 
 
@@ -156,7 +172,7 @@ training_args = GRPOConfig(
     logging_steps=10,
     report_to="none",
     num_generations=2,      # Giảm xuống 2 để tiết kiệm tối đa VRAM khi sinh mẫu
-    max_completion_length=384, # Giảm chiều dài tối đa (vì JSON Layout ngắn, chỉ cần <384 tokens)
+    max_completion_length=512, # Giảm xuống 512 để tránh Out of Memory VRAM trên các GPU trong khi vẫn đủ cho JSON và content
     use_cpu=USE_CPU,        # Ép chạy trên CPU nếu được cấu hình
     bf16=use_bf16 if not USE_CPU else False,
     fp16=not use_bf16 if not USE_CPU else False,
