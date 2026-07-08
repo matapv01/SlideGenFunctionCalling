@@ -52,8 +52,8 @@ uv run playwright install chromium
 # 3. Chạy thử nghiệm với mô hình 0.5B mặc định (Hugging Face tự tải về)
 uv run python3 infer.py
 
-# Hoặc chạy thử nghiệm với mô hình Qwen3 30B AWQ lớn:
-export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
+# Hoặc chạy thử nghiệm với mô hình Qwen3.6 35B lớn:
+export TRAINING_MODEL_ID="Qwen/Qwen3.6-35B-A3B"
 uv run python3 infer.py
 ```
 
@@ -70,11 +70,10 @@ vLLM hỗ trợ nạp trực tiếp mô hình từ Hugging Face repo ID và tự
         --port 8008 \
         --trust-remote-code
     ```
-*   **Chạy mô hình lớn (30B AWQ):**
+*   **Chạy mô hình lớn (35B):**
     ```bash
     uv run python3 -m vllm.entrypoints.openai.api_server \
-        --model ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ \
-        --quantization awq \
+        --model Qwen/Qwen3.6-35B-A3B \
         --port 8008 \
         --trust-remote-code
     ```
@@ -95,10 +94,10 @@ Mở một terminal riêng và chạy script để khởi động vLLM Server:
     cd rl
     ./serve_vllm.sh
     ```
-*   **Chạy mô hình lớn (30B AWQ trực tiếp từ Hugging Face):**
+*   **Chạy mô hình lớn (35B trực tiếp từ Hugging Face):**
     ```bash
     cd rl
-    ./serve_vllm.sh ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ
+    ./serve_vllm.sh Qwen/Qwen3.6-35B-A3B
     ```
 
 ### Bước 4.2: Chuẩn bị dữ liệu prompt đầu vào
@@ -157,8 +156,8 @@ Lựa chọn cách chạy phù hợp với GPU của bạn:
     export USE_LORA="False"
     export USE_GRAD_CHECKPOINT="False"
     
-    # Nếu muốn dùng mô hình 30B lớn của Hugging Face:
-    export TRAINING_MODEL_ID="ELVISIO/Qwen3-30B-A3B-Instruct-2507-AWQ"
+    # Nếu muốn dùng mô hình 35B lớn của Hugging Face:
+    export TRAINING_MODEL_ID="Qwen/Qwen3.6-35B-A3B"
     
     # 4. Khởi chạy huấn luyện
     uv run python3 train.py
