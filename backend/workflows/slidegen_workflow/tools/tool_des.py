@@ -2871,10 +2871,21 @@ def execute_tool(tool_call: dict):
     
     if name in TOOL_MAP:
         try:
-            result = TOOL_MAP[name].invoke(args)
+            tool_obj = TOOL_MAP[name]
+            func = getattr(tool_obj, "func", None)
+            if func:
+                import inspect
+                sig = inspect.signature(func)
+                has_kwargs = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
+                if not has_kwargs:
+                    # Chỉ giữ lại các tham số được định nghĩa trong chữ ký của hàm
+                    args = {k: v for k, v in args.items() if k in sig.parameters}
+            
+            result = tool_obj.invoke(args)
             return str(result)
         except Exception as e:
             print(f"Error executing tool '{name}': {e}")
             return None
+    else:
         print(f"Tool '{name}' not found.")
         return None
