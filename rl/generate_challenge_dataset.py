@@ -108,24 +108,35 @@ def main():
     needed_base_topics = (target_samples + 4) // 5
     base_topics = []
     
-    batch_idx = 1
-    batch_size = 10
+    import concurrent.futures
+
+    batch_size = 5
     if args.debug:
         needed_base_topics = (target_samples + 4) // 5
         batch_size = max(2, needed_base_topics)
-
-    while len(base_topics) < needed_base_topics:
-        topics = generate_base_topics_batch(batch_idx=batch_idx, batch_size=batch_size)
-        if topics:
-            base_topics.extend(topics)
-            print(f"-> Acquired {len(topics)} base topics. Total so far: {len(base_topics)}/{needed_base_topics}")
-            batch_idx += 1
-        else:
-            print("Failed to get topics from batch, retrying...")
-            
-        if batch_idx > 30: # Ngăn chặn vòng lặp vô hạn nếu API liên tục lỗi
-            print("API seems to fail too many times. Exiting base generation.")
-            break
+        
+    num_batches = (needed_base_topics + batch_size - 1) // batch_size
+    print(f"Acquiring {needed_base_topics} base topics via {num_batches} batches in parallel (Max 8 workers)...")
+    
+    base_topics = []
+    
+    def fetch_batch_with_retry(idx):
+        max_retries = 3
+        for attempt in range(max_retries):
+            topics = generate_base_topics_batch(batch_idx=idx, batch_size=batch_size)
+            if topics:
+                return topics
+            print(f"Batch {idx} failed (attempt {attempt + 1}/{max_retries}), retrying...")
+        print(f"[ERROR] Batch {idx} failed after {max_retries} attempts.")
+        return []
+        
+    with concurrent.futures.ThreadPoolExecutor(max_workers=8) as executor:
+        futures = [executor.submit(fetch_batch_with_retry, i) for i in range(1, num_batches + 1)]
+        for future in concurrent.futures.as_completed(futures):
+            topics = future.result()
+            if topics:
+                base_topics.extend(topics)
+                print(f"-> Thread complete. Acquired {len(topics)} topics. Total so far: {len(base_topics)}/{needed_base_topics}")
 
     if not base_topics:
         print("[ERROR] Failed to generate any base topics. Cannot proceed.")
