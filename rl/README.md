@@ -115,9 +115,21 @@ Mở một terminal mới (vẫn giữ vLLM Server đang bật ở Bước 4.1):
     cd rl
     uv run python3 generate_dataset.py
     ```
+*   **Cách C (Khuyên dùng khi train model lớn - Bộ dữ liệu 1,000 mẫu Thử thách tiếng Việt qua Gemini API):**
+    Cấu hình `GEMINI_API_KEY` hợp lệ trong tệp `.env`, sau đó chạy:
+    ```bash
+    cd rl
+    uv run python3 generate_challenge_dataset.py
+    ```
+    *Script này tự động chạy song song đa luồng để gọi Gemini sinh 200 chủ đề tiếng Việt thô chất lượng, sau đó tự nhân bản lập trình thành 1,000 mẫu thử thách cực hạn (văn bản siêu dài cần rút gọn, biểu đồ số liệu thống kê, bảng cột so sánh, quy trình steps, v.v.).*
+    
+    Khi chạy huấn luyện ở Bước 4.3, bạn có thể cấu hình sử dụng bộ dữ liệu thử thách này thông qua biến môi trường:
+    ```bash
+    OUTPUT_JSON=rl/slidegen_challenge_dataset.json uv run python3 train.py
+    ```
 
 > [!IMPORTANT]
-> **HÀNH ĐỘNG BẮT BUỘC:** Sau khi file `slidegen_rl_dataset.json` được lưu thành công ra đĩa, bạn phải **tắt vLLM Server** ở Bước 4.1 (ấn `Ctrl + C` trên terminal đó) để giải phóng hoàn toàn bộ nhớ GPU trước khi chạy lệnh train ở Bước 4.3.
+> **HÀNH ĐỘNG BẮT BUỘC:** Nếu bạn sinh dữ liệu bằng **Cách A**, sau khi file `slidegen_rl_dataset.json` được tạo ra, bạn phải **tắt vLLM Server** ở Bước 4.1 (ấn `Ctrl + C` trên terminal đó) để giải phóng hoàn toàn bộ nhớ GPU trước khi chạy lệnh train ở Bước 4.3 (Cách C chạy trực tiếp qua API ngoài nên không yêu cầu bật/tắt vLLM).
 
 ### Bước 4.3: Khởi chạy huấn luyện GRPO
 Tiến hành chạy huấn luyện tối ưu hóa Agent. 
