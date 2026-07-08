@@ -46,3 +46,7 @@ model/
 *.bin
 *.csv
 *.pt.tmp
+rl/qwen_slidegen_grpo/
+rl/temp_rl_renders/
+rl/offload/
+offload/
