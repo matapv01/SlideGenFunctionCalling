@@ -136,8 +136,8 @@ with torch.no_grad():
     generated_ids = model.generate(
         **inputs,
         max_new_tokens=512,
-        temperature=0.1,
-        do_sample=False
+        do_sample=False,
+        repetition_penalty=1.2
     )
 
 # Cắt bỏ phần prompt tokens trong đầu ra
