@@ -1,5 +1,9 @@
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load các biến môi trường từ file .env
+load_dotenv()
 
 # Đảm bảo chỉ sử dụng 1 GPU để tránh lỗi DataParallel/NCCL khi huấn luyện mô hình quantized (QLoRA)
 if "CUDA_VISIBLE_DEVICES" not in os.environ:
