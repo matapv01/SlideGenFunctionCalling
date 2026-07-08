@@ -109,7 +109,7 @@ def main():
     base_topics = []
     
     batch_idx = 1
-    batch_size = 20
+    batch_size = 5
     if args.debug:
         needed_base_topics = (target_samples + 4) // 5
         batch_size = max(2, needed_base_topics)
@@ -123,7 +123,7 @@ def main():
         else:
             print("Failed to get topics from batch, retrying...")
             
-        if batch_idx > 15: # Ngăn chặn vòng lặp vô hạn nếu API liên tục lỗi
+        if batch_idx > 60: # Ngăn chặn vòng lặp vô hạn nếu API liên tục lỗi
             print("API seems to fail too many times. Exiting base generation.")
             break
 
