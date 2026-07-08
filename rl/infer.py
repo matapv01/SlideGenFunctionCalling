@@ -1,17 +1,37 @@
 import os
 import sys
+from dotenv import load_dotenv
+
+# Load các biến môi trường từ file .env
+load_dotenv()
+
+# Đảm bảo chỉ sử dụng 1 GPU trống nhất để tránh lỗi/offload sang CPU làm chậm
+if "CUDA_VISIBLE_DEVICES" not in os.environ:
+    import subprocess
+    try:
+        res = subprocess.run(
+            ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,nounits,noheader"],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=2
+        )
+        free_mems = [int(x) for x in res.stdout.strip().split("\n") if x.strip().isdigit()]
+        if free_mems:
+            best_gpu = free_mems.index(max(free_mems))
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(best_gpu)
+            print(f"[System] Automatically selected GPU {best_gpu} with the most free VRAM ({free_mems[best_gpu]} MiB).")
+        else:
+            os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+    except Exception:
+        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
 import json
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import PeftModel
-from dotenv import load_dotenv
 
 # Đảm bảo PYTHONPATH nhận diện được backend của dự án để gọi tool render
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from rl.rewards.aesthetic_reward import execute_tool, render_html_to_png
-
-# Load các biến môi trường từ file .env
-load_dotenv()
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 
 # Cho phép chỉ định model ID qua biến môi trường để kiểm thử
 base_model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-0.5B-Instruct")
@@ -43,6 +63,36 @@ print(f"Using device: {device}")
 
 # Load tokenizer
 tokenizer = AutoTokenizer.from_pretrained(base_model_id)
+tokenizer.pad_token = tokenizer.eos_token
+
+# Chuẩn bị candidate tools giống hệt lúc train để khớp với chat template
+flat_tools = {}
+for category, tools_list in TOOLS_DICT.items():
+    for tool in tools_list:
+        flat_tools[tool.name] = tool
+
+def format_tool_for_qwen(tool):
+    return {
+        "type": "function",
+        "function": {
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": tool.args
+        }
+    }
+
+# Sử dụng danh sách các layout candidate offline thích hợp cho kiểm thử slide
+candidate_tool_names = [
+    "generate_split_layout_list_slide",
+    "generate_icon_list_slide",
+    "generate_content_slide",
+    "generate_classic_content_slide",
+    "generate_comparison_slide",
+    "generate_process_steps_slide",
+    "generate_vision_mission_slide"
+]
+selected_tools = [format_tool_for_qwen(flat_tools[name]) for name in candidate_tool_names if name in flat_tools]
+print(f"Loaded {len(selected_tools)} candidate tools for the model.")
 
 # Load base model
 torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
@@ -62,24 +112,15 @@ print("Model loaded successfully!")
 
 # Định nghĩa prompt test slidegen function calling
 prompt = os.getenv("INFER_PROMPT", "Hãy thiết kế slide giới thiệu về tập đoàn FPT. Nội dung: thành lập năm 1988, dẫn đầu lĩnh vực công nghệ thông tin và chuyển đổi số tại Việt Nam. Sử dụng layout tiêu đề và các gạch đầu dòng.")
-system_prompt = (
-    "You are a helpful assistant. You must respond ONLY with a JSON tool call in this format:\n"
-    "{\n"
-    "  \"name\": \"title_and_bullets_layout\",\n"
-    "  \"arguments\": {\n"
-    "    \"title\": \"string\",\n"
-    "    \"bullets\": [\"string\", \"string\", ...]\n"
-    "  }\n"
-    "}"
-)
-
 messages = [
-    {"role": "system", "content": system_prompt},
+    {"role": "system", "content": ""}, # Hệ thống prompt trống để khớp cấu hình train
     {"role": "user", "content": prompt}
 ]
 
+# Áp dụng template bao gồm tham số tools giống hệt quá trình huấn luyện
 text = tokenizer.apply_chat_template(
     messages,
+    tools=selected_tools,
     tokenize=False,
     add_generation_prompt=True
 )
@@ -90,7 +131,7 @@ print("----------------------------")
 
 inputs = tokenizer([text], return_tensors="pt").to(device)
 
-print("Running model generation...")
+print("Running model generation on GPU...")
 with torch.no_grad():
     generated_ids = model.generate(
         **inputs,
@@ -110,7 +151,7 @@ print("\n--- Model Response ---")
 print(response)
 print("----------------------")
 
-# Thử nghiệm thực thi và render slide sang HTML/PNG
+# Thực thi và render slide sang HTML/PNG
 try:
     print("\nParsing model response to render slide...")
     cleaned_text = response
