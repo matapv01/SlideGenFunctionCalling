@@ -2,6 +2,10 @@ import os
 import sys
 import json
 import asyncio
+from dotenv import load_dotenv
+
+# Load các biến môi trường từ file .env
+load_dotenv()
 from langchain_core.callbacks import BaseCallbackHandler
 
 # Đảm bảo PYTHONPATH nhận diện được backend của dự án
@@ -119,8 +123,8 @@ async def build_dataset_from_workflow_async(docx_path: str, output_json_path: st
     print(f"[Dataset Gen] Dataset saved successfully to: {output_json_path}")
 
 def main():
-    input_docx = "../Mô tả chi tiết về dự án SlideGen.docx"
-    output_json = "./slidegen_rl_dataset.json"
+    input_docx = os.getenv("INPUT_DOCX", "../Mô tả chi tiết về dự án SlideGen.docx")
+    output_json = os.getenv("OUTPUT_JSON", "./slidegen_rl_dataset.json")
     
     if not os.path.exists(input_docx):
         print(f"Error: Input document '{input_docx}' not found.")

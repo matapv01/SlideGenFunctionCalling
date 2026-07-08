@@ -2,6 +2,10 @@ import os
 import sys
 import json
 import httpx
+from dotenv import load_dotenv
+
+# Load các biến môi trường từ file .env
+load_dotenv()
 
 # Đảm bảo PYTHONPATH nhận diện được backend của dự án
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -9,7 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 
 # Thư mục chứa vLLM endpoint
-vllm_base_url = "http://localhost:8008/v1"
+vllm_base_url = os.getenv("LLM_BASE_URL", "http://localhost:8008/v1")
 vllm_url = f"{vllm_base_url}/chat/completions"
 
 # Xây dựng bảng tra cứu nhanh tên tool sang đối tượng LangChain Tool thật
