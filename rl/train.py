@@ -166,17 +166,25 @@ if USE_LORA:
 # Tự động phát hiện kiểu độ chính xác tối ưu của GPU
 use_bf16 = torch.cuda.is_bf16_supported()
 
+# Cấu hình các tham số huấn luyện từ biến môi trường (hoặc sử dụng giá trị mặc định tối ưu)
+learning_rate = float(os.getenv("LEARNING_RATE", "1e-6"))
+per_device_train_batch_size = int(os.getenv("PER_DEVICE_TRAIN_BATCH_SIZE", "1"))
+gradient_accumulation_steps = int(os.getenv("GRADIENT_ACCUMULATION_STEPS", "16"))
+num_train_epochs = int(os.getenv("NUM_TRAIN_EPOCHS", "3"))
+num_generations = int(os.getenv("NUM_GENERATIONS", "2"))
+max_completion_length = int(os.getenv("MAX_COMPLETION_LENGTH", "512"))
+
 training_args = GRPOConfig(
     output_dir="./qwen_slidegen_grpo",
-    learning_rate=1e-6,
-    per_device_train_batch_size=1,
-    gradient_accumulation_steps=16,
-    num_train_epochs=3,
+    learning_rate=learning_rate,
+    per_device_train_batch_size=per_device_train_batch_size,
+    gradient_accumulation_steps=gradient_accumulation_steps,
+    num_train_epochs=num_train_epochs,
     save_steps=100,
     logging_steps=10,
     report_to="none",
-    num_generations=2,      # Giảm xuống 2 để tiết kiệm tối đa VRAM khi sinh mẫu
-    max_completion_length=512, # Giảm xuống 512 để tránh Out of Memory VRAM trên các GPU trong khi vẫn đủ cho JSON và content
+    num_generations=num_generations,
+    max_completion_length=max_completion_length,
     use_cpu=USE_CPU,        # Ép chạy trên CPU nếu được cấu hình
     bf16=use_bf16 if not USE_CPU else False,
     fp16=not use_bf16 if not USE_CPU else False,
