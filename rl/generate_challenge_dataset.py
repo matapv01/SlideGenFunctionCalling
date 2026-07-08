@@ -46,7 +46,8 @@ try:
         base_url=base_url,
         model=model_name,
         temperature=0.7,
-        max_tokens=8192
+        max_tokens=8192,
+        model_kwargs={"response_format": {"type": "json_object"}}
     )
 except Exception as e:
     print(f"[ERROR] Failed to initialize Gemini LLM Client: {e}")
