@@ -2867,6 +2867,9 @@ def get_tool_by_name(name: str):
 def execute_tool(tool_call: dict):
     """Execute a tool call with the provided arguments."""
     name = tool_call.get("name")
+    if name:
+        name = name.strip().lower().replace(" ", "_")
+        
     args = tool_call.get("arguments", {})
     
     if name in TOOL_MAP:
