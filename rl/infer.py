@@ -164,7 +164,13 @@ try:
     if isinstance(tool_call, list) and len(tool_call) > 0:
         tool_call = tool_call[0]
         
-    print(f"Parsed tool call: {json.dumps(tool_call, indent=2, ensure_ascii=False)}")
+    # Chuẩn hóa tên tool sang snake_case nếu model trả về dạng Title Case có dấu cách hoặc viết hoa chữ cái đầu
+    tool_name = tool_call.get("name", "")
+    if tool_name:
+        normalized_name = tool_name.strip().lower().replace(" ", "_")
+        tool_call["name"] = normalized_name
+        
+    print(f"Parsed tool call (normalized): {json.dumps(tool_call, indent=2, ensure_ascii=False)}")
     
     # Thực thi tool dựng HTML
     html_content = execute_tool(tool_call)
