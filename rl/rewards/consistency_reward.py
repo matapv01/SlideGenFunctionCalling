@@ -47,7 +47,19 @@ def sanitize_to_placeholders(tool_call: dict) -> dict:
     for k, v in args.items():
         if k in _CONTENT_KEYS:
             if isinstance(v, list):
-                sanitized_args[k] = [f"Placeholder Item {i+1}" for i in range(len(v))]
+                if len(v) > 0 and isinstance(v[0], dict):
+                    new_list = []
+                    for item in v:
+                        new_item = {}
+                        for ik, iv in item.items():
+                            if isinstance(iv, str):
+                                new_item[ik] = "Dummy"
+                            else:
+                                new_item[ik] = iv
+                        new_list.append(new_item)
+                    sanitized_args[k] = new_list
+                else:
+                    sanitized_args[k] = [f"Placeholder Item {i+1}" for i in range(len(v))]
             elif isinstance(v, str):
                 sanitized_args[k] = "Standard Slide Content Placeholder"
             else:
