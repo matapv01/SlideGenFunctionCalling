@@ -106,6 +106,7 @@ _doc_workflow_service = DocWorkflowService(
 _slidegen_workflow_service = SlideGenWorkflowService(
     project_dir=str(PROJECT_DIR),
     llm_provider=_slidegen_llm,
+    planner_llm_provider=_idea_llm,
     capture_provider=_capture_infra,
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,

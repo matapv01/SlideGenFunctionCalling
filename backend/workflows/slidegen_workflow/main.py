@@ -59,13 +59,15 @@ async def main_workflow(
     try:
         # 1. 🟢 LẤY CÁC INSTANCE ĐÃ CÓ SẴN (KHÔNG KHỞI TẠO MỚI)
         llm_provider: LLMProvider = infra_providers['llm_provider']
+        planner_llm_provider: LLMProvider = infra_providers['planner_llm_provider']
         capture_provider: CaptureProvider = infra_providers['capture_provider']
         parser_provider: ParserProvider = infra_providers['parser_provider']
         tool_retriever: ToolRetrieveProvider = infra_providers['tool_retriever']
         conversion_service = infra_providers.get('conversion_service')
 
-        # Vì node slide_generator cần LangChain Runnable, ta lấy từ client
+        # Vì các node cần LangChain Runnable, ta lấy từ client
         langchain_llm = llm_provider.llm_client 
+        planner_llm = planner_llm_provider.llm_client
 
         # 2. Setup Graph
         workflow = build_workflow(router_flags)
@@ -75,6 +77,7 @@ async def main_workflow(
         graph_config = {
             "configurable": {
                 "llm": langchain_llm,
+                "planner_llm": planner_llm,
                 "tool_retriever": tool_retriever,
                 "capture_provider": capture_provider,
                 "parser_provider": parser_provider,
@@ -143,11 +146,13 @@ async def main_workflow_from_chunks(
     try:
         # --- INFRASTRUCTURE INITIALIZATION ---
         llm_provider: LLMProvider = infra_providers['llm_provider']
+        planner_llm_provider: LLMProvider = infra_providers['planner_llm_provider']
         capture_provider: CaptureProvider = infra_providers['capture_provider']
         parser_provider: ParserProvider = infra_providers['parser_provider']
         tool_retriever: ToolRetrieveProvider = infra_providers['tool_retriever']
         conversion_service = infra_providers.get('conversion_service')
         langchain_llm = llm_provider.llm_client
+        planner_llm = planner_llm_provider.llm_client
 
         # Router flag is False because we don't need to route document conversion
         workflow = build_workflow(router_flags=False) 
@@ -160,6 +165,7 @@ async def main_workflow_from_chunks(
         graph_config = {
             "configurable": {
                 "llm": langchain_llm,
+                "planner_llm": planner_llm,
                 "tool_retriever": tool_retriever,
                 "capture_provider": capture_provider,
                 "parser_provider": parser_provider,

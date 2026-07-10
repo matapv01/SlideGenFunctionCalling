@@ -56,7 +56,7 @@ def planning_slide(state: State, config: RunnableConfig) -> State:
 
     start_time = time.time()
     configurable = config["configurable"]
-    llm = configurable.get('llm')
+    llm = configurable.get('planner_llm') or configurable.get('llm')
 
     # Emit streaming event
     stream_callback = configurable.get('stream_callback')

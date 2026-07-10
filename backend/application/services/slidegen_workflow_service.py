@@ -21,6 +21,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         self, 
         project_dir: str,
         llm_provider: LLMProvider,
+        planner_llm_provider: LLMProvider,
         capture_provider: CaptureProvider,
         parser_provider: ParserProvider,
         tool_retriever: ToolRetrieveProvider,
@@ -29,6 +30,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
     ):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
+        self.planner_llm_provider = planner_llm_provider
         self.capture_provider = capture_provider
         self.parser_provider = parser_provider
         self.tool_retriever = tool_retriever
@@ -39,6 +41,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         """Gói các providers cần thiết để inject vào workflow"""
         return {
             "llm_provider": self.llm_provider,
+            "planner_llm_provider": self.planner_llm_provider,
             "capture_provider": self.capture_provider,
             "parser_provider": self.parser_provider,
             "tool_retriever": self.tool_retriever,
