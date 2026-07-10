@@ -284,16 +284,45 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         })
 
         # ❌ 1. No tool call
-        if not hasattr(response, "tool_calls") or not response.tool_calls:
+        tool_call_dict = None
+        
+        # A. Thử lấy từ tool_calls chuẩn (Dành cho Gemini API)
+        if hasattr(response, "tool_calls") and response.tool_calls:
+            tc = response.tool_calls[0]
+            tool_call_dict = {
+                "name": tc.get("name"),
+                "arguments": tc.get("args", {})
+            }
+        else:
+            # B. Fallback: Parse JSON từ text content (Dành cho mô hình Qwen local hoặc khi server không hỗ trợ tool calling)
+            content = getattr(response, "content", "")
+            try:
+                cleaned_text = content.strip()
+                if "```json" in cleaned_text:
+                    cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in cleaned_text:
+                    cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
+                
+                parsed_json = json.loads(cleaned_text)
+                if isinstance(parsed_json, list) and len(parsed_json) > 0:
+                    parsed_json = parsed_json[0]
+                
+                if isinstance(parsed_json, dict) and "name" in parsed_json:
+                    tool_call_dict = {
+                        "name": parsed_json["name"],
+                        "arguments": parsed_json.get("arguments") or parsed_json.get("args") or {}
+                    }
+            except Exception as parse_err:
+                print(f"⚠️ Failed to parse fallback JSON from message content: {parse_err}")
+
+        if not tool_call_dict:
             error_msg = "You did NOT generate any function call."
             print(f"❌ {error_msg}")
             retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
             continue
 
-        tool_call = response.tool_calls[0]
-        tool_name = tool_call.get("name")
-        tool_args = tool_call.get("args", {})
-
+        tool_name = tool_call_dict["name"]
+        tool_args = tool_call_dict["arguments"]
         tool_lookup = {t.name: t for t in my_tools}
 
         # ❌ 2. Tool not callable
@@ -302,11 +331,6 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
             print(f"❌ {error_msg}")
             retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
             continue
-
-        tool_call_dict = {
-            "name": tool_name,
-            "arguments": tool_args
-        }
 
         # ❌ 3. Execution failure
         try:
