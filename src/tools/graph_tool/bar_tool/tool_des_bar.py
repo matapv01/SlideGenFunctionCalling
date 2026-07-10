@@ -16,9 +16,9 @@ class GenerateBarChartSlide1(BaseModel):
     subtitle: str = Field(..., description="Subtitle displayed below the main title.")
     insight: str = Field(..., description="Text insight or general description.")
     categories: List[str] = Field(..., description="List of categories for the X-axis.")
-    series: List[float] = Field(
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
-        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: [45, 52, 68, 58]"
+        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: {\"name\": \"Import\", \"data\": [45, 52, 68, 58]}"
     )
     unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
     show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
@@ -44,9 +44,9 @@ class GenerateBarChartSlide2(BaseModel):
     y_axis_max: float = Field(default=None, description="Maximum value of Y-axis. If None, auto-calculated.")
     colors: List[str] = Field(default=["#00695C", "#26A69A", "#4DD0E1", "#0277BD", "#00838F"], description="List of hex colors for the bars and icons.")
     categories: List[str] = Field(default=["Pacific", "Atlantic", "Indian Ocean", "Mediterranean"], description="List of categories or regions to display.")
-    series: List[float] = Field(
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
-        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: [120, 85, 60, 45]"
+        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: {\"name\": \"Ocean\", \"data\": [120, 85, 60, 45]}"
     )
     main_title_color: str = Field(default="#104c64", description="Hex color for the main title part.")
     subtitle_color: str = Field(default="#457b8c", description="Hex color for the subtitle text.")
@@ -65,9 +65,9 @@ class GenerateBarChartSlide3(BaseModel):
     y_axis_max: float = Field(default=None, description="Maximum value of Y-axis. If None, auto-calculated.")
     colors: List[str] = Field(..., description="List of hex colors for the bars and icons.")
     categories: List[str] = Field(..., description="List of categories or regions to display.")
-    series: List[float] = Field(
+    series: List[Dict[str, str | List[float]]] = Field(
         ...,
-        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: [20, 30, 50, 70]"
+        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: {\"name\": \"Production\", \"data\": [20, 30, 50, 70]}"
     )
     data_label_format: str = Field(default="{value}", description="Format string for data labels.")
     main_title_color: str = Field(default="#4A5E7B", description="Hex color for the main title part.")
