@@ -8,6 +8,10 @@ from langchain_core.runnables import RunnableConfig
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
 from backend.config import MAX_REMAKE
+from backend.workflows.slidegen_workflow.utils.prompts import (
+    QWEN_GENERATOR_SYSTEM_PROMPT,
+    QWEN_GENERATOR_HUMAN_TEMPLATE
+)
 
 def _check_is_qwen(llm) -> bool:
     """Helper to detect if the loaded LLM is a Qwen variant."""
@@ -70,10 +74,6 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
         # A. QWEN LOCAL EXECUTION PATH (Native JSON tool call)
         if is_qwen:
-            # Format human prompt as raw text
-            formatted_human = human_template.format(**human_vars)
-            
-            # Append available tool schemas directly to the prompt instructions for Qwen
             tool_schemas = []
             for t in my_tools:
                 tool_schemas.append({
@@ -82,14 +82,18 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                     "parameters": t.args
                 })
             
-            qwen_user_prompt = (
-                f"{formatted_human}\n\n"
-                "[AVAILABLE TOOLS]\n"
-                f"{json.dumps(tool_schemas, indent=2, ensure_ascii=False)}"
+            qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
+                style_context=style_context_str,
+                slide_content=current_text
             )
             
+            if retry_feedback:
+                qwen_user_prompt += f"\n\n[PREVIOUS ERROR TO CORRECT]\n{retry_feedback}"
+                
+            qwen_user_prompt += f"\n\n[AVAILABLE TOOLS]\n{json.dumps(tool_schemas, indent=2, ensure_ascii=False)}"
+            
             messages = [
-                {"role": "system", "content": system_prompt},
+                {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
                 {"role": "user", "content": qwen_user_prompt}
             ]
             
