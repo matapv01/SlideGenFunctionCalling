@@ -131,16 +131,16 @@ def generate_dummy_args(args_schema, prev_theme_color, prev_bg_color, prev_font_
     return dummy_args
 
 def main():
-    input_path = "rl/slidegen_challenge_dataset.json"
-    output_path = "rl/slidegen_consistent_dataset.json"
+    input_path = "rl/data/slidegen_challenge_dataset.json"
+    output_path = "rl/data/slidegen_consistent_dataset.json"
     
     if not os.path.exists(input_path):
-        input_path = "/home/llm/MinhPV/SlideGenFunctionCalling/rl/slidegen_challenge_dataset.json"
-        output_path = "/home/llm/MinhPV/SlideGenFunctionCalling/rl/slidegen_consistent_dataset.json"
+        input_path = "/home/llm/MinhPV/SlideGenFunctionCalling/rl/data/slidegen_challenge_dataset.json"
+        output_path = "/home/llm/MinhPV/SlideGenFunctionCalling/rl/data/slidegen_consistent_dataset.json"
         
     if not os.path.exists(input_path):
-        input_path = "slidegen_challenge_dataset.json"
-        output_path = "slidegen_consistent_dataset.json"
+        input_path = "data/slidegen_challenge_dataset.json"
+        output_path = "data/slidegen_consistent_dataset.json"
         
     if not os.path.exists(input_path):
         print(f"[ERROR] Input challenge dataset not found at '{input_path}'.")

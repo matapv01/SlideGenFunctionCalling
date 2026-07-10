@@ -47,7 +47,7 @@ print(f"Loading tokenizer for model: '{model_id}'...")
 tokenizer = AutoTokenizer.from_pretrained(model_id)
 tokenizer.pad_token = tokenizer.eos_token
 
-dataset_path = os.getenv("TRAINING_DATASET_PATH", "./slidegen_rl_dataset.json")
+dataset_path = os.getenv("TRAINING_DATASET_PATH", "rl/data/slidegen_consistent_dataset.json")
 
 if not os.path.exists(dataset_path):
     print(f"Error: Dataset '{dataset_path}' not found. Please verify the path or generate it first.")
