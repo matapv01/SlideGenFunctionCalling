@@ -56,13 +56,26 @@ def sanitize_to_placeholders(tool_call: dict) -> dict:
     for k, v in args.items():
         if k in _CONTENT_KEYS:
             if isinstance(v, list):
-                sanitized_args[k] = [f"Placeholder Item {i+1}" for i in range(len(v))]
+                # Kiểm tra xem phần tử trong list là dict hay str
+                if len(v) > 0 and isinstance(v[0], dict):
+                    # Giữ nguyên cấu trúc dict, chỉ thay đổi các value thành chữ mẫu
+                    new_list = []
+                    for item in v:
+                        new_item = {}
+                        for ik, iv in item.items():
+                            if isinstance(iv, str):
+                                new_item[ik] = "Dummy"
+                            else:
+                                new_item[ik] = iv
+                        new_list.append(new_item)
+                    sanitized_args[k] = new_list
+                else:
+                    sanitized_args[k] = [f"Placeholder Item {i+1}" for i in range(len(v))]
             elif isinstance(v, str):
                 sanitized_args[k] = "Standard Slide Content Placeholder"
             else:
                 sanitized_args[k] = v
         elif k == "image_url":
-            # Thay thế bằng ảnh xám trung tính cố định
             sanitized_args[k] = "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=200"
         else:
             sanitized_args[k] = v
@@ -82,12 +95,13 @@ def get_dinov2_embedding(image_path) -> list:
     inputs = processor(images=image, return_tensors="pt")
     with torch.no_grad():
         outputs = dinov2_model(**inputs)
-        # Lấy mean của last_hidden_state để làm véc-tơ đặc trưng trực quan
         embeddings = outputs.last_hidden_state.mean(dim=1).squeeze().tolist()
     return embeddings
 
 def render_html_to_png_sync(html_content, output_path):
     """Render HTML sang PNG đồng bộ"""
+    if not html_content:
+        return
     try:
         loop = asyncio.get_event_loop()
     except RuntimeError:
@@ -100,6 +114,52 @@ THEME_COLORS = ["#2563EB", "#10B981", "#EF4444", "#F59E0B", "#8B5CF6", "#EC4899"
 BG_COLORS = ["#FFFFFF", "#F9FAFB", "#F3F4F6", "#1F2937", "#111827", "#0F172A"]
 FONT_SIZES = [0.9, 1.0, 1.1, 1.2]
 PADDINGS = ["1.0rem", "1.5rem", "2.0rem"]
+
+def generate_dummy_args(args_schema, prev_theme_color, prev_bg_color, prev_font_size, prev_padding):
+    """Tự động sinh các đối số hợp lệ (Pydantic-compliant) dựa trên schema"""
+    dummy_args = {}
+    for param_name, param_info in args_schema.items():
+        # A. Điền các tham số phong cách (Style parameters)
+        if param_name in ["theme_color", "accent_color", "highlight_color"]:
+            dummy_args[param_name] = prev_theme_color
+        elif param_name in ["background_color", "bg_color_left", "bg_color_right"]:
+            dummy_args[param_name] = prev_bg_color
+        elif param_name == "font_size_multiplier":
+            dummy_args[param_name] = prev_font_size
+        elif param_name in ["card_padding", "border_width"]:
+            dummy_args[param_name] = prev_padding
+        elif param_name in ["text_color", "title_color", "main_title_color"]:
+            dummy_args[param_name] = "#555555" if prev_bg_color in ["#FFFFFF", "#F9FAFB", "#F3F4F6"] else "#CCCCCC"
+            
+        # B. Sinh các tham số nội dung mẫu dựa trên kiểu dữ liệu (Content parameters)
+        else:
+            param_type = param_info.get("type")
+            if param_type == "string":
+                dummy_args[param_name] = "Dummy text"
+            elif param_type in ["number", "integer"]:
+                dummy_args[param_name] = 1.0 if param_type == "number" else 1
+            elif param_type == "boolean":
+                dummy_args[param_name] = True
+            elif param_type == "array":
+                items_info = param_info.get("items", {})
+                item_type = items_info.get("type")
+                if item_type == "string":
+                    dummy_args[param_name] = ["Dummy string 1", "Dummy string 2"]
+                elif item_type == "object" or "properties" in items_info:
+                    # Nếu là list of objects (như IconPoint trong icon list slide)
+                    properties = items_info.get("properties", {})
+                    dummy_dict = {}
+                    for prop_name, prop_info in properties.items():
+                        if prop_info.get("type") == "string":
+                            dummy_dict[prop_name] = "Dummy value"
+                        else:
+                            dummy_dict[prop_name] = "star"
+                    dummy_args[param_name] = [dummy_dict, dummy_dict]
+                else:
+                    dummy_args[param_name] = ["Dummy 1", "Dummy 2"]
+            elif param_type == "object":
+                dummy_args[param_name] = {}
+    return dummy_args
 
 def main():
     input_path = "rl/slidegen_challenge_dataset.json"
@@ -127,13 +187,11 @@ def main():
     temp_dir = "rl/temp_dataset_renders"
     os.makedirs(temp_dir, exist_ok=True)
     
-    # Rút gọn số mẫu khi debug nếu cần thiết (để chạy nhanh hơn)
     import argparse
     parser = argparse.ArgumentParser()
-    parser.add_argument("--limit", type=int, default=200, help="Giới hạn số mẫu sinh cho nhất quán")
+    parser.add_argument("--limit", type=int, default=200, help="Giới hạn số mẫu sinh")
     args = parser.parse_args(args=[] if 'ipykernel' in sys.modules else None)
     
-    # Giới hạn số mẫu xử lý để tiết kiệm thời gian render offline (ví dụ: 200 mẫu là cực kỳ đủ cho GRPO học phong cách)
     target_samples = samples[:args.limit]
     print(f"Processing {len(target_samples)} samples for style consistency...")
     
@@ -169,7 +227,6 @@ def main():
         prev_font_size = random.choice(FONT_SIZES)
         prev_padding = random.choice(PADDINGS)
         
-        # Xác định nhóm nền sáng hay tối
         bg_brightness = "Dark background" if prev_bg_color in ["#1F2937", "#111827", "#0F172A"] else "Light background"
         bg_style_str = f"{bg_brightness} ({prev_bg_color})"
         
@@ -201,28 +258,15 @@ def main():
             "and align the style parameters to ensure visual consistency with the previous slide."
         )
         
-        # 4. Tạo cuộc gọi JSON slide trước để render lấy véc-tơ đặc trưng
-        # Ta giả lập slide trước dùng cùng loại layout để đo độ nhất quán
+        # 4. Tự động tạo đối số hợp lệ cho slide trước để render
+        tool_args_schema = flat_tools[selected_tool_name].args
+        dummy_args = generate_dummy_args(tool_args_schema, prev_theme_color, prev_bg_color, prev_font_size, prev_padding)
+        
         prev_tool_call = {
             "name": selected_tool_name,
-            "arguments": {
-                "main_title": "Prev Title",
-                "theme_color": prev_theme_color,
-                "background_color": prev_bg_color,
-                "font_size_multiplier": prev_font_size,
-                "card_padding": prev_padding
-            }
+            "arguments": dummy_args
         }
         
-        # Thêm các trường phụ thuộc đặc thù của tool
-        tool_args_schema = flat_tools[selected_tool_name].args
-        if "items" in tool_args_schema:
-            prev_tool_call["arguments"]["items"] = ["Item 1", "Item 2", "Item 3"]
-        if "points" in tool_args_schema:
-            prev_tool_call["arguments"]["points"] = ["Point 1", "Point 2"]
-        if "steps" in tool_args_schema:
-            prev_tool_call["arguments"]["steps"] = ["Step 1", "Step 2"]
-            
         # Chuẩn hóa slide trước và render PNG tạm thời
         sanitized_prev = sanitize_to_placeholders(prev_tool_call)
         html_prev = execute_tool(sanitized_prev)
@@ -231,9 +275,14 @@ def main():
         render_html_to_png_sync(html_prev, temp_img_path)
         
         # Trích xuất véc-tơ DINOv2 768 chiều
-        prev_embedding = get_dinov2_embedding(temp_img_path)
+        try:
+            prev_embedding = get_dinov2_embedding(temp_img_path)
+        except Exception as e:
+            print(f"Error extracting embedding for index {idx}: {e}")
+            # Fallback embedding nếu bị lỗi
+            prev_embedding = [0.0] * 768
         
-        # Xóa ảnh tạm sau khi lấy embedding để tiết kiệm ổ đĩa
+        # Xóa ảnh tạm
         if os.path.exists(temp_img_path):
             os.remove(temp_img_path)
             
