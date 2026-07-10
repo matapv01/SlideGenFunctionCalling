@@ -262,11 +262,10 @@ SLIDE_TYPE_PROMPTS = {
 HUMAN_PROMPT_TEMPLATE = """
 CONTEXT: {slide_context_map}
 
-PREVIOUS SLIDE STYLE (match VISUAL STYLE ONLY — colors, fonts, layout. Do NOT reuse any text/content from here): {previous_slide_function_call}
+PREVIOUS SLIDE STYLE CONTEXT:
+{previous_slide_function_call}
 
-DIVERSITY REQUIREMENT:
-To keep the presentation visually engaging, you MUST NOT use the exact same tool as the `previous_slide_function_call`. 
-Additionally, try to AVOID these recently used tools if possible:
+RECENTLY USED LAYOUTS (for reference):
 {recent_tools}
 
 DESIGN PLAN: {slide_plan}
