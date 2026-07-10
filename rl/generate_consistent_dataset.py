@@ -13,6 +13,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
+from backend.workflows.slidegen_workflow.utils.helper import sanitize_to_placeholders, get_slide_style_context
 
 # Khởi tạo Playwright Renderer để render slide tạm thời
 capture_provider = PlaywrightCaptureProvider()
@@ -34,54 +35,6 @@ def format_tool_for_qwen(tool):
         }
     }
 
-# Định nghĩa các khoá content để lọc thế bằng text mẫu
-_CONTENT_KEYS = {
-    "main_title", "subtitle", "content_text", "description_text", "title",
-    "main_content", "content1", "content2", "left_text", "right_text",
-    "items", "list_items", "steps", "agenda_items", "subtitle1", "subtitle2",
-    "header_text", "headline", "top_text", "author_line", "top_left_text",
-    "bottom_text", "year", "section_title", "section_subtitle", "mission_items",
-    "left_title", "right_title", "left_content", "right_content", "description"
-}
-
-def sanitize_to_placeholders(tool_call: dict) -> dict:
-    """Thay thế toàn bộ text và ảnh thật của tool call bằng placeholder cố định"""
-    if not tool_call:
-        return {}
-    
-    result = {"name": tool_call.get("name", "")}
-    args = tool_call.get("arguments", {})
-    sanitized_args = {}
-    
-    for k, v in args.items():
-        if k in _CONTENT_KEYS:
-            if isinstance(v, list):
-                # Kiểm tra xem phần tử trong list là dict hay str
-                if len(v) > 0 and isinstance(v[0], dict):
-                    # Giữ nguyên cấu trúc dict, chỉ thay đổi các value thành chữ mẫu
-                    new_list = []
-                    for item in v:
-                        new_item = {}
-                        for ik, iv in item.items():
-                            if isinstance(iv, str):
-                                new_item[ik] = "Dummy"
-                            else:
-                                new_item[ik] = iv
-                        new_list.append(new_item)
-                    sanitized_args[k] = new_list
-                else:
-                    sanitized_args[k] = [f"Placeholder Item {i+1}" for i in range(len(v))]
-            elif isinstance(v, str):
-                sanitized_args[k] = "Standard Slide Content Placeholder"
-            else:
-                sanitized_args[k] = v
-        elif k == "image_url":
-            sanitized_args[k] = "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=200"
-        else:
-            sanitized_args[k] = v
-            
-    result["arguments"] = sanitized_args
-    return result
 
 # Khởi tạo mô hình DINOv2 để trích xuất đặc trưng visual
 print("[DINOv2] Loading Meta DINOv2 model locally on CPU...")
@@ -243,24 +196,17 @@ def main():
         prev_font_size = random.choice(FONT_SIZES)
         prev_padding = random.choice(PADDINGS)
         
-        bg_brightness = "Dark background" if prev_bg_color in ["#1F2937", "#111827", "#0F172A"] else "Light background"
-        bg_style_str = f"{bg_brightness} ({prev_bg_color})"
+        # 3. Tự động tạo đối số hợp lệ cho slide trước để render
+        tool_args_schema = flat_tools[selected_tool_name].args
+        dummy_args = generate_dummy_args(tool_args_schema, prev_theme_color, prev_bg_color, prev_font_size, prev_padding)
         
-        prev_layout_category = "LIST_TOOLS"
-        if "chart" in selected_tool_name:
-            prev_layout_category = "CHART_TOOLS"
-        elif "process" in selected_tool_name:
-            prev_layout_category = "TIMELINE_TOOLS"
-            
-        # 3. Tạo chuỗi [PREVIOUS SLIDE STYLE CONTEXT]
-        style_context_str = (
-            "[PREVIOUS SLIDE STYLE CONTEXT]\n"
-            f"- Layout Category: {prev_layout_category}\n"
-            f"- Primary Theme Color: {prev_theme_color}\n"
-            f"- Background Style: {bg_style_str}\n"
-            f"- Font Scale Multiplier: {prev_font_size}\n"
-            f"- Padding/Margins: {prev_padding}"
-        )
+        prev_tool_call = {
+            "name": selected_tool_name,
+            "arguments": dummy_args
+        }
+        
+        # Tạo chuỗi [PREVIOUS SLIDE STYLE CONTEXT] sử dụng core BE function
+        style_context_str = get_slide_style_context(prev_tool_call)
         
         # Ráp prompt mới
         full_user_prompt = (
@@ -273,15 +219,6 @@ def main():
             "Choose the single most appropriate tool from the available tools below, populate its arguments with the content, "
             "and align the style parameters to ensure visual consistency with the previous slide."
         )
-        
-        # 4. Tự động tạo đối số hợp lệ cho slide trước để render
-        tool_args_schema = flat_tools[selected_tool_name].args
-        dummy_args = generate_dummy_args(tool_args_schema, prev_theme_color, prev_bg_color, prev_font_size, prev_padding)
-        
-        prev_tool_call = {
-            "name": selected_tool_name,
-            "arguments": dummy_args
-        }
         
         # Chuẩn hóa slide trước và render PNG tạm thời
         sanitized_prev = sanitize_to_placeholders(prev_tool_call)

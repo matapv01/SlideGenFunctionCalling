@@ -273,7 +273,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 
         response = slide_generator_runnable.invoke({
             "slide_context_map": current_context_map,
-            "previous_slide_function_call": json.dumps(_extract_style_params(previous_slide_function_call), indent=2),
+            "previous_slide_function_call": get_slide_style_context(previous_slide_function_call),
             "recent_tools": recent_tools_str,
             "slide_plan": json.dumps(current_plan, indent=2),
             "slide_content": current_text,

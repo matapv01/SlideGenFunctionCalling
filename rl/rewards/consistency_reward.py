@@ -13,11 +13,9 @@ sys.path.append(project_root)
 
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
+from backend.workflows.slidegen_workflow.utils.helper import sanitize_to_placeholders
 
-# Khởi tạo Playwright Capture Provider
 capture_provider = PlaywrightCaptureProvider()
-
-# Cấu hình thiết bị chạy DINOv2 (mặc định CPU để tránh VRAM)
 device = torch.device("cpu")
 
 print("\n[Consistency Module] Loading Meta DINOv2 model on CPU for visual consistency checks...")
@@ -25,52 +23,6 @@ processor = AutoImageProcessor.from_pretrained('facebook/dinov2-base')
 dinov2_model = AutoModel.from_pretrained('facebook/dinov2-base').to(device)
 dinov2_model.eval()
 
-# Các khoá content để lọc thế bằng text mẫu
-_CONTENT_KEYS = {
-    "main_title", "subtitle", "content_text", "description_text", "title",
-    "main_content", "content1", "content2", "left_text", "right_text",
-    "items", "list_items", "steps", "agenda_items", "subtitle1", "subtitle2",
-    "header_text", "headline", "top_text", "author_line", "top_left_text",
-    "bottom_text", "year", "section_title", "section_subtitle", "mission_items",
-    "left_title", "right_title", "left_content", "right_content", "description"
-}
-
-def sanitize_to_placeholders(tool_call: dict) -> dict:
-    """Thay thế toàn bộ text và ảnh thật của tool call bằng placeholder cố định"""
-    if not tool_call:
-        return {}
-    
-    result = {"name": tool_call.get("name", "")}
-    args = tool_call.get("arguments", {})
-    sanitized_args = {}
-    
-    for k, v in args.items():
-        if k in _CONTENT_KEYS:
-            if isinstance(v, list):
-                if len(v) > 0 and isinstance(v[0], dict):
-                    new_list = []
-                    for item in v:
-                        new_item = {}
-                        for ik, iv in item.items():
-                            if isinstance(iv, str):
-                                new_item[ik] = "Dummy"
-                            else:
-                                new_item[ik] = iv
-                        new_list.append(new_item)
-                    sanitized_args[k] = new_list
-                else:
-                    sanitized_args[k] = [f"Placeholder Item {i+1}" for i in range(len(v))]
-            elif isinstance(v, str):
-                sanitized_args[k] = "Standard Slide Content Placeholder"
-            else:
-                sanitized_args[k] = v
-        elif k == "image_url":
-            sanitized_args[k] = "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=200"
-        else:
-            sanitized_args[k] = v
-            
-    result["arguments"] = sanitized_args
-    return result
 
 def get_dinov2_embedding(image_path) -> np.ndarray:
     """Trích xuất véc-tơ đặc trưng 768 chiều từ ảnh PNG bằng DINOv2"""
