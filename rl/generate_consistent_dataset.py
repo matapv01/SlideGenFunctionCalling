@@ -145,18 +145,34 @@ def generate_dummy_args(args_schema, prev_theme_color, prev_bg_color, prev_font_
                 item_type = items_info.get("type")
                 if item_type == "string":
                     dummy_args[param_name] = ["Dummy string 1", "Dummy string 2"]
-                elif item_type == "object" or "properties" in items_info:
-                    # Nếu là list of objects (như IconPoint trong icon list slide)
-                    properties = items_info.get("properties", {})
-                    dummy_dict = {}
-                    for prop_name, prop_info in properties.items():
-                        if prop_info.get("type") == "string":
-                            dummy_dict[prop_name] = "Dummy value"
-                        else:
-                            dummy_dict[prop_name] = "star"
-                    dummy_args[param_name] = [dummy_dict, dummy_dict]
                 else:
-                    dummy_args[param_name] = ["Dummy 1", "Dummy 2"]
+                    if param_name == "points":
+                        dummy_args[param_name] = [
+                            {"title": "Dummy Title 1", "description": "Dummy Description 1", "icon_name": "star"},
+                            {"title": "Dummy Title 2", "description": "Dummy Description 2", "icon_name": "thumbs-up"}
+                        ]
+                    elif param_name == "items":
+                        dummy_args[param_name] = [
+                            {"label": "Category A", "value": 45},
+                            {"label": "Category B", "value": 55}
+                        ]
+                    elif param_name in ["columns", "reference_items"]:
+                        dummy_args[param_name] = [
+                            {"title": "Col Title 1", "description": "Column Description 1"},
+                            {"title": "Col Title 2", "description": "Column Description 2"}
+                        ]
+                    elif param_name == "steps":
+                        dummy_args[param_name] = [
+                            {"step_number": "01", "title": "Step Title 1", "description": "Step Description 1"},
+                            {"step_number": "02", "title": "Step Title 2", "description": "Step Description 2"}
+                        ]
+                    elif param_name == "data_points":
+                        dummy_args[param_name] = [
+                            {"label": "Jan", "value": 15},
+                            {"label": "Feb", "value": 25}
+                        ]
+                    else:
+                        dummy_args[param_name] = [{"title": "Dummy title", "description": "Dummy description"}]
             elif param_type == "object":
                 dummy_args[param_name] = {}
     return dummy_args
