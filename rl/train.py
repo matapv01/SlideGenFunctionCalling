@@ -35,7 +35,7 @@ from datasets import Dataset
 # Đảm bảo PYTHONPATH nhận diện được backend của dự án
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from rl.rewards import slide_aesthetics_reward, content_preservation_reward
+from rl.rewards import slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward
 
 # ==============================================================================
 # 1. KHỞI TẠO TOKENIZER & LOAD DATASET TỪ FILE JSON
@@ -72,7 +72,8 @@ for sample in raw_data:
         add_generation_prompt=True
     )
     formatted_samples.append({
-        "prompt": formatted_prompt
+        "prompt": formatted_prompt,
+        "previous_slide_embedding": sample.get("previous_slide_embedding", [])
     })
 
 dataset = Dataset.from_list(formatted_samples)
@@ -197,7 +198,7 @@ training_args = GRPOConfig(
 trainer = GRPOTrainer(
     model=model,
     processing_class=tokenizer,
-    reward_funcs=[slide_aesthetics_reward, content_preservation_reward],
+    reward_funcs=[slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward],
     args=training_args,
     train_dataset=dataset,
     peft_config=peft_config, # Kích hoạt LoRA nếu peft_config không phải None
