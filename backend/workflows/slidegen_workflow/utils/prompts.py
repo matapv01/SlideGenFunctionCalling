@@ -484,3 +484,21 @@ DOCUMENT TO ANALYZE:
 
 Please analyze this document and create a hierarchical structure with appropriate headings and content distribution.
 """
+
+
+# ================================= QWEN GENERATOR PROMPTS =================================
+
+QWEN_GENERATOR_SYSTEM_PROMPT = "You are a helpful assistant that calls slide layout functions."
+
+QWEN_GENERATOR_HUMAN_TEMPLATE = """You are a slide layout generator. Based on the slide content, the available layout tool schemas, the design instructions, and the style context of the previous slide, generate the optimal tool call in JSON format.
+Your goal is to maintain visual consistency (matching the color palette and design tone of the previous slide) while selecting the best tool layout for the new content.
+
+{style_context}
+
+[DESIGN PLAN / INSTRUCTION (FROM GEMINI PREPARER)]
+{design_instruction}
+
+[CURRENT SLIDE CONTENT]
+{slide_content}
+
+Choose the single most appropriate tool from the available tools below, populate its arguments with the content, and align the style parameters to ensure visual consistency with the previous slide."""

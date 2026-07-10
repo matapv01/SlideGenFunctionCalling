@@ -14,6 +14,7 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
 from backend.workflows.slidegen_workflow.utils.helper import sanitize_to_placeholders, get_slide_style_context
+from backend.workflows.slidegen_workflow.utils.prompts import QWEN_GENERATOR_HUMAN_TEMPLATE
 
 # Khởi tạo Playwright Renderer để render slide tạm thời
 capture_provider = PlaywrightCaptureProvider()
@@ -209,15 +210,10 @@ def main():
         style_context_str = get_slide_style_context(prev_tool_call)
         
         # Ráp prompt mới
-        full_user_prompt = (
-            "You are a slide layout generator. Based on the slide content, the available layout tool schemas, "
-            "and the style context of the previous slide, generate the optimal tool call in JSON format.\n"
-            "Your goal is to maintain visual consistency (matching the color palette and design tone of the previous slide) "
-            "while selecting the best tool layout for the new content.\n\n"
-            f"{style_context_str}\n\n"
-            f"[CURRENT SLIDE CONTENT]\n{user_prompt}\n\n"
-            "Choose the single most appropriate tool from the available tools below, populate its arguments with the content, "
-            "and align the style parameters to ensure visual consistency with the previous slide."
+        full_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
+            style_context=style_context_str,
+            design_instruction="Design a visually clean slide matching the previous visual tone and content category.",
+            slide_content=user_prompt
         )
         
         # Chuẩn hóa slide trước và render PNG tạm thời

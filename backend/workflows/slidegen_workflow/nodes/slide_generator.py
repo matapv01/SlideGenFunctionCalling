@@ -84,6 +84,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             
             qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
                 style_context=style_context_str,
+                design_instruction=current_plan.get('thought', ''),
                 slide_content=current_text
             )
             
