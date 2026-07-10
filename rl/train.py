@@ -174,12 +174,15 @@ num_train_epochs = int(os.getenv("NUM_TRAIN_EPOCHS", "3"))
 num_generations = int(os.getenv("NUM_GENERATIONS", "2"))
 max_completion_length = int(os.getenv("MAX_COMPLETION_LENGTH", "512"))
 
+max_steps = int(os.getenv("MAX_STEPS", "-1"))
+
 training_args = GRPOConfig(
     output_dir="./qwen_slidegen_grpo",
     learning_rate=learning_rate,
     per_device_train_batch_size=per_device_train_batch_size,
     gradient_accumulation_steps=gradient_accumulation_steps,
     num_train_epochs=num_train_epochs,
+    max_steps=max_steps,
     save_steps=100,
     logging_steps=10,
     report_to="none",
