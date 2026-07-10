@@ -12,14 +12,16 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     SLIDE_TYPE_PROMPTS,
     HUMAN_PROMPT_TEMPLATE,
     INTRO_PROMPT,
-    MATH_EQUATION_RULES
+    MATH_EQUATION_RULES,
+    SLIDE_PREPARER_SYSTEM_PROMPT,
+    SLIDE_PREPARER_HUMAN_TEMPLATE
 )
 from backend.workflows.slidegen_workflow.utils.helper import get_slide_style_context
 
 def prepare_slide(state: State, config: RunnableConfig) -> State:
     """
-    Node to prepare tools, context, and prompts for the slide generator.
-    Separates the prompt preparation and tool retrieval from model invocation.
+    Node to prepare tools, style context, and call Gemini (Preparer)
+    to generate detailed slide design instructions for the generator model.
     """
     print("\n---------------- Executing Node: slide_preparer ----------------")
     
@@ -27,6 +29,7 @@ def prepare_slide(state: State, config: RunnableConfig) -> State:
     configurable = config["configurable"]
     tool_retriever = configurable.get('tool_retriever')
     all_tools_dict = configurable.get('tools_dict', TOOLS_DICT)
+    planner_llm = configurable.get('planner_llm') or configurable.get('llm')
     
     # 2. Get dynamic data from state
     idx = state['current_slide_index']
@@ -70,7 +73,7 @@ def prepare_slide(state: State, config: RunnableConfig) -> State:
         
     print(f"  -> Prepared {len(my_tools)} tools: {[t.name for t in my_tools]}")
     
-    # 4. Resolve system prompt
+    # 4. Resolve system prompt (legacy fallback for API models)
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
     if slide_type == 'CONTENT_TOOLS':
         if 'highlight_color' in state:
@@ -124,11 +127,34 @@ def prepare_slide(state: State, config: RunnableConfig) -> State:
     # 6. Format Style Context
     style_context_str = get_slide_style_context(previous_slide_function_call)
     
-    # 7. Store prepared inputs into state for slide generator
+    # 7. Invoke Gemini (Planner LLM) to get design instruction for the next slide
+    print("  -> Calling Gemini to prepare design instructions...")
+    design_instruction = creative_thought
+    if planner_llm:
+        try:
+            human_msg = SLIDE_PREPARER_HUMAN_TEMPLATE.format(
+                previous_style_context=style_context_str,
+                slide_plan=json.dumps(current_plan, indent=2),
+                slide_content=current_text
+            )
+            messages = [
+                {"role": "system", "content": SLIDE_PREPARER_SYSTEM_PROMPT},
+                {"role": "user", "content": human_msg}
+            ]
+            response = planner_llm.invoke(messages)
+            if hasattr(response, "content") and response.content:
+                design_instruction = response.content.strip()
+                print("  -> Prepared Instruction:")
+                print(f"     {design_instruction.replace('\n', '\n     ')}")
+        except Exception as e:
+            print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
+            
+    # 8. Store prepared inputs into state for slide generator
     state["slide_prompt_system"] = system_prompt
     state["slide_prompt_human"] = HUMAN_PROMPT_TEMPLATE
     state["candidate_tools"] = my_tools
     state["recent_tools_str"] = recent_tools_str
     state["style_context_str"] = style_context_str
+    state["design_instruction"] = design_instruction
     
     return state
