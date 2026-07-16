@@ -270,6 +270,9 @@ RECENTLY USED LAYOUTS (for reference):
 
 DESIGN PLAN: {slide_plan}
 
+DESIGN INSTRUCTION (FROM PREPARER):
+{design_instruction}
+
 SLIDE {slide_index}/{length_slide_chunks} CONTENT:
 {slide_content}
 
@@ -488,17 +491,41 @@ Please analyze this document and create a hierarchical structure with appropriat
 
 # ================================= QWEN GENERATOR PROMPTS =================================
 
-QWEN_GENERATOR_SYSTEM_PROMPT = "You are a helpful assistant that calls slide layout functions."
+QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY a function call. Do NOT use thinking mode. Do NOT output <think> tags.
 
-QWEN_GENERATOR_HUMAN_TEMPLATE = """You are a slide layout generator. Based on the slide content, the available layout tool schemas, the design instructions, and the style context of the previous slide, generate the optimal tool call in JSON format.
-Your goal is to maintain visual consistency (matching the color palette and design tone of the previous slide) while selecting the best tool layout for the new content.
+Example:
+<tool_call>
+{"name": "generate_title_slide", "arguments": {"main_title": "BUSINESS PLAN", "subtitle": "2024-2028"}}
+</tool_call>"""
 
-{style_context}
+QWEN_GENERATOR_HUMAN_TEMPLATE = """{style_context}
 
-[DESIGN PLAN / INSTRUCTION (FROM GEMINI PREPARER)]
+[DESIGN]
 {design_instruction}
+
+[CONTENT]
+{slide_content}"""
+
+
+# ================================= SLIDE PREPARER PROMPTS =================================
+
+SLIDE_PREPARER_SYSTEM_PROMPT = """You are a presentation design preparer. Your job is to analyze the content of the current slide, review the styling context of the previous slide, and write a detailed design instruction for the next model to follow.
+Do NOT choose or call any layout tools. Simply write a detailed visual instruction (describing the primary theme color, font scaling, background style, layout suggestion, and formatting rules) that will guide the layout generation model to build a visually consistent and beautiful slide."""
+
+SLIDE_PREPARER_HUMAN_TEMPLATE = """---
+[PREVIOUS SLIDE STYLE CONTEXT]
+{previous_style_context}
+
+[CURRENT SLIDE PLAN]
+{slide_plan}
 
 [CURRENT SLIDE CONTENT]
 {slide_content}
+---
 
-Choose the single most appropriate tool from the available tools below, populate its arguments with the content, and align the style parameters to ensure visual consistency with the previous slide."""
+Based on the information above, write a detailed visual styling instruction (in English, 3-4 bullet points) for the next slide. Describe:
+1. What theme color and background color to use to match the previous slide.
+2. The recommended text layout structure (e.g. key-value cards, bullet list, comparison columns).
+3. Any specific formatting rules (e.g. font sizes, highlight color span tags).
+4. What LANGUAGE to generate the slide text in (match the language of the [CURRENT SLIDE CONTENT] above).
+Keep it concise and clear."""

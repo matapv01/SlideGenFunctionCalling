@@ -1,0 +1,38 @@
+"""Shared utilities for RL training scripts (SDFT + GRPO)."""
+
+import os, subprocess
+
+
+def auto_select_gpu():
+    if "CUDA_VISIBLE_DEVICES" not in os.environ:
+        try:
+            res = subprocess.run(
+                ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,nounits,noheader"],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=2)
+            free_mems = [int(x) for x in res.stdout.strip().split("\n") if x.strip().isdigit()]
+            os.environ["CUDA_VISIBLE_DEVICES"] = str(free_mems.index(max(free_mems))) if free_mems else "0"
+        except Exception:
+            os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+
+
+def build_flat_tools(tooldict: dict) -> dict:
+    flat = {}
+    for cat, tools in tooldict.items():
+        for t in tools:
+            flat[t.name] = t
+    return flat
+
+
+def setup_tokenizer(tokenizer, chat_template: str):
+    tokenizer.chat_template = chat_template
+    tokenizer.pad_token = tokenizer.eos_token
+
+
+# LoRA constants shared between SDFT and GRPO
+LORA_R = 16
+LORA_ALPHA = 32
+LORA_DROPOUT = 0
+LORA_TARGET_MODULES = [
+    "q_proj", "v_proj", "k_proj", "o_proj",
+    "gate_proj", "up_proj", "down_proj",
+]

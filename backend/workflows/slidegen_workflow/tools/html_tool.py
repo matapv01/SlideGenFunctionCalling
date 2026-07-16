@@ -15268,6 +15268,7 @@ def generate_team_slide(
 
 def generate_colorful_team_grid_slide(
     main_title="Add a Team Members Page",
+    subtitle="",
     team_members=[
         { "name": "Olivia Chen", "role": "Lead Designer", "image_url": "https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop", "color": "#8A44A1" },
         { "name": "Ben Carter", "role": "Frontend Developer", "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop", "color": "#2E9A94" },

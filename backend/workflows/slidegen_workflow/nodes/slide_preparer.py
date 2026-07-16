@@ -73,14 +73,14 @@ def prepare_slide(state: State, config: RunnableConfig) -> State:
         
     print(f"  -> Prepared {len(my_tools)} tools: {[t.name for t in my_tools]}")
     
-    # 4. Resolve system prompt (legacy fallback for API models)
+    # 4. Build per-slide-type system prompt for the API generator (Gemini path)
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
     if slide_type == 'CONTENT_TOOLS':
         if 'highlight_color' in state:
             highlight_instruction = f"- MUST use this color: {state['highlight_color']} (maintain consistency!)"
         else:
             highlight_instruction = "- This is the FIRST content slide - choose ONE color from the list and use it consistently"
-        system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
+        generator_system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
         
     elif slide_type == 'TRANSITION_TOOLS':
         previous_transition = state.get('previous_transition_tool_call', {})
@@ -103,12 +103,12 @@ def prepare_slide(state: State, config: RunnableConfig) -> State:
 * ONLY change the text content to match the new section heading"""
         else:
             transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-        system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
+        generator_system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
         
     else:
-        system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, INTRO_PROMPT)
+        generator_system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, INTRO_PROMPT)
         
-    system_prompt = MATH_EQUATION_RULES + "\n\n" + system_prompt
+    generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + generator_system_prompt
     
     # 5. Extract history for recent tools
     recent_tools_list = []
@@ -145,12 +145,12 @@ def prepare_slide(state: State, config: RunnableConfig) -> State:
             if hasattr(response, "content") and response.content:
                 design_instruction = response.content.strip()
                 print("  -> Prepared Instruction:")
-                print(f"     {design_instruction.replace('\n', '\n     ')}")
+                print("     " + design_instruction.replace('\n', '\n     '))
         except Exception as e:
             print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
             
     # 8. Store prepared inputs into state for slide generator
-    state["slide_prompt_system"] = system_prompt
+    state["slide_prompt_system"] = generator_system_prompt
     state["slide_prompt_human"] = HUMAN_PROMPT_TEMPLATE
     state["candidate_tools"] = my_tools
     state["recent_tools_str"] = recent_tools_str

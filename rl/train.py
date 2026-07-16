@@ -1,208 +1,446 @@
-import os
-import sys
+import os, sys, json, random, threading, concurrent.futures
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 from dotenv import load_dotenv
-
-# Load các biến môi trường từ file .env
 load_dotenv()
 
-# Đảm bảo chỉ sử dụng 1 GPU để tránh lỗi DataParallel/NCCL khi huấn luyện mô hình quantized (QLoRA)
-if "CUDA_VISIBLE_DEVICES" not in os.environ:
-    import subprocess
-    try:
-        res = subprocess.run(
-            ["nvidia-smi", "--query-gpu=memory.free", "--format=csv,nounits,noheader"],
-            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True, timeout=2
-        )
-        free_mems = [int(x) for x in res.stdout.strip().split("\n") if x.strip().isdigit()]
-        if free_mems:
-            best_gpu = free_mems.index(max(free_mems))
-            os.environ["CUDA_VISIBLE_DEVICES"] = str(best_gpu)
-            print(f"[System] Automatically selected GPU {best_gpu} with the most free VRAM ({free_mems[best_gpu]} MiB).")
-        else:
-            os.environ["CUDA_VISIBLE_DEVICES"] = "0"
-    except Exception:
-        os.environ["CUDA_VISIBLE_DEVICES"] = "0"
+os.environ.setdefault("HF_HUB_ETAG_TIMEOUT", "300")
+os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "300")
 
-import json
+from rl.common import auto_select_gpu, build_flat_tools, setup_tokenizer
+from rl.common import LORA_R, LORA_ALPHA, LORA_DROPOUT, LORA_TARGET_MODULES
+auto_select_gpu()
+os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
+
 import torch
 
-# Hạn chế phân mảnh bộ nhớ VRAM của PyTorch
-os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
-from transformers import AutoModelForCausalLM, AutoTokenizer
+from unsloth import FastLanguageModel
 from trl import GRPOTrainer, GRPOConfig
 from datasets import Dataset
-
-# Đảm bảo PYTHONPATH nhận diện được backend của dự án
-sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
-
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate
 from rl.rewards import slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward
+from rl.rewards.conciseness_reward import conciseness_reward
+from rl.rewards.text_embedding_reward import text_embedding_reward
+from scripts.generate_challenge_dataset import generate_docs
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
+from backend.workflows.slidegen_workflow.utils.helper import (
+    format_tool_for_qwen,
+    QWEN_CHAT_TEMPLATE,
+    render_html_to_png,
+    sanitize_to_placeholders,
+    get_slide_style_context,
+)
+from backend.workflows.slidegen_workflow.utils.prompts import (
+    QWEN_GENERATOR_SYSTEM_PROMPT,
+    QWEN_GENERATOR_HUMAN_TEMPLATE,
+    SLIDE_PLANNER_SYSTEM_PROMPT,
+    SLIDE_PLANNER_HUMAN_PROMPT,
+    SLIDE_PREPARER_SYSTEM_PROMPT,
+    SLIDE_PREPARER_HUMAN_TEMPLATE,
+)
+from backend.workflows.slidegen_workflow.graph.stage import SlidePlan
+from backend.infrastructure.embedding.dinov2_provider import DINOv2EmbeddingProvider
+from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
+from backend.config import TOOL_RETRIEVER_TOP_K
 
 # ==============================================================================
-# 1. KHỞI TẠO TOKENIZER & LOAD DATASET TỪ FILE JSON
+# CONFIG
 # ==============================================================================
-# Load trực tiếp từ Hugging Face qua Model ID (mặc định là mô hình siêu nhỏ 0.5B để tránh OOM bộ nhớ)
-model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen2.5-Coder-0.5B-Instruct")
-
-print(f"Loading tokenizer for model: '{model_id}'...")
-tokenizer = AutoTokenizer.from_pretrained(model_id)
-tokenizer.pad_token = tokenizer.eos_token
-
-dataset_path = os.getenv("TRAINING_DATASET_PATH", "rl/data/slidegen_consistent_dataset.json")
-
-if not os.path.exists(dataset_path):
-    print(f"Error: Dataset '{dataset_path}' not found. Please verify the path or generate it first.")
-    sys.exit(1)
-
-print(f"Loading raw dataset from '{dataset_path}'...")
-with open(dataset_path, "r", encoding="utf-8") as f:
-    raw_data = json.load(f)
-
-# Format các mẫu đã capture sang Qwen Chat Template
-formatted_samples = []
-for sample in raw_data:
-    messages = [
-        {"role": "system", "content": sample["system_prompt"]},
-        {"role": "user", "content": sample["user_prompt"]}
-    ]
-    # Nhúng danh sách schema tools động vào template của Qwen
-    formatted_prompt = tokenizer.apply_chat_template(
-        messages,
-        tools=sample["tools"],
-        tokenize=False,
-        add_generation_prompt=True
-    )
-    formatted_samples.append({
-        "prompt": formatted_prompt,
-        "previous_slide_embedding": sample.get("previous_slide_embedding", [])
-    })
-
-dataset = Dataset.from_list(formatted_samples)
-print(f"Dataset prepared successfully! Created {len(dataset)} training samples.")
-
-
-# ==============================================================================
-# 2. KHỞI TẠO MÔ HÌNH GENERATOR CHẠY TRÊN GPU
-# ==============================================================================
-print(f"Loading Generator LLM ({model_id}) into memory...")
-
-# Đọc cấu hình môi trường để hỗ trợ huấn luyện chất lượng cao trên H100 hoặc chạy CPU để tránh OOM
+model_id = os.getenv("TRAINING_MODEL_ID", "Qwen/Qwen3-4B-Instruct-2507")
+total_steps = int(os.getenv("TOTAL_STEPS", "500"))
+batch_docs = int(os.getenv("BATCH_DOCS", "5"))
 USE_CPU = os.getenv("USE_CPU", "False").lower() == "true"
 USE_LORA = os.getenv("USE_LORA", "True").lower() == "true"
 USE_GRAD_CHECKPOINT = os.getenv("USE_GRAD_CHECKPOINT", "True").lower() == "true"
-
-# Kiểm tra GPU thích hợp để sử dụng dtype tối ưu
-torch_dtype = torch.bfloat16 if torch.cuda.is_bf16_supported() else torch.float16
-
-if USE_CPU:
-    print("USE_CPU is enabled! Forcing CPU execution (0 VRAM footprint)...")
-    torch_dtype = torch.float32
-    # Load model hoàn toàn trên CPU
-    model = AutoModelForCausalLM.from_pretrained(
-        model_id,
-        torch_dtype=torch_dtype,
-        device_map={"": "cpu"}
-    )
-else:
-    # Xác định device_map phù hợp cho huấn luyện
-    device_map = {"": torch.cuda.current_device()} if torch.cuda.is_available() else "auto"
-
-    # Kiểm tra xem bitsandbytes có sẵn không để tự động kích hoạt QLoRA 4-bit giúp tiết kiệm tối đa VRAM
-    try:
-        from transformers import BitsAndBytesConfig
-        from peft import prepare_model_for_kbit_training
-        
-        is_awq_or_gptq = "awq" in model_id.lower() or "gptq" in model_id.lower()
-        if is_awq_or_gptq:
-            print(f"Pre-quantized model detected ('{model_id}'). Loading directly in quantized precision...")
-            model = AutoModelForCausalLM.from_pretrained(
-                model_id,
-                device_map=device_map
-            )
-        else:
-            print("bitsandbytes detected! Activating 4-bit QLoRA to minimize VRAM usage (~250MB weight footprint)...")
-            bnb_config = BitsAndBytesConfig(
-                load_in_4bit=True,
-                bnb_4bit_use_double_quant=True,
-                bnb_4bit_quant_type="nf4",
-                bnb_4bit_compute_dtype=torch_dtype
-            )
-            model = AutoModelForCausalLM.from_pretrained(
-                model_id,
-                quantization_config=bnb_config,
-                device_map=device_map
-            )
-        model = prepare_model_for_kbit_training(model)
-    except ImportError:
-        print("Warning: bitsandbytes is not installed. Loading model in standard precision.")
-        print("-> Tip: Install it via 'uv pip install bitsandbytes' to enable 4-bit QLoRA and save massive VRAM!")
-        model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch_dtype,
-            device_map=device_map
-        )
-
-
-# ==============================================================================
-# 3. CẤU HÌNH & KHỞI CHẠY GRPO TRAINER VỚI LORA & GRADIENT CHECKPOINTING
-# ==============================================================================
-from peft import LoraConfig
-
-print(f"Training strategy configuration:")
-print(f"-> Run on CPU: {USE_CPU}")
-print(f"-> Use LoRA (PEFT): {USE_LORA}")
-print(f"-> Use Gradient Checkpointing: {USE_GRAD_CHECKPOINT}")
-
-# Cấu hình LoRA (PEFT) nếu được bật
-peft_config = None
-if USE_LORA:
-    peft_config = LoraConfig(
-        r=8,
-        lora_alpha=16,
-        target_modules=["q_proj", "v_proj", "k_proj", "o_proj", "gate_proj", "up_proj", "down_proj"],
-        lora_dropout=0.05,
-        bias="none",
-        task_type="CAUSAL_LM",
-    )
-
-# Tự động phát hiện kiểu độ chính xác tối ưu của GPU
-use_bf16 = torch.cuda.is_bf16_supported()
-
-# Cấu hình các tham số huấn luyện từ biến môi trường (hoặc sử dụng giá trị mặc định tối ưu)
 learning_rate = float(os.getenv("LEARNING_RATE", "1e-6"))
 per_device_train_batch_size = int(os.getenv("PER_DEVICE_TRAIN_BATCH_SIZE", "1"))
 gradient_accumulation_steps = int(os.getenv("GRADIENT_ACCUMULATION_STEPS", "16"))
-num_train_epochs = int(os.getenv("NUM_TRAIN_EPOCHS", "3"))
 num_generations = int(os.getenv("NUM_GENERATIONS", "2"))
-max_completion_length = int(os.getenv("MAX_COMPLETION_LENGTH", "512"))
+max_completion_length = int(os.getenv("MAX_COMPLETION_LENGTH", "2048"))
+output_dir = os.getenv("GRPO_OUTPUT_DIR", "./qwen_slidegen_grpo")
 
-max_steps = int(os.getenv("MAX_STEPS", "-1"))
+api_key = os.getenv("GEMINI_API_KEY")
+base_url = os.getenv("GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
+gemini_model = os.getenv("GEMINI_GENERATION_MODEL", "gemini-2.5-pro")
 
+flat_tools = build_flat_tools(TOOLS_DICT)
+device = "cuda" if torch.cuda.is_available() and not USE_CPU else "cpu"
+_gen_lock = threading.Lock()
+
+# ==============================================================================
+# 1. LOAD MODEL
+# ==============================================================================
+max_seq_length = 8192
+sdft_adapter_path = os.getenv("SDFT_ADAPTER_PATH", "./qwen_slidegen_sdft/final_adapter")
+
+if USE_LORA and os.path.exists(sdft_adapter_path):
+    print(f"Loading SDFT adapter from {sdft_adapter_path}")
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        sdft_adapter_path, max_seq_length=max_seq_length, dtype=torch.bfloat16, load_in_4bit=False)
+    sdft_loaded = True
+else:
+    print(f"Loading model: {model_id}")
+    model, tokenizer = FastLanguageModel.from_pretrained(
+        model_id, max_seq_length=max_seq_length, dtype=torch.bfloat16, load_in_4bit=False)
+    if USE_LORA:
+        model = FastLanguageModel.get_peft_model(
+            model, r=LORA_R, target_modules=LORA_TARGET_MODULES,
+            lora_alpha=LORA_ALPHA, lora_dropout=LORA_DROPOUT,
+            bias="none", use_gradient_checkpointing="unsloth", random_state=42)
+    sdft_loaded = False
+
+setup_tokenizer(tokenizer, QWEN_CHAT_TEMPLATE)
+peft_config_for_trainer = None
+
+# ==============================================================================
+# 2. GEMINI CLIENTS (Planner + Preparer)
+# ==============================================================================
+planner_llm = ChatOpenAI(api_key=api_key, base_url=base_url, model=gemini_model, temperature=0.3)
+preparer_llm = ChatOpenAI(api_key=api_key, base_url=base_url, model=gemini_model, temperature=0.3)
+
+planner_chain = ChatPromptTemplate.from_messages([
+    ("system", SLIDE_PLANNER_SYSTEM_PROMPT),
+    ("human", SLIDE_PLANNER_HUMAN_PROMPT),
+]) | planner_llm.with_structured_output(SlidePlan)
+
+# ==============================================================================
+# 3. EMBEDDING PROVIDER
+# ==============================================================================
+embedding_provider = DINOv2EmbeddingProvider(device=device)
+
+# ==============================================================================
+# 3b. TOOL RETRIEVER (RAG — reuse BE's GeminiToolRetrieveProvider)
+# ==============================================================================
+faiss_index_path = os.path.join(os.path.dirname(__file__), "faiss_index")
+try:
+    tool_retriever = GeminiToolRetrieveProvider(TOOLS_DICT, faiss_index_path, api_key=api_key)
+    print(f"  Tool retriever initialized at {faiss_index_path}")
+except Exception as e:
+    print(f"  [WARN] Tool retriever init failed: {e}. GRPO will fall back to random tool selection.")
+    tool_retriever = None
+
+# ==============================================================================
+# 4. SEQUENTIAL ROLLOUT (per doc)
+# ==============================================================================
+def log_node(step_num, doc_idx, si, node, msg):
+    print(f"  [Step {step_num} Doc {doc_idx} Slide {si}] {node} → {msg}")
+
+
+def run_planner_one(slide_id: int, slide: dict, step_num: int, doc_idx: int, cache: dict) -> dict:
+    ck = f"{doc_idx}_{slide_id}"
+    if ck in cache.get("plans", {}):
+        log_node(step_num, doc_idx, slide_id, "Planner", f"cached → {cache['plans'][ck]['action']}")
+        return cache["plans"][ck]
+
+    inp = {
+        "slide_number": slide_id + 1,
+        "slide_context_map": "[Slide 1] Content Slide",
+        "slide_content": json.dumps({"heading": slide.get("heading", "Slide"), "content": slide["user_prompt"][:500]}, ensure_ascii=False),
+    }
+    try:
+        plan = planner_chain.invoke(inp).model_dump()
+        if slide_id == 0:
+            plan["action"] = "INTRO_TOOLS"
+        log_node(step_num, doc_idx, slide_id, "Planner", plan["action"])
+    except Exception as e:
+        log_node(step_num, doc_idx, slide_id, "Planner", f"FAILED ({e})")
+        plan = {"action": "CONTENT_TOOLS", "thought": slide["user_prompt"][:100]}
+
+    cache.setdefault("plans", {})[ck] = plan
+    return plan
+
+
+def run_preparer_one(slide: dict, plan: dict, prev_style_context: str, step_num: int, doc_idx: int, si: int) -> str:
+    try:
+        msg = SLIDE_PREPARER_HUMAN_TEMPLATE.format(
+            previous_style_context=prev_style_context,
+            slide_plan=json.dumps(plan, indent=2),
+            slide_content=slide["user_prompt"],
+        )
+        resp = preparer_llm.invoke([{"role": "system", "content": SLIDE_PREPARER_SYSTEM_PROMPT},
+                                     {"role": "user", "content": msg}])
+        design = resp.content.strip() if hasattr(resp, "content") and resp.content else plan.get("thought", "")
+        log_node(step_num, doc_idx, si, "Preparer", f"OK ({len(design)} chars)")
+    except Exception as e:
+        log_node(step_num, doc_idx, si, "Preparer", f"FAILED ({e})")
+        design = plan.get("thought", "")
+    return design
+
+
+def _extract_last_json(text: str) -> dict | None:
+    if not text:
+        return None
+    cleaned = text.strip()
+    if "<tool_call>" in cleaned:
+        for part in reversed(cleaned.split("<tool_call>")):
+            if "</tool_call>" in part:
+                return _extract_last_json(part.split("</tool_call>")[0].strip())
+    for delim in ["```json", "```"]:
+        if delim in cleaned:
+            cleaned = cleaned.split(delim)[1].split("```")[0].strip()
+            break
+    try:
+        obj = json.loads(cleaned)
+        if isinstance(obj, dict) and "name" in obj:
+            return obj
+        if isinstance(obj, list) and obj and isinstance(obj[0], dict) and "name" in obj[0]:
+            return obj[0]
+    except Exception:
+        pass
+    pos = cleaned.rfind("}")
+    while pos >= 0:
+        depth = 0
+        for i in range(pos, -1, -1):
+            if cleaned[i] == "}":
+                depth += 1
+            elif cleaned[i] == "{":
+                depth -= 1
+                if depth == 0:
+                    try:
+                        obj = json.loads(cleaned[i:pos+1])
+                        if isinstance(obj, dict) and "name" in obj:
+                            return obj
+                    except Exception:
+                        pass
+                    pos = i - 1
+                    break
+        else:
+            break
+    return None
+
+
+def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> list:
+    prompts_data = []
+    prev_embedding = [0.0] * 768
+    prev_tool_call = None
+    render_dir = os.path.join(data_dir, f"step_{step_num:04d}", "renders", f"doc_{doc_idx}")
+    os.makedirs(render_dir, exist_ok=True)
+
+    for si, slide in enumerate(doc_slides):
+        plan = run_planner_one(si, slide, step_num, doc_idx, cache)
+        action = plan["action"]
+        style_context = get_slide_style_context(prev_tool_call) if prev_tool_call else ""
+        design = run_preparer_one(slide, plan, style_context, step_num, doc_idx, si)
+
+        filtered_tools = []
+        if tool_retriever is not None:
+            retrieved = tool_retriever.get_relevant_tools(
+                category=action, query=plan.get("thought", ""),
+                top_k=TOOL_RETRIEVER_TOP_K, current_slide_index=si)
+            filtered_tools = [format_tool_for_qwen(t) for t in retrieved] if retrieved else []
+        if not filtered_tools:
+            filtered_tools = [format_tool_for_qwen(t) for t in TOOLS_DICT.get(action, []) if t.name in flat_tools]
+        if len(filtered_tools) > 6:
+            random.shuffle(filtered_tools)
+            filtered_tools = filtered_tools[:6]
+
+        user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
+            style_context=style_context,
+            design_instruction=design[:600] if design else "",
+            slide_content=slide["user_prompt"][:1200],
+        )
+        messages = [
+            {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ]
+        prompt = tokenizer.apply_chat_template(messages, tools=filtered_tools, tokenize=False, add_generation_prompt=True)
+
+        if step_num == 1 and doc_idx == 0 and si == 0:
+            print(f"  [DEBUG] === PROMPT PREVIEW (last 500 chars) ===")
+            print(f"  [DEBUG] {prompt[-500:]}")
+            print(f"  [DEBUG] =========================================")
+
+        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
+        completion = ""
+        tool_call = None
+
+        for attempt in range(3):
+            with _gen_lock:
+                with torch.no_grad():
+                    out = model.generate(**inputs, max_new_tokens=max_completion_length,
+                                         temperature=0.0, do_sample=False,
+                                         pad_token_id=tokenizer.eos_token_id)
+            completion = tokenizer.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
+
+            reason = None
+            try:
+                tool_call = _extract_last_json(completion)
+            except Exception:
+                tool_call = None
+                reason = "NOT_JSON"
+
+            if tool_call and "name" in tool_call:
+                real_html = execute_tool(tool_call)
+                if real_html:
+                    log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 OK → {tool_call['name']}")
+                    break
+                reason = "EXEC_FAIL"
+
+            if reason is None:
+                if not tool_call:
+                    reason = "NOT_JSON"
+                elif "name" not in tool_call:
+                    reason = "NO_NAME"
+                else:
+                    reason = "EXEC_FAIL"
+
+            if reason == "NOT_JSON":
+                log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 NOT_JSON — full output:")
+                print(f"    === FULL OUTPUT (attempt {attempt+1}) ===")
+                print(f"    {completion.strip()}")
+                print(f"    ====================================")
+            else:
+                log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 {reason} — {completion[:120].strip()}")
+            prompt += f"\n\n[FAILED: {reason} — {completion[:100]}]"
+            inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
+
+        if tool_call and "name" in tool_call:
+            real_html = execute_tool(tool_call)
+            if real_html:
+                real_path = os.path.join(render_dir, f"slide_{si:03d}_real.png")
+                try:
+                    render_html_to_png(real_html, real_path)
+                    log_node(step_num, doc_idx, si, "Render", "OK")
+                except Exception as e:
+                    log_node(step_num, doc_idx, si, "Render", f"FAILED ({e})")
+
+                sanitized = sanitize_to_placeholders(tool_call)
+                sanitized_html = execute_tool(sanitized)
+                if sanitized_html:
+                    sanitized_path = os.path.join(render_dir, f"slide_{si:03d}_sanitized.png")
+                    try:
+                        render_html_to_png(sanitized_html, sanitized_path)
+                        prev_embedding = embedding_provider.get_embedding(sanitized_path)
+                        log_node(step_num, doc_idx, si, "Embed", "OK")
+                    except Exception as e:
+                        log_node(step_num, doc_idx, si, "Embed", f"FAILED ({e})")
+            prev_tool_call = tool_call
+
+        prompts_data.append({
+            "prompt": prompt,
+            "previous_slide_embedding": prev_embedding,
+        })
+
+    log_node(step_num, doc_idx, "-", "Done", f"{len(doc_slides)} slides")
+    return prompts_data
+
+
+# ==============================================================================
+# 5. TRAINING LOOP
+# ==============================================================================
 training_args = GRPOConfig(
-    output_dir="./qwen_slidegen_grpo",
+    output_dir=output_dir,
     learning_rate=learning_rate,
     per_device_train_batch_size=per_device_train_batch_size,
     gradient_accumulation_steps=gradient_accumulation_steps,
-    num_train_epochs=num_train_epochs,
-    max_steps=max_steps,
-    save_steps=100,
-    logging_steps=10,
+    max_steps=1,
+    save_steps=0,
+    logging_steps=1,
     report_to="none",
     num_generations=num_generations,
     max_completion_length=max_completion_length,
-    use_cpu=USE_CPU,        # Ép chạy trên CPU nếu được cấu hình
-    bf16=use_bf16 if not USE_CPU else False,
-    fp16=not use_bf16 if not USE_CPU else False,
-    gradient_checkpointing=USE_GRAD_CHECKPOINT if not USE_CPU else False, # Tiết kiệm VRAM nếu bật
+    use_cpu=USE_CPU,
+    bf16=torch.cuda.is_bf16_supported() if not USE_CPU else False,
+    fp16=not torch.cuda.is_bf16_supported() if not USE_CPU else False,
+    gradient_checkpointing=USE_GRAD_CHECKPOINT if not USE_CPU else False,
 )
 
-trainer = GRPOTrainer(
-    model=model,
-    processing_class=tokenizer,
-    reward_funcs=[slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward],
-    args=training_args,
-    train_dataset=dataset,
-    peft_config=peft_config, # Kích hoạt LoRA nếu peft_config không phải None
-)
+print(f"\n{'='*60}")
+print(f"Starting Sequential GRPO Training")
+print(f"  Model: {model_id}, Steps: {total_steps}, Docs/step: {batch_docs}")
+print(f"  Generations (GRPO): {num_generations}")
+print(f"{'='*60}\n")
 
-print("Starting GRPO training loop...")
-trainer.train()
+data_dir = os.path.join(os.path.dirname(__file__), "data")
+os.makedirs(data_dir, exist_ok=True)
+
+for step in range(1, total_steps + 1):
+    print(f"\n--- Step {step}/{total_steps} ---")
+
+    step_ckpt = os.path.join(data_dir, f"step_{step:04d}_adapter")
+    if os.path.exists(os.path.join(step_ckpt, "adapter_model.safetensors")):
+        print(f"  Step {step} skipped (checkpoint found at {step_ckpt})")
+        continue
+
+    doc_path = os.path.join(data_dir, f"step_{step:04d}_docs.json")
+    cache_path = os.path.join(data_dir, f"step_{step:04d}_cache.json")
+
+    if os.path.exists(doc_path):
+        with open(doc_path, "r", encoding="utf-8") as f:
+            all_slides_flat = json.load(f)
+        docs = []
+        by_doc = {}
+        for s in all_slides_flat:
+            by_doc.setdefault(s["doc_id"], []).append(s)
+        for did in sorted(by_doc):
+            docs.append(by_doc[did])
+        print(f"  Loaded {len(all_slides_flat)} slides from {doc_path}")
+    else:
+        docs = generate_docs(num_docs=batch_docs)
+        all_slides_flat = [s for doc in docs for s in doc]
+        with open(doc_path, "w", encoding="utf-8") as f:
+            json.dump(all_slides_flat, f, indent=2, ensure_ascii=False)
+        print(f"  Saved {len(all_slides_flat)} slides to {doc_path}")
+
+    cache = {"plans": {}}
+    if os.path.exists(cache_path):
+        with open(cache_path, "r", encoding="utf-8") as f:
+            cache = json.load(f)
+        print(f"  Loaded {len(cache.get('plans', {}))} cached plans from {cache_path}")
+
+    all_prompts = []
+    with concurrent.futures.ThreadPoolExecutor(max_workers=batch_docs) as ex:
+        futures = [ex.submit(process_doc, doc, step, i, cache) for i, doc in enumerate(docs)]
+        for f in concurrent.futures.as_completed(futures):
+            all_prompts.extend(f.result())
+
+    with open(cache_path, "w", encoding="utf-8") as f:
+        json.dump({"plans": cache.get("plans", {})}, f, indent=2, ensure_ascii=False)
+    print(f"  Saved {len(cache.get('plans', {}))} plans to {cache_path}")
+
+    if not all_prompts:
+        print("  No valid prompts generated, skipping step.")
+        continue
+
+    print(f"  Collected {len(all_prompts)} prompts. Running GRPO update...")
+
+    dataset = Dataset.from_list(all_prompts)
+    trainer = GRPOTrainer(
+        model=model,
+        processing_class=tokenizer,
+        reward_funcs=[slide_aesthetics_reward, content_preservation_reward,
+                       visual_consistency_reward, conciseness_reward, text_embedding_reward],
+        args=training_args,
+        train_dataset=dataset,
+        peft_config=peft_config_for_trainer,
+    )
+    trainer.train()
+
+    if trainer.state.log_history:
+        last = trainer.state.log_history[-1]
+        loss = last.get("loss", "?")
+        mean_reward = last.get("reward", "?")
+        print(f"  GRPO: loss={loss}, mean_reward={mean_reward}")
+
+    step_ckpt = os.path.join(data_dir, f"step_{step:04d}_adapter")
+    model.save_pretrained(step_ckpt)
+    tokenizer.save_pretrained(step_ckpt)
+    print(f"  Saved checkpoint to {step_ckpt}")
+
+    ds_path = os.path.join(data_dir, f"step_{step:04d}_dataset.json")
+    with open(ds_path, "w", encoding="utf-8") as f:
+        json.dump({"prompts": [p["prompt"] for p in all_prompts]}, f, indent=2, ensure_ascii=False)
+    print(f"  Saved training dataset to {ds_path}")
+
+# Copy final step to well-known location
+import shutil
+final_adapter = os.path.join(output_dir, "final_adapter")
+if os.path.exists(final_adapter):
+    shutil.rmtree(final_adapter)
+if os.path.exists(step_ckpt):
+    shutil.copytree(step_ckpt, final_adapter)
+    print(f"Final adapter: {final_adapter} (from step {step})")
+
+print(f"\n{'='*60}")
+print(f"Training complete! Checkpoints: qwen_slidegen_grpo/")
+print(f"{'='*60}")

@@ -1,6 +1,8 @@
-from typing import Dict, List
+import json
 import logging
+import asyncio
 import base64
+from typing import Dict, List, Optional
 
 
 def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> List[Dict]:
@@ -77,3 +79,200 @@ def create_default_html(content_data) -> str:
 </body>
 </html>"""
     return html
+
+
+# Keys that carry slide *content* — these must NOT leak into the next slide's prompt
+_CONTENT_KEYS = {
+    "main_title", "subtitle", "content_text", "description_text", "title",
+    "main_content", "content1", "content2", "left_text", "right_text",
+    "items", "list_items", "steps", "agenda_items", "subtitle1", "subtitle2",
+    "header_text", "headline", "top_text", "author_line", "top_left_text",
+    "bottom_text", "year", "section_title", "section_subtitle", "mission_items",
+    "left_title", "right_title", "left_content", "right_content", "description"
+}
+
+
+TOKEN = "Aa"
+
+def _sanitize_value(v):
+    if isinstance(v, str):
+        return TOKEN
+    if isinstance(v, list):
+        return [_sanitize_value(item) for item in v]
+    if isinstance(v, dict):
+        return {ik: _sanitize_value(iv) for ik, iv in v.items()}
+    return v
+
+def sanitize_to_placeholders(tool_call: dict) -> dict:
+    """
+    Replaces all text content with the same token "Aa", preserving structure
+    (list lengths, dict keys, nesting) so the rendered layout is identical
+    in element count but content text cannot influence embeddings.
+    """
+    if not tool_call:
+        return {}
+
+    result = {"name": tool_call.get("name", "")}
+    args = tool_call.get("arguments", {})
+    sanitized_args = {}
+
+    for k, v in args.items():
+        if k in _CONTENT_KEYS:
+            sanitized_args[k] = _sanitize_value(v)
+        elif k == "image_url":
+            sanitized_args[k] = "https://images.unsplash.com/photo-1544383835-bda2bc66a55d?q=80&w=200"
+        elif k in ("theme_color", "accent_color", "highlight_color",
+                   "background_color", "bg_color", "bg_color_left", "bg_color_right",
+                   "font_size_multiplier", "card_padding", "border_width"):
+            sanitized_args[k] = v
+        else:
+            sanitized_args[k] = v
+
+    result["arguments"] = sanitized_args
+    return result
+
+
+def get_slide_style_context(tool_call: dict) -> str:
+    """
+    Extracts key design/style properties from the previous slide's tool call
+    and returns a compact, standardized visual context prompt string.
+    """
+    if not tool_call:
+        return (
+            "[PREVIOUS SLIDE STYLE CONTEXT]\n"
+            "- Layout Category: CONTENT_TOOLS\n"
+            "- Primary Theme Color: #2563EB\n"
+            "- Background Style: Light background (#FFFFFF)\n"
+            "- Font Scale Multiplier: 1.0\n"
+            "- Padding/Margins: 1.5rem"
+        )
+        
+    name = tool_call.get("name", "")
+    args = tool_call.get("arguments", {})
+    
+    # 1. Classify layout category
+    layout_category = "LIST_TOOLS"
+    if "chart" in name:
+        layout_category = "CHART_TOOLS"
+    elif "process" in name or "timeline" in name:
+        layout_category = "TIMELINE_TOOLS"
+    elif "intro" in name or "title" in name:
+        layout_category = "INTRO_TOOLS"
+        
+    # 2. Extract style parameters (using typical parameter names)
+    theme_color = args.get("theme_color") or args.get("accent_color") or args.get("highlight_color") or "#2563EB"
+    bg_color = args.get("background_color") or args.get("bg_color") or args.get("bg_color_left") or "#FFFFFF"
+    font_size = args.get("font_size_multiplier") or 1.0
+    padding = args.get("card_padding") or args.get("border_width") or "1.5rem"
+    
+    bg_brightness = "Dark background" if bg_color in ["#1F2937", "#111827", "#0F172A", "#1A1A1A"] else "Light background"
+    bg_style_str = f"{bg_brightness} ({bg_color})"
+    
+    style_context_str = (
+        "[PREVIOUS SLIDE STYLE CONTEXT]\n"
+        f"- Layout Category: {layout_category}\n"
+        f"- Primary Theme Color: {theme_color}\n"
+        f"- Background Style: {bg_style_str}\n"
+        f"- Font Scale Multiplier: {font_size}\n"
+        f"- Padding/Margins: {padding}"
+    )
+    return style_context_str
+
+
+# ====================================================================
+# RL / Training Shared Utilities
+# ====================================================================
+
+def format_tool_for_qwen(tool) -> dict:
+    """Convert a LangChain tool to Qwen's expected JSON Schema format."""
+    return {
+        "type": "function",
+        "function": {
+            "name": tool.name,
+            "description": tool.description,
+            "parameters": tool.args
+        }
+    }
+
+
+QWEN_CHAT_TEMPLATE = """{%- if messages[0].role == 'system' %}
+{%- if tools is defined and tools %}
+<|im_start|>system
+{{ messages[0].content }}
+
+Available tools:
+<tools>
+{% for tool in tools %}
+{{ tool | tojson }}
+{% endfor %}
+</tools>
+
+Output ONLY a JSON function call within <tool_call> tags.
+Example: <tool_call>{% raw %}{"name": "generate_title_slide", "arguments": {"main_title": "Title"}}{% endraw %}</tool_call>
+<|im_end|>
+{%- else %}
+<|im_start|>system
+{{ messages[0].content }}<|im_end|>
+{%- endif %}
+{%- endif %}
+{%- for message in messages %}
+{%- if message.role == 'assistant' and message.tool_calls is defined and message.tool_calls %}
+<|im_start|>assistant
+{% for tc in message.tool_calls %}
+<tool_call>
+{{ tc | tojson }}
+</tool_call>
+{% endfor %}<|im_end|>
+{%- elif message.role != 'system' %}
+<|im_start|>{{ message.role }}
+{{ message.content }}<|im_end|>
+{%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+<|im_start|>assistant
+{%- endif %}"""
+
+
+def parse_tool_call_json(text: str) -> Optional[dict]:
+    """
+    Robustly extract a tool call dict from LLM output text.
+    Handles <tool_call> tags, ```json blocks, ``` blocks, and raw JSON.
+    Returns None if parsing fails.
+    """
+    if not text:
+        return None
+    cleaned = text.strip()
+    # Strip <tool_call>...</tool_call> wrapper
+    if "<tool_call>" in cleaned and "</tool_call>" in cleaned:
+        cleaned = cleaned.split("<tool_call>")[-1].split("</tool_call>")[0].strip()
+    try:
+        if "```json" in cleaned:
+            cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+        elif "```" in cleaned:
+            cleaned = cleaned.split("```")[1].split("```")[0].strip()
+        parsed = json.loads(cleaned)
+        if isinstance(parsed, list) and len(parsed) > 0:
+            parsed = parsed[0]
+        if isinstance(parsed, dict) and "name" in parsed:
+            return {
+                "name": parsed["name"],
+                "arguments": parsed.get("arguments") or parsed.get("args") or {}
+            }
+    except Exception:
+        pass
+    return None
+
+
+def render_html_to_png(html_content: str, output_path: str) -> None:
+    """Render HTML string to PNG image using Playwright (sync wrapper)."""
+    try:
+        from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
+        capture = PlaywrightCaptureProvider()
+        loop = asyncio.get_event_loop()
+    except RuntimeError:
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+    loop.run_until_complete(capture.generate_slide_from_html(html_content, output_path))
+
+
+

@@ -2,16 +2,40 @@
 
 import json
 import time
+from openai import OpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
+from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
 from backend.config import MAX_REMAKE
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
-    QWEN_GENERATOR_HUMAN_TEMPLATE
+    QWEN_GENERATOR_HUMAN_TEMPLATE,
+    HUMAN_PROMPT_TEMPLATE,
 )
+from backend.workflows.slidegen_workflow.utils.helper import format_tool_for_qwen, QWEN_CHAT_TEMPLATE
+
+_tokenizer_cache = {}
+
+
+def _get_qwen_tokenizer(model_name: str):
+    if model_name not in _tokenizer_cache:
+        tok = AutoTokenizer.from_pretrained(model_name)
+        tok.chat_template = QWEN_CHAT_TEMPLATE
+        tok.pad_token = tok.eos_token
+        _tokenizer_cache[model_name] = tok
+    return _tokenizer_cache[model_name]
+
+
+def _get_qwen_config(llm):
+    """Extract (model_name, base_url) from any LLM wrapper."""
+    if hasattr(llm, 'model_name'):
+        return llm.model_name, getattr(llm, 'openai_api_base', None)
+    if hasattr(llm, 'model'):
+        return llm.model, getattr(llm, 'base_url', None)
+    return 'Qwen/Qwen3-8B', None
 
 def _check_is_qwen(llm) -> bool:
     """Helper to detect if the loaded LLM is a Qwen variant."""
@@ -74,74 +98,85 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
         # A. QWEN LOCAL EXECUTION PATH (Native JSON tool call)
         if is_qwen:
-            tool_schemas = []
-            for t in my_tools:
-                tool_schemas.append({
-                    "name": t.name,
-                    "description": t.description,
-                    "parameters": t.args
-                })
-            
+            tool_schemas = [format_tool_for_qwen(t) for t in my_tools]
+
+            design_instruction = state.get('design_instruction') or current_plan.get('thought', '')
             qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
                 style_context=style_context_str,
-                design_instruction=current_plan.get('thought', ''),
+                design_instruction=design_instruction,
                 slide_content=current_text
             )
-            
+
             if retry_feedback:
                 qwen_user_prompt += f"\n\n[PREVIOUS ERROR TO CORRECT]\n{retry_feedback}"
-                
-            qwen_user_prompt += f"\n\n[AVAILABLE TOOLS]\n{json.dumps(tool_schemas, indent=2, ensure_ascii=False)}"
-            
+
+            # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
             messages = [
                 {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
-                {"role": "user", "content": qwen_user_prompt}
+                {"role": "user", "content": qwen_user_prompt},
             ]
-            
-            # Invoke raw LLM without tool binding to leverage Qwen's native tool-calling template
-            response = llm.invoke(messages)
+            model_name, base_url = _get_qwen_config(llm)
+            tokenizer = _get_qwen_tokenizer(model_name)
+            prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
+
+            # Call Qwen via raw completions endpoint (avoids server-side template override)
+            client = OpenAI(base_url=base_url, api_key=getattr(llm, 'openai_api_key', 'not-needed'))
+            resp = client.completions.create(
+                model=model_name,
+                prompt=prompt,
+                max_tokens=getattr(llm, 'max_tokens', 1024) or 1024,
+                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+                stop=["<|im_end|>"],
+            )
+            content = (resp.choices[0].text or "").strip()
             
         # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
         else:
+            design_instruction = state.get('design_instruction') or current_plan.get('thought', '')
+            gemini_vars = {**human_vars, "design_instruction": design_instruction}
             llm_with_tools = llm.bind_tools(my_tools)
             slidegen_prompt = ChatPromptTemplate.from_messages([
                 ("system", system_prompt),
                 ("human", human_template)
             ])
             slide_generator_runnable = slidegen_prompt | llm_with_tools
-            response = slide_generator_runnable.invoke(human_vars)
+            response = slide_generator_runnable.invoke(gemini_vars)
             
         # 3. Parse JSON / Extract tool call
         tool_call_dict = None
-        
-        # Try standard tool calls first (Gemini path)
-        if hasattr(response, "tool_calls") and response.tool_calls:
-            tc = response.tool_calls[0]
-            tool_call_dict = {
-                "name": tc.get("name"),
-                "arguments": tc.get("args", {})
-            }
+
+        if is_qwen:
+            # Qwen path: raw text from completions endpoint
+            from backend.workflows.slidegen_workflow.utils.helper import parse_tool_call_json
+            tool_call_dict = parse_tool_call_json(content)
         else:
-            # Fallback text parsing (Qwen path)
-            content = getattr(response, "content", "")
-            try:
-                cleaned_text = content.strip()
-                if "```json" in cleaned_text:
-                    cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
-                elif "```" in cleaned_text:
-                    cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
-                
-                parsed_json = json.loads(cleaned_text)
-                if isinstance(parsed_json, list) and len(parsed_json) > 0:
-                    parsed_json = parsed_json[0]
-                    
-                if isinstance(parsed_json, dict) and "name" in parsed_json:
-                    tool_call_dict = {
-                        "name": parsed_json["name"],
-                        "arguments": parsed_json.get("arguments") or parsed_json.get("args") or {}
-                    }
-            except Exception as parse_err:
-                print(f"⚠️ Fallback JSON parsing failed: {parse_err}")
+            # Gemini path: structured tool calls
+            if hasattr(response, "tool_calls") and response.tool_calls:
+                tc = response.tool_calls[0]
+                tool_call_dict = {
+                    "name": tc.get("name"),
+                    "arguments": tc.get("args", {})
+                }
+            else:
+                content = getattr(response, "content", "")
+                try:
+                    cleaned_text = content.strip()
+                    if "```json" in cleaned_text:
+                        cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
+                    elif "```" in cleaned_text:
+                        cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
+
+                    parsed_json = json.loads(cleaned_text)
+                    if isinstance(parsed_json, list) and len(parsed_json) > 0:
+                        parsed_json = parsed_json[0]
+
+                    if isinstance(parsed_json, dict) and "name" in parsed_json:
+                        tool_call_dict = {
+                            "name": parsed_json["name"],
+                            "arguments": parsed_json.get("arguments") or parsed_json.get("args") or {}
+                        }
+                except Exception as parse_err:
+                    print(f"⚠️ Fallback JSON parsing failed: {parse_err}")
                 
         if not tool_call_dict:
             error_msg = "You did NOT generate any function call."

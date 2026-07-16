@@ -1,252 +1,102 @@
 # SlideGen
 
-AI-powered presentation generator. Upload tài liệu hoặc nhập ý tưởng → nhận slide HTML đẹp.
+AI-powered presentation generator. Upload tài liệu hoặc nhập ý tưởng -> nhận slide HTML/PNG.
 
----
+## Cách dùng
 
-## Mục lục
+### 1. Web UI
+Mở trình duyệt -> chọn **Idea -> Enter Prompt** để nhập ý tưởng tiếng Việt, hoặc **Upload Document** để tải DOCX/PDF. Hệ thống chạy pipeline và trả về slide HTML/PNG.
 
-- [Yêu cầu](#yêu-cầu)
-- [Cấu hình `.env`](#cấu-hình-env)
-- [Server (Production)](#server-production)
-- [Local Development](#local-development)
-- [Lệnh Docker thường dùng](#lệnh-docker-thường-dùng)
-- [Quản lý Subscription Codes](#quản-lý-subscription-codes)
-- [Reset Database](#reset-database)
-
----
-
-## Yêu cầu
-
-Docker 24+, Docker Compose v2, Git.
-
+### 2. REST API
 ```bash
-# Cài Docker nếu server chưa có
-curl -fsSL https://get.docker.com | sh
-sudo usermod -aG docker $USER
-newgrp docker
-docker --version
+curl -X POST http://localhost:12008/generate/idea/structure \
+  -H "Content-Type: application/json" \
+  -d '{
+    "prompt": "Giới thiệu về công ty FPT: thành lập 1988, lĩnh vực CNTT, 40000 nhân viên",
+    "content_length": "medium",
+    "min_slides": 5,
+    "max_slides": 10
+  }'
 ```
 
----
-
-## Cấu hình `.env`
-
-```bash
-cp env_template.txt .env
-nano .env
+### 3. Pipeline kiến trúc
+```
+User Input (Idea / Document)
+    │
+    ▼
+[IDEA WORKFLOW]          Gemini Agent -> research + tạo cấu trúc slide
+    │
+    ▼
+[SLIDE PLANNER]          Gemini -> phân loại từng slide (INTRO/CONTENT/CHART/...)
+    │
+    ▼
+[SLIDE PREPARER]         Gemini -> viết design instruction (màu sắc, font, layout)
+    │
+    ▼
+[SLIDE GENERATOR]        Qwen / Gemini -> gọi layout tool -> HTML
+    │
+    ▼
+[SLIDE EVALUATOR]        VLM -> chấm điểm + feedback (retry tối đa 3 lần)
+    │
+    ▼
+[FINALIZE]               Lưu HTML + render PNG
 ```
 
-```env
-GEMINI_API_KEY=your_key_here
-TAVILY_API_KEY1=your_key_here
-TAVILY_API_KEY2=your_key_here
-TAVILY_API_KEY3=your_key_here
-SECRET_KEY=your_jwt_secret_here
-```
+- Generator dùng Qwen local: minimal system prompt + tool schemas + design instruction từ Gemini Preparer.
+- Generator dùng Gemini API: system prompt = slide-type rules + tool binding.
 
-> `.env` đã git-ignore — phải tạo tay trên mỗi máy, không commit lên git.
+## Training
+Tài liệu training nằm ở [rl/README.md](rl/README.md).
 
----
+- SDFT official: Hugging Face Transformers + TRL `DistilTrainer` + PEFT LoRA.
+- GRPO current: TRL `GRPOTrainer` + rollout/reward custom của repo.
+- Output SDFT: `./qwen_slidegen_sdft/final_adapter`.
 
-## Server (Production)
+## API Endpoints
 
-**Lần đầu deploy:**
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/generate/idea/structure` | Tạo slide từ ý tưởng |
+| POST | `/generate/doc/structure` | Phân tích document -> cấu trúc |
+| POST | `/auth/login` | Login |
+| POST | `/auth/register` | Register |
+| GET  | `/health` | Health check |
 
-```bash
-git clone <repo-url> SlideGenFunctionCalling
-cd SlideGenFunctionCalling
-
-cp env_template.txt .env
-nano .env   # điền API keys
-
-docker compose up -d --build
-```
-
-> Lần đầu build mất **15–25 phút** do tải Python deps, Playwright Chromium, Node.js.
-> Theo dõi: `docker compose logs -f`
-
-**Kiểm tra sau khi build xong:**
+## Development
 
 ```bash
-docker compose ps
-curl http://localhost:12008/health
-```
-
-Truy cập từ ngoài: `http://<server-ip>:12008`
-
----
-
-**Update code:**
-
-```bash
-# Máy local
-git add . && git commit -m "..." && git push
-
-# Trên server
-git pull
-docker compose up -d --build
-```
-
-> Rebuild lần sau nhanh (~3–5 phút) nhờ Docker layer cache.
-> File `.env` và dữ liệu trong volumes **không bị ảnh hưởng** khi rebuild.
-
----
-
-## Local Development
-
-**Lần đầu:**
-
-```bash
-git clone <repo-url> SlideGenFunctionCalling
-cd SlideGenFunctionCalling
-
-cp env_template.txt .env   # điền API keys
-
+# Build & chạy
 docker compose -f docker-compose.dev.yml up --build
+
+# Frontend: http://localhost:5173
+# Backend:  http://localhost:12008
+# API Docs: http://localhost:12008/docs
 ```
 
-**Từ lần 2 trở đi:**
+Code hot-reload: sửa file backend -> auto reload, sửa frontend -> Vite HMR.
+
+## Production
 
 ```bash
-docker compose -f docker-compose.dev.yml up
-```
-
-**Dev mode:**
-
-| | URL |
-|---|---|
-| Frontend (Vite HMR) | `http://localhost:5173` |
-| Backend API | `http://localhost:12008` |
-| API Docs | `http://localhost:12008/docs` |
-
-- Sửa file trong `backend/` → backend tự reload (uvicorn `--reload`)
-- Sửa file trong `frontend/src/` → browser tự cập nhật (Vite HMR)
-- Không cần rebuild image khi sửa code
-
-**Rebuild khi nào:**
-- Thêm/xóa Python package (`pyproject.toml` đổi)
-- Thêm/xóa npm package (`package.json` đổi)
-
----
-
-## Lệnh Docker thường dùng
-
-```bash
-# Xem container đang chạy
-docker compose ps
-
-# Theo dõi log realtime
+cp .env.example .env   # điền API keys
+docker compose up -d --build
 docker compose logs -f
-
-# Xem log gần nhất
-docker compose logs --tail 100
-
-# Restart không rebuild
-docker compose restart
-
-# Dừng (giữ nguyên data)
-docker compose down
-
-# Dừng + xóa toàn bộ data (KHÔNG THỂ PHỤC HỒI)
-docker compose down -v
-
-# Vào trong container để debug
-docker compose exec slidegen bash          # production
-docker compose -f docker-compose.dev.yml exec slidegen-dev bash   # dev
-
-# Rebuild 1 service cụ thể
-docker compose build --no-cache
 ```
 
----
+Truy cập: `http://localhost:12008`
 
-## Quản lý Subscription Codes
+## Cấu trúc thư mục
 
-DB file: `backend/infrastructure/database/slidegen.db`
-
-### Các loại code
-
-| `code_type` | `max_uses` | Hành vi |
-|---|---|---|
-| `unlimited` | bất kỳ | Dùng bao nhiêu lần cũng được, cùng account cũng gia hạn lại |
-| `limited` | `1` | Chỉ 1 tài khoản dùng 1 lần |
-| `limited` | `N` | Tối đa N tài khoản, mỗi account 1 lần |
-
-### Code mặc định
-
-| Code | Tier | Loại | Thời hạn |
-|---|---|---|---|
-| `SLIDEGENIUS` | Ultra | unlimited | 30 ngày/lần nhập |
-
-### Tạo code mới
-
-```bash
-# Vào container (production)
-docker compose exec slidegen bash
-
-# Unlimited
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type)
-   VALUES ('PROMO2025', 'plus', 30, -1, 'unlimited');"
-
-# Giới hạn 1 tài khoản
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type)
-   VALUES ('VIP-ABCD', 'ultra', 30, 1, 'limited');"
-
-# Giới hạn 50 tài khoản
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "INSERT INTO subscription_codes (code, tier, duration_days, max_uses, code_type)
-   VALUES ('LAUNCH50', 'plus', 30, 50, 'limited');"
+```
+backend/
+├── domain/ports/           # Interfaces (LLM, Capture, Embedding, Aesthetic)
+├── infrastructure/         # Implementations (Gemini, Playwright, DINOv2, ViT)
+└── workflows/
+    ├── slidegen_workflow/  # Pipeline chính (nodes, graph, tools, prompts)
+    ├── doc_workflow/       # Xử lý document
+    └── idea_workflow/      # Idea -> structure
+frontend/                   # React + TypeScript
+rl/                         # SDFT + GRPO training (xem rl/README.md)
 ```
 
-### Tắt / bật code
-
-```bash
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "UPDATE subscription_codes SET is_active = 0 WHERE code = 'PROMO2025';"
-
-sqlite3 backend/infrastructure/database/slidegen.db \
-  "UPDATE subscription_codes SET is_active = 1 WHERE code = 'PROMO2025';"
-```
-
-> **Tip:** Dùng [DB Browser for SQLite](https://sqlitebrowser.org/) để quản lý DB trực quan hơn.
-
----
-
-## Reset Database
-
-### Reset toàn bộ DB (Production)
-
-```bash
-# Dừng container và xóa volume DB
-docker compose down -v
-
-# Rebuild + khởi động lại (DB sẽ được tạo mới)
-docker compose up -d --build
-```
-
-### Reset toàn bộ DB (Development)
-
-```bash
-# Dừng container và xóa volume DB
-docker compose -f docker-compose.dev.yml down -v
-
-# Rebuild + khởi động lại (DB sẽ được tạo mới)
-docker compose -f docker-compose.dev.yml up --build
-```
-
-### Reset chỉ DB mà giữ container chạy
-
-```bash
-# Production
-rm backend/infrastructure/database/slidegen.db
-docker compose exec slidegen python migrate_db.py
-
-# Development
-rm backend/infrastructure/database/slidegen.db
-docker compose -f docker-compose.dev.yml exec slidegen-dev python migrate_db.py
-```
-
-> **⚠️ Lưu ý:** `docker compose down -v` sẽ xóa **toàn bộ data** và **không thể phục hồi**. Hãy backup trước nếu cần.
+Xem [ARCHITECTURE.md](ARCHITECTURE.md) để hiểu chi tiết thiết kế hệ thống.

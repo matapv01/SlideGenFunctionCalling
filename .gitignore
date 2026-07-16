@@ -50,3 +50,12 @@ rl/qwen_slidegen_grpo/
 rl/temp_rl_renders/
 rl/offload/
 offload/
+# Generated training artifacts
+rl/log/
+qwen_slidegen_grpo/
+qwen_slidegen_sdft/
+qwen_slidegen_sft/
+unsloth_compiled_cache/
+backend/backend/infrastructure/faiss_tool_retriever_index/
+backend/db_output.txt
+.venv.broken_uv_path/
