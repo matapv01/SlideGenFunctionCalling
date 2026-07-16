@@ -1,8 +1,9 @@
-# Python
+# Python environments / caches
 __pycache__/
 **/__pycache__/
 **/*.pyc
 .venv/
+.venv.*/
 env/
 env
 *.egg-info/
@@ -10,19 +11,14 @@ env
 
 # Env / secrets
 .env
+.env.*
+!.env.example
 
-# Node
+# Node dependencies / builds
 node_modules/
 frontend/node_modules/
 backend/infrastructure/converter/node_modules/
 frontend/dist/
-
-# Data (managed via Docker volumes)
-static/uploads/*
-static/output/*
-static/captures/*
-static/temp/*
-backend/infrastructure/database/*.db
 
 # IDE / OS
 .vscode/
@@ -30,32 +26,8 @@ backend/infrastructure/database/*.db
 *.DS_Store
 Thumbs.db
 
-# Logs
-*.log
-logs/
-
+# Runtime / generated caches
 context/
 web/
 **/context
-backend/infrastructure/faiss_tool_retriever_index/
-
-# Local LLM Models, Checkpoints and Datasets
-rl/model/
-model/
-*.pt
-*.bin
-*.csv
-*.pt.tmp
-rl/qwen_slidegen_grpo/
-rl/temp_rl_renders/
-rl/offload/
-offload/
-# Generated training artifacts
-rl/log/
-qwen_slidegen_grpo/
-qwen_slidegen_sdft/
-qwen_slidegen_sft/
 unsloth_compiled_cache/
-backend/backend/infrastructure/faiss_tool_retriever_index/
-backend/db_output.txt
-.venv.broken_uv_path/
