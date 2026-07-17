@@ -100,6 +100,14 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
 )
 from rl.sdft_official.distil_config import DistilConfig
 from rl.sdft_official.distil_trainer import DistilTrainer
+from rl.run_artifacts import (
+    append_jsonl,
+    get_runtime_metadata,
+    save_metric_trend_image,
+    save_text_summary_image,
+    start_run_logging,
+    write_json,
+)
 
 
 def parse_args():
@@ -145,7 +153,7 @@ def parse_args():
     parser.add_argument(
         "--vllm_gpu_memory_utilization",
         type=float,
-        default=float(os.getenv("SDFT_VLLM_GPU_MEMORY_UTILIZATION", "0.3")),
+        default=float(os.getenv("SDFT_VLLM_GPU_MEMORY_UTILIZATION", "0.6")),
     )
     parser.add_argument(
         "--vllm_enable_sleep_mode",
@@ -241,6 +249,14 @@ def main():
     log_dir = os.path.join(project_root, "rl", "log", "sdft_official", f"run_{run_id}")
     os.makedirs(log_dir, exist_ok=True)
     os.makedirs(args.output_dir, exist_ok=True)
+    run_log_path = start_run_logging(log_dir)
+    print(f"  Run log: {run_log_path}")
+    if args.use_vllm and args.vllm_mode == "colocate" and args.vllm_gpu_memory_utilization > 0.65:
+        print(
+            f"  [WARN] SDFT_VLLM_GPU_MEMORY_UTILIZATION={args.vllm_gpu_memory_utilization} is too high "
+            "for colocated SDFT on one 48GB GPU; capping to 0.6."
+        )
+        args.vllm_gpu_memory_utilization = 0.6
 
     print(f"Loading model: {args.model_name}")
     model = AutoModelForCausalLM.from_pretrained(
@@ -256,6 +272,8 @@ def main():
 
     peft_config = _build_lora_config()
     model = get_peft_model(model, peft_config)
+    if hasattr(model, "enable_input_require_grads"):
+        model.enable_input_require_grads()
     teacher_model = get_peft_model(teacher_model, _build_lora_config())
     teacher_model.load_state_dict(model.state_dict())
     teacher_model.eval()
@@ -269,6 +287,97 @@ def main():
 
     dataset = build_dataset(args.data_path, tokenizer)
     print(f"Dataset: {len(dataset)} samples")
+
+    sample_count = len(dataset)
+    prompt_lengths = [len(dataset[i]["prompt"]) for i in range(sample_count)] if sample_count else [0]
+    teacher_lengths = [len(dataset[i]["teacher_prompt"]) for i in range(sample_count)] if sample_count else [0]
+    preview_count = min(3, sample_count)
+    preview_samples = []
+    preview_sections = [
+        {
+            "title": "Dataset Stats",
+            "body": "\n".join(
+                [
+                    f"Samples: {sample_count}",
+                    f"Prompt chars avg/min/max: {sum(prompt_lengths) / len(prompt_lengths):.1f} / {min(prompt_lengths)} / {max(prompt_lengths)}",
+                    f"Teacher chars avg/min/max: {sum(teacher_lengths) / len(teacher_lengths):.1f} / {min(teacher_lengths)} / {max(teacher_lengths)}",
+                    f"Data path: {args.data_path}",
+                    f"Output dir: {args.output_dir}",
+                ]
+            ),
+        }
+    ]
+    for idx in range(preview_count):
+        sample = dataset[idx]
+        preview_samples.append(
+            {
+                "index": idx,
+                "prompt": sample["prompt"],
+                "teacher_prompt": sample["teacher_prompt"],
+                "prompt_chars": len(sample["prompt"]),
+                "teacher_chars": len(sample["teacher_prompt"]),
+            }
+        )
+        preview_sections.append(
+            {
+                "title": f"Sample {idx + 1}",
+                "body": "\n".join(
+                    [
+                        f"Prompt chars: {len(sample['prompt'])}",
+                        f"Teacher chars: {len(sample['teacher_prompt'])}",
+                        "Prompt:",
+                        sample["prompt"][:900],
+                        "Teacher prompt:",
+                        sample["teacher_prompt"][:900],
+                    ]
+                ),
+            }
+        )
+
+    manifest = get_runtime_metadata(
+        {
+            "run_name": "sdft_official",
+            "run_id": run_id,
+            "log_dir": log_dir,
+            "output_dir": args.output_dir,
+            "model_name": args.model_name,
+            "data_path": args.data_path,
+            "learning_rate": args.learning_rate,
+            "num_train_epochs": args.num_train_epochs,
+            "per_device_train_batch_size": args.per_device_train_batch_size,
+            "gradient_accumulation_steps": args.gradient_accumulation_steps,
+            "max_prompt_length": args.max_prompt_length,
+            "max_completion_length": args.max_completion_length,
+            "num_generations": args.num_generations,
+            "ref_model_mixup_alpha": args.ref_model_mixup_alpha,
+            "alpha": args.alpha,
+            "beta": args.beta,
+            "use_vllm": args.use_vllm,
+            "vllm_mode": args.vllm_mode,
+            "vllm_tensor_parallel_size": args.vllm_tensor_parallel_size,
+            "vllm_gpu_memory_utilization": args.vllm_gpu_memory_utilization,
+            "vllm_enable_sleep_mode": args.vllm_enable_sleep_mode,
+            "num_loss_tokens_to_skip": args.num_loss_tokens_to_skip,
+            "dataset": {
+                "samples": sample_count,
+                "prompt_chars_avg": sum(prompt_lengths) / len(prompt_lengths),
+                "prompt_chars_min": min(prompt_lengths),
+                "prompt_chars_max": max(prompt_lengths),
+                "teacher_chars_avg": sum(teacher_lengths) / len(teacher_lengths),
+                "teacher_chars_min": min(teacher_lengths),
+                "teacher_chars_max": max(teacher_lengths),
+            },
+        }
+    )
+    write_json(os.path.join(log_dir, "manifest.json"), manifest)
+    write_json(os.path.join(log_dir, "dataset_preview.json"), {"stats": manifest["dataset"], "samples": preview_samples})
+    save_text_summary_image(
+        os.path.join(log_dir, "dataset_preview.png"),
+        "SDFT Dataset Preview",
+        preview_sections,
+        subtitle=f"Run {run_id}",
+        footer=f"Log: {run_log_path.name}",
+    )
 
     config = DistilConfig(
         seed=args.seed,
@@ -339,6 +448,7 @@ def main():
     print(f"  Dataset: {len(dataset)} samples")
     print(f"  Loss: forward KL alpha={args.alpha}, beta={args.beta}")
     print(f"  VLLM: {args.use_vllm} ({args.vllm_mode})")
+    print(f"  VLLM GPU util: {args.vllm_gpu_memory_utilization}")
     print(f"  Log dir: {log_dir}")
     print(f"{'=' * 60}")
 
@@ -350,6 +460,50 @@ def main():
         processing_class=tokenizer,
     )
     trainer.train()
+
+    history = list(trainer.state.log_history or [])
+    metric_rows = [row for row in history if any(isinstance(v, (int, float)) for v in row.values())]
+    write_json(os.path.join(log_dir, "metrics.json"), history)
+    append_jsonl(os.path.join(log_dir, "metrics.jsonl"), metric_rows)
+    if metric_rows:
+        save_metric_trend_image(
+            metric_rows,
+            os.path.join(log_dir, "metrics_trend.png"),
+            title="SDFT Training Metrics",
+            preferred_keys=["loss", "reward", "learning_rate", "grad_norm", "entropy", "kl"],
+        )
+
+    final_metrics = metric_rows[-1] if metric_rows else {}
+    manifest["final_metrics"] = final_metrics
+    manifest["history_rows"] = len(history)
+    manifest["artifacts"] = {
+        "metrics_json": os.path.join(log_dir, "metrics.json"),
+        "metrics_jsonl": os.path.join(log_dir, "metrics.jsonl"),
+        "metrics_trend_png": os.path.join(log_dir, "metrics_trend.png"),
+        "dataset_preview_png": os.path.join(log_dir, "dataset_preview.png"),
+        "summary_png": os.path.join(log_dir, "training_summary.png"),
+        "run_log": str(run_log_path),
+    }
+    write_json(os.path.join(log_dir, "manifest.json"), manifest)
+    summary_lines = [
+        f"Model: {args.model_name}",
+        f"Samples: {len(dataset)}",
+        f"History rows: {len(history)}",
+    ]
+    if final_metrics:
+        summary_lines.append(f"Final metrics: {json.dumps(final_metrics, ensure_ascii=False, default=str)}")
+    save_text_summary_image(
+        os.path.join(log_dir, "training_summary.png"),
+        "SDFT Run Summary",
+        [
+            {
+                "title": "Run",
+                "body": "\n".join(summary_lines),
+            }
+        ],
+        subtitle=f"Run {run_id}",
+        footer=f"Log: {run_log_path.name}",
+    )
 
     final_dir = os.path.join(os.path.abspath(args.output_dir), "final_adapter")
     if os.path.exists(final_dir):

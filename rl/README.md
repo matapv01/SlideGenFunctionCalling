@@ -55,15 +55,20 @@ Reward funcs hiện có:
 - text embedding
 
 ## Chạy
+Mặc định train dùng GPU2. Có thể truyền GPU ngay trong lệnh chạy:
+
 ```bash
-uv run python rl/sdft.py
-uv run python rl/train.py
+TRAINING_GPU=2 uv run python rl/sdft.py
+TRAINING_GPU=2 uv run python rl/train.py
 ```
+
+Alias cũng được hỗ trợ: `GPU_ID=2`, `GPU=2`, `PREFERRED_GPU=2`. Nếu set trực tiếp `CUDA_VISIBLE_DEVICES=2` thì biến này có ưu tiên cao nhất.
 
 ## Biến môi trường quan trọng
 | Variable | Default | Ý nghĩa |
 |---|---:|---|
 | `TRAINING_MODEL_ID` | `Qwen/Qwen3-8B` cho SDFT, `Qwen/Qwen3-4B-Instruct-2507` cho GRPO | Base model |
+| `TRAINING_GPU` | `2` | GPU vật lý dùng cho train; alias: `GPU_ID`, `GPU`, `PREFERRED_GPU` |
 | `SDFT_OUTPUT_DIR` | `./qwen_slidegen_sdft` | Nơi lưu adapter cuối của SDFT |
 | `SDFT_ADAPTER_PATH` | `./qwen_slidegen_sdft/final_adapter` | Adapter SDFT để GRPO load |
 | `SDFT_USE_VLLM` | `true` | Bật vLLM nếu có |

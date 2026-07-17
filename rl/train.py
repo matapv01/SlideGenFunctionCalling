@@ -1,5 +1,15 @@
-import os, sys, json, random, threading, concurrent.futures
+import os, sys, json, random, threading, concurrent.futures, glob
+from datetime import datetime
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+from rl.run_artifacts import (
+    append_jsonl,
+    get_runtime_metadata,
+    save_contact_sheet,
+    save_metric_trend_image,
+    save_text_summary_image,
+    start_run_logging,
+    write_json,
+)
 from dotenv import load_dotenv
 load_dotenv()
 
@@ -58,6 +68,10 @@ gradient_accumulation_steps = int(os.getenv("GRADIENT_ACCUMULATION_STEPS", "16")
 num_generations = int(os.getenv("NUM_GENERATIONS", "2"))
 max_completion_length = int(os.getenv("MAX_COMPLETION_LENGTH", "2048"))
 output_dir = os.getenv("GRPO_OUTPUT_DIR", "./qwen_slidegen_grpo")
+run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
+run_log_dir = os.path.join(os.path.dirname(__file__), "log", "grpo", f"run_{run_id}")
+os.makedirs(run_log_dir, exist_ok=True)
+run_log_path = start_run_logging(run_log_dir)
 
 api_key = os.getenv("GEMINI_API_KEY")
 base_url = os.getenv("GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
@@ -213,6 +227,7 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
     prompts_data = []
     prev_embedding = [0.0] * 768
     prev_tool_call = None
+    rendered_paths = []
     render_dir = os.path.join(data_dir, f"step_{step_num:04d}", "renders", f"doc_{doc_idx}")
     os.makedirs(render_dir, exist_ok=True)
 
@@ -300,6 +315,7 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
                 real_path = os.path.join(render_dir, f"slide_{si:03d}_real.png")
                 try:
                     render_html_to_png(real_html, real_path)
+                    rendered_paths.append(real_path)
                     log_node(step_num, doc_idx, si, "Render", "OK")
                 except Exception as e:
                     log_node(step_num, doc_idx, si, "Render", f"FAILED ({e})")
@@ -310,6 +326,7 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
                     sanitized_path = os.path.join(render_dir, f"slide_{si:03d}_sanitized.png")
                     try:
                         render_html_to_png(sanitized_html, sanitized_path)
+                        rendered_paths.append(sanitized_path)
                         prev_embedding = embedding_provider.get_embedding(sanitized_path)
                         log_node(step_num, doc_idx, si, "Embed", "OK")
                     except Exception as e:
@@ -321,7 +338,27 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
             "previous_slide_embedding": prev_embedding,
         })
 
-    log_node(step_num, doc_idx, "-", "Done", f"{len(doc_slides)} slides")
+    overview_path = os.path.join(render_dir, "overview.png")
+    save_contact_sheet(
+        rendered_paths,
+        overview_path,
+        title=f"GRPO Step {step_num:04d} / Doc {doc_idx} Render Overview",
+        subtitle=f"{len(doc_slides)} slides, {len(rendered_paths)} rendered images",
+        columns=4,
+        thumb_size=(420, 236),
+    )
+    write_json(
+        os.path.join(render_dir, "summary.json"),
+        {
+            "step": step_num,
+            "doc_idx": doc_idx,
+            "slide_count": len(doc_slides),
+            "prompt_count": len(prompts_data),
+            "rendered_images": rendered_paths,
+            "overview_path": overview_path,
+        },
+    )
+    log_node(step_num, doc_idx, "-", "Done", f"{len(doc_slides)} slides, {len(rendered_paths)} renders")
     return prompts_data
 
 
@@ -344,6 +381,34 @@ training_args = GRPOConfig(
     fp16=not torch.cuda.is_bf16_supported() if not USE_CPU else False,
     gradient_checkpointing=USE_GRAD_CHECKPOINT if not USE_CPU else False,
 )
+
+run_manifest = get_runtime_metadata(
+    {
+        "run_name": "grpo",
+        "run_id": run_id,
+        "log_dir": run_log_dir,
+        "run_log": str(run_log_path),
+        "output_dir": output_dir,
+        "model_id": model_id,
+        "sdft_adapter_path": sdft_adapter_path if os.path.exists(sdft_adapter_path) else None,
+        "total_steps": total_steps,
+        "batch_docs": batch_docs,
+        "learning_rate": learning_rate,
+        "per_device_train_batch_size": per_device_train_batch_size,
+        "gradient_accumulation_steps": gradient_accumulation_steps,
+        "num_generations": num_generations,
+        "max_completion_length": max_completion_length,
+        "use_cpu": USE_CPU,
+        "use_lora": USE_LORA,
+        "use_grad_checkpoint": USE_GRAD_CHECKPOINT,
+        "device": device,
+        "sdft_loaded": sdft_loaded,
+        "tool_retriever": tool_retriever is not None,
+        "embedding_provider": type(embedding_provider).__name__,
+    }
+)
+write_json(os.path.join(run_log_dir, "manifest.json"), run_manifest)
+step_summaries = []
 
 print(f"\n{'='*60}")
 print(f"Starting Sequential GRPO Training")
@@ -416,11 +481,73 @@ for step in range(1, total_steps + 1):
     )
     trainer.train()
 
-    if trainer.state.log_history:
-        last = trainer.state.log_history[-1]
+    history = list(trainer.state.log_history or [])
+    metric_rows = [row for row in history if any(isinstance(v, (int, float)) and not isinstance(v, bool) for v in row.values())]
+    last = metric_rows[-1] if metric_rows else {}
+    if last:
         loss = last.get("loss", "?")
         mean_reward = last.get("reward", "?")
         print(f"  GRPO: loss={loss}, mean_reward={mean_reward}")
+
+    doc_overviews = sorted(
+        glob.glob(os.path.join(data_dir, f"step_{step:04d}", "renders", "doc_*", "overview.png"))
+    )
+    step_overview_path = os.path.join(run_log_dir, f"step_{step:04d}_overview.png")
+    save_contact_sheet(
+        doc_overviews,
+        step_overview_path,
+        title=f"GRPO Step {step:04d} Overview",
+        subtitle=f"Docs: {len(docs)} | Prompts: {len(all_prompts)} | Render overviews: {len(doc_overviews)}",
+        columns=3,
+        thumb_size=(420, 236),
+    )
+
+    step_summary = {
+        "step": step,
+        "docs": len(docs),
+        "slides": len(all_slides_flat),
+        "prompts": len(all_prompts),
+        "doc_overviews": len(doc_overviews),
+        "overview_path": step_overview_path,
+        "dataset_path": os.path.join(data_dir, f"step_{step:04d}_dataset.json"),
+        "checkpoint_path": os.path.join(data_dir, f"step_{step:04d}_adapter"),
+    }
+    for key, value in last.items():
+        if isinstance(value, (int, float)) and not isinstance(value, bool):
+            step_summary[key] = value
+    step_summaries.append(step_summary)
+    append_jsonl(os.path.join(run_log_dir, "metrics.jsonl"), [step_summary])
+    write_json(os.path.join(run_log_dir, "step_summaries.json"), step_summaries)
+    write_json(os.path.join(run_log_dir, f"step_{step:04d}_summary.json"), step_summary)
+    save_metric_trend_image(
+        step_summaries,
+        os.path.join(run_log_dir, "metrics_trend.png"),
+        title="GRPO Step Metrics",
+        preferred_keys=["loss", "reward", "learning_rate", "grad_norm", "kl", "entropy"],
+    )
+    summary_lines = [
+        f"Step: {step}",
+        f"Docs: {len(docs)}",
+        f"Slides: {len(all_slides_flat)}",
+        f"Prompts: {len(all_prompts)}",
+        f"Render overviews: {len(doc_overviews)}",
+        f"Checkpoint: {step_summary['checkpoint_path']}",
+        f"Overview: {step_overview_path}",
+    ]
+    if last:
+        summary_lines.append(f"Last metrics: {json.dumps(last, ensure_ascii=False, default=str)}")
+    save_text_summary_image(
+        os.path.join(run_log_dir, f"step_{step:04d}_summary.png"),
+        f"GRPO Step {step:04d} Summary",
+        [
+            {
+                "title": "Step",
+                "body": "\n".join(summary_lines),
+            }
+        ],
+        subtitle=f"Run {run_id}",
+        footer=f"Log: {run_log_path.name}",
+    )
 
     step_ckpt = os.path.join(data_dir, f"step_{step:04d}_adapter")
     model.save_pretrained(step_ckpt)
@@ -440,6 +567,59 @@ if os.path.exists(final_adapter):
 if os.path.exists(step_ckpt):
     shutil.copytree(step_ckpt, final_adapter)
     print(f"Final adapter: {final_adapter} (from step {step})")
+
+selected_overviews = []
+if step_summaries:
+    raw_candidates = [s.get("overview_path") for s in step_summaries if s.get("overview_path")]
+    if len(raw_candidates) <= 6:
+        selected_overviews = raw_candidates
+    else:
+        selected_overviews = raw_candidates[:3] + raw_candidates[-3:]
+    selected_overviews = list(dict.fromkeys(selected_overviews))
+    save_contact_sheet(
+        selected_overviews,
+        os.path.join(run_log_dir, "training_overview.png"),
+        title="GRPO Training Overview",
+        subtitle=f"Selected {len(selected_overviews)} step overviews from {len(step_summaries)} steps",
+        columns=3,
+        thumb_size=(420, 236),
+    )
+    final_metrics = {k: v for k, v in step_summaries[-1].items() if isinstance(v, (int, float)) and not isinstance(v, bool)}
+else:
+    final_metrics = {}
+
+run_manifest["final_adapter"] = final_adapter
+run_manifest["final_step"] = step_summaries[-1]["step"] if step_summaries else None
+run_manifest["completed_steps"] = len(step_summaries)
+run_manifest["final_metrics"] = final_metrics
+run_manifest["artifacts"] = {
+    "metrics_jsonl": os.path.join(run_log_dir, "metrics.jsonl"),
+    "metrics_trend_png": os.path.join(run_log_dir, "metrics_trend.png"),
+    "training_overview_png": os.path.join(run_log_dir, "training_overview.png"),
+    "run_summary_png": os.path.join(run_log_dir, "run_summary.png"),
+    "run_log": str(run_log_path),
+}
+write_json(os.path.join(run_log_dir, "manifest.json"), run_manifest)
+summary_lines = [
+    f"Model: {model_id}",
+    f"Steps completed: {len(step_summaries)} / {total_steps}",
+    f"Final adapter: {final_adapter}",
+    f"Output dir: {output_dir}",
+]
+if final_metrics:
+    summary_lines.append(f"Final metrics: {json.dumps(final_metrics, ensure_ascii=False, default=str)}")
+save_text_summary_image(
+    os.path.join(run_log_dir, "run_summary.png"),
+    "GRPO Run Summary",
+    [
+        {
+            "title": "Run",
+            "body": "\n".join(summary_lines),
+        }
+    ],
+    subtitle=f"Run {run_id}",
+    footer=f"Log: {run_log_path.name}",
+)
 
 print(f"\n{'='*60}")
 print(f"Training complete! Checkpoints: qwen_slidegen_grpo/")
