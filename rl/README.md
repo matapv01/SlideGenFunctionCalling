@@ -5,7 +5,7 @@ Pipeline training slide function calling của repo.
 ## Stack hiện tại
 - SDFT chính thức: Hugging Face Transformers + TRL `DistilTrainer` + PEFT LoRA.
 - GRPO hiện tại: TRL `GRPOTrainer` + rollout/reward custom của repo.
-- Unsloth: không dùng ở SDFT official; GRPO loader hiện tại vẫn dùng để load model/adapter nhanh.
+- Unsloth: không dùng; GRPO dùng Hugging Face Transformers + PEFT để khớp dependency hiện tại.
 
 ## Chiến lược
 1. SDFT trước để khóa format function call và khả năng chọn tool.
@@ -45,7 +45,7 @@ GRPO trong repo dùng `GRPOTrainer` của TRL, nhưng phần rollout là custom 
 - Qwen generate function call
 - execute tool, render HTML, lấy reward
 
-Model load hiện tại vẫn dùng `FastLanguageModel` + LoRA để giữ tốc độ và khớp checkpoint `final_adapter` từ SDFT.
+Model load hiện tại dùng `AutoModelForCausalLM` + PEFT LoRA. Nếu có checkpoint `final_adapter` từ SDFT, GRPO load đúng base model từ `adapter_config.json` rồi attach adapter trainable.
 
 Reward funcs hiện có:
 - aesthetic
@@ -77,6 +77,8 @@ Alias cũng được hỗ trợ: `GPU_ID=2`, `GPU=2`, `PREFERRED_GPU=2`. Nếu s
 | `GRPO_OUTPUT_DIR` | `./qwen_slidegen_grpo` | Nơi lưu checkpoint GRPO |
 | `TOTAL_STEPS` | `500` | Số bước GRPO |
 | `BATCH_DOCS` | `5` | Số doc rollout mỗi step |
+| `GRPO_RESUME` | `true` | Tự load adapter GRPO hoàn chỉnh mới nhất và bỏ qua step đã xong |
+| `MAX_COMPLETION_LENGTH` | `2048` | Giảm xuống `1024` hoặc `512` nếu OOM lúc generate |
 
 ## Key files
 - `rl/sdft_official/train_slidegen.py`: entrypoint SDFT official.

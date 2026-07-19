@@ -19,11 +19,12 @@ os.environ.setdefault("HF_HUB_DOWNLOAD_TIMEOUT", "300")
 from rl.common import auto_select_gpu, build_flat_tools, setup_tokenizer
 from rl.common import LORA_R, LORA_ALPHA, LORA_DROPOUT, LORA_TARGET_MODULES
 auto_select_gpu()
-os.environ["PYTORCH_ALLOC_CONF"] = "expandable_segments:True"
+os.environ.setdefault("PYTORCH_CUDA_ALLOC_CONF", "expandable_segments:True")
+os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
 
 import torch
-
-from unsloth import FastLanguageModel
+from transformers import AutoModelForCausalLM, AutoTokenizer
+from peft import LoraConfig, PeftConfig, PeftModel, TaskType, get_peft_model
 from trl import GRPOTrainer, GRPOConfig
 from datasets import Dataset
 from langchain_openai import ChatOpenAI
@@ -68,6 +69,8 @@ gradient_accumulation_steps = int(os.getenv("GRADIENT_ACCUMULATION_STEPS", "16")
 num_generations = int(os.getenv("NUM_GENERATIONS", "2"))
 max_completion_length = int(os.getenv("MAX_COMPLETION_LENGTH", "2048"))
 output_dir = os.getenv("GRPO_OUTPUT_DIR", "./qwen_slidegen_grpo")
+data_dir = os.path.join(os.path.dirname(__file__), "data")
+resume_grpo = os.getenv("GRPO_RESUME", "true").lower() in ("1", "true", "yes", "on")
 run_id = datetime.now().strftime("%Y%m%d_%H%M%S")
 run_log_dir = os.path.join(os.path.dirname(__file__), "log", "grpo", f"run_{run_id}")
 os.makedirs(run_log_dir, exist_ok=True)
@@ -86,22 +89,71 @@ _gen_lock = threading.Lock()
 # ==============================================================================
 max_seq_length = 8192
 sdft_adapter_path = os.getenv("SDFT_ADAPTER_PATH", "./qwen_slidegen_sdft/final_adapter")
+model_dtype = torch.bfloat16 if device == "cuda" and torch.cuda.is_bf16_supported() else (torch.float16 if device == "cuda" else torch.float32)
 
-if USE_LORA and os.path.exists(sdft_adapter_path):
-    print(f"Loading SDFT adapter from {sdft_adapter_path}")
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        sdft_adapter_path, max_seq_length=max_seq_length, dtype=torch.bfloat16, load_in_4bit=False)
-    sdft_loaded = True
+
+def _build_grpo_lora_config() -> LoraConfig:
+    return LoraConfig(
+        task_type=TaskType.CAUSAL_LM,
+        r=LORA_R,
+        lora_alpha=LORA_ALPHA,
+        lora_dropout=LORA_DROPOUT,
+        target_modules=LORA_TARGET_MODULES,
+        bias="none",
+    )
+
+
+def _latest_grpo_adapter():
+    """Find the latest completely-written GRPO step adapter."""
+    candidates = []
+    for path in glob.glob(os.path.join(data_dir, "step_*_adapter")):
+        if not os.path.isfile(os.path.join(path, "adapter_model.safetensors")):
+            continue
+        try:
+            step = int(os.path.basename(path).split("_")[1])
+        except (IndexError, ValueError):
+            continue
+        candidates.append((step, path))
+    return max(candidates, default=(0, None))
+
+
+resumed_grpo_step, grpo_adapter_path = _latest_grpo_adapter() if resume_grpo else (0, None)
+initial_adapter_path = grpo_adapter_path or sdft_adapter_path
+
+if USE_LORA and os.path.exists(initial_adapter_path):
+    adapter_kind = f"GRPO step {resumed_grpo_step}" if grpo_adapter_path else "SDFT"
+    print(f"Loading {adapter_kind} adapter from {initial_adapter_path}")
+    adapter_config = PeftConfig.from_pretrained(initial_adapter_path)
+    base_model_id = adapter_config.base_model_name_or_path or model_id
+    print(f"Loading adapter base model: {base_model_id}")
+    model = AutoModelForCausalLM.from_pretrained(
+        base_model_id,
+        torch_dtype=model_dtype,
+        trust_remote_code=True,
+        low_cpu_mem_usage=True,
+    )
+    tokenizer = AutoTokenizer.from_pretrained(base_model_id, trust_remote_code=True)
+    model = PeftModel.from_pretrained(model, initial_adapter_path, is_trainable=True)
+    sdft_loaded = not bool(grpo_adapter_path)
 else:
     print(f"Loading model: {model_id}")
-    model, tokenizer = FastLanguageModel.from_pretrained(
-        model_id, max_seq_length=max_seq_length, dtype=torch.bfloat16, load_in_4bit=False)
+    model = AutoModelForCausalLM.from_pretrained(
+        model_id,
+        torch_dtype=model_dtype,
+        trust_remote_code=True,
+        low_cpu_mem_usage=True,
+    )
+    tokenizer = AutoTokenizer.from_pretrained(model_id, trust_remote_code=True)
     if USE_LORA:
-        model = FastLanguageModel.get_peft_model(
-            model, r=LORA_R, target_modules=LORA_TARGET_MODULES,
-            lora_alpha=LORA_ALPHA, lora_dropout=LORA_DROPOUT,
-            bias="none", use_gradient_checkpointing="unsloth", random_state=42)
+        model = get_peft_model(model, _build_grpo_lora_config())
     sdft_loaded = False
+
+if USE_GRAD_CHECKPOINT and hasattr(model, "gradient_checkpointing_enable"):
+    model.gradient_checkpointing_enable()
+if hasattr(model, "config"):
+    model.config.use_cache = False
+if device == "cuda":
+    model = model.to(device)
 
 setup_tokenizer(tokenizer, QWEN_CHAT_TEMPLATE)
 peft_config_for_trainer = None
@@ -403,6 +455,9 @@ run_manifest = get_runtime_metadata(
         "use_grad_checkpoint": USE_GRAD_CHECKPOINT,
         "device": device,
         "sdft_loaded": sdft_loaded,
+        "resume_enabled": resume_grpo,
+        "resumed_grpo_step": resumed_grpo_step,
+        "initial_adapter_path": initial_adapter_path if os.path.exists(initial_adapter_path) else None,
         "tool_retriever": tool_retriever is not None,
         "embedding_provider": type(embedding_provider).__name__,
     }
@@ -416,7 +471,6 @@ print(f"  Model: {model_id}, Steps: {total_steps}, Docs/step: {batch_docs}")
 print(f"  Generations (GRPO): {num_generations}")
 print(f"{'='*60}\n")
 
-data_dir = os.path.join(os.path.dirname(__file__), "data")
 os.makedirs(data_dir, exist_ok=True)
 
 for step in range(1, total_steps + 1):
@@ -437,9 +491,15 @@ for step in range(1, total_steps + 1):
         by_doc = {}
         for s in all_slides_flat:
             by_doc.setdefault(s["doc_id"], []).append(s)
-        for did in sorted(by_doc):
+        # Cached data may contain more documents than the current run requests.
+        # Keep the workload consistent with the freshly generated-data path.
+        for did in sorted(by_doc)[:batch_docs]:
             docs.append(by_doc[did])
-        print(f"  Loaded {len(all_slides_flat)} slides from {doc_path}")
+        selected_slide_count = sum(len(doc) for doc in docs)
+        print(
+            f"  Loaded {selected_slide_count}/{len(all_slides_flat)} slides "
+            f"across {len(docs)} docs from {doc_path}"
+        )
     else:
         docs = generate_docs(num_docs=batch_docs)
         all_slides_flat = [s for doc in docs for s in doc]

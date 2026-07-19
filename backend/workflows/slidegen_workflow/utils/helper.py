@@ -2,7 +2,12 @@ import json
 import logging
 import asyncio
 import base64
+import html
+import re
+import textwrap
 from typing import Dict, List, Optional
+
+from PIL import Image, ImageDraw, ImageFont
 
 
 def _convert_llm_tree_to_nodes(llm_json_list: List[Dict], parent_level: int) -> List[Dict]:
@@ -265,14 +270,42 @@ def parse_tool_call_json(text: str) -> Optional[dict]:
 
 def render_html_to_png(html_content: str, output_path: str) -> None:
     """Render HTML string to PNG image using Playwright (sync wrapper)."""
+    def _fallback_render(reason: str) -> None:
+        text = re.sub(r"<script.*?</script>", " ", html_content, flags=re.S | re.I)
+        text = re.sub(r"<style.*?</style>", " ", text, flags=re.S | re.I)
+        text = re.sub(r"<[^>]+>", " ", text)
+        text = html.unescape(text)
+        text = re.sub(r"\s+", " ", text).strip()
+        preview = text[:1200] if text else "Render fallback"
+
+        img = Image.new("RGB", (1280, 720), "white")
+        draw = ImageDraw.Draw(img)
+        title_font = ImageFont.load_default()
+        body_font = ImageFont.load_default()
+        draw.text((48, 36), "Playwright render fallback", fill="#0F172A", font=title_font)
+        for idx, line in enumerate(textwrap.wrap(reason, width=95) or ["render failed"]):
+            draw.text((48, 68 + idx * 16), line, fill="#475569", font=body_font)
+        y = 120
+        for line in textwrap.wrap(preview, width=90):
+            if y > 680:
+                break
+            draw.text((48, y), line, fill="#111827", font=body_font)
+            y += 16
+        img.save(output_path)
+
     try:
         from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
+
         capture = PlaywrightCaptureProvider()
-        loop = asyncio.get_event_loop()
-    except RuntimeError:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-    loop.run_until_complete(capture.generate_slide_from_html(html_content, output_path))
+        try:
+            loop = asyncio.get_event_loop()
+        except RuntimeError:
+            loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(loop)
+        loop.run_until_complete(capture.generate_slide_from_html(html_content, output_path))
+    except Exception as exc:
+        logging.warning(f"Playwright render failed, using fallback PNG: {exc}")
+        _fallback_render(str(exc))
 
 
 

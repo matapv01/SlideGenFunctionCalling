@@ -1,0 +1,19 @@
+{
+  "model_name": "Qwen/Qwen3-4B-Instruct-2507",
+  "data_path": "/home/llm/MinhPV/SlideGenFunctionCalling/rl/data/sft_function_call_dataset.json",
+  "output_dir": "./qwen_slidegen_sdft",
+  "learning_rate": 2e-05,
+  "num_train_epochs": 2,
+  "per_device_train_batch_size": 1,
+  "gradient_accumulation_steps": 32,
+  "max_prompt_length": 2048,
+  "max_completion_length": 512,
+  "num_generations": 1,
+  "ref_model_mixup_alpha": 0.01,
+  "alpha": 0.0,
+  "beta": 0.0,
+  "use_vllm": false,
+  "vllm_mode": "colocate",
+  "vllm_enable_sleep_mode": true,
+  "num_loss_tokens_to_skip": 3
+}

@@ -1,0 +1,36 @@
+{%- if messages[0].role == 'system' %}
+{%- if tools is defined and tools %}
+<|im_start|>system
+{{ messages[0].content }}
+
+Available tools:
+<tools>
+{% for tool in tools %}
+{{ tool | tojson }}
+{% endfor %}
+</tools>
+
+Output ONLY a JSON function call within <tool_call> tags.
+Example: <tool_call>{% raw %}{"name": "generate_title_slide", "arguments": {"main_title": "Title"}}{% endraw %}</tool_call>
+<|im_end|>
+{%- else %}
+<|im_start|>system
+{{ messages[0].content }}<|im_end|>
+{%- endif %}
+{%- endif %}
+{%- for message in messages %}
+{%- if message.role == 'assistant' and message.tool_calls is defined and message.tool_calls %}
+<|im_start|>assistant
+{% for tc in message.tool_calls %}
+<tool_call>
+{{ tc | tojson }}
+</tool_call>
+{% endfor %}<|im_end|>
+{%- elif message.role != 'system' %}
+<|im_start|>{{ message.role }}
+{{ message.content }}<|im_end|>
+{%- endif %}
+{%- endfor %}
+{%- if add_generation_prompt %}
+<|im_start|>assistant
+{%- endif %}
