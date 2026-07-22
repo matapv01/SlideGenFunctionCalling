@@ -88,7 +88,7 @@ _gen_lock = threading.Lock()
 # 1. LOAD MODEL
 # ==============================================================================
 max_seq_length = 8192
-sdft_adapter_path = os.getenv("SDFT_ADAPTER_PATH", "./qwen_slidegen_sdft/final_adapter")
+sdft_adapter_path = os.getenv("SDFT_ADAPTER_PATH", "./qwen_slidegen_sft/final_adapter")
 model_dtype = torch.bfloat16 if device == "cuda" and torch.cuda.is_bf16_supported() else (torch.float16 if device == "cuda" else torch.float32)
 
 

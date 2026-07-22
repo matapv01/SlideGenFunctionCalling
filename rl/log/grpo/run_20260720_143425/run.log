@@ -1,8 +1,8 @@
-Loading SDFT adapter from ./qwen_slidegen_sdft/final_adapter
+Loading GRPO step 1 adapter from /home/llm/MinhPV/SlideGenFunctionCalling/rl/data/step_0001_adapter
 Loading adapter base model: Qwen/Qwen3-4B-Instruct-2507
-Loading checkpoint shards:   0%|                                              | 0/3 [00:00<?, ?it/s]Loading checkpoint shards: 100%|█████████████████████████████████████| 3/3 [00:00<00:00, 159.68it/s]
+Loading checkpoint shards:   0%|                                                             | 0/3 [00:00<?, ?it/s]Loading checkpoint shards: 100%|████████████████████████████████████████████████████| 3/3 [00:00<00:00, 191.14it/s]
 Traceback (most recent call last):
-  File "/home/llm/MinhPV/SlideGenFunctionCalling/rl/train.py", line 135, in <module>
+  File "/home/llm/MinhPV/SlideGenFunctionCalling/rl/train.py", line 156, in <module>
     model = model.to(device)
             ^^^^^^^^^^^^^^^^
   File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1371, in to
@@ -21,4 +21,4 @@ Traceback (most recent call last):
   File "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/lib/python3.12/site-packages/torch/nn/modules/module.py", line 1357, in convert
     return t.to(
            ^^^^^
-torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 47.37 GiB of which 36.12 MiB is free. Process 1272324 has 43.12 GiB memory in use. Including non-PyTorch memory, this process has 4.20 GiB memory in use. Of the allocated memory 3.86 GiB is allocated by PyTorch, and 10.58 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)
+torch.OutOfMemoryError: CUDA out of memory. Tried to allocate 48.00 MiB. GPU 0 has a total capacity of 47.37 GiB of which 21.31 MiB is free. Process 3178479 has 41.77 GiB memory in use. Including non-PyTorch memory, this process has 5.57 GiB memory in use. Of the allocated memory 5.22 GiB is allocated by PyTorch, and 14.38 MiB is reserved by PyTorch but unallocated. If reserved but unallocated memory is large try setting PYTORCH_CUDA_ALLOC_CONF=expandable_segments:True to avoid fragmentation.  See documentation for Memory Management  (https://pytorch.org/docs/stable/notes/cuda.html#environment-variables)

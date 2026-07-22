@@ -1,0 +1,101 @@
+[
+  {
+    "doc_id": 0,
+    "slide_index": 0,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "FPT Corporation: Dẫn Dắt Chuyển Đổi Số Toàn Cầu",
+    "user_prompt": "Chào mừng quý vị đến với bài thuyết trình về FPT Corporation và hành trình đầy ấn tượng của chúng tôi trong công cuộc chuyển đổi số toàn cầu. Trong bối cảnh thế giới đang dịch chuyển mạnh mẽ sang kỷ nguyên số, FPT không chỉ là người chứng kiến mà còn là kiến trúc sư tiên phong, định hình tương lai công nghệ. Bài thuyết trình này sẽ đi sâu vào chiến lược, những thành tựu nổi bật và tầm nhìn dài hạn của FPT nhằm khẳng định vị thế trên bản đồ công nghệ thế giới. Mục tiêu của chúng tôi là mang đến cái nhìn toàn diện về cách FPT đang góp phần tạo nên một thế giới số tốt đẹp hơn.",
+    "plan": {
+      "action": "INTRO_TOOLS",
+      "thought": "Thiết kế nền xanh dương đậm, tạo cảm giác chuyên nghiệp và hiện đại. Logo FPT được đặt tinh tế ở góc trên bên phải. Hình ảnh minh họa mạng lưới toàn cầu hoặc các đường kết nối kỹ thuật số làm nền, thể hiện sự kết nối và vươn ra thế giới. Font chữ 'Roboto Light' hoặc 'Montserrat Light' cho tiêu đề và nội dung, dễ đọc và tinh tế."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 1,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Nền Tảng Vững Chắc và Tầm Nhìn Chiến Lược",
+    "user_prompt": "FPT được thành lập vào năm 1988, khởi đầu từ một nhóm các nhà khoa học trẻ với khát vọng công nghệ. Trải qua hơn ba thập kỷ phát triển, FPT đã vươn mình trở thành tập đoàn công nghệ hàng đầu Việt Nam, hoạt động trong ba lĩnh vực cốt lõi: Công nghệ thông tin, Viễn thông và Giáo dục. Tầm nhìn chiến lược của FPT là trở thành tập đoàn công nghệ số toàn cầu, tiên phong trong các xu hướng công nghệ mới và mang lại giá trị bền vững cho khách hàng, đối tác và cộng đồng. Chúng tôi không ngừng đầu tư vào nghiên cứu và phát triển, nuôi dưỡng tài năng để sẵn sàng cho mọi thách thức của tương lai số.",
+    "plan": {
+      "action": "CONTENT_TOOLS",
+      "thought": "Sử dụng layout 2 cột: một bên là timeline ngắn gọn với các mốc thời gian quan trọng của FPT, một bên là mô tả về các lĩnh vực kinh doanh và tầm nhìn. Màu sắc chủ đạo là trắng tinh khiết, điểm nhấn màu cam đặc trưng của FPT để tạo sự năng động. Font chữ 'Lato' hoặc 'Open Sans' để đảm bảo tính dễ đọc và chuyên nghiệp."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 2,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Chiến Lược Chuyển Đổi Số Toàn Diện của FPT",
+    "user_prompt": "FPT đã xác định chiến lược chuyển đổi số toàn diện dựa trên các công nghệ lõi tiên tiến nhất của kỷ nguyên 4.0. Chúng tôi tập trung mạnh mẽ vào các nền tảng như Trí tuệ Nhân tạo (AI), Điện toán Đám mây (Cloud Computing), Dữ liệu Lớn (Big Data) và Internet Vạn vật (IoT). Chiến lược này được triển khai rộng khắp, nhắm vào các ngành mũi nhọn như sản xuất thông minh, tài chính số, y tế thông minh và chính phủ điện tử, giúp các tổ chức tối ưu hóa vận hành và tạo ra giá trị mới. FPT cũng chủ động xây dựng mô hình hợp tác toàn cầu, liên kết với các đối tác công nghệ hàng đầu thế giới để mở rộng năng lực và phạm vi ảnh hưởng.",
+    "plan": {
+      "action": "CONTENT_TOOLS",
+      "thought": "Thiết kế sử dụng biểu đồ hình tròn hoặc biểu đồ kim tự tháp để minh họa các trụ cột công nghệ chính trong chiến lược chuyển đổi số. Nền màu xám nhạt để làm nổi bật các icon công nghệ và văn bản. Các icon biểu trưng cho AI, Cloud, Big Data, IoT được thiết kế hiện đại, tối giản. Font chữ 'Open Sans Semibold' cho tiêu đề và 'Open Sans Regular' cho nội dung."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 3,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Dấu Ấn FPT Trên Bản Đồ Công Nghệ Thế Giới",
+    "user_prompt": "FPT đã và đang khẳng định vị thế vững chắc trên bản đồ công nghệ toàn cầu thông qua mạng lưới văn phòng và trung tâm phát triển tại hơn 29 quốc gia. Chúng tôi đặc biệt chú trọng vào các thị trường trọng điểm như Hoa Kỳ, Nhật Bản, Châu Âu và khu vực Châu Á - Thái Bình Dương (APAC). FPT tự hào là đối tác chiến lược của nhiều tập đoàn đa quốc gia hàng đầu thế giới, triển khai các dự án chuyển đổi số quy mô lớn và phức tạp. Năng lực triển khai dự án toàn cầu, với đội ngũ nhân sự chất lượng cao và quy trình chuẩn quốc tế, là yếu tố then chốt giúp FPT tạo dựng niềm tin và gặt hái thành công trên trường quốc tế.",
+    "plan": {
+      "action": "CONTENT_TOOLS",
+      "thought": "Sử dụng bản đồ thế giới làm hình nền, làm nổi bật các khu vực mà FPT có sự hiện diện hoặc thị trường trọng điểm bằng màu sắc rực rỡ. Bên cạnh đó, các logo của đối tác lớn được hiển thị một cách trang trọng. Thiết kế nền tối (xám đậm hoặc xanh than) để làm nổi bật chữ trắng, tạo cảm giác sang trọng và chuyên nghiệp. Font chữ 'Montserrat Bold' cho tiêu đề và 'Montserrat Light' cho nội dung."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 4,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Văn Hóa FPT: Nền Tảng Của Đổi Mới và Sáng Tạo",
+    "user_prompt": "Văn hóa doanh nghiệp là yếu tố cốt lõi tạo nên sức mạnh và sự khác biệt của FPT trên hành trình chuyển đổi số. FPT xây dựng và duy trì giá trị cốt lõi 'Tôn đổi đồng' – Tôn trọng, Đổi mới, Đồng đội – làm kim chỉ nam cho mọi hoạt động. Tinh thần khởi nghiệp được khuyến khích mạnh mẽ, tạo môi trường cho mỗi cá nhân dám nghĩ, dám làm và chấp nhận thử thách. FPT không ngừng đầu tư vào con người, từ các chương trình đào tạo chuyên sâu đến các hoạt động gắn kết, phát triển kỹ năng mềm. Môi trường làm việc cởi mở, khuyến khích sáng tạo là nơi ươm mầm cho những ý tưởng đột phá và giải pháp công nghệ tiên tiến.",
+    "plan": {
+      "action": "CONTENT_TOOLS",
+      "thought": "Hình ảnh minh họa là một collage về các hoạt động của nhân viên FPT: làm việc nhóm, các sự kiện văn hóa, hoạt động team building, thể hiện sự năng động và tinh thần đồng đội. Nền màu vàng nhạt hoặc cam nhạt, tạo cảm giác ấm áp và gần gũi, làm nổi bật chữ màu nâu đậm. Font chữ 'Playfair Display' cho tiêu đề và 'Merriweather' cho nội dung, tạo sự tinh tế và dễ đọc."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 5,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Hiệu Quả Kinh Doanh Từ Chuyển Đổi Số Toàn Cầu",
+    "user_prompt": "Hoạt động chuyển đổi số đã mang lại những kết quả kinh doanh ấn tượng cho FPT trên thị trường quốc tế. Doanh thu dịch vụ CNTT từ thị trường nước ngoài của FPT đã liên tục tăng trưởng mạnh mẽ trong những năm gần đây. Cụ thể, năm 2021, doanh thu đạt 16.365 tỷ VNĐ, tăng trưởng 20% so với năm 2020. Tiếp đó, năm 2022, con số này cán mốc 20.000 tỷ VNĐ, tăng trưởng 22% so với cùng kỳ. Đến năm 2023, doanh thu tiếp tục tăng trưởng 21.4%, đạt 24.288 tỷ VNĐ, cho thấy đà phát triển bền vững. Trong cơ cấu doanh thu này, thị trường Nhật Bản đóng góp 35%, Hoa Kỳ 28% và Châu Âu 20%, khẳng định vị thế của FPT tại các thị trường trọng điểm.",
+    "plan": {
+      "action": "CHART_TOOLS",
+      "thought": "Thiết kế sử dụng biểu đồ cột để thể hiện sự tăng trưởng doanh thu qua các năm (2021, 2022, 2023) và biểu đồ tròn để minh họa tỷ lệ đóng góp của các thị trường chính (Nhật Bản, Mỹ, Châu Âu). Sử dụng tông màu xanh lá cây và xanh dương để tạo cảm giác tươi mới, tăng trưởng và đáng tin cậy. Các số liệu được hiển thị rõ ràng trên biểu đồ. Font chữ 'Oswald Bold' cho tiêu đề và 'Roboto Condensed' cho các nhãn dữ liệu và nội dung."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 6,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Đội Ngũ Tiên Phong Kiến Tạo Tương Lai",
+    "user_prompt": "FPT tự hào có một đội ngũ lãnh đạo tài năng và giàu kinh nghiệm, những người đã và đang dẫn dắt tập đoàn vượt qua mọi thử thách để vươn tầm quốc tế. Dưới đây là những gương mặt tiêu biểu: \n- Anh Trương Gia Bình: Chủ tịch HĐQT FPT, nhà sáng lập có tầm nhìn chiến lược dài hạn, là người truyền cảm hứng cho toàn bộ tập đoàn. \n- Anh Nguyễn Văn Khoa: Tổng Giám đốc FPT, người trực tiếp dẫn dắt chiến lược toàn cầu hóa và chuyển đổi số, đưa FPT đến những thành công mới. \n- Chị Chu Thị Thanh Hà: Chủ tịch FPT Software, đóng vai trò then chốt trong việc mở rộng thị trường quốc tế và phát triển năng lực công nghệ phần mềm. \n- Anh Bùi Quang Ngọc: Phó Chủ tịch HĐQT FPT, chuyên gia về công nghệ và quản trị, có đóng góp lớn vào sự phát triển bền vững của tập đoàn.",
+    "plan": {
+      "action": "TEAM_TOOLS",
+      "thought": "Thiết kế dạng grid 2x2 hoặc 2x3, hiển thị ảnh chân dung của từng thành viên cùng với tên đầy đủ và chức vụ. Dưới mỗi ảnh là một đoạn mô tả ngắn gọn về vai trò và đóng góp của họ. Nền màu trắng hoặc xám nhạt để làm nổi bật hình ảnh và thông tin. Font chữ 'Arial Bold' cho tên và chức vụ, 'Arial Regular' cho mô tả."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 7,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Từ Chiến Lược Đến Thực Thi: Những Bước Đi Tiếp Theo",
+    "user_prompt": "Qua những nội dung vừa trình bày, chúng ta đã cùng nhau nhìn lại hành trình ấn tượng của FPT trong việc định hình và dẫn dắt chuyển đổi số trên quy mô toàn cầu. Những thành tựu đã đạt được là minh chứng cho tầm nhìn, nỗ lực và khả năng thích ứng của FPT. Tuy nhiên, hành trình này vẫn còn nhiều thách thức và cơ hội mới đang chờ đón. Chúng tôi sẽ tiếp tục đổi mới, mở rộng năng lực và hợp tác chiến lược để không ngừng kiến tạo giá trị, khẳng định vị thế tiên phong của FPT trong kỷ nguyên số.",
+    "plan": {
+      "action": "TRANSITION_TOOLS",
+      "thought": "Thiết kế tối giản, tập trung vào văn bản ở giữa slide với kích thước chữ lớn, rõ ràng. Sử dụng hiệu ứng chuyển sắc nhẹ nhàng từ xanh dương sang tím làm nền, tạo cảm giác chuyển tiếp mượt mà và hướng tới tương lai. Font chữ 'Bebas Neue' hoặc 'Impact' để tạo sự mạnh mẽ và dứt khoát."
+    }
+  },
+  {
+    "doc_id": 0,
+    "slide_index": 8,
+    "title": "FPT Corporation: Kiến Tạo Tương Lai Số Toàn Cầu",
+    "heading": "Cảm Ơn Quý Vị Đã Lắng Nghe!",
+    "user_prompt": "FPT Corporation xin chân thành cảm ơn quý vị đã dành thời gian lắng nghe bài thuyết trình của chúng tôi. Chúng tôi hy vọng đã mang đến cho quý vị những thông tin hữu ích về hành trình chuyển đổi số toàn cầu của FPT. Nếu quý vị có bất kỳ câu hỏi nào, xin đừng ngần ngại đặt câu hỏi. \nThông tin liên hệ: \n- Email: info@fpt.com.vn \n- Hotline: 1900 6600 \n- Website: www.fpt.com.vn \n- Địa chỉ: Tòa nhà FPT, Số 10 Duy Tân, Phường Dịch Vọng Hậu, Quận Cầu Giấy, Thành phố Hà Nội, Việt Nam.",
+    "plan": {
+      "action": "THANK_YOU_TOOLS",
+      "thought": "Thiết kế nền màu xanh lá cây tươi sáng hoặc màu cam nhạt, tạo cảm giác thân thiện và tích cực. Logo FPT được đặt ở giữa hoặc góc trên, thông tin liên hệ được trình bày rõ ràng, dễ nhìn ở phần dưới. Sử dụng font chữ 'Calibri' hoặc 'Segoe UI' để đảm bảo tính dễ đọc và chuyên nghiệp."
+    }
+  }
+]

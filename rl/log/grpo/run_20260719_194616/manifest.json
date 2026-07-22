@@ -1,14 +1,14 @@
 {
-  "timestamp_utc": "2026-07-17T16:02:44.741282+00:00",
+  "timestamp_utc": "2026-07-19T12:47:01.377653+00:00",
   "python": "3.12.3 (main, Jun 19 2026, 12:46:00) [GCC 13.3.0]",
   "platform": "Linux-6.17.0-35-generic-x86_64-with-glibc2.39",
-  "executable": "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/bin/python",
+  "executable": "/home/llm/MinhPV/SlideGenFunctionCalling/.venv/bin/python3",
   "cwd": "/home/llm/MinhPV/SlideGenFunctionCalling",
-  "cuda_visible_devices": "1",
+  "cuda_visible_devices": "0",
   "nvidia_visible_devices": null,
   "git": {
     "branch": "minh/rl",
-    "commit": "a39a85e",
+    "commit": "76bb815",
     "remote": "git@github.com:matapv01/SlideGenFunctionCalling.git"
   },
   "gpus": [
@@ -17,16 +17,16 @@
       "uuid": "GPU-4a137db8-f97b-e4ae-3be0-dfce61865da3",
       "name": "NVIDIA RTX 5880 Ada Generation",
       "memory_total_mib": "49140",
-      "memory_used_mib": "22847",
-      "memory_free_mib": "25665"
+      "memory_used_mib": "8499",
+      "memory_free_mib": "40013"
     },
     {
       "index": "1",
       "uuid": "GPU-f6bb44d4-da6c-c938-a477-b8be3b4c9432",
       "name": "NVIDIA RTX 5880 Ada Generation",
       "memory_total_mib": "49140",
-      "memory_used_mib": "8585",
-      "memory_free_mib": "39927"
+      "memory_used_mib": "17887",
+      "memory_free_mib": "30625"
     },
     {
       "index": "2",
@@ -45,24 +45,27 @@
     "capability": "8.9"
   },
   "run_name": "grpo",
-  "run_id": "20260717_230147",
-  "log_dir": "/home/llm/MinhPV/SlideGenFunctionCalling/rl/log/grpo/run_20260717_230147",
-  "run_log": "/home/llm/MinhPV/SlideGenFunctionCalling/rl/log/grpo/run_20260717_230147/run.log",
+  "run_id": "20260719_194616",
+  "log_dir": "/home/llm/MinhPV/SlideGenFunctionCalling/rl/log/grpo/run_20260719_194616",
+  "run_log": "/home/llm/MinhPV/SlideGenFunctionCalling/rl/log/grpo/run_20260719_194616/run.log",
   "output_dir": "./qwen_slidegen_grpo",
   "model_id": "Qwen/Qwen3-4B-Instruct-2507",
   "sdft_adapter_path": "./qwen_slidegen_sdft/final_adapter",
   "total_steps": 500,
-  "batch_docs": 5,
+  "batch_docs": 1,
   "learning_rate": 1e-06,
   "per_device_train_batch_size": 1,
   "gradient_accumulation_steps": 16,
   "num_generations": 2,
-  "max_completion_length": 2048,
+  "max_completion_length": 128,
   "use_cpu": false,
   "use_lora": true,
   "use_grad_checkpoint": true,
   "device": "cuda",
-  "sdft_loaded": true,
+  "sdft_loaded": false,
+  "resume_enabled": true,
+  "resumed_grpo_step": 1,
+  "initial_adapter_path": "/home/llm/MinhPV/SlideGenFunctionCalling/rl/data/step_0001_adapter",
   "tool_retriever": true,
   "embedding_provider": "DINOv2EmbeddingProvider"
 }
