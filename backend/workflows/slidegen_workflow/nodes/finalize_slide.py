@@ -23,14 +23,14 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
     html_path = state.get('current_html_path', '')
     converted_html_path = html_path
     conversion_service = config.get('configurable', {}).get('conversion_service')
-    
+
     if html_path and os.path.exists(html_path) and conversion_service:
         output_folder = config.get('configurable', {}).get('output_folder')
         if output_folder:
             converted_folder = os.path.join(output_folder, "converted")
             os.makedirs(converted_folder, exist_ok=True)
             converted_path = os.path.join(converted_folder, f"converted_{os.path.basename(html_path)}")
-            
+
             success = conversion_service.convert_single_slide(html_path, converted_path)
             if success and os.path.exists(converted_path):
                 converted_html_path = converted_path
@@ -48,8 +48,8 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
     }
     state['final_slides'].append(final_slide_data)
 
-    # Pop slide đã hoàn tất trước khi emit event để tính đúng total
-    state['slide_chunks'].pop(0)
+    # NOTE: Chunk popping is now handled in next_slide_provider.py for proper sync
+    # No need to pop here anymore - it's already been popped when the chunk was selected
 
     # Emit streaming event for slide completion
     stream_callback = config.get('configurable', {}).get('stream_callback')

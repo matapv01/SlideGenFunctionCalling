@@ -136,10 +136,12 @@ export const CanvasArea = ({
       const tag = (e.target as HTMLElement)?.tagName?.toLowerCase();
       if (['input', 'textarea', 'select'].includes(tag)) return;
       if ((e.target as HTMLElement)?.isContentEditable) return;
-      if (e.key === 'ArrowRight' || e.key === 'ArrowDown') {
+      // Arrow Up/Down: navigate slides
+      // Arrow Left/Right: reserved for caret movement in selected elements
+      if (e.key === 'ArrowDown') {
         e.preventDefault();
         onNextSlide();
-      } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+      } else if (e.key === 'ArrowUp') {
         e.preventDefault();
         onPrevSlide();
       }

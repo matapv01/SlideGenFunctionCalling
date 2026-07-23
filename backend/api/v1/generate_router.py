@@ -4,6 +4,7 @@ import os
 import json
 import logging
 import asyncio
+import re
 from typing import AsyncGenerator, Optional
 from pathlib import Path
 from datetime import datetime
@@ -27,9 +28,11 @@ from backend.api.dependencies import (
     get_slide_service,
     get_slidegen_workflow_service,
     get_idea_service,
-    get_subscription_service
+    get_subscription_service,
+    get_conversion_service
 )
 from backend.application.services.subscription_service import SubscriptionService
+from backend.application.services.conversion_service import ConversionService
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
 from backend.api.rate_limiting import idea_structure_rate_limiter, idea_stream_rate_limiter
 from backend.api.constants import EventTypes, SourceTypes, FilePatterns
@@ -74,7 +77,16 @@ def _check_docx_slide_limit(temp_path, subscription_service, user):
 
 def prepare_output_folder(name: str):
     """Helper to create unique output folder"""
-    safe_name = name.replace(' ', '_')
+    raw_name = str(name or "Untitled")
+    raw_name = re.sub(r"[\x00-\x1f\x7f]", " ", raw_name)
+    raw_name = re.sub(r"[\\/:*?\"<>|]", " ", raw_name)
+    safe_name = re.sub(r"\s+", "_", raw_name).strip("._")
+    if not safe_name:
+        safe_name = "Untitled"
+
+    if len(safe_name) > 120:
+        safe_name = safe_name[:120].rstrip("._")
+
     folder = OUTPUT_DIR / safe_name
     if folder.exists():
         folder = OUTPUT_DIR / f"{safe_name}_{int(datetime.now().timestamp())}"
@@ -88,6 +100,66 @@ def sanitize_event_data(event_type: str, data: dict):
         if 'html_path' in new_data: new_data['is_temp'] = True
         if 'image_path' in new_data: new_data['is_temp'] = True
     return new_data
+
+
+def ensure_converted_slides(output_folder: Path, conversion_service: Optional[ConversionService]) -> None:
+    """Best-effort conversion pass to ensure converted HTML exists for import/view."""
+    if conversion_service is None:
+        return
+
+    base_output = output_folder / "output"
+    html_folder = (base_output / "html") if (base_output / "html").exists() else (output_folder / "html")
+
+    if not html_folder.exists():
+        logger.warning(f"Conversion skipped: HTML folder not found at {html_folder}")
+        return
+
+    converted_folder = output_folder / "converted"
+    converted_folder.mkdir(parents=True, exist_ok=True)
+
+    result = conversion_service.convert_slides_batch(html_folder, converted_folder)
+    logger.info(
+        "Idea/manual conversion batch complete: %s success, %s failed",
+        len(result.get("success", [])),
+        len(result.get("failed", []))
+    )
+
+
+def _to_idea_text(value: Optional[str], fallback: str = "") -> str:
+    if value is None:
+        return fallback
+    txt = str(value).strip()
+    return txt if txt else fallback
+
+
+def _parse_intro_title_subtitle(raw_content: str, fallback_title: str) -> tuple[str, str]:
+    """
+    Parse intro content formatted like:
+      Title: ...\nSubtitle: ...
+    Returns clean (title, subtitle) without labels.
+    """
+    text = _to_idea_text(raw_content, "")
+    if not text:
+        return fallback_title, ""
+
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    parsed_title = ""
+    parsed_subtitle = ""
+
+    for line in lines:
+        lower_line = line.lower()
+        if lower_line.startswith("title:"):
+            parsed_title = line.split(":", 1)[1].strip()
+        elif lower_line.startswith("subtitle:"):
+            parsed_subtitle = line.split(":", 1)[1].strip()
+
+    if parsed_title or parsed_subtitle:
+        return parsed_title or fallback_title, parsed_subtitle
+
+    # Fallback: no explicit labels, use first line as title and the rest as subtitle.
+    first = lines[0]
+    rest = "\n".join(lines[1:]).strip()
+    return first or fallback_title, rest
 
 # ==========================================
 # 1. GENERATE FROM FILE (DOCX)
@@ -173,6 +245,7 @@ async def generate_from_docx_normal(
 @router.post("/docx/prepare-stream", response_model=DocxPrepareResponse)
 async def prepare_docx_stream(
     file: UploadFile = File(...),
+    workflow_mode: str = Form("auto_no_heading"),
     enable_transition_slides: str = Form("true"),
     enable_thank_you_slide: str = Form("true"),
     current_user: UserResponse = Depends(get_current_active_user),
@@ -205,6 +278,7 @@ async def prepare_docx_stream(
     _check_docx_slide_limit(temp_path, subscription_service, user)
 
     options = {
+        "workflow_mode": workflow_mode.strip() or "auto_no_heading",
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
         "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on')
     }
@@ -212,6 +286,56 @@ async def prepare_docx_stream(
         json.dump(options, f)
 
     return {"filename": file.filename}
+
+
+# ==========================================
+# MARKDOWN PARSER - Reusable for Manual & Idea
+# ==========================================
+
+@router.post("/markdown/parse")
+async def parse_markdown(
+    content: dict,
+    current_user: UserResponse = Depends(get_current_active_user)
+):
+    """
+    Parse markdown text into hierarchical structure.
+    Can be used by both Manual Mode and Idea Mode.
+    
+    Request body:
+    {
+        "markdown": "# Title\\nContent...",
+        "default_title": "Optional title"
+    }
+    """
+    try:
+        from backend.workflows.slidegen_workflow.utils.markdown_parser import markdown_to_manual_structure, validate_markdown_structure
+        
+        markdown_text = content.get('markdown', '').strip()
+        default_title = content.get('default_title', 'Document')
+        
+        if not markdown_text:
+            raise ValueError("Markdown content is empty")
+        
+        # Parse markdown
+        document_title, structure = markdown_to_manual_structure(markdown_text, default_title)
+        
+        # Validate
+        is_valid, errors = validate_markdown_structure(structure)
+        if not is_valid:
+            logger.warning(f"Markdown validation issues: {errors}")
+        
+        return {
+            "success": True,
+            "document_title": document_title,
+            "structure": structure,
+            "validation_warnings": errors if not is_valid else [],
+            "node_count": len(structure)
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.error(f"Markdown parse error: {e}")
+        raise HTTPException(status_code=500, detail="Failed to parse markdown")
 
 
 @router.get("/docx/stream")
@@ -413,12 +537,104 @@ async def generate_idea_structure(
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@router.post("/idea/structure/{session_id}/manual-session", response_model=ManualSessionResponse)
+async def convert_idea_to_manual_session(
+    session_id: str,
+    current_user: UserResponse = Depends(get_current_active_user),
+    structure_service: StructureService = Depends(get_structure_service)
+):
+    """
+    Convert idea JSON session into StructureEditor-compatible manual session.
+    This pre-populates L0 intro + L1 blocks so user can edit with manual UI immediately.
+    """
+    try:
+        idea_data = await SessionManager.read_session_json(session_id, "idea")
+    except HTTPException:
+        raise
+    except Exception as e:
+        logger.error(f"Idea session read error: {e}")
+        raise HTTPException(status_code=500, detail="Không thể đọc dữ liệu idea session")
+
+    document_title = _to_idea_text(idea_data.get("title"), "Untitled")
+    slide_chunks = idea_data.get("slide_chunks", [])
+
+    if not slide_chunks:
+        raise HTTPException(status_code=400, detail="Idea session không có slide chunk để chuyển đổi")
+
+    manual_structure = []
+    intro_title = document_title
+    intro_subtitle = ""
+    plain_text_parts = []
+
+    for idx, chunk in enumerate(slide_chunks):
+        title = _to_idea_text(chunk.get("title") or chunk.get("heading"), f"Slide {idx + 1}")
+        content = _to_idea_text(
+            chunk.get("content") or chunk.get("description") or chunk.get("text_content"),
+            ""
+        )
+        slide_type = _to_idea_text(chunk.get("slide_type"), "content").lower()
+
+        if slide_type == "intro":
+            intro_title, intro_subtitle = _parse_intro_title_subtitle(
+                content or title or document_title,
+                document_title,
+            )
+            continue
+
+        plain_text_parts.append(title)
+        if content:
+            plain_text_parts.append(content)
+
+        manual_structure.append({
+            "node_id": f"idea_node_{idx + 1}",
+            "level": 1,
+            "title": title,
+            "content": content,
+            "children": [],
+            "is_transition": slide_type == "transition",
+        })
+
+    full_text = "\n\n".join(plain_text_parts) if plain_text_parts else document_title
+
+    manual_session_id = structure_service.create_session(
+        filename=f"{document_title}.docx",
+        full_text=full_text,
+        paragraphs=[],
+        docx_path=""
+    )
+
+    intro_node = {
+        "node_id": "intro_slide_0",
+        "level": 0,
+        "title": intro_title,
+        "content": intro_subtitle,
+        "children": [],
+        "is_transition": False,
+    }
+
+    # Put intro directly into structure so StructureEditor can render L0 immediately on first load.
+    structure_with_intro = [intro_node] + manual_structure
+
+    structure_service.update_session_structure(
+        session_id=manual_session_id,
+        structure=structure_with_intro,
+        intro_slide=None
+    )
+
+    return {
+        "success": True,
+        "session_id": manual_session_id,
+        "document_title": document_title,
+    }
+
+
 @router.get("/idea/stream")
 async def stream_idea_generation(
     session_id: str = Query(...),
     current_user: UserResponse = Depends(idea_stream_rate_limiter),
     project_service: ProjectService = Depends(get_project_service),
-    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service)
+    slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
+    conversion_service: ConversionService = Depends(get_conversion_service)
 ):
     """Step 2 Idea: SSE Generation"""
     try:
@@ -452,6 +668,9 @@ async def stream_idea_generation(
             if not res:
                 await queue.put(('error_event', {'message': "Workflow failed"}))
                 return
+
+            # Ensure idea output has converted HTML (absolute positioning), matching full docx flow.
+            ensure_converted_slides(output_folder, conversion_service)
 
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
@@ -596,11 +815,18 @@ async def stream_manual_generation(
             queue.put_nowait((event_type, safe_data))
 
         async def run_bg():
+            slide_options = {
+                'enable_transition_slides': data.get('enable_transition_slides', False),
+                'enable_thank_you_slide': data.get('enable_thank_you_slide', False),
+            }
+            slide_chunks = data.get('slide_chunks', [])
+            logger.info(f"[Manual Stream] Starting with {len(slide_chunks)} chunks, options={slide_options}")
             res = await slidegen_workflow_service.process_chunks(
-                slide_chunks=data.get('slide_chunks', []),
+                slide_chunks=slide_chunks,
                 title=title,
                 output_folder=str(output_folder),
-                callback=callback
+                callback=callback,
+                slide_options=slide_options
             )
             
             if not res:
@@ -618,10 +844,23 @@ async def stream_manual_generation(
 
             workflow_temp_dir = str(output_folder)
 
+            # Derive actual generated slide count from output HTML files to avoid 0-total regressions.
+            actual_slide_count = 0
+            try:
+                _out = Path(output_folder)
+                _html_dir = (_out / "output" / "html") if (_out / "output" / "html").exists() else (_out / "html")
+                if _html_dir.exists():
+                    actual_slide_count = len(list(_html_dir.glob("*.html")))
+            except Exception as count_err:
+                logger.warning(f"[Manual Stream] Could not count generated slides: {count_err}")
+
+            if actual_slide_count <= 0:
+                actual_slide_count = len(data.get('slide_chunks', []))
+
             await queue.put((EventTypes.COMPLETE, {
                 'project_id': pid,
                 'project_name': title,
-                'total_slides': len(data.get('slide_chunks', [])),
+                'total_slides': actual_slide_count,
                 'temp_dir': workflow_temp_dir
             }))
 

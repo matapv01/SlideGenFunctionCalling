@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { resolveSlideBackground } from "@/lib/slideBackground";
 import { AppLayout } from "@/components/AppLayout";
-import { ReadOnlySlide } from "@/components/ReadOnlySlide";
+import { LazySlidePreview } from "@/components/LazySlidePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Projects = () => {
@@ -51,37 +51,64 @@ const Projects = () => {
         updatedAt: p.updated_at,
       }));
       setProjects(mappedProjects);
+      setLoading(false);
       
-      // Fetch first slide and slide counts for each project
-      const slidesMap: Record<string, string> = {};
-      const backgroundsMap: Record<string, string> = {};
-      const backgroundImagesMap: Record<string, string> = {};
-      const countsMap: Record<string, number> = {};
-      await Promise.all(
-        mappedProjects.map(async (project: any) => {
-          try {
-            const slidesRes = await api.getSlides(project.id);
-            countsMap[project.id] = slidesRes.slides?.length || 0;
-            if (slidesRes.slides && slidesRes.slides.length > 0) {
-              const slide = slidesRes.slides[0];
-              const rawHtml = slide.html_content || slide.html || '';
-              const { backgroundColor, backgroundImage } = resolveSlideBackground(slide.design_settings, rawHtml);
-              slidesMap[project.id] = rawHtml;
-              if (backgroundColor) backgroundsMap[project.id] = backgroundColor;
-              if (backgroundImage) backgroundImagesMap[project.id] = backgroundImage;
+      // Load slide previews in batches (optimized)
+      const loadSlidesInBatches = async () => {
+        const BATCH_SIZE = 3; // Small batch to avoid GPU overload
+        const BATCH_DELAY = 100; // 100ms delay between batches
+        
+        for (let i = 0; i < mappedProjects.length; i += BATCH_SIZE) {
+          const batch = mappedProjects.slice(i, i + BATCH_SIZE);
+          
+          const results = await Promise.allSettled(
+            batch.map(async (project: any) => {
+              try {
+                const slidesRes = await api.getSlides(project.id, 1); // Only fetch first slide
+                const count = slidesRes.total || slidesRes.slides?.length || 0;
+                
+                if (slidesRes.slides && slidesRes.slides.length > 0) {
+                  const slide = slidesRes.slides[0];
+                  const rawHtml = slide.html_content || slide.html || '';
+                  const { backgroundColor, backgroundImage } = resolveSlideBackground(slide.design_settings, rawHtml);
+                  
+                  return {
+                    id: project.id,
+                    html: rawHtml,
+                    bg: backgroundColor,
+                    bgImg: backgroundImage,
+                    count,
+                  };
+                }
+                return { id: project.id, count };
+              } catch {
+                return { id: project.id, count: 0 };
+              }
+            })
+          );
+          
+          // Update state after each batch
+          results.forEach((result) => {
+            if (result.status === 'fulfilled' && result.value) {
+              const data = result.value;
+              if (data.html) setFirstSlides(prev => ({ ...prev, [data.id]: data.html }));
+              if (data.bg) setFirstSlideBackgrounds(prev => ({ ...prev, [data.id]: data.bg }));
+              if (data.bgImg) setFirstSlideBackgroundImages(prev => ({ ...prev, [data.id]: data.bgImg }));
+              setSlideCounts(prev => ({ ...prev, [data.id]: data.count }));
             }
-          } catch {
-            // Ignore errors for individual projects
+          });
+          
+          // Small delay between batches to avoid UI freeze
+          if (i + BATCH_SIZE < mappedProjects.length) {
+            await new Promise(resolve => setTimeout(resolve, BATCH_DELAY));
           }
-        })
-      );
-      setFirstSlides(slidesMap);
-      setFirstSlideBackgrounds(backgroundsMap);
-      setFirstSlideBackgroundImages(backgroundImagesMap);
-      setSlideCounts(countsMap);
+        }
+      };
+      
+      // Load in background
+      loadSlidesInBatches();
     } catch (err: any) {
       toast({ title: t.projects_toast_load_fail, variant: "destructive" });
-    } finally {
       setLoading(false);
     }
   };
@@ -227,7 +254,8 @@ const Projects = () => {
             {filtered.map((project) => (
               <Card
                 key={project.id}
-                className={`glass transition-all hover:shadow-lg hover:-translate-y-0.5 cursor-pointer relative ${selectedIds.has(project.id) ? "ring-2 ring-primary" : ""}`}
+                className={`glass cursor-pointer relative ${selectedIds.has(project.id) ? "ring-2 ring-primary" : ""}`}
+                style={{ willChange: 'auto' }}
                 onClick={() => selectMode ? toggleSelect(project.id) : navigate(`/view/${project.id}`)}
               >
                 {selectMode && (
@@ -273,9 +301,9 @@ const Projects = () => {
                   )}
                 </CardHeader>
                 <CardContent>
-                  <div className="aspect-video overflow-hidden rounded-lg bg-muted relative">
+                  <div className="aspect-video overflow-hidden rounded-lg bg-muted/50 relative">
                     {firstSlides[project.id] ? (
-                      <ReadOnlySlide
+                      <LazySlidePreview
                         slideId={`project-thumb-${project.id}`}
                         htmlContent={firstSlides[project.id]}
                         backgroundColor={firstSlideBackgrounds[project.id]}
@@ -284,7 +312,7 @@ const Projects = () => {
                       />
                     ) : (
                       <div className="flex h-full items-center justify-center">
-                        <FolderOpen className="h-8 w-8 text-muted-foreground" />
+                        <FolderOpen className="h-10 w-10 text-muted-foreground/40 animate-pulse" />
                       </div>
                     )}
                   </div>
@@ -297,7 +325,7 @@ const Projects = () => {
             {filtered.map((project) => (
               <Card
                 key={project.id}
-                className={`glass cursor-pointer hover:shadow-md ${selectedIds.has(project.id) ? "ring-2 ring-primary" : ""}`}
+                className={`glass cursor-pointer ${selectedIds.has(project.id) ? "ring-2 ring-primary" : ""}`}
                 onClick={() => selectMode ? toggleSelect(project.id) : navigate(`/view/${project.id}`)}
               >
                 <CardContent className="flex items-center justify-between p-4">

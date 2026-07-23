@@ -153,6 +153,24 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
             const elementsData = [];
             const processedElements = new Set();
 
+            // Bỏ qua các parent quá lớn (wrapper/layout) để giữ lại các node con bên trong.
+            // Cách này giảm nhiễu khi converter tạo phần tử absolute cho cả cha lẫn con.
+            const isOversizedParentContainer = (element, rect, rootRect) => {
+                const tag = element.tagName.toLowerCase();
+                if (!['div', 'section', 'article', 'main'].includes(tag)) return false;
+                if (element.children.length === 0) return false;
+
+                const ownText = Array.from(element.childNodes)
+                    .filter(node => node.nodeType === Node.TEXT_NODE)
+                    .map(node => node.textContent || '')
+                    .join('')
+                    .trim();
+
+                // Chỉ skip khi là block rất lớn và không có text trực tiếp đáng kể.
+                const hugeByArea = rect.width >= rootRect.width * 0.75 && rect.height >= rootRect.height * 0.6;
+                return hugeByArea && ownText.length === 0;
+            };
+
             elements.forEach((el, index) => {
                 if (processedElements.has(el)) return;
 
@@ -163,6 +181,7 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                 if (rect.width === 0 && rect.height === 0) return;
 
                 const tagName = el.tagName.toLowerCase();
+                if (isOversizedParentContainer(el, rect, containerRect)) return;
                 const isComplexBlock = ['ul', 'ol', 'table', 'figure'].includes(tagName);
                 let content = '';
 
@@ -179,6 +198,8 @@ async function convertHtmlToAbsolute(inputFilePath, outputFilePath) {
                     return;
                 } else if (tagName === 'svg') {
                     content = el.outerHTML;
+                    // Nếu đã giữ nguyên SVG thì không convert riêng từng node con bên trong nữa.
+                    el.querySelectorAll('*').forEach(child => processedElements.add(child));
                 } else if (['img', 'input', 'br', 'hr', 'iframe', 'video'].includes(tagName)) {
                     content = '';
                 } else if (tagName === 'div') {
@@ -502,6 +523,7 @@ body {
 }
 .outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
 .content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:${pageData.contentBlock.width}px;height:${pageData.contentBlock.height}px;overflow:visible;background:inherit;box-sizing:border-box;}
+.svg-block > svg{width:100%;height:100%;display:block;}
 </style></head><body>${pageData.svgDefsHtml}<div class="outer-wrapper"><div class="content-wrapper">
 `;
         pageData.elements.sort((a, b) => a.index - b.index).forEach(data => {
@@ -531,7 +553,8 @@ body {
 
                 finalStyle = `position:absolute;z-index:${data.zIndex};left:${adjustedX}px;top:${adjustedY}px;width:${data.rect.width}px;height:${data.rect.height}px;object-fit:cover!important;box-sizing:border-box;${cleanStyleContent}`;
             } else {
-                finalStyle = `position:absolute;z-index:${data.zIndex};left:${adjustedX}px;top:${adjustedY}px;width:${data.rect.width}px;height:${data.rect.height}px;box-sizing:border-box;${styleContent}`;
+                const svgWrapperExtraStyle = data.isSvgWrapper ? 'overflow:visible;' : '';
+                finalStyle = `position:absolute;z-index:${data.zIndex};left:${adjustedX}px;top:${adjustedY}px;width:${data.rect.width}px;height:${data.rect.height}px;box-sizing:border-box;${svgWrapperExtraStyle}${styleContent}`;
             }
 
             let attributesString = '';
@@ -543,7 +566,8 @@ body {
             if (selfClosingTags.includes(data.tagName)) {
                 newHtmlContent += `    <${data.tagName} style='${finalStyle}'${attributesString}>\n`;
             } else {
-                newHtmlContent += `    <${data.tagName} style='${finalStyle}'${attributesString}>${data.content}</${data.tagName}>\n`;
+                const svgWrapperClass = data.isSvgWrapper ? ' class="svg-block"' : '';
+                newHtmlContent += `    <${data.tagName}${svgWrapperClass} style='${finalStyle}'${attributesString}>${data.content}</${data.tagName}>\n`;
             }
         });
 

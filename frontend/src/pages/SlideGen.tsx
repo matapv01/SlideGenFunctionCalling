@@ -28,12 +28,8 @@ const SlideGen = () => {
 
 
   const [workflowMode, setWorkflowMode] = useState("auto_heading");
-  const [docxTransitions, setDocxTransitions] = useState(false);
-  const [docxThankYou, setDocxThankYou] = useState(false);
   const [ideaTitle, setIdeaTitle] = useState("");
   const [ideaDescription, setIdeaDescription] = useState("");
-  const [ideaTransitions, setIdeaTransitions] = useState(false);
-  const [ideaThankYou, setIdeaThankYou] = useState(false);
   const [ideaContentLength, setIdeaContentLength] = useState("standard");
   const [isUploading, setIsUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
@@ -71,8 +67,7 @@ const SlideGen = () => {
       } else {
         // Auto modes: upload for streaming workflow
         const res = await api.uploadDocxForStream(file, {
-          enable_transition_slides: docxTransitions,
-          enable_thank_you_slide: docxThankYou,
+          workflow_mode: workflowMode,
         });
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_starting });
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
@@ -106,12 +101,12 @@ const SlideGen = () => {
         title: ideaTitle.trim(),
         prompt: ideaDescription.trim(),
         content_length: ideaContentLength,
-        enable_transition_slides: ideaTransitions,
-        enable_thank_you_slide: ideaThankYou
       });
 
-      // Navigate to structure preview page
-      navigate(`/idea/structure/${response.session_id}`);
+      // Convert idea JSON into manual structure session (L0/L1 blocks) and open StructureEditor.
+      const manualSession = await api.convertIdeaToManualSession(response.session_id);
+      toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_opening_structure });
+      navigate(`/structure?session=${manualSession.session_id}`);
     } catch (err: any) {
       const isRateLimit = err.status === 429;
       const rawMsg = (err.message || "").toLowerCase();
@@ -184,18 +179,6 @@ const SlideGen = () => {
                   </div>
                 </div>
 
-                {/* Toggles */}
-                <div className="flex flex-wrap gap-5">
-                  <div className="flex items-center gap-2">
-                    <Switch id="docx-transitions" checked={docxTransitions} onCheckedChange={setDocxTransitions} />
-                    <Label htmlFor="docx-transitions" className="text-sm">{t.slidegen_transitions}</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch id="docx-thankyou" checked={docxThankYou} onCheckedChange={setDocxThankYou} />
-                    <Label htmlFor="docx-thankyou" className="text-sm">{t.slidegen_thankyou}</Label>
-                  </div>
-                </div>
-
                 {/* Upload button */}
                 <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
                 <Button className="w-full gradient-primary text-primary-foreground" disabled={isUploading} onClick={() => docxRef.current?.click()}>
@@ -263,18 +246,6 @@ const SlideGen = () => {
                         </button>
                       );
                     })}
-                  </div>
-                </div>
-
-                {/* Toggles */}
-                <div className="flex flex-wrap gap-5">
-                  <div className="flex items-center gap-2">
-                    <Switch id="idea-transitions" checked={ideaTransitions} onCheckedChange={setIdeaTransitions} />
-                    <Label htmlFor="idea-transitions" className="text-sm">{t.slidegen_transitions}</Label>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Switch id="idea-thankyou" checked={ideaThankYou} onCheckedChange={setIdeaThankYou} />
-                    <Label htmlFor="idea-thankyou" className="text-sm">{t.slidegen_thankyou}</Label>
                   </div>
                 </div>
 

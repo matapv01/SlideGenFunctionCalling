@@ -8,10 +8,11 @@ import { HistoryMixin        } from './mixins/HistoryMixin.js';
 import { ElementAPIMixin     } from './mixins/ElementAPIMixin.js';
 
 export class SlideEditorLogic {
-    constructor(rootElement, onElementSelect, onChange) {
+    constructor(rootElement, onElementSelect, onChange, onRerenderEquations = null) {
         this.root             = rootElement;
         this.onElementSelect  = onElementSelect;
         this.onChange         = onChange;
+        this.onRerenderEquations = onRerenderEquations;
 
         // Prefer the stable outer wrapper produced by processHTML
         this.canvas = this.root.querySelector('.slide-bg-wrapper') ||
@@ -48,6 +49,31 @@ export class SlideEditorLogic {
         this.boundDoubleClick = (e) => this.handleDoubleClick(e);
         this.root.addEventListener('mousedown', this.boundMouseDown, true);
         this.root.addEventListener('dblclick', this.boundDoubleClick, true);
+
+        // Listen for inline equation clicks dispatched directly from math-field elements.
+        // This bypasses MathLive's Shadow DOM which can swallow mouse events.
+        this.boundInlineEquationClick = (e) => {
+            const mf = e.detail?.mathField;
+            if (!mf) return;
+            if (mf._mathfieldActive || !mf.hasAttribute?.('read-only')) return;
+
+            // Always prioritize equation interaction over textbox selection.
+            if (typeof this.exitEditMode === 'function') this.exitEditMode();
+            if (typeof this.deselectAll === 'function') this.deselectAll();
+
+            // Enter equation edit mode so caret is inside formula.
+            if (typeof this.activateInlineEquationEditor === 'function') {
+                this.activateInlineEquationEditor(mf);
+            }
+
+            // Keep properties panel in equation mode.
+            if (typeof this.selectInlineEquationForProperties === 'function') {
+                this.selectInlineEquationForProperties(mf);
+            }
+
+            e.stopPropagation?.();
+        };
+        this.root.addEventListener('inline-equation-click', this.boundInlineEquationClick, true);
 
         // Real-time text-edit save: trigger saveHistory+onChange on every keystroke
         // Debounced 300ms so we don't hammer the API on every character
@@ -97,6 +123,9 @@ export class SlideEditorLogic {
         }
         if (this.boundDoubleClick) {
             this.root.removeEventListener('dblclick', this.boundDoubleClick, true);
+        }
+        if (this.boundInlineEquationClick) {
+            this.root.removeEventListener('inline-equation-click', this.boundInlineEquationClick, true);
         }
         window.removeEventListener('mousemove', this.boundMouseMove);
         window.removeEventListener('mouseup',   this.boundMouseUp);

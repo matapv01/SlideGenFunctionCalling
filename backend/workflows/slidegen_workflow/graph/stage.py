@@ -3,7 +3,7 @@ from typing import List, Dict, TypedDict, Any, Literal
 from pydantic import BaseModel, Field
 
 # Define the allowed tool categories based on your TOOLS_DICT keys
-ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS']
+ToolCategory = Literal['INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS']
 
 
 class Evaluation(BaseModel):
@@ -55,6 +55,8 @@ class State(TypedDict, total=False):
     current_slide_index: int
     length_slide_chunks: int
     current_slide_text: str
+    current_slide_plan: Dict
+    current_slide_context_map: str
     current_tool_call: Dict
     current_html_content: str
     current_html_path: str

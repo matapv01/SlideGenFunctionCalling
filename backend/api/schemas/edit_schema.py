@@ -42,4 +42,6 @@ class ApprovedStructureResponse(BaseModel):
     document_title: str
     document_outline: List[Dict[str, Any]]
     slide_chunks: List[Dict[str, Any]]
+    slide_positions: List[Any]
+    slide_context_maps: List[str]
     slide_types: List[str]

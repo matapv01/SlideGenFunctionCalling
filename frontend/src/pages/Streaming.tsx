@@ -10,13 +10,16 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
-import { ScaledSlidePreview } from "@/components/ScaledSlidePreview";
+import { ReadOnlySlide } from "@/components/ReadOnlySlide";
+import { resolveSlideBackground } from "@/lib/slideBackground";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SlideThumb {
   index: number;
   html: string;
   title?: string;
+  backgroundColor?: string;
+  backgroundImage?: string;
 }
 
 const Streaming = () => {
@@ -194,7 +197,15 @@ const Streaming = () => {
         </div>`;
       }
       
-      setSlides((prev) => [...prev, { index: slideIndex, html: htmlContent, title: slideTitle }]);
+      const { backgroundColor, backgroundImage } = resolveSlideBackground(data.design_settings, htmlContent);
+      
+      setSlides((prev) => [...prev, { 
+        index: slideIndex, 
+        html: htmlContent, 
+        title: slideTitle,
+        backgroundColor,
+        backgroundImage
+      }]);
     });
 
     es.addEventListener("complete", (e) => {
@@ -230,8 +241,6 @@ const Streaming = () => {
   useEffect(() => {
     const title = location.state?.title;
     const description = location.state?.description;
-    const enableTransitions = location.state?.enableTransitions ?? true;
-    const enableThankYou = location.state?.enableThankYou ?? true;
     const contentLength = location.state?.contentLength || "standard";
 
     // Check if this is an idea workflow
@@ -243,8 +252,6 @@ const Streaming = () => {
         title: title,
         prompt: description,
         content_length: contentLength,
-        enable_transition_slides: enableTransitions,
-        enable_thank_you_slide: enableThankYou,
       })
         .then((response) => {
           setIdeaSessionId(response.session_id);
@@ -344,6 +351,10 @@ const Streaming = () => {
   }, [isPresentMode]);
 
   const finalProjectId = streamProjectIdRef.current || projectId;
+  const displayTotalSlides =
+    typeof totalSlides === "number" && totalSlides <= 0
+      ? Math.max(slides.length, 1)
+      : totalSlides;
 
   const startPresentation = async (startIndex: number = 0) => {
     setCurrentSlideIndex(startIndex);
@@ -544,7 +555,7 @@ const Streaming = () => {
                 <FileText className="h-4 w-4 text-white" />
               </div>
               <h2 className="text-lg font-semibold">
-                {t.streaming_slides_header} {slides.length}/{totalSlides}
+                {t.streaming_slides_header} {slides.length}/{displayTotalSlides}
               </h2>
             </div>
             
@@ -577,9 +588,11 @@ const Streaming = () => {
                     
                     {/* Thumbnail */}
                     <div className="aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-muted/50 to-muted border relative">
-                      <ScaledSlidePreview
-                        html={slide.html}
-                        title={`Slide ${slide.index + 1} preview`}
+                      <ReadOnlySlide
+                        slideId={`streaming-thumb-${slide.index}`}
+                        htmlContent={slide.html}
+                        backgroundColor={slide.backgroundColor}
+                        backgroundImage={slide.backgroundImage}
                         className="absolute inset-0"
                       />
                       
@@ -643,9 +656,11 @@ const Streaming = () => {
           </DialogHeader>
           <div className="aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-muted/50 to-muted border-2 shadow-inner relative">
             {previewSlide && (
-              <ScaledSlidePreview
-                html={previewSlide.html}
-                title={`Slide ${previewSlide.index + 1}`}
+              <ReadOnlySlide
+                slideId={`streaming-preview-${previewSlide.index}`}
+                htmlContent={previewSlide.html}
+                backgroundColor={previewSlide.backgroundColor}
+                backgroundImage={previewSlide.backgroundImage}
                 className="absolute inset-0"
               />
             )}
@@ -718,12 +733,14 @@ const Streaming = () => {
 
           {/* Slide content - Full screen with maintained aspect ratio */}
           <div className="flex-1 flex items-center justify-center bg-black">
-            <div className="w-full h-full relative">
+            <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8 overflow-hidden">
               {slides[currentSlideIndex]?.html ? (
-                <ScaledSlidePreview
-                  html={slides[currentSlideIndex].html}
-                  title={`Slide ${currentSlideIndex + 1}`}
-                  className="w-full h-full"
+                <ReadOnlySlide
+                  slideId={`streaming-present-${currentSlideIndex}`}
+                  htmlContent={slides[currentSlideIndex].html}
+                  backgroundColor={slides[currentSlideIndex].backgroundColor}
+                  backgroundImage={slides[currentSlideIndex].backgroundImage}
+                  className="w-full h-full flex items-center justify-center"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">

@@ -7,6 +7,7 @@ from backend.domain.ports.capture_provider import CaptureProvider
 from backend.domain.ports.parser_provider import ParserProvider
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 from backend.application.services.base_workflow_service import BaseWorkflowService
+from backend.application.services.doc_workflow_service import DocWorkflowService
 
 logger = logging.getLogger(__name__)
 
@@ -23,6 +24,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         capture_provider: CaptureProvider,
         parser_provider: ParserProvider,
         tool_retriever: ToolRetrieveProvider,
+        doc_workflow_service: DocWorkflowService,
         conversion_service=None
     ):
         super().__init__(project_dir)
@@ -30,6 +32,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         self.capture_provider = capture_provider
         self.parser_provider = parser_provider
         self.tool_retriever = tool_retriever
+        self.doc_workflow_service = doc_workflow_service
         self.conversion_service = conversion_service
 
     def _get_providers(self) -> Dict[str, Any]:
@@ -47,14 +50,28 @@ class SlideGenWorkflowService(BaseWorkflowService):
         from backend.workflows.slidegen_workflow.main import main_workflow
 
         async def run_logic(output_folder, **kw):
+            _slide_options = kw.get('slide_options', {})
+            _workflow_mode = _slide_options.get('workflow_mode', 'auto_no_heading')
+            _stream_callback = kw.get('callback')
+
+            # Step 1: Run dedicated doc_workflow service first.
+            doc_state = await self.doc_workflow_service.preprocess_docx(
+                docx_file=docx_path,
+                workflow_mode=_workflow_mode,
+                slide_options=_slide_options,
+                callback=_stream_callback,
+            )
+
+            # Step 2: Run slidegen_workflow only after doc_workflow finished.
             # Hàm main_workflow trả về đường dẫn file ZIP
             return await main_workflow(
                 docx_file=docx_path,
                 output_folder=output_folder,
+                doc_state=doc_state,
                 infra_providers=self._get_providers(),
                 router_flags=kw.get('router_flags', False),
-                callback=kw.get('callback'),
-                slide_options=kw.get('slide_options', {})
+                callback=_stream_callback,
+                slide_options=_slide_options
             )
         
         if output_folder:

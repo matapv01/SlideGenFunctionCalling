@@ -34,6 +34,7 @@ services:
       - ./.env:/app/.env:ro
       - slidegen_db:/app/backend/infrastructure/database
       - slidegen_static:/app/static
+      - slidegen_faiss:/app/backend/infrastructure/faiss_tool_retriever_index
       - huggingface_cache:/root/.cache/huggingface
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:12008/health"]
@@ -45,4 +46,5 @@ services:
 volumes:
   slidegen_db:
   slidegen_static:
+  slidegen_faiss:
   huggingface_cache:

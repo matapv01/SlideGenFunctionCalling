@@ -12,11 +12,47 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     TRANSITION_PROMPT,
     SLIDE_TYPE_PROMPTS,
     HUMAN_PROMPT_TEMPLATE,
-    INTRO_PROMPT
+    INTRO_PROMPT,
+    MATH_EQUATION_RULES
 )
 import time
 
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
+
+# Keys that carry slide *content* — these must NOT leak into the next slide's prompt
+_CONTENT_KEYS = frozenset({
+    # text / titles
+    "main_title", "subtitle", "subtitle1", "subtitle2", "content_text",
+    "description_text", "header_text", "headline", "top_text", "title",
+    "author_line", "top_left_text", "bottom_text", "year",
+    "section_title", "section_subtitle",
+    # body content
+    "main_content", "content1", "content2", "content3", "content4",
+    "left_title", "right_title", "left_text", "right_text",
+    "left_content", "right_content", "description",
+    # list / structured content
+    "items", "agenda_items", "mission_items", "list_items", "steps",
+    # image alt text (content-specific)
+    "image_alt_text",
+})
+
+
+def _extract_style_params(tool_call: dict) -> dict:
+    """
+    Return a copy of *tool_call* that keeps only style-related parameters
+    (colors, fonts, opacity, layout, image URLs) and removes content fields
+    so the LLM won't copy text from the previous slide.
+    """
+    if not tool_call:
+        return {}
+    
+    result = {"name": tool_call.get("name", "")}
+    args = tool_call.get("arguments", {})
+    
+    style_args = {k: v for k, v in args.items() if k not in _CONTENT_KEYS}
+    result["arguments"] = style_args
+    return result
+
 
 def create_default_html(content_data) -> str:
     """Create default HTML when unable to get from LLM"""
@@ -85,15 +121,13 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         print("WARNING: No slide text provided. Using default.")
         current_text = "Default slide content"
     
-    if not slide_plans or idx >= len(slide_plans):
-        raise ValueError(f"Missing slide plan for slide index {idx}.")
-        
-    if not slide_context_maps or idx >= len(slide_context_maps):
-        raise ValueError(f"Missing slide context map for slide index {idx}.")
+    current_plan = state.get('current_slide_plan')
+    if not current_plan:
+        raise ValueError(f"Missing current_slide_plan for slide index {idx}.")
 
-    # Get the plan for the current slide
-    current_plan = slide_plans[idx]
-    current_context_map = slide_context_maps[idx]
+    current_context_map = state.get('current_slide_context_map')
+    if not current_context_map:
+        raise ValueError(f"Missing current_slide_context_map for slide index {idx}.")
     tool_category = current_plan.get('action', 'CONTENT_TOOLS')
     creative_thought = current_plan.get('thought', '') # This is our query!
 
@@ -155,7 +189,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 
     # Get slide type and corresponding prompt
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
-    
+
     # Prepare system prompt based on slide type
     if slide_type == 'CONTENT_TOOLS':
         # Handle highlight color for content slides
@@ -165,19 +199,19 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         else:
             # First content slide - let LLM choose
             highlight_instruction = "- This is the FIRST content slide - choose ONE color from the list and use it consistently"
-        
+
         system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
-    
+
     elif slide_type == 'TRANSITION_TOOLS':
         # Handle previous transition context
         previous_transition = state.get('previous_transition_tool_call', {})
         if previous_transition:
             prev_tool_name = previous_transition.get('name', 'unknown')
             prev_args = previous_transition.get('arguments', {})
-            
+
             # Format arguments as readable text (avoiding JSON braces that confuse LangChain)
             args_text = "\n".join([f"    - {key}: {value}" for key, value in prev_args.items()])
-            
+
             # Extract key styling info from previous transition
             transition_context = f"""* PREVIOUS TRANSITION details:
   - Tool used: {prev_tool_name}
@@ -193,11 +227,16 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
 * ONLY change the text content to match the new section heading"""
         else:
             transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-        
+
         system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
-    
+
     else:
-        system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, CONTENT_PROMPT)
+        # For all other slide types (INTRO, CHART, THANK_YOU, TEAM), use prompt as-is
+        # These prompts don't have template variables to format
+        system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, INTRO_PROMPT)
+
+    # Prepend MATH_EQUATION_RULES to all prompts for consistent equation handling
+    system_prompt = MATH_EQUATION_RULES + "\n\n" + system_prompt
     
     slidegen_prompt = ChatPromptTemplate.from_messages([
         ("system", system_prompt),
@@ -216,9 +255,26 @@ def generate_slide(state: State, config: RunnableConfig) -> State: # <-- 2. ADD 
         print(current_text)
         print("-" * 100)
 
+        # Extract recently used tools for the prompt
+        recent_tools_list = []
+        if hasattr(tool_retriever, 'tool_usage_history') and tool_category in tool_retriever.tool_usage_history:
+            # Get unique tools used recently (most recent first)
+            history = list(tool_retriever.tool_usage_history[tool_category])
+            history.reverse()
+            seen = set()
+            for t_name, _ in history:
+                if t_name not in seen:
+                    recent_tools_list.append(f"- {t_name}")
+                    seen.add(t_name)
+                    if len(recent_tools_list) >= 3: # Only show top 3 recent to avoid overwhelming
+                        break
+        
+        recent_tools_str = "\n".join(recent_tools_list) if recent_tools_list else "- (None used recently)"
+
         response = slide_generator_runnable.invoke({
             "slide_context_map": current_context_map,
-            "previous_slide_function_call": json.dumps(previous_slide_function_call, indent=2),
+            "previous_slide_function_call": json.dumps(_extract_style_params(previous_slide_function_call), indent=2),
+            "recent_tools": recent_tools_str,
             "slide_plan": json.dumps(current_plan, indent=2),
             "slide_content": current_text,
             "previous_function_call": json.dumps(previous_function_call, indent=2),

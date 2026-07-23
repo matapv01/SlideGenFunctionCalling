@@ -53,22 +53,30 @@ const Tip = ({
 
 // ─── Font options ─────────────────────────────────────────────────────────────
 const FONT_FAMILIES = [
-  { value: "Inter, sans-serif", label: "Inter" },
+  // ── Google Fonts for Vietnamese & Slides ──
+  { value: "'Be Vietnam Pro', sans-serif", label: "Be Vietnam Pro" },
+  { value: "'Nunito', sans-serif", label: "Nunito" },
+  { value: "'Nunito Sans', sans-serif", label: "Nunito Sans" },
+  { value: "'Lato', sans-serif", label: "Lato" },
+  { value: "'Raleway', sans-serif", label: "Raleway" },
+  { value: "'Source Sans Pro', sans-serif", label: "Source Sans Pro" },
+  { value: "'Poppins', sans-serif", label: "Poppins" },
+  { value: "'Montserrat', sans-serif", label: "Montserrat" },
+  { value: "'Roboto', sans-serif", label: "Roboto" },
+  { value: "'Open Sans', sans-serif", label: "Open Sans" },
+  { value: "'Inter', sans-serif", label: "Inter" },
+  // ── Serif ──
+  { value: "'Playfair Display', serif", label: "Playfair Display" },
+  { value: "'Lora', serif", label: "Lora" },
+  { value: "Georgia, serif", label: "Georgia" },
+  { value: "'Times New Roman', serif", label: "Times New Roman" },
+  // ── System ──
   { value: "Arial, sans-serif", label: "Arial" },
   { value: "Helvetica, sans-serif", label: "Helvetica" },
-  { value: "'Times New Roman', serif", label: "Times New Roman" },
-  { value: "Georgia, serif", label: "Georgia" },
-  { value: "'Courier New', monospace", label: "Courier New" },
   { value: "Verdana, sans-serif", label: "Verdana" },
   { value: "Tahoma, sans-serif", label: "Tahoma" },
   { value: "'Trebuchet MS', sans-serif", label: "Trebuchet MS" },
-  { value: "'Roboto', sans-serif", label: "Roboto" },
-  { value: "'Open Sans', sans-serif", label: "Open Sans" },
-  { value: "'Montserrat', sans-serif", label: "Montserrat" },
-  { value: "'Playfair Display', serif", label: "Playfair Display" },
-  { value: "'Lora', serif", label: "Lora" },
-  { value: "'Poppins', sans-serif", label: "Poppins" },
-  { value: "Nunito, sans-serif", label: "Nunito" },
+  { value: "'Courier New', monospace", label: "Courier New" },
 ];
 
 const FONT_WEIGHTS = [
@@ -101,7 +109,8 @@ const matchFontFamily = (fontFamily: string | undefined): string => {
       normalized.startsWith(labelLower) ||
       valueLower.startsWith(normalized.split(',')[0].trim());
   });
-  return match?.value || FONT_FAMILIES[0].value;
+  // Return original fontFamily if not in list — preserves slide's custom font instead of defaulting to Inter
+  return match?.value || fontFamily;
 };
 
 const normalizeFontWeight = (fw: string | undefined): string => {
@@ -195,7 +204,7 @@ export const PropertiesPanel = ({
 
   if (!el) {
     return (
-      <div className="w-72 border-l bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground px-8">
+      <div data-properties-panel="true" className="w-72 border-l bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground px-8">
         <div className="rounded-2xl bg-muted/60 p-5 flex items-center justify-center">
           <MousePointer className="h-7 w-7 opacity-30" />
         </div>
@@ -236,6 +245,7 @@ export const PropertiesPanel = ({
   return (
     <TooltipProvider>
     <div
+      data-properties-panel="true"
       className="w-72 border-l bg-background flex flex-col h-full overflow-y-auto overflow-x-hidden [&::-webkit-scrollbar]:hidden"
       style={{ scrollbarWidth: "none" }}
     >

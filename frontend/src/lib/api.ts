@@ -177,13 +177,11 @@ export const api = {
 
   // Upload for streaming workflow
   uploadDocxForStream: (file: File, options: {
-    enable_transition_slides?: boolean;
-    enable_thank_you_slide?: boolean;
+    workflow_mode?: string;
   } = {}) => {
     const formData = new FormData();
     formData.append("file", file);
-    formData.append("enable_transition_slides", String(options.enable_transition_slides ?? true));
-    formData.append("enable_thank_you_slide", String(options.enable_thank_you_slide ?? true));
+    formData.append("workflow_mode", options.workflow_mode ?? "auto_no_heading");
     return request<{ filename: string }>("/generate/docx/prepare-stream", { method: "POST", body: formData });
   },
 
@@ -220,7 +218,6 @@ export const api = {
   approveStructure: (sessionId: string) =>
     request<{
       success: boolean;
-      message: string;
       session_id: string;
       document_title: string;
       document_outline: any[];
@@ -233,9 +230,22 @@ export const api = {
       body: JSON.stringify({ session_id: sessionId }),
     }),
 
+  // Markdown Parser endpoints - /api/generate/markdown/*
+  parseMarkdown: (data: { markdown: string; default_title?: string }) =>
+    request<{
+      success: boolean;
+      document_title: string;
+      structure: any[];
+      validation_warnings: string[];
+      node_count: number;
+    }>("/generate/markdown/parse", {
+      method: "POST",
+      body: JSON.stringify(data),
+    }),
+
   // Slides endpoints - /api/projects/{project_id}/slides and /api/slides/{slide_id}
-  getSlides: (projectId: string | number) =>
-    request<SlidesResponse>(`/projects/${projectId}/slides`),
+  getSlides: (projectId: string | number, limit?: number) =>
+    request<SlidesResponse>(`/projects/${projectId}/slides${limit ? `?limit=${limit}` : ''}`),
 
   getSlidesByProjectName: (projectName: string) =>
     request<{ project_name: string; project_id: number; slides: any[]; count: number }>(
@@ -346,8 +356,6 @@ export const api = {
     title?: string;
     prompt: string;
     content_length?: string;
-    enable_transition_slides?: boolean;
-    enable_thank_you_slide?: boolean;
   }) =>
     request<{
       session_id: string;
@@ -359,14 +367,22 @@ export const api = {
       body: JSON.stringify(data),
     }),
 
+    // Convert idea session to manual structure session (L0/L1 editor flow)
+    convertIdeaToManualSession: (sessionId: string) =>
+      request<{
+        success: boolean;
+        session_id: string;
+        document_title: string;
+      }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}/manual-session`, {
+        method: "POST",
+      }),
+
   // Get idea structure details
   getIdeaStructure: (sessionId: string) =>
     request<{
       session_id: string;
       title: string;
       slide_chunks: any[];
-      enable_transition_slides: boolean;
-      enable_thank_you_slide: boolean;
       metadata?: any;
     }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`),
 
@@ -374,15 +390,11 @@ export const api = {
   updateIdeaStructure: (sessionId: string, data: {
     title: string;
     slide_chunks: any[];
-    enable_transition_slides: boolean;
-    enable_thank_you_slide: boolean;
   }) =>
     request<{
       session_id: string;
       title: string;
       slide_chunks: any[];
-      enable_transition_slides: boolean;
-      enable_thank_you_slide: boolean;
       metadata?: any;
     }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}`, {
       method: "PUT",
@@ -397,6 +409,7 @@ export const api = {
     tier: string;
     is_active: boolean;
     expires_at?: string;
+    cancel_at_period_end: boolean;
     daily_limits: {
       idea_generation: number;
       docx_upload: number;

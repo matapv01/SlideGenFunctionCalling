@@ -94,6 +94,25 @@ Provide detailed feedback on what works well and what needs improvement, then ma
 
 # ================================= SLIDE GENERATION PROMPTS =================================
 
+# Critical rule for math/equations - include in all slide prompts
+# NOTE: Use {{ and }} to escape braces for LangChain template
+MATH_EQUATION_RULES = """
+🔢 **CRITICAL - MATH/EQUATIONS FORMAT:**
+⚠️ ALL mathematical expressions MUST be written in LaTeX and wrapped strictly inside `<math-field>` tags.
+
+❌ **ABSOLUTELY FORBIDDEN - DO NOT USE:**
+   - Unicode superscripts: ², ³, ⁴, ⁵, ⁿ
+   - Unicode subscripts: ₀, ₁, ₂, ₃, ₙ  
+   - Unicode fractions: ½, ¼, ⅓
+   - Unicode math symbols as text: √, ∫, ∑, ∏, ∞
+   - Plain text like "x^2" or "a_1"
+   - `$E = mc^2$` or `\(E=mc^2\)`
+
+✅ **CORRECT EXAMPLES:**
+   - Quadratic: `<math-field>ax^2 + bx + c = 0</math-field>`
+   - Fraction: `<math-field>\\frac{{-b \\pm \\sqrt{{b^2-4ac}}}}{{2a}}</math-field>`
+"""
+
 INTRO_PROMPT = """
 🎯 INTRO SLIDE - Title slide, first impression!
 
@@ -104,11 +123,18 @@ INTRO_PROMPT = """
 
 **RULES:**
 1. CONTENT: Short title + brief subtitle. No fluff!
-2. HTML: Use <br> or <p> for line breaks ONLY
+2. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
+   ✅ CORRECT: "Smart Contract Security<br>Detecting Vulnerabilities<br>A Community Project"
+   ❌ WRONG: "Smart Contract Security Detecting Vulnerabilities A Community Project"
+   Every sentence, bullet point, or idea = separate line with <br>!
+3. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
+4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/347/1600/900) NOT text! Text seeds cause 404s!
-4. MATCH previous slide's style
+5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
+   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
+   ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
+6. MATCH previous slide's visual style
 
 Generate clean, HIGHLY READABLE function call.
 """
@@ -127,7 +153,9 @@ TRANSITION_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/523/1600/900) NOT text! Text seeds cause 404s!
-4. CONSISTENCY: {previous_transition_context}
+4. MATH/EQUATIONS: If you need formulas, use: `<math-field>formula</math-field>`
+   ❌ FORBIDDEN: Unicode superscripts/subscripts like ², ³, ₂, ₃ — use LaTeX instead!
+5. CONSISTENCY: {previous_transition_context}
 
 Generate BOLD, ULTRA-VISIBLE function call.
 """
@@ -145,12 +173,19 @@ CONTENT_PROMPT = """
    {highlight_instruction}
    Example: "AI improves <span style="font-weight: bold;">efficiency</span> by 80%"
    ⚠️ ONLY use <span style="font-weight:bold"> for KEY PHRASES!
-2. HTML: Use <br> or <p> for line breaks ONLY
+2. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
+   ✅ CORRECT: "Lost $3.35B in 2025<br>630 security incidents<br>37% increase vs 2024"
+   ❌ WRONG: "Lost $3.35B in 2025 630 security incidents 37% increase vs 2024"
+   Every bullet point, fact, or sentence = separate line with <br>!
+3. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
    ❌ NO style attributes except for key phrase highlights!
-3. CONTENT: Concise, no filler words
-4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
+4. CONTENT: Concise, no filler words
+5. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
+6. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
+   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
+   ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
 
 Generate READABLE, professional function call.
 """
@@ -166,6 +201,7 @@ THANK_YOU_PROMPT = """
 **RULES:**
 1. CONTENT: "Thank You" ONLY
 2. IMAGE: seed/success/1600/900 or gradient
+3. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
 
 Generate simple, HIGHLY VISIBLE function call.
 """
@@ -184,8 +220,33 @@ TEAM_PROMPT = """
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
 3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
    ⚠️ MUST use NUMERIC seed (e.g., seed/456/1600/900) NOT text! Text seeds cause 404s!
+4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
 
 Generate professional, READABLE function call.
+"""
+
+CHART_PROMPT = """
+🎯 CHART SLIDE - Data visualization!
+
+**CRITICAL: CHART MUST BE CLEAR AND READABLE!**
+⚠️ Text labels must contrast with background
+⚠️ Axis labels and values must be legible
+⚠️ Avoid cluttered data points or overlapping labels
+
+**RULES:**
+1. DATA: Extract series names, values, time points, and metrics from content
+   - Identify multi-series trends if available
+   - Use appropriate axis labels (x: time/category, y: metric)
+2. INSIGHT: Translate the main analytical message into clear language
+   - What trend or pattern should the viewer see?
+   - What makes this data meaningful?
+3. VISUAL: Generate high-quality line/bar/area charts
+   - Use contrasting colors for multiple series
+   - Include grid lines for readability
+   - Ensure proper spacing and sizing
+4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
+
+Generate professional, DATA-DRIVEN function call.
 """
 
 # Map slide types to their specific prompts
@@ -195,12 +256,18 @@ SLIDE_TYPE_PROMPTS = {
     'CONTENT_TOOLS': CONTENT_PROMPT,
     'THANK_YOU_TOOLS': THANK_YOU_PROMPT,
     'TEAM_TOOLS': TEAM_PROMPT,
+    'CHART_TOOLS': CHART_PROMPT,
 }
 
 HUMAN_PROMPT_TEMPLATE = """
 CONTEXT: {slide_context_map}
 
-PREVIOUS SLIDE (match this style!): {previous_slide_function_call}
+PREVIOUS SLIDE STYLE (match VISUAL STYLE ONLY — colors, fonts, layout. Do NOT reuse any text/content from here): {previous_slide_function_call}
+
+DIVERSITY REQUIREMENT:
+To keep the presentation visually engaging, you MUST NOT use the exact same tool as the `previous_slide_function_call`. 
+Additionally, try to AVOID these recently used tools if possible:
+{recent_tools}
 
 DESIGN PLAN: {slide_plan}
 
@@ -219,29 +286,48 @@ EVALUATION OF PREVIOUS ATTEMPT:
 SLIDE_PLANNER_SYSTEM_PROMPT = """
 You are an expert presentation designer and slide planner. Your task is to analyze the content for a single slide and create a high-level plan for its visual design and type.
 
-**INSTRUCTIONS:**
+**TOOL CATEGORIES EXPLAINED:**
 
-1.  **Check Slide Number FIRST:** Before anything else, check the SLIDE NUMBER provided.
-2.  **Develop a Creative Vision (`thought`):** Based on the content, describe your vision for the slide.
-    *   What is the key message?
-    *   What layout would be best (e.g., two-column, grid, single image with text)?
-    *   What is the appropriate mood or tone (e.g., professional, playful, minimalist, high-tech)?
-    *   Suggest color themes, font styles, and whether an image or icon would enhance the message.
-3.  **Select the Right Tool Category (`action`):** Based on the slide number and content type, choose the appropriate tool category.
+- **INTRO_TOOLS**: Title/introduction slides (only for slide #1). Features prominent titles, subtitles, and opening visuals.
+- **TRANSITION_TOOLS**: Section dividers or transition slides. Mark chapter breaks or topic shifts in the presentation.
+- **CONTENT_TOOLS**: General content slides for text, points, concepts, explanations, stories, or narrative content. Flexible layout for various information types.
+- **TEAM_TOOLS**: Slides specifically designed for team members, employees, or people profiles with photos and bios.
+- **THANK_YOU_TOOLS**: Closing/thank you slides for the end of the presentation.
+- **CHART_TOOLS**: Data visualization slides. Use when the slide's primary purpose is to display and analyze data through charts, graphs, trends, metrics, comparisons, time-series analysis, or statistical insights.
 
-**CRITICAL RULES FOR TOOL SELECTION:**
-- **SLIDE NUMBER 1 ONLY**: MUST use 'INTRO_TOOLS' - This is the title/introduction slide
-- **SLIDE NUMBER 2+**: Choose based on content:
-  * If content starts with "TRANSITION SLIDE" → use 'TRANSITION_TOOLS'
-  * If content starts with "THANK YOU SLIDE" → use 'THANK_YOU_TOOLS'
-  * If content is about team members → use 'TEAM_TOOLS'
-  * For all other content (main points, details, lists) → use 'CONTENT_TOOLS'
-- **NEVER use INTRO_TOOLS for slides after slide 1**
+**INTELLIGENT ANALYSIS PROCESS:**
 
-**CRITICAL OUTPUT REQUIREMENT:**
-- You MUST return ONLY a single, valid JSON object that strictly follows the required schema.
+1. **Understand the Slide's PRIMARY PURPOSE:**
+   - What is the main goal of this slide? (teach concept, show data trends, introduce person, mark section break, close presentation, set stage?)
+   - Who is the audience and what do they need to understand?
+
+2. **Identify Content Type** (look beyond surface keywords):
+   - **Data-driven content**: Numbers, percentages, metrics, trends over time, year-over-year growth, market analysis, performance comparisons
+     → These belong to **CHART_TOOLS** (visual data presentation is most effective)
+   - **People-focused content**: Team bios, member introductions, names with roles/titles
+     → **TEAM_TOOLS** (specialized for human presentation)
+   - **Narrative/Conceptual**: Stories, explanations, lessons, processes, abstract ideas, text-heavy content
+     → **CONTENT_TOOLS** (flexible for varied information)
+   - **Section breaks**: "Next topic", "Chapter 3", visual dividers between major parts
+     → **TRANSITION_TOOLS** (visual separator)
+   - **Closing moments**: Gratitude, appreciation, final thoughts
+     → **THANK_YOU_TOOLS** (closing aesthetic)
+
+3. **Make Your Choice** (`action`):
+   - **Slide #1 is always INTRO_TOOLS** (presentation opening)
+   - **For all other slides**: Select the category that best serves the slide's primary purpose
+   - Trust your judgment: match content essence to the tool that will make it shine
+   - **NEVER default to CONTENT_TOOLS** just because you're unsure—analyze carefully and choose the specialized tool if it fits
+
+4. **Craft Your Vision** (`thought`): Write 2-3 sentences on:
+   - The visual mood and style that will make this message land
+   - Key layout approach (what goes where)
+   - Any special considerations (bold colors, subtle, high-tech, warm, etc.)
+
+**OUTPUT REQUIREMENT:**
+- Return ONLY a single, valid JSON object that strictly follows the required schema.
 - Do not add any text, explanations, or markdown formatting before or after the JSON object.
-- The 'action' key must be one of the following exact strings: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS'.
+- The 'action' key must be one of: 'INTRO_TOOLS', 'TRANSITION_TOOLS', 'CONTENT_TOOLS', 'TEAM_TOOLS', 'THANK_YOU_TOOLS', 'CHART_TOOLS'.
 """
 
 SLIDE_PLANNER_HUMAN_PROMPT = """

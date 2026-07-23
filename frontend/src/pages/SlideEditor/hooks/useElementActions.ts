@@ -90,8 +90,8 @@ export const useElementActions = ({
       const color = '#333333';
       const fontSize = 32;
       html = `<div id="${id}" class="element equation" data-type="equation" data-selectable="true" data-latex="${defaultLatex}"
-        style="position:absolute;left:${x}px;top:${y}px;width:500px;min-height:80px;background:transparent;cursor:move;display:flex;align-items:center;justify-content:center;padding:8px;font-size:${fontSize}px;color:${color};"
-        ><div class="equation-overlay"></div><math-field value="${safeLatexAttr}" style="width:fit-content;max-width:100%;min-height:60px;"></math-field></div>`;
+        style="position:absolute;left:${x}px;top:${y}px;width:fit-content;min-height:40px;height:fit-content;background:transparent;cursor:move;display:flex;align-items:center;justify-content:center;padding:10px;font-size:${fontSize}px;color:${color};"
+        ><div class="equation-overlay"></div><math-field value="${safeLatexAttr}" style="width:fit-content;max-width:100%;min-height:30px;"></math-field></div>`;
     }
 
     if (!html) return;

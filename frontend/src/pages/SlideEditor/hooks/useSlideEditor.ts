@@ -64,6 +64,25 @@ export const useSlideEditor = () => {
     didApplyInitialSlideRef.current = true;
   }, [loading, slides.length, searchParams, setCurrentSlideIndex]);
 
+  // Restore history state from sessionStorage after mount
+  useEffect(() => {
+    if (!projectId || !slideCanvasRef.current || loading) return;
+    
+    const savedHistoryKey = `slide-history-${projectId}`;
+    const savedHistory = sessionStorage.getItem(savedHistoryKey);
+    
+    if (savedHistory) {
+      try {
+        const historyState = JSON.parse(savedHistory);
+        slideCanvasRef.current.restoreHistoryState?.(historyState);
+        sessionStorage.removeItem(savedHistoryKey);
+        console.log('[SlideEditor] Restored history state from sessionStorage');
+      } catch (e) {
+        console.warn('[SlideEditor] Failed to restore history state:', e);
+      }
+    }
+  }, [projectId, loading, slideCanvasRef]);
+
   // ── Slide CRUD ────────────────────────────────────────────────────────
   const { addSlide, addSlideFromTemplate, deleteSlide, duplicateSlide, reorderSlides } = useSlideActions({
     slides,

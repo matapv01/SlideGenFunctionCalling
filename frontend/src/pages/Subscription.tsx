@@ -77,7 +77,10 @@ const Subscription = () => {
         api.getSubscriptionInfo(),
         api.getPricingInfo()
       ]);
-      setSubscriptionInfo(subInfo);
+      setSubscriptionInfo({
+        ...subInfo,
+        cancel_at_period_end: subInfo.cancel_at_period_end ?? false,
+      });
       setPricingTiers(pricingInfo.tiers);
     } catch (error: any) {
       toast({

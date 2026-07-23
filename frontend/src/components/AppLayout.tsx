@@ -30,7 +30,7 @@ const navItemDefs = [
   { labelKey: "sidebar_guide" as const, path: "/guide", icon: BookOpen },
 ];
 
-export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const AppLayout: React.FC<{ children: React.ReactNode; headerContent?: React.ReactNode }> = ({ children, headerContent }) => {
   const { t } = useLanguage();
   const navItems = navItemDefs.map((item) => ({ ...item, label: t[item.labelKey] || item.labelKey }));
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -55,7 +55,7 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
     if (isAuthenticated) {
       api.getSubscriptionInfo().then((info: any) => {
         setSubscriptionTier(info.tier || "free");
-      }).catch(() => {});
+      }).catch(() => { });
     }
   }, [isAuthenticated]);
 
@@ -98,9 +98,9 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           <TooltipProvider delayDuration={0}>
             {navItems.map((item) => {
               // Check if current path matches or is a related sub-route
-              const isActive = location.pathname === item.path || 
+              const isActive = location.pathname === item.path ||
                 (item.path === "/projects" && (
-                  location.pathname.startsWith("/view/") || 
+                  location.pathname.startsWith("/view/") ||
                   location.pathname.startsWith("/editor/") ||
                   location.pathname.startsWith("/streaming/")
                 ));
@@ -192,7 +192,11 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           <Button variant="ghost" size="icon" className="lg:hidden" onClick={() => setSidebarOpen(true)}>
             <Menu className="h-5 w-5" />
           </Button>
-          <div className="hidden lg:block" />
+          {headerContent ? (
+            <div className="hidden min-w-0 flex-1 pr-3 lg:flex lg:items-center">{headerContent}</div>
+          ) : (
+            <div className="hidden lg:block" />
+          )}
           <div className="flex items-center gap-2">
             {/* Language and Theme toggles for all users */}
             <LanguageToggle />
@@ -215,8 +219,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
                       <div className={cn(
                         "text-xs leading-tight font-medium capitalize",
                         subscriptionTier === "ultra" && "text-yellow-600 dark:text-yellow-400",
-                        subscriptionTier === "plus"  && "text-blue-600 dark:text-blue-400",
-                        subscriptionTier === "free"  && "text-muted-foreground"
+                        subscriptionTier === "plus" && "text-blue-600 dark:text-blue-400",
+                        subscriptionTier === "free" && "text-muted-foreground"
                       )}>
                         {subscriptionTier === "ultra" ? "👑 ultra" : subscriptionTier}
                       </div>
@@ -244,8 +248,8 @@ export const AppLayout: React.FC<{ children: React.ReactNode }> = ({ children })
           </div>
         </header>
 
-        <main 
-          key={location.pathname} 
+        <main
+          key={location.pathname}
           className="flex-1 overflow-y-auto animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out fill-mode-both"
         >
           {children}

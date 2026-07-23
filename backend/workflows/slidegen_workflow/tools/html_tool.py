@@ -1,3 +1,6 @@
+import math
+DEFAULT_FONT_FAMILY = "'Be Vietnam Pro', sans-serif"
+
 #---------------------- SLIDE INTRO
 def generate_title_slide(
     main_title="BUSINESS PLAN",
@@ -5,7 +8,6 @@ def generate_title_slide(
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
-    font_family="'Inter', sans-serif",
     show_skyline=True,
     skyline_opacity=0.3,
     triangle_opacity=0.2,
@@ -20,12 +22,10 @@ def generate_title_slide(
     :param bg_color: Primary background color (hex code)
     :param bg_gradient_to: Secondary background color for gradient effect (hex code)
     :param text_color: Color of the title and subtitle text (hex code)
-    :param font_family: Font family for all text elements
     :param show_skyline: Whether to show the city skyline silhouette at the bottom
     :param skyline_opacity: Opacity of the skyline silhouette (0.0 to 1.0)
     :param triangle_opacity: Opacity of the triangle decorative elements (0.0 to 1.0)
-    :param title_font_size: Font size for the main title
-    :param subtitle_font_size: Font size for the subtitle
+
     :param show_border: Whether to show the dashed border frame
     :param custom_css: Additional custom CSS to be included
     :return: A string containing the HTML code for the slide
@@ -37,7 +37,7 @@ def generate_title_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -49,7 +49,7 @@ def generate_title_slide(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -226,7 +226,6 @@ def generate_introduction_slide(
     bg_color="#1a4b8c",
     bg_gradient_to="#2a6cb7",
     text_color="#FFFFFF",
-    font_family="'Inter', sans-serif",
     show_decorative_triangles=True,
     triangle_opacity=0.15,
     show_border=True,
@@ -246,7 +245,6 @@ def generate_introduction_slide(
     :param text_color: Color of all text elements (hex code)
     :param title_font_size: Font size for the main title
     :param content_font_size: Font size for the content text
-    :param font_family: Font family for all text elements
     :param show_decorative_triangles: Whether to show decorative triangle elements
     :param triangle_opacity: Opacity of the decorative triangles (0.0 to 1.0)
     :param show_border: Whether to show the dashed border frame
@@ -271,7 +269,7 @@ def generate_introduction_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -283,7 +281,7 @@ def generate_introduction_slide(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -493,8 +491,6 @@ def generate_intro_slide1(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
-    font_family="'Inter', sans-serif",
-    main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"        # Thêm tham số cho URL ảnh
 ):
     """
@@ -514,7 +510,7 @@ def generate_intro_slide1(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_bg_color};
             overflow: hidden;
         }}
@@ -622,7 +618,7 @@ def generate_intro_slide1(
             color: {title_color};
             margin: 0 0 2.5rem 0; 
             font-weight: 800;
-            font-style: {main_title_font_style};
+            font-style: {DEFAULT_FONT_FAMILY};
             line-height: 1.1;
             text-align: center;
             letter-spacing: -0.02em;
@@ -705,7 +701,6 @@ def generate_elegant_intro_slide(
     main_title="My Amazing Presentation",
     subtitle="This is a test slide to demonstrate the improved layout and styling.",
     image_url="https://images.pexels.com/photos/3807735/pexels-photo-3807735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    font_family="'Be Vietnam Pro', sans-serif",
     background_color="#EAE3D9",
     text_color="#4A403A",
     decoration_color_start="#F7DC6F",
@@ -761,14 +756,14 @@ def generate_elegant_intro_slide(
     <title>Elegant Intro Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {background_color};
             color: {text_color};
             overflow: hidden;
@@ -934,7 +929,6 @@ def generate_elegant_intro_slide(
 
 def generate_title_slide_2(
     main_title="THIS IS YOUR<br><span class='highlight'>PRESENTATION</span><br>TITLE",
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#06B6D4",
     shadow_color="#0E7490",
     text_color="#6B7280",
@@ -972,14 +966,14 @@ def generate_title_slide_2(
     <title>Corporate Title Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: #FFFFFF;
         }}
@@ -1065,7 +1059,6 @@ def generate_dynamic_intro_slide(
     subtitle="This is where we outline our core mission and the driving force behind our vision.",
     # ĐÃ THAY ĐỔI: Ảnh nền mới, hiện đại hơn
     image_url="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop",
-    font_family="'Poppins', 'Inter', sans-serif",
     primary_color="#4F46E5",
     secondary_color="#3730A3",
     text_color="#FFFFFF"
@@ -1093,14 +1086,14 @@ def generate_dynamic_intro_slide(
     <title>Dynamic Intro Slide - Large Text</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
 
@@ -1235,7 +1228,6 @@ def generate_big_concept_slide(
     main_title="BIG<br>CONCEPT",
     subtitle="Bring the attention of your audience over a key concept using icons or illustrations",
     icon_name="space",
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -1275,14 +1267,14 @@ def generate_big_concept_slide(
     <title>Big Concept Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -1418,8 +1410,7 @@ def generate_elegant_agenda_slide(
     subtitle_color="#B48E8E",
     text_color="#4B5563", # Medium Gray
     # --- Font chữ ---
-    font_family_title="'Playfair Display', serif",
-    font_family_body="'Montserrat', sans-serif",
+
     custom_css=""
 ):
     """
@@ -1437,12 +1428,12 @@ def generate_elegant_agenda_slide(
     <title>{main_title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{ font-size: 16px; }}
         body, html {{
             margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: {font_family_body};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
         }}
@@ -1494,7 +1485,7 @@ def generate_elegant_agenda_slide(
         }}
         
         .main-title {{
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 5rem;
             font-weight: 600;
             font-style: italic;
@@ -1563,8 +1554,6 @@ def generate_playful_title_slide(
     main_title="Introduction<br>to penguins",
     subtitle="Introduce penguins here. Mention their characteristics and unique behaviors.",
     illustration_character="penguin",
-    font_family_title="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     top_bg_color="#FFC947",
     bottom_bg_color="#E8715D",
     text_color="#2D2D2D",
@@ -1591,15 +1580,15 @@ def generate_playful_title_slide(
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Playful Title Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
         .slide-container {{ width: 100%; height: 100%; background-color: {top_bg_color}; position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 4rem 5rem; }}
         .slide-container::after {{ content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 15%; background-color: {bottom_bg_color}; z-index: 0; }}
         .text-column {{ z-index: 10; display: flex; flex-direction: column; justify-content: center; }}
-        .main-title {{ font-family: 'Patrick Hand', cursive; font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 400; color: #2D2D2D; line-height: 1.15; margin-bottom: 2.5rem; }}
-        .subtitle {{ font-family: {font_family_body}; font-size: 2rem; color: {text_color}; line-height: 1.6; max-width: 45ch; font-weight: 400; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 400; color: #2D2D2D; line-height: 1.15; margin-bottom: 2.5rem; }}
+        .subtitle {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2rem; color: {text_color}; line-height: 1.6; max-width: 45ch; font-weight: 400; }}
         .illustration-column {{ z-index: 5; display: flex; align-items: center; justify-content: center; }}
         .illustration-wrapper {{ position: relative; width: 90%; max-width: 450px; }}
         .penguin-svg {{ width: 100%; height: auto; filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.1)); }}
@@ -1624,7 +1613,6 @@ def generate_minimalist_title_slide(
     main_title="This is your presentation title",
     subtitle="A subtitle to provide more context or a tagline",
     author_line="Presented by Your Name / Company",
-    font_family="'Inter', sans-serif",
     bg_color="#111827",
     text_color="#F9FAFB",
     subtitle_color="#E5E7EB",
@@ -1643,7 +1631,7 @@ def generate_minimalist_title_slide(
     <title>Modern Title Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{
             --accent-color: {accent_color};
@@ -1653,7 +1641,7 @@ def generate_minimalist_title_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -1755,7 +1743,6 @@ def generate_mission_slide(
     subtitle="Elaborate on your key message or provide a call to action. This text can be a bit longer.",
     image_url="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", 
     image_alt_text="A team collaborating in a modern office, representing mission and goals",
-    font_family="'Inter', sans-serif",
     background_color_left="#F5EBE0",
     text_color_title="#4E443F",
     text_color_top="#4E443F",
@@ -1786,7 +1773,7 @@ def generate_mission_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             font-size: var(--base-font-size);
         }}
@@ -1925,7 +1912,7 @@ def generate_training_intro_slide(
     title_color="#b8d89f",
     text_color="#e8d7a8",
     image_url="https://images.pexels.com/photos/3587620/pexels-photo-3587620.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1",
-    font_family="'Inter', sans-serif",
+
 ):
     """
     Generate a training introduction slide with dark background and bottom image.
@@ -1940,7 +1927,6 @@ def generate_training_intro_slide(
     :param title_color: Color for the main title (hex code, light green by default)
     :param text_color: Color for the description text (hex code, light yellow by default)
     :param image_url: URL of the image to display in bottom section
-    :param font_family: Font family for all text elements
     :param title_font_size: Font size for the main title
     :param text_font_size: Font size for the description text
     :param image_height: Height of the image section (percentage or px)
@@ -1980,7 +1966,7 @@ def generate_training_intro_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -2090,7 +2076,6 @@ def generate_employee_intro_slide(
     circle_color_2="#10855b",
     circle_color_3="#2dd4bf",
     circle_color_4="#FFFFFF",
-    font_family="'Inter', sans-serif",
 ):
     """
     Generate an Employee Introduction slide with decorative geometric circles.
@@ -2114,7 +2099,6 @@ def generate_employee_intro_slide(
         circle_color_2 (str): Second circle color (medium green)
         circle_color_3 (str): Third circle color (light cyan)
         circle_color_4 (str): Fourth circle color (white)
-        font_family (str): Font family for all text
         
     Returns:
         str: Complete HTML code for the slide
@@ -2134,7 +2118,7 @@ def generate_employee_intro_slide(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -2370,7 +2354,7 @@ def generate_research_proposal_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Research Proposal Presentation</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -2379,7 +2363,7 @@ def generate_research_proposal_slide(
         }}
         
         body {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -2414,7 +2398,7 @@ def generate_research_proposal_slide(
         }}
         
         .title {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 110px;
             font-weight: 900;
             color: {title_color};
@@ -2424,7 +2408,7 @@ def generate_research_proposal_slide(
         }}
         
         .subtitle {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 28px;
             font-weight: 500;
             color: {subtitle_color};
@@ -2622,8 +2606,7 @@ def generate_business_intro_slide(
     main_title_color="#0056d2",
     subtitle_color="#666666",
     accent_color="#0056d2",
-    main_font="Arial, sans-serif",
-    subtitle_font="Arial, sans-serif"
+
 ):
     """
     Generate a clean business presentation intro slide with centered text and decorative side circles.
@@ -2635,7 +2618,6 @@ def generate_business_intro_slide(
         main_title_color (str): Color for main title (default: blue)
         subtitle_color (str): Color for subtitle text
         accent_color (str): Color for decorative circles
-        main_font (str): Font family for main title
         subtitle_font (str): Font family for subtitle
     
     Returns:
@@ -2698,7 +2680,7 @@ def generate_business_intro_slide(
         }}
         
         .main-title {{
-            font-family: {main_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 120px;
             font-weight: 900;
             color: {main_title_color};
@@ -2708,7 +2690,7 @@ def generate_business_intro_slide(
         }}
         
         .subtitle {{
-            font-family: {subtitle_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 28px;
             font-weight: 400;
             color: {subtitle_color};
@@ -2767,7 +2749,6 @@ def generate_title_slide_3(
     bg_color="#F5EBE0",
     text_color="#C41E3A",
     subtitle_color="#3D3D3D",
-    font_family="'Lobster Two', 'Georgia', serif",
     show_top_lights=True,
     show_sparkles=True,
     custom_css=""
@@ -2781,7 +2762,6 @@ def generate_title_slide_3(
     - bg_color: Background color (default: "#F5EBE0")
     - text_color: Main title color (default: "#C41E3A")
     - subtitle_color: Subtitle color (default: "#3D3D3D")
-    - font_family: Font family (default: "'Lobster Two', 'Georgia', serif")
     - show_top_lights: Show Christmas lights at top (default: True)
     - show_sparkles: Show decorative sparkles (default: True)
     - custom_css: Additional custom CSS (default: "")
@@ -2855,7 +2835,7 @@ def generate_title_slide_3(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title.replace('<br>', ' ')}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lobster+Two:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -2869,7 +2849,7 @@ def generate_title_slide_3(
             background: {bg_color};
             position: relative;
             overflow: hidden;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         /* String Lights Top */
@@ -2910,7 +2890,7 @@ def generate_title_slide_3(
         .subtitle {{
             font-size: 32px;
             color: {subtitle_color};
-            font-family: 'Georgia', serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-weight: 400;
             font-style: italic;
             margin: 0;
@@ -2990,8 +2970,6 @@ def generate_title_slide_3(
 def generate_minimalist_slide(
     title="Your presentation title",
     subtitle="Here is where your presentation begins",
-    font_family_title="Playfair Display, Georgia, serif",
-    font_family_subtitle="Inter, sans-serif",
     background_color="#E8E3DC",
     text_color_title="#1A1A1A",
     text_color_subtitle="#4A4A4A",
@@ -3004,10 +2982,6 @@ def generate_minimalist_slide(
     Removes all responsive elements (flexbox, vw/vh units, @media queries) for reliable conversion.
     
     Args:
-        title (str): The main title for the slide (112px serif font, centered at 1600px width)
-        subtitle (str): Descriptive text below the title (26px sans-serif font)
-        font_family_title (str): Font family for the title (default: Playfair Display, Georgia, serif)
-        font_family_subtitle (str): Font family for the subtitle (default: Inter, sans-serif)
         background_color (str): The background color of the slide (default: #E8E3DC warm beige)
         text_color_title (str): Color for the title text (default: #1A1A1A dark gray)
         text_color_subtitle (str): Color for the subtitle text (default: #4A4A4A medium gray)
@@ -3026,7 +3000,7 @@ def generate_minimalist_slide(
     <title>{title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -3035,7 +3009,7 @@ def generate_minimalist_slide(
         }}
         
         body {{
-            font-family: {font_family_subtitle};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {background_color};
             width: 1920px;
             height: 1080px;
@@ -3048,7 +3022,7 @@ def generate_minimalist_slide(
             top: 450px;
             left: 160px;
             width: 1600px;
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 112px;
             font-weight: 400;
             color: {text_color_title};
@@ -3062,7 +3036,7 @@ def generate_minimalist_slide(
             top: 620px;
             left: 160px;
             width: 1600px;
-            font-family: {font_family_subtitle};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 26px;
             font-weight: 300;
             color: {text_color_subtitle};
@@ -3130,8 +3104,6 @@ def generate_title_slide_5(
     main_title="Your Title Here",
     bottom_text="Here is where your presentation begins",
     image_path="Image/generate_title_slide_5/Default_1.jpg",
-    font_family="'Arial'",
-    font_family_secondary="'Arial'",
     bg_color="#b8c8d4",
     text_color="#2c3e50",
     show_clover=True,
@@ -3147,8 +3119,6 @@ def generate_title_slide_5(
     - main_title: Main title text (default: "Your Title Here")
     - bottom_text: Text in bottom-right corner (default: "Here is where your presentation begins")
     - image_path: Path to polaroid image (default: "Image/generate_title_slide_5/Default_1.jpg")
-    - font_family: Font for main title (default: "'Arial'")
-    - font_family_secondary: Font for secondary text (default: "'Arial'")
     - bg_color: Background color (default: "#b8c8d4" - soft blue-gray)
     - text_color: Text color (default: "#2c3e50" - dark blue)
     - show_clover: Show four-leaf clover decoration (default: True)
@@ -3188,7 +3158,7 @@ def generate_title_slide_5(
         }}
         
         body {{
-            font-family: 'Courier New', monospace;
+            font-family: {DEFAULT_FONT_FAMILY};
             width: 1920px;
             height: 1080px;
             overflow: hidden;
@@ -3205,7 +3175,7 @@ def generate_title_slide_5(
             left: 120px;
             font-size: 30px;
             color: {text_color};
-            font-family: {font_family_secondary};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .top-right {{
@@ -3215,7 +3185,7 @@ def generate_title_slide_5(
             font-size: 24px;
             color: {text_color};
             font-weight: bold;
-            font-family: {font_family_secondary};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .text-content {{
@@ -3231,7 +3201,7 @@ def generate_title_slide_5(
             color: {text_color};
             line-height: 1.2;
             font-weight: 400;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             margin: 0;
         }}
 
@@ -3272,7 +3242,7 @@ def generate_title_slide_5(
             right: 120px;
             font-size: 30px;
             color: {text_color};
-            font-family: {font_family_secondary};
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .top-line {{
@@ -3344,10 +3314,10 @@ def generate_title_slide_7(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{main_title}</title>
-        <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin:0; padding:0; box-sizing:border-box; }}
-            body {{ font-family: 'Poppins', sans-serif; background-color:{bg_color}; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }}
+            body {{ font-family: {DEFAULT_FONT_FAMILY}; background-color:{bg_color}; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }}
             .text-frame {{ width:1100px; padding:60px 80px; border-radius:24px; background:{card_bg_color}; border:5px solid {border_color}; box-shadow:0 12px 36px rgba(0,0,0,0.12); text-align:center; position:relative; }}
             .main-title {{ font-size:56px; font-weight:900; color:{title_color}; margin:0; }}
             .subtitle {{ font-size:34px; color:{subtitle_color}; margin-top:12px; line-height:1.2; }}
@@ -3413,7 +3383,7 @@ def generate_title_slide_11(
         }}
         
         body {{
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background: linear-gradient(90deg, {bg_left_color} 0%, {bg_left_color} 50%, {bg_right_color} 50%, {bg_right_color} 100%);
             overflow: hidden;
             width: 100vw;
@@ -3448,7 +3418,7 @@ def generate_title_slide_11(
         }}
         
         .title {{
-            font-family: Georgia, 'Times New Roman', serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 110px;
             font-weight: 400;
             color: {text_color};
@@ -3457,7 +3427,7 @@ def generate_title_slide_11(
         }}
         
         .subtitle {{
-            font-family: 'Segoe UI', Tahoma, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {text_color};
@@ -3543,7 +3513,7 @@ def generate_title_slide_12(
     <title>Elegant Black and White Thesis Defense</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Open+Sans:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -3552,7 +3522,7 @@ def generate_title_slide_12(
         }}
         
         body {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -3600,7 +3570,7 @@ def generate_title_slide_12(
         }}
         
         .main-title {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 88px;
             font-weight: 900;
             color: {text_color};
@@ -3610,7 +3580,7 @@ def generate_title_slide_12(
         }}
         
         .subtitle {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {text_color};
@@ -3703,7 +3673,7 @@ def generate_title_slide_13(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Inverse Functions Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -3712,7 +3682,7 @@ def generate_title_slide_13(
         }}
 
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background: linear-gradient(135deg, {bg_color} 0%, #D4E8F0 100%);
         }}
@@ -3744,7 +3714,7 @@ def generate_title_slide_13(
         }}
 
         .main-title {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-weight: 800;
             font-size: 100px;
             color: {text_color};
@@ -3754,7 +3724,7 @@ def generate_title_slide_13(
         }}
         
         .subtitle {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-weight: 400;
             font-size: 40px;
             color: {text_color};
@@ -3941,7 +3911,7 @@ def generate_title_slide_15(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simple Meeting Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -3950,7 +3920,7 @@ def generate_title_slide_15(
         }}
 
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {background_color};
             overflow: hidden;
             width: 1920px;
@@ -4076,7 +4046,7 @@ def generate_title_slide_17(
     <title>Town Hall Meeting Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -4085,7 +4055,7 @@ def generate_title_slide_17(
         }}
         
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -4250,7 +4220,7 @@ def generate_title_slide_18(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Minimalist Pattern Meeting Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -4259,7 +4229,7 @@ def generate_title_slide_18(
         }}
         
         body {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             width: 1920px;
             height: 1080px;
@@ -4294,7 +4264,7 @@ def generate_title_slide_18(
         }}
         
         .main-title {{
-            font-family: 'Bebas Neue', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 110px;
             font-weight: 400;
             color: {title_color};
@@ -4309,7 +4279,7 @@ def generate_title_slide_18(
         }}
         
         .subtitle {{
-            font-family: 'Open Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {subtitle_color};
@@ -4344,140 +4314,9 @@ def generate_title_slide_18(
 
 #----------------------SLIDE CHUYỂN SLIDE
 
-def generate_geometric_transition_slide(
-    headline="TRANSITION HEADLINE",
-    subtitle="Let's start with the first set of slides",
-    font_family="'Poppins', 'Inter', sans-serif",
-    bg_color="#0F172A",
-    primary_text_color="#FFFFFF",
-    subtitle_color="#67E8F9"
-):
-    """
-    Generates a modern, dynamic transition slide with colorful geometric shapes.
-    Features a dark background with high-contrast, centered text. Ideal for tech
-    or creative presentations.
-    """
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Geometric Transition Slide</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700&family=Roboto:wght@400;700&display=swap" rel="stylesheet">
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            overflow: hidden;
-            background-color: {bg_color};
-            color: {primary_text_color};
-        }}
-
-        .slide-container {{
-            width: 100%; height: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            text-align: center;
-            position: relative;
-        }}
-
-        .text-content {{
-            z-index: 10;
-            max-width: 90%;
-            width: 100%;
-        }}
-
-        .headline {{
-            font-size: clamp(6rem, 10vw, 8rem) !important;
-            font-weight: 700;
-            text-transform: uppercase;
-            line-height: 1.25;
-            margin-bottom: 3rem;
-            display: block;
-            width: 100%;
-        }}
-
-        .subtitle {{
-            font-size: 3.5rem !important;
-            font-weight: 500;
-            color: {subtitle_color};
-            line-height: 1.5;
-            display: block;
-            width: 100%;
-        }}
-
-        /* --- Geometric Shapes --- */
-        .shape-cluster {{
-            position: absolute;
-            width: 40%;
-            height: 40%;
-            pointer-events: none;
-        }}
-
-        .shape-cluster.top-right {{
-            top: 0;
-            right: 0;
-        }}
-
-        .shape-cluster.bottom-left {{
-            bottom: 0;
-            left: 0;
-        }}
-
-        .shape {{
-            position: absolute;
-            transform-origin: center center;
-            transform: skewX(-20deg) rotate(15deg);
-        }}
-
-        /* Top-Right Shapes Palette */
-        .shape-tr-1 {{ width: 10rem; height: 10rem; background-color: #34D399; opacity: 0.9; top: 6rem; right: 5rem; z-index: 2; }}
-        .shape-tr-2 {{ width: 12rem; height: 12rem; background-color: #6366F1; opacity: 0.8; top: 10rem; right: 9rem; z-index: 1; }}
-        .shape-tr-3 {{ width: 8rem; height: 8rem; background: linear-gradient(45deg, #F87171, #FBBF24); opacity: 1; top: 16rem; right: 5rem; z-index: 3; }}
-        .shape-tr-4 {{ width: 9rem; height: 9rem; background-color: #1E3A8A; opacity: 0.5; top: 3rem; right: 13rem; z-index: 0; }}
-
-        /* Bottom-Left Shapes Palette */
-        .shape-bl-1 {{ width: 8rem; height: 8rem; background-color: #34D399; opacity: 0.7; bottom: 10rem; left: 3rem; z-index: 2; }}
-        .shape-bl-2 {{ width: 7rem; height: 7rem; background-color: #FBBF24; opacity: 0.9; bottom: 7rem; left: 8rem; z-index: 3; }}
-        .shape-bl-3 {{ width: 11rem; height: 11rem; background-color: #A78BFA; opacity: 1; bottom: 2rem; left: 11rem; z-index: 2; }}
-        .shape-bl-4 {{ width: 10rem; height: 10rem; background: linear-gradient(45deg, #EF4444, #FB923C); opacity: 1; bottom: 2rem; left: 5rem; z-index: 4; }}
-        .shape-bl-5 {{ width: 9rem; height: 9rem; background-color: #1E3A8A; opacity: 0.8; bottom: 9rem; left: 7rem; z-index: 1; }}
-        .shape-bl-6 {{ width: 6rem; height: 6rem; background-color: #60A5FA; opacity: 0.4; bottom: 14rem; left: 2rem; z-index: 0; }}
-
-        @media (max-width: 48rem) {{
-            .shape-cluster {{ transform: scale(0.7); }}
-            .top-right {{ top: -5rem; right: -5rem; }}
-            .bottom-left {{ bottom: -5rem; left: -5rem; }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <div class="shape-cluster top-right">
-            <div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div><div class="shape shape-tr-4"></div>
-        </div>
-        <div class="shape-cluster bottom-left">
-            <div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div><div class="shape shape-bl-4"></div><div class="shape shape-bl-5"></div><div class="shape shape-bl-6"></div>
-        </div>
-        <div class="text-content">
-            <h2 class="headline">{headline}</h2>
-            <p class="subtitle">{subtitle}</p>
-        </div>
-    </div>
-</body>
-</html>"""
-    return html_code
-
 def generate_dusk_transition_slide(
     headline="Transition Headline",
     subtitle="Let's start with the first set of slides",
-    font_family="'Nunito', 'Inter', sans-serif",
     headline_color="#2C3E50",
     subtitle_color="#4A5568",
     number_color="#FDE68A",
@@ -4502,13 +4341,13 @@ def generate_dusk_transition_slide(
     <title>Minimalist Dusk Transition</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
 
@@ -4567,69 +4406,8 @@ def generate_dusk_transition_slide(
     
     return html_code
 
-def generate_memphis_transition_slide(
-    headline="Transition headline",
-    subtitle="Let's start with the first set of slides",
-    font_family_headline="'Lora', serif",
-    font_family_body="'Lato', sans-serif",
-    top_panel_bg="#19114B",
-    bottom_panel_bg="#403271",
-    palette=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
-):
-    """
-    Generates a vibrant, retro, and STATIC 'Memphis-style' transition slide.
-    The rotating icon animation has been removed.
-    """
-    svg_patterns = f"""<svg width="0" height="0" style="position:absolute;"><defs><pattern id="pattern-dots" x="0" y="0" width="8" height="8" patternUnits="userSpaceOnUse"><circle cx="2" cy="2" r="2" fill="{palette[3]}" /></pattern><pattern id="pattern-stripes" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="10" stroke="{palette[0]}" stroke-width="4" /></pattern></defs></svg>"""
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Transition Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Lora:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
-        body, html {{ height: 100vh; width: 100vw; overflow: hidden; font-family: {font_family_body}; }}
-        .slide-container {{ width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; }}
-        .top-panel, .bottom-panel {{ flex: 1; position: relative; overflow: hidden; }}
-        .top-panel {{ background-color: {top_panel_bg}; display: flex; justify-content: center; align-items: flex-end; padding-bottom: 5rem; }}
-        .bottom-panel {{ background-color: {bottom_panel_bg}; }}
-        .text-content {{
-            text-align: center;
-            transform: scale(1.3);
-            min-width: 50vw;
-            min-height: 25vh; 
-        }}
-        .section-number {{ font-family: {font_family_headline}; font-size: 3rem; font-weight: 400; color: {palette[3]}; opacity: 0.8; }}
-        .headline {{ font-family: {font_family_headline}; font-size: 4rem; font-weight: 700; margin-bottom: 5rem ; color: #FFFFFF; }}
-        .subtitle {{font-size: 2rem; font-weight: 500; margin-bottom: 8rem; color: {palette[1]}; }}
-        .shape {{ position: absolute; }}
-        .shape-tl-1 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: 4rem; left: 6rem; border-radius: 50%; opacity: 0.8; }}
-        .shape-tl-2 {{ width: 0; height: 0; border-left: 3rem solid transparent; border-right: 3rem solid transparent; border-bottom: 5rem solid {palette[0]}; top: 12rem; left: 3rem; transform: rotate(-25deg); }}
-        .shape-tl-3 {{ width: 5rem; height: 5rem; border: 3px solid {palette[4]}; top: 2rem; left: 1rem; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
-        .shape-tr-1 {{ width: 7rem; height: 7rem; border-radius: 50%; border: 3px dashed {palette[1]}; top: 3rem; right: 8rem; }}
-        .shape-tr-2 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.5; top: 1rem; right: 2rem; clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); transform: rotate(20deg); }}
-        .shape-tr-3 {{ width: 9rem; height: 9rem; background: url(#pattern-stripes); border-radius: 50%; top: 8rem; right: 3rem; transform: rotate(45deg); opacity: 0.9; }}
-        .shape-bl-1 {{ width: 0; height: 0; border-left: 4rem solid transparent; border-right: 4rem solid transparent; border-bottom: 7rem solid {palette[1]}; bottom: 2rem; left: 1rem; transform: rotate(15deg) scaleX(-1); }}
-        .shape-bl-2 {{ width: 6rem; height: 6rem; border: 3px dashed {palette[2]}; border-radius: 50%; bottom: 8rem; left: 9rem; }}
-        .shape-bl-3 {{ width: 4rem; height: 4rem; background-color: {palette[0]}; bottom: 1rem; left: 12rem; transform: rotate(30deg); }}
-        .shape-br-1 {{ width: 5rem; height: 5rem; background-color: {palette[3]}; border-radius: 50%; bottom: 2rem; right: 1rem; }}
-        .shape-br-2 {{ width: 9rem; height: 9rem; background: url(#pattern-dots); bottom: 6rem; right: 5rem; clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%); transform: rotate(-15deg); }}
-        .shape-br-3 {{ width: 0; height: 0; border-left: 2rem solid transparent; border-right: 2rem solid transparent; border-bottom: 3.5rem solid {palette[4]}; bottom: 1rem; right: 10rem; transform: rotate(45deg); opacity: 0.7;}}
-    </style>
-</head>
-<body>
-    {svg_patterns}
-    <div class="slide-container">
-        <div class="top-panel"><div class="text-content"><h2 class="headline">{headline}</h2><p class="subtitle">{subtitle}</p></div><div class="shape shape-tl-1"></div><div class="shape shape-tl-2"></div><div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div><div class="shape shape-tr-3"></div></div>
-        <div class="bottom-panel"><div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div><div class="shape shape-bl-3"></div><div class="shape shape-br-1"></div><div class="shape shape-br-2"></div><div class="shape shape-br-3"></div></div>
-    </div>
-</body>
-</html>"""
-    return html_code
-
 def generate_pushpin_section_header(
     main_title="Add a Section Header",
-    font_family="'Poppins', 'Inter', sans-serif",
     # ĐÃ THAY ĐỔI: Bảng màu mới tối giản và chuyên nghiệp
     bg_color="#FDFCFB",
     text_color="#1F2937",    # Xám đen
@@ -4648,7 +4426,7 @@ def generate_pushpin_section_header(
     <title>Section Header - Minimalist Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
@@ -4667,7 +4445,7 @@ def generate_pushpin_section_header(
             font-size: 16px !important;
             height: 100vh !important;
             width: 100vw !important;
-            font-family: {font_family} !important;
+            font-family: {DEFAULT_FONT_FAMILY} !important;
             overflow: hidden !important;
             display: flex !important;
             justify-content: center !important;
@@ -4681,7 +4459,7 @@ def generate_pushpin_section_header(
         body#body.body, html#html.html {{
             height: 100vh !important;
             width: 100vw !important;
-            font-family: {font_family} !important;
+            font-family: {DEFAULT_FONT_FAMILY} !important;
             overflow: hidden !important;
             display: flex !important;
             justify-content: center !important;
@@ -4772,7 +4550,6 @@ def generate_pushpin_section_header(
 
 def generate_section_header_slide(
     header_text="Add a Section Header",
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     text_color="#1E293B",
     gradient_color_1="#A78BFA",
@@ -4795,14 +4572,14 @@ def generate_section_header_slide(
     <title>Section Header Slide - Geometric shapes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             position: relative;
@@ -4867,8 +4644,6 @@ def generate_intro_slide(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
-    font_family="'Inter', sans-serif",
-    main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"
 ):
     """
@@ -4888,7 +4663,7 @@ def generate_intro_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_bg_color};
             overflow: hidden;
         }}
@@ -4995,7 +4770,7 @@ def generate_intro_slide(
             color: {title_color};
             margin: 0 0 3rem 0;
             font-weight: bold;
-            font-style: {main_title_font_style};
+            font-style: {DEFAULT_FONT_FAMILY};
             line-height: 1.2;
             text-align: center !important;
             display: block;
@@ -5116,7 +4891,7 @@ def generate_research_proposal_transition_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Transition Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@700;900&family=Inter:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -5125,7 +4900,7 @@ def generate_research_proposal_transition_slide(
         }}
         
         body {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -5161,7 +4936,7 @@ def generate_research_proposal_transition_slide(
         }}
         
         .headline {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 90px;
             font-weight: 900;
             color: {headline_color};
@@ -5172,7 +4947,7 @@ def generate_research_proposal_transition_slide(
         }}
         
         .subtitle {{
-            font-family: 'Inter', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 32px;
             font-weight: 500;
             color: {subtitle_color};
@@ -5375,8 +5150,7 @@ def generate_business_transition_slide(
     headline_color="#0056d2",
     subtitle_color="#666666",
     accent_color="#0056d2",
-    headline_font="Arial, sans-serif",
-    subtitle_font="Arial, sans-serif"
+
 ):
     """
     Generate a clean business transition slide with centered text and decorative side D-shapes.
@@ -5387,8 +5161,7 @@ def generate_business_transition_slide(
         headline_color (str): Color for headline (default: blue)
         subtitle_color (str): Color for subtitle text
         accent_color (str): Color for decorative D-shapes
-        headline_font (str): Font family for headline
-        subtitle_font (str): Font family for subtitle
+
     
     Returns:
         str: Complete HTML code for the business transition slide
@@ -5450,7 +5223,7 @@ def generate_business_transition_slide(
         }}
         
         .headline {{
-            font-family: {headline_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 140px;
             font-weight: 900;
             color: {headline_color};
@@ -5461,7 +5234,7 @@ def generate_business_transition_slide(
         }}
         
         .subtitle {{
-            font-family: {subtitle_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {subtitle_color};
@@ -5567,7 +5340,7 @@ def generate_section_header_slide_5(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Section Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -5583,7 +5356,7 @@ def generate_section_header_slide_5(
             body {{
                 width: 1920px;
                 height: 1080px;
-                font-family: 'Playfair Display', serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 background: {bg_color};
                 color: {text_color};
                 position: relative;
@@ -5697,7 +5470,7 @@ def generate_section_header_slide_6(
         }}
         
         body {{
-            font-family: 'Arial', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background: linear-gradient(to bottom, {bg_color} 0%, {bg_gradient_to} 100%);
             min-height: 100vh;
             display: flex;
@@ -5792,7 +5565,7 @@ def generate_section_header_slide_8(
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body {{
-            font-family: 'Arial', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             margin: 0;
             padding: 0;
@@ -5874,7 +5647,7 @@ def generate_section_header_slide_9(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@700;900&family=Roboto:wght@300;400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -5885,7 +5658,7 @@ def generate_section_header_slide_9(
         body {{
             margin: 0;
             padding: 0 120px;
-            font-family: 'Roboto', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             width: 1920px;
             height: 1080px;
@@ -5925,7 +5698,7 @@ def generate_section_header_slide_9(
         }}
         
         .main-title {{
-            font-family: 'Roboto Condensed', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 4rem;
             font-weight: 900;
             color: {text_color};
@@ -5935,7 +5708,7 @@ def generate_section_header_slide_9(
         }}
         
         .subtitle {{
-            font-family: 'Roboto', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 2rem;
             font-weight: 300;
             color: {text_color};
@@ -6044,7 +5817,7 @@ def generate_section_header_slide_10(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>{main_title} - Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&family=Noto+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -6055,7 +5828,7 @@ def generate_section_header_slide_10(
             body {{
                 margin: 0;
                 padding: 0;
-                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
             }}
             
@@ -6155,7 +5928,7 @@ def generate_section_header_slide_10(
                 font-size: 4rem;
                 font-weight: 900;
                 color: #4A4A4A;
-                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
             }}
             
             .main-title {{
@@ -6164,7 +5937,7 @@ def generate_section_header_slide_10(
                 color: {title_color};
                 text-align: center;
                 margin-bottom: 50px;
-                font-family: 'Roboto', 'Noto Sans', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 letter-spacing: 1px;
                 width: 100%;
                 max-width: 1200px;
@@ -6177,7 +5950,7 @@ def generate_section_header_slide_10(
                 color: {subtitle_color};
                 text-align: center;
                 line-height: 1.6;
-                font-family: 'Noto Sans', 'Roboto', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 width: 100%;
                 max-width: 1200px;
                 z-index: 3;
@@ -6263,7 +6036,7 @@ def generate_section_header_slide_12(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Question Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700;900&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -6272,7 +6045,7 @@ def generate_section_header_slide_12(
         }}
         
         body {{
-            font-family: 'Roboto', 'Noto Sans', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             width: 1920px;
             height: 1080px;
             background: {bg_color};
@@ -6352,7 +6125,7 @@ def generate_section_header_slide_15(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Gradient Colorful Title Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -6361,7 +6134,7 @@ def generate_section_header_slide_15(
             }}
             
             body {{
-                font-family: 'Inter', sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 background: {bg_color};
                 color: {text_color};
                 overflow: hidden;
@@ -6631,7 +6404,7 @@ def generate_section_header_slide_17(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Project Schedule Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -6640,7 +6413,7 @@ def generate_section_header_slide_17(
         }}
         
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -6786,7 +6559,7 @@ def generate_section_header_slide_18(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Section Slide - {section_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -6795,7 +6568,7 @@ def generate_section_header_slide_18(
         }}
         
         body {{
-            font-family: 'Montserrat', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             width: 1920px;
             height: 1080px;
@@ -6906,7 +6679,6 @@ def generate_content_slide(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     border_width="30px",
-    font_family="Arial, sans-serif",
     num_columns=3,
     num_rows=2,
 ):
@@ -6916,16 +6688,13 @@ def generate_content_slide(
     Parameters:
     - main_title: The main title of the slide
     - items: List of item titles (default is ["Your Title Here"] * 6)
-    - main_title_font_size: Font size for the main title
     - number_font_size: Font size for the item numbers
-    - item_title_font_size: Font size for the item titles
     - main_title_color: Color for the main title
     - number_color: Color for the item numbers
     - item_title_color: Color for the item titles
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - border_width: Width of the border around the slide
-    - font_family: Font family for the slide
     - num_columns: Number of columns in the grid
     - num_rows: Number of rows in the grid
     
@@ -6967,7 +6736,7 @@ def generate_content_slide(
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {accent_color};
             width: 100vw;
             height: 100vh;
@@ -7161,7 +6930,6 @@ def generate_comparison_slide(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     divider_color="#555555",
-    font_family="Arial, sans-serif",
 ):
     """
     Generates an HTML slide with a main title and two comparison columns with icons.
@@ -7186,7 +6954,6 @@ def generate_comparison_slide(
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - divider_color: Color for the divider line
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the comparison slide
@@ -7229,7 +6996,7 @@ def generate_comparison_slide(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color};
             color: {title_color};
             overflow: hidden;
@@ -7382,7 +7149,6 @@ def generate_process_slide(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     border_width="30px",
-    font_family="Arial, sans-serif",
     box_width="380px",
     box_height="350px",
     box_border_radius="5px",
@@ -7407,7 +7173,6 @@ def generate_process_slide(
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - border_width: Width of the border around the slide
-    - font_family: Font family for the slide
     - box_width: Width of each box
     - box_height: Height of each box
     - box_border_radius: Border radius for the boxes
@@ -7426,7 +7191,7 @@ def generate_process_slide(
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {accent_color};
             width: 100vw;
             height: 100vh;
@@ -7623,8 +7388,6 @@ def generate_process_steps_slide(
     title_color="#1F2937",
     text_heading_color="#374151",
     text_body_color="#6B7280",
-    font_family_title="'Playfair Display', serif",
-    font_family_body="'Montserrat', sans-serif",
     custom_css=""
 ):
     """
@@ -7651,12 +7414,11 @@ def generate_process_steps_slide(
     <title>{main_title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&family=Montserrat:wght@400;500&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{ font-size: 16px; }}
         body, html {{
             margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: {font_family_body};
             overflow: hidden;
             background-color: {bg_color};
         }}
@@ -7683,7 +7445,7 @@ def generate_process_steps_slide(
         }}
         
         .main-title {{
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 6rem;
             font-weight: 500;
             font-style: italic;
@@ -7791,168 +7553,6 @@ def generate_process_steps_slide(
 
 
 
-def generate_icon_list_slide_2(
-    main_title="Giải pháp",
-    subtitle="CÁCH TIẾP CẬN ĐA KÊNH",
-    items=[
-        {
-            "icon_svg": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81 1.66 0 3-1.34 3-3s-1.34-3-3-3-3 1.34-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9c-1.66 0-3 1.34-3 3s1.34 3 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.16c-.05.21-.08.43-.08.65 0 1.61 1.31 2.92 2.92 2.92s2.92-1.31 2.92-2.92-1.31-2.92-2.92-2.92z"/></svg>',
-            "text": "Hiện diện trực tuyến"
-        },
-        {
-            "icon_svg": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M17 1.01L7 1c-1.1 0-2 .9-2 2v18c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V3c0-1.1-.9-1.99-2-1.99zM17 19H7V5h10v14z"/></svg>',
-            "text": "Các chiến dịch số"
-        },
-        {
-            "icon_svg": '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M0 8c3.42 0 6.55 1.31 8.83 3.59L12 15l3.17-3.41A12.42 12.42 0 0024 8h-3c-1.93 0-3.68.79-4.95 2.05L12 14.1l-4.05-4.05A6.97 6.97 0 003 8H0z M1 22h22v-2H1v2zm2-2h18v-2H3v2zm2-2h14v-2H5v2z"/></svg>',
-            "text": "Hiện diện trực tuyến"
-        }
-    ],
-    accent_color="#EAD6D6",
-    bg_color="#FCFCFC",
-    title_color="#1F2937",
-    subtitle_color="#4B5563",
-    text_color="#374151",
-    icon_color="#FFFFFF",
-    font_family_title="'Playfair Display', serif",
-    font_family_body="'Montserrat', sans-serif",
-    custom_css=""
-):
-    """
-    Generates a clean, minimalist slide for presenting solutions, features, or key points.
-    Features a two-column layout with a large title on the left and a vertical list of icon-text pairs.
-    """
-    
-    list_items_html = ""
-    for item in items:
-        list_items_html += f"""
-        <div class="list-item">
-            <div class="icon-container">
-                {item.get('icon_svg', '')}
-            </div>
-            <p class="item-text">{item.get('text', '')}</p>
-        </div>
-        """
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="vi">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{main_title}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@1,500&family=Montserrat:wght@400;600&display=swap" rel="stylesheet">
-    <style>
-        :root {{ font-size: 16px; }}
-        body, html {{
-            margin: 0; padding: 0; height: 100%; width: 100%;
-            font-family: {font_family_body};
-            overflow: hidden;
-            background-color: {bg_color};
-        }}
-        
-        .slide-container {{
-            width: 100%; height: 100vh;
-            display: flex; align-items: center; justify-content: center;
-            padding: 4vw; box-sizing: border-box;
-        }}
-        
-        .content-wrapper {{
-            display: flex;
-            align-items: center;
-            width: 100%;
-            max-width: 70rem; /* 1120px */
-            transform: scale(1.2);
-            min-height: 60vh;
-        }}
-        
-        .title-section {{
-            flex: 1;
-            padding-right: 4rem;
-        }}
-        
-        .main-title {{
-            font-family: {font_family_title};
-            font-size: 4.5rem;
-            font-weight: 700;
-            font-style: italic;
-            color: {title_color};
-            margin-bottom: 2rem;
-            line-height: 1.1;
-        }}
-        
-        .subtitle {{
-            color: {subtitle_color};
-            font-size: 1.8rem;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }}
-
-        .list-section {{
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            gap: 3rem;
-        }}
-        
-        .list-item {{
-            display: flex;
-            align-items: center;
-            gap: 1.5rem;
-        }}
-
-        .icon-container {{
-            flex-shrink: 0;
-            width: 7rem;
-            height: 7rem;
-            background-color: {accent_color};
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        .icon-container svg {{
-            width: 4rem;
-            height: 4rem;
-            fill: {icon_color};
-        }}
-        
-        .item-text {{
-            font-size: 1.8rem;
-            font-weight: 600;
-            margin: 0;
-            color: {text_color};
-            line-height: 7rem;
-        }}
-
-        @media (max-width: 48em) {{ /* 768px */
-            .content-wrapper {{ flex-direction: column; text-align: center; }}
-            .title-section {{ padding-right: 0; margin-bottom: 3rem; }}
-            .list-section {{ width: 100%; align-items: flex-start; }}
-            .main-title {{ font-size: 3.5rem; }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <div class="content-wrapper">
-            <div class="title-section">
-                <h1 class="main-title">{main_title}</h1>
-                <h2 class="subtitle">{subtitle}</h2>
-            </div>
-            <div class="list-section">
-                {list_items_html}
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    return html_code
-
-
-
-
 def generate_image_cutout_list_slide(
     list_items=[
         {"title": "Add a main point", "description": "Elaborate on what you want to discuss."},
@@ -7968,8 +7568,6 @@ def generate_image_cutout_list_slide(
     accent_color="#8A63D2",
     line_color="rgba(255, 255, 255, 0.2)",
     # --- Font chữ ---
-    font_family_title="'Source Serif 4', serif",
-    font_family_body="'Inter', sans-serif",
     custom_css=""
 ):
     """
@@ -8002,7 +7600,7 @@ def generate_image_cutout_list_slide(
     <title>Key Points Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Source+Serif+4:wght@600&family=Inter:wght@400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         :root {{ font-size: 16px; }}
         body, html {{
@@ -8079,7 +7677,7 @@ def generate_image_cutout_list_slide(
         }}
         
         .item-title {{
-            font-family: {font_family_title};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 2.2rem;
             font-weight: 600;
             color: {text_heading_color};
@@ -8087,7 +7685,7 @@ def generate_image_cutout_list_slide(
         }}
         
         .item-description {{
-            font-family: {font_family_body};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 1.6rem;
             color: {text_color};
             line-height: 1.6;
@@ -8119,444 +7717,6 @@ def generate_image_cutout_list_slide(
 
 
 
-def generate_body_slide2(
-    # Main parameters
-    main_title="MainTitle",
-    
-    # Content parameters
-    subtitle1="SubTitle1",
-    content1="Content1",
-    subtitle2="SubTitle2",
-    content2="Content2",
-    subtitle3="SubTitle3",
-    content3="Content3",
-    
-    # Style parameters
-    main_bg_color="#ffffff",  # White background
-    accent_color="#d5e8b9",   # Light green accent
-    title_color="#333333",
-    subtitle_color="#333333",
-    content_color="#555555",
-    font_family="'Inter', sans-serif",
-    image_url="Image/generate_body_slide2/Default_1.png",
-
-    # Icon parameters - SVG paths for each icon
-    icon1="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18h6M12 2v6M12 18v4M14.5 8a2.5 2.5 0 1 0-5 0 2.5 2.5 0 0 0 5 0zM16.5 13a4.5 4.5 0 1 0-9 0 4.5 4.5 0 0 0 9 0z"></path></svg>""",  # Lightbulb
-    icon2="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>""",  # Target
-    icon3="""<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>""",  # Bar chart
-):
-    """
-    Generates an HTML slide with a main title, large image on the left,
-    and three content sections with icons on the right - Full viewport design.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    
-    Content parameters:
-    - subtitle1, subtitle2, subtitle3: Subtitles for each content section
-    - content1, content2, content3: Content text for each section
-    
-    Style parameters:
-    - main_bg_color: Background color for the slide
-    - accent_color: Color for accents and icon backgrounds
-    - title_color: Color for the main title
-    - subtitle_color: Color for subtitles
-    - content_color: Color for content text
-    - title_font_size: Font size for the main title
-    - subtitle_font_size: Font size for subtitles
-    - content_font_size: Font size for content text
-    - font_family: Font family for the slide
-    
-    Icon parameters:
-    - icon1, icon2, icon3: SVG code for each icon
-    
-    Returns:
-    - HTML code for the slide
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Image with Icons Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Full viewport accent background */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            padding: 3rem 4rem; /* 48px 64px */
-            position: relative;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
-        }}
-        
-        .title-accent {{
-            width: 2.5rem; /* 40px - increased size */
-            height: 2.5rem; /* 40px */
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            margin-right: 1.25rem; /* 20px */
-            border-radius: 0.5rem; /* 8px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-        }}
-        
-        .main-title {{
-            font-size: 3.5rem; 
-            color: {title_color};
-            font-weight: 600;
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1;
-            gap: 2.5rem; /* 40px */
-        }}
-        
-        .image-section {{
-            flex: 2;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1.5rem; /* 24px */
-            background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .image-frame {{
-            width: 100%;
-            height: 100%;
-            position: relative;
-            overflow: hidden;
-            border-radius: 0.75rem; /* 12px */
-        }}
-        
-        .image-accent {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 95%;
-            height: 95%;
-            border: 0.5rem solid {accent_color}; /* 8px */
-            border-radius: 0.75rem; /* 12px */
-            z-index: 1;
-            transition: all 0.3s ease;
-        }}
-        
-        .image-section:hover .image-accent {{
-            border-width: 0.75rem; /* 12px - expand on hover */
-            background: linear-gradient(45deg, {accent_color}20, transparent);
-        }}
-        
-        .image-container {{
-            position: absolute;
-            top: 1.5rem; /* 24px */
-            left: 1.5rem; /* 24px */
-            width: 95%;
-            height: 95%;
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            overflow: hidden;
-            z-index: 2;
-            border-radius: 0.75rem; /* 12px */
-            transition: transform 0.3s ease;
-        }}
-        
-        .image-section:hover .image-container {{
-            transform: scale(1.02); /* subtle zoom on hover */
-        }}
-        
-        .image-container img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 0.75rem; /* 12px */
-            transition: transform 0.3s ease;
-        }}
-        
-        .image-section:hover .image-container img {{
-            transform: scale(1.05); /* image zoom effect */
-        }}
-        
-        .content-section {{
-            flex: 3;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 2rem; /* 32px */
-        }}
-        
-        .content-item {{
-            display: flex;
-            align-items: flex-start;
-            background: rgba(255,255,255,0.9);
-            padding: 1.5rem; /* 24px */
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            border-left: 0.25rem solid {accent_color}; /* 4px */
-            position: relative;
-            overflow: hidden;
-        }}
-        
-        .content-item:hover {{
-            transform: translateX(0.5rem); /* 8px horizontal shift */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
-            border-left-width: 0.5rem; /* 8px - expand border */
-        }}
-        
-        .content-item::before {{
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 0.25rem; /* 4px */
-            height: 100%;
-            background: linear-gradient(to bottom, {accent_color}, rgba(213, 232, 185, 0.5));
-            transform: scaleY(0);
-            transition: transform 0.3s ease;
-            transform-origin: top;
-        }}
-        
-        .content-item:hover::before {{
-            transform: scaleY(1);
-        }}
-        
-        .icon-container {{
-            width: 4rem; /* 64px - increased size */
-            height: 4rem; /* 64px */
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            margin-right: 1.5rem; /* 24px */
-            flex-shrink: 0;
-            border-radius: 0.75rem; /* 12px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .icon-container {{
-            transform: scale(1.1) rotate(5deg); /* hover effect */
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.15);
-        }}
-        
-        .icon-container svg {{
-            width: 2rem; /* 32px - increased size */
-            height: 2rem; /* 32px */
-            stroke: #333333;
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .icon-container svg {{
-            stroke: #ffffff;
-            transform: scale(1.1);
-        }}
-        
-        .content-text {{
-            flex: 1;
-        }}
-        
-        .subtitle {{
-            font-size: 2.2rem;
-            color: {subtitle_color};
-            margin: 0 0 0.75rem 0; /* 12px */
-            font-weight: 600;
-            position: relative;
-        }}
-        
-        .subtitle::after {{
-            content: '';
-            position: absolute;
-            bottom: -0.25rem; /* -4px */
-            left: 0;
-            width: 2rem; /* 32px */
-            height: 0.125rem; /* 2px */
-            background: {accent_color};
-            border-radius: 0.0625rem; /* 1px */
-            transition: width 0.3s ease;
-        }}
-        
-        .content-item:hover .subtitle::after {{
-            width: 4rem; /* 64px - expand underline on hover */
-        }}
-        
-        .content {{
-            font-size: 1.5rem;
-            color: {content_color};
-            margin: 0;
-            line-height: 1.6;
-            padding: 0.75rem; /* 12px */
-            background: rgba(213, 232, 185, 0.1);
-            border-radius: 0.5rem; /* 8px */
-            transition: all 0.3s ease;
-        }}
-        
-        .content-item:hover .content {{
-            background: rgba(213, 232, 185, 0.2);
-            transform: translateY(-0.125rem); /* -2px */
-        }}
-        
-        /* Responsive design */
-        @media screen and (max-width: 75rem) {{
-            body {{
-                padding: 3rem 5rem;
-            }}
-            
-            .content-layout {{
-                flex-direction: column;
-                gap: 2rem;
-            }}
-            
-            .image-section {{
-                flex: none;
-                height: 20rem;
-            }}
-            
-            .content-section {{
-                flex: none;
-                gap: 1.5rem;
-            }}
-        }}
-        
-        @media screen and (max-width: 50rem) {{
-            body {{
-                padding: 2rem 3rem;
-            }}
-            
-            .slide-inner-container {{
-                padding: 2rem 3rem;
-            }}
-            
-            .content-item {{
-                padding: 1rem;
-            }}
-            
-            .icon-container {{
-                width: 3rem;
-                height: 3rem;
-                margin-right: 1rem;
-            }}
-            
-            .icon-container svg {{
-                width: 1.5rem;
-                height: 1.5rem;
-            }}
-            
-            .main-title {{
-                font-size: 2rem;
-            }}
-            
-            .subtitle {{
-                font-size: 1.25rem;
-            }}
-            
-            .content {{
-                font-size: 1rem;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Image Section -->
-            <div class="image-section">
-                <div class="image-frame">
-                    <div class="image-accent"></div>
-                    <div class="image-container">
-                        <img src="{image_url}" alt="Slide image">
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Content Section -->
-            <div class="content-section">
-                <!-- Content Item 1 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon1}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle1}</h3>
-                        <p class="content">{content1}</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 2 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon2}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle2}</h3>
-                        <p class="content">{content2}</p>
-                    </div>
-                </div>
-                
-                <!-- Content Item 3 -->
-                <div class="content-item">
-                    <div class="icon-container">
-                        {icon3}
-                    </div>
-                    <div class="content-text">
-                        <h3 class="subtitle">{subtitle3}</h3>
-                        <p class="content">{content3}</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
-
 
 
 def generate_body_slide4(
@@ -8578,7 +7738,6 @@ def generate_body_slide4(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide4/Default_1.png",
     image_url_2="Image/generate_body_slide4/Default_2.png",
     image_url_3="Image/generate_body_slide4/Default_3.png"
@@ -8604,7 +7763,6 @@ def generate_body_slide4(
     - title_font_size: Font size for the main title
     - content_font_size: Font size for content text
     - subtitle_font_size: Font size for subtitles
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the slide
@@ -8631,7 +7789,7 @@ def generate_body_slide4(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -8960,7 +8118,6 @@ def generate_body_slide5(
     title_color="#333333",
     subtitle_color="#6b9d34", # Green color for subtitles
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide5/Default_1.png",
     image_url_2="Image/generate_body_slide5/Default_2.png",
     image_url_3="Image/generate_body_slide5/Default_3.png",
@@ -8986,7 +8143,6 @@ def generate_body_slide5(
     - title_font_size: Font size for the main title
     - subtitle_font_size: Font size for subtitles
     - content_font_size: Font size for content text
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the slide
@@ -9013,7 +8169,7 @@ def generate_body_slide5(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -9335,329 +8491,6 @@ def generate_body_slide5(
 
 
 
-
-def generate_body_slide7(
-    # Main parameters
-    main_title="MainTitle",
-    subtitle="SubTitle",
-  
-    # Content parameters
-    content1="Content1",
-    content2="Content2",
-    
-    # Style parameters
-    main_bg_color="#ffffff",  # White background
-    accent_color="#d5e8b9",   # Light green accent
-    title_color="#333333",
-    subtitle_color="#333333",
-    content_color="#4a90a0",  # Teal/blue color for content
-    divider_color="#d5e8b9",  # Light green divider
-    font_family="'Inter', sans-serif",
-    image_url_1="Image/generate_body_slide7/Default_1.png",
-    image_url_2="Image/generate_body_slide7/Default_2.png",
-    image_url_3="Image/generate_body_slide7/Default_3.png",
-
-):
-    """
-    Generates an HTML slide with a main title, three vertical images on the left,
-    and content with subtitle on the right - Full viewport design.
-    
-    Parameters:
-    - main_title: The main title of the slide
-    - subtitle: The subtitle on the right side
-    
-    Content parameters:
-    - content1, content2: Content text sections
-    
-    Style parameters:
-    - main_bg_color: Background color for the slide
-    - accent_color: Color for accents
-    - title_color: Color for the main title
-    - subtitle_color: Color for the subtitle
-    - content_color: Color for content text
-    - divider_color: Color for the horizontal divider
-    - title_font_size: Font size for the main title
-    - subtitle_font_size: Font size for the subtitle
-    - content_font_size: Font size for content text
-    - font_family: Font family for the slide
-    
-    Returns:
-    - HTML code for the slide
-    """
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Vertical Images Slide</title>
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        html {{ 
-            font-size: 16px; 
-            width: 100vw; 
-            height: 100vh;
-            overflow: hidden;
-        }}
-        
-        body {{
-            font-family: {font_family};
-            background-color: {accent_color}; /* Full viewport accent background */
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            padding: 5rem 7.5rem; /* 80px 120px */
-        }}
-
-        .slide-inner-container {{
-            width: 100%;
-            height: 100%;
-            max-width: 105rem; /* 1680px */
-            max-height: 57.5rem; /* 920px */
-            background-color: {main_bg_color};
-            border-radius: 1rem; /* 16px */
-            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
-            display: flex;
-            flex-direction: column;
-            padding: 3rem 4rem; /* 48px 64px */
-            position: relative;
-        }}
-        
-        .title-section {{
-            display: flex;
-            align-items: center;
-            margin-bottom: 2.5rem; /* 40px */
-        }}
-        
-        .title-accent {{
-            width: 2.5rem; /* 40px - increased size */
-            height: 2.5rem; /* 40px */
-            background: linear-gradient(135deg, {accent_color}, rgba(213, 232, 185, 0.8));
-            margin-right: 1.25rem; /* 20px */
-            border-radius: 0.5rem; /* 8px */
-            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
-        }}
-        
-        .main-title {{
-            font-size: 4.5rem;
-            color: {title_color};
-            font-weight: 600;
-            margin: 0;
-        }}
-        
-        .content-layout {{
-            display: flex;
-            width: 100%;
-            flex: 1;
-            gap: 2.5rem; /* 40px */
-        }}
-        
-        .image-section {{
-            flex: 2;
-            display: flex;
-            flex-direction: column;
-            gap: 1rem; /* 16px */
-        }}
-        
-        .image-card {{
-            flex: 1;
-            background: rgba(255,255,255,0.9);
-            border-radius: 0.75rem; /* 12px */
-            overflow: hidden;
-            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
-            transition: all 0.3s ease;
-            position: relative;
-            border-left: 0.25rem solid {accent_color}; /* accent border */
-        }}
-        
-        .image-card:hover {{
-            transform: translateX(0.5rem) scale(1.02); /* hover effect */
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
-        }}
-        
-        .image-container {{
-            width: 100%;
-            height: 100%;
-            overflow: hidden;
-            position: relative;
-        }}
-        
-        .image-container img {{
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            transition: transform 0.3s ease;
-        }}
-        
-        .image-card:hover .image-container img {{
-            transform: scale(1.05); /* zoom effect on hover */
-        }}
-        
-        .image-overlay {{
-            position: absolute;
-            bottom: 0;
-            left: 0;
-            width: 100%;
-            height: 0.25rem; /* 4px */
-            background: linear-gradient(90deg, {accent_color}, rgba(213, 232, 185, 0.8));
-        }}
-        
-        .content-section {{
-            flex: 3;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            background: rgba(255,255,255,0.9);
-            border-radius: 1rem; /* 16px */
-            padding: 3rem;
-            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
-            border-left: 0.25rem solid {accent_color}; /* accent border */
-        }}
-        
-        .subtitle {{
-            font-size: 2.5rem;
-            color: {subtitle_color};
-            margin: 0 0 2rem 0;
-            font-weight: 600;
-            position: relative;
-        }}
-        
-        .subtitle::after {{
-            content: '';
-            position: absolute;
-            bottom: -0.5rem; /* -8px */
-            left: 0;
-            width: 4rem; /* 64px */
-            height: 0.25rem; /* 4px */
-            background: linear-gradient(90deg, {divider_color}, rgba(213, 232, 185, 0.6));
-            border-radius: 0.125rem; /* 2px */
-        }}
-        
-        .content {{
-            font-size: 2rem;
-            color: {content_color};
-            margin: 0 0 2rem 0;
-            line-height: 1.6;
-            padding: 1.25rem;
-            background: rgba(74, 144, 160, 0.05); /* content color with low opacity */
-            border-radius: 0.5rem; /* 8px */
-            border-left: 0.25rem solid {content_color}; /* content accent */
-            transition: all 0.3s ease;
-        }}
-        
-        .content:hover {{
-            background: rgba(74, 144, 160, 0.1);
-            transform: translateX(0.25rem); /* 4px */
-        }}
-        
-        .content:last-child {{
-            margin-bottom: 0;
-        }}
-        
-        /* Responsive design */
-        @media screen and (max-width: 75rem) {{
-            body {{
-                padding: 3rem 5rem;
-            }}
-            
-            .content-layout {{
-                flex-direction: column;
-                gap: 2rem;
-            }}
-            
-            .image-section {{
-                flex: none;
-                height: 20rem;
-                flex-direction: row;
-            }}
-            
-            .content-section {{
-                flex: none;
-            }}
-        }}
-        
-        @media screen and (max-width: 50rem) {{
-            body {{
-                padding: 2rem 3rem;
-            }}
-            
-            .slide-inner-container {{
-                padding: 2rem 3rem;
-            }}
-            
-            .image-section {{
-                flex-direction: column;
-                height: 15rem;
-            }}
-            
-            .main-title {{
-                font-size: 2rem;
-            }}
-            
-            .subtitle {{
-                font-size: 1.5rem;
-            }}
-            
-            .content {{
-                font-size: 1rem;
-            }}
-        }}
-    </style>
-</head>
-<body>
-    <div class="slide-inner-container">
-        <!-- Title Section -->
-        <div class="title-section">
-            <div class="title-accent"></div>
-            <h1 class="main-title">{main_title}</h1>
-        </div>
-        
-        <!-- Content Layout -->
-        <div class="content-layout">
-            <!-- Image Section -->
-            <div class="image-section">
-                <div class="image-card">
-                    <div class="image-container">
-                        <img src="{image_url_1}" alt="Image 1">
-                        <div class="image-overlay"></div>
-                    </div>
-                </div>
-                <div class="image-card">
-                    <div class="image-container">
-                        <img src="{image_url_2}" alt="Image 2">
-                        <div class="image-overlay"></div>
-                    </div>
-                </div>
-                <div class="image-card">
-                    <div class="image-container">
-                        <img src="{image_url_3}" alt="Image 3">
-                        <div class="image-overlay"></div>
-                    </div>
-                </div>
-            </div>
-            
-            <!-- Content Section -->
-            <div class="content-section">
-                <h2 class="subtitle">{subtitle}</h2>
-                <p class="content">{content1}</p>
-                <p class="content">{content2}</p>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-# sửa biến trong tool
-
-
 def generate_body_slide10(
     # Main parameters
     main_title="MainTitle",
@@ -9676,7 +8509,6 @@ def generate_body_slide10(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     image_url="Image/generate_body_slide10/Default_1.png",
 
     # Icon parameters - SVG paths for each icon
@@ -9710,7 +8542,7 @@ def generate_body_slide10(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -10023,7 +8855,6 @@ def generate_body_slide11(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     box_height="15.625rem",
     
     # Icon parameters - SVG paths for each icon
@@ -10057,7 +8888,7 @@ def generate_body_slide11(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -10296,7 +9127,6 @@ def generate_body_slide12(
     title_color="#333333",
     content_color="#555555",
     subtitle_color="#333333",
-    font_family="'Inter', sans-serif",
     image_url_1="Image/generate_body_slide12/Default_1.png",
     image_url_2="Image/generate_body_slide12/Default_2.png",
     image_url_3="Image/generate_body_slide12/Default_3.png",
@@ -10328,7 +9158,7 @@ def generate_body_slide12(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Full viewport accent background */
             width: 100vw;
             height: 100vh;
@@ -10586,7 +9416,6 @@ def generate_body_slide15(
     title_color="#333333",
     subtitle_color="#333333",
     content_color="#555555",
-    font_family="'Inter', sans-serif",
     image_url="Image/generate_body_slide15/Default_1.png",  # Default image path
 ):
     """
@@ -10615,7 +9444,7 @@ def generate_body_slide15(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color}; /* Accent color cho toàn màn hình */
             width: 100vw;
             height: 100vh;
@@ -10805,16 +9634,13 @@ def generate_body_slide18(
     custom_left_icon="",  # Custom SVG code if left_icon is "custom"
     custom_right_icon="",  # Custom SVG code if right_icon is "custom"
     # Style parameters (đã chuyển sang rem cho consistency)
-    main_title_font_size="3rem",          # THAY ĐỔI: 48px -> 3rem
-    column_title_font_size="2.25rem",     # THAY ĐỔI: 36px -> 2.25rem
-    text_font_size="1.375rem",            # THAY ĐỔI: 22px -> 1.375rem
+          # THAY ĐỔI: 22px -> 1.375rem
     title_color="#555555",
     text_color="#555555",
     icon_color="#a2c4c9",
     background_color="#ffffff",
     accent_color="#a2c4c9",
     divider_color="#555555",
-    font_family="Arial, sans-serif"
 ):
     """
     Generates an HTML slide with a main title and two comparison columns with icons.
@@ -10839,7 +9665,6 @@ def generate_body_slide18(
     - background_color: Background color of the slide
     - accent_color: Color for the corner accents
     - divider_color: Color for the divider line
-    - font_family: Font family for the slide
     
     Returns:
     - HTML code for the comparison slide
@@ -10882,7 +9707,7 @@ def generate_body_slide18(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color};
             color: {text_color};
             overflow: hidden;
@@ -11034,7 +9859,6 @@ def generate_body_slide19(
     right_text_color="#555555",
     border_color="#a2c4c9",
     icon_color="#a2c4c9",
-    font_family="Arial, sans-serif",
 ):
     """
     Generates an HTML slide with two columns. All size parameters are now in REM.
@@ -11089,7 +9913,7 @@ def generate_body_slide19(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {border_color};
             color: {right_text_color};
             overflow: hidden;
@@ -11286,7 +10110,6 @@ def generate_body_slide20(
     background_color="#ffffff",
     accent_color="#a2c4c9",
     divider_color="#555555",
-    font_family="Arial, sans-serif",
 ):
     """
     Generates an HTML slide with two comparison columns. All size parameters are now in REM.
@@ -11330,7 +10153,7 @@ def generate_body_slide20(
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {accent_color};
             color: {text_color};
             overflow: hidden;
@@ -11508,7 +10331,6 @@ def generate_main_points_slide(
     point2_description="Briefly elaborate on what you want to discuss.",
     point3_title="ADD A MAIN POINT",
     point3_description="Briefly elaborate on what you want to discuss.",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a completely static main points slide with three columns featuring environmental icons.
@@ -11521,7 +10343,7 @@ def generate_main_points_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Main Points Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -11532,7 +10354,7 @@ def generate_main_points_slide(
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: #111827;
             overflow: hidden;
             position: relative;
@@ -11963,7 +10785,6 @@ def generate_elegant_points_slide(
             "description": "Briefly elaborate on the topic you want to discuss."
         }
     ],
-    font_family="'Be Vietnam Pro', sans-serif",
     bg_color="#FDFCFB",
     card_bg_color="#FFFFFF",
     title_color="#4E443F",
@@ -12004,14 +10825,14 @@ def generate_elegant_points_slide(
     <title>Elegant Points Slide - 1920x1080</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             color: {text_color};
             overflow: hidden;
@@ -12132,7 +10953,6 @@ def generate_corporate_content_slide(
         { "title": "Second Key Point", "description": "And some text to elaborate on the second main idea of your slide." },
         { "title": "Third Key Point", "description": "But remember not to overload your slides with too much content." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     accent_panel_color="#6366F1",
     title_color="#FFFFFF",
@@ -12174,14 +10994,14 @@ def generate_corporate_content_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Corporate Content Slide - Bright Design</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
         }}
@@ -12284,7 +11104,6 @@ def generate_split_content_slide(
         { "icon_name": "bulb", "title": "Title One", "description": "Description for the first column goes here. Elaborate on your point with clear and concise text." },
         { "icon_name": "target", "title": "Title Two", "description": "Description for the second column. This layout is perfect for comparing two ideas side-by-side." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_gradient_start="#0F172A",
     bg_gradient_end="#1E293B",
     title_color="#FFFFFF",
@@ -12322,14 +11141,14 @@ def generate_split_content_slide(
     <title>Split Content Slide - High-Tech Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end});
             color: {text_color};
             overflow: hidden;
@@ -12451,7 +11270,6 @@ def generate_corporate_multicolumn_slide(
         { "title": "Blue", "description": "Is the colour of the clear sky and the deep sea." },
         { "title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#8B5CF6",
     shadow_color="#7C3AED",
     text_color="#4B5563",
@@ -12470,10 +11288,10 @@ def generate_corporate_multicolumn_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Multi-Column Content Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 18px; }}
-        body, html {{ height: 100vh; width: 100vw; font-family: {font_family}; overflow: hidden; background-color: #FFFFFF; }}
+        body, html {{ height: 100vh; width: 100vw; font-family: {DEFAULT_FONT_FAMILY}; overflow: hidden; background-color: #FFFFFF; }}
         .slide-container {{ width: 100%; height: 100%; display: flex; position: relative; border-top: 6px solid #F3F4F6; }}
         .content-area {{ flex: 2; padding: 4rem 5rem; display: flex; flex-direction: column; justify-content: center; }}
         .color-panel {{ flex: 1; position: relative; background: linear-gradient(135deg, {accent_color} 0%, {shadow_color} 100%); clip-path: url(#angled-multi-divider); }}
@@ -12520,7 +11338,6 @@ def generate_corporate_grid_slide(
         { "title": "title", "description": "description." },
         { "title": "title", "description": "description." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#22C55E",
     shadow_color="#16A34A",
     text_color="#6B7280",
@@ -12557,14 +11374,14 @@ def generate_corporate_grid_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Grid Content Slide - Adjusted</title>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 18px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: #FFFFFF;
         }}
@@ -12693,7 +11510,6 @@ def generate_corporate_grid_slide(
 #     icon_color="#FFFFFF",
 #     content_bg_color="#FFFFFF",
 #     content_text_color="#1a4b8c",
-#     font_family="'Inter', sans-serif",
 #     show_border=False,
 #     border_opacity=0.25,
 #     section_spacing="30px",
@@ -12715,7 +11531,6 @@ def generate_corporate_grid_slide(
 #     :param content_text_color: Text color for content sections (hex code)
 #     :param title_font_size: Font size for the main title
 #     :param content_font_size: Font size for section content text
-#     :param font_family: Font family for all text elements
 #     :param show_border: Whether to show the dashed border frame
 #     :param border_opacity: Opacity of the border frame (0.0 to 1.0)
 #     :param section_spacing: Vertical spacing between content sections
@@ -12772,14 +11587,14 @@ def generate_corporate_grid_slide(
 #     <meta charset="UTF-8">
 #     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 #     <title>{main_title}</title>
-#     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700;900&display=swap" rel="stylesheet">
+#     <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 #     <style>
 #         body, html {{
 #             margin: 0;
 #             padding: 0;
 #             height: 100%;
 #             width: 100%;
-#             font-family: {font_family};
+#             font-family: {DEFAULT_FONT_FAMILY};
 #             overflow: hidden;
 #         }}
         
@@ -13001,7 +11816,6 @@ def generate_vision_mission_slide(
     text_color="#FFFFFF",
     vision_number_color="rgba(74, 123, 200, 0.3)",
     mission_number_color="rgba(26, 75, 140, 0.3)",
-    font_family="'Inter', sans-serif",
     show_border=True,
     border_color="#1a4b8c",
     border_opacity=0.4,
@@ -13024,7 +11838,6 @@ def generate_vision_mission_slide(
     :param number_font_size: Font size for large background numbers
     :param vision_number_color: Color of background numbers in vision section (rgba)
     :param mission_number_color: Color of background numbers in mission section (rgba)
-    :param font_family: Font family for all text elements
     :param show_border: Whether to show the dashed border frame
     :param border_color: Color of the border frame (hex code)
     :param border_opacity: Opacity of the border frame (0.0 to 1.0)
@@ -13076,14 +11889,14 @@ def generate_vision_mission_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{vision_title} & {mission_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body, html {{
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background: linear-gradient(135deg, #e8f4f8 0%, #d1e7dd 100%);
         }}
@@ -13340,293 +12153,6 @@ def generate_vision_mission_slide(
     return html_code
 
 
-def generate_strategic_goals_slide(
-    main_title="STRATEGIC GOALS",
-    goals=[
-        {
-            "number": "01",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-            "number": "02",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        },
-        {
-            "number": "03",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit."
-        }
-    ],
-    bg_image="skyscrapers.jpg",
-    bg_overlay_color="rgba(26, 75, 140, 0.85)",
-    title_color="#FFFFFF",
-    number_bg_color="#1a4b8c",
-    number_text_color="#FFFFFF",
-    content_bg_color="#FFFFFF",
-    content_text_color="#1a4b8c",
-    font_family="'Inter', sans-serif",
-    show_border=True,
-    border_opacity=0.4,
-    number_circle_size="80px",
-    content_padding="20px",
-    custom_css=""
-):
-    """
-    Generate a professional strategic goals slide with numbered points and background image.
-
-    :param main_title: Main title text (10-25 characters), displayed on the left side
-    :param goals: List of dictionaries with number and content for each strategic goal,
-                 or list of lists where first element is content and second is number
-    :param bg_image: Background image URL or path (skyscraper/city image recommended)
-    :param bg_overlay_color: Color overlay for the background image (rgba with transparency)
-    :param title_color: Color of the main title text (hex code)
-    :param number_bg_color: Background color for the number circles (hex code)
-    :param number_text_color: Text color for the numbers (hex code)
-    :param content_bg_color: Background color for content text boxes (hex code)
-    :param content_text_color: Text color for content (hex code)
-    :param title_font_size: Font size for the main title
-    :param number_font_size: Font size for the numbers
-    :param content_font_size: Font size for content text
-    :param font_family: Font family for all text elements
-    :param show_border: Whether to show the dashed border frame
-    :param border_opacity: Opacity of the border frame (0.0 to 1.0)
-    :param number_circle_size: Size of the circular number containers
-    :param content_padding: Padding inside content boxes
-    :param custom_css: Additional custom CSS to be included
-    :return: A string containing the HTML code for the slide
-    """
-
-    # Generate goals HTML
-    goals_html = ""
-    for i, goal in enumerate(goals):
-        # Xử lý goal dạng list hoặc dictionary
-        if isinstance(goal, list):
-            # Nếu goal là list thì giả định [content, number]
-            if len(goal) >= 2:
-                # Kiểm tra loại dữ liệu của phần tử đầu tiên
-                if isinstance(goal[0], str) and not goal[0].isdigit():
-                    content = goal[0]
-                    number = goal[1] if len(goal) > 1 and goal[1] else f"{i+1:02d}"
-                else:
-                    number = goal[0] if goal[0] else f"{i+1:02d}"
-                    content = goal[1] if len(goal) > 1 else ""
-            else:
-                content = goal[0] if len(goal) > 0 else ""
-                number = f"{i+1:02d}"
-        else:
-            # Đối với dictionary, sử dụng get() như trước
-            number = goal.get("number", f"{i+1:02d}")
-            content = goal.get("content", "")
-        
-        goals_html += f'''
-        <div class="goal-item">
-            <div class="number-circle">
-                <span>{number}</span>
-            </div>
-            <div class="content-box">
-                <div class="content-text">{content}</div>
-            </div>
-        </div>
-        '''
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            font-family: {font_family};
-            overflow: hidden;
-        }}
-        
-        .slide-container {{
-            width: 100%;
-            height: 100vh;
-            position: relative;
-            background-image: url('{bg_image}');
-            background-size: cover;
-            background-position: center;
-            padding: 40px;
-            box-sizing: border-box;
-        }}
-        
-        .bg-overlay {{
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: {bg_overlay_color};
-            z-index: 1;
-        }}
-        
-        .slide-border {{
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            border: {("2px dashed rgba(255, 255, 255, " + str(border_opacity) + ")" if show_border else "none")};
-            pointer-events: none;
-            z-index: 5;
-        }}
-        
-        .content-wrapper {{
-            position: relative;
-            z-index: 10;
-            display: flex;
-            height: 100%;
-        }}
-        
-        .title-section {{
-            width: 40%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }}
-        
-        .main-title {{
-            font-size: 4.5rem;
-            font-weight: 700;
-            color: {title_color};
-            line-height: 1.1;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }}
-        
-        .goals-section {{
-            width: 60%;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            gap: 20px;
-        }}
-        
-        .goal-item {{
-            display: flex;
-            align-items: center;
-        }}
-        
-        .number-circle {{
-            width: {number_circle_size};
-            height: {number_circle_size};
-            min-width: {number_circle_size};
-            background-color: {number_bg_color};
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            margin-right: 20px;
-            z-index: 20;
-            position: relative;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-        }}
-        
-        .number-circle span {{
-            color: {number_text_color};
-            font-size: 2.5rem;
-            font-weight: 700;
-        }}
-        
-        .content-box {{
-            flex: 1;
-            background-color: {content_bg_color};
-            border-radius: 8px;
-            padding: {content_padding};
-            padding-left: {content_padding};
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-            z-index: 10;
-            position: relative;
-        }}
-        
-        .content-text {{
-            color: {content_text_color};
-            font-size: 0.9rem;
-            line-height: 1.5;
-        }}
-        
-        @media (max-width: 768px) {{
-            .content-wrapper {{
-                flex-direction: column;
-            }}
-            
-            .title-section, .goals-section {{
-                width: 100%;
-            }}
-            
-            .title-section {{
-                height: 30%;
-                align-items: flex-start;
-                justify-content: center;
-            }}
-            
-            .goals-section {{
-                height: 70%;
-            }}
-            
-            .main-title {{
-                font-size: 2.5rem;
-                text-align: center;
-                margin-top: 20px;
-            }}
-            
-            .number-circle {{
-                width: 60px;
-                height: 60px;
-                min-width: 60px;
-                margin-right: 15px;
-            }}
-            
-            .number-circle span {{
-                font-size: 1.8rem;
-            }}
-            
-            .content-box {{
-                padding: 15px;
-            }}
-            
-            .content-text {{
-                font-size: 0.8rem;
-            }}
-        }}
-        
-        {custom_css}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <!-- Background overlay -->
-        <div class="bg-overlay"></div>
-        
-        <!-- Border frame -->
-        <div class="slide-border"></div>
-        
-        <!-- Content -->
-        <div class="content-wrapper">
-            <!-- Title section -->
-            <div class="title-section">
-                <h1 class="main-title">{main_title}</h1>
-            </div>
-            
-            <!-- Goals section -->
-            <div class="goals-section">
-                {goals_html}
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    return html_code
-
-
-
 
 def generate_service_roadmap_slide(
     main_title="SERVICE ROADMAP",
@@ -13654,7 +12180,6 @@ def generate_service_roadmap_slide(
     card_bg_color="#FFFFFF",
     card_text_color="#2E5BBA",
     card_title_color="#1A4480",
-    font_family="'Inter', sans-serif",
     show_border=True,
     border_color="rgba(255, 255, 255, 0.3)",
     show_decorative_triangles=True,
@@ -13679,7 +12204,6 @@ def generate_service_roadmap_slide(
     :param title_font_size: Font size for the main title
     :param card_title_font_size: Font size for card titles
     :param card_content_font_size: Font size for card content text
-    :param font_family: Font family for all text elements
     :param show_border: Whether to show the dashed border frame
     :param border_color: Color of the border frame (rgba with transparency)
     :param show_decorative_triangles: Whether to show decorative triangle elements
@@ -13730,14 +12254,14 @@ def generate_service_roadmap_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{main_title}</title>
-    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body, html {{
             margin: 0;
             padding: 0;
             height: 100%;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -13945,326 +12469,6 @@ def generate_service_roadmap_slide(
 
 
 
-def generate_financial_projections_slide_dark(
-    # Main title
-    main_title="FINANCIAL PROJECTIONS",
-    
-    # Card content
-    cards=[
-        {
-            "title": "REVENUE FORECASTS",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. Nunc sed lorem aliquam, malesuada lectus eu, placerat lorem. Proin at aliquet sapien, vitae elementum mi."
-        },
-        {
-            "title": "EXPENSE PROJECTIONS", 
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. Nunc sed lorem aliquam, malesuada lectus eu, placerat lorem. Proin at aliquet sapien, vitae elementum mi."
-        },
-        {
-            "title": "FUNDING REQUIREMENTS",
-            "content": "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. Nunc sed lorem aliquam, malesuada lectus eu, placerat lorem. Proin at aliquet sapien, vitae elementum mi."
-        }
-    ],
-    
-    # Colors - Dark Theme
-    background_color="#1E3A8A",  # Deep blue
-    main_title_color="#FFFFFF",
-    card_background_color="rgba(255, 255, 255, 0.95)",
-    card_title_color="#1E3A8A",
-    card_content_color="#374151",
-    border_color="rgba(255, 255, 255, 0.3)",
-    
-    # Typography
-    font_family="'Inter', sans-serif",
-    main_title_font_weight="700",
-    main_title_letter_spacing="0.05em",
-    card_title_font_weight="700",
-    card_title_letter_spacing="0.02em",
-    card_content_line_height="1.6",
-    card_content_font_weight="400",
-    
-    # Layout
-    slide_padding="60px",
-    main_title_margin_bottom="80px",
-    cards_gap="40px",
-    card_padding="40px",
-    card_border_radius="12px",
-    card_shadow="0 8px 32px rgba(0, 0, 0, 0.2)",
-    card_title_margin_bottom="25px",
-    
-    # Border frame
-    show_border_frame=True,
-    frame_border_style="3px dashed",
-    frame_border_color="rgba(255, 255, 255, 0.4)",
-    frame_border_radius="12px",
-    frame_padding="80px",
-    
-    # Responsive
-    mobile_title_font_size="2.8rem",
-    mobile_card_title_font_size="1.4rem",
-    mobile_card_content_font_size="0.9rem",
-    mobile_cards_gap="20px",
-    mobile_card_padding="25px",
-    mobile_slide_padding="30px",
-    mobile_frame_padding="40px",
-    
-    # Additional styling
-    additional_css=""
-):
-    """
-    Generate an HTML slide for financial projections with dark blue theme and three cards.
-    
-    :param main_title: Main title displayed at the top of the slide
-    :param cards: List of dictionaries with 'title' and 'content' keys for each card,
-                 or list of lists where first element is title and second is content
-    :param background_color: Solid background color (dark blue)
-    :param main_title_color: Color of the main title text
-    :param card_background_color: Background color of the cards
-    :param card_title_color: Color of the card titles
-    :param card_content_color: Color of the card content text
-    :param border_color: Color of the border elements
-    :param font_family: Font family for all text elements
-    :param main_title_font_size: Font size of the main title
-    :param main_title_font_weight: Font weight of the main title
-    :param main_title_letter_spacing: Letter spacing of the main title
-    :param card_title_font_size: Font size of the card titles
-    :param card_title_font_weight: Font weight of the card titles
-    :param card_title_letter_spacing: Letter spacing of the card titles
-    :param card_content_font_size: Font size of the card content
-    :param card_content_line_height: Line height of the card content
-    :param card_content_font_weight: Font weight of the card content
-    :param slide_padding: Padding around the entire slide
-    :param main_title_margin_bottom: Bottom margin below the main title
-    :param cards_gap: Gap between the cards
-    :param card_padding: Internal padding within each card
-    :param card_border_radius: Border radius of the cards
-    :param card_shadow: Box shadow of the cards
-    :param card_title_margin_bottom: Bottom margin below card titles
-    :param show_border_frame: Whether to show dashed border frame
-    :param frame_border_style: Style of the border frame
-    :param frame_border_color: Color of the border frame
-    :param frame_border_radius: Border radius of the frame
-    :param frame_padding: Padding inside the border frame
-    :param mobile_title_font_size: Main title font size on mobile
-    :param mobile_card_title_font_size: Card title font size on mobile
-    :param mobile_card_content_font_size: Card content font size on mobile
-    :param mobile_cards_gap: Gap between cards on mobile
-    :param mobile_card_padding: Card padding on mobile
-    :param mobile_slide_padding: Slide padding on mobile
-    :param mobile_frame_padding: Frame padding on mobile
-    :param additional_css: Additional CSS to include
-    :return: A string containing the HTML code for the slide
-    """
-    
-    # Generate cards HTML
-    cards_html = ""
-    for card in cards:
-        # Handle both dictionary and list formats
-        if isinstance(card, list):
-            # Assume list format: [title, content]
-            title = card[0] if len(card) > 0 else ""
-            content = card[1] if len(card) > 1 else ""
-        else:
-            # Original dictionary format
-            title = card.get('title', '')
-            content = card.get('content', '')
-        
-        cards_html += f"""
-        <div class="financial-card">
-            <h2 class="card-title">{title}</h2>
-            <p class="card-content">{content}</p>
-        </div>
-        """
-    
-    # Generate border frame
-    frame_class = "content-frame" if show_border_frame else "content-frame no-border"
-    
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{main_title}</title>
-    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <style>
-        * {{
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }}
-        
-        body, html {{
-            height: 100%;
-            font-family: {font_family};
-            overflow: hidden;
-        }}
-        
-        .slide-container {{
-            width: 100vw;
-            height: 100vh;
-            background-color: {background_color};
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: {slide_padding};
-            position: relative;
-            box-sizing: border-box;
-        }}
-        
-        .content-frame {{
-            width: 100%;
-            max-width: 1400px;
-            padding: {frame_padding};
-            position: relative;
-            text-align: center;
-        }}
-        
-        .content-frame:not(.no-border) {{
-            border: {frame_border_style} {frame_border_color};
-            border-radius: {frame_border_radius};
-        }}
-        
-        .main-title {{
-            font-size: 4.5rem;
-            font-weight: {main_title_font_weight};
-            color: {main_title_color};
-            margin-bottom: {main_title_margin_bottom};
-            letter-spacing: {main_title_letter_spacing};
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }}
-        
-        .cards-container {{
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: {cards_gap};
-            width: 100%;
-        }}
-        
-        .financial-card {{
-            background-color: {card_background_color};
-            padding: {card_padding};
-            border-radius: {card_border_radius};
-            box-shadow: {card_shadow};
-            text-align: left;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
-            backdrop-filter: blur(10px);
-        }}
-        
-        .financial-card:hover {{
-            transform: translateY(-5px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
-        }}
-        
-        .card-title {{
-            font-size: 2.3rem;
-            font-weight: {card_title_font_weight};
-            color: {card_title_color};
-            margin-bottom: {card_title_margin_bottom};
-            letter-spacing: {card_title_letter_spacing};
-            text-align: center;
-        }}
-        
-        .card-content {{
-            font-size: 1.5rem;
-            line-height: {card_content_line_height};
-            color: {card_content_color};
-            font-weight: {card_content_font_weight};
-            margin: 0;
-        }}
-        
-        /* Responsive Design */
-        @media (max-width: 1200px) {{
-            .cards-container {{
-                grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-                gap: 30px;
-            }}
-            
-            .main-title {{
-                font-size: 3.5rem;
-            }}
-            
-            .content-frame {{
-                padding: 60px;
-            }}
-        }}
-        
-        @media (max-width: 768px) {{
-            .slide-container {{
-                padding: {mobile_slide_padding};
-            }}
-            
-            .content-frame {{
-                padding: {mobile_frame_padding};
-            }}
-            
-            .main-title {{
-                font-size: {mobile_title_font_size};
-                margin-bottom: 50px;
-            }}
-            
-            .cards-container {{
-                grid-template-columns: 1fr;
-                gap: {mobile_cards_gap};
-            }}
-            
-            .financial-card {{
-                padding: {mobile_card_padding};
-            }}
-            
-            .card-title {{
-                font-size: {mobile_card_title_font_size};
-            }}
-            
-            .card-content {{
-                font-size: {mobile_card_content_font_size};
-            }}
-        }}
-        
-        @media (max-width: 480px) {{
-            .main-title {{
-                font-size: 2.2rem;
-                margin-bottom: 40px;
-            }}
-            
-            .card-title {{
-                font-size: 1.2rem;
-            }}
-            
-            .card-content {{
-                font-size: 0.85rem;
-            }}
-            
-            .financial-card {{
-                padding: 20px;
-            }}
-            
-            .content-frame {{
-                padding: 30px 20px;
-            }}
-        }}
-        
-        {additional_css}
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <div class="{frame_class}">
-            <h1 class="main-title">{main_title}</h1>
-            
-            <div class="cards-container">
-                {cards_html}
-            </div>
-        </div>
-    </div>
-    
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-</body>
-</html>"""
-    
-    return html_code
-
-
-
 def generate_minimalist_tech_list_slide(
     title="This is a slide title",
     list_items=[
@@ -14273,7 +12477,6 @@ def generate_minimalist_tech_list_slide(
         "But remember not to overload your slides with content"
     ],
     concluding_text="Your audience will listen to you or read the content, but won’t do both.",
-    font_family="'Nunito', 'Inter', sans-serif",
     sky_top_color="#ABB0EA",
     sky_bottom_color="#A2CFED",
     grid_dot_color="rgba(0, 0, 0, 0.05)",
@@ -14317,11 +12520,11 @@ def generate_minimalist_tech_list_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Bright Tech List Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         body, html {{
-            height: 100vh; width: 100vw; font-family: {font_family};
+            height: 100vh; width: 100vw; font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {sky_top_color};
             background-image: 
@@ -14422,7 +12625,6 @@ def generate_split_layout_list_slide(
             "description": "Briefly elaborate on this key point to provide more details and context for your audience."
         }
     ],
-    font_family="'Be Vietnam Pro', sans-serif",
     left_bg_color="#6F6254",
     right_bg_color="#F5F0E8",
     light_text_color="#F5F0E8",
@@ -14474,13 +12676,13 @@ def generate_split_layout_list_slide(
     <title>Split-Layout List Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh; width: 100vw;
-            font-family: {font_family}; overflow: hidden;
+            font-family: {DEFAULT_FONT_FAMILY}; overflow: hidden;
         }}
         .slide-container {{ width: 100%; height: 100%; display: flex; }}
         .left-column {{
@@ -14554,7 +12756,6 @@ def generate_reference_slide(
     ],
     # ĐÃ THAY ĐỔI: Đặt một URL ảnh mặc định chất lượng cao, hoạt động tốt
     image_url="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop",
-    font_family="'Be Vietnam Pro', sans-serif",
     bg_color="#FFFFFF",
     text_color="#1F2937",
     accent_color="#3B82F6"
@@ -14581,14 +12782,14 @@ def generate_reference_slide(
     <title>Reference Slide - Enhanced</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;700;900&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
 
@@ -14703,7 +12904,6 @@ def generate_icon_list_slide(
         { "icon_name": "star", "title": "Add a main point", "description": "Briefly elaborate on what you want to discuss." },
         { "icon_name": "thumbs-up", "title": "Add a main point", "description": "Briefly elaborate on what you want to discuss." }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#FFFFFF",
     main_title_color="#111827",
     point_title_color="#1F2937",
@@ -14746,14 +12946,14 @@ def generate_icon_list_slide(
     <title>Icon List Slide - 1920x1080</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -14882,8 +13082,6 @@ def generate_flexible_columns_slide(
             "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."
         }
     ],
-    font_family_heading="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     text_color="#34495E",
     bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png"
 ):
@@ -14910,7 +13108,7 @@ def generate_flexible_columns_slide(
     <title>Minimalist Columns Slide - Positioned Higher</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lato&family=Patrick+Hand&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
 
     <style>
         * {{
@@ -14938,7 +13136,7 @@ def generate_flexible_columns_slide(
         body#body.body, html#html.html {{
             height: 100vh !important;
             width: 100vw !important;
-            font-family: {font_family_body} !important;
+            font-family: {DEFAULT_FONT_FAMILY} !important;
             color: {text_color} !important;
             overflow: hidden !important;
             background-color: #F8F8F8 !important;
@@ -14962,7 +13160,7 @@ def generate_flexible_columns_slide(
         }}
 
         .main-title {{
-            font-family: 'Patrick Hand', cursive;
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: clamp(4rem, 8vw, 5rem); 
             text-transform: uppercase;
             margin-bottom: 10rem; 
@@ -15023,8 +13221,6 @@ def generate_text_with_image_slide(
     title="Tiltle Tiltle TiltleTiltle Tiltle",
     text_content="Content.",
     image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80",
-    font_family_heading="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     text_color="#34495E",
     bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png",
     doodle_border_url="https://i.imgur.com/Qy2O1vN.png"
@@ -15041,14 +13237,14 @@ def generate_text_with_image_slide(
     <title>Text and Image Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family_body};
+            font-family: {DEFAULT_FONT_FAMILY};
             color: {text_color};
             overflow: hidden;
             background-color: #F8F8F8;
@@ -15081,7 +13277,7 @@ def generate_text_with_image_slide(
         }}
 
         .title {{
-            font-family: {font_family_heading};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: clamp(3rem, 4vw, 4rem);
             font-weight: 400;
             text-transform: uppercase;
@@ -15130,188 +13326,6 @@ def generate_text_with_image_slide(
 
 
 
-def generate_instructions_slide(
-    main_title="TOPIC",
-    columns=[
-        { "title": ["TOPIC ONE"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] },
-        { "title": ["TOPIC TWO"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] },
-        { "title": ["TOPIC THREE"], "list_items": ["First instruction point.", "Second instruction point.", "Third instruction point."] }
-    ],
-    font_family="'Poppins', 'Inter', sans-serif",
-    header_primary_color="#4F46E5",
-    header_secondary_color="#1E293B",
-    header_text_color="#FFFFFF",
-    body_title_color="#1E293B",
-    body_text_color="#333333"
-):
-    """
-    Generates a professional three-column instructions slide with extra-large,
-    impactful fonts and generous spacing.
-    """
-    
-    columns_html = ""
-    for column in columns:
-        title = column["title"]
-        if isinstance(title, str):
-            title = [title]
-        list_items_html = "".join([f"<li>{item}</li>" for item in column['list_items']])
-        title_items_html = "".join([f"<li>{item}</li>" for item in title])
-
-        columns_html += f"""
-        <div class="column">
-            <h2 class="column-title">{title_items_html}</h2>
-            <ul class="instruction-list">
-                {list_items_html}
-            </ul>
-        </div>
-        """
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Instructions Slide - Extra Large</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;700;800&display=swap" rel="stylesheet">
-    <style>
-        * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html {{ font-size: 16px; }}
-        body, html {{
-            height: 100vh;
-            width: 100vw;
-            font-family: {font_family};
-            background-color: #FFFFFF;
-            overflow: hidden;
-        }}
-
-        .slide-container {{
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }}
-
-        .header-bar {{
-            width: 100%;
-            background-color: {header_primary_color};
-            color: {header_text_color};
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }}
-        
-        .header-title {{
-            /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: clamp(3.5rem, 4vw, 4.5rem);
-            font-weight: 700;
-            padding: 2.5rem 3.5rem;
-        }}
-        
-        .header-accent {{
-            background-color: {header_secondary_color};
-            height: 100%;
-            padding: 2.5rem;
-            display: flex;
-            align-items: center;
-        }}
-        
-        .dots-icon {{
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 0.4rem;
-        }}
-        .dot {{
-            width: 0.7rem;
-            height: 0.7rem;
-            background-color: {header_text_color};
-            border-radius: 50%;
-        }}
-
-        .content-grid {{
-            padding: 5rem; /* Tăng padding để thoáng hơn */
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 3.5rem; /* Tăng gap */
-            flex-grow: 1;
-        }}
-        
-        .column-title {{
-            /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: 3rem;
-            font-weight: 800;
-            color: {body_title_color};
-            text-transform: uppercase;
-            margin-bottom: 2.5rem; /* Tăng lề dưới */
-        }}
-        
-        .instruction-list {{
-            list-style: none;
-            padding: 0;
-            display: flex;
-            flex-direction: column;
-            gap: 1.5rem; /* Tăng khoảng cách */
-        }}
-        
-        .instruction-list li {{
-            display: flex;
-            align-items: flex-start;
-            gap: 0.75rem;
-            /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: 2rem;
-            color: {body_text_color};
-            line-height: 1.7;
-        }}
-
-        .instruction-list li::before {{
-            content: '•';
-            color: {header_primary_color};
-            font-weight: 800;
-            /* ĐÃ SỬA ĐỔI: To hơn một chút */
-            font-size: 2.2rem;
-            margin-top: 0.15rem;
-        }}
-        
-        @media (max-width: 64rem) {{
-            .content-grid {{ 
-                grid-template-columns: 1fr; 
-                max-width: 45rem; 
-                margin: 0 auto;
-                padding: 4rem 2rem;
-            }}
-            body, html {{
-                 height: auto;
-                 min-height: 100vh;
-                 overflow-y: auto;
-            }}
-        }}
-
-    </style>
-</head>
-<body>
-    <div class="slide-container">
-        <div class="header-bar">
-            <h1 class="header-title">{main_title}</h1>
-            <div class="header-accent">
-                <div class="dots-icon">
-                    <div class="dot"></div><div class="dot"></div>
-                    <div class="dot"></div><div class="dot"></div>
-                </div>
-            </div>
-        </div>
-        <div class="content-grid">
-            {columns_html}
-        </div>
-    </div>
-</body>
-</html>"""
-    
-    return html_code
-
-
-
-
 def generate_geometric_split_content_slide(
     main_title="You can also split your content",
     columns=[
@@ -15324,7 +13338,6 @@ def generate_geometric_split_content_slide(
             "description": "Is the color of ebony and of outer space. It has been the symbolic color of elegance, solemnity and authority."
         }
     ],
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -15351,14 +13364,14 @@ def generate_geometric_split_content_slide(
     <title>Split Content Slide - Final Fix</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -15467,7 +13480,6 @@ def generate_geometric_split_content_slide_2(
             "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."
         }
     ],
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -15494,14 +13506,14 @@ def generate_geometric_split_content_slide_2(
     <title>Multi-Column Slide - Safe Layout</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -15595,7 +13607,6 @@ def generate_geometric_image_content_slide(
     image_url="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2574&auto=format&fit=crop",
     main_title="A picture is worth a <span class='highlight'>thousand</span> words",
     description="A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.",
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -15622,14 +13633,14 @@ def generate_geometric_image_content_slide(
     <title>Image Content Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -15747,7 +13758,6 @@ def generate_geometric_grid_slide(
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ],
-    font_family="'Poppins', 'Inter', sans-serif",
     bg_color="#0F172A",
     text_color="#FFFFFF"
 ):
@@ -15772,14 +13782,14 @@ def generate_geometric_grid_slide(
     <title>Grid Content Slide - Faded Shapes</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {bg_color};
             color: {text_color};
@@ -15880,8 +13890,6 @@ def generate_memphis_content_slide(
         "But remember not to overload your slides with content"
     ],
     concluding_text="Your audience will listen to you or read the content, but won't do both.",
-    font_family_title="'Lora', serif",
-    font_family_body="'Source Code Pro', monospace",
     top_panel_bg="#19114B",
     bottom_panel_bg="#403271",
     palette=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
@@ -15896,7 +13904,7 @@ def generate_memphis_content_slide(
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Content Slide - 20/80 Layout</title>
     <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
@@ -15905,11 +13913,11 @@ def generate_memphis_content_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 75rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 3rem; font-weight: 600; text-align: center; }}
-        .content-list {{ font-family: {font_family_body}; list-style: none; margin-bottom: 3rem; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 3rem; font-weight: 600; text-align: center; }}
+        .content-list {{ font-family: {DEFAULT_FONT_FAMILY}; list-style: none; margin-bottom: 3rem; }}
         .content-list li {{ font-size: 2rem; line-height: 1.7; padding-left: 2.5rem; position: relative; margin-bottom: 0.5rem; }}
         .content-list li::before {{ content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid {palette[1]}; }}
-        .concluding-text {{ font-family: {font_family_body}; font-size: 2rem; line-height: 1.7; max-width: 60ch; }}
+        .concluding-text {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2rem; line-height: 1.7; max-width: 60ch; }}
         .shape {{ position: absolute; }}
         .shape-tl-1 {{ width: 4rem; height: 4rem; border: 2px dashed {palette[0]}; top: 2rem; left: 2rem; transform: rotate(-25deg); }}
         .shape-tl-2 {{ width: 0; height: 0; border-left: 1.5rem solid transparent; border-right: 1.5rem solid transparent; border-bottom: 2.5rem solid {palette[0]}; top: 3.5rem; left: 7rem; transform: rotate(20deg); opacity: 0.8; }}
@@ -15946,8 +13954,6 @@ def generate_memphis_multicolumn_slide(
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ],
-    font_family_title="'Lora', serif",
-    font_family_body="'Source Code Pro', monospace",
     top_panel_bg="#19114B",
     bottom_panel_bg="#403271",
     palette=["#F43F5E", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
@@ -15962,7 +13968,7 @@ def generate_memphis_multicolumn_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Multi-Column Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
@@ -15971,10 +13977,10 @@ def generate_memphis_multicolumn_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 80rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 3.5rem; font-weight: 600; text-align: center; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 3.5rem; font-weight: 600; text-align: center; }}
         .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 3rem 5rem; }}
-        .column-title {{ font-family: {font_family_body}; font-size: 2.5rem; font-weight: 600; margin-bottom: 1.5rem; }}
-        .column-description {{ font-family: {font_family_body}; font-size: 1.75rem; line-height: 1.6; }}
+        .column-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2.5rem; font-weight: 600; margin-bottom: 1.5rem; }}
+        .column-description {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.75rem; line-height: 1.6; }}
         .shape {{ position: absolute; }} .pentagon {{ clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
         .shape-tl-1 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.4; top: 1rem; left: 8rem; }}
         .shape-tl-2 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: -1rem; left: 1rem; border-radius: 50%; opacity: 0.8; }}
@@ -16014,8 +14020,6 @@ def generate_memphis_grid_slide(
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
     ],
-    font_family_title="'Lora', serif",
-    font_family_body="'Source Code Pro', monospace",
     top_panel_bg="#19114B",
     bottom_panel_bg="#403271",
     palette=["#F43F5E", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"]
@@ -16032,7 +14036,7 @@ def generate_memphis_grid_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Grid Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;600&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }} html {{ font-size: 16px; }}
         body, html {{ height: 100vh; width: 100vw; overflow: hidden; }}
@@ -16041,10 +14045,10 @@ def generate_memphis_grid_slide(
         .top-panel {{ background-color: {top_panel_bg}; flex-basis: 20%; align-items: center; }}
         .bottom-panel {{ background-color: {bottom_panel_bg}; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }}
         .panel-content {{ width: 100%; max-width: 80rem; padding: 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_title}; font-size: 2.25rem; font-weight: 600; text-align: center; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 2.25rem; font-weight: 600; text-align: center; }}
         .columns-grid {{ display: grid; grid-template-columns: {grid_template_style}; gap: 3rem 4rem; }}
-        .item-title {{ font-family: {font_family_body}; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }}
-        .item-description {{ font-family: {font_family_body}; font-size: 1.1rem; line-height: 1.6; }}
+        .item-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.25rem; font-weight: 600; margin-bottom: 1rem; }}
+        .item-description {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.1rem; line-height: 1.6; }}
         .shape {{ position: absolute; }} .pentagon {{ clip-path: polygon(50% 0%, 100% 38%, 82% 100%, 18% 100%, 0% 38%); }}
         .shape-tl-1 {{ width: 6rem; height: 6rem; background: {palette[2]}; opacity: 0.4; top: 1rem; left: 8rem; }}
         .shape-tl-2 {{ width: 8rem; height: 8rem; background: url(#pattern-dots); top: -1rem; left: 1rem; border-radius: 50%; opacity: 0.8; }}
@@ -16070,248 +14074,6 @@ def generate_memphis_grid_slide(
 </html>"""
     
     return html_code
-
-
-def generate_premium_abstract_slide(
-    main_title="HR Management",
-    content_paragraphs=[
-        "We foster a dynamic and supportive work environment where every individual can thrive. Our approach integrates technology and human-centric policies to build a resilient and engaged workforce.",
-        "From talent acquisition to professional development, our comprehensive strategies ensure that our people are our greatest asset, driving innovation and success."
-    ],
-    # --- Bảng màu thiết kế cao cấp ---
-    bg_color="#F8FAFC", # Off-white, rất nhẹ
-    aurora_color_1="#FBCFE8", # Pink
-    aurora_color_2="#CFFAFE", # Cyan
-    aurora_color_3="#DDD6FE", # Lavender
-    title_color="#881337", # Deep Raspberry
-    text_color="#334155",  # Slate Gray
-    # --- Tùy chỉnh khác ---
-    enable_animation=True,
-    show_border=True,
-    font_family_title="'Poppins', sans-serif",
-    font_family_content="'Inter', sans-serif",
-    custom_css=""
-):
-    """
-    Generate a premium, modern slide with an aurora gradient background and abstract glassmorphism graphics.
-
-    :param main_title: The main title of the slide.
-    :param content_paragraphs: A list of strings for body text.
-    :param bg_color: The base background color.
-    :param aurora_color_1: First color for the aurora gradient effect.
-    :param aurora_color_2: Second color for the aurora gradient effect.
-    :param aurora_color_3: Third color for the aurora gradient effect.
-    :param title_color: Color for the main title.
-    :param text_color: Color for the paragraph text.
-    :param enable_animation: Whether to enable subtle load animations.
-    :param show_border: Whether to show a subtle finishing border.
-    :param font_family_title: Font family for the title.
-    :param font_family_content: Font family for the content.
-    :param custom_css: Additional custom CSS.
-    :return: HTML string for the slide.
-    """
-
-    paragraphs_html = "".join([f"<p class='content-paragraph'>{p}</p>" for p in content_paragraphs])
-    animation_class = "animated" if enable_animation else ""
-
-    html_code = f"""<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{main_title}</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@600&family=Inter:wght@400&display=swap" rel="stylesheet">
-    <style>
-        body, html {{
-            margin: 0;
-            padding: 0;
-            height: 100%;
-            width: 100%;
-            overflow: hidden;
-            background-color: {bg_color};
-            color: {text_color};
-        }}
-        
-        .slide-container {{
-            width: 100%;
-            height: 100vh;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 4vw;
-            box-sizing: border-box;
-            position: relative;
-        }}
-        
-        /* Aurora Gradient Background */
-        .aurora-shape {{
-            position: absolute;
-            filter: blur(120px);
-            opacity: 0.4;
-            border-radius: 50%;
-        }}
-        .aurora-1 {{
-            width: 450px;
-            height: 450px;
-            top: -150px;
-            left: -150px;
-            background: {aurora_color_1};
-        }}
-        .aurora-2 {{
-            width: 400px;
-            height: 400px;
-            bottom: -150px;
-            right: -100px;
-            background: {aurora_color_2};
-        }}
-        .aurora-3 {{
-            width: 300px;
-            height: 300px;
-            top: 50%;
-            right: 15%;
-            transform: translateY(-50%);
-            background: {aurora_color_3};
-            opacity: 0.3;
-        }}
-
-        .slide-border {{
-            position: absolute;
-            top: 20px;
-            left: 20px;
-            right: 20px;
-            bottom: 20px;
-            border: 1px solid rgba(0, 0, 0, 0.05);
-            border-radius: 20px;
-            display: { "block" if show_border else "none" };
-        }}
-
-        .content-wrapper {{
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            width: 100%;
-            max-width: 1200px;
-            position: relative;
-            z-index: 1;
-        }}
-        
-        .text-section {{
-            flex-basis: 50%;
-            padding-right: 40px;
-        }}
-        
-        .graphic-section {{
-            flex-basis: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            height: 400px;
-        }}
-        
-        .main-title {{
-            font-family: {font_family_title};
-            font-size: 4.5rem;
-            font-weight: 600;
-            color: {title_color};
-            margin: 0 0 30px 0;
-            line-height: 1.15;
-        }}
-        
-        .content-paragraph {{
-            font-family: {font_family_content};
-            font-size: 1.1rem;
-            line-height: 1.8;
-            margin-bottom: 20px;
-            max-width: 500px;
-        }}
-
-        /* Abstract Glassmorphism Graphic */
-        .abstract-graphic {{
-            position: relative;
-            width: 380px;
-            height: 380px;
-        }}
-        .abstract-shape {{
-            position: absolute;
-            border-radius: 30%;
-            transition: transform 0.4s ease-out;
-        }}
-        .shape1 {{
-            width: 380px;
-            height: 380px;
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.5);
-            border-radius: 50%;
-        }}
-        .shape2 {{
-            width: 180px;
-            height: 180px;
-            top: 30px;
-            left: 10px;
-            background: {aurora_color_1};
-            opacity: 0.8;
-            border-radius: 45% 55% 70% 30% / 30% 30% 70% 70%;
-            transform: rotate(-15deg);
-        }}
-        .shape3 {{
-            width: 200px;
-            height: 200px;
-            bottom: 20px;
-            right: 0px;
-            background: {aurora_color_2};
-            opacity: 0.8;
-            border-radius: 60% 40% 30% 70% / 60% 30% 70% 40%;
-            transform: rotate(15deg);
-        }}
-        
-        
-
-        /* Responsive */
-        @media (max-width: 900px) {{
-            .main-title {{ font-size: 3.2rem; }}
-        }}
-        @media (max-width: 768px) {{
-            .content-wrapper {{ flex-direction: column-reverse; text-align: center; }}
-            .text-section {{ padding-right: 0; margin-top: 40px; align-items: center; display:flex; flex-direction:column;}}
-            .graphic-section {{ flex-basis: auto; width: 60%; height: 300px; margin-bottom: 20px; }}
-            .abstract-graphic, .shape1 {{ width: 300px; height: 300px; }}
-            .shape2 {{ width: 140px; height: 140px; }}
-            .shape3 {{ width: 160px; height: 160px; }}
-        }}
-        
-        {custom_css}
-    </style>
-</head>
-<body>
-    <div class="slide-container {animation_class}">
-        <div class="aurora-shape aurora-1"></div>
-        <div class="aurora-shape aurora-2"></div>
-        <div class="aurora-shape aurora-3"></div>
-        <div class="slide-border"></div>
-
-        <div class="content-wrapper">
-            <div class="text-section">
-                <h1 class="main-title">{main_title}</h1>
-                <div class="content-area">
-                    {paragraphs_html}
-                </div>
-            </div>
-            <div class="graphic-section">
-                <div class="abstract-graphic">
-                    <div class="abstract-shape shape1"></div>
-                    <div class="abstract-shape shape2"></div>
-                    <div class="abstract-shape shape3"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</body>
-</html>"""
-    return html_code
-
 
 def generate_company_mission_slide(
     main_title="OUR COMPANY OUR COMPANY OUR COMPANY OUR COMPANY",
@@ -16376,7 +14138,7 @@ def generate_company_mission_slide(
         }}
 
         body {{
-            font-family: 'Arial', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             display: flex;
             justify-content: center;
@@ -16530,7 +14292,6 @@ def generate_methodology_slide(
     quantitative_text="Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.",
     image_url="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2340&auto=format&fit=crop",
     bg_color="#F5F5F5",
-    font_family="'Inter', sans-serif",
     custom_css=""
 ):
     """
@@ -16546,7 +14307,6 @@ def generate_methodology_slide(
         quantitative_text: Description text for quantitative methods
         image_url: URL for the right side professional image
         bg_color: Background color
-        font_family: Font family for the text
         custom_css: Additional custom CSS
     
     Returns:
@@ -16567,7 +14327,7 @@ def generate_methodology_slide(
         }}
         
         body {{
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -16989,7 +14749,7 @@ def generate_planning_phase_slide(
         body {{
             width: 1920px;
             height: 1080px;
-            font-family: 'Arial', 'Segoe UI', Tahoma, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {bg_color};
             color: white;
             overflow: hidden;
@@ -17163,7 +14923,6 @@ def generate_timeline_slide(
     bg_color="#1E1E2E",
     accent_color="#F43F5E",
     text_color="#FFFFFF",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a horizontal timeline slide to visualize progress or history.
@@ -17200,10 +14959,10 @@ def generate_timeline_slide(
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background: {bg_color}; overflow: hidden; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background: {bg_color}; overflow: hidden; }}
         </style>
     </head>
     <body>
@@ -17231,7 +14990,6 @@ def generate_quote_slide(
     bg_color="#FAF9F6",
     quote_color="#18181B",
     accent_color="#EA580C",
-    font_family="Playfair Display"
 ):
     """
     Generates an elegant quote slide centered on screen.
@@ -17240,15 +14998,15 @@ def generate_quote_slide(
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;1,400&family=Inter:wght@400;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            html, body {{ width: 1920px; height: 1080px; font-family: {font_family}, serif; background: {bg_color}; overflow: hidden; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background: {bg_color}; overflow: hidden; }}
         </style>
     </head>
     <body>
         <!-- Decorative quotation mark -->
-        <div style="position: absolute; top: 180px; left: 200px; font-size: 300px; color: {accent_color}; opacity: 0.1; font-family: {font_family}, serif; line-height: 1; pointer-events: none;">"</div>
+        <div style="position: absolute; top: 180px; left: 200px; font-size: 300px; color: {accent_color}; opacity: 0.1; font-family: {DEFAULT_FONT_FAMILY}; line-height: 1; pointer-events: none;">"</div>
         
         <!-- Main quote text -->
         <h1 style="position: absolute; top: 300px; left: 300px; width: 1320px; font-size: 80px; font-weight: 700; color: {quote_color}; line-height: 1.3; font-style: italic; text-align: center;">
@@ -17259,10 +15017,10 @@ def generate_quote_slide(
         <div style="position: absolute; top: 610px; left: 910px; width: 100px; height: 4px; background: {accent_color};"></div>
         
         <!-- Author name -->
-        <h3 style="position: absolute; top: 654px; left: 300px; width: 1320px; font-size: 36px; font-weight: 700; color: {quote_color}; font-family: Inter, sans-serif; text-align: center;">{author}</h3>
+        <h3 style="position: absolute; top: 654px; left: 300px; width: 1320px; font-size: 36px; font-weight: 700; color: {quote_color}; font-family: {DEFAULT_FONT_FAMILY}; text-align: center;">{author}</h3>
         
         <!-- Author role -->
-        <p style="position: absolute; top: 708px; left: 300px; width: 1320px; font-size: 24px; color: #71717A; font-family: Inter, sans-serif; text-align: center;">{role}</p>
+        <p style="position: absolute; top: 708px; left: 300px; width: 1320px; font-size: 24px; color: #71717A; font-family: {DEFAULT_FONT_FAMILY}; text-align: center;">{role}</p>
         
         <div style="position: absolute; top: 60px; left: 60px; width: 1800px; height: 960px; border: 2px solid {quote_color}; opacity: 0.1; pointer-events: none;"></div>
     </body>
@@ -17304,10 +15062,10 @@ def generate_classic_content_slide(
     <html lang="en">
     <head>
         <meta charset="UTF-8">
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-            html, body {{ width: 1920px; height: 1080px; font-family: 'Inter', sans-serif; background: {bg_color}; overflow: hidden; }}
+            html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background: {bg_color}; overflow: hidden; }}
         </style>
     </head>
     <body>
@@ -17357,7 +15115,6 @@ def generate_team_slide(
             "image_url": "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop"
         }
     ],
-    font_family="'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
     accent_bg_color="#14B8A6",
     main_bg_color="#F8FAFC",
     title_color="#FFFFFF",
@@ -17389,14 +15146,14 @@ def generate_team_slide(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Team Slide - Dynamic Design</title>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: {main_bg_color};
         }}
@@ -17517,7 +15274,6 @@ def generate_colorful_team_grid_slide(
         { "name": "Aisha Khan", "role": "Project Manager", "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop", "color": "#D93B58" },
         { "name": "Leo Martinez", "role": "Marketing Head", "image_url": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop", "color": "#F3C314" }
     ],
-    font_family="'Montserrat', 'Inter', sans-serif",
     bg_color="#F8FAFC",
     title_color="#111827",
     card_text_color="#1F2937"
@@ -17547,14 +15303,14 @@ def generate_colorful_team_grid_slide(
     <title>Team Members Slide - Spacious Design</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; width: 1920px; height: 1080px; }}
         body, html {{
             height: 1080px;
             width: 1920px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background-color: {bg_color};
             overflow: hidden;
         }}
@@ -17686,8 +15442,6 @@ def generate_corporate_team_slide(
         { "name": "Aisha Khan", "role": "Content Strategist", "image_url": "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop" },
         { "name": "Leo Martinez", "role": "Illustrator", "image_url": "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop" }
     ],
-    font_family_heading="'Patrick Hand', cursive",
-    font_family_body="'Lato', sans-serif",
     text_color="#4A403A",
     role_color="#6B7280",
     bg_url="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png"
@@ -17701,7 +15455,7 @@ def generate_corporate_team_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Team Presentation - Polaroid Style</title>
-    <link href="https://fonts.googleapis.com/css2?family=Patrick+Hand&family=Lato:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         
@@ -17721,7 +15475,7 @@ def generate_corporate_team_slide(
         body#body.body, html#html.html {{
             height: 100vh !important; 
             width: 100vw !important; 
-            font-family: {font_family_body} !important; 
+            font-family: {DEFAULT_FONT_FAMILY} !important; 
             overflow: hidden !important; 
             background-color: #F8F8F8 !important; 
             background-image: url('{bg_url}') !important;
@@ -17738,7 +15492,7 @@ def generate_corporate_team_slide(
             background: transparent !important;
         }}
         .title-section {{ width: 100%; display: flex; justify-content: center; align-items: center; padding: 4rem 4rem 2rem 4rem; }}
-        .main-title {{ font-family: {font_family_heading}; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 400; color: {text_color}; margin: 0; text-align: center; }}
+        .main-title {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 400; color: {text_color}; margin: 0; text-align: center; }}
         .content-section {{ flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 0 4rem 4rem 4rem; }}
         .team-grid {{ display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; width: 100%; max-width: 80rem; }}
         .polaroid-card {{
@@ -17751,7 +15505,7 @@ def generate_corporate_team_slide(
         .polaroid-card:nth-child(4n+4) {{ transform: rotate(-2deg); }}
         .member-photo {{ width: 100%; display: block; margin-bottom: 1rem; }}
         .member-info {{ text-align: center; }}
-        .member-name {{ font-family: {font_family_heading}; font-size: 1.75rem; color: {text_color}; margin-bottom: 0.25rem; }}
+        .member-name {{ font-family: {DEFAULT_FONT_FAMILY}; font-size: 1.75rem; color: {text_color}; margin-bottom: 0.25rem; }}
         .member-role {{ font-size: 1rem; color: {role_color}; line-height: 1.5; }}
         @media (max-width: 48rem) {{ body, html {{ height: auto; min-height: 100vh; overflow-y: auto; }} }}
     </style>
@@ -17799,7 +15553,6 @@ def generate_thank_you_slide_3(
     ],
     
     # Typography
-    font_family="'Inter', sans-serif",
     main_title_font_size="6rem",
     main_title_font_weight="700",
     main_title_letter_spacing="0.1em",
@@ -17848,7 +15601,6 @@ def generate_thank_you_slide_3(
     :param contact_icon_color: Color of contact icons
     :param border_color: Color of the border frame
     :param geometric_shape_colors: List of colors for geometric shapes
-    :param font_family: Font family for all text elements
     :param main_title_font_size: Font size of the main title
     :param main_title_font_weight: Font weight of the main title
     :param main_title_letter_spacing: Letter spacing of the main title
@@ -17934,7 +15686,7 @@ def generate_thank_you_slide_3(
         
         body, html {{
             height: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -18157,7 +15909,6 @@ def generate_thank_you_slide_3(
 def generate_corporate_thank_you_slide(
         
     thanks_text="THANK YOU FOR WACTCHING!",
-    font_family="'Montserrat', 'Inter', sans-serif",
     accent_color="#F97316",
     shadow_color="#EA580C",
     icon_color="#D1D5DB"
@@ -18196,14 +15947,14 @@ def generate_corporate_thank_you_slide(
     <title>Thank You Slide</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
         html {{ font-size: 16px; }}
         body, html {{
             height: 100vh;
             width: 100vw;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             background-color: #FFFFFF;
         }}
@@ -18278,8 +16029,7 @@ def generate_business_thank_you_slide(
     main_text_color="#0056d2",
     subtitle_color="#666666",
     accent_color="#0056d2",
-    main_font="Arial, sans-serif",
-    subtitle_font="Arial, sans-serif"
+
 ):
     """
     Generate a clean business thank you slide with centered text and decorative side D-shapes.
@@ -18291,7 +16041,6 @@ def generate_business_thank_you_slide(
         subtitle_color (str): Color for subtitle text
         contact_color (str): Color for contact information
         accent_color (str): Color for decorative D-shapes
-        main_font (str): Font family for main text
         subtitle_font (str): Font family for subtitle and contact
     
     Returns:
@@ -18354,7 +16103,7 @@ def generate_business_thank_you_slide(
         }}
         
         .main-text {{
-            font-family: {main_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 160px;
             font-weight: 900;
             color: {main_text_color};
@@ -18364,7 +16113,7 @@ def generate_business_thank_you_slide(
         }}
         
         .subtitle {{
-            font-family: {subtitle_font};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 36px;
             font-weight: 400;
             color: {subtitle_color};
@@ -18422,7 +16171,6 @@ def generate_thank_you_slide_4(
     bg_gradient_to="#A8D8F0",
     text_color="#2C5F8D",
     bubble_bg_color="#FFFFFF",
-    font_family="Arial, sans-serif",
     show_speech_tail=True,
     custom_css=""
 ):
@@ -18435,7 +16183,6 @@ def generate_thank_you_slide_4(
     - bg_gradient_to: Background gradient end color (default: light blue)
     - text_color: Color of the thank you text
     - bubble_bg_color: Background color of the speech bubble
-    - font_family: Font family for the text (default: Arial, sans-serif)
     - show_speech_tail: Whether to show the speech bubble tail
     - custom_css: Additional custom CSS
     
@@ -18466,7 +16213,7 @@ def generate_thank_you_slide_4(
         }}
         
         body {{
-            font-family: 'Arial', 'Helvetica', sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
         }}
         
@@ -18507,7 +16254,7 @@ def generate_thank_you_slide_4(
             font-size: 5rem;
             font-weight: 900;
             color: {text_color};
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             text-align: center;
             letter-spacing: 0.05em;
             text-transform: uppercase;
@@ -18608,7 +16355,7 @@ def generate_thank_you_decorative_slide(
             background: linear-gradient(135deg, {bg_color} 0%, {bg_gradient_to} 100%);
             overflow: hidden;
             position: relative;
-            font-family: 'Arial Black', 'Arial Bold', Arial, sans-serif;
+            font-family: {DEFAULT_FONT_FAMILY};
         }}
         
         .main-text {{
@@ -18653,7 +16400,6 @@ def generate_watercolor_thank_you_slide(
     text_color="#1e3a5f",
     watercolor_color="#4dd0e1",
     watercolor_opacity=0.6,
-    font_family="'Brush Script MT', cursive, serif",
     show_watercolor=True,
     custom_css=""
 ):
@@ -18666,7 +16412,6 @@ def generate_watercolor_thank_you_slide(
     - text_color: Text color (default: "#1e3a5f" - dark blue)
     - watercolor_color: Watercolor splash color (default: "#4dd0e1" - cyan)
     - watercolor_opacity: Opacity of watercolor effect (default: 0.6)
-    - font_family: Font for title (default: cursive/script style)
     - show_watercolor: Show watercolor background effect (default: True)
     - custom_css: Additional custom CSS
     
@@ -18746,7 +16491,7 @@ def generate_watercolor_thank_you_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Thank You Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Pacifico&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -18755,7 +16500,7 @@ def generate_watercolor_thank_you_slide(
             }}
             
             body {{
-                font-family: Arial, sans-serif;
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 margin: 0;
                 padding: 0;
@@ -18781,7 +16526,7 @@ def generate_watercolor_thank_you_slide(
             }}
             
             .title {{
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 8rem;
                 color: {text_color};
                 font-weight: 700;
@@ -18870,7 +16615,7 @@ def generate_thank_you_slide_5(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Geometric Thank You Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Caveat:wght@700&family=Kalam:wght@700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{
             margin: 0;
@@ -18879,7 +16624,7 @@ def generate_thank_you_slide_5(
         }}
         
         body {{
-            font-family: 'Caveat', cursive;
+            font-family: {DEFAULT_FONT_FAMILY};
             overflow: hidden;
             margin: 0;
             padding: 0;
@@ -18969,7 +16714,6 @@ def generate_thank_you_slide_6(
     text_color="#1a3a52",
     show_decorative_elements=True,
     show_olive_branches=True,
-    font_family="'Dancing Script', 'Brush Script MT', cursive",
     custom_css=""
 ):
     """
@@ -18981,7 +16725,6 @@ def generate_thank_you_slide_6(
         text_color (str): Text color (default: navy #1a3a52)
         show_decorative_elements (bool): Show sunburst patterns and dots
         show_olive_branches (bool): Show olive branch decorations
-        font_family (str): Font family for the main text
         custom_css (str): Additional custom CSS
     
     Returns:
@@ -19063,7 +16806,7 @@ def generate_thank_you_slide_6(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thank You Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@400;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {{
             margin: 0;
@@ -19089,7 +16832,7 @@ def generate_thank_you_slide_6(
             top: 460px;
             left: 0;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 160px;
             color: {text_color};
             font-weight: 400;
@@ -19119,7 +16862,6 @@ def generate_thank_you_slide_7(
     main_text="THANK YOU!",
     bg_color="#F5F3F0",
     text_color="#7A6350",
-    font_family="'Playfair Display', 'Georgia', serif"
 ):
     """
     Generate a thank you slide.
@@ -19128,7 +16870,6 @@ def generate_thank_you_slide_7(
         main_text (str): Main text to display (default: "THANK YOU!")
         bg_color (str): Background color (default: "#F5F3F0" - light warm gray)
         text_color (str): Text color (default: "#7A6350" - brown/taupe)
-        font_family (str): Font family for main text
     
     Returns:
         str: Complete HTML code for the slide
@@ -19140,14 +16881,14 @@ def generate_thank_you_slide_7(
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Thank You Slide</title>
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         body {{
             margin: 0;
             padding: 0;
             width: 1920px;
             height: 1080px;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             background: {bg_color};
             overflow: hidden;
             position: relative;
@@ -19158,7 +16899,7 @@ def generate_thank_you_slide_7(
             top: 390px;
             left: 0;
             width: 100%;
-            font-family: {font_family};
+            font-family: {DEFAULT_FONT_FAMILY};
             font-size: 130px;
             font-weight: 400;
             color: {text_color};
@@ -19189,7 +16930,6 @@ def generate_modern_contact_slide(
     contact_text_color="#333333",
     top_image_url="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop",
     bottom_image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop",
-    font_family="'Roboto', sans-serif",
     show_logo=True
 ):
     """
@@ -19207,7 +16947,6 @@ def generate_modern_contact_slide(
     :param contact_text_color: Color of the contact details on the white background.
     :param top_image_url: URL for the top-right background image (charts/abstract).
     :param bottom_image_url: URL for the bottom-right corner image (team/office).
-    :param font_family: Font family for all text elements.
     :param show_logo: Whether to display the logo placeholder.
     :return: A string containing the HTML code for the slide.
     """
@@ -19251,7 +16990,7 @@ def generate_modern_contact_slide(
         <title>{main_title}</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700;900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -19263,7 +17002,7 @@ def generate_modern_contact_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 background-color: #FFFFFF;
             }}
@@ -19489,7 +17228,6 @@ def generate_closing_slide(
     bg_color="#FDFBF7",
     primary_color="#263238",
     accent_shape_color="#DDE6ED",
-    font_family="'DM Sans', sans-serif",
     show_sunburst=True,
     show_dots=True,
     custom_css=""
@@ -19505,7 +17243,6 @@ def generate_closing_slide(
     :param bg_color: Background color of the slide (hex code).
     :param primary_color: Color for the text and main graphic elements (hex code).
     :param accent_shape_color: Color for the decorative background shape behind the image (hex code).
-    :param font_family: Font family for the text.
     :param show_sunburst: Whether to show the sunburst/line graphic.
     :param show_dots: Whether to show the dot grid pattern.
     :param custom_css: Additional CSS to override styles.
@@ -19555,7 +17292,7 @@ def generate_closing_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Closing Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -19567,7 +17304,7 @@ def generate_closing_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 background-color: {bg_color};
                 color: {primary_color};
@@ -19739,7 +17476,6 @@ def generate_minimalist_thank_you_slide(
     primary_color="#59664D",
     secondary_color="#E8E8E8",
     bg_color="#FFFFFF",
-    font_family="'Arial', sans-serif",
     show_shapes=True,
     custom_css=""
 ):
@@ -19753,7 +17489,6 @@ def generate_minimalist_thank_you_slide(
     :param primary_color: Main accent color for text and small decorations (Hex code).
     :param secondary_color: Color for the large geometric background blocks (Hex code).
     :param bg_color: Background color of the slide (Hex code).
-    :param font_family: Font family for all text elements.
     :param show_shapes: Whether to show the geometric background blocks.
     :param custom_css: Additional custom CSS to be included.
     :return: A string containing the HTML code for the slide.
@@ -19804,7 +17539,7 @@ def generate_minimalist_thank_you_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Thank You Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;700&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -19816,7 +17551,7 @@ def generate_minimalist_thank_you_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 background-color: {bg_color};
                 overflow: hidden;
                 color: {primary_color};
@@ -19924,7 +17659,6 @@ def generate_minimalist_sage_slide(
     accent_color="#FFDAC1",
     shape_color="#E0E7E5",
     text_color="#1A2F28",
-    font_family="'Montserrat', sans-serif",
     show_glow_effects=True
 ):
     """
@@ -19938,7 +17672,6 @@ def generate_minimalist_sage_slide(
     :param accent_color: Color for the glowing accents/orbs (Hex code, usually peach/orange).
     :param shape_color: Color for the large geometric curved shapes (Hex code, usually sage green).
     :param text_color: Color of the text elements (Hex code).
-    :param font_family: Font family to use.
     :param show_glow_effects: Whether to render the soft blurred gradient orbs.
     :return: A string containing the HTML code for the slide.
     """
@@ -20014,7 +17747,7 @@ def generate_minimalist_sage_slide(
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>Minimalist Sage Slide</title>
-        <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
             
@@ -20022,7 +17755,7 @@ def generate_minimalist_sage_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 background-color: {bg_color};
                 color: {text_color};
                 overflow: hidden;
@@ -20200,7 +17933,6 @@ def generate_thank_you_so_much_slide(
     bg_color="#F9F7F2",
     text_color="#5A6B6D",
     accent_color="#5A6B6D",
-    font_family="'Inter', sans-serif",
     show_corner_accent=True
 ):
     """
@@ -20218,7 +17950,6 @@ def generate_thank_you_so_much_slide(
     :param bg_color: Main background color (Off-white/Cream).
     :param text_color: Main text color (Slate/Grey).
     :param accent_color: Color for icons and graphical elements.
-    :param font_family: Font family to use.
     :param show_corner_accent: Whether to show the geometric arrow in the bottom left.
     :return: A string containing the HTML code for the slide.
     """
@@ -20270,7 +18001,7 @@ def generate_thank_you_so_much_slide(
         <title>Thank You Slide</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{ margin: 0; padding: 0; box-sizing: border-box; }}
             
@@ -20278,7 +18009,7 @@ def generate_thank_you_so_much_slide(
             body, html {{
                 height: 1080px;
                 width: 1920px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 background-color: {bg_color};
                 color: {text_color};
                 overflow: hidden;
@@ -20482,13 +18213,10 @@ def generate_brand_collaboration_closing_slide(
     bg_color="#F5F2EB",
     left_image_url="https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1740&auto=format&fit=crop",
     right_image_url="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1740&auto=format&fit=crop",
-    title_font="'Playfair Display', serif",
-    body_font="'DM Sans', sans-serif",
-    script_font="'Mrs Saint Delafield', cursive"
+  
 ):
     """
     Generate a sophisticated 'Thank You' or closing slide with an asymmetrical image layout,
-    elegant typography mixing serif and script fonts, and a textured paper background feel.
 
     :param main_title: The large central title text (e.g., "Thank you").
     :param message_text: The uppercase body paragraph below the title.
@@ -20502,7 +18230,6 @@ def generate_brand_collaboration_closing_slide(
     :param left_image_url: URL for the large vertical image on the left.
     :param right_image_url: URL for the smaller image on the right.
     :param title_font: Font family for the main title.
-    :param body_font: Font family for body text and headers.
     :param script_font: Font family for the signature text.
     :return: HTML string of the slide.
     """
@@ -20527,7 +18254,7 @@ def generate_brand_collaboration_closing_slide(
         <title>Brand Collaboration Closing Slide</title>
         <link rel="preconnect" href="https://fonts.googleapis.com">
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-        <link href="https://fonts.googleapis.com/css2?family=DM+Sans:opsz,wght@9..40,500;700&family=Mrs+Saint+Delafield&family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
         <style>
             * {{
                 margin: 0;
@@ -20542,7 +18269,7 @@ def generate_brand_collaboration_closing_slide(
                 overflow: hidden;
                 background-color: {bg_color};
                 color: {primary_color};
-                font-family: {body_font};
+                font-family: {DEFAULT_FONT_FAMILY};
             }}
 
             body {{
@@ -20621,9 +18348,8 @@ def generate_brand_collaboration_closing_slide(
             }}
 
             .main-title {{
-                font-family: {title_font};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 10rem; /* Huge text */
-                font-weight: 400; /* Serif usually looks better regular/light at this size */
                 line-height: 0.9;
                 margin-bottom: 3rem;
                 letter-spacing: -0.02em;
@@ -20631,7 +18357,7 @@ def generate_brand_collaboration_closing_slide(
             }}
 
             .message-block {{
-                font-family: {body_font};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 1.1rem;
                 line-height: 1.6;
                 font-weight: 700;
@@ -20643,7 +18369,7 @@ def generate_brand_collaboration_closing_slide(
             }}
 
             .signature {{
-                font-family: {script_font};
+                font-family: {DEFAULT_FONT_FAMILY};
                 font-size: 4rem;
                 font-weight: 400;
                 opacity: 0.9;
@@ -20687,7 +18413,6 @@ def generate_military_thank_you_slide(
     primary_color="#4B5320",
     secondary_color="#556B2F",
     text_color="#000000",
-    font_family="'Arial Black', 'Arial', sans-serif",
     overlay_opacity=0.2
 ):
     """
@@ -20700,7 +18425,6 @@ def generate_military_thank_you_slide(
     :param primary_color: Main olive green color for the diagonal stripes.
     :param secondary_color: Lighter green for the thin separator line.
     :param text_color: Color for the main and description text.
-    :param font_family: Font used for the slide. Bold sans-serif recommended.
     :param overlay_opacity: Opacity of the image background overlay.
     :return: A string containing the HTML code for the slide.
     """
@@ -20715,7 +18439,7 @@ def generate_military_thank_you_slide(
             html {{ width: 1920px; height: 1080px; font-size: 16px; }}
             body {{
                 width: 1920px; height: 1080px;
-                font-family: {font_family};
+                font-family: {DEFAULT_FONT_FAMILY};
                 overflow: hidden;
                 background-color: #f0f0f0;
             }}
@@ -20842,7 +18566,6 @@ def generate_corporate2_thank_you_slide(
     accent_color="#3B82F6",
     text_color="#1F2937",
     bg_color="#F8FAFC",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a professional corporate Thank You slide with contact information.
@@ -20854,7 +18577,7 @@ def generate_corporate2_thank_you_slide(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background-color: {bg_color}; overflow: hidden; }}
         
         .side-panel {{
             position: absolute;
@@ -20926,7 +18649,6 @@ def generate_creative_thank_you_slide(
     bg_gradient_start="#FFF1F2",
     bg_gradient_end="#FCE7F3",
     accent_color="#BE123C",
-    font_family="'Montserrat', sans-serif"
 ):
     """
     Generates a creative Thank You slide with aurora background shapes and a featured image.
@@ -20938,7 +18660,7 @@ def generate_creative_thank_you_slide(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; 
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; 
                       background: linear-gradient(135deg, {bg_gradient_start}, {bg_gradient_end}); overflow: hidden; }}
         
         .aurora-1 {{
@@ -20995,7 +18717,6 @@ def generate_tech_thank_you_slide(
     social_handle="@tech_studio",
     primary_neon="#00FFFF",
     bg_dark="#1a1a2e",
-    font_family="'Montserrat', sans-serif"
 ):
     """
     Generates a tech-themed Thank You slide with neon glow effects and geometric SVG elements.
@@ -21006,7 +18727,7 @@ def generate_tech_thank_you_slide(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_dark}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background-color: {bg_dark}; overflow: hidden; }}
         
         .grid-bg {{
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
@@ -21046,7 +18767,6 @@ def generate_minimalist_thank_you_slide_2(
     footer_note="Copyright 2026 Studio",
     text_color="#000000",
     bg_color="#FFFFFF",
-    font_family="'Inter', sans-serif"
 ):
     """
     Generates a minimalist Thank You slide focusing on high-end typography and white space.
@@ -21057,7 +18777,7 @@ def generate_minimalist_thank_you_slide_2(
     <meta charset="UTF-8">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; background-color: {bg_color}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; background-color: {bg_color}; overflow: hidden; }}
         
         .main-title {{
             position: absolute; left: 120px; top: 400px;
@@ -21093,7 +18813,6 @@ def generate_elegant_thank_you_slide(
     subtitle="FOR YOUR KIND ATTENTION",
     bg_image="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop",
     overlay_color="rgba(255, 255, 255, 0.85)",
-    font_family="'Playfair Display', serif"
 ):
     """
     Generates an elegant Thank You slide with an image background and a glassmorphism card.
@@ -21102,10 +18821,10 @@ def generate_elegant_thank_you_slide(
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,400&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
     <style>
         * {{ margin: 0; padding: 0; box-sizing: border-box; }}
-        html, body {{ width: 1920px; height: 1080px; font-family: {font_family}; overflow: hidden; }}
+        html, body {{ width: 1920px; height: 1080px; font-family: {DEFAULT_FONT_FAMILY}; overflow: hidden; }}
         
         .bg-img {{
             position: absolute; width: 100%; height: 100%;
@@ -21141,4 +18860,5941 @@ def generate_elegant_thank_you_slide(
 </body>
 </html>"""
     return html_code
+
+#------------------------ SLIDE  chart slide
+def generate_line_chart_slide_2(
+    main_title: str = "Model Accuracy Converges with Minor Overfitting",
+    subtitle: str = "ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)", 
+    insight: str = (
+        "Training and validation accuracy both increase steadily during the first 15 epochs, "
+        "indicating effective learning and rapid convergence. After epoch 20, training accuracy "
+        "continues to improve while validation accuracy plateaus, suggesting mild overfitting. "
+        "The gap remains controlled, implying overall stable generalization performance."
+    ),
+    x_axis = "Epoch",
+    y_axis = "Accuracy",
+    unit = "%",
+    show_value = False,
+    show_legend= True,
+    y_axis_min = 40,
+    y_axis_max = 100,
+    data_label_format= None,
+    colors = ["#4F46E5", "#22C55E"],
+    time_points = [
+        "Epoch 1", "Epoch 5", "Epoch 10",
+        "Epoch 15", "Epoch 20", "Epoch 25", "Epoch 30"
+    ],
+    series= [
+            {
+                "name": "Training Accuracy",
+                "values": [45, 62, 75, 84, 90, 94, 97]
+            },
+            {
+                "name": "Validation Accuracy",
+                "values": [43, 60, 73, 82, 87, 88, 88]
+            }
+        ],
+    accent_color: str = "#4F46E5",
+    main_title_color: str = "#1F2937",
+    subtitle_color: str = "#4B5563",
+    insight_text_color: str = "#374151",
+    body_background_color: str = "#ffffff",
+    left_shape_background_color: str = "#f1fcf4",
+    right_panel_background_color: str = "rgba(255, 255, 255, 0.6)",
+    insight_background_color: str = "#f8fafc",
+) -> str:
+    """
+    Generate a premium line chart HTML slide using the Global Economy theme.
+    Refactored to accept explicit parameters instead of a raw dictionary.
+    """
+
+    # ===== 1. DATA EXTRACTION =====
+
+
+
+    # ===== 2. CHART CONFIG =====
+    svg_w, svg_h = 1000, 500
+    margin = {"top": 60, "bottom": 60, "left": 80, "right": 40}
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    all_vals = [v for s in series for v in s.get("values", [])]
+
+
+    def get_x(i):
+        return (
+            margin["left"] + (i * chart_w / (len(time_points) - 1))
+            if len(time_points) > 1
+            else margin["left"] + chart_w / 2
+        )
+
+    def get_y(v):
+        return svg_h - margin["bottom"] - ((v - y_axis_min) / (y_axis_max - y_axis_min) * chart_h)
+
+    # ===== 3. SVG DRAWING =====
+    chart_elements = ""
+
+    # Horizontal grid lines
+    for i in range(5):
+        y_val = svg_h - margin["bottom"] - (i * chart_h / 4)
+        chart_elements += (
+            f'<line x1="{margin["left"]}" y1="{y_val}" '
+            f'x2="{svg_w - margin["right"]}" y2="{y_val}" '
+            f'stroke="#e2e8f0" stroke-width="1" />'
+        )
+
+    # Lines + areas
+    for idx, s in enumerate(series):
+        color = colors[idx % len(colors)]
+        values = s.get("values", [])
+
+        if not values:
+            continue
+
+        d_path = f"M {get_x(0)} {get_y(values[0])}"
+        d_area = f"M {get_x(0)} {svg_h - margin['bottom']} L {get_x(0)} {get_y(values[0])}"
+
+        for i in range(1, len(values)):
+            d_path += f" L {get_x(i)} {get_y(values[i])}"
+            d_area += f" L {get_x(i)} {get_y(values[i])}"
+
+        d_area += f" L {get_x(len(values) - 1)} {svg_h - margin['bottom']} Z"
+
+        chart_elements += f'<path d="{d_area}" fill="{color}" fill-opacity="0.1" />'
+        chart_elements += (
+            f'<path d="{d_path}" fill="none" stroke="{color}" '
+            f'stroke-width="6" stroke-linecap="round" stroke-linejoin="round" />'
+        )
+
+        for i, v in enumerate(values):
+            chart_elements += (
+                f'<circle cx="{get_x(i)}" cy="{get_y(v)}" r="8" '
+                f'fill="white" stroke="{color}" stroke-width="4" />'
+            )
+            if show_value:
+                chart_elements += (
+                    f'<text x="{get_x(i)}" y="{get_y(v) - 25}" '
+                    f'font-size="18" text-anchor="middle" '
+                    f'fill="#1e293b" font-weight="bold">{v}{unit}</text>'
+                )
+
+    # X-axis labels
+    for i, label in enumerate(time_points):
+        chart_elements += (
+            f'<text x="{get_x(i)}" y="{svg_h - 20}" '
+            f'font-size="18" text-anchor="middle" fill="#64748b">{label}</text>'
+        )
+
+    # ===== 4. HTML OUTPUT =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: {DEFAULT_FONT_FAMILY};
+                background-color: {body_background_color}; overflow: hidden;
+            }}
+            
+            /* Decorative Elements */
+            .left-shape {{
+                position: absolute;
+                width: 1200px;
+                height: 1200px;
+                background-color: {left_shape_background_color};
+                border-radius: 50%;
+                left: -450px;
+                top: -100px;
+                z-index: 0;
+            }}
+            .dot-grid {{
+                position: absolute;
+                top: 80px;
+                left: 350px;
+                display: grid;
+                grid-template-columns: repeat(10, 15px);
+                gap: 15x;
+                z-index: 1;
+            }}
+  
+            
+            /* Header */
+            .header {{
+                margin-bottom: 40px;
+                padding: 80px 100px 0 100px;
+                position: relative;
+                z-index: 2;
+            }}
+            h1 {{
+                font-size: 64px;
+                font-weight: 800;
+                color: {main_title_color};
+                margin: 0;
+            }}
+            .subtitle {{
+                font-size: 30px;
+                color: {subtitle_color};
+                margin-top: 15px;
+            }}
+            
+            /* Main Content Flex */
+            .main-flex {{
+                display: flex;
+                height: calc(100vh - 300px);
+                gap: 60px;
+                padding: 0 100px 80px 100px;
+                position: relative;
+                z-index: 2;
+            }}
+            .left-panel {{
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+            }}
+            .right-panel {{
+                flex: 1.5;
+                background: {right_panel_background_color};
+                border-radius: 40px;
+                padding: 40px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }}
+            .insight {{
+                font-size: 28px;
+                color: {insight_text_color};
+                line-height: 1.7;
+                background: {insight_background_color};
+                border-left: 5px solid {accent_color};
+                padding: 35px 40px;
+                border-radius: 16px;
+            }}
+        </style>
+    </head>
+    <body>
+        <!-- Decorative Background Elements -->
+        <div class="left-shape"></div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>{main_title}</h1>
+            <p class="subtitle">{subtitle}</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-flex">
+            <div class="left-panel">
+                <div class="insight">{insight}</div>
+            </div>
+            <div class="right-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def generate_line_chart_slide_3(
+    main_title = "EV Market Leaders Expand the Gap", 
+    subtitle = "Southeast Asia EV Sales – Jan to Dec 2026", 
+    insight = (
+        "Tesla and BYD maintain strong upward momentum throughout the year, "
+        "with Tesla accelerating sharply in Q3 following new model releases. "
+    ), 
+    x_axis = "Month",
+    y_axis = "Units Sold",
+    unit = "K",
+    show_value = True,
+    show_legend = True,
+    y_axis_min = 20,
+    y_axis_max = 140,
+    colors = ["#00F2FF", "#8B5CF6", "#EC4899"],
+    time_points = [
+        "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+        "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+    ],
+    series = [
+        {
+            "name": "Tesla",
+            "values": [45, 50, 55, 60, 68, 75, 90, 105, 115, 120, 125, 130]
+        },
+        {
+            "name": "BYD",
+            "values": [40, 48, 52, 58, 63, 70, 85, 95, 105, 110, 118, 122]
+        },
+        {
+            "name": "VinFast",
+            "values": [30, 35, 40, 44, 50, 55, 60, 66, 70, 72, 74, 76]
+        }
+    ],
+
+) -> str:
+    # ===== LẤYTHÔNG TIN =====
+    font_family: str = "Inter, sans-serif"
+    accent_color: str = "#00F2FF"
+    main_title_color: str = "#FFFFFF"
+    subtitle_color: str = "#94A3B8"
+    insight_text_color: str = "#E2E8F0"
+    main_title_font_size: str = "64px"
+    subtitle_font_size: str = "28px"
+    insight_font_size: str = "30px"   
+    
+    # ===== SVG CONFIG =====
+    svg_w, svg_h = 1100, 600
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 40
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== TÍNH MIN MAX =====
+    all_values = [v for s in series for v in s.get("values", [])]
+    y_min = y_axis_min or (min(all_values) * 0.9 if all_values else 0)
+    y_max = y_axis_max or (max(all_values) * 1.1 if all_values else 100)
+    if y_max == y_min: 
+        y_max += 1
+
+    # ===== VẼ CHART ELEMENTS =====
+    chart_elements = ""
+    
+    # Grid lines Y & Labels (with optional unit suffix)
+    steps = 5
+    for i in range(steps + 1):
+        y_pos = margin_top + (chart_h / steps) * i
+        val = y_max - (y_max - y_min) / steps * i
+        # format y-axis tick label with unit if provided
+        if unit:
+            y_tick_label = f"{val:,.0f}{unit}"
+        else:
+            y_tick_label = f"{val:,.0f}"
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_pos}" x2="{svg_w - margin_right}" y2="{y_pos}" 
+              stroke="#ffffff15" stroke-width="1" stroke-dasharray="5,5"/>
+        <text x="{margin_left - 15}" y="{y_pos + 6}" font-size="16" text-anchor="end" 
+              fill="{subtitle_color}">{y_tick_label}</text>
+        '''
+
+    # X-axis Labels
+    num_points = len(time_points)
+    for i, label in enumerate(time_points):
+        x_pos = margin_left + (i / max(num_points - 1, 1)) * chart_w
+        chart_elements += f'''
+        <text x="{x_pos}" y="{svg_h - margin_bottom + 35}" font-size="16" 
+              text-anchor="middle" fill="{subtitle_color}">{label}</text>
+        <line x1="{x_pos}" y1="{svg_h - margin_bottom}" x2="{x_pos}" y2="{svg_h - margin_bottom + 8}" 
+              stroke="{accent_color}" stroke-width="2"/>
+        '''
+
+    # Draw Lines, Points & Data Labels
+    for idx, s in enumerate(series):
+        color = colors[idx % len(colors)]
+        values = s.get("values", [])
+        if not values: continue
+        
+        path_points = []
+        for i, val in enumerate(values):
+            x = margin_left + (i / max(len(time_points) - 1, 1)) * chart_w
+            y = svg_h - margin_bottom - (val - y_min) / (y_max - y_min) * chart_h
+            path_points.append(f"{x},{y}")
+        
+        # Line Path with Glow Effect
+        points_str = " ".join(path_points)
+        chart_elements += f'''
+        <polyline points="{points_str}" fill="none" stroke="{color}" stroke-width="4" 
+                  stroke-linecap="round" stroke-linejoin="round" style="filter: drop-shadow(0 0 8px {color}66);"/>
+        '''
+        
+        # Points
+        for p in path_points:
+            px, py = p.split(',')
+            chart_elements += f'<circle cx="{px}" cy="{py}" r="6" fill="#0F172A" stroke="{color}" stroke-width="3"/>'
+        
+        # Data Labels (if show_value is True)
+        if show_value:
+            for i, val in enumerate(values):
+                x = margin_left + (i / max(len(time_points) - 1, 1)) * chart_w
+                y = svg_h - margin_bottom - (val - y_min) / (y_max - y_min) * chart_h
+                label_text = f"{val}{unit}"
+                chart_elements += f'''
+                <text x="{x}" y="{y - 14}" font-size="12" font-weight="bold" 
+                      text-anchor="middle" fill="{color}" stroke="#0F172A" stroke-width="1.5" 
+                      paint-order="stroke">{label_text}</text>
+                '''
+
+    # ===== LAYOUT COMPONENTS =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div style="display:flex;align-items:center;margin-bottom:12px;background:rgba(255,255,255,0.05);padding:10px 20px;border-radius:10px;border-left:4px solid {color};">
+                <span style="font-size:20px;color:#FFFFFF;font-weight:500;">{s.get("name","Series")}</span>
+            </div>
+            '''
+
+    # Build axis titles with unit if provided
+    y_axis_title = f"{y_axis} ({unit})" if unit else y_axis
+
+    # ===== FINAL HTML =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700&family=Inter:wght@300;400;600&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                background-color: #020617; color: white;
+                font-family: {font_family}; overflow: hidden;
+                background-image: 
+                    radial-gradient(circle at 20% 20%, #1e1b4b 0%, transparent 40%),
+                    radial-gradient(circle at 80% 80%, #312e81 0%, transparent 40%),
+                    linear-gradient(#0f172a 1px, transparent 1px),
+                    linear-gradient(90deg, #0f172a 1px, transparent 1px);
+                background-size: 100% 100%, 100% 100%, 60px 60px, 60px 60px;
+            }}
+            .header-container {{
+                padding: 80px 100px 40px 100px;
+                background: linear-gradient(to bottom, rgba(15,23,42,0.8), transparent);
+            }}
+            .main-title {{
+                font-family: 'Orbitron', sans-serif;
+                font-size: {main_title_font_size};
+                color: {main_title_color};
+                text-transform: uppercase; letter-spacing: 4px; margin: 0;
+            }}
+            .main-title span {{ color: {accent_color}; }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                color: {subtitle_color}; margin-top: 15px;
+            }}
+            .content-grid {{
+                display: flex; padding: 0 100px; gap: 60px; height: 700px;
+            }}
+            .chart-area {{
+                flex: 2; background: transparent;
+                border: 1px solid rgba(255,255,255,0.1);
+                border-radius: 10px; padding: 20px;
+                backdrop-filter: blur(5px);
+                display: flex; align-items: center; justify-content: center;
+            }}
+            .insight-area {{
+                flex: 1; display: flex; flex-direction: column; justify-content: flex-start;
+            }}
+            .insight-box {{
+                background: transparent;
+                border-radius: 20px; padding: 35px; margin-bottom: 30px;
+                font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.6;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header-container">
+            <h1 class="main-title">{main_title.split(' ')[0]} <span>{' '.join(main_title.split(' ')[1:])}</span></h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+        <div class="content-grid">
+            <div class="chart-area">
+                <div>
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                        <text x="{svg_w/2}" y="{svg_h-10}" font-size="20" text-anchor="middle" fill="{accent_color}" font-weight="bold">{x_axis}</text>
+                        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-size="20" text-anchor="middle" fill="{accent_color}" font-weight="bold">{y_axis_title}</text>
+                    </svg>
+                </div>
+            </div>
+            <div class="insight-area">
+                <div class="insight-box">{insight}</div>
+                <div>{legend_html}</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+def generate_radar_chart_slide_1(
+    main_title="Chỉ Số Đánh Giá Chất Lượng Dịch Vụ Chăm Sóc",
+    subtitle="Báo cáo phân tích trải nghiệm khách hàng Q1/2026",
+    insight="Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe.",
+    unit = "điểm"  ,
+    show_value = True,
+    data_label_format = "{value}",
+    show_grid_lines = True,
+    show_axis_lines = True,
+    max_value = 10,
+    num_levels = 5,
+    axis_color = "#D1D5DB",
+    grid_color = "#E5E7EB",
+    label_color = "#374151",
+    accent_color = "#F4A261",
+    axes = ["Y tế", "Tâm lý", "Dinh dưỡng", "Vận động", "Công nghệ", "Môi trường"],
+    series = [
+        {"label": "Hiện tại", "values": [8, 8, 9, 9, 9, 9]},
+        {"label": "Mục tiêu", "values": [9.5, 9.5, 9.0, 8.5, 8.5, 9.5]}
+    ],
+    main_title_color="#1D3557",
+    subtitle_color="#457B9D",
+    insight_text_color="#1D3557",
+    background="#F8F8F8",
+    background_image="none",
+    insight_box_background="rgba(71, 123, 157, 0.10)",
+    legend_background="#FFFFFF",
+    legend_swatch_current_background="#1D3557",
+    legend_swatch_target_background="#F4A261",
+) -> str:
+    """
+    Create a radar chart slide with a professional, warm style.
+    Suitable for healthcare service reports, medical care, or multidimensional analysis
+    """
+
+    # ===== 1. GET & PROCESS DATA =====
+    num_axes = len(axes)
+
+    max_val = max_value
+    colors_opt = {
+        "axis_color": axis_color,
+        "grid_color": grid_color,
+        "label_color": label_color
+    }
+
+    # Cấu hình kích thước SVG
+    width, height = 900, 700
+    cx, cy = width / 2, height / 2
+    radius = 280
+
+    def get_coords(value, index, total):
+        angle = (math.pi * 2 * index / total) - (math.pi / 2)
+        r = (value / max_val) * radius
+        return cx + r * math.cos(angle), cy + r * math.sin(angle)
+
+    # ===== 2. RENDER RADAR SVG COMPONENTS =====
+    
+    # Grid lines (concentric polygons)
+    grid_html = ""
+    if show_grid_lines:
+        for i in range(1, num_levels + 1):
+            level_val = (max_val / num_levels) * i
+            points = []
+            for j in range(num_axes):
+                px, py = get_coords(level_val, j, num_axes)
+                points.append(f"{px},{py}")
+            grid_html += f'<polygon points="{" ".join(points)}" fill="none" stroke="{colors_opt.get("grid_color", "#EEE")}" stroke-width="1" />'
+
+    # Axis lines and Labels
+    axes_html = ""
+    labels_html = ""
+    for i in range(num_axes):
+        px, py = get_coords(max_val, i, num_axes)
+        # Line from center
+        if show_axis_lines:
+            axes_html += f'<line x1="{cx}" y1="{cy}" x2="{px}" y2="{py}" stroke="{colors_opt.get("axis_color", "#CCC")}" stroke-width="1" />'
+        
+        # Labels placement
+        label_r = radius + 40
+        lx = cx + label_r * math.cos((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        ly = cy + label_r * math.sin((math.pi * 2 * i / num_axes) - (math.pi / 2))
+        anchor = "middle"
+        if lx < cx - 20: anchor = "end"
+        elif lx > cx + 20: anchor = "start"
+        
+        labels_html += f'<text x="{lx}" y="{ly}" text-anchor="{anchor}" font-size="20" fill="{colors_opt.get("label_color", "#333")}" font-weight="600">{axes[i]}</text>'
+
+    # Data Polygons (Series)
+    series_colors = ["#1D3557", "#F4A261", "#2A9D8F", "#E76F51"]
+    data_polygons_html = ""
+    legend_items_html = ""
+    placed_value_labels = []
+
+    def estimate_text_box(text, font_size):
+        text_width = max(20, len(text) * font_size * 0.58)
+        text_height = font_size * 1.25
+        return text_width, text_height
+    
+    for idx, s in enumerate(series):
+        s_color = series_colors[idx % len(series_colors)]
+        s_values = s.get("values", [])
+        s_label = s.get("label", "Series")
+        series_center = (len(series) - 1) / 2
+        
+        points = []
+        data_points_html = ""
+        for i, val in enumerate(s_values):
+            px, py = get_coords(val, i, num_axes)
+            points.append(f"{px},{py}")
+            if show_value:
+                data_points_html += f'<circle cx="{px}" cy="{py}" r="5" fill="{s_color}" />'
+                vx, vy = px - cx, py - cy
+                norm = math.sqrt(vx * vx + vy * vy) or 1
+                ux, uy = vx / norm, vy / norm
+                point_r = math.sqrt((px - cx) ** 2 + (py - cy) ** 2)
+                display_text = data_label_format.replace("{value}", str(val)).replace("{unit}", unit)
+
+                # Enforce deterministic placement and auto-adjust to avoid overlap.
+                tangent_x, tangent_y = -uy, ux
+                tangent_offset = (idx - series_center) * 20
+                if idx == 0:
+                    # Always place dark-series text inside radar, regardless of data values.
+                    inside_r = max(16, point_r - 40)
+                    tx = cx + ux * inside_r + tangent_x * tangent_offset
+                    ty = cy + uy * inside_r + tangent_y * tangent_offset
+                else:
+                    # Place target text outside, but keep it away from axis titles.
+                    outside_r = min(radius + 16, point_r + 30)
+                    tx = cx + ux * outside_r + tangent_x * tangent_offset
+                    ty = cy + uy * outside_r + tangent_y * tangent_offset
+
+                anchor = "middle"
+                if idx != 0:
+                    if ux < -0.2: anchor = "end"
+                    elif ux > 0.2: anchor = "start"
+
+                font_size = 14
+                text_w, text_h = estimate_text_box(display_text, font_size)
+                move_sign = -1 if idx == 0 else 1
+
+                # Collision pass: shift and shrink a bit until no overlap with placed labels.
+                for _ in range(6):
+                    overlap = False
+                    for ox, oy, ow, oh in placed_value_labels:
+                        if abs(tx - ox) < (text_w + ow) / 2 and abs(ty - oy) < (text_h + oh) / 2:
+                            overlap = True
+                            break
+                    if not overlap:
+                        break
+                    tx += tangent_x * 8 * move_sign
+                    ty += tangent_y * 8 * move_sign
+                    if idx != 0:
+                        tx += ux * 3
+                        ty += uy * 3
+                    font_size = max(11, font_size - 0.5)
+                    text_w, text_h = estimate_text_box(display_text, font_size)
+
+                # Final safety clamp to preserve inside/outside rule after adjustments.
+                dist = math.sqrt((tx - cx) ** 2 + (ty - cy) ** 2) or 1
+                if idx == 0:
+                    max_inside = max(14, point_r - 14)
+                    if dist > max_inside:
+                        scale = max_inside / dist
+                        tx = cx + (tx - cx) * scale
+                        ty = cy + (ty - cy) * scale
+                else:
+                    min_outside = point_r + 10
+                    if dist < min_outside:
+                        scale = min_outside / dist
+                        tx = cx + (tx - cx) * scale
+                        ty = cy + (ty - cy) * scale
+
+                placed_value_labels.append((tx, ty, text_w, text_h))
+
+                data_points_html += (
+                    f'<text x="{tx}" y="{ty}" text-anchor="{anchor}" '
+                    f'font-size="{font_size:.1f}" font-weight="bold" fill="{s_color}">{display_text}</text>'
+                )
+        
+        data_polygons_html += f"""
+            <polygon points="{" ".join(points)}" fill="{s_color}" fill-opacity="0.2" stroke="{s_color}" stroke-width="3" />
+            {data_points_html}
+        """
+        
+        legend_variant_class = "legend-swatch-current" if idx == 0 else "legend-swatch-target" if idx == 1 else ""
+        legend_items_html += f"""
+        <div class="legend-item">
+            <span class="legend-swatch {legend_variant_class}"></span>
+            <span class="legend-label">{s_label}</span>
+        </div>
+        """
+
+    # Convert hex accent_color to rgb for use in rgba()
+    accent_rgb = f"{int(accent_color[1:3], 16)}, {int(accent_color[3:5], 16)}, {int(accent_color[5:7], 16)}"
+    background_image = background_image.replace("{accent_rgb}", accent_rgb)
+
+    # ===== 3. RENDER FINAL HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                overflow: hidden; font-family: {DEFAULT_FONT_FAMILY};
+                background: {background};
+            }}
+            .slide-container {{
+                position: relative; width: 100%; height: 100%;
+                background-image: {background_image};
+            }}
+            .header {{
+                padding: 80px 100px 40px 100px;
+            }}
+            h1 {{
+                font-size: 64px; color: {main_title_color};
+                margin: 0; font-weight: 800; letter-spacing: -1px;
+            }}
+            .subtitle {{
+                font-size: 28px; color: {subtitle_color};
+                margin-top: 15px; font-weight: 500;
+            }}
+            .content-flex {{
+                display: flex; padding: 0 100px; gap: 80px; align-items: flex-start;
+            }}
+            .left-col {{
+                flex: 1; margin-top: 40px;
+            }}
+            .right-col {{
+                flex: 1.5; display: flex; justify-content: center;
+            }}
+            .insight-box {{
+                background: {insight_box_background};
+                padding: 40px; border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(29, 53, 87, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                font-size: 30; color: {insight_text_color};
+                line-height: 1.7; border-left: 4px solid #457B9D;
+                border-top: 4px solid rgba({accent_rgb}, 0.3);
+                margin-bottom: 50px; font-weight: 500; letter-spacing: 0.3px;
+            }}
+            .legend-container {{
+                background: {legend_background};
+                padding: 26px 28px;
+                border-radius: 18px;
+                display: inline-block;
+                border: 1px solid rgba(69, 123, 157, 0.18);
+                box-shadow: 0 10px 24px rgba(29, 53, 87, 0.12);
+                backdrop-filter: blur(2px);
+            }}
+            .legend-title {{
+                font-size: 16px;
+                text-transform: uppercase;
+                color: #2F5D78;
+                margin-bottom: 14px;
+                font-weight: 800;
+                letter-spacing: 1.2px;
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                margin-bottom: 12px;
+            }}
+            .legend-swatch {{
+                width: 22px;
+                height: 22px;
+                display: inline-block;
+                flex-shrink: 0;
+                border-radius: 999px;
+                margin-right: 12px;
+                border: 2px solid rgba(255,255,255,0.9);
+                box-shadow: 0 0 0 1px rgba(69, 123, 157, 0.2);
+            }}
+            .legend-swatch-current {{
+                background: {legend_swatch_current_background};
+            }}
+            .legend-swatch-target {{
+                background: {legend_swatch_target_background};
+            }}
+            .legend-label {{
+                font-size: 21px;
+                font-weight: 650;
+                color: #24465E;
+            }}
+            .chart-wrapper {{
+                width: {width}px; height: {height}px;
+            }}
+            .background-blob {{
+                position: absolute; bottom: -260px; left: -140px;
+                width: 460px; height: 460px; background: rgba(168, 218, 220, 0.26);
+                border-radius: 50%; z-index: -1; pointer-events: none;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="header">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">{insight}</div>
+                    <div class="legend-container">
+                        <div class="legend-title">Chú thích</div>
+                        {legend_items_html}
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="chart-wrapper">
+                        <svg viewBox="0 0 {width} {height}" width="100%" height="100%">
+                            {grid_html}
+                            {axes_html}
+                            {data_polygons_html}
+                            {labels_html}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="background-blob"></div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_pie_chart_slide_1(
+    main_title = "Quarterly Revenue Breakdown",
+    subtitle = "Data Source: Financial Year 2025 Reports",
+    insight = "AI Services now account for nearly half of total revenue growth.",
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    colors = ["#818CF8", "#2DD4BF", "#FBBF24", "#FB7185"],
+    items = [
+        {"label": "AI Services", "value": 55},
+        {"label": "Cloud Hosting", "value": 25},
+        {"label": "Consulting", "value": 20},
+        {"label": "Support", "value": 10}
+    ],
+    accent_color: str = "#F472B6",
+    main_title_color: str = "#38BDF8",
+    subtitle_color: str = "#CCCCCC",
+    insight_text_color: str = "#FFFFFF",
+    background_color: str = "#0F172A"
+) -> str:
+    """
+    Generates a high-impact HTML slide featuring a pie chart, 
+    designed with a teal-accented dark theme.
+    """
+    chart_type = "pie"
+    
+    # Calculate SVG Pie Chart Slices
+    total = sum(item['value'] for item in items)
+    cumulative_percent = 0
+    svg_paths = ""
+    legend_html = ""
+
+    for i, item in enumerate(items):
+        color = colors[i % len(colors)]
+        percent = (item['value'] / total) * 100
+        
+        # Simple SVG Circle sector calculation logic
+        start_angle = (cumulative_percent / 100) * 360
+        end_angle = ((cumulative_percent + percent) / 100) * 360
+        
+        # For simplicity in a single-file HTML output, we use a stroke-dasharray approach
+        offset = 100 - cumulative_percent + 25 # Start from top
+        svg_paths += f'<circle r="15.9" cx="21" cy="21" fill="transparent" stroke="{color}" stroke-width="8" stroke-dasharray="{percent} {100-percent}" stroke-dashoffset="{offset}" />'
+        
+        cumulative_percent += percent
+        
+        if show_legend:
+            label_suffix = f" ({item['value']}{unit})" if show_value else ""
+            legend_html += f'''
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: 25px; height: 25px; background: {color}; margin-right: 10px; border-radius: 3px;"></div>
+                <div style="color: white; font-size: 25px; margin: 0;">{item['label']}{label_suffix}</div>
+            </div>'''
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body {{
+                margin: 0;
+                background-color: {background_color};
+                font-family: {DEFAULT_FONT_FAMILY};
+                color: white;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }}
+            .upper-section {{
+                padding: 60px 80px 20px 80px;
+            }}
+            .main-title {{
+                font-size: 70px;
+                color: {main_title_color};
+                font-weight: 800;
+                margin: 0;
+                text-transform: uppercase;
+            }}
+            .subtitle {{
+                font-size: 32px;
+                color: {subtitle_color};
+                opacity: 0.8;
+                margin-top: 10px;
+            }}
+            .main-content {{
+                display: flex;
+                flex: 1;
+                padding: 0 80px 60px 80px;
+                align-items: center;
+            }}
+            .left-section {{
+                flex: 1;
+                padding-right: 40px;
+            }}
+            .insight-box {{
+                border-left: 5px solid {accent_color};
+                padding: 20px 30px;
+                background: rgba(255, 255, 255, 0.05);
+                font-size: 34px;
+                color: {insight_text_color};
+                margin-bottom: 40px;
+                line-height: 1.4;
+            }}
+            .right-section {{
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }}
+            .chart-container {{
+                width: 450px;
+                height: 450px;
+            }}
+            svg {{
+                transform: rotate(-90deg);
+                border-radius: 50%;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="upper-section">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-section">
+                <div class="insight-box">
+                    {insight}
+                </div>
+                <div class="legend">
+                    {legend_html}
+                </div>
+            </div>
+            
+            <div class="right-section">
+                <div class="chart-container">
+                    <svg viewBox="0 0 42 42" width="100%" height="100%">
+                        {svg_paths}
+                        {f'<circle r="12" cx="21" cy="21" fill="{background_color}" />' if chart_type == "donut" else ""}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
+
+def generate_pie_chart_slide_2(
+    main_title = "Technology Market Share 2024",
+    subtitle = "Source: Global Tech Market Report",
+    insight = (
+        "AI services dominate the market with nearly half of the total share, "
+        "while cloud infrastructure and cybersecurity continue to grow steadily."
+    ),
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    items = [
+        {"label": "AI Services", "value": 45},
+        {"label": "Cloud Infrastructure", "value": 25},
+        {"label": "Cybersecurity", "value": 18},
+        {"label": "IoT Platforms", "value": 12}
+    ]
+) -> str:
+
+    # Color and font configuration
+    chart_type = "pie"
+    colors = ["#32CD32", "#FF7F50", "#FFD700", "#8A2BE2"]
+    font_family = "Inter, sans-serif"
+    accent_color = "#5FD9D3"
+    main_title_color = "#5FD9D3"
+    subtitle_color = "#FFFFFF"
+    insight_text_color = "#FFFFFF"
+    main_title_font_size = "70px"
+    subtitle_font_size = "32px"
+    insight_font_size = "34px"
+
+    items = items or []
+    # ===== SVG CONFIG =====
+    svg_w, svg_h = 1000, 700
+    center_x, center_y = svg_w / 2, svg_h / 2
+
+    radius = 280
+    inner_radius = radius * 0.6 if chart_type == "donut" else 0
+
+    total = sum(item.get("value", 0) for item in items)
+    if total == 0:
+        total = 1
+
+    chart_elements = ""
+    current_angle = -90
+
+    for idx, item in enumerate(items):
+
+        value = item.get("value", 0)
+        percentage = (value / total) * 100
+        slice_angle = (value / total) * 360
+        color = colors[idx % len(colors)]
+
+        start_rad = math.radians(current_angle)
+        end_rad = math.radians(current_angle + slice_angle)
+
+        x1 = center_x + radius * math.cos(start_rad)
+        y1 = center_y + radius * math.sin(start_rad)
+
+        x2 = center_x + radius * math.cos(end_rad)
+        y2 = center_y + radius * math.sin(end_rad)
+
+        large_arc = 1 if slice_angle > 180 else 0
+
+        if chart_type == "donut":
+
+            ix1 = center_x + inner_radius * math.cos(start_rad)
+            iy1 = center_y + inner_radius * math.sin(start_rad)
+
+            ix2 = center_x + inner_radius * math.cos(end_rad)
+            iy2 = center_y + inner_radius * math.sin(end_rad)
+
+            path_data = (
+                f"M {x1} {y1} "
+                f"A {radius} {radius} 0 {large_arc} 1 {x2} {y2} "
+                f"L {ix2} {iy2} "
+                f"A {inner_radius} {inner_radius} 0 {large_arc} 0 {ix1} {iy1} Z"
+            )
+
+        else:
+
+            path_data = (
+                f"M {center_x} {center_y} "
+                f"L {x1} {y1} "
+                f"A {radius} {radius} 0 {large_arc} 1 {x2} {y2} Z"
+            )
+
+        chart_elements += f'''
+        <path d="{path_data}" fill="{color}" stroke="{accent_color}" stroke-width="3"/>
+        '''
+
+        if show_value and slice_angle > 15:
+
+            mid_rad = math.radians(current_angle + slice_angle / 2)
+
+            label_r = (radius + inner_radius) / 2 if chart_type == "donut" else radius * 0.7
+
+            lx = center_x + label_r * math.cos(mid_rad)
+            ly = center_y + label_r * math.sin(mid_rad)
+
+            label_text = f"{percentage:.1f}{unit}"
+
+            chart_elements += f'''
+            <text x="{lx}" y="{ly}" fill="white"
+            font-size="20" font-weight="bold"
+            text-anchor="middle"
+            dominant-baseline="middle">
+            {label_text}
+            </text>
+            '''
+
+        current_angle += slice_angle
+
+    # ===== LEGEND =====
+    legend_html = ""
+
+    if show_legend:
+
+        for i, item in enumerate(items):
+
+            color = colors[i % len(colors)]
+            perc = (item.get("value", 0) / total) * 100
+
+            legend_html += f'''
+            <div style="display:flex;align-items:center;margin-bottom:20px;">
+                <div style="width:24px;height:24px;background:{color};
+                border-radius:4px;margin-right:15px;
+                box-shadow:0 0 10px {color}66;"></div>
+
+                <div style="color:white;font-size:24px;">
+                {item.get("label","")}
+                <span style="color:{accent_color};opacity:0.8;">
+                ({perc:.1f}%)
+                </span>
+                </div>
+            </div>
+            '''
+
+    # ===== HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+
+    <style>
+
+    html,body{{
+        width:1920px;
+        height:1080px;
+        margin:0;
+        padding:0;
+        overflow:hidden;
+        font-family:{font_family};
+        background: linear-gradient(135deg, #020c24, #1a2a4a, {accent_color});
+        color:white;
+        --accent-color: {accent_color};
+        --main-title-color: {main_title_color};
+        --subtitle-color: {subtitle_color};
+        --insight-text-color: {insight_text_color};
+        --main-title-font-size: {main_title_font_size};
+        --subtitle-font-size: {subtitle_font_size};
+        --insight-font-size: {insight_font_size};
+    }}
+
+    .bg-decoration{{
+        position:absolute;
+        width:100%;
+        height:100%;
+        z-index:0;
+        background:radial-gradient(circle at 90% 90%, #1a2a4a 0%, transparent 50%);
+    }}
+
+    .container{{
+    position:relative;
+    z-index:1;
+    padding:80px 100px;
+    height:920px;
+    display:flex;
+    flex-direction:column;
+    }}
+
+    .header-box{{
+    margin-bottom:60px;
+    border-left:10px solid var(--accent-color);
+    padding-left:35px;
+    }}
+
+    h1{{
+        font-size: var(--main-title-font-size);
+        color: var(--main-title-color);
+        margin:0;
+        text-transform:uppercase;
+        letter-spacing:2px;
+    }}
+
+    .subtitle{{
+        font-size: var(--subtitle-font-size);
+        color: var(--subtitle-color);
+        margin-top:10px;
+        opacity:0.8;
+    }}
+
+    .content-grid{{
+    display:flex;
+    flex:1;
+    gap:80px;
+    align-items:center;
+    }}
+
+    .left-col{{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    }}
+
+    .insight-box{{
+        background:rgba(255,255,255,0.05);
+        border:2px solid var(--accent-color);
+        border-radius:25px;
+        box-shadow:0 0 15px var(--accent-color)AA;
+        padding:35px;
+        margin-bottom:40px;
+        font-size: var(--insight-font-size);
+        color: var(--insight-text-color);
+        line-height:1.5;
+    }}
+
+    .right-col{{
+    flex:1.2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    }}
+
+    .right-col svg{{
+    max-width:100%;
+    height:auto;
+    }}
+
+    </style>
+    </head>
+
+    <body>
+
+    <div class="bg-decoration"></div>
+
+    <div class="container">
+
+    <div class="header-box">
+    <h1>{main_title}</h1>
+    <div class="subtitle">{subtitle}</div>
+    </div>
+
+    <div class="content-grid">
+
+    <div class="left-col">
+
+    <div class="insight-box">
+    {insight}
+    </div>
+
+    <div class="legend-container">
+    {legend_html}
+    </div>
+
+    </div>
+
+    <div class="right-col">
+
+    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+    {chart_elements}
+    </svg>
+
+    </div>
+
+    </div>
+
+    </div>
+
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_pie_chart_slide_4(
+    main_title = "Global Ecosystem Distribution",
+    subtitle = "Source: International Nature Conservation Report",
+    insight = (
+        "Forests make up the largest share of Earth's ecosystems, "
+        "supporting the highest biodiversity, while oceans and wetlands "
+        "play crucial roles in climate regulation and wildlife habitats."
+    ),
+    chart_type = "donut",
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    data_label_format = "{value}{unit}",
+    items = [
+            {"label": "Forests", "value": 40},
+            {"label": "Oceans", "value": 30},
+            {"label": "Grasslands", "value": 18},
+            {"label": "Wetlands", "value": 12}
+        ]
+) -> str:
+    """
+    Tạo slide biểu đồ tròn hoặc donut với bố cục hiện đại.
+    Phù hợp để trình bày tỷ lệ phần trăm, phân bổ ngân sách hoặc thị phần.
+    """
+
+    # ===== COLOR AND FONT CONFIGURATION =====
+    colors = ["#5FD9D3", "#4ABFB9", "#36A6A0", "#248C87"]
+    font_family = "Inter, sans-serif"
+    accent_color = "#38B2AC"
+    main_title_color = "#2C7A7B"
+    subtitle_color = "#4A5568"
+    insight_text_color = "#2D3748"
+    main_title_font_size = "70px"
+    subtitle_font_size = "32px"
+    insight_font_size = "34px"
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 800, 800
+    center_x, center_y = svg_w / 2, svg_h / 2
+    radius = 320
+    inner_radius = radius * 0.6 if chart_type == "donut" else 0
+
+    # ===== 3. TÍNH TỔNG & PHẦN TRĂM =====
+    total = sum(item.get("value", 0) for item in items)
+    if total == 0: total = 1
+
+    # ===== 4. VẼ CHART =====
+    chart_elements = ""
+    current_angle = -90 
+    
+    for idx, item in enumerate(items):
+        label = item.get("label", "")
+        value = item.get("value", 0)
+        percentage = (value / total) * 100
+        color = colors[idx % len(colors)]
+        slice_angle = (value / total) * 360
+        
+        start_angle_rad = math.radians(current_angle)
+        end_angle_rad = math.radians(current_angle + slice_angle)
+        
+        # Điểm ngoài
+        x1 = center_x + radius * math.cos(start_angle_rad)
+        y1 = center_y + radius * math.sin(start_angle_rad)
+        x2 = center_x + radius * math.cos(end_angle_rad)
+        y2 = center_y + radius * math.sin(end_angle_rad)
+        
+        large_arc = 1 if slice_angle > 180 else 0
+        
+        if chart_type == "donut":
+            # Điểm trong
+            ix1 = center_x + inner_radius * math.cos(start_angle_rad)
+            iy1 = center_y + inner_radius * math.sin(start_angle_rad)
+            ix2 = center_x + inner_radius * math.cos(end_angle_rad)
+            iy2 = center_y + inner_radius * math.sin(end_angle_rad)
+            
+            path_data = f"M {x1} {y1} A {radius} {radius} 0 {large_arc} 1 {x2} {y2} L {ix2} {iy2} A {inner_radius} {inner_radius} 0 {large_arc} 0 {ix1} {iy1} Z"
+        else:
+            path_data = f"M {center_x} {center_y} L {x1} {y1} A {radius} {radius} 0 {large_arc} 1 {x2} {y2} Z"
+        
+        chart_elements += f'<path d="{path_data}" fill="{color}" stroke="#ffffff" stroke-width="3" />'
+        
+        # Nhãn giá trị trên lát cắt
+        if show_value and slice_angle > 15:
+            mid_angle = math.radians(current_angle + slice_angle / 2)
+            label_r = (radius + inner_radius) / 2 if chart_type == "donut" else radius * 0.7
+            lx = center_x + label_r * math.cos(mid_angle)
+            ly = center_y + label_r * math.sin(mid_angle)
+            
+            display_text = data_label_format.replace("{label}", label).replace("{value}", f"{percentage:.1f}").replace("{unit}", unit)
+            chart_elements += f'<text x="{lx}" y="{ly}" fill="white" font-size="24" font-weight="bold" text-anchor="middle" dominant-baseline="middle">{display_text}</text>'
+            
+        current_angle += slice_angle
+
+    # ===== 5. LEGEND & INSIGHT =====
+    legend_items = ""
+    if show_legend:
+        for idx, item in enumerate(items):
+            color = colors[idx % len(colors)]
+            perc = (item.get("value", 0) / total) * 100
+            legend_items += f'''
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <div style="width:24px; height:24px; background:{color}; border-radius:6px; margin-right:15px;"></div>
+                <div style="font-size:24px; color:{insight_text_color};">
+                    <strong>{item.get("label")}</strong>: {item.get("value")}{unit} ({perc:.1f}%)
+                </div>
+            </div>'''
+
+    # ===== 6. HTML RENDER =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+    body {{
+        width:1920px;
+        height:1080px;
+        margin:0;
+        padding:0;
+        font-family:'{font_family}', sans-serif;
+        background: linear-gradient(135deg,#e0f7f1 0%,#f7f3ff 100%);
+        position:relative;
+        overflow:hidden;
+        --colors-0: {colors[0]};
+        --colors-1: {colors[1]};
+        --colors-2: {colors[2]};
+        --colors-3: {colors[3]};
+        --accent-color: {accent_color};
+        --main-title-color: {main_title_color};
+        --subtitle-color: {subtitle_color};
+        --insight-text-color: {insight_text_color};
+        --main-title-font-size: {main_title_font_size};
+        --subtitle-font-size: {subtitle_font_size};
+        --insight-font-size: {insight_font_size};
+    }}
+
+    .blob {{
+        position:absolute;
+        filter:blur(40px);
+        opacity:0.6;
+    }}
+
+    .title-block {{
+        position:absolute;
+        top:80px;
+        left:100px;
+        font-size: var(--main-title-font-size);
+        color: var(--main-title-color);
+        font-weight:800;
+    }}
+
+    .subtitle-block {{
+        position:absolute;
+        top:160px;
+        left:100px;
+        font-size: var(--subtitle-font-size);
+        color: var(--subtitle-color);
+    }}
+
+    .insight-block {{
+        position:absolute;
+        top:260px;
+        left:100px;
+        width:520px;
+        background:rgba(255,255,255,0.5);
+        backdrop-filter:blur(10px);
+        border-radius:30px;
+        padding:40px;
+        font-size: var(--insight-font-size);
+        color: var(--insight-text-color);
+        line-height:1.6;
+    }}
+
+    .legend-block {{
+        position:absolute;
+        top:700px;
+        left:100px;
+        width:520px;
+    }}
+
+    .chart-block {{
+        position:absolute;
+        top:160px;
+        right:120px;
+        width:800px;
+        height:800px;
+    }}
+    </style>
+    </head>
+
+    <body>
+
+    <div class="blob" style="width:600px;height:600px;background:#63E6BE;top:-200px;left:-100px;border-radius:40% 60% 70% 30%;"></div>
+
+    <div class="blob" style="width:500px;height:500px;background:#B197FC;bottom:-100px;right:-100px;border-radius:30% 70% 50% 50%;"></div>
+
+    <div class="title-block">
+    {main_title}
+    </div>
+
+    <div class="subtitle-block">
+    {subtitle}
+    </div>
+
+    <div class="insight-block">
+    {insight}
+    </div>
+
+    <div class="legend-block">
+    {legend_items}
+    </div>
+
+    <div class="chart-block">
+    <svg viewBox="0 0 800 800" width="100%" height="100%">
+    {chart_elements}
+    {f'<circle cx="400" cy="400" r="{inner_radius}" fill="transparent"/>' if chart_type == "donut" else ""}
+    </svg>
+    </div>
+
+    </body>
+    </html>
+    """
+
+def generate_pie_chart_slide_6(
+    main_title = "Global Personal Investment Allocation",
+    subtitle = "Source: International Financial Market Report",
+    insight = (
+        "Stocks remain the dominant investment choice for long-term wealth growth, "
+        "while bonds and real estate continue to provide stability and diversification "
+        "in global personal portfolios."
+    ),
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    items = [
+        {"label": "Stocks", "value": 45},
+        {"label": "Bonds", "value": 25},
+        {"label": "Real Estate", "value": 20},
+        {"label": "Commodities", "value": 10}
+    ]
+) -> str:
+
+    # Color and font configuration
+    chart_type = "pie"
+    colors = ["#C9A227", "#A8892F", "#7A6525", "#4F4318"]
+    font_family = "Inter, sans-serif"
+    accent_color = "#C9A227"
+    main_title_color = "#3A2F1F"
+    subtitle_color = "#6B5E3B"
+    insight_text_color = "#4B4030"
+    main_title_font_size = "70px"
+    subtitle_font_size = "32px"
+    insight_font_size = "34px"
+
+    items = items or []
+
+    svg_w, svg_h = 900, 700
+    center_x = svg_w / 2
+    center_y = svg_h / 2
+    radius = 280
+    inner_radius = radius * 0.6 if chart_type == "donut" else 0
+
+    total = sum(item.get("value", 0) for item in items)
+    if total == 0:
+        total = 1
+
+    chart_elements = ""
+    current_angle = -90
+
+    for idx, item in enumerate(items):
+
+        label = item.get("label", "")
+        value = item.get("value", 0)
+
+        percentage = (value / total) * 100
+        color = colors[idx % len(colors)]
+        slice_angle = (value / total) * 360
+
+        start_angle_rad = math.radians(current_angle)
+        end_angle_rad = math.radians(current_angle + slice_angle)
+
+        x1 = center_x + radius * math.cos(start_angle_rad)
+        y1 = center_y + radius * math.sin(start_angle_rad)
+
+        x2 = center_x + radius * math.cos(end_angle_rad)
+        y2 = center_y + radius * math.sin(end_angle_rad)
+
+        large_arc_flag = 1 if slice_angle > 180 else 0
+
+        if chart_type == "donut":
+
+            ix1 = center_x + inner_radius * math.cos(start_angle_rad)
+            iy1 = center_y + inner_radius * math.sin(start_angle_rad)
+
+            ix2 = center_x + inner_radius * math.cos(end_angle_rad)
+            iy2 = center_y + inner_radius * math.sin(end_angle_rad)
+
+            path_data = (
+                f"M {x1} {y1} "
+                f"A {radius} {radius} 0 {large_arc_flag} 1 {x2} {y2} "
+                f"L {ix2} {iy2} "
+                f"A {inner_radius} {inner_radius} 0 {large_arc_flag} 0 {ix1} {iy1} Z"
+            )
+
+        else:
+
+            path_data = (
+                f"M {center_x} {center_y} "
+                f"L {x1} {y1} "
+                f"A {radius} {radius} 0 {large_arc_flag} 1 {x2} {y2} Z"
+            )
+
+        chart_elements += f'''
+        <path d="{path_data}" fill="{color}" stroke="#F5EFE6" stroke-width="3"/>
+        '''
+
+        if show_value and slice_angle > 15:
+
+            mid_angle = math.radians(current_angle + slice_angle / 2)
+
+            label_r = (
+                (radius + inner_radius) / 2
+                if chart_type == "donut"
+                else radius * 0.7
+            )
+
+            lx = center_x + label_r * math.cos(mid_angle)
+            ly = center_y + label_r * math.sin(mid_angle)
+
+            txt = f"{percentage:.1f}{unit}"
+
+            chart_elements += f'''
+            <text x="{lx}" y="{ly}"
+            font-size="20"
+            text-anchor="middle"
+            fill="white"
+            font-weight="600"
+            style="text-shadow:1px 1px 2px rgba(0,0,0,0.3)">
+            {txt}
+            </text>
+            '''
+
+        current_angle += slice_angle
+
+    legend_items = ""
+
+    if show_legend:
+        for i, item in enumerate(items):
+
+            color = colors[i % len(colors)]
+            val_str = f"{item.get('value', 0)}{unit}"
+
+            legend_items += f'''
+            <div style="display:flex; align-items:center; margin-bottom:18px;">
+                <div style="width:24px;height:24px;background:{color};
+                border-radius:4px;margin-right:15px;"></div>
+
+                <div style="font-size:24px;color:{main_title_color};flex:1;">
+                    {item.get("label", "")}
+                </div>
+
+                <div style="font-size:24px;color:{accent_color};font-weight:bold;">
+                    {val_str}
+                </div>
+            </div>
+            '''
+
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+
+    <style>
+
+    html,body{{
+    width:1920px;
+    height:1080px;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    font-family:'{font_family}';
+    background:#F8F6F1;
+    --accent-color: {accent_color};
+    --main-title-color: {main_title_color};
+    --subtitle-color: {subtitle_color};
+    --insight-text-color: {insight_text_color};
+    --main-title-font-size: {main_title_font_size};
+    --subtitle-font-size: {subtitle_font_size};
+    --insight-font-size: {insight_font_size};
+    --color-0: {colors[0]};
+    --color-1: {colors[1]};
+    --color-2: {colors[2]};
+    --color-3: {colors[3]};
+    }}
+
+    .header{{
+    position:absolute;
+    top:80px;
+    left:100px;
+    border-left:12px solid var(--accent-color);
+    padding-left:35px;
+    }}
+
+    h1{{
+    font-size:var(--main-title-font-size);
+    color:var(--main-title-color);
+    margin:0;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    }}
+
+    .subtitle{{
+    font-size:var(--subtitle-font-size);
+    color:var(--subtitle-color);
+    margin-top:10px;
+    }}
+
+    .chart{{
+    position:absolute;
+    left:100px;
+    top:260px;
+    }}
+
+    .insight{{
+    position:absolute;
+    right:120px;
+    top:320px;
+    width:640px;
+    background:white;
+    padding:45px;
+    border-radius:20px;
+    box-shadow:20px 20px 60px rgba(139,115,85,0.1);
+    border-bottom:8px solid var(--accent-color);
+    }}
+
+    .insight-text{{
+    font-size:var(--insight-font-size);
+    color:var(--insight-text-color);
+    line-height:1.6;
+    font-style:italic;
+    }}
+
+    .legend{{
+    position:absolute;
+    right:550px;
+    top:750px;
+    width:300px;
+    }}
+
+    </style>
+    </head>
+
+    <body>
+
+    <div class="header">
+    <h1>{main_title}</h1>
+    <div class="subtitle">{subtitle}</div>
+    </div>
+
+    <div class="chart">
+    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+    {chart_elements}
+    </svg>
+    </div>
+
+    <div class="insight">
+    <div class="insight-text">"{insight}"</div>
+    </div>
+
+    <div class="legend">
+    {legend_items}
+    </div>
+
+    </body>
+    </html>
+    """
+
+    return html_code
+
+def generate_pie_chart_slide_7(
+    main_title = "ELEGANCE CLASSY",
+    subtitle = "Style Agency Infographics",
+    pie1_insight = "Jupiter is the biggest planet of them all",
+    pie2_insight = "Neptune is the farthest one from the sun",
+    pie3_insight = "Mercury is the closest to the sun",
+    chart_type = "pie",
+    unit = "%",
+    show_value = True,
+    show_legend = True,
+    pie1_items = [
+        {"label": "Jupiter", "value": 75},
+        {"label": "other", "value": 25},
+    ],
+    pie2_items = [
+        {"label": "Neptune", "value": 65},
+        {"label": "other", "value": 35},
+    ],
+    pie3_items = [
+        {"label": "Mercury", "value": 60},
+        {"label": "other", "value": 40},
+    ]
+) -> str:
+    """
+    Generates a minimalist, elegant HTML slide with three pie charts.
+    Inspired by the provided SVG template.
+    Uses all provided parameters including unit, show_value, show_legend.
+    """
+    
+    # Color and font configuration
+    colors = ["#c9b09a", "#6f7067"]
+    font_family = "Outfit, sans-serif"
+    accent_color = "#9a7a63"
+    main_title_color = "#3a3730"
+    subtitle_color = "#3a3730"
+    insight_text_color = "#3a3730"
+    main_title_font_size = "100px"
+    subtitle_font_size = "36px"
+    insight_font_size = "20px"
+    legend_font_size = "24px"
+    background_color = "#fefaf4"
+    
+    def generate_pie_svg(items, colors_list):
+        total = sum(item['value'] for item in items)
+        cumulative_percent = 0
+        svg_slices = ""
+        for i, item in enumerate(items):
+            color = colors_list[i % len(colors_list)]
+            percent = (item['value'] / total) * 100
+            offset = 100 - cumulative_percent
+            svg_slices += f'<circle r="15.9" cx="21" cy="21" fill="transparent" stroke="{color}" stroke-width="10" stroke-dasharray="{percent} {100-percent}" stroke-dashoffset="{offset}" />'
+            cumulative_percent += percent
+        
+        # Display value in center if show_value is True
+        value_text = ""
+        if show_value:
+            main_val = items[0]['value']
+            formatted_val = f"{main_val}{unit}"
+            value_text = f'<text x="21" y="21" text-anchor="middle" dy=".3em" font-family="{font_family}" font-size="8" font-weight="700" fill="{main_title_color}">{formatted_val}</text>'
+        
+        donut_hole = f'<circle r="11" cx="21" cy="21" fill="{background_color}" />' if chart_type == "donut" else ""
+        
+        return f"""
+        <svg viewBox="0 0 42 42" class="pie-svg">
+            <g transform="rotate(-90 21 21)">
+                {svg_slices}
+                {donut_hole}
+            </g>
+            {value_text}
+        </svg>
+        """
+
+    pie1_svg = generate_pie_svg(pie1_items, colors)
+    pie2_svg = generate_pie_svg(pie2_items, colors)
+    pie3_svg = generate_pie_svg(pie3_items, colors)
+
+    html_content = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+        <style>
+            :root {{
+                --bg-color: {background_color};
+                --text-color: {main_title_color};
+                --accent-color: {accent_color};
+                --secondary-accent: #b7b9ab;
+                --dark-accent: #6f7067;
+                --colors-0: {colors[0]};
+                --colors-1: {colors[1]};
+                --font-family: {font_family};
+                --subtitle-color: {subtitle_color};
+                --insight-text-color: {insight_text_color};
+                --main-title-font-size: {main_title_font_size};
+                --subtitle-font-size: {subtitle_font_size};
+                --insight-font-size: {insight_font_size};
+                --legend-font-size: {legend_font_size};
+            }}
+            body {{
+                margin: 0;
+                padding: 0;
+                background-color: var(--bg-color);
+                font-family: var(--font-family);
+                color: var(--text-color);
+                width: 1920px;
+                height: 1080px;
+                overflow: hidden;
+                position: relative;
+            }}
+            .left-bar {{
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 0;
+                width: 70px;
+                background-color: var(--accent-color);
+            }}
+            .top-right-box {{
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 236px;
+                height: 77px;
+                background-color: var(--secondary-accent);
+            }}
+            .bottom-right-box {{
+                position: absolute;
+                right: 70px;
+                bottom: 0;
+                width: 374px;
+                height: 58px;
+                background-color: var(--dark-accent);
+            }}
+            .container {{
+                padding-left: 150px;
+                padding-top: 100px;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+            }}
+            .header {{
+                margin-bottom: 80px;
+            }}
+            .main-title {{
+                font-size: var(--main-title-font-size);
+                font-weight: 700;
+                margin: 0;
+                line-height: 1.1;
+                letter-spacing: -2px;
+            }}
+            .subtitle {{
+                font-size: var(--subtitle-font-size);
+                font-weight: 300;
+                margin-top: 5px;
+                opacity: 0.8;
+                color: var(--subtitle-color);
+            }}
+            .charts-row {{
+                display: flex;
+                justify-content: space-between;
+                width: 1400px;
+                margin-top: 40px;
+            }}
+            .chart-item {{
+                width: 400px;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                text-align: center;
+            }}
+            .pie-container {{
+                width: 280px;
+                height: 280px;
+                margin-bottom: 40px;
+                position: relative;
+            }}
+            .pie-svg {{
+                width: 100%;
+                height: 100%;
+            }}
+            .chart-label {{
+                font-size: var(--legend-font-size);
+                font-weight: 700;
+                margin-bottom: 10px;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                display: {"block" if show_legend else "none"};
+            }}
+            .insight-text {{
+                font-size: var(--insight-font-size);
+                font-weight: 400;
+                line-height: 1.5;
+                max-width: 350px;
+                opacity: 0.9;
+                color: var(--insight-text-color);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="left-bar"></div>
+        <div class="top-right-box"></div>
+        <div class="bottom-right-box"></div>
+        
+        <div class="container">
+            <div class="header">
+                <h1 class="main-title">{main_title}</h1>
+                <div class="subtitle">{subtitle}</div>
+            </div>
+            
+            <div class="charts-row">
+                <div class="chart-item">
+                    <div class="pie-container">
+                        {pie1_svg}
+                    </div>
+                    <div class="chart-label">{pie1_items[0]['label']}</div>
+                    <div class="insight-text">{pie1_insight}</div>
+                </div>
+                
+                <div class="chart-item">
+                    <div class="pie-container">
+                        {pie2_svg}
+                    </div>
+                    <div class="chart-label">{pie2_items[0]['label']}</div>
+                    <div class="insight-text">{pie2_insight}</div>
+                </div>
+                
+                <div class="chart-item">
+                    <div class="pie-container">
+                        {pie3_svg}
+                    </div>
+                    <div class="chart-label">{pie3_items[0]['label']}</div>
+                    <div class="insight-text">{pie3_insight}</div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_content
+
+def generate_pie_chart_slide_8(
+        main_title = "Business Inforgraphic", 
+        subtitle = "This is subtitle",     
+        unit = "%",
+        categories = ["North America", "Europe", "Asia"],
+        insights = [
+            "North America's shipment volume increased by 55% compared to last year.",
+            "Europe experienced a significant growth of 76% in shipment volume.",
+            "Asia had a steady increase of 43% in shipment volume.",
+        ],
+        series = [55, 76, 43]
+    ) -> str:
+    """
+    Generates a generic HTML slide with a Grouped Bar Chart using the "Logistic Company" theme.
+    """
+
+    # ===== 1. COLOR AND FONT CONFIGURATION =====
+    colors = ["#9CA3AF", "#85BA2A", "#5561D2"]
+    font_family = "Inter, sans-serif"
+    accent_color = "#FF6B35"
+    main_title_color = "#1B2559"
+    subtitle_color = "#6B7280"
+    main_title_font_size = "64px"
+    subtitle_font_size = "28px"
+    insights_text_color = "#374151"
+    insights_font_size = "26px"
+
+    # ===== 2. LẤY THÔNG TIN =====
+    title = main_title
+    if subtitle:
+        subtitle = f"<div style='font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px;'>{subtitle}</div>"
+
+    # ===== 3. RENDER ROWS (3 arcs) =====
+    data_list = series
+    
+    arcs = []
+    left_items = []
+    right_items = []
+    
+    cx, cy = 400, 400
+    base_r = 150
+    stroke_w = 60
+    
+    for i in range(min(3, len(categories))):
+        cat = categories[i]
+        color = colors[i % len(colors)]
+        val = data_list[i] if i < len(data_list) else 0
+        desc = insights[i] if insights and i < len(insights) else ""
+    
+    # Calculate percentage for progress bar width
+    percent = min(100, max(0, val))
+    r = base_r + i * (stroke_w + 10)
+    circumference = 2 * math.pi * r
+    dashoffset = circumference * (1 - percent / 100)
+    start_angle = 180 - (percent / 100 * 360) / 2
+    
+    arcs.append(f'''
+        <!-- Background arc -->
+        <circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="none" stroke-width="{stroke_w}"/>
+        <!-- Foreground arc -->
+        <circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="{color}" stroke-width="{stroke_w}" 
+            stroke-dasharray="{circumference}" stroke-dashoffset="{dashoffset}" 
+            transform="rotate({start_angle}, {cx}, {cy})" stroke-linecap="butt"/>
+    ''')
+    
+    left_items.append(f'''
+        <div style="background-color: #F3F4F6; border-radius: 60px 0 0 60px; padding: 30px 60px; margin-bottom: 40px; display: flex; flex-direction: column; justify-content: center; height: 160px; box-sizing: border-box; flex-grow: 1;">
+        <div style="font-size: 32px; font-weight: bold; color: {color}; margin-bottom: 8px;">{cat}</div>
+        <div style="font-size: {insights_font_size}; color: {insights_text_color}; line-height: 1.4;">{desc}</div>
+        </div>
+    ''')
+
+    right_items.append(f'''
+        <div style="background-color: #F3F4F6; border-radius: 0 60px 60px 0; padding: 30px 60px; margin-bottom: 40px; display: flex; align-items: center; height: 160px; box-sizing: border-box; gap: 40px; flex-grow: 1;">
+        <div style="width: 80px; height: 80px; border-radius: 50%; background-color: {color}; display: flex; align-items: center; justify-content: center; color: white; flex-shrink: 0;">
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="10"></circle>
+            </svg>
+        </div>
+        <div style="font-size: 56px; font-weight: bold; color: {color};">
+            {val}{unit}
+        </div>
+        </div>
+    ''')
+
+    rows_html = f'''
+    <div style="display: flex; align-items: center; justify-content: center; width: 100%; position: relative;">
+        <!-- Left Panel -->
+        <div style="flex: 1.5; display: flex; flex-direction: column; z-index: 1; margin-right: -40px;">
+        {''.join(left_items)}
+        </div>
+        
+        <!-- Center SVG -->
+        <div style="z-index: 10; display: flex; align-items: center; justify-content: center;">
+        <svg width="680" height="680" viewBox="60 60 680 680">
+            <!-- White background circle to hide overlapping panels -->
+            <circle cx="400" cy="400" r="340" fill="white" />
+            {''.join(arcs)}
+        </svg>
+        </div>
+        
+        <!-- Right Panel -->
+        <div style="flex: 1.5; display: flex; flex-direction: column; z-index: 1; margin-left: -40px;">
+        {''.join(right_items)}
+        </div>
+    </div>
+    '''
+
+    # ===== 4. HTML RENDER =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+    width: 1920px;
+    height: 1080px;
+    margin: 0;
+    padding: 0;
+    overflow: hidden;
+    font-family: {font_family};
+    background-color: #FFFFFF;
+    position: relative;
+    --font-family: {font_family};
+    --accent-color: {accent_color};
+    --main-title-color: {main_title_color};
+    --subtitle-color: {subtitle_color};
+    --insights-text-color: {insights_text_color};
+    --main-title-font-size: {main_title_font_size};
+    --subtitle-font-size: {subtitle_font_size};
+    --insights-font-size: {insights_font_size};
+    --color-0: {colors[0]};
+    --color-1: {colors[1]};
+    --color-2: {colors[2]};
+    }}
+    
+    /* Decorative Background Elements based on reference */
+    .bg-shape-top {{
+    position: absolute;
+    top: -30px;
+    left: 0;
+    width: 400px;
+    height: 150px;
+    background: var(--main-title-color);
+    clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+    z-index: 0;
+    }}
+    .bg-shape-accent {{
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 150px;
+    height: 150px;
+    background: var(--accent-color);
+    clip-path: polygon(0 0, 80% 0, 0 80%);
+    z-index: 1;
+    }}
+    .bg-shape-bottom {{
+    position: absolute;
+    bottom: -50px;
+    right: -300px;
+    width: 600px;
+    height: 120px;
+    background: var(--main-title-color);
+    clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+    z-index: 0;
+    }}
+    
+    .container {{
+    position: relative;
+    z-index: 10;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    padding: 60px 80px 40px 80px;
+    box-sizing: border-box;
+    }}
+    
+    .header {{
+    margin-bottom: 40px;
+    padding-left: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    }}
+    
+    .title-group h1 {{
+    font-size: var(--main-title-font-size);
+    color: var(--accent-color);
+    margin: 0;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    }}
+    
+    .title-group h1 span {{
+    color: var(--main-title-color);
+    }}
+    
+    .subtitle {{
+    font-size: var(--subtitle-font-size);
+    color: var(--subtitle-color);
+    margin-top: 10px;
+    font-weight: 400;
+    }}
+
+    .main-content {{
+    display: flex;
+    flex: 1;
+    gap: 40px;
+    align-items: center;
+    justify-content: space-between;
+    }}
+    
+    .left-panel {{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    }}
+    
+    .center-panel {{
+    flex: 2;
+    background: #FFFFFF;
+    padding: 20px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    }}
+
+    .right-panel {{
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    }}
+    
+    .footer-mark {{
+    position: absolute;
+    bottom: 30px;
+    right: 10px;
+    color: white;
+    font-size: 20px;
+    font-weight: bold;
+    z-index: 10;
+    }}
+
+    </style>
+    </head>
+    <body>
+
+    <div class="bg-shape-top"></div>
+    <div class="bg-shape-accent"></div>
+    <div class="bg-shape-bottom"></div>
+    <div class="footer-mark">www.reallygreatsite.com</div>
+
+    <div class="container">
+    <div class="header" style="justify-content: center; margin-bottom: 60px;">
+        <div class="title-group" style="text-align: center;">
+        <h1 style="color: #000000; font-size: 64px; text-transform: none;">{title}</h1>
+        {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+        </div>
+
+    </div>
+
+    <div class="main-content" style="flex-direction: column; align-items: stretch; justify-content: center; padding: 0 40px; box-sizing: border-box; max-width: 1600px; margin: 0 auto; width: 100%;">
+        {rows_html}
+    </div>
+    </div>
+
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_scatter_plot_chart_slide_1(
+    main_title = "Early Childhood Development Analysis",
+    subtitle = "Correlation between Play Time and Social Skill Scores",
+    insight = "Data shows a strong positive correlation: children with more than 4 hours of structured play weekly exhibit 30% higher social integration scores.",
+    x_axis = "Weekly Play Time (Hours)",
+    y_axis = "Social Skill Score (0-100)",
+    unit = "pts",
+    show_value = False,
+    show_legend = True,
+    x_axis_min = 0,
+    x_axis_max = 8,
+    y_axis_min = 30,
+    y_axis_max = 200,
+    series = [
+        {
+            "name": "Group A (Ages 3-4)",
+            "points": [{"x": 2, "y": 45}, {"x": 3.5, "y": 58}, {"x": 5, "y": 72}, {"x": 6.2, "y": 85}]
+        },
+        {
+            "name": "Group B (Ages 5-6)",
+            "points": [{"x": 1.5, "y": 40}, {"x": 4, "y": 65}, {"x": 5.5, "y": 78}, {"x": 7, "y": 92}]
+        }
+    ],
+    colors = ["#FF6B6B", "#4ECDC4", "#FFE66D", "#FF9F43"],
+    accent_color = "#ffffff",
+    main_title_color = "#ffffff",
+    subtitle_color = "#3d4a85",
+    insight_text_color = "#3d4a85",
+    bg_color = "#7b92f7"
+) -> str:
+
+    # ===== STYLE CONFIGURATION =====
+    font_family = "'Montserrat', sans-serif"
+    main_title_font_size = "70px"
+    subtitle_font_size = "32px"
+    insight_font_size = "28px"
+
+    # ===== 1. TÍNH TOÁN MIN/MAX ĐỂ SCALE BIỂU ĐỒ =====
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min = x_axis_min if x_axis_min is not None else 0
+    x_max = x_axis_max if x_axis_max is not None else (max(all_x) if all_x else 100)
+    y_min = y_axis_min if y_axis_min is not None else 0
+    y_max = y_axis_max if y_axis_max is not None else (max(all_y) if all_y else 100)
+
+    # Tránh chia cho 0
+    if x_max == x_min: x_max += 1
+    if y_max == y_min: y_max += 1
+
+    # ===== 2. CẤU HÌNH SVG =====
+    svg_w, svg_h = 1050, 650
+    margin_t, margin_b, margin_l, margin_r = 60, 80, 100, 60
+    chart_w = svg_w - margin_l - margin_r
+    chart_h = svg_h - margin_t - margin_b
+
+    chart_elements = ""
+
+    # Vẽ Grid lines (ngang) và nhãn trục Y
+    for i in range(6):
+        ratio = i / 5
+        y_pos = svg_h - margin_b - (ratio * chart_h)
+        val = y_min + (y_max - y_min) * ratio
+        chart_elements += f'<line x1="{margin_l}" y1="{y_pos}" x2="{svg_w - margin_r}" y2="{y_pos}" stroke="rgba(255,255,255,0.3)" stroke-width="1" />'
+        chart_elements += f'<text x="{margin_l - 15}" y="{y_pos + 6}" font-size="18" text-anchor="end" fill="{main_title_color}">{val:g}</text>'
+
+    # Vẽ các điểm dữ liệu
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            cx = margin_l + ((p["x"] - x_min) / (x_max - x_min)) * chart_w
+            cy = svg_h - margin_b - ((p["y"] - y_min) / (y_max - y_min)) * chart_h
+            
+            # Vẽ điểm với hiệu ứng sticker
+            chart_elements += f'<circle cx="{cx}" cy="{cy}" r="12" fill="{color}" stroke="{accent_color}" stroke-width="3" />'
+            
+            if show_value:
+                chart_elements += f'<text x="{cx}" y="{cy - 20}" font-size="16" text-anchor="middle" font-weight="bold" fill="{accent_color}">{p["y"]}{unit}</text>'
+
+    # Vẽ trục X và Y chính
+    chart_elements += f'<line x1="{margin_l}" y1="{svg_h - margin_b}" x2="{svg_w - margin_r}" y2="{svg_h - margin_b}" stroke="{accent_color}" stroke-width="4" stroke-linecap="round" />'
+    chart_elements += f'<line x1="{margin_l}" y1="{margin_t}" x2="{margin_l}" y2="{svg_h - margin_b}" stroke="{accent_color}" stroke-width="4" stroke-linecap="round" />'
+
+    # Nhãn trục
+    chart_elements += f'<text x="{margin_l + chart_w/2}" y="{svg_h - 20}" font-size="22" text-anchor="middle" fill="{accent_color}" font-weight="700">{x_axis}</text>'
+    chart_elements += f'<text transform="rotate(-90)" x="{-margin_t - chart_h/2}" y="35" font-size="22" text-anchor="middle" fill="{accent_color}" font-weight="700">{y_axis}</text>'
+
+    # ===== 3. RENDER LEGEND =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <li style="display:flex; align-items:center; margin-bottom:15px;">
+                <div style="width:24px; height:24px; background:{color}; border:3px solid {accent_color}; border-radius:50%; margin-right:15px;"></div>
+                <span style="font-size:24px; font-weight:700; color:{subtitle_color};">{s.get("name", "Group")}</span>
+            </li>
+            '''
+
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
+                background-color: {bg_color}; font-family: {font_family};
+                background-image: radial-gradient({accent_color} 2px, transparent 2px); background-size: 60px 60px;
+            }}
+            .header-box {{
+                position: absolute; top: 60px; left: 100px; width: 1720px;
+            }}
+            .main-title {{
+                font-size: {main_title_font_size}; font-weight: 700; color: {main_title_color}; margin: 0;
+                text-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+            }}
+            .subtitle-text {{
+                font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; font-weight: 700;
+            }}
+            .chart-container {{
+                position: absolute; top: 280px; left: 80px; width: {svg_w}px; height: {svg_h}px;
+                background: rgba(255, 255, 255, 0.1); border-radius: 30px; border: 5px dashed rgba(255,255,255,0.4);
+            }}
+            .insight-container {{
+                position: absolute; top: 280px; right: 100px; width: 550px;
+            }}
+            .insight-card {{
+                background: #fffbe6; border: 8px solid {accent_color}; border-radius: 40px;
+                padding: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 40px;
+            }}
+            .insight-content {{
+                font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.4; font-weight: 400;
+            }}
+            .legend-box {{
+                background: rgba(255, 255, 255, 0.2); border-radius: 30px; padding: 30px; border: 4px solid {accent_color};
+                list-style: none; margin: 0; margin-top: 50px;
+            }}
+            .sticker {{
+                position: absolute; font-size: 80px; background: {accent_color}; border-radius: 20px; padding: 10px;
+                border: 5px solid {accent_color}; box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="sticker" style="top: 40px; right: 80px; transform: rotate(15deg);">✏️</div>
+        <div class="sticker" style="top: 80px; right: 170px; transform: rotate(-10deg);">🎨</div>
+        
+        <div class="header-box">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle-text">{subtitle if subtitle else ""}</div>
+        </div>
+
+        <div class="chart-container">
+            <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                {chart_elements}
+            </svg>
+        </div>
+
+        <div class="insight-container">
+            <div class="insight-card">
+                <div style="font-size: 30px; font-weight: 700; color: {subtitle_color}; margin-bottom: 15px;">Key Insight 💡</div>
+                <div class="insight-content">{insight}</div>
+            </div>
+            <ul class="legend-box">
+                {legend_html}
+            </ul>
+        </div>
+    </body>
+    </html>
+    """
+
+def generate_scatter_plot_chart_slide_2(
+    main_title: str = "Relationship Between Travel Distance and Spending",
+    subtitle: str = "Source: Tourist Behavior Survey 2024 | Sample: 200 Trips",
+    insight: str = (
+        "The scatter plot indicates a strong positive correlation between travel distance "
+        "and total spending."
+    ),
+    x_axis= "Travel Distance (km)",
+    y_axis = "Total Travel Spending (USD)",
+    unit = "USD",
+    show_value = False,
+    show_legend = True,
+    x_axis_min = 0,
+    x_axis_max = 12000,
+    y_axis_min = 0,
+    y_axis_max = 6000,
+    series = [
+        {
+            "name": "Domestic Travelers",
+            "points": [
+                {"x": 150, "y": 300},
+                {"x": 300, "y": 450},
+                {"x": 500, "y": 700},
+                {"x": 800, "y": 900},
+                {"x": 1200, "y": 1100},
+                {"x": 2000, "y": 1500}
+            ]
+        },
+        {
+            "name": "International Travelers",
+            "points": [
+                {"x": 3000, "y": 2500},
+                {"x": 5000, "y": 3200},
+                {"x": 7000, "y": 4000},
+                {"x": 9000, "y": 4800},
+                {"x": 11000, "y": 5500},
+                {"x": 2500, "y": 5000}
+            ]
+        }
+    ],
+    colors = ["#008080", "#FFB347"],
+    accent_color = "#008080",
+    main_title_color = "#005F5F",
+    subtitle_color = "#556B2F",
+    insight_text_color = "#2C3E50"
+) -> str:
+
+    # ===== 1. STYLE CONFIGURATION =====
+    background_color = "#FEF9E1"
+    insight_box_background_color = "#FFFFFF"
+    chart_panel_background_color = "rgba(255, 255, 255, 0.5)"
+    font_family = "'Inter', sans-serif"
+
+    # ===== 2. TÍNH TOÁN MIN MAX VÀ SCALE =====
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min_val = x_axis_min if x_axis_min is not None else 0
+    x_max_val = x_axis_max if x_axis_max is not None else (max(all_x) if all_x else 100)
+    y_min_val = y_axis_min if y_axis_min is not None else 0
+    y_max_val = y_axis_max if y_axis_max is not None else (max(all_y) if all_y else 100)
+
+    if x_max_val == x_min_val: x_max_val += 1
+    if y_max_val == y_min_val: y_max_val += 1
+
+    # ===== 3. SVG CONFIG =====
+    svg_w, svg_h = 1100, 700
+    margin = {"top": 70, "bottom": 100, "left": 120, "right": 40}
+    
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    chart_elements = ""
+
+    # Grid Y và Label Trục Y
+    steps = 5
+    for i in range(steps + 1):
+        y_val_raw = y_min_val + (y_max_val - y_min_val) * (i / steps)
+        y_pos = svg_h - margin["bottom"] - (i / steps) * chart_h
+        
+        chart_elements += f'<line x1="{margin["left"]}" y1="{y_pos}" x2="{svg_w - margin["right"]}" y2="{y_pos}" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" />'
+        chart_elements += f'<text x="{margin["left"] - 15}" y="{y_pos + 8}" font-size="20" text-anchor="end" fill="{subtitle_color}">{y_val_raw:g}</text>'
+
+    # Trục X Labels
+    for i in range(steps + 1):
+        x_val_raw = x_min_val + (x_max_val - x_min_val) * (i / steps)
+        x_pos = margin["left"] + (i / steps) * chart_w
+        chart_elements += f'<text x="{x_pos}" y="{svg_h - margin["bottom"] + 40}" font-size="20" text-anchor="middle" fill="{subtitle_color}">{x_val_raw:g}</text>'
+
+    # Trục chính
+    chart_elements += f'''
+        <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
+        <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="{accent_color}" stroke-width="4" />
+    '''
+
+    # Scatter Points
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            px = margin["left"] + ((p["x"] - x_min_val) / (x_max_val - x_min_val)) * chart_w
+            py = svg_h - margin["bottom"] - ((p["y"] - y_min_val) / (y_max_val - y_min_val)) * chart_h
+            
+            chart_elements += f'<circle cx="{px}" cy="{py}" r="12" fill="{color}" stroke="white" stroke-width="3" opacity="0.9" />'
+            
+            if show_value:
+                chart_elements += f'<text x="{px}" y="{py - 20}" font-size="16" text-anchor="middle" fill="{insight_text_color}" font-weight="bold">{p["y"]}{unit}</text>'
+
+    # Axis Labels
+    chart_elements += f'''
+        <text x="{margin["left"] + chart_w/2}" y="{svg_h - 20}" font-size="26" text-anchor="middle" font-weight="600" fill="{main_title_color}">{x_axis}</text>
+        <text transform="rotate(-90)" x="{-margin["top"] - chart_h/2}" y="35" font-size="26" text-anchor="middle" font-weight="600" fill="{main_title_color}">{y_axis}</text>
+    '''
+
+    # ===== 4. LEGEND & INSIGHT =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <li style="display:flex; align-items:center; margin:0 0 15px 0;">
+                <span style="display:inline-block; width:24px; height:24px; border-radius:50%; background:{color}; border:3px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:15px;"></span>
+                <span style="font-size:24px; font-weight:500; color:{insight_text_color};">{s.get("name", "Series")}</span>
+            </li>
+            '''
+
+    # ===== 5. FINAL HTML RENDER =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: {font_family}; background-color: {background_color}; color: {insight_text_color};
+                display: grid; 
+                grid-template-rows: 280px 1fr;
+                grid-template-columns: 1fr;
+                row-gap: 20px;
+                overflow: hidden;
+            }}
+            .header-section {{
+                padding: 20px 100px 20px 100px;
+            }}
+            h1 {{
+                font-size: 72px; color: {main_title_color}; margin: 0; font-weight: 800; 
+                text-transform: uppercase; letter-spacing: -1px;
+                border-left: 12px solid {accent_color}; padding-left: 35px;
+            }}
+            .subtitle {{
+                font-size: 32px; color: {subtitle_color}; margin: 10px 0 0 47px; font-weight: 400;
+            }}
+            .content-area {{
+                display: grid; 
+                grid-template-columns: 500px 1fr;
+                gap: 80px;
+                padding: 10px 100px 60px 100px;
+                position: center;
+            }}
+            .left-panel {{
+                display: grid;
+                grid-template-rows: auto auto;
+                gap: 40px;
+                align-content: space-around;
+            }}
+            .insight-box {{
+                background: {insight_box_background_color}; padding: 30px; border-radius: 30px; 
+                box-shadow: 15px 15px 0px rgba(0, 128, 128, 0.1);
+                border: 3px solid {accent_color}; font-size: 28px; line-height: 1.5;
+            }}
+            .legend-area {{
+                padding-left: 10px;
+                list-style: none; margin: 0;
+            }}
+            .right-panel {{
+                display: flex; align-items: center; justify-content: center;
+                background: {chart_panel_background_color}; border-radius: 40px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header-section">
+            <h1>{main_title}</h1>
+            <div class="subtitle">{subtitle if subtitle else ""}</div>
+        </div>
+        <div class="content-area">
+            <div class="left-panel">
+                <div class="insight-box">
+                    {insight}
+                </div>
+                <ul class="legend-area">
+                    {legend_items}
+                </ul>
+            </div>
+            <div class="right-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html> 
+    """
+    return html_code
+
+def generate_scatter_plot_chart_slide_3(
+    main_title: str = "Study Time and Exam Performance Trend",
+    subtitle: str = "Study Time and Exam Performance Trend",
+    insight: str = (
+        "The scatter plot demonstrates a clear positive correlation between weekly "
+        "self-study hours and final exam scores. Students participating in guided "
+        "revision sessions consistently achieve higher scores at comparable effort "
+        "levels."
+    ),
+    x_axis = "Weekly Self-Study Hours",
+    y_axis = "Final Exam Score",
+    unit = " points",
+    show_value = False,
+    show_legend = True,
+    x_axis_min = 0,
+    x_axis_max = 20,
+    y_axis_min = 50,
+    y_axis_max = 100,
+    data_label_format = None,
+    series = [
+        {
+            "name": "Independent Study Group",
+            "points": [
+                {"x": 3, "y": 58},
+                {"x": 5, "y": 65},
+                {"x": 7, "y": 72},
+                {"x": 10, "y": 78},
+                {"x": 14, "y": 82}
+            ]
+        },
+        {
+            "name": "Guided Revision Group",
+            "points": [
+                {"x": 4, "y": 68},
+                {"x": 6, "y": 75},
+                {"x": 9, "y": 85},
+                {"x": 12, "y": 90},
+                {"x": 15, "y": 94}
+            ]
+        }
+    ],
+    colors = ["#3D5A80", "#EE6C4D"],
+    accent_color = "#7B8FB3",
+    main_title_color = "#4A5E7B",
+    subtitle_color = "#8E97A4",
+    insight_text_color = "#4A5E7B",
+    background_color = "#E8F5E9"
+) -> str:
+    # ===== 0. STYLE CONFIGURATION =====
+    font_family = "Inter, sans-serif"
+    main_title_font_size = "65px"
+    subtitle_font_size = "28px"
+    insight_font_size = "30px"
+
+    # ===== 1. DATA PREPARATION =====
+    x_label = x_axis
+    y_label = y_axis
+
+    # ===== 2. SVG CALCULATIONS =====
+    svg_w, svg_h = 1100, 700
+    margin = {"top": 60, "right": 60, "bottom": 100, "left": 120}
+    
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    # Calculate Data Boundaries
+    all_points = [p for s in series for p in s.get("points", [])]
+    all_x = [p["x"] for p in all_points] or [0]
+    all_y = [p["y"] for p in all_points] or [0]
+
+    x_min = x_axis_min if x_axis_min is not None else 0
+    x_max = x_axis_max if x_axis_max is not None else max(all_x)
+    y_min = y_axis_min if y_axis_min is not None else 0
+    y_max = y_axis_max if y_axis_max is not None else max(all_y)
+
+    # Add padding to boundaries if auto-calculated
+    if x_max == x_min: x_max += 1
+    if y_max == y_min: y_max += 1
+    
+    # Range buffers
+    x_range = (x_max - x_min) * 1.1 if (x_max - x_min) != 0 else 1
+    y_range = (y_max - y_min) * 1.1 if (y_max - y_min) != 0 else 1
+
+    # ===== 3. RENDER SVG ELEMENTS =====
+    chart_elements = ""
+
+    # Grid lines (Horizontal)
+    for i in range(6):
+        y_tick = margin["top"] + (chart_h / 5) * i
+        val = y_max - (i * (y_max - y_min) / 5)
+        chart_elements += f'''
+        <line x1="{margin["left"]}" y1="{y_tick}" x2="{svg_w - margin["right"]}" y2="{y_tick}" stroke="#E5E7EB" stroke-width="1" />
+        <text x="{margin["left"] - 15}" y="{y_tick + 5}" font-size="18" text-anchor="end" fill="{subtitle_color}">{val:g}</text>
+        '''
+
+    # Axis lines
+    chart_elements += f'''
+    <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="{main_title_color}" stroke-width="2"/>
+    <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="{main_title_color}" stroke-width="2"/>
+    '''
+
+    # Data Points
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            # Scale coordinates
+            cx = margin["left"] + ((p["x"] - x_min) / (x_max - x_min) * chart_w)
+            cy = svg_h - margin["bottom"] - ((p["y"] - y_min) / (y_max - y_min) * chart_h)
+            
+            chart_elements += f'''
+            <circle cx="{cx}" cy="{cy}" r="10" fill="{color}" stroke="white" stroke-width="2" opacity="0.9" />
+            '''
+            if show_value:
+                label_text = data_label_format.format(**p) if data_label_format else f'{p["y"]}{unit}'
+                chart_elements += f'''
+                <text x="{cx}" y="{cy - 15}" font-size="16" text-anchor="middle" fill="{insight_text_color}">{label_text}</text>
+                '''
+
+    # Axis Labels
+    chart_elements += f'''
+    <text x="{margin["left"] + chart_w/2}" y="{svg_h - 30}" font-size="24" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{x_label}</text>
+    <text transform="rotate(-90)" x="{-margin["top"] - chart_h/2}" y="40" font-size="24" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
+    '''
+
+    # ===== 4. LEGEND & INSIGHT HTML =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; border-radius:50%; background:{color}; margin-right:12px; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+                <div style="font-size:22px; color:{main_title_color};">{s.get("name", "Series")}</div>
+            </li>
+            '''
+
+    # ===== 5. FINAL HTML ASSEMBLY =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {{
+                width: 1920px;
+                height: 1080px;
+                margin: 0;
+                padding: 60px 80px;
+                overflow: hidden;
+                font-family: {font_family};
+                background-color: {background_color};
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            }}
+            .header {{
+                margin-bottom: 50px;
+                border-left: 12px solid {accent_color};
+                padding-left: 30px;
+            }}
+            h1 {{
+                font-size: {main_title_font_size};
+                color: {main_title_color};
+                margin: 0;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                color: {subtitle_color};
+                margin-top: 5px;
+            }}
+            .main-content {{
+                display: flex;
+                gap: 60px;
+                align-items: flex-start;
+            }}
+            .left-panel {{
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 40px;
+            }}
+            .insight-card {{
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 10px 10px 0px {accent_color}22;
+                border: 2px solid {accent_color}44;
+                font-size: {insight_font_size};
+                color: {insight_text_color};
+                line-height: 1.6;
+            }}
+            .legend-container {{
+                list-style: none; padding: 0; margin: 0;
+            }}
+            .right-panel {{
+                flex: 1.8;
+                background: white;
+                border-radius: 30px;
+                padding: 30px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>{main_title}</h1>
+            {f'<p class="subtitle">{subtitle}</p>' if subtitle else ""}
+        </div>
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="insight-card">
+                    {insight}
+                </div>
+                <ul class="legend-container">
+                    {legend_items}
+                </ul>
+            </div>
+            <div class="right-panel">
+                <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def generate_scatter_plot_chart_slide_4(
+    main_title: str = "Study Effort Drives Skill Mastery",
+    subtitle: str = "Data from Online Python Course – Q4 2024 Cohort",
+    insight: str = ("The scatter plot shows a strong positive relationship between weekly study hours "
+        "and final skill assessment scores"),
+    x_axis = "Weekly Study Hours",
+    y_axis = "Final Skill Assessment Score",
+    unit = " points",
+    show_value = False,
+    show_legend = True,
+    x_axis_min = 0,
+    x_axis_max = 25,
+    y_axis_min = 40,
+    y_axis_max = 100,
+    data_label_format = None,
+    series = [
+        {
+            "name": "Self-Paced Learners",
+            "points": [
+                {"x": 4, "y": 55},
+                {"x": 6, "y": 60},
+                {"x": 8, "y": 68},
+                {"x": 10, "y": 72},
+                {"x": 14, "y": 82},
+                {"x": 5, "y": 88}   # high score with lower effort (efficient learner)
+            ]
+        },
+        {
+            "name": "Instructor-Led Learners",
+            "points": [
+                {"x": 6, "y": 70},
+                {"x": 9, "y": 78},
+                {"x": 12, "y": 85},
+                {"x": 15, "y": 90},
+                {"x": 18, "y": 95},
+                {"x": 20, "y": 97}
+            ]
+        }
+    ],
+    colors = ["#4F46E5", "#F59E0B"],
+    accent_color = "#F59E0B",
+    main_title_color = "#1F2937",
+    subtitle_color = "#6B7280",
+    insight_text_color = "#374151"
+) -> str:
+    # ===== 1. STYLE CONFIGURATION =====
+    font_family = "'Inter', sans-serif"
+    main_title_font_size = "64px"
+    subtitle_font_size = "28px"
+    insight_font_size = "26px"
+
+    # ===== 2. DATA PROCESSING =====
+    x_label = x_axis
+    y_label = y_axis
+
+    # ===== 3. SVG & CHART CALCULATIONS =====
+    svg_w, svg_h = 1100, 700
+    margin = {"top": 60, "right": 60, "bottom": 100, "left": 100}
+    chart_w = svg_w - margin["left"] - margin["right"]
+    chart_h = svg_h - margin["top"] - margin["bottom"]
+
+    # Calculate Min/Max for Scaling
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min = x_axis_min if x_axis_min is not None else 0
+    x_max = x_axis_max if x_axis_max is not None else (max(all_x) if all_x else 100)
+    y_min = y_axis_min if y_axis_min is not None else 0
+    y_max = y_axis_max if y_axis_max is not None else (max(all_y) if all_y else 100)
+
+    # Padding for min/max to prevent points on the edge
+    if x_max == x_min: x_max += 1
+    if y_max == y_min: y_max += 1
+
+    # ===== 4. RENDER SVG ELEMENTS =====
+    chart_elements = ""
+
+    # Background Grid (Y-axis)
+    grid_steps = 5
+    for i in range(grid_steps + 1):
+        y_val_grid = margin["top"] + (chart_h / grid_steps) * i
+        y_display = y_max - (i * (y_max - y_min) / grid_steps)
+        chart_elements += f'''
+        <line x1="{margin["left"]}" y1="{y_val_grid}" x2="{svg_w - margin["right"]}" y2="{y_val_grid}" stroke="#E5E7EB" stroke-width="1" />
+        <text x="{margin["left"] - 15}" y="{y_val_grid + 6}" font-size="18" text-anchor="end" fill="#9CA3AF">{round(y_display, 1)}</text>
+        '''
+
+    # Axes
+    chart_elements += f'''
+    <line x1="{margin["left"]}" y1="{margin["top"]}" x2="{margin["left"]}" y2="{svg_h - margin["bottom"]}" stroke="#374151" stroke-width="2"/>
+    <line x1="{margin["left"]}" y1="{svg_h - margin["bottom"]}" x2="{svg_w - margin["right"]}" y2="{svg_h - margin["bottom"]}" stroke="#374151" stroke-width="2"/>
+    '''
+
+    # X-Axis Ticks
+    for i in range(grid_steps + 1):
+        x_val_grid = margin["left"] + (chart_w / grid_steps) * i
+        x_display = x_min + (i * (x_max - x_min) / grid_steps)
+        chart_elements += f'''
+        <text x="{x_val_grid}" y="{svg_h - margin["bottom"] + 30}" font-size="18" text-anchor="middle" fill="#9CA3AF">{round(x_display, 1)}</text>
+        '''
+
+    # Scatter Points
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            cx = margin["left"] + (p["x"] - x_min) / (x_max - x_min) * chart_w
+            cy = svg_h - margin["bottom"] - (p["y"] - y_min) / (y_max - y_min) * chart_h
+            
+            chart_elements += f'''
+            <circle cx="{cx}" cy="{cy}" r="12" fill="{color}" fill-opacity="0.7" stroke="{color}" stroke-width="2" />
+            '''
+            if show_value:
+                label_text = data_label_format.format(**p) if data_label_format else f'{p["y"]}{unit}'
+                chart_elements += f'<text x="{cx}" y="{cy - 18}" font-size="14" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{label_text}</text>'
+
+    # Axis Titles
+    chart_elements += f'''
+    <text x="{margin['left'] + chart_w/2}" y="{svg_h - 20}" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{x_label}</text>
+    <text transform="rotate(-90)" x="{-margin['top'] - chart_h/2}" y="30" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
+    '''
+
+    # ===== 5. LEGEND & INSIGHT HTML =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <div style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:{color}; border-radius:50%; margin-right:12px;"></div>
+                <span style="font-size:22px; color:{main_title_color};">{s.get("name", "N/A")}</span>
+            </div>
+            '''
+
+    # ===== 6. FINAL HTML CONSTRUCT =====
+    return f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: {font_family}; background-color: #FFFFFF; overflow: hidden;
+            }}
+            .slide-container {{
+                width: 100%; height: 100%; position: relative;
+                background-image: radial-gradient(circle at 20px 20px, #f1f1f1 2px, transparent 0);
+                background-size: 40px 40px;
+            }}
+            .top-section {{
+                padding: 60px 100px 20px 100px;
+                border-bottom: 2px dashed {accent_color};
+            }}
+            .main-content {{
+                display: flex; padding: 40px 100px; gap: 60px;
+            }}
+            .left-column {{
+                flex: 1; display: flex; flex-direction: column;
+            }}
+            .right-column {{
+                flex: 2; background: #FAFAFA; border-radius: 40px; 
+                padding: 30px; box-shadow: 15px 15px 0px {accent_color};
+                border: 3px solid #333;
+            }}
+            .insight-box {{
+                background: #FFF9E6; padding: 35px; border-radius: 20px;
+                border: 2px solid {accent_color}; margin-bottom: 40px;
+                font-size: {insight_font_size}; color: {insight_text_color};
+                line-height: 1.6; position: relative;
+            }}
+            .insight-box::before {{
+                content: "💡 Insight"; position: absolute; top: -20px; left: 20px;
+                background: {accent_color}; color: white; padding: 5px 15px;
+                border-radius: 10px; font-weight: bold; font-size: 20px;
+            }}
+            h1 {{ margin: 0; font-size: {main_title_font_size}; color: {main_title_color}; }}
+            .subtitle {{ font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; }}
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="top-section">
+                <h1>{main_title}</h1>
+                <div class="subtitle">{subtitle if subtitle else ""}</div>
+            </div>
+            <div class="main-content">
+                <div class="left-column">
+                    <div class="insight-box">{insight}</div>
+                    <div class="legend-container">{legend_items}</div>
+                </div>
+                <div class="right-column">
+                    <div>
+                        <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                            {chart_elements}
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+def generate_scatter_plot_chart_slide_6(
+    main_title: str = "Relationship Between Study Time and Academic Performance",
+    subtitle: str = "Source: Education Analytics Report 2024 | Sample: 200 Students",
+    insight: str = "High achievers tend to study more, but optimal study time varies among students",
+
+    x_axis: str = "Daily Study Time (minutes)",
+    y_axis: str = "Exam Score (Points)",
+    unit: str = "",
+    show_value: bool = False,
+    show_legend: bool = True,
+    x_axis_min: int = 0,
+    x_axis_max: int = 600,
+    y_axis_min: int = 0,
+    y_axis_max: int = 500,
+
+    series: list = [
+        {
+            "name": "Average Students",
+            "points": [
+                {"x": 30, "y": 10},
+                {"x": 60, "y": 20},
+                {"x": 90, "y": 35},
+                {"x": 120, "y": 50},
+                {"x": 150, "y": 65},
+                {"x": 180, "y": 80}
+            ]
+        },
+        {
+            "name": "High Achievers",
+            "points": [
+                {"x": 240, "y": 120},
+                {"x": 300, "y": 180},
+                {"x": 360, "y": 250},
+                {"x": 420, "y": 320},
+                {"x": 480, "y": 400},
+                {"x": 200, "y": 450}
+            ]
+        }
+    ],
+    colors = ["#008080", "#FFB347"],
+    accent_color = "#008080",
+    main_title_color = "#005F5F",
+    subtitle_color = "#556B2F",
+    insight_text_color = "#2C3E50"
+) -> str:
+    # ===== 1. STYLE CONFIGURATION =====
+    font_family = "'Montserrat', sans-serif"
+    main_title_font_size = "80px"
+    subtitle_font_size = "30px"
+    insight_font_size = "28px"
+
+    # ===== 2. LẤY THÔNG TIN & CẤU HÌNH DỮ LIỆU =====
+    options = {
+        "unit": unit,
+        "show_value": show_value,
+        "show_legend": show_legend,
+        "x_axis": x_axis,
+        "y_axis": y_axis,
+        "x_axis_min": x_axis_min,
+        "x_axis_max": x_axis_max,
+        "y_axis_min": y_axis_min,
+        "y_axis_max": y_axis_max
+    }
+
+    data = {
+        "series": series
+    }
+
+    series = data.get("series", [])
+
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    
+    x_label = options.get("x_axis", "X Axis")
+    y_label = options.get("y_axis", "Y Axis")
+
+    # ===== 3. SVG CONFIG & TÍNH TOÁN TỌA ĐỘ =====
+    svg_w, svg_h = 1000, 600
+    m_top, m_bottom, m_left, m_right = 60, 80, 100, 60
+    
+    c_w = svg_w - m_left - m_right
+    c_h = svg_h - m_top - m_bottom
+
+    # Tìm Min/Max để scale
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else 0
+    x_max = options.get("x_axis_max") if options.get("x_axis_max") is not None else (max(all_x) if all_x else 100)
+    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else 0
+    y_max = options.get("y_axis_max") if options.get("y_axis_max") is not None else (max(all_y) if all_y else 100)
+
+    # Tránh chia cho 0
+    dx = (x_max - x_min) if x_max != x_min else 1
+    dy = (y_max - y_min) if y_max != y_min else 1
+
+    # ===== 4. VẼ BIỂU ĐỒ (SVG ELEMENTS) =====
+    chart_elements = ""
+    
+    # Grid lines (Y-axis)
+    for i in range(5):
+        y_tick = m_top + (c_h / 4) * i
+        chart_elements += f'<line x1="{m_left}" y1="{y_tick}" x2="{svg_w - m_right}" y2="{y_tick}" stroke="#ccc" stroke-dasharray="4"/>'
+
+    # Vẽ các điểm dữ liệu
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            cx = m_left + (p["x"] - x_min) / dx * c_w
+            cy = svg_h - m_bottom - (p["y"] - y_min) / dy * c_h
+            
+            chart_elements += f'<circle cx="{cx}" cy="{cy}" r="10" fill="{color}" opacity="0.8" />'
+            if show_value:
+                chart_elements += f'<text x="{cx}" y="{cy-15}" font-size="16" text-anchor="middle" fill="{main_title_color}">{p["y"]}{unit}</text>'
+
+    # Trục tọa độ & Nhãn
+    chart_elements += f'''
+        <line x1="{m_left}" y1="{m_top}" x2="{m_left}" y2="{svg_h - m_bottom}" stroke="{main_title_color}" stroke-width="2"/>
+        <line x1="{m_left}" y1="{svg_h - m_bottom}" x2="{svg_w - m_right}" y2="{svg_h - m_bottom}" stroke="{main_title_color}" stroke-width="2"/>
+        <text x="{svg_w/2 + m_left/2}" y="{svg_h - 20}" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{x_label}</text>
+        <text transform="rotate(-90)" x="{-svg_h/2 + 10}" y="40" font-size="22" text-anchor="middle" font-weight="bold" fill="{main_title_color}">{y_label}</text>
+    '''
+
+    # ===== 5. LEGEND & INSIGHT HTML =====
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:{color}; margin-right:10px; border-radius:4px;"></div>
+                <span style="font-size:22px; color:{main_title_color}; font-weight:bold;">{s.get("name")}</span>
+            </li>'''
+
+    # ===== 6. GENERATE FINAL HTML =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800;900&display=swap');
+            html, body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                overflow: hidden; font-family: {font_family};
+                background-color: #e5dbf1; color: {main_title_color};
+            }}
+            .square {{
+                position: absolute; background-color: {accent_color};
+                width: 50px; height: 50px; opacity: 0.6; z-index: 1;
+            }}
+            .waves {{
+                position: absolute; bottom: -10%; left: -10%; right: -10%; height: 60%;
+                background: linear-gradient(110deg, rgba(255,255,255,0) 20%, rgba(215,188,245,0.4) 40%, rgba(255,255,255,0.6) 50%, rgba(196,160,233,0.3) 60%, rgba(255,255,255,0) 80%);
+                transform: skewY(-8deg); z-index: 0;
+            }}
+            .header-container {{
+                display: flex; justify-content: space-between; align-items: flex-start;
+                padding: 80px 120px 0 120px; position: relative; z-index: 10;
+            }}
+            .title-box {{ flex: 2; }}
+            .title-box h1 {{
+                font-size: {main_title_font_size}; font-weight: 900; margin: 0;
+                line-height: 1; text-transform: uppercase; color: {main_title_color};
+            }}
+            .subtitle-box {{
+                flex: 1; text-align: right; font-size: {subtitle_font_size};
+                color: {subtitle_color}; font-weight: 400; margin-top: 15px;
+            }}
+            .content-container {{
+                display: flex; padding: 60px 120px; gap: 80px;
+                position: relative; z-index: 10; align-items: center;
+            }}
+            .chart-area {{
+                flex: 1.2; background: rgba(255,255,255,0.5);
+                border-radius: 40px; padding: 40px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            }}
+            .insight-area {{
+                flex: 1; display: flex; flex-direction: column; gap: 30px;
+            }}
+            .insight-text {{
+                font-size: {insight_font_size}; line-height: 1.5;
+                color: {insight_text_color}; background: rgba(255,255,255,0.3);
+                padding: 30px; border-radius: 20px; border-left: 10px solid {accent_color};
+            }}
+            .legend-box {{
+                list-style: none; padding: 0; margin: 0;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="square" style="top: 0; left: 55%; width: 70px; height: 70px;"></div>
+        <div class="square" style="top: 45%; left: 0;"></div>
+        <div class="square" style="bottom: 5%; left: 30%;"></div>
+        <div class="square" style="top: 38%; right: 0; width: 80px; height: 80px;"></div>
+        
+        <div class="waves"></div>
+
+        <div class="header-container">
+            <div class="title-box">
+                <h1>{main_title}</h1>
+            </div>
+            <p class="subtitle-box">{subtitle if subtitle else ""}</p>
+        </div>
+
+        <div class="content-container">
+            <div class="insight-area">
+                <div class="insight-text">{insight}</div>
+                <ul class="legend-box">{legend_items}</ul>
+            </div>
+            <div class="chart-area">
+                <svg width="100%" height="100%" viewBox="0 0 {svg_w} {svg_h}" preserveAspectRatio="xMidYMid meet">
+                    {chart_elements}
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def generate_scatter_plot_chart_slide_7(
+    main_title: str = "Relationship Between App Usage Time and Monthly Spending",
+    subtitle: str = "Source: Mobile App Analytics Report 2024 | Sample: 200 Users",
+    insight: str = "",
+    x_axis= "App Usage Time (minutes/day)",
+    y_axis = "Monthly Digital Spending (USD)",
+    unit = "USD",
+    show_value = False,
+    show_legend = True,
+    x_axis_min = 0,
+    x_axis_max = 400,
+    y_axis_min = 0,
+    y_axis_max = 300,
+    series = [
+        {
+            "name": "Casual Users",
+            "points": [
+                {"x": 30, "y": 10},
+                {"x": 60, "y": 20},
+                {"x": 90, "y": 35}
+            ]
+        },
+        {
+            "name": "Power Users",
+            "points": [
+                {"x": 240, "y": 120},
+                {"x": 300, "y": 180},
+                {"x": 360, "y": 250}
+            ]
+        }
+    
+    ],
+    colors = ["#a06d4f", "#6b8e23"],
+    accent_color = "#a06d4f",
+    main_title_color = "#3e2f25",
+    subtitle_color = "#5a4638",
+    insight_text_color = "#3e2f25"
+) -> str:
+
+    # ===== 1. STYLE CONFIGURATION =====
+    font_family = "'Playfair Display', serif"
+    main_title_font_size = "60px"
+    subtitle_font_size = "28px"
+    insight_font_size = "30px"
+
+    # ===== 2. TRÍCH XUẤT DỮ LIỆU =====
+    data_input = {
+        "series": series
+    }
+
+    chart_options = {
+        "x_axis": x_axis,
+        "y_axis": y_axis,
+        "unit": unit,
+        "show_value": show_value,
+        "show_legend": show_legend,
+        "x_axis_min": x_axis_min,
+        "x_axis_max": x_axis_max,
+        "y_axis_min": y_axis_min,
+        "y_axis_max": y_axis_max
+    }
+
+    series = data_input.get("series", [])
+    options = chart_options if chart_options else {}
+    
+    unit = options.get("unit", "")
+    show_value = options.get("show_value", False)
+    show_legend = options.get("show_legend", True)
+    
+    x_label = options.get("x_axis", "X Axis")
+    y_label = options.get("y_axis", "Y Axis")
+
+    # ===== 3. TÍNH TOÁN MIN/MAX ĐỂ SCALE BIỂU ĐỒ =====
+    all_x = [p["x"] for s in series for p in s.get("points", [])]
+    all_y = [p["y"] for s in series for p in s.get("points", [])]
+
+    x_min = options.get("x_axis_min") if options.get("x_axis_min") is not None else 0
+    x_max = options.get("x_axis_max") if options.get("x_axis_max") is not None else (max(all_x) if all_x else 100)
+    y_min = options.get("y_axis_min") if options.get("y_axis_min") is not None else 0
+    y_max = options.get("y_axis_max") if options.get("y_axis_max") is not None else (max(all_y) if all_y else 100)
+
+    if x_max == x_min: x_max += 1
+    if y_max == y_min: y_max += 1
+
+    # ===== 4. CẤU HÌNH SVG =====
+    svg_w, svg_h = 1100, 700
+    margin_t, margin_b, margin_l, margin_r = 60, 80, 100, 40
+    chart_w = svg_w - margin_l - margin_r
+    chart_h = svg_h - margin_t - margin_b
+
+    chart_elements = ""
+
+    for i in range(6):
+        y_ratio = i / 5
+        y_pos = svg_h - margin_b - (y_ratio * chart_h)
+        val = y_min + (y_max - y_min) * y_ratio
+        chart_elements += f'<line x1="{margin_l}" y1="{y_pos}" x2="{svg_w - margin_r}" y2="{y_pos}" stroke="#c8a98d" stroke-dasharray="4,4" stroke-width="1" />'
+        chart_elements += f'<text x="{margin_l - 15}" y="{y_pos + 6}" font-size="18" text-anchor="end" fill="{subtitle_color}">{int(val)}</text>'
+
+    for i, s in enumerate(series):
+        color = colors[i % len(colors)]
+        for p in s.get("points", []):
+            cx = margin_l + ((p["x"] - x_min) / (x_max - x_min)) * chart_w
+            cy = svg_h - margin_b - ((p["y"] - y_min) / (y_max - y_min)) * chart_h
+            
+            chart_elements += f'<circle cx="{cx}" cy="{cy}" r="10" fill="{color}" fill-opacity="0.7" stroke="#3e2f25" stroke-width="1.5" />'
+            
+            if show_value:
+                chart_elements += f'<text x="{cx}" y="{cy - 15}" font-size="16" text-anchor="middle" fill="{main_title_color}">{p["y"]}{unit}</text>'
+
+    chart_elements += f'<line x1="{margin_l}" y1="{svg_h - margin_b}" x2="{svg_w - margin_r}" y2="{svg_h - margin_b}" stroke="{accent_color}" stroke-width="2" />'
+    chart_elements += f'<line x1="{margin_l}" y1="{margin_t}" x2="{margin_l}" y2="{svg_h - margin_b}" stroke="{accent_color}" stroke-width="2" />'
+
+    chart_elements += f'<text x="{margin_l + chart_w/2}" y="{svg_h - 20}" font-size="22" text-anchor="middle" fill="{main_title_color}" font-weight="600">{x_label}</text>'
+    chart_elements += f'<text transform="rotate(-90)" x="{-margin_t - chart_h/2}" y="35" font-size="22" text-anchor="middle" fill="{main_title_color}" font-weight="600">{y_label}</text>'
+
+    legend_items = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_items += f'''
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:{color}; border:1px solid #3e2f25; border-radius:50%; margin-right:12px;"></div>
+                <span style="font-size:22px; color:{main_title_color};">{s.get("name", "Group")}</span>
+            </li>
+            '''
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
+                background-color: #efe5d8; font-family: {font_family}; color: {main_title_color};
+                background-image: radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1px); background-size: 8px 8px;
+            }}
+            .corner {{ position: absolute; width: 100px; height: 100px; border: 3px solid {accent_color}; z-index: 10; }}
+            .top-left {{ top: 30px; left: 30px; border-right: none; border-bottom: none; border-radius: 20px 0 0 0; }}
+            .top-right {{ top: 30px; right: 30px; border-left: none; border-bottom: none; border-radius: 0 20px 0 0; }}
+            .bottom-left {{ bottom: 30px; left: 30px; border-right: none; border-top: none; border-radius: 0 0 0 20px; }}
+            .bottom-right {{ bottom: 30px; right: 30px; border-left: none; border-top: none; border-radius: 0 0 20px 0; }}
+            
+            .header-container {{
+                position: absolute; top: 80px; left: 120px; width: 1680px;
+                text-align: left; border-bottom: 2px solid {accent_color}; padding-bottom: 20px;
+            }}
+            .main-title {{ font-size: {main_title_font_size}; font-weight: 600; margin: 0; }}
+            .subtitle-text {{ font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; font-style: italic; }}
+            
+            .chart-panel {{ position: absolute; top: 280px; left: 100px; width: {svg_w}px; height: {svg_h}px; }}
+            
+            .insight-panel {{
+                position: absolute; top: 280px; right: 120px; width: 500px;
+                background: rgba(255, 255, 255, 0.3); border: 1.5px solid {accent_color};
+                padding: 40px; border-radius: 10px;
+            }}
+            .insight-title {{ font-size: 24px; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid {accent_color}; }}
+            .insight-content {{ font-size: {insight_font_size}; color: {insight_text_color}; line-height: 1.5; }}
+            .legend-container {{ margin-top: 40px; list-style: none; padding: 0; margin-left: 0; }}
+        </style>
+    </head>
+    <body>
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+
+        <div class="header-container">
+            <h1 class="main-title">{main_title}</h1>
+            <div class="subtitle-text">{subtitle if subtitle else ""}</div>
+        </div>
+
+        <div class="chart-panel">
+            <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                {chart_elements}
+            </svg>
+        </div>
+
+        <div class="insight-panel">
+            <div class="insight-title">Phân tích dữ liệu</div>
+            <div class="insight-content">{insight}</div>
+            <ul class="legend-container">
+                {legend_items}
+            </ul>
+        </div>
+    </body>
+    </html>
+    """
+
+
+
+def generate_bar_chart_slide_1(
+    main_title: str = "Quarterly Logistics Performance",
+    subtitle: str = "Performance metrics across key operational hubs",
+    insight: str = "Import volumes have seen a significant 20% surge in Q3 compared to previous quarters.",
+    categories: list = ["Q1", "Q2", "Q3", "Q4"],
+    series: list = [
+        {"name": "Import", "data": [45, 52, 68, 58]},
+        {"name": "Export", "data": [38, 41, 44, 50]}
+    ],
+    unit: str = " tons",
+    show_value: bool = True,
+    show_legend: bool = True,
+    colors: list = ["#1B2559", "#FF6B35", "#4B5563", "#9CA3AF"],
+    accent_color: str = "#FF6B35",
+    main_title_color: str = "#1B2559",
+    subtitle_color: str = "#6B7280",
+    insight_text_color: str = "#374151",
+    y_axis_label: str = "Volume",
+) -> str:
+    """
+    Generates a generic HTML slide with a Grouped Bar Chart using the "Logistic Company" theme.
+    """
+    # ===== LẤY THÔNG TIN =====
+    title = main_title
+    sub = subtitle
+    insight_text = insight
+
+    # ===== STYLE CONFIG =====
+    font_family: str = "Arial, sans-serif"
+    f_family = font_family
+    c_accent = accent_color
+    c_title = main_title_color
+    c_sub = subtitle_color
+    c_insight = insight_text_color
+    main_title_font_size: str = "70px"
+    subtitle_font_size: str = "32px"
+    insight_font_size: str = "30px"
+    fs_title = main_title_font_size
+    fs_sub = subtitle_font_size
+    fs_insight = insight_font_size
+    y_axis_min = 0
+    y_axis_max = None
+    # ===== SVG CONFIG =====
+    svg_w, svg_h = 1150, 650
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 50
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+    # ===== TÍNH TOÁN DATA =====
+    # Find max value for Y scaling
+    all_values = []
+    for s in series:
+        all_values.extend(s.get("data", []))
+    
+    val_max = y_axis_max
+    if val_max is None:
+        val_max = max(all_values) if all_values else 100
+        val_max = val_max * 1.1 # Add top padding
+    val_min = y_axis_min
+    if val_max == val_min:
+        val_max += 10
+    # Grid calculations
+    num_grid_lines = 5
+    # Bar calculations
+    num_cats = len(categories) if categories else 1
+    num_series = len(series) if series else 1
+    # Calculate widths
+    # Slot width = space allocated for one category
+    slot_width = chart_w / num_cats
+    padding_group = slot_width * 0.2 # 20% padding between groups
+    group_width = slot_width - padding_group
+    bar_width = group_width / num_series
+    # ===== VẼ CHART =====
+    chart_elements = ""
+    # Background Grid
+    for i in range(num_grid_lines + 1):
+        y_ratio = i / num_grid_lines
+        y_pos = svg_h - margin_bottom - (y_ratio * chart_h)
+        value_label = val_min + (val_max - val_min) * y_ratio
+        
+        # Grid line
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_pos}" x2="{svg_w - margin_right}" y2="{y_pos}" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        '''
+        # Y-Axis Label
+        chart_elements += f'''
+        <text x="{margin_left - 15}" y="{y_pos + 5}" font-family="{f_family}" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">{int(value_label) if value_label % 1 == 0 else f"{value_label:.1f}"}</text>
+        '''
+
+    # -- Bars --
+    for i, cat in enumerate(categories):
+        # Center X of the category slot
+        slot_x_start = margin_left + (i * slot_width) + (padding_group / 2)
+        
+        for j, s in enumerate(series):
+            data_val = s["data"][i] if i < len(s["data"]) else 0
+            
+            # Height calculation
+            bar_height = ((data_val - val_min) / (val_max - val_min)) * chart_h
+            if bar_height < 0: bar_height = 0
+            
+            x_pos = slot_x_start + (j * bar_width)
+            y_pos = svg_h - margin_bottom - bar_height
+            
+            color = colors[j % len(colors)]
+            
+            # Rect
+            chart_elements += f'''
+            <rect x="{x_pos}" y="{y_pos}" width="{bar_width * 0.85}" height="{bar_height}" 
+                  fill="{color}" rx="4" ry="4" />
+            '''
+            
+            # Value Label (on top of bar)
+            if show_value:
+                chart_elements += f'''
+                <text x="{x_pos + (bar_width * 0.85)/2}" y="{y_pos - 8}" 
+                      font-family="{f_family}" font-size="14" fill="{color}" font-weight="bold" text-anchor="middle">
+                    {data_val}{unit}
+                </text>
+                '''
+
+        # Category Label (X-axis)
+        cat_x_center = margin_left + (i * slot_width) + (slot_width / 2)
+        chart_elements += f'''
+        <text x="{cat_x_center}" y="{svg_h - margin_bottom + 30}" 
+              font-family="{f_family}" font-size="18" fill="{c_title}" font-weight="bold" text-anchor="middle">
+            {cat}
+        </text>
+        '''
+
+    # -- Axis Titles --
+    if y_axis_label:
+        chart_elements += f'''
+        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" 
+              font-family="{f_family}" font-size="18" fill="{c_sub}" text-anchor="middle">
+            {y_axis_label}
+        </text>
+        '''
+
+    # ===== LEGEND (HTML side) =====
+    legend_html = ""
+    if show_legend:
+        legend_html += '<div style="display:flex; flex-wrap:wrap; gap:20px; margin-top:30px;">'
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+                <span style="display:flex; align-items:center; gap:8px;">
+                    <span style="width:16px; height:16px; background-color:{color}; border-radius:4px; display:inline-block;"></span>
+                    <span style="font-family:{f_family}; font-size:18px; color:{c_title}; font-weight:500;">{s.get("name", "Series")}</span>
+                </span>
+            '''
+        legend_html += '</div>'
+
+    # ===== INSIGHT =====
+    insight_html = f"""
+    <div style="
+        font-family: {f_family};
+        font-size: {fs_insight};
+        color: {c_insight};
+        line-height: 1.6;
+        background: #F3F4F6;
+        padding: 30px;
+        border-left: 6px solid {c_accent};
+        border-radius: 0 12px 12px 0;
+        margin-bottom: 20px;">
+        {insight_text}
+    </div>
+    """
+
+    # ===== 5. HTML RENDER =====
+    # Logistic Theme: White BG, Navy/Orange accents, clean layout
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: {f_family};
+        background-color: #FFFFFF;
+        position: relative;
+    }}
+    
+    /* Decorative Background Elements based on reference */
+    .bg-shape-top {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 400px;
+        height: 150px;
+        background: {c_title}; /* Navy */
+        clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+        z-index: 0;
+    }}
+    .bg-shape-accent {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 150px;
+        height: 150px;
+        background: {c_accent}; /* Orange */
+        clip-path: polygon(0 0, 80% 0, 0 80%);
+        z-index: 1;
+    }}
+    .bg-shape-bottom {{
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 300px;
+        height: 120px;
+        clip-path: polygon(10% 0, 100% 0, 100% 100%, 0% 100%);
+        z-index: 0;
+    }}
+    
+    .container {{
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 60px 80px 40px 80px;
+        box-sizing: border-box;
+    }}
+    
+    .header {{
+        margin-bottom: 40px;
+        padding-left: 350px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }}
+    
+    .title-group h1 {{
+        font-size: {fs_title};
+        color: {c_accent}; /* Orange Title like 'Logistic' */
+        margin: 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+    
+    .title-group h1 span {{
+        color: {c_title}; /* Navy part like 'Company' */
+    }}
+    
+    .subtitle {{
+        font-size: {fs_sub};
+        color: {c_sub};
+        margin-top: 10px;
+        font-weight: 400;
+    }}
+
+    .main-content {{
+        display: flex;
+        flex: 1;
+        gap: 60px;
+        align-items: center;
+    }}
+    
+    .left-panel {{
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }}
+    
+    .right-panel {{
+        flex: 2;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }}
+    
+    .footer-mark {{
+        position: absolute;
+        bottom: 30px;
+        right: 40px;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        z-index: 10;
+    }}
+
+    </style>
+    </head>
+    <body>
+
+    <div class="bg-shape-top"></div>
+    <div class="bg-shape-accent"></div>
+    <div class="bg-shape-bottom"></div>
+    <div class="footer-mark">www.reallygreatsite.com</div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-group">
+                <h1>{title}</h1>
+                <div class="subtitle">{sub}</div>
+            </div>
+            <div style="font-size: 24px; color: {c_title}; font-weight: bold; opacity: 0.5;">2024 REPORT</div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+
+                {insight_html}
+                {legend_html}
+            </div>
+
+            <div class="right-panel">
+                <div>
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_bar_chart_slide_2(
+
+    main_title: str = "Ocean Temperature Variation by Depth", 
+    subtitle: str = "Unit: °C | Data Source: Marine Research Institute 2025", 
+    insight: str = "The chart reveals a clear decline in average ocean temperatures as depth increases, with the Pacific Ocean consistently warmer than the Atlantic at all measured depths.",
+    x_axis: str = "Ocean Depth (meters)",
+    y_axis: str = "Average Temperature (°C)",
+    unit: str = "°C",
+    show_value: bool = True,
+    show_legend: bool = True,
+    y_axis_min: float = 0,
+    y_axis_max: float  = None,
+    data_label_format: str  = None,
+    colors: list[str] =["#00695C", "#26A69A"], 
+    background_color: str = "#E0F7FA",
+    insight_box_background_color: str = "rgba(255, 255, 255, 0.5)",
+    chart_panel_background_color: str = "rgba(255, 255, 255, 0.6)",
+    categories = ["Surface", "50m", "100m", "200m", "500m"],
+    series = [
+            {
+                "name": "Pacific Ocean",
+                "values": [28, 22, 18, 12, 5]
+            },
+            {
+                "name": "Atlantic Ocean",
+                "values": [26, 21, 17, 11, 4]
+            }
+        ],
+    accent_color: str = "#A67C52",
+    main_title_color: str = "#3D4E5D",
+    subtitle_color: str = "#6B7280",
+    insight_text_color: str = "#374151",
+) -> str:
+    """
+    Generates an Ocean-themed Bubble Chart slide based on the provided data and style.
+    """
+    
+
+
+
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1100, 700
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 60
+
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH TOÁN MIN/MAX =====
+    # Lấy tất cả giá trị từ các series
+    all_values = []
+    for s in series:
+        all_values.extend(s.get("values", []))
+    
+    if not all_values:
+        all_values = [0]
+
+    # Lấy min/max từ option hoặc tự tính
+    y_min_opt = y_axis_min
+    y_max_opt = y_axis_max
+
+    y_min = y_min_opt if y_min_opt is not None else 0
+    y_max = y_max_opt if y_max_opt is not None else max(all_values)
+
+    # Padding nhẹ cho trục Y
+    if y_max_opt is None:
+        y_max = y_max * 1.1  # Thêm 10% padding
+
+    # 🛡 Tránh chia cho 0
+    if y_max <= y_min:
+        y_max = y_min + 10
+
+    # ===== 4. VẼ CHART (SVG GENERATION) =====
+    chart_elements = ""
+
+    # -- Background Chart Decor --
+    chart_elements += f'''
+    <rect x="{margin_left}" y="{margin_top}" width="{chart_w}" height="{chart_h}" 
+          fill="white" fill-opacity="0.3" rx="20" ry="20" />
+    '''
+
+    # -- Grid Lines (Nét đứt mềm mại) --
+    num_ticks = 5
+    for i in range(num_ticks + 1):
+        # Grid ngang (Y-axis)
+        val_y = y_min + (y_max - y_min) * (i / num_ticks)
+        pos_y = svg_h - margin_bottom - (i / num_ticks) * chart_h
+        
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{pos_y}" x2="{svg_w - margin_right}" y2="{pos_y}" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        '''
+        # Label Y
+        chart_elements += f'''
+        <text x="{margin_left - 15}" y="{pos_y + 5}" font-family="{DEFAULT_FONT_FAMILY}" 
+              font-size="16" fill="{subtitle_color}" text-anchor="end">{int(val_y) if val_y == int(val_y) else f"{val_y:.1f}"}</text>
+        '''
+
+    # -- Axis Labels --
+    # X Label
+    if x_axis:
+        chart_elements += f'''
+        <text x="{margin_left + chart_w/2}" y="{svg_h - 20}" font-family="{DEFAULT_FONT_FAMILY}" 
+              font-size="20" fill="{main_title_color}" font-weight="bold" text-anchor="middle">{x_axis}</text>
+        '''
+    # Y Label
+    if y_axis:
+        chart_elements += f'''
+        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-family="{DEFAULT_FONT_FAMILY}" 
+              font-size="20" fill="{main_title_color}" font-weight="bold" text-anchor="middle">{y_axis}</text>
+        '''
+
+    # -- Grouped Bar Chart --
+    num_categories = len(categories)
+    num_series = len(series)
+    
+    if num_categories > 0 and num_series > 0:
+        # Tính toán kích thước và khoảng cách
+        group_width = chart_w / num_categories * 0.8  # 80% của không gian dành cho mỗi nhóm
+        bar_width = group_width / num_series * 0.85   # 85% của không gian nhóm chia đều cho các cột
+        group_spacing = chart_w / num_categories
+        
+        for cat_idx, category in enumerate(categories):
+            # Vị trí trung tâm của nhóm cột
+            group_center_x = margin_left + (cat_idx + 0.5) * group_spacing
+            
+            # Vẽ các cột trong nhóm
+            for series_idx, s in enumerate(series):
+                values = s.get("values", [])
+                if cat_idx < len(values):
+                    value = values[cat_idx]
+                    color = colors[series_idx % len(colors)]
+                    
+                    # Tính toán vị trí và chiều cao của cột
+                    bar_height = (value - y_min) / (y_max - y_min) * chart_h
+                    bar_x = group_center_x - group_width/2 + series_idx * (group_width / num_series) + (group_width / num_series - bar_width) / 2
+                    bar_y = svg_h - margin_bottom - bar_height
+                    
+                    # Vẽ cột với bo góc
+                    chart_elements += f'''
+                    <rect x="{bar_x}" y="{bar_y}" width="{bar_width}" height="{bar_height}" 
+                          fill="{color}" rx="5" ry="5"/>
+                    '''
+                    
+                    # Hiển thị giá trị trên cột (nếu bật)
+                    if show_value:
+                        chart_elements += f'''
+                        <text x="{bar_x + bar_width/2}" y="{bar_y - 8}" font-family="{DEFAULT_FONT_FAMILY}" 
+                              font-size="14" fill="{main_title_color}" text-anchor="middle" font-weight="bold">{value}{unit}</text>
+                        '''
+            
+            # Nhãn danh mục (category) trên trục X
+            chart_elements += f'''
+            <text x="{group_center_x}" y="{svg_h - margin_bottom + 25}" font-family="{DEFAULT_FONT_FAMILY}" 
+                  font-size="16" fill="{main_title_color}" text-anchor="middle">{category}</text>
+            '''
+
+    # ===== LEGEND (HTML) =====
+    legend_html = ""
+    if show_legend:
+        legend_html = '<div class="legend-container">'
+        for i, s in enumerate(series):
+            color = colors[i % len(colors)]
+            legend_html += f'''
+            <div class="legend-item">
+                <div class="legend-dot" style="background-color:{color}; box-shadow: 0 0 0 1px {color};"></div>
+                <div class="legend-label">{s.get("name", "Series")}</div>
+            </div>
+            '''
+        legend_html += '</div>'
+
+    # ===== INSIGHT (HTML) =====
+
+    # ===== 5. HTML RENDER =====
+    # Cấu trúc: Header + 2 Cột (Left: Insight/Legend - Right: Chart)
+    # Background có thêm vài bong bóng trang trí bằng CSS thuần (border-radius)
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        html, body {{
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: {DEFAULT_FONT_FAMILY};
+            background-color: {background_color};
+            /* Hiệu ứng gradient nhẹ giống nước */
+            background: linear-gradient(135deg, {background_color} 0%, #B2EBF2 100%);
+        }}
+
+        .container {{
+            position: relative;
+            z-index: 1;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-sizing: border-box;
+        }}
+
+        .header {{
+            margin-bottom: 40px;
+        }}
+
+        h1 {{
+            font-size: 60px;
+            color: {main_title_color};
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }}
+
+        .subtitle {{
+            font-size: 26px;
+            color: {subtitle_color};
+            margin-top: 15px;
+            font-weight: 500;
+        }}
+
+        .content-flex {{
+            display: flex;
+            flex: 1;
+            gap: 60px;
+            align-items: center; 
+        }}
+
+        .left-col {{
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }}
+
+        .right-col {{
+            flex: 1.6;
+            background: {chart_panel_background_color};
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 137, 123, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }}
+        
+        .insight-box {{
+            font-size: 28px;
+            color: {insight_text_color};
+            font-family: {DEFAULT_FONT_FAMILY};
+            line-height: 1.6;
+            background: {insight_box_background_color};
+            padding: 30px;
+            border-radius: 20px;
+            border-left: 6px solid {accent_color};
+        }}
+        
+        .legend-container {{
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            margin-top: 28px;
+            width: 100%;
+        }}
+        
+        .legend-item {{
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 30px;
+        }}
+        
+        .legend-dot {{
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid white;
+        }}
+        
+        .legend-label {{
+            font-size: 20px;
+            color: {main_title_color};
+            font-family: {DEFAULT_FONT_FAMILY};
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }}
+
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">{insight}</div>
+                    {legend_html}
+                </div>
+
+                <div class="right-col">
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_bar_chart_slide_3(
+        main_title = "Student Performance Analysis",
+        subtitle = "Comparing average grades across different subjects",
+        x_axis = "Subjects",
+        y_axis = "Average Score",
+        unit = "%",
+        show_value = True,
+        show_legend = True,
+        y_axis_min = 0,
+        y_axis_max = None,
+        colors = ["#4A5E7B", "#F5B041", "#A67C52", "#B5B191"],
+        categories = ["Math", "Science", "English", "History"],
+        series = [
+            {"name": "Class A", "values": [85, 92, 78, 80]},
+            {"name": "Class B", "values": [80, 88, 82, 75]}
+        ],
+        main_title_color = "#4A5E7B",
+        subtitle_color = "#8E97A4",
+        image_url = "https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3jt3HxXUeFzHPpte0_XVx2FuYiUqYEXELOaVwMGPLuRo0onkYXLylC7dg&s=10"
+    ) -> str:
+    """
+    Tạo slide biểu đồ cột (Grouped Bar Chart) với phong cách giáo dục, 
+    lấy cảm hứng từ theme 'My Family'.
+    """
+
+    # ===== 1. LẤY THÔNG TIN DỮ LIỆU =====
+    x_axis_label = x_axis
+    y_axis_label = y_axis
+    font_family = "Inter, sans-serif"
+    main_title_font_size = "65px"
+    subtitle_font_size = "28px"
+    # ===== 2. SVG CONFIG & TÍNH TOÁN =====
+    svg_w, svg_h = 1100, 600
+    margin_t, margin_b, margin_l, margin_r = 60, 80, 100, 40
+    chart_w = svg_w - margin_l - margin_r
+    chart_h = svg_h - margin_t - margin_b
+
+    all_values = [v for s in series for v in s.get("values", [])]
+    y_min = y_axis_min
+    y_max = y_axis_max
+    if y_max is None:
+        y_max = max(all_values) * 1.1 if all_values else 100
+    if y_max == y_min: y_max += 1
+
+    # ===== 3. VẼ BIỂU ĐỒ (SVG ELEMENTS) =====
+    chart_elements = ""
+
+    # Grid lines & Y-axis labels
+    steps = 5
+    for i in range(steps + 1):
+        y_pos = margin_t + (chart_h / steps) * i
+        val = y_max - (y_max - y_min) / steps * i
+        chart_elements += f'''
+        <line x1="{margin_l}" y1="{y_pos}" x2="{svg_w - margin_r}" y2="{y_pos}" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="{margin_l - 15}" y="{y_pos + 6}" font-size="18" text-anchor="end" fill="{subtitle_color}">{val:.0f}</text>
+        '''
+
+    # Grouped Bars logic
+    num_cats = len(categories)
+    num_series = len(series)
+    
+    if num_cats > 0:
+        cat_width = chart_w / num_cats
+        # Chiều rộng mỗi cột (bar), chừa khoảng cách giữa các nhóm
+        gap_between_groups = 0.2 
+        available_bar_space = cat_width * (1 - gap_between_groups)
+        bar_width = available_bar_space / num_series
+
+        for c_idx, cat in enumerate(categories):
+            x_group_start = margin_l + c_idx * cat_width + (cat_width * gap_between_groups / 2)
+            
+            # X-axis labels
+            chart_elements += f'<text x="{x_group_start + available_bar_space/2}" y="{svg_h - margin_b + 40}" font-size="20" text-anchor="middle" fill="{main_title_color}" font-weight="bold">{cat}</text>'
+            
+            for s_idx, s in enumerate(series):
+                val = s.get("values", [])[c_idx] if c_idx < len(s.get("values", [])) else 0
+                color = colors[s_idx % len(colors)]
+                
+                h = ((val - y_min) / (y_max - y_min)) * chart_h
+                x_bar = x_group_start + s_idx * bar_width
+                y_bar = svg_h - margin_b - h
+                
+                # Vẽ cột với bo góc phía trên (rx)
+                chart_elements += f'''
+                <rect x="{x_bar + 5}" y="{y_bar}" width="{max(bar_width - 10, 5)}" height="{h}" fill="{color}" rx="8" />
+                '''
+                
+                if show_value:
+                    label = f"{val}{unit}"
+                    chart_elements += f'<text x="{x_bar + bar_width/2}" y="{y_bar - 10}" font-size="16" text-anchor="middle" fill="{main_title_color}" font-weight="bold">{label}</text>'
+
+    # Axis Title
+    chart_elements += f'<text x="{svg_w/2 + margin_l/2}" y="{svg_h - 10}" font-size="22" text-anchor="middle" fill="{main_title_color}" font-weight="600">{x_axis_label}</text>'
+    chart_elements += f'<text transform="rotate(-90)" x="{-svg_h/2}" y="30" font-size="22" text-anchor="middle" fill="{main_title_color}" font-weight="600">{y_axis_label}</text>'
+
+    # ===== 4. CẤU TRÚC LEGEND & INSIGHT =====
+    legend_html = ""
+    if show_legend:
+        for i, s in enumerate(series):
+            legend_html += f'''
+            <div style="display:flex; align-items:center;">
+                <div style="width:24px; height:24px; background:{colors[i % len(colors)]}; border-radius:50%; margin-right:12px;"></div>
+                <div style="font-size:24px; color:{main_title_color}; font-weight:500;">{s.get("name")}</div>
+            </div>
+            '''
+
+    # ===== 5. GENERATE FINAL HTML =====
+    return f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {{
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                background-color: #FDF5E6; /* Light beige */
+                font-family: {font_family};
+                display: flex; flex-direction: column;
+                overflow: hidden;
+            }}
+            .top-bar {{
+                padding: 60px 100px 20px 100px;
+            }}
+            .title-box {{
+                display: inline-block;
+            }}
+            h1 {{ margin: 0; font-size: {main_title_font_size}; color: {main_title_color}; text-transform: capitalize; }}
+            .subtitle {{ font-size: {subtitle_font_size}; color: {subtitle_color}; margin-top: 10px; padding-left: 20px; }}
+            
+            .content-area {{
+                display: flex;
+                flex: 1;
+                padding: 0 80px 60px 80px;
+                gap: 40px;
+            }}
+            .left-panel {{
+                flex: 1.5;
+                display: flex; flex-direction: column;
+                justify-content: flex-start;
+            }}
+            .legend-container {{
+                display: flex;
+                gap: 30px;
+                margin-bottom: 40px;
+                padding-left: 20px;
+            }}
+            .chart-panel {{
+                display: flex; align-items: flex-start; justify-content: flex-start;
+            }}
+            .right-panel {{
+                flex: 1;
+                display: flex; align-items: center; justify-content: center;
+            }}
+            .image-capsule {{
+                width: 500px;
+                height: 800px;
+                border-radius: 250px;
+                object-fit: cover;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }}
+            .decoration-star {{
+                position: absolute; color: white; font-size: 40px;
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="decoration-star" style="top:40px; left:40px;">✦</div>
+        <div class="decoration-star" style="top:100px; left:80px;">✦</div>
+        
+        <div class="top-bar">
+            <div class="title-box">
+                <h1>{main_title}</h1>
+            </div>
+            <div class="subtitle">{subtitle}</div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <div class="legend-container">
+                    {legend_html}
+                </div>
+                <div class="chart-panel">
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                    </svg>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <img class="image-capsule" src="{image_url}" alt="Decoration">
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+
+def generate_bar_chart_slide_4(
+        main_title = "Business Inforgraphic", 
+        subtitle = "Detailed shipment analysis for the fiscal year 2024",
+        insight = "The shipment volume has shown a steady increase compared to last year.",
+        x_axis = "Regions",
+        y_axis = "Percentage",
+        unit = "%",
+        show_value = True,
+        show_legend = True,
+        y_axis_min = 0,
+        y_axis_max = None,
+        colors= ["#1B2559", "#FF6B35", "#4B5563", "#9CA3AF","#85BA2A", "#5561D2"],
+        categories = ["North America", "Europe", "Asia", "South America", "Africa", "Australia"],
+        insights = [
+            "North America's shipment volume increased by 15% compared to last year.",
+            "Europe experienced a significant growth of 25% in shipment volume.",
+            "Asia had a steady increase of 10% in shipment volume.",
+            "South America's shipment volume remained stable with a slight increase of 5%.",
+            "Africa saw a remarkable growth of 40% in shipment volume.",
+            "Australia experienced a moderate increase of 20% in shipment volume."
+        ],
+        series = [20, 10, 5, 5, 40, 20],
+        accent_color = "#FF6B35",
+        main_title_color = "#1B2559",
+        subtitle_color = "#6B7280",
+        insight_text_color = "#374151",
+    ) -> str:
+    """
+    Generates a generic HTML slide with a Grouped Bar Chart using the "Logistic Company" theme.
+    """
+
+    # ===== 1. LẤY THÔNG TIN =====
+    title = main_title
+    sub = subtitle
+    insight_text = insight
+    font_family = "Inter, sans-serif"
+    main_title_font_size = "64px"
+    subtitle_font_size = "28px"
+    insight_font_size = "26px"
+    # The parameters are now used directly as they are passed to the function.
+    # unit, show_value, show_legend, y_axis_min, y_axis_max, colors, categories, series
+    # are all already available from the function arguments.
+
+    y_axis_label = y_axis
+    x_axis_label = x_axis
+
+    # Normalize series: if it's a flat list of numbers, wrap it in the expected dict structure
+    if series and isinstance(series, list) and not isinstance(series[0], dict):
+        series = [{"name": y_axis_label if y_axis_label else "Series 1", "data": series}]
+
+    # ===== STYLE CONFIG =====
+    # Override defaults if not provided, leaning towards the image theme
+    f_family = font_family if font_family else "Arial, sans-serif"
+    c_accent = accent_color if accent_color else "#FF6B35"
+    c_title = main_title_color if main_title_color else "#1B2559"
+    c_sub = subtitle_color if subtitle_color else "#6B7280"
+    c_insight = insight_text_color if insight_text_color else "#374151"
+
+    fs_title = main_title_font_size
+    fs_sub = subtitle_font_size
+    fs_insight = insight_font_size
+
+    # ===== 2. SVG CONFIG =====
+    svg_w, svg_h = 1150, 650
+    margin_top, margin_bottom = 60, 80
+    margin_left, margin_right = 100, 50
+
+    chart_w = svg_w - margin_left - margin_right
+    chart_h = svg_h - margin_top - margin_bottom
+
+    # ===== 3. TÍNH TOÁN DATA =====
+    # Find max value for Y scaling
+    all_values = []
+    for s in series:
+        all_values.extend(s.get("data", []))
+    
+    val_max = y_axis_max
+    if val_max is None:
+        val_max = max(all_values) if all_values else 100
+        val_max = val_max * 1.1 # Add top padding
+
+    val_min = y_axis_min
+    
+    if val_max == val_min:
+        val_max += 10
+
+    # Grid calculations
+    num_grid_lines = 5
+    
+    # Bar calculations
+    num_cats = len(categories) if categories else 1
+    num_series = len(series) if series else 1
+    
+    # Calculate widths
+    # Slot width = space allocated for one category
+    slot_width = chart_w / num_cats
+    padding_group = slot_width * 0.2 # 20% padding between groups
+    group_width = slot_width - padding_group
+    bar_width = group_width / num_series
+
+    # ===== 4. VẼ CHART =====
+    chart_elements = ""
+
+    # -- Background Grid --
+    for i in range(num_grid_lines + 1):
+        y_ratio = i / num_grid_lines
+        y_pos = svg_h - margin_bottom - (y_ratio * chart_h)
+        value_label = val_min + (val_max - val_min) * y_ratio
+        
+        # Grid line
+        chart_elements += f'''
+        <line x1="{margin_left}" y1="{y_pos}" x2="{svg_w - margin_right}" y2="{y_pos}" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        '''
+        # Y-Axis Label
+        chart_elements += f'''
+        <text x="{margin_left - 15}" y="{y_pos + 5}" font-family="{f_family}" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">{int(value_label) if value_label % 1 == 0 else f"{value_label:.1f}"}</text>
+        '''
+
+    # -- Bars --
+    for i, cat in enumerate(categories):
+        # Center X of the category slot
+        slot_x_start = margin_left + (i * slot_width) + (padding_group / 2)
+        
+        for j, s in enumerate(series):
+            data_val = s["data"][i] if i < len(s["data"]) else 0
+            
+            # Height calculation
+            bar_height = ((data_val - val_min) / (val_max - val_min)) * chart_h
+            if bar_height < 0: bar_height = 0
+            
+            x_pos = slot_x_start + (j * bar_width)
+            y_pos = svg_h - margin_bottom - bar_height
+            
+            # Use color by category if only one series, otherwise by series
+            if len(series) == 1:
+                color = colors[i % len(colors)]
+            else:
+                color = colors[j % len(colors)]
+            
+            # Rect
+            chart_elements += f'''
+            <rect x="{x_pos}" y="{y_pos}" width="{bar_width * 0.85}" height="{bar_height}" 
+                  fill="{color}" rx="4" ry="4" />
+            '''
+            
+            # Value Label (on top of bar)
+            if show_value:
+                chart_elements += f'''
+                <text x="{x_pos + (bar_width * 0.85)/2}" y="{y_pos - 8}" 
+                      font-family="{f_family}" font-size="14" fill="{color}" font-weight="bold" text-anchor="middle">
+                    {data_val}{unit}
+                </text>
+                '''
+
+        # Category Label (X-axis)
+        cat_x_center = margin_left + (i * slot_width) + (slot_width / 2)
+        chart_elements += f'''
+        <text x="{cat_x_center}" y="{svg_h - margin_bottom + 30}" 
+              font-family="{f_family}" font-size="18" fill="{c_title}" font-weight="bold" text-anchor="middle">
+            {cat}
+        </text>
+        '''
+
+    # -- Axis Titles --
+    if y_axis_label:
+        chart_elements += f'''
+        <text transform="rotate(-90)" x="{-svg_h/2}" y="30" 
+              font-family="{f_family}" font-size="18" fill="{c_sub}" text-anchor="middle">
+            {y_axis_label}
+        </text>
+        '''
+
+    # ===== LEGEND (HTML side) =====
+    legend_left_html = ""
+    legend_right_html = ""
+    if show_legend:
+        data_list = series[0]["data"] if series else []
+        half = (len(categories) + 1) // 2
+        
+        legend_left_html += '<div style="display:flex; flex-direction:column; gap:30px; margin-top:30px;">'
+        for i in range(half):
+            if i >= len(categories): break
+            cat = categories[i]
+            color = colors[i % len(colors)]
+            val = data_list[i] if i < len(data_list) else 0
+            desc = insights[i] if insights and i < len(insights) else ""
+            legend_left_html += f'''
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:{f_family}; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:{color}; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">{val}{unit}</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">{cat}</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">{desc}</div>
+                </div>
+            '''
+        legend_left_html += '</div>'
+
+        legend_right_html += '<div style="display:flex; flex-direction:column; gap:30px; margin-top:30px;">'
+        for i in range(half, len(categories)):
+            cat = categories[i]
+            color = colors[i % len(colors)]
+            val = data_list[i] if i < len(data_list) else 0
+            desc = insights[i] if insights and i < len(insights) else ""
+            legend_right_html += f'''
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:{f_family}; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:{color}; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">{val}{unit}</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">{cat}</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">{desc}</div>
+                </div>
+            '''
+        legend_right_html += '</div>'
+
+    # ===== INSIGHT =====
+    insight_html = f"""
+    <div style="
+        font-family: {f_family};
+        font-size: {fs_insight};
+        color: {c_insight};
+        line-height: 1.6;
+        background: #F3F4F6;
+        padding: 30px;
+        border-left: 6px solid {c_accent};
+        border-radius: 0 12px 12px 0;
+        margin-bottom: 20px;">
+        {insight_text}
+    </div>
+    """
+
+    # ===== 5. HTML RENDER =====
+    # Logistic Theme: White BG, Navy/Orange accents, clean layout
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: {f_family};
+        background-color: #FFFFFF;
+        position: relative;
+    }}
+    
+    /* Decorative Background Elements based on reference */
+    .bg-shape-top {{
+        position: absolute;
+        top: -500px;
+        left: 0;
+        width: 400px;
+        height: 150px;
+        background: {c_title}; /* Navy */
+        clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+        z-index: 0;
+    }}
+    .bg-shape-accent {{
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 150px;
+        height: 150px;
+        background: {c_accent}; /* Orange */
+        clip-path: polygon(0 0, 80% 0, 0 80%);
+        z-index: 1;
+    }}
+    .bg-shape-bottom {{
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 150px;
+        height: 150px;
+        background: {c_title};
+        clip-path: polygon(100% 0, 100% 100%, 0% 100%);
+        z-index: 0;
+    }}
+    
+    .container {{
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 60px 80px 40px 80px;
+        box-sizing: border-box;
+    }}
+    
+    .header {{
+        margin-bottom: 40px;
+        padding-left: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }}
+    
+    .title-group h1 {{
+        font-size: {fs_title};
+        color: {c_accent}; /* Orange Title like 'Logistic' */
+        margin: 0;
+        margin-bottom: 15px;
+        line-height: 1.2;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }}
+    
+    .title-group h1 span {{
+        color: {c_title}; /* Navy part like 'Company' */
+    }}
+    
+    .subtitle {{
+        font-size: {fs_sub};
+        color: {c_sub};
+        margin-top: 15px;
+        font-weight: 400;
+        line-height: 1.4;
+    }}
+
+    .main-content {{
+        display: flex;
+        flex: 1;
+        gap: 40px;
+        align-items: center;
+        justify-content: space-between;
+    }}
+    
+    .left-panel {{
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }}
+    
+    .center-panel {{
+        flex: 2;
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }}
+
+    .right-panel {{
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }}
+    
+    .footer-mark {{
+        position: absolute;
+        bottom: 30px;
+        right: 40px;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        z-index: 10;
+    }}
+
+    </style>
+    </head>
+    <body>
+
+    <div class="bg-shape-top"></div>
+    <div class="bg-shape-accent"></div>
+    <div class="bg-shape-bottom"></div>
+    <div class="footer-mark"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-group">
+                <h1>{title}</h1>
+                <div class="subtitle">{sub}</div>
+            </div>
+            <div style="font-size: 24px; color: {c_title}; font-weight: bold; opacity: 0.5;">2024 REPORT</div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                {legend_left_html}
+            </div>
+
+            <div class="center-panel">
+                <div>
+                    <svg width="{svg_w}" height="{svg_h}" viewBox="0 0 {svg_w} {svg_h}">
+                        {chart_elements}
+                    </svg>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                {legend_right_html}
+            </div>
+        </div>
+    </div>
+
+    </body>
+    </html>
+    """
+    return html_code
+
+
+def generate_table_slide_1(
+    main_title="Renewable Energy Capacity by Region",
+    subtitle="Global Energy Research Lab – 2024 Data",
+    insight=(
+        "Asia shows the largest installed renewable capacity, particularly in solar energy. "
+        "Europe maintains strong wind power production, while hydro remains a stable base "
+        "energy source across multiple regions."
+    ),
+    unit = " GW",
+    show_value = True,
+    columns =  ["Solar", "Wind", "Hydro"],
+    rows = [
+        {"label": "Asia", "values": [620, 430, 510]},
+        {"label": "Europe", "values": [310, 520, 260]},
+        {"label": "North America", "values": [290, 340, 300]},
+        {"label": "South America", "values": [150, 120, 380]}
+    ],
+    header_bg: str = "#76C2B4",
+    grid_color: str = "#D1D5DB",
+    text_color: str = "#333333",
+    highlight_bg: str = "#E6F4F1",
+    accent_color: str = "#76C2B4",
+    main_title_color: str = "#333333",
+    subtitle_color: str = "#666666",
+    insight_text_color: str = "#444444"
+)->str:
+    # ===== COLOR & FONT VARIABLES =====
+    font_family = "Inter, Arial, sans-serif"
+    main_title_font_size = "72px"
+    subtitle_font_size = "32px"
+    insight_font_size = "28px"
+
+    # ===== 1. DATA PREPARATION =====
+    # Using parameters directly instead of data_input and chart_options
+
+    # ===== 2. PROCESS TABLE =====
+    table_rows_html = ""
+    for row in rows:
+        label = row.get("label", "")
+        values = row.get("values", [])
+        cells_html = ""
+
+        for value in values:
+            formatted_value = ""
+            if show_value:
+                formatted_value = str(value)
+                if unit:
+                    formatted_value += unit
+
+            cells_html += f"""
+            <td style="padding:20px; border-bottom:1px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
+                {formatted_value}
+            </td>
+            """
+
+        table_rows_html += f"""
+        <tr style="background-color: white;">
+            <td style="padding:20px; border-bottom:1px solid {grid_color}; font-weight:700; font-size:24px; color:{main_title_color}; background:{highlight_bg}66;">
+                {label}
+            </td>
+            {cells_html}
+        </tr>
+        """
+
+    header_cells = ""
+    for col in columns:
+        header_cells += f"""
+        <th style="padding:22px; background:{header_bg}; border-bottom:3px solid rgba(0,0,0,0.1); font-size:24px; color:white; text-transform:uppercase; letter-spacing:1px; width:25%;">
+            {col}
+        </th>
+        """
+
+    table_html = f"""
+    <table style="border-collapse:collapse; width:60%; background:white; border-radius:15px; box-shadow:0 10px 30px rgba(0,0,0,0.05); table-layout:fixed;">
+        <thead>
+            <tr>
+                <th style="padding:22px; background:{header_bg}; border-bottom:3px solid rgba(0,0,0,0.1); font-size:24px; color:white; text-transform:uppercase; width:25%;">
+                    Hạng mục
+                </th>
+                {header_cells}
+            </tr>
+        </thead>
+        <tbody>
+            {table_rows_html}
+        </tbody>
+    </table>
+    """
+
+    # ===== 3. DESIGN SVG (LAB ICONS) =====
+    decorations_svg = f"""
+    <!-- Top Right Decoration (Atom / Science Theme) -->
+    <div style="position:absolute; top:60px; right:60px; width:280px; height:280px; opacity:0.12; pointer-events:none; z-index:0;">
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <ellipse cx="100" cy="100" rx="80" ry="25" transform="rotate(30 100 100)" stroke="{header_bg}" stroke-width="4"/>
+            <ellipse cx="100" cy="100" rx="80" ry="25" transform="rotate(-30 100 100)" stroke="{header_bg}" stroke-width="4"/>
+            <ellipse cx="100" cy="100" rx="80" ry="25" transform="rotate(90 100 100)" stroke="{header_bg}" stroke-width="4"/>
+            <circle cx="100" cy="100" r="15" fill="{accent_color}"/>
+            <circle cx="160" cy="30" r="8" fill="{header_bg}" fill-opacity="0.6"/>
+            <circle cx="180" cy="60" r="5" fill="{accent_color}" fill-opacity="0.8"/>
+            <circle cx="30" cy="150" r="6" fill="{header_bg}" fill-opacity="0.5"/>
+        </svg>
+    </div>
+
+    <!-- Bottom Left Decoration (Beaker) -->
+    <div style="position:absolute; bottom:50px; left:80px; width:160px; height:160px; opacity:0.25; pointer-events:none; z-index:0;">
+        <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M140 40V140C140 151.046 131.046 160 120 160H80C68.9543 160 60 151.046 60 140V40" stroke="{header_bg}" stroke-width="8" stroke-linecap="round"/>
+            <path d="M50 40H150" stroke="{header_bg}" stroke-width="8" stroke-linecap="round"/>
+            <rect x="75" y="100" width="50" height="40" fill="{header_bg}" fill-opacity="0.3" />
+            <circle cx="160" cy="60" r="10" fill="{header_bg}" fill-opacity="0.2" />
+            <circle cx="175" cy="90" r="6" fill="{header_bg}" fill-opacity="0.2" />
+        </svg>
+    </div>
+    """
+
+    # ===== 4. RENDER HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+      width:1920px;
+      height:1080px;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      font-family:{font_family};
+      background: radial-gradient({grid_color} 2px, transparent 2px), linear-gradient(135deg, #FFFFFF 0%, {highlight_bg} 40%, {accent_color}66 100%);
+      background-size: 40px 40px, 100% 100%;
+    }}
+
+    .header-container {{
+      padding: 80px 100px 0 100px;
+    }}
+
+    .title-box {{
+      display: inline-block;
+      background: {header_bg};
+      padding: 10px 40px;
+      border-radius: 50px;
+      margin-bottom: 20px;
+    }}
+
+    h1 {{
+      font-size: {main_title_font_size};
+      color: {main_title_color};
+      margin: 0;
+      font-weight: 900;
+      text-transform: uppercase;
+    }}
+
+    .subtitle {{
+      font-size: {subtitle_font_size};
+      color: {subtitle_color};
+      margin-top: 10px;
+      font-weight: 500;
+    }}
+
+    .main-flex {{
+      display: flex;
+      padding: 60px 100px;
+      gap: 60px;
+      height: 600px;
+    }}
+
+    .left-panel {{
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }}
+
+    .right-panel {{
+      flex: 2;
+      display: flex;
+      align-items: center;
+    }}
+
+    .insight-card {{
+      background: white;
+      padding: 40px;
+      border-radius: 20px;
+      border-left: 15px solid {accent_color};
+      box-shadow: 10px 10px 0px {accent_color}33;
+      font-size: {insight_font_size};
+      color: {insight_text_color};
+      line-height: 1.6;
+    }}
+    </style>
+    </head>
+
+    <body>
+        <div class="header-container">
+            <h1>{main_title}</h1>
+            {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+        </div>
+
+        <div class="main-flex">
+            <div class="left-panel">
+                <div class="insight-card">
+                    {insight}
+                </div>
+            </div>
+
+            <div class="right-panel">
+                {table_html}
+            </div>
+        </div>
+
+        {decorations_svg}
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_table_slide_2(
+        main_title = "Chemical Reagent Stability Analysis", 
+        subtitle = "Source: International Journal of Applied Chemistry 2026", 
+        insight = "Chemical reagents exhibit varying stability under standard laboratory conditions, with high-purity salts generally showing better long-term stability compared to organic solvents and reactive compounds.",
+        unit = "%",    
+        show_value = True,
+        columns = ["Purity Level", "Solubility", "Reaction Yield"],
+        rows = [
+            {"label": "Ethanol (C2H5OH)", "values": [99.8, 100, 92]},
+            {"label": "Sulfuric Acid (H2SO4)", "values": [98.5, 100, 88]},
+            {"label": "Sodium Chloride (NaCl)", "values": [99.9, 36, 95]},
+            {"label": "Silver Nitrate (AgNO3)", "values": [99.5, 216, 84]}
+        ],
+    header_bg: str = "#3B3781",
+    grid_color: str = "#D1D5DB",
+    text_color: str = "#1F2937",
+    highlight_bg: str = "#F3F4F6",
+    accent_color: str = "#FFB300",
+    main_title_color: str = "#3B3781",
+    subtitle_color: str = "#6B7280",
+    insight_text_color: str = "#1F2937"
+    ) -> str:
+    # ===== COLOR & FONT VARIABLES =====
+    font_family = "'Inter', sans-serif"
+    main_title_font_size = "72px"
+    subtitle_font_size = "30px"
+    insight_font_size = "28px"
+
+    # ===== 1. DATA PREPARATION =====
+    # Using parameters directly instead of data_input and chart_options
+
+    # ===== 2. TABLE DATA PROCESSING =====
+    table_rows_html = ""
+    for index, row in enumerate(rows):
+        label = row.get("label", "")
+        values = row.get("values", [])
+        
+        # Stripe effect cho các hàng
+        row_bg = "white" if index % 2 == 0 else highlight_bg
+
+        cells_html = ""
+        for value in values:
+            formatted_value = ""
+            if show_value:
+                formatted_value = str(value)
+                if unit:
+                    formatted_value += unit
+
+            cells_html += f"""
+            <td style="padding:25px 30px; border-bottom:2px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
+                {formatted_value}
+            </td>
+            """
+
+        table_rows_html += f"""
+        <tr style="background:{row_bg};">
+            <td style="padding:25px 30px; border-bottom:2px solid {grid_color}; font-weight:700; font-size:24px; color:{header_bg}; text-align:left;">
+                {label}
+            </td>
+            {cells_html}
+        </tr>
+        """
+
+    # ===== HEADER RENDER =====
+    header_cells = ""
+    for col in columns:
+        header_cells += f"""
+        <th style="padding:25px 30px; background:{header_bg}; color:white; font-size:26px; font-weight:600; text-align:center; border-right:1px solid rgba(255,255,255,0.1);">
+            {col}
+        </th>
+        """
+
+    table_html = f"""
+    <table style="border-collapse:collapse; width:100%; border-radius:20px; overflow:hidden; box-shadow:0 15px 35px rgba(59,55,129,0.1);">
+        <thead>
+            <tr>
+                <th style="padding:25px 30px; background:{header_bg}; color:{accent_color}; font-size:26px; font-weight:800; text-align:left;">
+                    Element/Exp
+                </th>
+                {header_cells}
+            </tr>
+        </thead>
+        <tbody>
+            {table_rows_html}
+        </tbody>
+    </table>
+    """
+
+    # ===== 3. DECORATIVE SVG (Chemistry Style) =====
+    beaker_svg = f"""
+    <div style="position:absolute; bottom:120px; right:80px; width:150px; height:150px; opacity:0.6;">
+        <svg viewBox="0 0 100 100" fill="none">
+            <path d="M30 20 L30 80 Q30 90 40 90 L60 90 Q70 90 70 80 L70 20 Z" stroke="{header_bg}" stroke-width="3"/>
+            <path d="M30 40 L70 40" stroke="{header_bg}" stroke-width="2" stroke-dasharray="4 2"/>
+            <path d="M30 65 L70 65" stroke="{accent_color}" stroke-width="5"/>
+            <circle cx="45" cy="55" r="3" fill="{accent_color}"/>
+            <circle cx="55" cy="48" r="2" fill="{header_bg}"/>
+        </svg>
+    </div>
+    """
+
+    # ===== 4. HTML RENDER =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {{
+      width:1920px;
+      height:1080px;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      font-family:{font_family};
+      background-color:#FDFCFE;
+    }}
+    .slide-container {{
+      width:100%;
+      height:100%;
+      padding:80px 100px;
+      box-sizing:border-box;
+      position:relative;
+      background: radial-gradient(circle at 90% 10%, #F3E8FF 0%, transparent 40%);
+    }}
+    .header-section {{
+      margin-bottom:60px;
+      border-left:12px solid {accent_color};
+      padding-left:35px;
+    }}
+    h1 {{
+      font-size:{main_title_font_size};
+      color:{main_title_color};
+      margin:0;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+    }}
+    .subtitle {{
+      font-size:{subtitle_font_size};
+      color:{subtitle_color};
+      margin-top:15px;
+      font-weight: 500;
+    }}
+    .main-flex {{
+      display: flex;
+      gap: 50px;
+      margin-top: 20px;
+      position: relative;
+      z-index: 10;
+      align-items: center;
+    }}
+    .left-panel {{
+      flex: 1;
+    }}
+    .right-panel {{
+      flex: 2;
+    }}
+    .insight-card {{
+      background: white;
+      padding: 35px;
+      border-radius: 16px;
+      border-left: 10px solid {accent_color};
+      font-size: {insight_font_size};
+      color: {insight_text_color};
+      line-height: 1.6;
+      box-shadow: 0 10px 25px rgba(59,55,129,0.05);
+    }}
+    .top-blob {{
+      position:absolute; top:-100px; right:-100px; width:400px; height:400px; 
+      background: {accent_color}; opacity: 0.1; border-radius: 50%;
+    }}
+    </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="top-blob"></div>
+            
+            <div class="header-section">
+                <h1>{main_title}</h1>
+                {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+            </div>
+
+            <div class="main-flex">
+                <div class="left-panel">
+                    {f'<div class="insight-card">{insight}</div>' if insight else ''}
+                </div>
+                <div class="right-panel">
+                    {table_html}
+                </div>
+            </div>
+
+            {beaker_svg}
+        </div>
+    </body>
+    </html>
+    """
+
+    return html_code
+
+def generate_table_slide_3(
+        main_title="Islamic Cultural Contributions by Region",
+        subtitle="Global Islamic Heritage Study – 2024",
+        insight="",
+        unit = "",
+        show_value = True,
+        columns = ["Mosques", "Scholars", "Cultural Sites"],
+        rows = [
+            {"label": "Middle East", "values": [1200, 850, 400]},
+            {"label": "Southeast Asia", "values": [900, 300, 150]},
+            {"label": "South Asia", "values": [1100, 500, 220]},
+            {"label": "North Africa", "values": [800, 450, 300]}
+        ],
+    header_bg: str = "linear-gradient(135deg, #D4AF37, #AA7C11)",
+    grid_color: str = "rgba(212, 175, 55, 0.2)",
+    text_color: str = "#FFFFFF",
+    highlight_bg: str = "rgba(10, 52, 39, 0.4)",
+    accent_color: str = "#D4AF37",
+    main_title_color: str = "#D4AF37",
+    subtitle_color: str = "#E0E0E0",
+    insight_text_color: str = "#FFFFFF"
+    ) -> str:
+    
+    # ===== COLOR & FONT VARIABLES =====
+    font_family = "'Outfit', sans-serif"
+    main_title_font_size = "64px"
+    subtitle_font_size = "28px"
+    insight_font_size = "28px"
+
+    # ===== XỬ LÝ HTML TABLE =====
+    table_rows_html = ""
+    for row in rows:
+        label = row.get("label", "")
+        values = row.get("values", [])
+        cells_html = ""
+
+        for value in values:
+            formatted_value = ""
+            if show_value:
+                formatted_value = str(value)
+                if unit:
+                    formatted_value += unit
+
+            cells_html += f"""
+            <td style="padding:18px; border-bottom:2px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
+                {formatted_value}
+            </td>"""
+
+        table_rows_html += f"""
+        <tr style="background-color: transparent; transition: all 0.3s ease;" class="table-row-hover">
+            <td style="padding:18px; border-bottom:2px solid {grid_color}; font-weight:600; font-size:24px; color:{main_title_color}; background:rgba(212, 175, 55, 0.05); font-family: 'Cinzel', serif;">
+                {label}
+            </td>
+            {cells_html}
+        </tr>"""
+
+    header_cells = "".join([f'<th style="padding:22px; background:{header_bg}; color:#0A3427; font-size:24px; font-family: \'Cinzel\', serif; text-transform:uppercase; letter-spacing:2px; font-weight:700;">{col}</th>' for col in columns])
+
+    table_html = f"""
+    <table style="border-collapse:collapse; width:100%; border-radius:15px; overflow:hidden; box-shadow:0 15px 40px rgba(0,0,0,0.6); background:rgba(6, 31, 23, 0.7); backdrop-filter:blur(10px); border: 2px solid #D4AF37;">
+        <thead>
+            <tr>
+                <th style="padding:22px; background:{header_bg}; color:#0A3427; font-size:24px; text-align:left; font-family: \'Cinzel\', serif; font-weight:700;">Category</th>
+                {header_cells}
+            </tr>
+        </thead>
+        <tbody>{table_rows_html}</tbody>
+    </table>"""
+
+    # ===== HỌA TIẾT TRANG TRÍ (SVG) =====
+    lantern_svg = f"""
+    <div class="lantern-container">
+    <svg width="100" height="150" viewBox="0 0 100 150" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M50 0V20M30 40C30 30 70 30 70 40V80C70 90 30 90 30 80V40Z" stroke="{accent_color}" stroke-width="2.5" filter="url(#glow)"/>
+        <path d="M35 45L65 45M35 75L65 75M50 40V85" stroke="{accent_color}" stroke-width="2"/>
+        <path d="M40 85L30 110H70L60 85" fill="{accent_color}" fill-opacity="0.2" stroke="{accent_color}" stroke-width="2.5"/>
+        <circle cx="50" cy="60" r="8" fill="#FFF2CC" filter="url(#glow_light)" />
+        <defs>
+            <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+            <filter id="glow_light" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+        </defs>
+    </svg>
+    </div>"""
+
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        html, body {{
+            width:1920px; height:1080px; margin:0; padding:0; overflow:hidden;
+            font-family: {font_family}; 
+            background-color: #123C2A;
+            background-image: 
+                radial-gradient(circle at top, rgba(212, 175, 55, 0.15) 0%, transparent 60%),
+                url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='80' height='80' viewBox='0 0 80 80'%3E%3Cg fill='none' stroke='%23D4AF37' stroke-width='1.5' stroke-opacity='0.12'%3E%3Cpath d='M40 0L80 40L40 80L0 40zm0 20L60 40 40 60 20 40z'/%3E%3Ccircle cx='40' cy='40' r='10'/%3E%3Cpath d='M0 0h80v80H0z' stroke-opacity='0.05'/%3E%3C/g%3E%3C/svg%3E");
+            background-size: 100% 100%, 80px 80px;
+            background-repeat: no-repeat, repeat;
+        }}
+        .slide-container {{
+            position:relative; width:100%; height:100%;
+            display:flex; flex-direction:column; padding: 130px 140px; box-sizing:border-box;
+        }}
+        .header-section {{
+            display:flex; justify-content:space-between; align-items:flex-start; margin-bottom:40px;
+        }}
+        .title-group {{
+            border-left:8px solid {accent_color}; padding-left:30px;
+        }}
+        h1 {{
+            font-family: 'Cinzel', Georgia, 'Times New Roman', serif;
+            font-size:{main_title_font_size}; color:{main_title_color}; margin:0; font-weight:700; text-transform:uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0px 2px 4px rgba(0,0,0,0.6);
+        }}
+        .subtitle {{
+            font-size:{subtitle_font_size}; color:{subtitle_color}; margin-top:12px; font-weight: 400;
+            letter-spacing: 1px;
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.6);
+        }}
+        .main-content {{
+            display:flex; gap:60px; align-items:flex-start;
+            background: {highlight_bg};
+            backdrop-filter: blur(8px);
+            border: 1.5px solid rgba(212, 175, 55, 0.3);
+            border-radius: 20px;
+            padding: 45px;
+            box-shadow: inset 0 0 30px rgba(0,0,0,0.6), 0 10px 40px rgba(0,0,0,0.5);
+        }}
+        .insight-panel {{
+            flex: 1;
+            font-size: {insight_font_size};
+            color: {insight_text_color};
+            line-height: 1.6;
+            padding-right: 20px;
+            font-weight: 300;
+            text-shadow: 0px 1px 2px rgba(0,0,0,0.8);
+        }}
+        .table-panel {{
+            flex:2;
+            table-layout:fixed;
+        }}
+        .table-row-hover:hover {{
+            background: rgba(212, 175, 55, 0.12) !important;
+            transform: scale(1.008);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+        }}
+        .lantern-container {{
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.5));
+        }}
+        .decoration-bottom {{
+            position:absolute; bottom:120px; left:140px; right:140px; height:2px;
+            background: linear-gradient(to right, transparent, {accent_color}, transparent);
+            opacity: 0.4;
+        }}
+    </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="header-section">
+                <div class="title-group">
+                    <h1>{main_title}</h1>
+                    {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+                </div>
+                <div>{lantern_svg}</div>
+            </div>
+
+            <div class="main-content">
+                {f'<div class="insight-panel">{insight}</div>' if insight else ''}
+                <div class="table-panel">
+                    {table_html}
+                </div>
+            </div>
+            
+            <div class="decoration-bottom"></div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_table_slide_4(
+    main_title: str = "Average Blood Pressure by Age Group", 
+    subtitle: str = "Unit: mmHg | Data Source: National Health Survey 2025", 
+    insight: str = "Healthcare is important, Keep your health in check!",
+    unit: str = "mmHg",
+    show_value: bool = True,
+    categories = ["18-25", "26-35", "36-45", "46-60", "60+"],
+    series = [
+        {
+        "name": "Male",
+        "values": [118, 122, 128, 135, 142]
+        },
+        {
+        "name": "Female",
+        "values": [112, 118, 124, 130, 138]
+        }
+    ],
+    header_bg: str = "#5D3B6B",
+    grid_color: str = "rgba(255, 255, 255, 0.1)",
+    text_color: str = "#FFFFFF",
+    highlight_bg: str = "rgba(232, 156, 180, 0.15)",
+    accent_color: str = "#E89CB4",
+    main_title_color: str = "#4ADE80",
+    subtitle_color: str = "#64748B",
+    insight_text_color: str = "#2DD4BF"
+    ) -> str:
+    # ===== 1. LẤY THÔNG TIN DỮ LIỆU =====
+    rows = []
+    for item in series:
+        row_data = {
+            "label": item["name"],
+            "values": item["values"]
+        }
+        rows.append(row_data)
+
+    columns = categories
+
+    # ===== 2. XỬ LÝ DỮ LIỆU BẢNG (ROWS) =====
+    table_rows_html = ""
+    for row in rows:
+        label = row.get("label", "")
+        values = row.get("values", [])
+        
+        cells_html = ""
+        for value in values:
+            formatted_value = str(value) if show_value else ""
+            if unit and formatted_value:
+                formatted_value += unit
+
+            cells_html += f"""
+        <td style="padding:25px; border-bottom:1px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
+        {formatted_value}
+        </td>
+        """
+
+        table_rows_html += f"""
+    <tr style="transition: background 0.3s;">
+        <td style="padding:25px; border-bottom:1px solid {grid_color}; font-weight:600; font-size:24px; color:{accent_color}; background:{highlight_bg};">
+        {label}
+        </td>
+        {cells_html}
+    </tr>
+    """
+
+    # ===== 3. XỬ LÝ TIÊU ĐỀ BẢNG (HEADER) =====
+    header_cells = ""
+    for col in columns:
+        header_cells += f"""
+    <th style="padding:25px; background:{header_bg}; border-bottom:2px solid {accent_color}; font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
+        {col}
+    </th>
+    """
+
+    table_html = f"""
+    <table style="border-collapse:collapse; width:100%; background:rgba(255,255,255,0.05); border-radius:20px; overflow:hidden; backdrop-filter:blur(10px);">
+    <thead>
+        <tr>
+        <th style="padding:25px; background:{header_bg}; border-bottom:2px solid {accent_color}; font-size:22px; color:#FFFFFF; text-transform:uppercase; text-align:left;">
+            Metric / Category
+        </th>
+        {header_cells}
+        </tr>
+    </thead>
+    <tbody>
+        {table_rows_html}
+    </tbody>
+    </table>
+    """
+
+    # ===== 4. HTML RENDER =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    :root {{
+      --font-family: 'Inter', sans-serif;
+      --main-title-font-size: 70px;
+      --subtitle-font-size: 30px;
+      --insight-font-size: 28px;
+    }}
+
+    html, body {{
+      width:1920px;
+      height:1080px;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      font-family: var(--font-family);
+      background: radial-gradient(circle at 20% 20%, #4A2B52 0%, #2D1B33 100%);
+      color: white;
+    }}
+
+    .medical-pattern {{
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cpath stroke='rgba(255,255,255,0.05)' stroke-width='3' stroke-linejoin='round' fill='none' d='M0,80 L40,80 L50,40 L70,120 L80,80 L160,80'/%3E%3Cpath fill='rgba(255,255,255,0.03)' d='M125,25 h10 v10 h10 v10 h-10 v10 h-10 v-10 h-10 v-10 h10 z'/%3E%3C/svg%3E");
+      background-size: 160px 160px;
+      z-index: 0;
+    }}
+
+    .content-container {{
+      position: relative;
+      z-index: 1;
+      padding: 80px 100px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      box-sizing: border-box;
+    }}
+
+    .header-section {{
+      margin-bottom: 60px;
+      border-left: 12px solid {accent_color};
+      padding-left: 40px;
+    }}
+
+    h1 {{
+      font-size: var(--main-title-font-size);
+      font-weight: 800;
+      color: {main_title_color};
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+    }}
+
+    .subtitle {{
+      font-size: var(--subtitle-font-size);
+      color: {subtitle_color};
+      margin-top: 15px;
+      font-weight: 300;
+    }}
+
+    .main-grid {{
+      display: flex;
+      gap: 60px;
+      flex: 1;
+      align-items: flex-start;
+    }}
+
+    .left-column {{
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }}
+
+    .insight-panel {{
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 50px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }}
+
+    .insight-text {{
+      font-size: var(--insight-font-size);
+      color: {insight_text_color};
+      line-height: 1.6;
+      font-style: italic;
+    }}
+
+    .table-panel {{
+      flex: 2;
+    }}
+
+    .accent-bar {{
+      width: 80px;
+      height: 6px;
+      background: {accent_color};
+      margin-bottom: 30px;
+      border-radius: 3px;
+    }}
+
+    </style>
+    </head>
+    <body>
+    <div class="medical-pattern"></div>
+    <div class="content-container">
+        <div class="header-section">
+        <h1>{main_title}</h1>
+        {f'<div class="subtitle">{subtitle}</div>' if subtitle else ""}
+        </div>
+
+        <div class="main-grid">
+        <div class="left-column">
+            <div class="insight-panel">
+            <div class="accent-bar"></div>
+            <div class="insight-text">
+                "{insight}"
+            </div>
+            </div>
+            <div class="medical-svg" style="display:flex; justify-content:center; align-items:center; flex:1; opacity: 0.3;">
+            <svg width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="{accent_color}" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            </div>
+        </div>
+
+        <div class="table-panel">
+            {table_html}
+        </div>
+        </div>
+    </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_table_slide_5(
+    main_title: str = "Vietnamese Cultural Heritage by Region",
+    subtitle: str = "Traditional Values & Cultural Assets across Vietnam",
+    insight: str = "Vietnam's rich cultural heritage is deeply rooted in its regional diversity, with the North known for its vibrant festivals, the Central region for its historical sites, and the South for its traditional crafts. This slide highlights the unique cultural assets of each region, showcasing the importance of preserving these traditions for future generations.",
+    unit: str = "",
+    show_value: bool = True,
+    columns = ["Festivals", "Historical Sites", "Traditional Crafts"],
+    rows = [
+        {"label": "Northern Vietnam", "values": [120, 85, 60]},
+        {"label": "Central Vietnam", "values": [95, 70, 55]},
+        {"label": "Southern Vietnam", "values": [80, 60, 40]}
+    ],
+    header_bg: str = "linear-gradient(135deg, #8B0000, #5D0E0E)",
+    grid_color: str = "#D4AF37",
+    text_color: str = "#FFFFFF",
+    highlight_bg: str = "rgba(93, 14, 14, 0.6)",
+    accent_color: str = "#FFD700",
+    main_title_color: str = "#FFD700",
+    subtitle_color: str = "#E0E0E0",
+    insight_text_color: str = "#FFFFFF"
+) -> str:
+
+    # ===== TABLE =====
+    table_rows_html = ""
+    for row in rows:
+        label = row.get("label", "")
+        values = row.get("values", [])
+        cells_html = ""
+
+        for value in values:
+            formatted_value = ""
+            if show_value:
+                formatted_value = str(value)
+                if unit:
+                    formatted_value += unit
+
+            cells_html += f"""
+            <td style="padding:18px; border:1px solid {grid_color}; text-align:center; font-size:24px; color:{text_color};">
+            {formatted_value}
+            </td>
+            """
+
+        table_rows_html += f"""
+        <tr style="background: rgba(139, 0, 0, 0.2);">
+            <td style="padding:18px; border:1px solid {grid_color}; font-weight:bold; font-size:24px; color:{accent_color}; background:{highlight_bg};">
+            {label}
+            </td>
+            {cells_html}
+        </tr>
+        """
+
+    header_cells = ""
+    for col in columns:
+        header_cells += f"""
+    <th style="padding:22px; background:{header_bg}; border:2px solid {grid_color}; font-size:24px; color:{accent_color}; text-transform:uppercase;">
+        {col}
+    </th>
+    """
+
+    table_html = f"""
+    <table style="border-collapse:collapse; width:100%; border:2px solid {grid_color}; box-shadow: 0 10px 30px rgba(0,0,0,0.5);">
+    <thead>
+        <tr>
+        <th style="padding:22px; background:{header_bg}; border:2px solid {grid_color}; font-size:24px; color:{accent_color};">CATEGORY</th>
+        {header_cells}
+        </tr>
+    </thead>
+    <tbody>
+        {table_rows_html}
+    </tbody>
+    </table>
+    """
+
+    # ===== HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    :root {{
+      --font-family: 'Times New Roman', serif;
+      --main-title-font-size: 64px;
+      --subtitle-font-size: 28px;
+      --insight-font-size: 28px;
+    }}
+
+    html, body {{
+      width:1920px; height:1080px; margin:0;
+      font-family: var(--font-family);
+      background-color: #4A0404;
+      background-image: 
+    radial-gradient(circle at 50% 50%, rgba(212,175,55,0.1) 0%, transparent 70%),
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120' viewBox='0 0 120 120'%3E%3Cg stroke='rgba(212,175,55,0.15)' stroke-width='1.5' fill='none'%3E%3Ccircle cx='60' cy='60' r='50'/%3E%3Ccircle cx='60' cy='60' r='35'/%3E%3Cpath stroke-linejoin='round' d='M60,10 L70,45 L105,60 L70,75 L60,110 L50,75 L15,60 L50,45 Z'/%3E%3Ccircle cx='60' cy='60' r='15' fill='rgba(212,175,55,0.05)'/%3E%3Cpath d='M0,0 L120,120 M120,0 L0,120' stroke='rgba(212,175,55,0.05)'/%3E%3C/g%3E%3C/svg%3E");
+      background-size: 100% 100%, 120px 120px;
+      color: #FFFFFF;
+    }}
+
+    .container {{
+      width: 100%; height: 100%;
+      display: flex;
+      flex-direction: column;
+      padding: 60px 100px;
+      border: 20px solid {grid_color};
+      box-sizing: border-box;
+    }}
+
+    h1 {{
+      font-size: var(--main-title-font-size);
+      color: {main_title_color};
+      margin: 0;
+      text-transform: uppercase;
+    }}
+
+    .subtitle {{
+      font-size: var(--subtitle-font-size);
+      color: {subtitle_color};
+      margin-top: 10px;
+    }}
+
+    .insight-box {{
+      margin-top: 40px;
+      font-size: var(--insight-font-size);
+      color: {insight_text_color};
+      background: rgba(0,0,0,0.3);
+      padding: 30px 40px;
+      border-left: 10px solid {grid_color};
+      line-height: 1.6;
+    }}
+
+    .table-container {{
+      margin-top: 50px;
+    }}
+
+    </style>
+    </head>
+
+    <body>
+    <div class="container">
+        <h1>{main_title}</h1>
+        <div class="subtitle">{subtitle}</div>
+
+        <!-- Insight trên -->
+        <div class="insight-box">
+        {insight}
+        </div>
+
+        <!-- Table dưới -->
+        <div class="table-container">
+        {table_html}
+        </div>
+    </div>
+    </body>
+    </html>
+    """
+    return html_code
+
+def generate_table_slide_7(
+    main_title="ELEGANCE CLASSY",
+    subtitle="Minimalist Table Infographics",
+    show_legend=True,
+    legend_items=[
+        {"label": "Marketing", "color": "#9a7a63"},
+        {"label": "Financial", "color": "#b7b9ab"},
+        {"label": "Sales", "color": "#faeaaa"}
+    ],
+    columns=["Mon", "Tue", "Wed", "Thu", "Fri"],
+    rows=[
+        {
+            "label": "Week 1",
+            "cells": [None, "Financial", None, None, None]
+        },
+        {
+            "label": "Week 2",
+            "cells": [None, None, None, "Sales", None]
+        },
+        {
+            "label": "Week 3",
+            "cells": ["Marketing", None, None, None, None]
+        },
+    ],
+    bg_light: str = "#fefaf4",
+    bg_dark: str = "#3a3730",
+    grid_color: str = "#9a7a6344",
+    main_title_color: str = "#3a3730",
+    subtitle_color: str = "#3a3730aa",
+    text_col_default: str = "#6f7067"
+) -> str:
+    # Create a color mapping from legend labels to colors
+    color_map = {item['label']: item['color'] for item in legend_items} if legend_items else {}
+    
+    # ===== STYLE VARIABLES =====
+    font_family = "Outfit, sans-serif"
+    main_title_font_size = "100px"
+    subtitle_font_size = "36px"
+
+    # ===== 1. DATA PROCESSING =====
+    header_html = ""
+    for col_label in columns:
+        label = col_label if isinstance(col_label, str) else col_label.get("label", str(col_label))
+        header_html += f'<th style="padding: 30px 20px; border: 1px solid {grid_color}; text-align: center; color: {text_col_default}; background: {bg_light}; font-weight: 700; font-size: 40px; min-width: 200px;">{label}</th>'
+
+    table_rows_html = ""
+    for row in rows:
+        row_label = row.get("label", "")
+        cells = row.get("cells", [])
+        
+        cells_html = ""
+        for cell in cells:
+            # cell can be: None (light bg) or a legend label string
+            if cell and cell in color_map:
+                bg = color_map[cell]
+                text_col = "white" if cell == "Marketing" else text_col_default
+            else:
+                bg = bg_light
+                text_col = text_col_default
+            
+            cell_style = f"padding: 25px 20px; border: 1px solid {grid_color}; text-align: center; color: {text_col}; font-size: 28px; line-height: 1.2; background: {bg};"
+            cells_html += f'<td style="{cell_style}"></td>'
+
+        table_rows_html += f"""
+        <tr>
+            <td style="padding: 30px 20px; border: 1px solid {grid_color}; font-weight: 700; color: {text_col_default}; background: {bg_light}; font-size: 40px; text-align: center;">
+                {row_label}
+            </td>
+            {cells_html}
+        </tr>
+        """
+
+    legend_html = ""
+    if show_legend and legend_items:
+        items_html = ""
+        for item in legend_items:
+            items_html += f"""
+            <li class="legend-item">
+                <div class="legend-circle" style="background-color: {item['color']};"></div>
+                <span class="legend-label">{item['label']}</span>
+            </li>
+            """
+        legend_html = f'<ul class="legend-container">{items_html}</ul>'
+
+    # ===== 2. FINAL HTML =====
+    html_code = f"""
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+        <style>
+            :root {{
+                --bg-light: {bg_light};
+                --bg-dark: {bg_dark};
+                --grid-line: {grid_color};
+                --text-default: {text_col_default};
+            }}
+            body {{
+                margin: 0;
+                padding: 0;
+                background-color: var(--bg-light);
+                font-family: {font_family};
+                color: var(--text-default);
+                width: 1920px;
+                height: 1080px;
+                overflow: hidden;
+                position: relative;
+            }}
+            .left-bar {{
+                position: absolute;
+                left: 0;
+                top: 0;
+                bottom: 650px;
+                width: 70px;
+                background-color: #c9b09a;
+            }}
+            .top-box-mini {{
+                position: absolute;
+                right: 0;
+                top: 0;
+                width: 483px;
+                height: 50px;
+                background-color: #b7b9ab;
+            }}
+            .bottom-left-box {{
+                position: absolute;
+                left: 0;
+                bottom: 0;
+                width: 235px;
+                height: 77px;
+                background-color: #b7b9ab;
+            }}
+            .bottom-right-box {{
+                position: absolute;
+                right: 70px;
+                bottom: 0;
+                width: 374px;
+                height: 58px;
+                background-color: #b7b9ab;
+            }}
+            .container {{
+                padding: 80px 100px 80px 170px;
+                display: flex;
+                flex-direction: column;
+                height: 100%;
+                box-sizing: border-box;
+            }}
+            .header {{
+                margin-bottom: 20px;
+            }}
+            .main-title {{
+                font-size: {main_title_font_size};
+                font-weight: 700;
+                margin: 0;
+                line-height: 1.1;
+                letter-spacing: -2px;
+                color: {main_title_color};
+            }}
+            .subtitle {{
+                font-size: {subtitle_font_size};
+                font-weight: 300;
+                margin-top: 5px;
+                opacity: 0.8;
+                color: {subtitle_color};
+            }}
+            .legend-container {{
+                display: flex;
+                gap: 60px;
+                margin: 40px 0;
+                list-style: none;
+                padding: 0;
+            }}
+            .legend-item {{
+                display: flex;
+                align-items: center;
+                gap: 20px;
+            }}
+            .legend-circle {{
+                width: 45px;
+                height: 45px;
+                border-radius: 50%;
+                border: 2px solid {grid_color};
+            }}
+            .legend-label {{
+                font-size: 42px;
+                font-weight: 700;
+                color: var(--text-default);
+                letter-spacing: -0.5px;
+            }}
+            .content-layout {{
+                flex: 1;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }}
+            .table-wrapper {{
+                width: 100%;
+            }}
+            table {{
+                width: 100%;
+                border-collapse: collapse;
+                background: white;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.05);
+                border: 1px solid {grid_color};
+            }}
+        </style>
+    </head>
+    <body>
+        <div class="left-bar"></div>
+        <div class="top-box-mini"></div>
+        <div class="bottom-left-box"></div>
+        <div class="bottom-right-box"></div>
+        
+        <div class="container">
+            <div class="header">
+                <h1 class="main-title">{main_title}</h1>
+                <div class="subtitle">{subtitle}</div>
+            </div>
+            
+            {legend_html}
+            
+            <div class="content-layout">
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th style="padding: 20px; border: 1px solid {grid_color}; text-align: left; background: {bg_light};"></th>
+                                {header_html}
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {table_rows_html}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return html_code
+
 
