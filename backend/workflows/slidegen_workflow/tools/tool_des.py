@@ -96,6 +96,7 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_timeline_slide, # slide content
     generate_quote_slide, # slide content
     generate_classic_content_slide, # slide content
+    
 
 
 
@@ -130,9 +131,35 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
     generate_line_chart_slide_2 , # slide biểu đồ đường (mhung)
     generate_line_chart_slide_3 ,# slide biểu đồ đường (mhung)
     generate_radar_chart_slide_1 ,# slide biểu đồ radar (mhung)
+
     generate_pie_chart_slide_1 ,# slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_2 ,# slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_4 ,# slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_6 ,# slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_7 ,# slide biểu đồ tròn (mhung)
+    generate_pie_chart_slide_8 ,# slide biểu đồ tròn (mhung)
+
+    generate_scatter_plot_chart_slide_1 ,# slide biểu đồ scatter (mhung)
     generate_scatter_plot_chart_slide_2 ,# slide biểu đồ scatter (mhung)
+    generate_scatter_plot_chart_slide_3 ,# slide biểu đồ scatter (mhung)
+    generate_scatter_plot_chart_slide_4 ,# slide biểu đồ scatter (mhung)
+    generate_scatter_plot_chart_slide_6 ,# slide biểu đồ scatter (mhung)
+    generate_scatter_plot_chart_slide_7 ,# slide biểu đồ scatter (mhung)
+    
+    generate_bar_chart_slide_1 ,# slide biểu đồ cột (mhung)
     generate_bar_chart_slide_2 ,# slide biểu đồ cột (mhung)
+    generate_bar_chart_slide_3 ,# slide biểu đồ cột (mhung)
+    generate_bar_chart_slide_4 ,# slide biểu đồ cột (mhung) 
+
+    generate_table_slide_1,# slide biểu đồ cột (mhung) 
+    generate_table_slide_2, # slide biểu đồ cột (mhung)
+    generate_table_slide_3, # slide biểu đồ cột (mhung)'
+    generate_table_slide_4, # slide biểu đồ cột (mhung)'
+    generate_table_slide_5, # slide biểu đồ cột (mhung)'
+    generate_table_slide_7, # slide biểu đồ cột (mhung)'
+
+
+    
 )
 
 # ===========================================================================================
@@ -143,8 +170,8 @@ from backend.workflows.slidegen_workflow.tools.html_tool import (
 
 class GenerateTitleSlideInput(BaseModel):
     """Input schema for generate_title_slide."""
-    main_title: str = Field(default='BUSINESS PLAN', description="Main title text (10-30 characters), displayed prominently in the center. Default: 'BUSINESS PLAN'.")
-    subtitle: str = Field(default='2026 - 2030', description="Subtitle text (5-20 characters), displayed below the main title. Default: '2026 - 2030'.")
+    main_title: str = Field(..., description="Main title text (10-30 characters), displayed prominently in the center. Default: 'BUSINESS PLAN'.")
+    subtitle: str = Field(..., description="Subtitle text (5-20 characters), displayed below the main title. Default: '2026 - 2030'.")
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of the title and subtitle text (hex code).")
@@ -157,8 +184,8 @@ class GenerateTitleSlideInput(BaseModel):
 
 class GenerateIntroductionSlideInput(BaseModel):
     """Input schema for generate_introduction_slide."""
-    main_title: str = Field(default='INTRODUCTION', description="Main title text (8-20 characters). Default: 'INTRODUCTION'.")
-    content_text: str = Field(default='Lorem ipsum dolor sit amet, consectetur adipiscing elit. Suspendisse quis enim pretium, bibendum ante ullamcorper, tincidunt augue. ', description="Main content paragraph.. Default: Lorem ipsum text.")
+    main_title: str = Field(..., description="Main title text (8-20 characters). Default: 'INTRODUCTION'.")
+    content_text: str = Field(..., description="Main content paragraph.. Default: Lorem ipsum text.")
     bg_color: str = Field(default="#1a4b8c", description="Primary background color (hex code).")
     bg_gradient_to: str = Field(default="#2a6cb7", description="Secondary background color for gradient effect (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
@@ -173,9 +200,9 @@ class GenerateIntroductionSlideInput(BaseModel):
 
 class GenerateIntroSlide1Input(BaseModel):
     """Input schema for generate_intro_slide1."""
-    main_title: str = Field(default='Main Title', description="Main title text. Default: 'Main Title'.")
-    subtitle1: str = Field(default='Subtitle1', description="First subtitle text. Default: 'Subtitle1'.")
-    subtitle2: str = Field(default='Subtitle2', description="Second subtitle text. Default: 'Subtitle2'.")
+    main_title: str = Field(..., description="Main title text. Default: 'Main Title'.")
+    subtitle1: str = Field(..., description="First subtitle text. Default: 'Subtitle1'.")
+    subtitle2: str = Field(..., description="Second subtitle text. Default: 'Subtitle2'.")
     main_bg_color: str = Field(default="#ffffff", description="CSS main background color for the slide.")
     accent_bg_color: str = Field(default="#6ea88a", description="CSS background color for the right section.")
     text_box_bg_color: str = Field(default="#c5e6b8", description="CSS background color for the text box.")
@@ -188,8 +215,8 @@ class GenerateIntroSlide1Input(BaseModel):
 
 class GenerateElegantIntroSlideInput(BaseModel):
     """Input schema for generate_elegant_intro_slide."""
-    main_title: str = Field(default='My Amazing Presentation', description="The large title displayed in the left column. Default: 'My Amazing Presentation'.")
-    subtitle: str = Field(default='This is a test slide to demonstrate the improved layout and styling.', description="The smaller subtitle text below the main title. Default: 'This is a test slide to demonstrate the improved layout and styling.'.")
+    main_title: str = Field(..., description="The large title displayed in the left column. Default: 'Write Your Topic or Idea Here'.")
+    subtitle: str = Field(..., description="The smaller subtitle text below the main title. Default: 'Briefly elaborate on what you want to discuss.'.")
     image_url: str = Field(default="https://images.pexels.com/photos/3807735/pexels-photo-3807735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the main image to be displayed on the right.")
     background_color: str = Field(default="#EAE3D9", description="Background color of the slide.")
     text_color: str = Field(default="#4A403A", description="Main text color for titles and descriptions.")
@@ -199,7 +226,7 @@ class GenerateElegantIntroSlideInput(BaseModel):
 
 class GenerateTitleSlide2Input(BaseModel):
     """Input schema for generate_title_slide_2."""
-    main_title: str = Field(default="THIS IS YOUR<br><span class='highlight'>PRESENTATION</span><br>TITLE", description="The entire title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight a specific word. Default: 'THIS IS YOUR<br><span class=\'highlight\'>PRESENTATION</span><br>TITLE'.")
+    main_title: str = Field(..., description="The entire title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight a specific word. Default: 'THIS IS YOUR<br><span class=\'highlight\'>PRESENTATION</span><br>TITLE'.")
     accent_color: str = Field(default="#06B6D4", description="The primary accent color for the right panel and the highlighted word.")
     shadow_color: str = Field(default="#0E7490", description="The secondary (darker) accent color for the panel behind.")
     text_color: str = Field(default="#6B7280", description="The primary color for the non-highlighted text.")
@@ -207,8 +234,8 @@ class GenerateTitleSlide2Input(BaseModel):
 
 class GenerateDynamicIntroSlideInput(BaseModel):
     """Input schema for generate_dynamic_intro_slide."""
-    main_title: str = Field(default='Innovate. Create. Inspire.', description="The large, bold title for the slide. Default: 'Innovate. Create. Inspire.'.")
-    subtitle: str = Field(default='This is where we outline our core mission and the driving force behind our vision.', description="The smaller subtitle text below the main title. Default: 'This is where we outline our core mission and the driving force behind our vision.'.")
+    main_title: str = Field(..., description="The large, bold title for the slide. Default: 'Innovate. Create. Inspire.'.")
+    subtitle: str = Field(..., description="The smaller subtitle text below the main title. Default: 'This is where we outline our core mission and the driving force behind our vision.'.")
     image_url: str = Field(default="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop", description="URL for the full-height image on the right.")
     primary_color: str = Field(default="#4F46E5", description="The primary (brighter) color for the main part of the text block.")
     secondary_color: str = Field(default="#3730A3", description="The secondary (darker) color for the footer area of the text block.")
@@ -216,17 +243,17 @@ class GenerateDynamicIntroSlideInput(BaseModel):
 
 class GenerateBigConceptSlideInput(BaseModel):
     """Input schema for generate_big_concept_slide."""
-    main_title: str = Field(default='BIG<br>CONCEPT', description="The main, large title for the concept. Use <br> for line breaks. Default: 'BIG<br>CONCEPT'.")
-    subtitle: str = Field(default='Bring the attention of your audience over a key concept using icons or illustrations', description="A smaller descriptive text below the main title. Default: 'Bring the attention of your audience over a key concept using icons or illustrations'.")
-    icon_name: str = Field(default='space', description="Selects a pre-designed illustration scene to display. Default: 'space'.")
+    main_title: str = Field(..., description="The main, large title for the concept. Use <br> for line breaks. Default: 'BIG<br>CONCEPT'.")
+    subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Bring the attention of your audience over a key concept using icons or illustrations'.")
+    icon_name: str = Field(..., description="Selects a pre-designed illustration scene to display. Default: 'space'.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The main color for all text elements.")
 
 class GenerateElegantAgendaSlideInput(BaseModel):
     """Input schema for generate_elegant_agenda_slide."""
-    main_title: str = Field(default='Bài thuyết trình hôm nay', description="The main title of the slide, typically using an elegant serif font. Default: 'Bài thuyết trình hôm nay'.")
-    subtitle: str = Field(default='CHỦ ĐỀ CHÍNH', description="A small, uppercase subtitle to introduce the list. Default: 'CHỦ ĐỀ CHÍNH'.")
-    agenda_items: List[str] = Field(default=['Về công ty chúng tôi', 'Dịch vụ mạng xã hội', 'Vấn đề/Cơ hội', 'Giải pháp của chúng tôi', 'Thực hiện kế hoạch', 'Đội ngũ của chúng tôi'], description="""A list of strings representing the agenda points. Defualt: [
+    main_title: str = Field(..., description="The main title of the slide, typically using an elegant serif font. Default: 'Bài thuyết trình hôm nay'.")
+    subtitle: str = Field(..., description="A small, uppercase subtitle to introduce the list. Default: 'CHỦ ĐỀ CHÍNH'.")
+    agenda_items: List[str] = Field(..., description="""A list of strings representing the agenda points. Defualt: [
         "Về công ty chúng tôi",
         "Dịch vụ mạng xã hội",
         "Vấn đề/Cơ hội",
@@ -234,18 +261,18 @@ class GenerateElegantAgendaSlideInput(BaseModel):
         "Thực hiện kế hoạch",
         "Đội ngũ của chúng tôi"
     ]""")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1484417894907-623942c8ee29?q=80&w=2832&auto=format&fit=crop", description="URL of the image to be displayed on the left. A professional desk photo is recommended.")
+    image_url: str = Field(default="A high-quality Unsplash image", description="URL of the image to be displayed on the left. A professional desk photo is recommended. Default: A high-quality Unsplash image.")
     accent_color: str = Field(default="#EAD6D6", description="The color of the decorative rectangle behind the image (hex code).")
     bg_color: str = Field(default="#FCFCFC", description="The main background color of the slide (hex code).")
     title_color: str = Field(default="#1F2937", description="Color for the main title (hex code).")
     subtitle_color: str = Field(default="#B48E8E", description="Color for the subtitle text (hex code).")
     text_color: str = Field(default="#4B5563", description="Color for the agenda list items (hex code).")
-    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
+    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
 class GeneratePlayfulTitleSlideInput(BaseModel):
     """Input schema for generate_playful_title_slide."""
-    main_title: str = Field(default='Introduction<br>to penguins', description="The main title for the slide. Use <br> for line breaks. Default: 'Introduction<br>to penguins'.")
-    subtitle: str = Field(default='Introduce penguins here. Mention their characteristics and unique behaviors.', description="A smaller descriptive text below the main title. Default: 'Introduce penguins here. Mention their characteristics and unique behaviors.'.")
+    main_title: str = Field(..., description="The main title for the slide. Use <br> for line breaks. Default: 'Introduction<br>to penguins'.")
+    subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Introduce penguins here. Mention their characteristics and unique behaviors.'.")
     illustration_character: str = Field(default="penguin", description="Selects a pre-drawn character illustration.")
     top_bg_color: str = Field(default="#FFC947", description="The main background color (yellow).")
     bottom_bg_color: str = Field(default="#E8715D", description="The color of the strip at the bottom.")
@@ -254,9 +281,9 @@ class GeneratePlayfulTitleSlideInput(BaseModel):
 
 class GenerateMinimalistTitleSlideInput(BaseModel):
     """Input schema for generate_minimalist_title_slide."""
-    main_title: str = Field(default='This is your presentation title', description="The main, large presentation title. Default: 'This is your presentation title'.")
-    subtitle: str = Field(default='A subtitle to provide more context or a tagline', description="A smaller subtitle to provide more context or a tagline. Default: 'A subtitle to provide more context or a tagline'.")
-    author_line: str = Field(default='Presented by Your Name / Company', description="A line for the presenter's name or company, displayed at the bottom. Default: 'Presented by Your Name / Company'.")
+    main_title: str = Field(..., description="The main, large presentation title. Default: 'This is your presentation title'.")
+    subtitle: str = Field(..., description="A smaller subtitle to provide more context or a tagline. Default: 'A subtitle to provide more context or a tagline'.")
+    author_line: str = Field(..., description="A line for the presenter's name or company, displayed at the bottom. Default: 'Presented by Your Name / Company'.")
     bg_color: str = Field(default="#111827", description="The dark background color of the slide.")
     text_color: str = Field(default="#F9FAFB", description="The color for the main title text.")
     subtitle_color: str = Field(default="#E5E7EB", description="The color for the subtitle and author line.")
@@ -264,9 +291,9 @@ class GenerateMinimalistTitleSlideInput(BaseModel):
 
 class GenerateMissionSlideInput(BaseModel):
     """Input schema for generate_mission_slide."""
-    top_text: str = Field(default='Subheading or Category', description="A small heading displayed above the main title (e.g., 'Our Purpose', 'Core Philosophy'). Default: 'Subheading or Category'.")
-    title: str = Field(default='Your Main Title Here', description="The main, concise title of the slide. Default: 'Your Main Title Here'.")
-    subtitle: str = Field(default='Elaborate on your key message or provide a call to action. This text can be a bit longer.', description="The main descriptive text, displayed in a larger, prominent area below the title. Default: 'Elaborate on your key message or provide a call to action. This text can be a bit longer.'.")
+    top_text: str = Field(..., description="A small heading displayed above the main title (e.g., 'Our Purpose', 'Core Philosophy'). Default: 'Subheading or Category'.")
+    title: str = Field(..., description="The main, concise title of the slide. Default: 'Your Main Title Here'.")
+    subtitle: str = Field(..., description="The main descriptive text, displayed in a larger, prominent area below the title. Default: 'Elaborate on your key message or provide a call to action. This text can be a bit longer.'.")
     image_url: str = Field(default="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", description="URL of the image to be displayed in the right column.")
     image_alt_text: str = Field(default="A team collaborating in a modern office, representing mission and goals", description="Alternative text for the image, for accessibility.")
     background_color_left: str = Field(default="#F5EBE0", description="Background color for the top content area in the left column (warm beige).")
@@ -277,8 +304,8 @@ class GenerateMissionSlideInput(BaseModel):
 
 class GenerateTrainingIntroSlideInput(BaseModel):
     """Input schema for generate_training_intro_slide."""
-    main_title: str = Field(default='Introduction', description="Main title text (e.g., 'Introduction'). Default: 'Introduction'.")
-    description_text: str = Field(default='Briefly introduce yourself and explain the purpose of your training presentation. Discuss its objectives, and give the audience an idea of what to expect in the coming slides.', description="Description or explanation text below title. Default: 'Briefly introduce yourself and explain the purpose of your training presentation.'")
+    main_title: str = Field(..., description="Main title text (e.g., 'Introduction'). Default: 'Introduction'.")
+    description_text: str = Field(..., description="Description or explanation text below title. Default: 'Briefly introduce yourself and explain the purpose of your training presentation.'")
     bg_color: str = Field(default="#3a3a3a", description="Background color for the slide (hex code). Default: '#3a3a3a' (dark gray).")
     title_color: str = Field(default="#b8d89f", description="Color for the main title (hex code). Default: '#b8d89f' (light green).")
     text_color: str = Field(default="#e8d7a8", description="Color for the description text (hex code). Default: '#e8d7a8' (light yellow).")
@@ -286,16 +313,16 @@ class GenerateTrainingIntroSlideInput(BaseModel):
 
 class GenerateBusinessIntroSlideInput(BaseModel):
     """Input schema for generate_business_intro_slide."""
-    main_title: str = Field(default='PRESENTATION', description="Large main title text , default='PRESENTATION'")
-    subtitle: str = Field(default='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore', description="Description text below main title.  default='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore'")
+    main_title: str = Field(..., description="Large main title text , default='PRESENTATION'")
+    subtitle: str = Field(..., description="Description text below main title.  default='Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore'")
     main_title_color: str = Field(default="#0056d2", description="Color for main title (default: blue).")
     subtitle_color: str = Field(default="#666666", description="Color for subtitle text.")
     accent_color: str = Field(default="#0056d2", description="Color for decorative D-shapes on sides.")
 
 class GenerateTitleSlide3Input(BaseModel):
     """Input schema for generate_title_slide_3."""
-    main_title: str = Field(default='Your main presentation title', description="The main title for the slide. Use <br> for line breaks. Default: 'Your main presentation title'.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="A smaller descriptive text below the main title. Default: 'Here is where your presentation begins'.")
+    main_title: str = Field(..., description="The main title for the slide. Use <br> for line breaks. Default: 'Christmas Lights<br>Minitheme'.")
+    subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Here is where your presentation begins'.")
     bg_color: str = Field(default="#F5EBE0", description="The background color of the slide.")
     text_color: str = Field(default="#C41E3A", description="The color for the main title text.")
     subtitle_color: str = Field(default="#3D3D3D", description="The color for the subtitle text.")
@@ -305,8 +332,8 @@ class GenerateTitleSlide3Input(BaseModel):
     
 class GenerateMinimalistSlideInput(BaseModel):
     """Input schema for generate_minimalist_slide."""
-    title: str = Field(default='Your presentation title', description="The main title for the slide. Default: 'Your presentation title'.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="A smaller descriptive text below the main title. Default: 'Here is where your presentation begins'.")
+    title: str = Field(..., description="The main title for the slide. Default: 'Minimalist Business Slides'.")
+    subtitle: str = Field(..., description="A smaller descriptive text below the main title. Default: 'Here is where your presentation begins'.")
     background_color: str = Field(default="#E8E3DC", description="The background color of the slide.")
     text_color_title: str = Field(default="#1A1A1A", description="The color for the title text.")
     text_color_subtitle: str = Field(default="#4A4A4A", description="The color for the subtitle text.")
@@ -330,8 +357,8 @@ class GenerateTitleSlide5Input(BaseModel):
 
 class GenerateTitleSlide7Input(BaseModel):
     """Input schema for generate_title_slide_7."""
-    main_title: str = Field(default='Main Title Here', description="Main title text displayed prominently (e.g., 'BUSINESS PLAN').")
-    subtitle: str = Field(default='Here is where your presentation begins', description="Subtitle text displayed below the main title.")
+    main_title: str = Field(..., description="Main title text displayed prominently (e.g., 'BUSINESS PLAN').")
+    subtitle: str = Field(..., description="Subtitle text displayed below the main title.")
     bg_color: str = Field(default="#F5F7FA", description="Background color of the slide (hex code).")
     card_bg_color: str = Field(default="#FFFFFF", description="Background color for the text card or frame (hex code).")
     border_color: str = Field(default="#E5E7EB", description="Border color for framed elements (hex code).")
@@ -342,16 +369,16 @@ class GenerateTitleSlide7Input(BaseModel):
 
 class GenerateTitleSlide11Input(BaseModel):
     """Input schema for generate_title_slide_11."""
-    main_title: str = Field(default='Simple and Minimalist Thesis Defense', description="Main title text displayed in large Georgia serif font.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="Subtitle text shown below the title.")
+    main_title: str = Field(..., description="Main title text displayed in large Georgia serif font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
     bg_left_color: str = Field(default="#f5d7d7", description="Background color for left half of the slide (hex).")
     bg_right_color: str = Field(default="#e8e8e8", description="Background color for right half of the slide (hex).")
     text_color: str = Field(default="#2d2d2d", description="Color for all text elements (hex).")
 
 class GenerateTitleSlide12Input(BaseModel):
     """Input schema for generate_title_slide_12."""
-    main_title: str = Field(default='Elegant Black and White Thesis Defense', description="Main title text in Montserrat bold font.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="Subtitle text shown below the title.")
+    main_title: str = Field(..., description="Main title text in Montserrat bold font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
     bg_color: str = Field(default="#F5F5F5", description="Background color of the slide (hex).")
     circle_color: str = Field(default="#E5E5E5", description="Color of the large decorative circle on the right (hex).")
     border_color: str = Field(default="#000000", description="Color of the rectangular border frame (hex).")
@@ -359,16 +386,16 @@ class GenerateTitleSlide12Input(BaseModel):
 
 class GenerateTitleSlide13Input(BaseModel):
     """Input schema for generate_title_slide_13."""
-    main_title: str = Field(default='Head of Presentation', description="Main title text in Montserrat extra-bold font.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="Subtitle text shown below the title.")
+    main_title: str = Field(..., description="Main title text in Montserrat extra-bold font.")
+    subtitle: str = Field(..., description="Subtitle text shown below the title.")
     bg_color: str = Field(default="#E8F4F8", description="Starting color for diagonal gradient background (hex).")
     text_color: str = Field(default="#1A1A4D", description="Color for title and subtitle text (hex).")
     decoration_color: str = Field(default="#A8D5E2", description="Color for geometric decorations - rounded rectangles and circle (hex).")
 
 class GenerateTitleSlide15Input(BaseModel):
     """Input schema for generate_title_slide_15."""
-    main_title: str = Field(default='SIMPLE MEETING', description="Main title text in Montserrat bold uppercase font.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="Subtitle text shown above the main title.")
+    main_title: str = Field(..., description="Main title text in Montserrat bold uppercase font.")
+    subtitle: str = Field(..., description="Subtitle text shown above the main title.")
     background_color: str = Field(default="#F5F5F0", description="Background color for the slide (hex).")
     subtitle_color: str = Field(default="#7A7A7A", description="Color for the subtitle text (hex).")
     title_color: str = Field(default="#E8B45E", description="Color for the main title text (hex, default golden yellow).")
@@ -378,8 +405,8 @@ class GenerateTitleSlide15Input(BaseModel):
 
 class GenerateTitleSlide17Input(BaseModel):
     """Input schema for generate_title_slide_17."""
-    main_title: str = Field(default='Heading of Presentation', description="Main title text.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="Subtitle text.")
+    main_title: str = Field(..., description="Main title text.")
+    subtitle: str = Field(..., description="Subtitle text.")
     bg_color: str = Field(default="#F5F5F5", description="Background color (hex).")
     title_color: str = Field(default="#2D2D2D", description="Main title color (hex).")
     subtitle_color: str = Field(default="#6B6B6B", description="Subtitle text color (hex).")
@@ -389,8 +416,8 @@ class GenerateTitleSlide17Input(BaseModel):
 
 class GenerateTitleSlide18Input(BaseModel):
     """Input schema for generate_title_slide_18."""
-    main_title: str = Field(default='Heading of Your Presentation', description="Main heading text.")
-    subtitle: str = Field(default='Here is where your presentation begins', description="Subtitle text below main title.")
+    main_title: str = Field(..., description="Main heading text.")
+    subtitle: str = Field(..., description="Subtitle text below main title.")
     bg_pattern_color: str = Field(default="#E8E8E8", description="Color for the geometric cube pattern background (hex).")
     card_bg_color: str = Field(default="#F9ED9B", description="Background color of center card (hex).")
     title_color: str = Field(default="#000000", description="Color for main title text (hex).")
@@ -400,8 +427,8 @@ class GenerateTitleSlide18Input(BaseModel):
 
 class GenerateDuskTransitionSlideInput(BaseModel):
     """Input schema for generate_dusk_transition_slide."""
-    headline: str = Field(default='Transition Headline', description="The main headline for the transition. Default: 'Transition Headline'.")
-    subtitle: str = Field(default="Let's start with the first set of slides", description="The smaller subtitle text below the headline. Default: 'Let's start with the first set of slides'.")
+    headline: str = Field(..., description="The main headline for the transition. Default: 'Transition Headline'.")
+    subtitle: str = Field(..., description="The smaller subtitle text below the headline. Default: 'Let's start with the first set of slides'.")
     headline_color: str = Field(default="#2C3E50", description="The color for the main headline text.")
     subtitle_color: str = Field(default="#4A5568", description="The color for the subtitle text.")
     number_color: str = Field(default="#FDE68A", description="The accent color for the section number.")
@@ -412,14 +439,14 @@ class GenerateDuskTransitionSlideInput(BaseModel):
 
 class GeneratePushpinSectionHeaderInput(BaseModel):
     """Input schema for generate_pushpin_section_header."""
-    main_title: str = Field(default='Add a Section Header', description="The main text for the section header. It will be displayed in large, uppercase letters. Default: 'Add a Section Header'.")
+    main_title: str = Field(..., description="The main text for the section header. It will be displayed in large, uppercase letters. Default: 'Add a Section Header'.")
     bg_color: str = Field(default="#FDFCFB", description="The background color of the slide, with a subtle paper texture overlay.")
     text_color: str = Field(default="#1F2937", description="The color for the main title text.")
     accent_color: str = Field(default="#1F2937", description="The color for the horizontal divider line and the two flanking dots.")
 
 class GenerateSectionHeaderSlideInput(BaseModel):
     """Input schema for generate_section_header_slide."""
-    header_text: str = Field(default='Add a Section Header', description="The main, large text for the section header. Default: 'Add a Section Header'.")
+    header_text: str = Field(..., description="The main, large text for the section header. Default: 'Add a Section Header'.")
     bg_color: str = Field(default="#F8FAFC", description="The main background color of the slide (typically a very light off-white).")
     text_color: str = Field(default="#1E293B", description="The color for the header text.")
     gradient_color_1: str = Field(default="#A78BFA", description="The first color for the soft aurora gradient background (e.g., light purple).")
@@ -428,8 +455,8 @@ class GenerateSectionHeaderSlideInput(BaseModel):
 
 class GenerateResearchProposalTransitionSlideInput(BaseModel):
     """Input schema for generate_research_proposal_transition_slide."""
-    headline: str = Field(default='TRANSITION HEADLINE', description="Main headline text for the transition. Default: 'TRANSITION HEADLINE'.")
-    subtitle: str = Field(default="Let's start with the first set of slides", description="Subtitle/description text below the headline. Default: 'Let's start with the first set of slides'.")
+    headline: str = Field(..., description="Main headline text for the transition. Default: 'TRANSITION HEADLINE'.")
+    subtitle: str = Field(..., description="Subtitle/description text below the headline. Default: 'Let's start with the first set of slides'.")
     bg_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
     accent_color: str = Field(default="#C4A57B", description="Color for decorative elements (geometric shapes, grid, bar).")
     number_color: str = Field(default="#C4A57B", description="Color for section number (if used).")
@@ -439,17 +466,17 @@ class GenerateResearchProposalTransitionSlideInput(BaseModel):
 
 class GenerateBusinessTransitionSlideInput(BaseModel):
     """Input schema for generate_business_transition_slide."""
-    headline: str = Field(default='TRANSITION', description="Main transition headline  Default: 'TRANSITION'.")
-    subtitle: str = Field(default="Let's start with the next section", description="Subtitle text below headline. Default: 'Let's start with the first set of slides'.")
+    headline: str = Field(..., description="Main transition headline  Default: 'TRANSITION'.")
+    subtitle: str = Field(..., description="Subtitle text below headline. Default: 'Let's start with the first set of slides'.")
     headline_color: str = Field(default="#0056d2", description="Color for headline (default: blue).")
     subtitle_color: str = Field(default="#666666", description="Color for subtitle text.")
     accent_color: str = Field(default="#0056d2", description="Color for decorative D-shapes on sides.")
 
 class GenerateIntroSlideInput(BaseModel):
     """Input schema for generate_intro_slide."""
-    main_title: str = Field(default='Main Title', description="Main title text. Default: 'Main Title'.")
-    subtitle1: str = Field(default='Subtitle1', description="First subtitle text. Default: 'Subtitle1'.")
-    subtitle2: str = Field(default='Subtitle2', description="Second subtitle text. Default: 'Subtitle2'.")
+    main_title: str = Field(..., description="Main title text. Default: 'Main Title'.")
+    subtitle1: str = Field(..., description="First subtitle text. Default: 'Subtitle1'.")
+    subtitle2: str = Field(..., description="Second subtitle text. Default: 'Subtitle2'.")
     main_bg_color: str = Field(default="#ffffff", description="CSS main background color for the slide.")
     accent_bg_color: str = Field(default="#6ea88a", description="CSS background color for the right section.")
     text_box_bg_color: str = Field(default="#c5e6b8", description="CSS background color for the text box.")
@@ -461,8 +488,8 @@ class GenerateIntroSlideInput(BaseModel):
 
 class GenerateEmployeeIntroSlideInput(BaseModel):
     """Input schema for generate_employee_intro_slide."""
-    main_title: str = Field(default='Employee Transition Plan', description="Main slide title displayed prominently. Default: 'Employee Transition Plan'.")
-    subtitle: str = Field(default='Use the following infographics to outline how your team or company will manage responsibilities and workflow during employee movement.', description="Descriptive text below the main title explaining the slide purpose. Default: 'Use the following infographics to outline how your team or company will manage responsibilities and workflow during employee movement.'.")
+    main_title: str = Field(..., description="Main slide title displayed prominently. Default: 'Employee Transition Plan'.")
+    subtitle: str = Field(..., description="Descriptive text below the main title explaining the slide purpose. Default: 'Use the following infographics to outline how your team or company will manage responsibilities and workflow during employee movement.'.")
     bg_color: str = Field(default="#0d4d3d", description="Background color (hex code). Default: dark green (#0d4d3d).")
     title_color: str = Field(default="#FFFFFF", description="Color for the main title text (hex code). Default: white.")
     subtitle_color: str = Field(default="#FFFFFF", description="Color for the subtitle text (hex code). Default: white.")
@@ -473,8 +500,8 @@ class GenerateEmployeeIntroSlideInput(BaseModel):
 
 class GenerateResearchProposalSlideInput(BaseModel):
     """Input schema for generate_research_proposal_slide."""
-    title: str = Field(default='Research Proposal Presentation', description="The main title text for the slide. Default: 'Research Proposal Presentation'.")
-    subtitle: str = Field(default='PRODUCT RESEARCH PROPOSAL FOR INGOUDE COMPANY', description="The subtitle text displayed below the main title. Default: 'PRODUCT RESEARCH PROPOSAL FOR INGOUDE COMPANY'.")
+    title: str = Field(..., description="The main title text for the slide. Default: 'Research Proposal Presentation'.")
+    subtitle: str = Field(..., description="The subtitle text displayed below the main title. Default: 'PRODUCT RESEARCH PROPOSAL FOR INGOUDE COMPANY'.")
     bg_color: str = Field(default="#FFFFFF", description="Background color . Default: '#FFFFFF'.")
     accent_color: str = Field(default="#C4A57B", description="Color for decorative elements . Default: '#C4A57B'.")
     title_color: str = Field(default="#000000", description="Color for the main title . Default: '#000000'.")
@@ -483,8 +510,8 @@ class GenerateResearchProposalSlideInput(BaseModel):
 
 class GenerateCompanyMissionSlideInput(BaseModel):
     """Input schema for generate_company_mission_slide."""
-    main_title: str = Field(default='OUR COMPANY OUR COMPANY OUR COMPANY OUR COMPANY', description="Main title text displayed in the left section. Default: 'OUR COMPANY OUR COMPANY OUR COMPANY OUR COMPANY'.")
-    mission_items: List[str] = Field(default=['Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore'], description="""List of mission item texts (4-7 items recommended). default=[
+    main_title: str = Field(..., description="Main title text displayed in the left section. Default: 'OUR COMPANY OUR COMPANY OUR COMPANY OUR COMPANY'.")
+    mission_items: List[str] = Field(..., description="""List of mission item texts (4-7 items recommended). default=[
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
         "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore",
@@ -504,7 +531,7 @@ class GenerateCompanyMissionSlideInput(BaseModel):
 
 class GenerateSectionHeaderSlide5Input(BaseModel):
     """Input schema for generate_section_header_slide_5."""
-    section_title: str = Field(default='THIS IS THE TITLE OF THIS SECTION', description="Main section title. Default: 'THIS IS THE TITLE OF THIS SECTION'.")
+    section_title: str = Field(..., description="Main section title. Default: 'THIS IS THE TITLE OF THIS SECTION'.")
     bg_color: str = Field(default="#1a3d4a", description="Background color (default: dark teal).")
     text_color: str = Field(default="#ffffff", description="Text color (default: white).")
     stripe_color: str = Field(default="#2a5566", description="Color of decorative stripes (default: medium teal).")
@@ -512,8 +539,8 @@ class GenerateSectionHeaderSlide5Input(BaseModel):
 
 class GenerateSectionHeaderSlide6Input(BaseModel):
     """Input schema for generate_section_header_slide_6."""
-    title: str = Field(default='INTRODUCTION', description="Main heading text for the slide.")
-    description: str = Field(default='Here you can add a brief description of the topic you want to talk aboout.', description="Supporting text displayed below the title and underline.")
+    title: str = Field(..., description="Main heading text for the slide.")
+    description: str = Field(..., description="Supporting text displayed below the title and underline.")
     bg_color: str = Field(default="#ffffff", description="Starting color of the background gradient (top).")
     bg_gradient_to: str = Field(default="#e3f2fd", description="Ending color of the background gradient (bottom).")
     title_color: str = Field(default="#1a1a1a", description="Color of the main title text.")
@@ -524,8 +551,8 @@ class GenerateSectionHeaderSlide6Input(BaseModel):
 
 class GenerateSectionHeaderSlide8Input(BaseModel):
     """Input schema for generate_section_header_slide_8."""
-    main_title: str = Field(default='Name of the section', description="Main title text for the slide.")
-    subtitle: str = Field(default='You can enter a subtitle here if you need it', description="Subtitle text displayed below the title.")
+    main_title: str = Field(..., description="Main title text for the slide.")
+    subtitle: str = Field(..., description="Subtitle text displayed below the title.")
     bg_color: str = Field(default="#FFB84D", description="Background color of the slide (warm peach/orange).")
     text_color: str = Field(default="#2C2C2C", description="Color of the main title text (dark gray).")
     subtitle_color: str = Field(default="#4A4A4A", description="Color of the subtitle text (medium gray).")
@@ -533,7 +560,7 @@ class GenerateSectionHeaderSlide8Input(BaseModel):
   
 class GenerateSectionHeaderSlide9Input(BaseModel):
     """Input schema for generate_section_header_slide_9."""
-    main_title: str = Field(default='Main Title Here', description="Main title text for the slide. default='SECTION TITLE HERE'.")
+    main_title: str = Field(..., description="Main title text for the slide. default='SECTION TITLE HERE'.")
     subtitle: str = Field(default="Here you could describe the topic of the section", description="Subtitle text displayed below the title.")
     bg_gradient_from: str = Field(default="#fef5e7", description="Starting gradient color (light cream).")
     bg_gradient_to: str = Field(default="#d4a574", description="Ending gradient color (warm brown).")
@@ -542,8 +569,8 @@ class GenerateSectionHeaderSlide9Input(BaseModel):
 
 class GenerateSectionHeaderSlide10Input(BaseModel):
     """Input schema for generate_section_header_slide_10."""
-    main_title: str = Field(default='Main Title Here', description="Main title text for the slide. default='SECTION TITLE HERE'.")
-    subtitle: str = Field(default='You can enter a subtitle here if you need it', description="Subtitle text displayed below the title.")
+    main_title: str = Field(..., description="Main title text for the slide. default='SECTION TITLE HERE'.")
+    subtitle: str = Field(..., description="Subtitle text displayed below the title.")
     bg_color: str = Field(default="#9BD89B", description="Background color (light green).")
     notebook_bg: str = Field(default="#FFFFFF", description="Notebook paper background color.")
     title_color: str = Field(default="#A84A3A", description="Color of the main title (brown/red).")
@@ -553,7 +580,7 @@ class GenerateSectionHeaderSlide10Input(BaseModel):
 
 class GenerateSectionHeaderSlide12Input(BaseModel):
     """Input schema for generate_section_header_slide_12."""
-    main_title: str = Field(default='What is <br> artificial intelligence?', description="Main title text (question) to display. default='WHAT IS THE MAIN <br> TOPIC OF THIS SECTION?'.")
+    main_title: str = Field(..., description="Main title text (question) to display. default='WHAT IS THE MAIN <br> TOPIC OF THIS SECTION?'.")
     bg_color: str = Field(default="#f5f5f5", description="Background color of the slide (light gray).")
     title_color: str = Field(default="#2d3748", description="Color of the main title text (dark gray).")
     custom_css: str = Field(default="", description="Additional custom CSS.")
@@ -561,7 +588,7 @@ class GenerateSectionHeaderSlide12Input(BaseModel):
 
 class GenerateSectionHeaderSlide15Input(BaseModel):
     """Input schema for generate_section_header_slide_15."""
-    main_title: str = Field(default='This is the title of this section', description="Main title text for the slide. default='MERRY CHRISTMAS AND HAPPY NEW YEAR!'.")
+    main_title: str = Field(..., description="Main title text for the slide. default='MERRY CHRISTMAS AND HAPPY NEW YEAR!'.")
     bg_color: str = Field(default="#0f2f1f", description="Background color (default: dark evergreen green for Christmas theme).")
     text_color: str = Field(default="#f8f8f8", description="Text color (default: bright white).")
     blob1_color: str = Field(default="rgba(220, 38, 38, 0.5)", description="First gradient blob color (default: Christmas red).")
@@ -571,8 +598,8 @@ class GenerateSectionHeaderSlide15Input(BaseModel):
 
 class GenerateSectionHeaderSlide17Input(BaseModel):
     """Input schema for generate_section_header_slide_17."""
-    section_title: str = Field(default='PROJECT SCHEDULE', description="Main title text in uppercase. Default: PROJECT SCHEDULE.")
-    section_subtitle: str = Field(default='You could enter a subtitle here if you need it', description="Subtitle text below main title. Default: You could enter a subtitle here if you need it")
+    section_title: str = Field(..., description="Main title text in uppercase. Default: PROJECT SCHEDULE.")
+    section_subtitle: str = Field(..., description="Subtitle text below main title. Default: You could enter a subtitle here if you need it")
     bg_color: str = Field(default="#f5f3ed", description="Background color (hex).")
     title_color: str = Field(default="#d4af6a", description="Color for main title (hex).")
     subtitle_color: str = Field(default="#7a8288", description="Color for subtitle text (hex).")
@@ -583,8 +610,8 @@ class GenerateSectionHeaderSlide17Input(BaseModel):
 
 class GenerateSectionHeaderSlide18Input(BaseModel):
     """Input schema for generate_section_header_slide_18."""
-    section_title: str = Field(default='Main Title Here', description="Main title text. Default: ANALYSIS AND RESULTS.")
-    section_subtitle: str = Field(default='You could enter a subtitle here if you need it', description="Subtitle text below main title. Default: You could enter a subtitle here if you need it")
+    section_title: str = Field(..., description="Main title text. Default: ANALYSIS AND RESULTS.")
+    section_subtitle: str = Field(..., description="Subtitle text below main title. Default: You could enter a subtitle here if you need it")
     bg_color: str = Field(default="#f5f5f0", description="Background color (hex).")
     title_color: str = Field(default="#E8B44F", description="Color for main title (hex).")
     subtitle_color: str = Field(default="#666666", description="Color for subtitle text (hex).")
@@ -598,8 +625,8 @@ class GenerateSectionHeaderSlide18Input(BaseModel):
 
 class GenerateContentSlideInput(BaseModel):
     """Input schema for generate_content_slide."""
-    main_title: str = Field(default='CONTENT', description="Main title of the slide. Default: 'CONTENT'.")
-    items: List[str] = Field(default=None, description="List of item titles for the grid. Default: ['Your Title Here', ...] (6 items).")
+    main_title: str = Field(..., description="Main title of the slide. Default: 'CONTENT'.")
+    items: List[str] = Field(..., description="List of item titles for the grid. Default: ['Your Title Here', ...] (6 items).")
     main_title_color: str = Field(default="#555555", description="CSS color for the main title.")
     number_color: str = Field(default="#a2c4c9", description="CSS color for item numbers.")
     item_title_color: str = Field(default="#555555", description="CSS color for item titles.")
@@ -611,15 +638,15 @@ class GenerateContentSlideInput(BaseModel):
 
 class GenerateComparisonSlideInput(BaseModel):
     """Input schema for generate_comparison_slide."""
-    main_title: str = Field(default='Your Title Here', description="Main title of the slide. Default: 'Your Title Here'.")
-    left_title: str = Field(default='Your Title Here', description="Title for the left column. Default: 'Your Title Here'.")
-    right_title: str = Field(default='Your Title Here', description="Title for the right column. Default: 'Your Title Here'.")
-    left_text: str = Field(default='Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.', description="Text content for the left column. Default: placeholder text.")
-    right_text: str = Field(default='Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.', description="Text content for the right column. Default: placeholder text.")
+    main_title: str = Field(..., description="Main title of the slide. Default: 'Your Title Here'.")
+    left_title: str = Field(..., description="Title for the left column. Default: 'Your Title Here'.")
+    right_title: str = Field(..., description="Title for the right column. Default: 'Your Title Here'.")
+    left_text: str = Field(..., description="Text content for the left column. Default: placeholder text.")
+    right_text: str = Field(..., description="Text content for the right column. Default: placeholder text.")
     left_icon: str = Field(default="gavel", description="Icon for the left column ('gavel' or 'custom').")
     right_icon: str = Field(default="scales", description="Icon for the right column ('scales' or 'custom').")
-    custom_left_icon: str = Field(default="", description="Custom SVG code for left icon if 'custom'.")
-    custom_right_icon: str = Field(default="", description="Custom SVG code for right icon if 'custom'.")
+    custom_left_icon: str = Field(default="''", description="Custom SVG code for left icon if 'custom'.")
+    custom_right_icon: str = Field(default="''", description="Custom SVG code for right icon if 'custom'.")
     title_color: str = Field(default="#555555", description="CSS color for all titles.")
     text_color: str = Field(default="#555555", description="CSS color for text content.")
     icon_color: str = Field(default="#a2c4c9", description="CSS color for icons.")
@@ -629,11 +656,11 @@ class GenerateComparisonSlideInput(BaseModel):
 
 class GenerateProcessSlideInput(BaseModel):
     """Input schema for generate_process_slide."""
-    main_title: str = Field(default='Your Title Here', description="Main title of the slide. Default: 'Your Title Here'.")
-    left_title: str = Field(default='Your Title Here', description="Title for the left box. Default: 'Your Title Here'.")
-    right_title: str = Field(default='Your Title Here', description="Title for the right box. Default: 'Your Title Here'.")
-    left_content: str = Field(default='Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.', description="Content text for the left box. Default: placeholder text.")
-    right_content: str = Field(default='Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.', description="Content text for the right box. Default: placeholder text.")
+    main_title: str = Field(..., description="Main title of the slide. Default: 'Your Title Here'.")
+    left_title: str = Field(..., description="Title for the left box. Default: 'Your Title Here'.")
+    right_title: str = Field(..., description="Title for the right box. Default: 'Your Title Here'.")
+    left_content: str = Field(..., description="Content text for the left box. Default: placeholder text.")
+    right_content: str = Field(..., description="Content text for the right box. Default: placeholder text.")
     title_color: str = Field(default="#555555", description="CSS color for the main title.")
     left_box_color: str = Field(default="#8cbeca", description="CSS background color for the left box.")
     right_box_color: str = Field(default="#c5e1e8", description="CSS background color for the right box.")
@@ -648,8 +675,8 @@ class GenerateProcessSlideInput(BaseModel):
 
 class GenerateProcessStepsSlideInput(BaseModel):
     """Input schema for generate_process_steps_slide."""
-    main_title: str = Field(default='Cách tiếp cận đề xuất', description="The main title displayed in the left-hand colored panel. Default: 'Cách tiếp cận đề xuất'.")
-    steps: List[Dict] = Field(default=[{'image_url': 'https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop', 'title': 'Thiết lập nền tảng số', 'description': 'Thuyết trình là công cụ giao tiếp có thể dùng để giảng dạy.'}, {'image_url': 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4', 'title': 'Ra mắt các chiến dịch số', 'description': 'Thuyết trình là công cụ giao tiếp có thể dùng để giảng dạy.'}, {'image_url': 'https://images.unsplash.com/photo-1454165804606-c3d57bc86b40?q=80&w=2940&auto=format&fit=crop', 'title': 'Theo dõi kết quả', 'description': 'Thuyết trình là công cụ giao tiếp có thể dùng để giảng dạy.'}], description=f"""A list of step objects, each containing an image URL, a title, and a description. Default: [
+    main_title: str = Field(..., description="The main title displayed in the left-hand colored panel. Default: 'Cách tiếp cận đề xuất'.")
+    steps: List[Dict] = Field(..., description=f"""A list of step objects, each containing an image URL, a title, and a description. Default: [
         {{
             "image_url": "https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop",
             "title": "Thiết lập nền tảng số",
@@ -675,7 +702,7 @@ class GenerateProcessStepsSlideInput(BaseModel):
 
 class GenerateImageCutoutListSlideInput(BaseModel):
     """Input schema for generate_image_cutout_list_slide."""
-    list_items: List[str] = Field(default=[{'title': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}, {'title': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}, {'title': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}, {'title': 'Add a main point', 'description': 'Elaborate on what you want to discuss.'}],description=f"""A list of items to display, each with a 'title' (main point) and a 'description' (elaboration). default=[ {{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}}]""")
+    list_items: List[str] = Field(...,description=f"""A list of items to display, each with a 'title' (main point) and a 'description' (elaboration). default=[ {{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}}]""")
     background_image_url: str = Field(default="https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?q=80&w=2940&auto=format&fit=crop", description="URL for the single, continuous background image that spans the entire slide. An atmospheric or abstract office photo is recommended.")
     content_bg_color: str = Field(default="#1A1A22", description="Background color for the main content panel that sits on top of the image.")
     text_heading_color: str = Field(default="#FFFFFF", description="Color for the main heading of each list item.")
@@ -686,14 +713,14 @@ class GenerateImageCutoutListSlideInput(BaseModel):
 
 class GenerateBodySlide4Input(BaseModel):
     """Input schema for generate_body_slide4."""
-    main_title: str = Field(default='MainTitle', description="Main title of the slide. Default: 'MainTitle'.")
-    main_content: str = Field(default='Content', description="Content text for the horizontal bar. Default: 'Content'.")
-    subtitle1: str = Field(default='Subtitle1', description="Subtitle for the first image. Default: 'Subtitle1'.")
-    content1: str = Field(default='Content1', description="Content text for the first image. Default: 'Content1'.")
-    subtitle2: str = Field(default='Subtitle2', description="Subtitle for the second image. Default: 'Subtitle2'.")
-    content2: str = Field(default='Content2', description="Content text for the second image. Default: 'Content2'.")
-    subtitle3: str = Field(default='Subtitle3', description="Subtitle for the third image. Default: 'Subtitle3'.")
-    content3: str = Field(default='Content3', description="Content text for the third image. Default: 'Content3'.")
+    main_title: str = Field(..., description="Main title of the slide. Default: 'MainTitle'.")
+    main_content: str = Field(..., description="Content text for the horizontal bar. Default: 'Content'.")
+    subtitle1: str = Field(..., description="Subtitle for the first image. Default: 'Subtitle1'.")
+    content1: str = Field(..., description="Content text for the first image. Default: 'Content1'.")
+    subtitle2: str = Field(..., description="Subtitle for the second image. Default: 'Subtitle2'.")
+    content2: str = Field(..., description="Content text for the second image. Default: 'Content2'.")
+    subtitle3: str = Field(..., description="Subtitle for the third image. Default: 'Subtitle3'.")
+    content3: str = Field(..., description="Content text for the third image. Default: 'Content3'.")
     main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     accent_color: str = Field(default="#d5e8b9", description="CSS color for accents and borders.")
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
@@ -705,15 +732,15 @@ class GenerateBodySlide4Input(BaseModel):
 
 class GenerateBodySlide5Input(BaseModel):
     """Input schema for generate_body_slide5."""
-    main_title: str = Field(default='MainTitle', description="Main title of the slide. Default: 'MainTitle'.")
-    subtitle1: str = Field(default='SUBTITLE1', description="Subtitle for the first content section. Default: 'SUBTITLE1'.")
-    content1: str = Field(default='Content1', description="Content text for the first content section. Default: 'Content1'.")
-    subtitle2: str = Field(default='SUBTITLE2', description="Subtitle for the second content section. Default: 'SUBTITLE2'.")
-    content2: str = Field(default='Content2', description="Content text for the second content section. Default: 'Content2'.")
-    subtitle3: str = Field(default='SUBTITLE3', description="Subtitle for the third content section. Default: 'SUBTITLE3'.")
-    content3: str = Field(default='Content3', description="Content text for the third content section. Default: 'Content3'.")
-    subtitle4: str = Field(default='SUBTITLE4', description="Subtitle for the fourth content section. Default: 'SUBTITLE4'.")
-    content4: str = Field(default='Content4', description="Content text for the fourth content section. Default: 'Content4'.")
+    main_title: str = Field(..., description="Main title of the slide. Default: 'MainTitle'.")
+    subtitle1: str = Field(..., description="Subtitle for the first content section. Default: 'SUBTITLE1'.")
+    content1: str = Field(..., description="Content text for the first content section. Default: 'Content1'.")
+    subtitle2: str = Field(..., description="Subtitle for the second content section. Default: 'SUBTITLE2'.")
+    content2: str = Field(..., description="Content text for the second content section. Default: 'Content2'.")
+    subtitle3: str = Field(..., description="Subtitle for the third content section. Default: 'SUBTITLE3'.")
+    content3: str = Field(..., description="Content text for the third content section. Default: 'Content3'.")
+    subtitle4: str = Field(..., description="Subtitle for the fourth content section. Default: 'SUBTITLE4'.")
+    content4: str = Field(..., description="Content text for the fourth content section. Default: 'Content4'.")
     main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     accent_color: str = Field(default="#d5e8b9", description="CSS color for accents and borders.")
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
@@ -727,13 +754,13 @@ class GenerateBodySlide5Input(BaseModel):
 
 class GenerateBodySlide10Input(BaseModel):
     """Input schema for generate_body_slide10."""
-    main_title: str = Field(default='MainTitle', description="Main title of the slide displayed prominently at the top (e.g., 'Key Features Overview').")
-    subtitle1: str = Field(default='SubTitle1', description="Subtitle for the first content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., '<b>Innovation</b> & Technology').")
-    content1: str = Field(default='Content1', description="Content text for the first section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'This covers <b>key innovations</b> in <i>modern technology</i>: <ul><li>Advanced <u>algorithms</u></li><li>Smart <span style=\"color: #e74c3c;\">automation</span></li><li>Enhanced user experience</li></ul>'")
-    subtitle2: str = Field(default='SubTitle2', description="Subtitle for the second content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Market <u>Analysis</u>').")
-    content2: str = Field(default='Content2', description="Content text for the second section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Comprehensive analysis of <b>market trends</b>: <ul><li>Consumer <i>behavior patterns</i></li><li>Emerging <u>market opportunities</u></li><li>Competitive <span style=\"color: #27ae60;\">advantages</span></li></ul>'")
-    subtitle3: str = Field(default='SubTitle3', description="Subtitle for the third content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Future <b>Roadmap</b>').")
-    content3: str = Field(default='Content3', description="Content text for the third section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Strategic planning for <b>sustainable growth</b>: <ul><li>Short-term <i>objectives</i></li><li>Long-term <u>vision</u></li><li>Resource <span style=\"color: #3498db;\">allocation</span></li></ul>'")
+    main_title: str = Field(..., description="Main title of the slide displayed prominently at the top (e.g., 'Key Features Overview').")
+    subtitle1: str = Field(..., description="Subtitle for the first content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., '<b>Innovation</b> & Technology').")
+    content1: str = Field(..., description="Content text for the first section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'This covers <b>key innovations</b> in <i>modern technology</i>: <ul><li>Advanced <u>algorithms</u></li><li>Smart <span style=\"color: #e74c3c;\">automation</span></li><li>Enhanced user experience</li></ul>'")
+    subtitle2: str = Field(..., description="Subtitle for the second content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Market <u>Analysis</u>').")
+    content2: str = Field(..., description="Content text for the second section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Comprehensive analysis of <b>market trends</b>: <ul><li>Consumer <i>behavior patterns</i></li><li>Emerging <u>market opportunities</u></li><li>Competitive <span style=\"color: #27ae60;\">advantages</span></li></ul>'")
+    subtitle3: str = Field(..., description="Subtitle for the third content section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Future <b>Roadmap</b>').")
+    content3: str = Field(..., description="Content text for the third section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Strategic planning for <b>sustainable growth</b>: <ul><li>Short-term <i>objectives</i></li><li>Long-term <u>vision</u></li><li>Resource <span style=\"color: #3498db;\">allocation</span></li></ul>'")
     main_bg_color: str = Field(default="#ffffff", description="CSS background color for the entire slide.")
     accent_color: str = Field(default="#d5e8b9", description="CSS color for accent elements including icon backgrounds and decorative elements.")
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
@@ -746,16 +773,16 @@ class GenerateBodySlide10Input(BaseModel):
 
 class GenerateBodySlide11Input(BaseModel):
     """Input schema for generate_body_slide11."""
-    main_title: str = Field(default='MainTitle', description="The main title of the slide.")
-    subtitle1: str = Field(default='SUBTITLE1', description="Subtitle for the first content box. You can use HTML tags like '<b>' for emphasis.")
-    content1: str = Field(default='Content1', description="Content for the first box. For structured bullet points, use '<ul>' and '<li>' tags. To highlight key phrases, use HTML tags like '<b>bold</b>', '<i>italic</i>', or '<span style=\"color:blue\">colored text</span>'. For sub-points (ý nhỏ), nest another '<ul>' inside an '<li>'.")
-    icon1: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v18h18"></path><path d="M18 9l-5 5-2-2-4 4"></path></svg>', description="SVG code for the first section's icon(e.g., '<svg xmlns=\"http://www.w3.org/2000/svg\" ...>').")
-    subtitle2: str = Field(default='SUBTITLE2', description="Subtitle for the second content box. You can use HTML tags like '<b>' for emphasis.")
-    content2: str = Field(default='Content2', description="Content for the second box. For structured bullet points, use '<ul>' and '<li>' tags. To highlight key phrases, use HTML tags like '<b>bold</b>', '<i>italic</i>', or '<span style=\"color:blue\">colored text</span>'. For sub-points (ý nhỏ), nest another '<ul>' inside an '<li>'.")
-    icon2: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 20V10M12 20V4M6 20v-6"></path></svg>', description="SVG code for the second section's icon(e.g., '<svg xmlns=\"http://www.w3.org/2000/svg\" ...>').")
-    subtitle3: str = Field(default='SUBTITLE3', description="Subtitle for the third content box. You can use HTML tags like '<b>' for emphasis.")
-    content3: str = Field(default='Content3', description="Content for the third box. For structured bullet points, use '<ul>' and '<li>' tags. To highlight key phrases, use HTML tags like '<b>bold</b>', '<i>italic</i>', or '<span style=\"color:blue\">colored text</span>'. For sub-points, nest another '<ul>' inside an '<li>'.")
-    icon3: str = Field(default='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="32" height="32" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path></svg>', description="SVG code for the third section's icon.(e.g., '<svg xmlns=\"http://www.w3.org/2000/svg\" ...>')")
+    main_title: str = Field(..., description="The main title of the slide.")
+    subtitle1: str = Field(..., description="Subtitle for the first content box. You can use HTML tags like '<b>' for emphasis.")
+    content1: str = Field(..., description="Content for the first box. For structured bullet points, use '<ul>' and '<li>' tags. To highlight key phrases, use HTML tags like '<b>bold</b>', '<i>italic</i>', or '<span style=\"color:blue\">colored text</span>'. For sub-points (ý nhỏ), nest another '<ul>' inside an '<li>'.")
+    icon1: str = Field(..., description="SVG code for the first section's icon(e.g., '<svg xmlns=\"http://www.w3.org/2000/svg\" ...>').")
+    subtitle2: str = Field(..., description="Subtitle for the second content box. You can use HTML tags like '<b>' for emphasis.")
+    content2: str = Field(..., description="Content for the second box. For structured bullet points, use '<ul>' and '<li>' tags. To highlight key phrases, use HTML tags like '<b>bold</b>', '<i>italic</i>', or '<span style=\"color:blue\">colored text</span>'. For sub-points (ý nhỏ), nest another '<ul>' inside an '<li>'.")
+    icon2: str = Field(..., description="SVG code for the second section's icon(e.g., '<svg xmlns=\"http://www.w3.org/2000/svg\" ...>').")
+    subtitle3: str = Field(..., description="Subtitle for the third content box. You can use HTML tags like '<b>' for emphasis.")
+    content3: str = Field(..., description="Content for the third box. For structured bullet points, use '<ul>' and '<li>' tags. To highlight key phrases, use HTML tags like '<b>bold</b>', '<i>italic</i>', or '<span style=\"color:blue\">colored text</span>'. For sub-points, nest another '<ul>' inside an '<li>'.")
+    icon3: str = Field(..., description="SVG code for the third section's icon.(e.g., '<svg xmlns=\"http://www.w3.org/2000/svg\" ...>')")
     main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     box_bg_color: str = Field(default="#e6f2dd", description="CSS background color for the content boxes.")
     accent_color: str = Field(default="#8cc63f", description="CSS color for accents and icons.")
@@ -766,14 +793,14 @@ class GenerateBodySlide11Input(BaseModel):
 
 class GenerateBodySlide12Input(BaseModel):
     """Input schema for generate_body_slide12."""
-    main_title: str = Field(default='MainTitle', description="Main title of the slide displayed prominently at the top (e.g., 'Our Key Solutions').")
-    main_content: str = Field(default='Content', description="Content text for the horizontal bar section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'We provide <b>comprehensive solutions</b> that deliver <i>measurable results</i>: <ul><li>Enhanced <u>performance</u></li><li>Improved <span style=\"color: #e74c3c;\">efficiency</span></li><li>Sustainable growth</li></ul>'")
-    subtitle1: str = Field(default='Subtitle1', description="Subtitle for the first image section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., '<b>Digital</b> Transformation').")
-    content1: str = Field(default='Content1', description="Content text for the first image section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Modernizing <b>business processes</b> through <i>innovative technology</i>: <ul><li>Cloud <u>migration</u></li><li>Process <span style=\"color: #27ae60;\">automation</span></li><li>Data analytics</li></ul>'")
-    subtitle2: str = Field(default='Subtitle2', description="Subtitle for the second image section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Strategic <u>Planning</u>').")
-    content2: str = Field(default='Content2', description="Content text for the second image section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Comprehensive <b>strategy development</b> for <i>long-term success</i>: <ul><li>Market <u>analysis</u></li><li>Risk <span style=\"color: #3498db;\">assessment</span></li><li>Growth planning</li></ul>'")
-    subtitle3: str = Field(default='Subtitle3', description="Subtitle for the third image section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Team <b>Development</b>').")
-    content3: str = Field(default='Content3', description="Content text for the third image section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Building <b>high-performance teams</b> through <i>targeted training</i>: <ul><li>Skill <u>development</u></li><li>Leadership <span style=\"color: #9b59b6;\">coaching</span></li><li>Performance optimization</li></ul>'")
+    main_title: str = Field(..., description="Main title of the slide displayed prominently at the top (e.g., 'Our Key Solutions').")
+    main_content: str = Field(..., description="Content text for the horizontal bar section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'We provide <b>comprehensive solutions</b> that deliver <i>measurable results</i>: <ul><li>Enhanced <u>performance</u></li><li>Improved <span style=\"color: #e74c3c;\">efficiency</span></li><li>Sustainable growth</li></ul>'")
+    subtitle1: str = Field(..., description="Subtitle for the first image section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., '<b>Digital</b> Transformation').")
+    content1: str = Field(..., description="Content text for the first image section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Modernizing <b>business processes</b> through <i>innovative technology</i>: <ul><li>Cloud <u>migration</u></li><li>Process <span style=\"color: #27ae60;\">automation</span></li><li>Data analytics</li></ul>'")
+    subtitle2: str = Field(..., description="Subtitle for the second image section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Strategic <u>Planning</u>').")
+    content2: str = Field(..., description="Content text for the second image section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Comprehensive <b>strategy development</b> for <i>long-term success</i>: <ul><li>Market <u>analysis</u></li><li>Risk <span style=\"color: #3498db;\">assessment</span></li><li>Growth planning</li></ul>'")
+    subtitle3: str = Field(..., description="Subtitle for the third image section. Can include HTML formatting like <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span> (e.g., 'Team <b>Development</b>').")
+    content3: str = Field(..., description="Content text for the third image section. Use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Building <b>high-performance teams</b> through <i>targeted training</i>: <ul><li>Skill <u>development</u></li><li>Leadership <span style=\"color: #9b59b6;\">coaching</span></li><li>Performance optimization</li></ul>'")
     main_bg_color: str = Field(default="#ffffff", description="CSS background color for the entire slide.")
     accent_color: str = Field(default="#d5e8b9", description="CSS color for accent elements including borders, decorative elements, and highlights.")
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
@@ -786,10 +813,10 @@ class GenerateBodySlide12Input(BaseModel):
 
 class GenerateBodySlide15Input(BaseModel):
     """Input schema for generate_body_slide15."""
-    main_title: str = Field(default='MainTitle', description="Main title of the slide displayed at the top (e.g., 'Main Title').")
-    subtitle: str = Field(default="", description="Subtitle for the right column, appears as a section header (e.g., 'Subtitle').")
-    content1: str = Field(default='\n        <ul>SubTitle1\n            <li>Point 1</li>\n            <li>Point 2</li>\n            <li>Point 3</li>\n        </ul>\n    ', description="First content text section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
-    content2: str = Field(default='\n        <ul>SubTitle2\n            <li>Point 1</li>\n            <li>Point 2</li>\n            <li>Point 3</li>\n        </ul>\n    ', description="Second content text section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
+    main_title: str = Field(..., description="Main title of the slide displayed at the top (e.g., 'Main Title').")
+    subtitle: str = Field(..., description="Subtitle for the right column, appears as a section header (e.g., 'Subtitle').")
+    content1: str = Field(..., description="First content text section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
+    content2: str = Field(..., description="Second content text section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
     image_url: str = Field(default="Image/generate_body_slide15/Default_1.png", description="Path to the background image for the slide.")
     main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     accent_color: str = Field(default="#d5e8b9", description="CSS color for accents, such as the title accent block.")
@@ -799,11 +826,11 @@ class GenerateBodySlide15Input(BaseModel):
 
 class GenerateBodySlide18Input(BaseModel):
     """Input schema for generate_body_slide18."""
-    main_title: str = Field(default='Main title', description="The main title displayed at the top center of the slide (e.g., 'Main title').")
-    left_title: str = Field(default='Subtitle 1', description="The title for the left column (e.g., 'Subtitle 1').")
-    right_title: str = Field(default='Subtitle 2', description="The title for the right column (e.g., 'Subtitle 2').")
-    left_text: str = Field(default='Content1', description="Text content for the left column.'")
-    right_text: str = Field(default='Content2', description="Text content for the right column.'")
+    main_title: str = Field(..., description="The main title displayed at the top center of the slide (e.g., 'Main title').")
+    left_title: str = Field(..., description="The title for the left column (e.g., 'Subtitle 1').")
+    right_title: str = Field(..., description="The title for the right column (e.g., 'Subtitle 2').")
+    left_text: str = Field(..., description="Text content for the left column.'")
+    right_text: str = Field(..., description="Text content for the right column.'")
     left_icon: str = Field(default="gavel", description="Icon to display in the left column. Options: 'gavel' (predefined gavel icon) or 'custom' (use custom SVG code).")
     right_icon: str = Field(default="scales", description="Icon to display in the right column. Options: 'scales' (predefined scales icon) or 'custom' (use custom SVG code).")
     custom_left_icon: str = Field(default="", description="Custom SVG code for the left icon. Only used when left_icon is set to 'custom'. Should be a complete SVG element with proper dimensions (recommended: 70x70px).")
@@ -817,11 +844,11 @@ class GenerateBodySlide18Input(BaseModel):
 
 class GenerateBodySlide19Input(BaseModel):
     """Input schema for generate_body_slide19."""
-    main_title: str = Field(default='Your Title Here', description="The main title displayed at the top center of the slide (e.g., 'Your Title Here').")
-    left_column_titles: List[str] = Field(default=['Your Title Here', 'Your Title Here'], description="Array of titles for the left column sections. Each title will be displayed as a section header in the left column.")
-    left_column_texts: List[str] = Field(default=['Presentations are communication tools that can be used as demonstrations.', 'Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience.'], description="Array of text content for the left column sections. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Presentations are <b>communication tools</b> that can be used as <i>demonstrations</i>: <ul><li>Interactive <u>engagement</u></li><li>Visual <span style=\"color: #e74c3c;\">storytelling</span></li><li>Audience participation</li></ul>'")
-    right_column_titles: List[str] = Field(default=['Your Title Here', 'Your Title Here'], description="Array of titles for the right column sections. Each title will be displayed as a section header in the right column with an accompanying icon.")
-    right_column_texts: List[str] = Field(default=['Presentations are communication tools that can be used as speeches, reports, and more.', 'Presentations are communication tools that can be used as speeches, reports, and more.'], description="Array of text content for the right column sections. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Presentations are <b>communication tools</b> for <i>speeches and reports</i>: <ul><li>Professional <u>delivery</u></li><li>Clear <span style=\"color: #27ae60;\">messaging</span></li><li>Structured format</li></ul>'")
+    main_title: str = Field(..., description="The main title displayed at the top center of the slide (e.g., 'Your Title Here').")
+    left_column_titles: List[str] = Field(..., description="Array of titles for the left column sections. Each title will be displayed as a section header in the left column.")
+    left_column_texts: List[str] = Field(..., description="Array of text content for the left column sections. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Presentations are <b>communication tools</b> that can be used as <i>demonstrations</i>: <ul><li>Interactive <u>engagement</u></li><li>Visual <span style=\"color: #e74c3c;\">storytelling</span></li><li>Audience participation</li></ul>'")
+    right_column_titles: List[str] = Field(..., description="Array of titles for the right column sections. Each title will be displayed as a section header in the right column with an accompanying icon.")
+    right_column_texts: List[str] = Field(..., description="Array of text content for the right column sections. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Presentations are <b>communication tools</b> for <i>speeches and reports</i>: <ul><li>Professional <u>delivery</u></li><li>Clear <span style=\"color: #27ae60;\">messaging</span></li><li>Structured format</li></ul>'")
     main_title_color: str = Field(default="#555555", description="CSS color for the main title.")
     left_bg_color: str = Field(default="#a2c4c9", description="CSS background color for the left column.")
     left_text_color: str = Field(default="#ffffff", description="CSS color for all text in the left column (titles and content).")
@@ -832,11 +859,11 @@ class GenerateBodySlide19Input(BaseModel):
 
 class GenerateBodySlide20Input(BaseModel):
     """Input schema for generate_body_slide20."""
-    main_title: str = Field(default='Your Title Here', description="The main title displayed at the top center of the slide (e.g., 'Main title').")
-    left_title: str = Field(default='Your Title Here', description="The title for the left column (e.g., 'Subtitle 1').")
-    right_title: str = Field(default='Your Title Here', description="The title for the right column (e.g., 'Subtitle 2').")
-    left_text: str = Field(default='Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.', description="Text content for the left column.'")
-    right_text: str = Field(default='Presentation are communication tools that can be used as demontrations, lectures, reports, and more. it is mostly presented before an audience. Presentation are communication tools that can be used as demontrations, lectures, reports, and more.', description="Text content for the right column.'")
+    main_title: str = Field(..., description="The main title displayed at the top center of the slide (e.g., 'Main title').")
+    left_title: str = Field(..., description="The title for the left column (e.g., 'Subtitle 1').")
+    right_title: str = Field(..., description="The title for the right column (e.g., 'Subtitle 2').")
+    left_text: str = Field(..., description="Text content for the left column.'")
+    right_text: str = Field(..., description="Text content for the right column.'")
     left_icon: str = Field(default="gavel", description="Icon to display in the left column. Options: 'gavel' (predefined gavel icon), 'scales' (predefined scales icon), or 'custom' (use custom SVG code).")
     right_icon: str = Field(default="scales", description="Icon to display in the right column. Options: 'gavel' (predefined gavel icon), 'scales' (predefined scales icon), or 'custom' (use custom SVG code).")
     custom_left_icon: str = Field(default="", description="Custom SVG code for the left icon. Only used when left_icon is set to 'custom'. Should be a complete SVG element with proper dimensions (recommended: 70x70px).")
@@ -850,18 +877,18 @@ class GenerateBodySlide20Input(BaseModel):
 
 class GenerateMainPointsSlideInput(BaseModel):
     """Input schema for generate_main_points_slide."""
-    title: str = Field(default='WRITE YOUR TOPIC OR IDEA', description="Main title displayed at the top of the slide in uppercase")
-    point1_title: str = Field(default='ADD A MAIN POINT', description="Title for the first point (plastic bag icon) - displayed in uppercase")
-    point1_description: str = Field(default='Briefly elaborate on what you want to discuss.', description="Description text for the first point about plastic/waste management. .")
-    point2_title: str = Field(default='ADD A MAIN POINT', description="Title for the second point (faucet icon) - displayed in uppercase")
-    point2_description: str = Field(default='Briefly elaborate on what you want to discuss.', description="Description text for the second point about water conservation/management. .")
-    point3_title: str = Field(default='ADD A MAIN POINT', description="Title for the third point (factory icon) - displayed in uppercase")
-    point3_description: str = Field(default='Briefly elaborate on what you want to discuss.', description="Description text for the third point about industrial processes/manufacturing. .")
+    title: str = Field(..., description="Main title displayed at the top of the slide in uppercase")
+    point1_title: str = Field(..., description="Title for the first point (plastic bag icon) - displayed in uppercase")
+    point1_description: str = Field(..., description="Description text for the first point about plastic/waste management. .")
+    point2_title: str = Field(..., description="Title for the second point (faucet icon) - displayed in uppercase")
+    point2_description: str = Field(..., description="Description text for the second point about water conservation/management. .")
+    point3_title: str = Field(..., description="Title for the third point (factory icon) - displayed in uppercase")
+    point3_description: str = Field(..., description="Description text for the third point about industrial processes/manufacturing. .")
 
 class GenerateElegantPointsSlideInput(BaseModel):
     """Input schema for generate_elegant_points_slide."""
-    main_title: str = Field(default='Write Your Topic or Idea Here', description="A concise title at the top of the slide, styled to be less prominent than the main content. Default: 'Write Your Topic or Idea Here'.")
-    points: List[Dict[str, str]] = Field(default=[{'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}], description="An array of exactly 4 objects, where each object represents a large, prominent content card with an icon, title, and description. Each point should have 'title' and 'description' keys. Default: [{'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}].")
+    main_title: str = Field(..., description="A concise title at the top of the slide, styled to be less prominent than the main content. Default: 'Write Your Topic or Idea Here'.")
+    points: List[Dict[str, str]] = Field(..., description="An array of exactly 4 objects, where each object represents a large, prominent content card with an icon, title, and description. Each point should have 'title' and 'description' keys. Default: [{'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}, {'title': 'Add a Key Point', 'description': 'Briefly elaborate on the topic you want to discuss.'}].")
     bg_color: str = Field(default="#FDFCFB", description="Overall background color of the slide (off-white).")
     card_bg_color: str = Field(default="#FFFFFF", description="Background color for the four content cards (pure white).")
     title_color: str = Field(default="#4E443F", description="Text color for the main title and card titles (dark brown).")
@@ -871,8 +898,8 @@ class GenerateElegantPointsSlideInput(BaseModel):
 
 class GenerateCorporateContentSlideInput(BaseModel):
     """Input schema for generate_corporate_content_slide."""
-    main_title: str = Field(default="THIS IS A <span class='highlight'>SLIDE</span> TITLE", description="The main title displayed in the colored panel on the left. To highlight a word, wrap it in `<span class='highlight'>...</span>`. Default: 'THIS IS A <span class=\'highlight\'>SLIDE</span> TITLE'.")
-    list_items: List[Dict[str, str]] = Field(default=[{'title': 'First Key Point', 'description': 'Here you have a list of items, presented in a modern, card-based format.'}, {'title': 'Second Key Point', 'description': 'And some text to elaborate on the second main idea of your slide.'}, {'title': 'Third Key Point', 'description': 'But remember not to overload your slides with too much content.'}], description="An array of objects, where each object represents a content card with its own title and description. Default: [{'title': 'First Key Point', 'description': 'Here you have a list of items, presented in a modern, card-based format.'}, {'title': 'Second Key Point', 'description': 'And some text to elaborate on the second main idea of your slide.'}, {'title': 'Third Key Point', 'description': 'But remember not to overload your slides with too much content.'}]")
+    main_title: str = Field(..., description="The main title displayed in the colored panel on the left. To highlight a word, wrap it in `<span class='highlight'>...</span>`. Default: 'THIS IS A <span class=\'highlight\'>SLIDE</span> TITLE'.")
+    list_items: List[Dict[str, str]] = Field(..., description="An array of objects, where each object represents a content card with its own title and description. Default: [{'title': 'First Key Point', 'description': 'Here you have a list of items, presented in a modern, card-based format.'}, {'title': 'Second Key Point', 'description': 'And some text to elaborate on the second main idea of your slide.'}, {'title': 'Third Key Point', 'description': 'But remember not to overload your slides with too much content.'}]")
     bg_color: str = Field(default="#F8FAFC", description="The background color for the main content area (typically off-white).")
     accent_panel_color: str = Field(default="#6366F1", description="The background color for the diagonal title panel.")
     title_color: str = Field(default="#FFFFFF", description="Text color for the main title on the colored panel.")
@@ -883,8 +910,8 @@ class GenerateCorporateContentSlideInput(BaseModel):
 
 class GenerateSplitContentSlideInput(BaseModel):
     """Input schema for generate_split_content_slide."""
-    main_title: str = Field(default='SPLIT YOUR CONTENT', description="The main title at the top of the slide. Use `<span class='highlight'>...</span>` to color a word with the accent color. Default: 'SPLIT YOUR CONTENT'.")
-    columns: List[Dict[str, str]] = Field(default=[{'icon_name': 'bulb', 'title': 'Title One', 'description': 'Description for the first column goes here. Elaborate on your point with clear and concise text.'}, {'icon_name': 'target', 'title': 'Title Two', 'description': 'Description for the second column. This layout is perfect for comparing two ideas side-by-side.'}], description="An array of exactly 2 objects, each representing a content card with an icon, title, and description. Default: [{'icon_name': 'bulb', 'title': 'Title One', 'description': 'Description for the first column goes here. Elaborate on your point with clear and concise text.'}, {'icon_name': 'target', 'title': 'Title Two', 'description': 'Description for the second column. This layout is perfect for comparing two ideas side-by-side.'}]")
+    main_title: str = Field(..., description="The main title at the top of the slide. Use `<span class='highlight'>...</span>` to color a word with the accent color. Default: 'SPLIT YOUR CONTENT'.")
+    columns: List[Dict[str, str]] = Field(..., description="An array of exactly 2 objects, each representing a content card with an icon, title, and description. Default: [{'icon_name': 'bulb', 'title': 'Title One', 'description': 'Description for the first column goes here. Elaborate on your point with clear and concise text.'}, {'icon_name': 'target', 'title': 'Title Two', 'description': 'Description for the second column. This layout is perfect for comparing two ideas side-by-side.'}]")
     bg_gradient_start: str = Field(default="#0F172A", description="The starting color (top) of the dark background gradient.")
     bg_gradient_end: str = Field(default="#1E293B", description="The ending color (bottom) of the dark background gradient.")
     title_color: str = Field(default="#FFFFFF", description="The color for the main title and the card titles.")
@@ -893,8 +920,8 @@ class GenerateSplitContentSlideInput(BaseModel):
 
 class GenerateCorporateMulticolumnSlideInput(BaseModel):
     """Input schema for generate_corporate_multicolumn_slide."""
-    main_title: str = Field(default="IN TWO OR THREE<br><span class='highlight'>COLUMNS</span>", description="The main title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight. Will be displayed in large 2.5rem font. Default: 'IN TWO OR THREE<br><span class=\'highlight\'>COLUMNS</span>'.")
-    columns: List[Dict[str, str]] = Field(default=[{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}], description="An array of 2 or 3 objects, each representing a column. Each column will be displayed as a card with gradient background, rounded corners, and hover effects. Default: [{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}]")
+    main_title: str = Field(..., description="The main title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight. Will be displayed in large 2.5rem font. Default: 'IN TWO OR THREE<br><span class=\'highlight\'>COLUMNS</span>'.")
+    columns: List[Dict[str, str]] = Field(..., description="An array of 2 or 3 objects, each representing a column. Each column will be displayed as a card with gradient background, rounded corners, and hover effects. Default: [{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}]")
     accent_color: str = Field(default="#8B5CF6", description="The primary accent color for the right panel, highlighted text, and card accent borders. Used in gradients for enhanced visual appeal.")
     shadow_color: str = Field(default="#7C3AED", description="The secondary (darker) accent color for the panel behind and gradient effects.")
     text_color: str = Field(default="#4B5563", description="The primary color for the body text.")
@@ -902,8 +929,8 @@ class GenerateCorporateMulticolumnSlideInput(BaseModel):
 
 class GenerateCorporateGridSlideInput(BaseModel):
     """Input schema for generate_corporate_grid_slide."""
-    main_title: str = Field(default="LET'S <span class='highlight'>REVIEW</span> SOME<br>CONCEPTS", description="The main title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight. Will be displayed in large 2.5rem font with uppercase styling. Default: 'LET'S <span class=\'highlight\'>REVIEW</span> SOME<br>CONCEPTS'.")
-    grid_items: List[Dict[str, str]] = Field(default=[{'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}], description="An array of exactly 6 objects for the 2x3 grid. Each item will be displayed as a card with gradient background, rounded corners, hover effects, and colored top border. Grid automatically adjusts to 2 columns on smaller screens. Default: [{'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}]")
+    main_title: str = Field(..., description="The main title for the slide. Use <br> for line breaks and <span class='highlight'>word</span> to highlight. Will be displayed in large 2.5rem font with uppercase styling. Default: 'LET'S <span class=\'highlight\'>REVIEW</span> SOME<br>CONCEPTS'.")
+    grid_items: List[Dict[str, str]] = Field(..., description="An array of exactly 6 objects for the 2x3 grid. Each item will be displayed as a card with gradient background, rounded corners, hover effects, and colored top border. Grid automatically adjusts to 2 columns on smaller screens. Default: [{'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}, {'title': 'title', 'description': 'description.'}]")
     accent_color: str = Field(default="#22C55E", description="The primary accent color for the right panel, highlighted text, and card accent borders. Used in gradients for enhanced visual appeal.")
     shadow_color: str = Field(default="#16A34A", description="The secondary (darker) accent color for the panel behind and gradient effects.")
     text_color: str = Field(default="#6B7280", description="The primary color for the body text.")
@@ -924,14 +951,14 @@ class GenerateCorporateGridSlideInput(BaseModel):
 #     border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.3.")
 #     section_spacing: str = Field(default="15px", description="Vertical spacing between content sections.")
 #     icon_size: str = Field(default="80px", description="Size of the icon containers.")
-#     custom_css: str = Field(default="", description="Additional custom CSS to be included.")
+#     custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
 class GenerateVisionMissionSlideInput(BaseModel):
     """Input schema for generate_vision_mission_slide."""
-    vision_title: str = Field(default='VISION', description="Title for the vision section (5-15 characters). Default: 'VISION'.")
-    mission_title: str = Field(default='MISSION', description="Title for the mission section (5-15 characters). Default: 'MISSION'.")
-    vision_points: List[str] = Field(default=['Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'], description="List of vision statements. . Default: 2 Lorem ipsum statements.")
-    mission_points: List[str] = Field(default=['Lorem ipsum dolor sit amet, consectetur adipiscing elit.', 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'], description="List of mission statements. . Default: 2 Lorem ipsum statements.")
+    vision_title: str = Field(..., description="Title for the vision section (5-15 characters). Default: 'VISION'.")
+    mission_title: str = Field(..., description="Title for the mission section (5-15 characters). Default: 'MISSION'.")
+    vision_points: List[str] = Field(..., description="List of vision statements. . Default: 2 Lorem ipsum statements.")
+    mission_points: List[str] = Field(..., description="List of mission statements. . Default: 2 Lorem ipsum statements.")
     vision_bg_color: str = Field(default="#1a4b8c", description="Background color for the vision section (hex code).")
     mission_bg_color: str = Field(default="#4a7bc8", description="Background color for the mission section (hex code).")
     text_color: str = Field(default="#FFFFFF", description="Color of all text elements (hex code).")
@@ -942,12 +969,12 @@ class GenerateVisionMissionSlideInput(BaseModel):
     border_opacity: Optional[float] = Field(default=0, description="Opacity of the border frame (0.0 to 1.0). Default: 0.4.")
     show_geometric_pattern: Optional[bool] = Field(default=True, description="Whether to show geometric background pattern. Default: True.")
     pattern_opacity: Optional[float] = Field(default=0, description="Opacity of the geometric pattern (0.0 to 1.0). Default: 0.1.")
-    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
+    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
 class GenerateServiceRoadmapSlideInput(BaseModel):
     """Input schema for generate_service_roadmap_slide."""
-    main_title: str = Field(default='SERVICE ROADMAP', description="Main title text (10-30 characters), displayed at the top center. Default: 'SERVICE ROADMAP'.")
-    roadmap_items: List[Dict] = Field(default=[{'title': 'Phase 1', 'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}, {'title': 'Phase 2', 'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}, {'title': 'Phase 3', 'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}, {'title': 'Phase 4', 'content': 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.'}], description="List of dictionaries with title and content for each roadmap phase. . Default: 4 phases with Lorem ipsum content.")
+    main_title: str = Field(..., description="Main title text (10-30 characters), displayed at the top center. Default: 'SERVICE ROADMAP'.")
+    roadmap_items: List[Dict] = Field(..., description="List of dictionaries with title and content for each roadmap phase. . Default: 4 phases with Lorem ipsum content.")
     bg_gradient_start: str = Field(default="#4A90E2", description="Starting color of the background gradient (hex code).")
     bg_gradient_end: str = Field(default="#2E5BBA", description="Ending color of the background gradient (hex code).")
     title_color: str = Field(default="#FFFFFF", description="Color of the main title text (hex code).")
@@ -961,14 +988,14 @@ class GenerateServiceRoadmapSlideInput(BaseModel):
     card_border_radius: str = Field(default="20px", description="Border radius for content cards.")
     card_padding: str = Field(default="25px", description="Padding inside content cards.")
     card_shadow: str = Field(default="0 8px 24px rgba(0, 0, 0, 0.15)", description="Box shadow for content cards.")
-    custom_css: str = Field(default="", description="Additional custom CSS to be included.")
+    custom_css: str = Field(default="''", description="Additional custom CSS to be included.")
 
 
 class GenerateMinimalistTechListSlideInput(BaseModel):
     """Input schema for generate_minimalist_tech_list_slide."""
-    title: str = Field(default='This is a slide title', description="The main title of the slide. Default: 'This is a slide title'.")
-    list_items: List[str] = Field(default=['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'], description="A list of strings for the bullet points. Default: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'].")
-    concluding_text: str = Field(default='Your audience will listen to you or read the content, but won’t do both.', description="A final sentence or phrase at the bottom, styled to stand out. Default: 'Your audience will listen to you or read the content, but won't do both.'.")
+    title: str = Field(..., description="The main title of the slide. Default: 'This is a slide title'.")
+    list_items: List[str] = Field(..., description="A list of strings for the bullet points. Default: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'].")
+    concluding_text: str = Field(..., description="A final sentence or phrase at the bottom, styled to stand out. Default: 'Your audience will listen to you or read the content, but won't do both.'.")
     title_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '3rem') for the main title.")
     list_item_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.5rem') for list items.")
     concluding_text_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.1rem') for the concluding text.")
@@ -981,8 +1008,8 @@ class GenerateMinimalistTechListSlideInput(BaseModel):
 
 class GenerateSplitLayoutListSlideInput(BaseModel):
     """Input schema for generate_split_layout_list_slide."""
-    main_title: str = Field(default='YOUR MAIN TOPIC', description="The main title displayed in the left column. Supports HTML tags like <b>, <i>, and <br> for line breaks. Default: 'YOUR MAIN TOPIC'.")
-    points: List[Dict[str, str]] = Field(default=[{'title': 'ADD A KEY POINT', 'description': 'Briefly elaborate on this key point to provide more details and context for your audience.'}, {'title': 'ADD A KEY POINT', 'description': 'Briefly elaborate on this key point to provide more details and context for your audience.'}, {'title': 'ADD A KEY POINT', 'description': 'Briefly elaborate on this key point to provide more details and context for your audience.'}], description="A list of key points to display in the right column. Each point should have 'title' and 'description' keys.")
+    main_title: str = Field(..., description="The main title displayed in the left column. Supports HTML tags like <b>, <i>, and <br> for line breaks. Default: 'YOUR MAIN TOPIC'.")
+    points: List[Dict[str, str]] = Field(..., description="A list of key points to display in the right column. Each point should have 'title' and 'description' keys.")
     font_size_multiplier: Optional[float] = Field(default=1.0, description="Adjusts the default responsive font size. 1.0 is standard. This is ignored if a fixed font size is set below.")
     main_title_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '4rem') for the main title, overriding automatic scaling.")
     point_title_font_size: str = Field(default=None, description="Optional. Set a fixed CSS font size (e.g., '1.25rem') for the point titles, overriding automatic scaling.")
@@ -996,8 +1023,8 @@ class GenerateSplitLayoutListSlideInput(BaseModel):
 
 class GenerateReferenceSlideInput(BaseModel):
     """Input schema for generate_reference_slide."""
-    main_title: str = Field(default='CONTENT', description="The main, bold title at the top of the text column. Default: 'CONTENT'.")
-    reference_items: List[Dict[str, str]] = Field(default=[{'title': 'PRIMARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}, {'title': 'SECONDARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}], description="An array of objects, each representing a reference or key point. Each item should have 'title' and 'description' keys. Default: [{'title': 'PRIMARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}, {'title': 'SECONDARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}].")
+    main_title: str = Field(..., description="The main, bold title at the top of the text column. Default: 'CONTENT'.")
+    reference_items: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a reference or key point. Each item should have 'title' and 'description' keys. Default: [{'title': 'PRIMARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}, {'title': 'SECONDARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}].")
     image_url: str = Field(default="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop", description="URL for the full-height image in the right column.")
     bg_color: str = Field(default="#FFFFFF", description="The background color for the text column.")
     text_color: str = Field(default="#1F2937", description="The main text color for all text elements.")
@@ -1005,8 +1032,8 @@ class GenerateReferenceSlideInput(BaseModel):
 
 class GenerateIconListSlideInput(BaseModel):
     """Input schema for generate_icon_list_slide."""
-    main_title: str = Field(default='Write your topic or idea', description="The supporting title displayed in the smaller, left column. Default: 'Write your topic or idea'.")
-    points: List[Dict[str, str]] = Field(default=[{'icon_name': 'megaphone', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.'}, {'icon_name': 'star', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.'}, {'icon_name': 'thumbs-up', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.'}], description="An array of objects, each representing a key point in the main content area. Each point should have 'icon_name', 'title', and 'description' keys. Default: [{ 'icon_name': 'megaphone', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }, { 'icon_name': 'star', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }, { 'icon_name': 'thumbs-up', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }].")
+    main_title: str = Field(..., description="The supporting title displayed in the smaller, left column. Default: 'Write your topic or idea'.")
+    points: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a key point in the main content area. Each point should have 'icon_name', 'title', and 'description' keys. Default: [{ 'icon_name': 'megaphone', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }, { 'icon_name': 'star', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }, { 'icon_name': 'thumbs-up', 'title': 'Add a main point', 'description': 'Briefly elaborate on what you want to discuss.' }].")
     bg_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
     main_title_color: str = Field(default="#111827", description="Text color for the main title.")
     point_title_color: str = Field(default="#1F2937", description="Text color for the point titles.")
@@ -1015,15 +1042,15 @@ class GenerateIconListSlideInput(BaseModel):
 
 class GenerateFlexibleColumnsSlideInput(BaseModel):
     """Input schema for generate_flexible_columns_slide."""
-    main_title: str = Field(default='IN TWO OR THREE COLUMNS', description="The main title displayed at the top of the slide. Default: 'IN TWO OR THREE COLUMNS'.")
-    columns: List[Dict[str, str]] = Field(default=[{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}], description="An array of 1 to 6 objects, each representing a column with its own title and description. Default: [{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}].")
+    main_title: str = Field(..., description="The main title displayed at the top of the slide. Default: 'IN TWO OR THREE COLUMNS'.")
+    columns: List[Dict[str, str]] = Field(..., description="An array of 1 to 6 objects, each representing a column with its own title and description. Default: [{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}].")
     text_color: str = Field(default="#34495E", description="The color for all text elements.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
 
 class GenerateTextWithImageSlideInput(BaseModel):
     """Input schema for generate_text_with_image_slide."""
-    title: str = Field(default='Tiltle Tiltle TiltleTiltle Tiltle', description="The introductory headline for the text column, styled to be smaller. Default: 'Tiltle'.")
-    text_content: str = Field(default='Content.', description="The main paragraph or body text, displayed in a large font to be the central focus of the text column. Default: 'Content.'.")
+    title: str = Field(..., description="The introductory headline for the text column, styled to be smaller. Default: 'Tiltle'.")
+    text_content: str = Field(..., description="The main paragraph or body text, displayed in a large font to be the central focus of the text column. Default: 'Content.'.")
     image_url: str = Field(default="https://images.pexels.com/photos/1778412/pexels-photo-1778412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the full-height image on the right side.")
     text_color: str = Field(default="#34495E", description="The color for all text elements.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
@@ -1031,8 +1058,8 @@ class GenerateTextWithImageSlideInput(BaseModel):
 
 class GenerateGeometricSplitContentSlideInput(BaseModel):
     """Input schema for generate_geometric_split_content_slide."""
-    main_title: str = Field(default='You can also split your content', description="The main title for the slide's content. Default: 'You can also split your content'.")
-    columns: List[Dict[str, str]] = Field(default=[{'title': 'White', 'description': 'Is the color of milk and fresh snow, the color produced by the combination of all the colors of the visible spectrum.'}, {'title': 'Black', 'description': 'Is the color of ebony and of outer space. It has been the symbolic color of elegance, solemnity and authority.'}], description="""An array of objects, where each object represents a column. Default: [
+    main_title: str = Field(..., description="The main title for the slide's content. Default: 'You can also split your content'.")
+    columns: List[Dict[str, str]] = Field(..., description="""An array of objects, where each object represents a column. Default: [
         {"title": "White", "description": "Is the color of milk and fresh snow, the color produced by the combination of all the colors of the visible spectrum."},
         {"title": "Black", "description": "Is the color of ebony and of outer space. It has been the symbolic color of elegance, solemnity and authority."}
     ]""")
@@ -1041,8 +1068,8 @@ class GenerateGeometricSplitContentSlideInput(BaseModel):
 
 class GenerateGeometricSplitContentSlide2Input(BaseModel):
     """Input schema for generate_geometric_split_content_slide_2."""
-    main_title: str = Field(default='In two or three columns', description="The main title for the slide's content. Default: 'In two or three columns'.")
-    columns: List[Dict[str, str]] = Field(default=[{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}], description="""An array of objects, where each object represents a column. Default: [
+    main_title: str = Field(..., description="The main title for the slide's content. Default: 'In two or three columns'.")
+    columns: List[Dict[str, str]] = Field(..., description="""An array of objects, where each object represents a column. Default: [
         {"title": "Yellow", "description": "Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange."},
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
@@ -1053,16 +1080,16 @@ class GenerateGeometricSplitContentSlide2Input(BaseModel):
 class GenerateGeometricImageContentSlideInput(BaseModel):
     """Input schema for generate_geometric_image_content_slide."""
     image_url: str = Field(default="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2574&auto=format&fit=crop", description="The URL for the main image to be displayed in the custom-shaped container.")
-    main_title: str = Field(default="A picture is worth a <span class='highlight'>thousand</span> words", description="The main title for the slide. Use a `<span class='highlight'>` tag to highlight a specific word. Default: 'A picture is worth a <span class='highlight'>thousand</span> words'.")
-    description: str = Field(default='A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.', description="The paragraph of text that describes or complements the image. Default: 'A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.'.")
+    main_title: str = Field(..., description="The main title for the slide. Use a `<span class='highlight'>` tag to highlight a specific word. Default: 'A picture is worth a <span class='highlight'>thousand</span> words'.")
+    description: str = Field(..., description="The paragraph of text that describes or complements the image. Default: 'A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.'.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
     text_color: str = Field(default="#FFFFFF", description="The color for the non-highlighted text.")
 
 
 class GenerateGeometricGridSlideInput(BaseModel):
     """Input schema for generate_geometric_grid_slide."""
-    main_title: str = Field(default="Let's review some concepts", description="The main title for the slide, displayed above the grid. Default: 'Let's review some concepts'.")
-    grid_items: List[Dict[str, str]] = Field(default=[{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}, {'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}], description="""An array of exactly 6 objects, where each object populates a cell in the 2x3 grid. Default: [
+    main_title: str = Field(..., description="The main title for the slide, displayed above the grid. Default: 'Let's review some concepts'.")
+    grid_items: List[Dict[str, str]] = Field(..., description="""An array of exactly 6 objects, where each object populates a cell in the 2x3 grid. Default: [
         {"title": "Yellow", "description": "Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange."},
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."},
@@ -1075,17 +1102,17 @@ class GenerateGeometricGridSlideInput(BaseModel):
 
 class GenerateMemphisContentSlideInput(BaseModel):
     """Input schema for generate_memphis_content_slide."""
-    main_title: str = Field(default='This is a slide title', description="The main title of the slide, displayed in the top panel. Default: 'This is a slide title'.")
-    list_items: List[str] = Field(default=['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'], description="A list of strings for the bullet points in the bottom panel. Default: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'].")
-    concluding_text: str = Field(default="Your audience will listen to you or read the content, but won't do both.", description="A final sentence or paragraph displayed below the list. Default: 'Your audience will listen to you or read the content, but won't do both.'.")
+    main_title: str = Field(..., description="The main title of the slide, displayed in the top panel. Default: 'This is a slide title'.")
+    list_items: List[str] = Field(..., description="A list of strings for the bullet points in the bottom panel. Default: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content'].")
+    concluding_text: str = Field(..., description="A final sentence or paragraph displayed below the list. Default: 'Your audience will listen to you or read the content, but won't do both.'.")
     top_panel_bg: str = Field(default="#19114B", description="The background color for the top half of the slide.")
     bottom_panel_bg: str = Field(default="#403271", description="The background color for the bottom half of the slide.")
     palette: List[str] = Field(default=["#F87171", "#FBBF24", "#A78BFA", "#60A5FA", "#34D399"], description="A list of 5 colors used for the various decorative shapes and accents.")
 
 class GenerateMemphisMulticolumnSlideInput(BaseModel):
     """Input schema for generate_memphis_multicolumn_slide."""
-    main_title: str = Field(default='In two or three columns', description="The main title for the slide, displayed in the top panel. Default: 'In two or three columns'.")
-    columns: List[Dict[str, str]] = Field(default=[{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}], description="""An array of objects for the content columns in the bottom panel. Default: [
+    main_title: str = Field(..., description="The main title for the slide, displayed in the top panel. Default: 'In two or three columns'.")
+    columns: List[Dict[str, str]] = Field(..., description="""An array of objects for the content columns in the bottom panel. Default: [
         {"title": "Yellow", "description": "Is the color of gold, butter and ripe lemons."},
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."}
@@ -1096,8 +1123,8 @@ class GenerateMemphisMulticolumnSlideInput(BaseModel):
 
 class GenerateMemphisGridSlideInput(BaseModel):
     """Input schema for generate_memphis_grid_slide."""
-    main_title: str = Field(default="Let's review some concepts", description="The main title for the slide, displayed in the top panel. Default: 'Let's review some concepts'.")
-    grid_items: List[Dict[str, str]] = Field(default=[{'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}, {'title': 'Yellow', 'description': 'Is the color of gold, butter and ripe lemons.'}, {'title': 'Blue', 'description': 'Is the colour of the clear sky and the deep sea.'}, {'title': 'Red', 'description': 'Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.'}], description="""An array of exactly 6 objects, where each object populates a cell in the 2x3 grid. Default: '[
+    main_title: str = Field(..., description="The main title for the slide, displayed in the top panel. Default: 'Let's review some concepts'.")
+    grid_items: List[Dict[str, str]] = Field(..., description="""An array of exactly 6 objects, where each object populates a cell in the 2x3 grid. Default: '[
         {"title": "Yellow", "description": "Is the color of gold, butter and ripe lemons."},
         {"title": "Blue", "description": "Is the colour of the clear sky and the deep sea."},
         {"title": "Red", "description": "Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage."},
@@ -1111,13 +1138,13 @@ class GenerateMemphisGridSlideInput(BaseModel):
 
 class GenerateMethodologySlideInput(BaseModel):
     """Input schema for generate_methodology_slide"""
-    title: str = Field(default='Methodology Methodology ', description="Main title text for the slide header. Default: 'Methodology Methodology '.")
+    title: str = Field(..., description="Main title text for the slide header. Default: 'Research Methodology'.")
     title_color: str = Field(default="#000000", description="Color for the main title")
     accent_color: str = Field(default="#C9A86A", description="Color for accent elements (bar, circles, method boxes)")
-    qualitative_title: str = Field(default='Qualitative Methods', description="Title for the qualitative methods section. Default: 'Qualitative Methods'.")
-    qualitative_text: str = Field(default='Qualitative research methods involve collecting and analyzing non-numerical data to explore the underlying motivations, perceptions, and behaviors of individuals. In our research proposal, qualitative methods will be utilized to gain in-depth insights into consumer preferences, attitudes, and experiences related to the new product.', description="Description text for qualitative methods. Default: 'Qualitative research methods involve collecting and analyzing non-numerical data to explore the underlying motivations, perceptions, and behaviors of individuals. In our research proposal, qualitative methods will be utilized to gain in-depth insights into consumer preferences, attitudes, and experiences related to the new product.'")
-    quantitative_title: str = Field(default='Quantitative Methods', description="Title for the quantitative methods section. Default: 'Quantitative Methods'.")
-    quantitative_text: str = Field(default='Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.', description="Description text for quantitative methods. Default: 'Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.'")
+    qualitative_title: str = Field(..., description="Title for the qualitative methods section. Default: 'Qualitative Methods'.")
+    qualitative_text: str = Field(..., description="Description text for qualitative methods. Default: 'Qualitative research methods involve collecting and analyzing non-numerical data to explore the underlying motivations, perceptions, and behaviors of individuals. In our research proposal, qualitative methods will be utilized to gain in-depth insights into consumer preferences, attitudes, and experiences related to the new product.'")
+    quantitative_title: str = Field(..., description="Title for the quantitative methods section. Default: 'Quantitative Methods'.")
+    quantitative_text: str = Field(..., description="Description text for quantitative methods. Default: 'Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.'")
     image_url: str = Field(
         default="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2340&auto=format&fit=crop",
         description="URL for the professional image displayed on the right side"
@@ -1176,7 +1203,7 @@ class GenerateTimelineSlideInput(BaseModel):
 class GenerateQuoteSlideInput(BaseModel):
     """Input schema for generate_quote_slide."""
     quote: str = Field(
-        default="Design is not  what it looks like and feels like. Design is how it works.", 
+        ..., 
         description="The main quote text or core message to display. Default: 'Design is not just what it looks like and feels like. Design is how it works.'"
     )
     author: str = Field(
@@ -1207,7 +1234,7 @@ class GenerateClassicContentSlideInput(BaseModel):
         description="The main headline of the content slide."
     )
     paragraph: str = Field(
-        default="The global market for our solution is expanding rapidly. By leveraging our unique technology stack, we can capture significant market share in the next fiscal year.", 
+        ..., 
         description="A detailed paragraph explaining the topic (2-3 sentences). Default: 'The market opportunity for our innovative solution is vast and growing rapidly. With increasing demand for efficient and user-friendly products, we are well-positioned to capture significant market share and drive substantial growth in the coming years.'"
     )
     bullet_points: List[str] = Field(
@@ -1240,8 +1267,8 @@ class GenerateClassicContentSlideInput(BaseModel):
 
 class GenerateTeamSlideInput(BaseModel):
     """Input schema for generate_team_slide."""
-    main_title: str = Field(default='Our Team', description="The main title, displayed in the smaller, diagonal accent area. Default: 'Our Team'.")
-    team_members: List[Dict[str, str]] = Field(default=[{'name': 'Alex Johnson', 'role': 'Lead Developer', 'image_url': 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format=fit=crop'}, {'name': 'Maria Garcia', 'role': 'Product Manager', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'James Smith', 'role': 'UX/UI Designer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}], description="Array of team member objects, each displayed in a large, professional card. Each member should have 'name', 'role', and 'image_url' keys. Recommended 3 members for this layout. Default: [{'name': 'Alex Johnson', 'role': 'Lead Developer', 'image_url': 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format=fit=crop'}, {'name': 'Maria Garcia', 'role': 'Product Manager', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'James Smith', 'role': 'UX/UI Designer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}].")
+    main_title: str = Field(..., description="The main title, displayed in the smaller, diagonal accent area. Default: 'Our Team'.")
+    team_members: List[Dict[str, str]] = Field(..., description="Array of team member objects, each displayed in a large, professional card. Each member should have 'name', 'role', and 'image_url' keys. Recommended 3 members for this layout. Default: [{'name': 'Alex Johnson', 'role': 'Lead Developer', 'image_url': 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format=fit=crop'}, {'name': 'Maria Garcia', 'role': 'Product Manager', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'James Smith', 'role': 'UX/UI Designer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}].")
     accent_bg_color: str = Field(default="#14B8A6", description="Background color for the diagonal accent area (teal).")
     main_bg_color: str = Field(default="#F8FAFC", description="Background color for the main content area where team cards are displayed (off-white).")
     title_color: str = Field(default="#FFFFFF", description="Text color for the main title.")
@@ -1250,9 +1277,9 @@ class GenerateTeamSlideInput(BaseModel):
 
 class GenerateColorfulTeamGridSlideInput(BaseModel):
     """Input schema for generate_colorful_team_grid_slide."""
-    main_title: str = Field(default='Add a Team Members Page', description="The large title displayed in the left column. Default: 'Add a Team Members Page'.")
-    subtitle: str = Field(default='', description="The smaller subtitle text below the main title.")
-    team_members: List[Dict[str, str]] = Field(default=[{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop', 'color': '#8A44A1'}, {'name': 'Ben Carter', 'role': 'Frontend Developer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop', 'color': '#2E9A94'}, {'name': 'Aisha Khan', 'role': 'Project Manager', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop', 'color': '#D93B58'}, {'name': 'Leo Martinez', 'role': 'Marketing Head', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop', 'color': '#F3C314'}], description="An array of exactly 4 objects, each containing details for one team member with 'name', 'role', 'image_url', and 'color' keys. Default: [{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop', 'color': '#8A44A1'}, {'name': 'Ben Carter', 'role': 'Frontend Developer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop', 'color': '#2E9A94'}, {'name': 'Aisha Khan', 'role': 'Project Manager', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop', 'color': '#D93B58'}, {'name': 'Leo Martinez', 'role': 'Marketing Head', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop', 'color': '#F3C314'}].")
+    main_title: str = Field(..., description="The large title displayed in the left column. Default: 'Add a Team Members Page'.")
+    subtitle: str = Field(..., description="The smaller subtitle text below the main title.")
+    team_members: List[Dict[str, str]] = Field(..., description="An array of exactly 4 objects, each containing details for one team member with 'name', 'role', 'image_url', and 'color' keys. Default: [{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop', 'color': '#8A44A1'}, {'name': 'Ben Carter', 'role': 'Frontend Developer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop', 'color': '#2E9A94'}, {'name': 'Aisha Khan', 'role': 'Project Manager', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop', 'color': '#D93B58'}, {'name': 'Leo Martinez', 'role': 'Marketing Head', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop', 'color': '#F3C314'}].")
     bg_color: str = Field(default="#F8FAFC", description="Background color of the slide.")
     title_color: str = Field(default="#111827", description="Text color for the main title.")
     subtitle_color: str = Field(default=None, description="Text color for the subtitle.")
@@ -1260,8 +1287,8 @@ class GenerateColorfulTeamGridSlideInput(BaseModel):
 
 class GenerateCorporateTeamSlideInput(BaseModel):
     """Input schema for generate_corporate_team_slide."""
-    main_title: str = Field(default='Our Creative Team', description="The main title for the slide, e.g., 'Our Creative Team'. Default: 'Our Creative Team'.")
-    team_members: List[Dict[str, str]] = Field(default=[{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Ben Carter', 'role': 'Photographer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Aisha Khan', 'role': 'Content Strategist', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Leo Martinez', 'role': 'Illustrator', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop'}], description="An array of objects, each representing a team member with their own photo. Default: [{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Ben Carter', 'role': 'Photographer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Aisha Khan', 'role': 'Content Strategist', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Leo Martinez', 'role': 'Illustrator', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop'}]")
+    main_title: str = Field(..., description="The main title for the slide, e.g., 'Our Creative Team'. Default: 'Our Creative Team'.")
+    team_members: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a team member with their own photo. Default: [{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Ben Carter', 'role': 'Photographer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Aisha Khan', 'role': 'Content Strategist', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Leo Martinez', 'role': 'Illustrator', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop'}]")
     text_color: str = Field(default="#4A403A", description="The main text color for names.")
     role_color: str = Field(default="#6B7280", description="The secondary text color for roles.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
@@ -1270,7 +1297,7 @@ class GenerateCorporateTeamSlideInput(BaseModel):
 
 class GenerateThankYouSlide3Input(BaseModel):
     """Input schema for generate_thank_you_slide_3."""
-    main_title: str = Field(default='THANK YOU', description="Main title text displayed prominently. Default: 'THANK YOU'.")
+    main_title: str = Field(..., description="Main title text displayed prominently. Default: 'THANK YOU'.")
     phone_number: str = Field(default="123-456-7890", description="Phone number to display.")
     email: str = Field(default="hello@reallygreatsite.com", description="Email address to display.")
     show_phone: Optional[bool] = Field(default=True, description="Whether to show phone number. Default: True.")
@@ -1296,7 +1323,7 @@ class GenerateThankYouSlide3Input(BaseModel):
     phone_icon: str = Field(default="📞", description="Icon for phone number.")
     email_icon: str = Field(default="✉️", description="Icon for email.")
     icon_margin_right: str = Field(default="12px", description="Right margin for icons.")
-    additional_css: str = Field(default="", description="Additional CSS to include.")
+    additional_css: str = Field(default="''", description="Additional CSS to include.")
 
 class GenerateCorporateThankYouSlideInput(BaseModel):
     """Input schema for generate_corporate_thank_you_slide."""
@@ -1510,21 +1537,21 @@ class GenerateElegantThankYouInput(BaseModel):
 #---LINE CHART SLIDES-------------------------------------------------------------------------    
 class GenerateLineChartSlide2(BaseModel):
     """Schema for generate_line_chart_slide_2"""
-    main_title: str = Field(default='Model Accuracy Converges with Minor Overfitting', description=(  
+    main_title: str = Field(..., description=(  
             "Primary headline of the slide describing the overall evolution or trend "
             "displayed in the line chart (10–60 characters). "
             "The title should communicate insight or direction, not just restate the metric name. "
             "Example: Improvement of Model Accuracy During Training"
         ),
     )
-    subtitle: Optional[str] = Field(default='ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)', description=(
+    subtitle: Optional[str] = Field(..., description=(
             "Contextual information that frames the chart, such as model type, dataset, "
             "training duration, or experimental setting. "
             "This helps the audience understand where and how the time-series data was produced. "
             "Example: CNN trained on Image Classification Dataset (50 Epochs)"
         )
     )
-    insight: Optional[str] = Field(default='Training and validation accuracy both increase steadily during the first 15 epochs, indicating effective learning and rapid convergence. After epoch 20, training accuracy continues to improve while validation accuracy plateaus, suggesting mild overfitting. The gap remains controlled, implying overall stable generalization performance.', description=(
+    insight: Optional[str] = Field(..., description=(
             "A short analytical takeaway highlighting key patterns in the data, "
             "such as convergence speed, stabilization, divergence between series, "
             "or signs of overfitting. "
@@ -1534,15 +1561,15 @@ class GenerateLineChartSlide2(BaseModel):
     )
 
     x_axis: str = Field(
-        default='Epoch',
+        ...,
         description="Label for the X-axis (time progression). Example: Epoch."
     )
     y_axis: str = Field(
-        default='Accuracy',
+        ...,
         description="Label for the Y-axis metric being measured. Example: Accuracy."
     )
     unit: str = Field(
-        default='%',
+        ...,
         description="Unit suffix appended to values when labels are shown. Example: %."
     )
     show_value: bool = Field(
@@ -1570,11 +1597,11 @@ class GenerateLineChartSlide2(BaseModel):
         description="Color list used for each line series in order."
     )
     time_points: List[str] = Field(
-        default=['Epoch 1', 'Epoch 5', 'Epoch 10', 'Epoch 15', 'Epoch 20', 'Epoch 25', 'Epoch 30'],
+        ...,
         description="Ordered labels along the X-axis representing time progression. Example: ['Epoch 1', 'Epoch 5', 'Epoch 10', 'Epoch 15', 'Epoch 20', 'Epoch 25', 'Epoch 30']."
     )
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
-        default=[{'name': 'Training Accuracy', 'values': [45, 62, 75, 84, 90, 94, 97]}, {'name': 'Validation Accuracy', 'values': [43, 60, 73, 82, 87, 88, 88]}],
+        ...,
         description="Series data for the line chart. Each object should include 'name' and 'values'. Example: [{'name': 'Training Accuracy', 'values': [45, 62, 75, 84, 90, 94, 97]}, {'name': 'Validation Accuracy', 'values': [43, 60, 73, 82, 87, 88, 88]}]."
     )
 
@@ -1630,182 +1657,44 @@ class GenerateLineChartSlide2(BaseModel):
 
 
 class GenerateLineChartSlide3(BaseModel):
-    """Schema for generate_line_chart_slide_3"""
-    main_title: str = Field(default='EV Market Leaders Expand the Gap', description=(
-            "Main headline communicating the overall direction or competitive "
-            "movement shown in the chart (10–60 characters). "
-            "The title should reflect a meaningful observation rather than "
-            "simply naming the metric. "
-            "Example: EV Sales Momentum Accelerates Across Major Brands"
-        ),
+    """Input schema for generate_line_chart_slide_3."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'EV Market Leaders Expand the Gap'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Southeast Asia EV Sales – Jan to Dec 2026'")
+    insight: str = Field(..., description="Text insight displayed in the right panel, providing key observations about the data (100-300 characters).")
+    x_axis: str = Field(..., description="Label for X-axis (e.g., 'Month', 'Year', 'Quarter').")
+    y_axis: str = Field(..., description="Label for Y-axis (e.g., 'Units Sold', 'Revenue', 'Capacity').")
+    unit: str = Field(..., description="Optional unit appended to values (e.g., 'K', 'GW', '%', '$'). Appears in Y-axis label and data labels.")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed on chart points.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed in the insight area.")
+    y_axis_min: float = Field(default=20, description="Minimum value of Y-axis. If None, auto-calculated from data with 10% padding.")
+    y_axis_max: float = Field(default=140, description="Maximum value of Y-axis. If None, auto-calculated from data with 10% padding.")
+    colors: List[str] = Field(default=["#00F2FF", "#8B5CF6", "#EC4899"], description="List of colors for each line series. Each series gets a color in order.")
+    time_points: List[str] = Field(..., description="List of time points on X-axis (e.g., ['Jan', 'Feb', 'Mar', ...] or ['2019', '2020', ...]).")
+    series: List[Dict[str, Union[str, List[float]]]] = Field(
+        ...,
+        description="""
+        Line chart series data.
+        Structure:
+        - series: list of series objects
+            - name: series name (e.g., 'Tesla', 'BYD')
+            - values: list of numeric values matching time_points length
+        Rules:
+        - Each series must have same length as time_points
+        - Values should be positive numbers
+        Example:
+        [
+            {
+                "name": "Tesla",
+                "values": [45, 50, 55, 60, 68, 75, 90, 105, 115, 120, 125, 130]
+            },
+            {
+                "name": "BYD", 
+                "values": [40, 48, 52, 58, 63, 70, 85, 95, 105, 110, 118, 122]
+            }
+        ]
+        """
     )
 
-    subtitle: Optional[str] = Field(default='Southeast Asia EV Sales – Jan to Dec 2026', description=(
-            "Supporting context that clarifies the scope of the dataset, "
-            "such as geographic market, reporting period, or data source. "
-            "This helps viewers interpret the time-series correctly. "
-            "Example: Southeast Asia Market – January to December 2026"
-        )
-    )
-
-    insight: str = Field(default='Tesla and BYD maintain strong upward momentum throughout the year, with Tesla accelerating sharply in Q3 following new model releases. ', description=(
-            "Concise analytical commentary summarizing the most important "
-            "patterns observed in the chart. "
-            "This may highlight acceleration, seasonal peaks, widening gaps "
-            "between brands, or emerging leaders. "
-            "The explanation should focus on interpretation and implications, "
-            "not just restating numeric values."
-        )
-    )
-
-    x_axis: str = Field(
-        default="Month",
-        description=(
-            "Label for the horizontal (X) axis, describing the time dimension "
-            "or categorical grouping of the data points. "
-            "Example: 'Month', 'Quarter', 'Week'."
-        )
-    )
-
-    y_axis: str = Field(
-        default="Units Sold",
-        description=(
-            "Label for the vertical (Y) axis, describing the measured metric. "
-            "Example: 'Units Sold', 'Revenue (USD)', 'Market Share (%)'."
-        )
-    )
-
-    unit: str = Field(
-        default="K",
-        description=(
-            "Unit suffix appended to numeric values on the chart axes or data labels. "
-            "Example: 'K' for thousands, 'M' for millions, '%' for percentages."
-        )
-    )
-
-    show_value: bool = Field(
-        default=False,
-        description=(
-            "Whether to display numeric data labels directly on each data point "
-            "along the lines. Useful for dense datasets where exact values matter."
-        )
-    )
-
-    show_legend: bool = Field(
-        default=True,
-        description=(
-            "Whether to display the series legend panel alongside the chart. "
-            "Recommended when there are multiple series to distinguish."
-        )
-    )
-
-    y_axis_min: float = Field(
-        default=20,
-        description=(
-            "Minimum value for the Y axis scale. "
-            "Setting this above zero can emphasize relative differences between series. "
-            "Example: 20 (starts axis at 20 instead of 0)."
-        )
-    )
-
-    y_axis_max: float = Field(
-        default=140,
-        description=(
-            "Maximum value for the Y axis scale. "
-            "Should be set above the highest data value to avoid clipping. "
-            "Example: 140."
-        )
-    )
-
-    data_label_format: str = Field(
-        default="{value}K",
-        description=(
-            "Template string for formatting data point labels when show_value is True. "
-            "Use '{value}' as the placeholder for the numeric value. "
-            "Example: '{value}K', '{value}%', '${value}M'."
-        )
-    )
-
-    colors: List[str] = Field(
-        default=["#00F2FF", "#8B5CF6", "#EC4899"],
-        description=(
-            "Ordered list of hex color codes assigned to each series in the chart. "
-            "Colors are cycled if there are more series than colors provided. "
-            "Each color is used for the line stroke, data point markers, and legend indicator. "
-            "Example: ['#00F2FF', '#8B5CF6', '#EC4899']."
-        )
-    )
-
-    time_points: List[str] = Field(
-        default=['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        description=(
-            "Ordered list of labels for each point on the X axis, representing "
-            "the time intervals or categories at which data is recorded. "
-            "The length of this list determines the number of data points per series. "
-            "Example: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'] "
-            "or ['Q1', 'Q2', 'Q3', 'Q4']."
-        )
-    )
-
-    series: List[Dict[str, str | List[float]]] = Field(
-        default=[{'name': 'Tesla', 'values': [45, 50, 55, 60, 68, 75, 90, 105, 115, 120, 125, 130]}, {'name': 'BYD', 'values': [40, 48, 52, 58, 63, 70, 85, 95, 105, 110, 118, 122]}, {'name': 'VinFast', 'values': [30, 35, 40, 44, 50, 55, 60, 66, 70, 72, 74, 76]}],
-        description=(
-            "List of data series objects to plot on the line chart. "
-            "Each object must contain: "
-            "'name' (str) — the series label shown in the legend; "
-            "'values' (List[float]) — numeric data points corresponding to each time_point in order. "
-            "The length of each 'values' list must match the length of time_points. "
-            "Example: [{'name': 'Tesla', 'values': [45, 60, 90, 130]}, "
-            "{'name': 'BYD', 'values': [40, 48, 52, 58]}, "
-            "{'name': 'VinFast', 'values': [30, 35, 40, 44]}]."
-        )
-    )
-
-
-    accent_color: str = Field(
-        default="#00F2FF",
-        description=(
-            "Primary highlight color used for decorative elements, "
-            "emphasis accents, or active markers. "
-            "It should align with the dark-tech theme of the slide."
-        )
-    )
-
-    main_title_color: str = Field(
-        default="#FFFFFF",
-        description=(
-            "Text color of the main title. "
-            "Designed to provide strong contrast against a dark background "
-            "and immediately draw viewer attention."
-        )
-    )
-
-    subtitle_color: str = Field(
-        default="#94A3B8",
-        description=(
-            "Secondary text color used for contextual information. "
-            "It should be visually softer than the main title "
-            "while remaining clearly legible."
-        )
-    )
-
-    insight_text_color: str = Field(
-        default="#E2E8F0",
-        description=(
-            "Color applied to the analytical insight section. "
-            "Optimized for readability in longer explanatory text "
-            "under dark presentation themes."
-        )
-    )
-
-    bg_color: str = Field(
-        default="#020617",
-        description=(
-            "Background color of the slide (hex code). "
-            "Default is a very dark navy (#020617) to create a dark-tech theme. "
-            "Example: '#020617', '#0A0A1A', '#1a1a2e', '#FFFFFF'."
-        )
-    )
 
 class GenerateRadarChartSlide1(BaseModel):
     """
@@ -1813,16 +1702,16 @@ class GenerateRadarChartSlide1(BaseModel):
     This schema describes parameters used to generate a radar chart slide
     """
     # ===== CONTENT =====
-    main_title: str = Field(default='Chỉ Số Đánh Giá Chất Lượng Dịch Vụ Chăm Sóc', description="Main title of the radar chart slide.")
-    subtitle: str = Field(default='Báo cáo phân tích trải nghiệm khách hàng Q1/2026', description="Subtitle providing context such as report source or timeframe.")
-    insight: str = Field(default="Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe.", description="Key takeaway or analysis derived from the radar chart.")
+    main_title: str = Field(..., description="Main title of the radar chart slide.")
+    subtitle: str = Field(..., description="Subtitle providing context such as report source or timeframe.")
+    insight: str = Field(..., description="Key takeaway or analysis derived from the radar chart.")
     # ===== DISPLAY OPTIONS =====
-    unit: str = Field(default='điểm', description="Unit of measurement (e.g., điểm, %, level).")
+    unit: str = Field(..., description="Unit of measurement (e.g., điểm, %, level).")
     show_value: bool = Field(default=True, description="Show value labels on each data point.")
     data_label_format: str = Field(default="{value}", description="Format string for data labels (e.g., {value}/10).")
     # ===== RADAR STRUCTURE =====
-    axes: List[str] = Field(default=['Y tế', 'Tâm lý', 'Dinh dưỡng', 'Vận động', 'Công nghệ', 'Môi trường'], description="List of dimensions (axes). Example: ['Medical', 'Psychological', 'Nutrition']")
-    series: List[Dict[str, str | List[float]]] = Field(default=[{'label': 'Hiện tại', 'values': [8, 8, 9, 9, 9, 9]}, {'label': 'Mục tiêu', 'values': [9.5, 9.5, 9.0, 8.5, 8.5, 9.5]}], description=
+    axes: List[str] = Field(..., description="List of dimensions (axes). Example: ['Medical', 'Psychological', 'Nutrition']")
+    series: List[Dict[str, str | List[float]]] = Field(..., description=
         """
         List of data series. Each series contains a label and values array. Values length must match axes length.
         Example:
@@ -1861,16 +1750,14 @@ class GeneratePieChartSlide1(BaseModel):
     This schema defines all visual and content elements required to render the slide,
     including titles, data, styling, and display options.
     """
-    main_title: str = Field(default='Quarterly Revenue Breakdown', description="Primary heading of the slide. Should clearly describe what the pie chart represents.")
-    subtitle: str = Field(default='Data Source: Financial Year 2025 Reports', description="Secondary text displayed below the main title. Typically used for data source, timeframe, or additional context.")
-    insight: str = Field(default='AI Services now account for nearly half of total revenue growth.', description="Short analytical takeaway or key message derived from the chart data. Should highlight the most important insight.")
-    chart_type: str = Field(default="pie", description="Type of chart: 'pie' (full) or 'donut' (ring-style with center space).")
+    main_title: str = Field(..., description="Primary heading of the slide. Should clearly describe what the pie chart represents.")
+    subtitle: str = Field(..., description="Secondary text displayed below the main title. Typically used for data source, timeframe, or additional context.")
+    insight: str = Field(..., description="Short analytical takeaway or key message derived from the chart data. Should highlight the most important insight.")
     unit: str = Field(default="%", description="Unit of measurement for the values (e.g., %, $, users). This may be displayed in labels or legends.")
     show_value: bool = Field(default=True, description="Controls whether numeric values are displayed directly on the pie chart slices.")
     show_legend: bool = Field(default=True, description="Controls whether the legend (mapping colors to labels) is displayed on the slide.")
-    data_label_format: str = Field(default="{value}{unit}", description="Template string for formatting data labels on the chart. Use placeholders like {value}, {label}, or {unit}.")
     colors: List[str] = Field(default=["#5FD9D3", "#4ABFB9", "#36A6A0", "#248C87"], description="List of colors for pie chart slices. Each color corresponds to an item in 'items' by index order.")
-    items: List[Dict[str, str | float]] = Field(default=[{'label': 'AI Services', 'value': 55}, {'label': 'Cloud Hosting', 'value': 25}, {'label': 'Consulting', 'value': 20}, {'label': 'Support', 'value': 10}], 
+    items: List[Dict[str, str | float]] = Field(..., 
         description=(
             "List of data points for the pie chart. "
             "Each item must be an object with 'label' (string) and 'value' (number). "
@@ -1883,33 +1770,275 @@ class GeneratePieChartSlide1(BaseModel):
     insight_text_color: str = Field(default="#FFFFFF", description="Color of the insight text.")
     background_color: str = Field(default="#0F172A", description="Background color of the slide.")
 
+class GeneratePieChartSlide2(BaseModel):
+    """
+    Input schema for generate_pie_chart_slide_2.
+    """
+    main_title: str = Field(..., description="Primary heading of the slide.")
+    subtitle: str = Field(..., description="Secondary text displayed below the main title.")
+    insight: str = Field(..., description="Key analytical takeaway from the chart.")
+    unit: str = Field(..., description="Unit of measurement for the values.")
+    show_value: bool = Field(default=True, description="Whether to display numeric values on chart slices.")
+    show_legend: bool = Field(default=True, description="Whether to display the legend.")
+    items: List[Dict[str, str | float]] = Field(
+        ...,
+        description="""
+        List of data items.
+
+        Structure:
+        - items: list of objects
+            - label: (str) Name of the category or data point
+            - value: (float) Numeric value associated with the label
+
+        Notes:
+        - 'value' should be a number (int or float)
+        - Labels should be unique to avoid duplication in visualization
+
+        Example:
+        [
+            {"label": "AI Services", "value": 45},
+            {"label": "Cloud Infrastructure", "value": 25}
+        ]
+        """
+    )
+class GeneratePieChartSlide4(BaseModel):
+    """
+    Input schema for generate_pie_chart_slide_4.
+    This schema defines all parameters required to generate
+    a modern pie/donut chart slide with SVG rendering.
+    """
+    main_title: str = Field(..., description="Main title of the slide (10–60 characters).")
+    subtitle: str = Field(..., description="Subtitle or data source displayed below the title.")
+    insight: str = Field(..., description="Short analytical insight highlighting the key takeaway from the chart.")
+    unit: str = Field(default="%", description="Unit displayed in values (%, $, users, etc.).")
+    show_value: bool = Field(default=True, description="Whether to display percentage values on chart slices.")
+    show_legend: bool = Field(default=True, description="Whether to display the legend block.")
+    data_label_format: str = Field(default="{value}{unit}", description="Template for slice labels. Supports {label}, {value}, {unit}.")
+    items: List[Dict[str, str | float]] = Field(
+        ..., 
+        description="""
+        List of data items.
+
+        Structure:
+        - items: list of objects
+            - label: (str) Name of the category or data point
+            - value: (float) Numeric value associated with the label
+
+        Notes:
+        - 'value' should be a number (int or float)
+        - Labels should be unique to avoid duplication in visualization
+
+        Example:
+        [
+            {"label": "AI Services", "value": 45},
+            {"label": "Cloud Infrastructure", "value": 25}
+        ]
+        """
+    )
+
+class GeneratePieChartSlide6(BaseModel):
+    """
+    Input schema for generate_pie_chart_slide_6.
+    This schema describes parameters used to generate a financial-themed pie or donut chart slide.
+    """
+    main_title: str = Field(
+        ...,
+        description="Main title of the slide (10–60 characters)."
+    )
+    subtitle: str = Field(
+        ...,
+        description="Subtitle or data source displayed below the title."
+    )
+    insight: str = Field(
+        ...,
+        description="Short analytical insight or key takeaway describing the distribution of investment allocation."
+    )
+
+    unit: str = Field(
+        default="%",
+        description="Unit displayed in values (%, $, users, etc.)."
+    )
+    show_value: bool = Field(
+        default=True,
+        description="Whether to display percentage values on chart slices."
+    )
+    show_legend: bool = Field(
+        default=True,
+        description="Whether to render the legend block beside the chart"
+    )
+    items: List[Dict[str, str | float]] = Field(
+        ...,
+        description="""
+        List of data items.
+
+        Structure:
+        - items: list of objects
+            - label: (str) Name of the category or data point
+            - value: (float) Numeric value associated with the label
+
+        Notes:
+        - 'value' should be a number (int or float)
+        - Labels should be unique to avoid duplication in visualization
+
+        Example:
+        [
+            {"label": "Stocks", "value": 45},
+            {"label": "Bonds", "value": 25}
+        ]
+        """
+    )
+
+
+class GeneratePieChartSlide7(BaseModel):
+    """
+    Input schema for generate_pie_chart_slide_7.
+    This schema defines parameters for generating an elegant three-pie-chart slide with minimalist design.
+    """
+    main_title: str = Field(..., description="Main title of the slide.")
+    subtitle: str = Field(..., description="Subtitle displayed below the title.")
+    pie1_insight: str = Field(..., description="Analytical insight for the first pie chart.")
+    pie2_insight: str = Field(..., description="Analytical insight for the second pie chart.")
+    pie3_insight: str = Field(..., description="Analytical insight for the third pie chart.")
+    unit: str = Field(default="%", description="Unit displayed in values (%, $, users, etc.).")
+    show_value: bool = Field(default=True, description="Whether to display percentage values on chart slices.")
+    show_legend: bool = Field(default=True, description="Whether to render the legend block beside the chart.")
+    pie1_items: List[Dict[str, str | float]] = Field(
+        ...,
+        description="""
+        List of data items for the first pie chart.
+
+        Structure:
+        - label: (str) Name of the category or data point
+        - value: (float) Numeric value associated with the label
+
+        Example:
+        [
+            {"label": "Jupiter", "value": 75},
+            {"label": "Other", "value": 25}
+        ]
+        """
+    )
+    pie2_items: List[Dict[str, str | float]] = Field(
+        ...,
+        description="""
+        List of data items for the second pie chart.
+
+        Structure:
+        - label: (str) Name of the category or data point
+        - value: (float) Numeric value associated with the label
+
+        Example:
+        [
+            {"label": "Neptune", "value": 65},
+            {"label": "Other", "value": 35}
+        ]
+        """
+    )
+    pie3_items: List[Dict[str, str | float]] = Field(
+        ...,
+        description="""
+        List of data items for the third pie chart.
+
+        Structure:
+        - label: (str) Name of the category or data point
+        - value: (float) Numeric value associated with the label
+
+        Example:
+        [
+            {"label": "Mercury", "value": 60},
+            {"label": "Other", "value": 40}
+        ]
+        """
+    )
+
+class GeneratePieChartSlide8(BaseModel):    
+    """
+    Input schema for generate_pie_chart_slide_8.
+    This schema defines parameters for generating an elegant three-pie-chart slide with minimalist design.
+    """
+    main_title: str = Field(..., description="Main title of the slide.")
+    subtitle: str = Field(..., description="Subtitle providing context or data summary.")
+    unit: str = Field(default="%", description="Measurement unit displayed after the number.")
+    categories: List[str] = Field(..., description="List of categories to display (e.g., ['North America', 'Europe']).")
+    insights: List[str] = Field(..., description="List of strings containing detailed analysis or insights texts for each category.")
+    series: List[float] = Field(..., description="List of numerical values corresponding to each category. Example format: [45.0, 30.0, 25.0]")
+
+class GenerateScatterPlotChart1(BaseModel):
+    """Input schema for generate_scatter_plot_chart_slide_1."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Early Childhood Development Analysis'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Correlation between Play Time and Social Skill Scores'")
+    insight: str = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot.")
+    x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Play Time (Hours)').")
+    y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Social Skill Score (0-100)').")
+    unit: str = Field(..., description="Unit displayed with values (e.g., 'pts', 'points').")
+    show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
+    x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
+        ...,
+        description="""
+            Scatter plot data in series format.
+
+            Structure:
+            - series: list of data series
+                - name: Name of the series
+                - points: list of (x, y) coordinates
+
+            Notes:
+            - Each point must contain numeric 'x' and 'y'
+            - Multiple series are supported
+            - Used to visualize relationships or correlations
+
+            Example:
+            [
+                {
+                    "name": "Group A (Ages 3-4)",
+                    "points": [
+                        {"x": 2, "y": 45},
+                        {"x": 3.5, "y": 58}
+                    ]
+                }
+            ]
+        """
+    )
+    colors: List[str] = Field(default=["#FF6B6B", "#4ECDC4", "#FFE66D", "#FF9F43"], description="List of hex colors for each data series. Example: ['#FF6B6B', '#4ECDC4'].")
+    accent_color: str = Field(default="#ffffff", description="Accent color used for axis lines, borders, and chart markers. Example: '#ffffff'.")
+    main_title_color: str = Field(default="#ffffff", description="Hex color for the main title text. Example: '#ffffff'.")
+    subtitle_color: str = Field(default="#3d4a85", description="Hex color for subtitle and secondary labels. Example: '#3d4a85'.")
+    insight_text_color: str = Field(default="#3d4a85", description="Hex color for the insight text inside the card. Example: '#3d4a85'.")
+    bg_color: str = Field(default="#7b92f7", description="Background color of the slide. Example: '#7b92f7'.")
+
+
 class GenerateScatterPlotChartSlide2(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_2"""
-    main_title: str = Field(default='Relationship Between Travel Distance and Spending', description="""
+    main_title: str = Field(..., description="""
             "Main title of the slide, summarizing the core message of the scatter plot "
             "within a travel context (10–60 characters). "
             "Example: Relationship Between Travel Distance and Spending"""
         )
-    subtitle: str = Field(default='Source: Tourist Behavior Survey 2024 | Sample: 200 Trips', description="""
+    subtitle: str = Field(..., description="""
             "Subtitle or supplementary information such as data source, survey scope, "
             "or collection period. "
             "Example: Source: Tourist Behavior Survey 2024"
         """)
-    insight: str = Field(default='The scatter plot indicates a strong positive correlation between travel distance and total spending.', description="""
+    insight: str = Field(..., description="""
             "A concise analytical statement derived from the chart, highlighting key trends, "
             "correlations, or notable outliers in travel behavior. "
             "Example: International travelers spend disproportionately more for trips above 7000 km."
         """)
     x_axis: str = Field(
-        default='Travel Distance (km)',
+        ...,
         description="Label for the X-axis metric represented in the scatter plot. Example: Travel Distance (km)."
     )
     y_axis: str = Field(
-        default='Total Travel Spending (USD)',
+        ...,
         description="Label for the Y-axis metric represented in the scatter plot. Example: Total Travel Spending (USD)."
     )
     unit: str = Field(
-        default='USD',
+        ...,
         description="Unit suffix used when displaying point value labels. Example: USD, $, k VND."
     )
     show_value: bool = Field(
@@ -1953,7 +2082,7 @@ class GenerateScatterPlotChartSlide2(BaseModel):
         description="Background color of the chart container panel. Example: rgba(255, 255, 255, 0.5)."
     )
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
-        default=[{'name': 'Domestic Travelers', 'points': [{'x': 150, 'y': 300}, {'x': 300, 'y': 450}, {'x': 500, 'y': 700}, {'x': 800, 'y': 900}, {'x': 1200, 'y': 1100}, {'x': 2000, 'y': 1500}]}, {'name': 'International Travelers', 'points': [{'x': 3000, 'y': 2500}, {'x': 5000, 'y': 3200}, {'x': 7000, 'y': 4000}, {'x': 9000, 'y': 4800}, {'x': 11000, 'y': 5500}, {'x': 2500, 'y': 5000}]}],
+        ...,
         description=(
             "List of scatter data series. Each series includes 'name' and 'points'; "
             "each point is an object with numeric 'x' and 'y' values. "
@@ -1977,30 +2106,245 @@ class GenerateScatterPlotChartSlide2(BaseModel):
         description="Text color for the insight section, ensuring clarity and neutral tone. Example: #2C3E50."
     )
 
+class GenerateScatterPlotChartSlide3(BaseModel):
+    """Input schema for generate_scatter_plot_chart_slide_3."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Study Time and Exam Performance Trend'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Education Performance Study 2026'")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Students attending guided revision sessions consistently outperform independent learners.'")
+    x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Self-Study Hours').")
+    y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Final Exam Score').")
+    unit: str = Field(..., description="Unit displayed with values (e.g., 'points', '%', 'USD').")
+    show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
+    data_label_format: str = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=20, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=50, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=100, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
+        ...,
+        description="""
+            Scatter plot data in series format.
+
+            Structure:
+            - series: list of data series
+                - name: Name of the series
+                - points: list of (x, y) coordinates
+
+            Notes:
+            - Each point must contain numeric 'x' and 'y'
+            - Multiple series are supported
+            - Used to visualize relationships or correlations
+
+            Example:
+            [
+                {
+                    "name": "Independent Study Group",
+                    "points": [
+                        {"x": 3, "y": 58},
+                        {"x": 5, "y": 65}
+                    ]
+                }
+            ]
+        """
+    )
+    colors: List[str] = Field(default=["#3D5A80", "#EE6C4D"], description="List of hex colors for each data series. Colors cycle if there are more series than colors.")
+    accent_color: str = Field(default="#7B8FB3", description="Accent color used for the header border and insight card border. Example: '#7B8FB3'.")
+    main_title_color: str = Field(default="#4A5E7B", description="Hex color for the main title text. Example: '#4A5E7B'.")
+    subtitle_color: str = Field(default="#8E97A4", description="Hex color for subtitle and axis labels. Example: '#8E97A4'.")
+    insight_text_color: str = Field(default="#4A5E7B", description="Hex color for the insight text. Example: '#4A5E7B'.")
+    background_color: str = Field(default="#E8F5E9", description="Background color of the slide. Example: '#E8F5E9'.")
+
+class GenerateScatterPlotChartSlide4(BaseModel):
+    """Input schema for generate_scatter_plot_chart_slide_4."""   
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Study Effort Drives Skill Mastery'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Online Course Analysis – Q4 2024'")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Higher weekly study hours generally lead to better skill assessment scores.'")
+    x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Study Hours').")
+    y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Final Skill Assessment Score').")
+    unit: str = Field(..., description="Unit displayed with values (e.g., 'points', '%', 'USD').")
+    show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
+    data_label_format: str = Field(default=None, description="Optional format string for data labels (not used if show_value is False).")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=25, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=40, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=100, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
+        ...,
+        description="""
+            Scatter plot data in series format.
+
+            Structure:
+            - series: list of data series
+                - name: Name of the series
+                - points: list of (x, y) coordinates
+
+            Notes:
+            - Each point must contain numeric 'x' and 'y'
+            - Multiple series are supported
+            - Used to visualize relationships or correlations
+
+            Example:
+            [
+                {
+                    "name": "Self-Paced Learners",
+                    "points": [
+                        {"x": 4, "y": 55},
+                        {"x": 6, "y": 60}
+                    ]
+                }
+            ]
+        """
+    )
+    colors: List[str] = Field(default=["#4F46E5", "#F59E0B"], description="List of hex colors for each data series. Colors cycle if there are more series than colors.")
+    accent_color: str = Field(default="#F59E0B", description="Accent color used for the header border line and insight card. Example: '#F59E0B'.")
+    main_title_color: str = Field(default="#1F2937", description="Hex color for the main title text. Example: '#1F2937'.")
+    subtitle_color: str = Field(default="#6B7280", description="Hex color for subtitle and secondary labels. Example: '#6B7280'.")
+    insight_text_color: str = Field(default="#374151", description="Hex color for the insight text. Example: '#374151'.")
+
+
+class GenerateScatterPlotChartSlide6(BaseModel):
+    """Input schema for generate_scatter_plot_chart_slide_6."""
+    main_title: str = Field(..., description="Main title displayed prominently in the header section (10–60 characters). Example: 'Relationship Between Study Time and Academic Performance'")
+    subtitle: str = Field(..., description="Subtitle displayed on the top-right of the header, typically indicating data source or context. Example: 'Source: Education Analytics Report 2024'")
+    insight: str = Field(..., description="Key analytical insight displayed in a highlighted box on the left panel, summarizing trends or correlations in the scatter plot. Example: 'High achievers tend to study more, but optimal study time varies among students.'")
+    x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Daily Study Time (minutes)').")
+    y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Exam Score (Points)').")
+    unit: str = Field(..., description="Unit displayed with values (e.g., '%', 'points', 'USD').")
+    show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=600, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=0, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=500, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
+        ...,
+        description="""
+            Scatter plot data in series format.
+
+            Structure:
+            - series: list of data series
+                - name: Name of the series
+                - points: list of (x, y) coordinates
+
+            Notes:
+            - Each point must contain numeric 'x' and 'y'
+            - Multiple series are supported
+            - Used to visualize relationships or correlations between variables
+
+            Example:
+            [
+                {
+                    "name": "Average Students",
+                    "points": [
+                        {"x": 30, "y": 10},
+                        {"x": 60, "y": 20}
+                    ]
+                }
+            ]
+        """
+    )
+    colors: List[str] = Field(default=["#008080", "#FFB347"], description="List of hex colors for each data series. Example: ['#008080', '#FFB347'].")
+    accent_color: str = Field(default="#008080", description="Accent color used for borders and highlighted elements. Example: '#008080'.")
+    main_title_color: str = Field(default="#005F5F", description="Hex color for the main title text. Example: '#005F5F'.")
+    subtitle_color: str = Field(default="#556B2F", description="Hex color for subtitle text. Example: '#556B2F'.")
+    insight_text_color: str = Field(default="#2C3E50", description="Hex color for the insight text. Example: '#2C3E50'.")
+
+class GenerateScatterPlotChartSlide7(BaseModel):
+    """Input schema for generate_scatter_plot_chart_slide_7."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Relationship Between App Usage Time and Monthly Spending'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Source: Mobile App Analytics Report 2024'")
+    insight: str = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot. Example: 'Power users tend to spend significantly more than casual users.'")
+    x_axis: str = Field(..., description="Label for the X-axis (e.g., 'App Usage Time (minutes/day)').")
+    y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Monthly Digital Spending (USD)').")
+    unit: str = Field(..., description="Unit displayed with values (e.g., '%', 'USD', 'points').")
+    show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=400, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=0, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=300, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
+        ...,
+        description="""
+            Scatter plot data in series format.
+
+            Structure:
+            - series: list of data series
+                - name: Name of the series
+                - points: list of (x, y) coordinates
+
+            Notes:
+            - Each point must contain numeric 'x' and 'y'
+            - Multiple series are supported
+            - Used to visualize relationships or correlations
+
+            Example:
+            [
+                {
+                    "name": "Casual Users",
+                    "points": [
+                        {"x": 30, "y": 10},
+                        {"x": 60, "y": 20}
+                    ]
+                }
+            ]
+        """
+    )
+    colors: List[str] = Field(default=["#a06d4f", "#6b8e23"], description="List of hex colors for each data series. Example: ['#a06d4f', '#6b8e23'].")
+    accent_color: str = Field(default="#a06d4f", description="Accent color used for axis lines and borders. Example: '#a06d4f'.")
+    main_title_color: str = Field(default="#3e2f25", description="Hex color for the main title text. Example: '#3e2f25'.")
+    subtitle_color: str = Field(default="#5a4638", description="Hex color for subtitle and secondary labels. Example: '#5a4638'.")
+    insight_text_color: str = Field(default="#3e2f25", description="Hex color for the insight text. Example: '#3e2f25'.")
+
+
+
+
+class GenerateBarChartSlide1(BaseModel):
+    """Input schema for generate_bar_chart_slide_1"""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters).")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Text insight or general description.")
+    categories: List[str] = Field(..., description="List of categories for the X-axis.")
+    series: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: {\"name\": \"Import\", \"data\": [45, 52, 68, 58]}"
+    )
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed on the left panel.")
+    colors: List[str] = Field(default=["#1B2559", "#FF6B35", "#4B5563", "#9CA3AF"], description="List of hex colors for the bars and icons.")
+    accent_color: str = Field(default="#FF6B35", description="Hex color for the accent elements.")
+    main_title_color: str = Field(default="#1B2559", description="Hex color for the main title part.")
+    subtitle_color: str = Field(default="#6B7280", description="Hex color for the subtitle text.")
+    insight_text_color: str = Field(default="#374151", description="Hex color for the insights description text.")
+    y_axis_label: str = Field(default="Volume", description="Label for Y-axis.")
+
 class GenerateBarChartSlide2(BaseModel):
     """Input schema for generate_bar_chart_slide_2."""
-    main_title: str = Field(default='Ocean Temperature Variation by Depth', description="""
+    main_title: str = Field(..., description="""
         Main title of the chart (10–60 characters). Example: Ocean Temperature vs. Depth Analysis
         """)
-    subtitle: str = Field(default='Unit: °C | Data Source: Marine Research Institute 2025', description="""
+    subtitle: str = Field(..., description="""
         Subtitle, unit, or data source. Example: Data Source: Marine Institute 2025
         """)
-    insight: str = Field(default='The chart reveals a clear decline in average ocean temperatures as depth increases, with the Pacific Ocean consistently warmer than the Atlantic at all measured depths.', description="""
+    insight: str = Field(..., description="""
         Description or main insight of the slide. Example: Temperature drops steadily as depth increases in both oceans.
         """)
 
     x_axis: str = Field(
-        default='Ocean Depth (meters)',
+        ...,
         description="Label for the X-axis metric. Example: Ocean Depth (meters)."
     )
 
     y_axis: str = Field(
-        default='Average Temperature (°C)',
+        ...,
         description="Label for the Y-axis metric. Example: Average Temperature °C."
     )
 
     unit: str = Field(
-        default='°C',
+        ...,
         description="Unit suffix used for values. Example: °C."
     )
 
@@ -2090,6 +2434,293 @@ class GenerateBarChartSlide2(BaseModel):
     insight_text_color: str = Field(
         default="#374151",
         description="CSS color for insight text."
+    )
+
+class GenerateBarChartSlide3(BaseModel):
+    """Input schema for generate_bar_chart_slide_3"""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters).")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    x_axis: str = Field(..., description="Label for X-axis.")
+    y_axis: str = Field(..., description="Label for Y-axis.")
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed on the left panel.")
+    y_axis_min: float = Field(default=0, description="Minimum value of Y-axis.")
+    y_axis_max: float = Field(default=None, description="Maximum value of Y-axis. If None, auto-calculated.")
+    colors: List[str] = Field(..., description="List of hex colors for the bars and icons.")
+    categories: List[str] = Field(..., description="List of categories or regions to display.")
+    series: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description="List of numeric values corresponding to each category for the bar sizes and labels. Example: {\"name\": \"Production\", \"data\": [20, 30, 50, 70]}"
+    )
+    main_title_color: str = Field(default="#4A5E7B", description="Hex color for the main title part.")
+    subtitle_color: str = Field(default="#8E97A4", description="Hex color for the subtitle text.")
+    image_url: str = Field(
+        default="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2022&auto=format&fit=crop",
+        description="URL of the image to display in the right capsule panel."
+    )
+
+class GenerateBarChartSlide4(BaseModel):
+    """Input schema for generate_bar_chart_slide_4"""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters).")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Text insight or general description.")
+    x_axis: str = Field(..., description="Label for X-axis (e.g., 'Regions').")
+    y_axis: str = Field(..., description="Label for Y-axis (e.g., 'Percentage').")
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
+    show_legend: bool = Field(default=True, description="Whether legend is displayed on the left and right panels.")
+    y_axis_min: float = Field(default=0, description="Minimum value of Y-axis.")
+    y_axis_max: float = Field(default=None, description="Maximum value of Y-axis.")
+    colors: List[str] = Field(..., description="List of hex colors for the bars and icons.")
+    categories: List[str] = Field(..., description="List of categories or regions to display.")
+    insights: List[str] = Field(..., description="List of text descriptions or insights corresponding to each category.")
+    series: List[float] = Field(
+        ...,
+        description="List of numeric values for each category. Example: [20, 30, 50, 70]"
+    )
+    accent_color: str = Field(default="#FF6B35", description="Hex color for the accent elements.")
+    main_title_color: str = Field(default="#1B2559", description="Hex color for the main title part.")
+    subtitle_color: str = Field(default="#6B7280", description="Hex color for the subtitle text.")
+    insight_text_color: str = Field(default="#374151", description="Hex color for the insights description text.")
+
+class GenerateTableSlide1(BaseModel):
+    """Input schema for generate_table_slide_1."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel.")
+    unit: str = Field(..., description="Unit appended to each value (e.g., 'GW', '%', '$').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed inside table cells.")
+    columns: List[str] = Field(..., description="List of column names.")
+    header_bg: str = Field(default="#76C2B4", description="Hex color or gradient for the table header background.")
+    grid_color: str = Field(default="#D1D5DB", description="Hex color for table borders and grid lines.")
+    text_color: str = Field(default="#333333", description="Hex color for general text inside table cells.")
+    highlight_bg: str = Field(default="#E6F4F1", description="Hex color for highlighted rows or specific cells.")
+    accent_color: str = Field(default="#76C2B4", description="Hex color for accent elements (e.g., SVG decorations, insight borders).")
+    main_title_color: str = Field(default="#333333", description="Hex color for the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Hex color for the subtitle text.")
+    insight_text_color: str = Field(default="#444444", description="Hex color for the insight descriptive text.")
+    rows: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description="""
+            Table row data.
+
+            Structure:
+            - rows: list of row objects
+                - label: name of the row
+                - values: list of numeric values corresponding to each column
+            Example:
+            [
+                {
+                    "label": "Row 1",
+                    "values": [1, 2, 3]
+                },
+                {
+                    "label": "Row 2",
+                    "values": [4, 5, 6]
+                }
+            ]
+            Notes:
+            - Each row must have the same number of values as columns
+        """
+    )
+
+class GenerateTableSlide2(BaseModel):
+    """Input schema for generate_table_slide_2."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel.")
+    unit: str = Field(..., description="Unit appended to each value (e.g., '%', 'GW', '$').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed inside table cells.")
+    columns: List[str] = Field(..., description="List of column names.")
+    header_bg: str = Field(default="#3B3781", description="Hex color for the table header background.")
+    grid_color: str = Field(default="#D1D5DB", description="Hex color for table grid lines.")
+    text_color: str = Field(default="#1F2937", description="Hex color for table body text.")
+    highlight_bg: str = Field(default="#F3F4F6", description="Hex color for alternate row backgrounds.")
+    accent_color: str = Field(default="#FFB300", description="Hex color for accents (SVG, header left borders).")
+    main_title_color: str = Field(default="#3B3781", description="Hex color for the main title.")
+    subtitle_color: str = Field(default="#6B7280", description="Hex color for the subtitle.")
+    insight_text_color: str = Field(default="#1F2937", description="Hex color for the insight text.")
+    rows: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description="""
+            Table row data.
+
+            Structure:
+            - rows: list of row objects
+                - label: name of the row
+                - values: list of numeric values corresponding to each column
+            Example:
+            [
+                {
+                    "label": "Row 1",
+                    "values": [1, 2, 3]
+                },
+                {
+                    "label": "Row 2",
+                    "values": [4, 5, 6]
+                }
+            ]
+            Notes:
+            - Each row must have the same number of values as columns
+
+            """
+        )
+
+class GenerateTableSlide3(BaseModel):
+    """Input schema for generate_table_slide_3."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel.")
+    unit: str = Field(..., description="Unit appended to each value (e.g., '%', 'sites', 'count').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed inside table cells.")
+    columns: List[str] = Field(..., description="List of column names.")
+    header_bg: str = Field(default="linear-gradient(135deg, #D4AF37, #AA7C11)", description="Background style for the header.")
+    grid_color: str = Field(default="rgba(212, 175, 55, 0.2)", description="Color for table grid lines.")
+    text_color: str = Field(default="#FFFFFF", description="Hex color for text inside table cells.")
+    highlight_bg: str = Field(default="rgba(10, 52, 39, 0.4)", description="Background color for the main content block.")
+    accent_color: str = Field(default="#D4AF37", description="Hex color for visual accents like borders and SVGs.")
+    main_title_color: str = Field(default="#D4AF37", description="Hex color for the main title.")
+    subtitle_color: str = Field(default="#E0E0E0", description="Hex color for the subtitle.")
+    insight_text_color: str = Field(default="#FFFFFF", description="Hex color for the insight text.")
+    rows: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description="""
+            Table row data.
+
+            Structure:
+            - rows: list of row objects
+                - label: name of the row
+                - values: list of numeric values corresponding to each column
+
+            Notes:
+            - Each row must have the same number of values as columns
+        """
+    )
+
+class GenerateTableSlide4(BaseModel):
+    """Input schema for generate_table_slide_4."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    insight: str = Field(..., description="Key analytical insight shown in the left panel.")
+    unit: str = Field(..., description="Optional unit appended to each value (e.g., 'mmHg', '%').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed inside table cells.")
+    categories: List[str] = Field(..., description="List of category labels for columns.")
+    header_bg: str = Field(default="#5D3B6B", description="Background color for the header.")
+    grid_color: str = Field(default="rgba(255, 255, 255, 0.1)", description="Color for table grid lines.")
+    text_color: str = Field(default="#FFFFFF", description="Hex color for text inside table cells.")
+    highlight_bg: str = Field(default="rgba(232, 156, 180, 0.15)", description="Background color for highlighted cells.")
+    accent_color: str = Field(default="#E89CB4", description="Hex color for visual accents.")
+    main_title_color: str = Field(default="#4ADE80", description="Hex color for the main title.")
+    subtitle_color: str = Field(default="#64748B", description="Hex color for the subtitle.")
+    insight_text_color: str = Field(default="#2DD4BF", description="Hex color for the insight text.")
+    series: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description="""
+            Series data with names and values.
+
+            Structure:
+            - series: list of series objects
+                - name: name of the series (e.g., 'Male', 'Female')
+                - values: list of numeric values corresponding to each category
+            Example:
+            [
+                {
+                    "name": "Male",
+                    "values": [120, 80, 140]
+                },
+                {
+                    "name": "Female",
+                    "values": [110, 75, 130]
+                }
+            ]
+            Notes:
+            - Each series must have the same number of values as categories
+        """
+    )
+
+class GenerateTableSlide5(BaseModel):
+    """Input schema for generate_table_slide_5."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters).")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or theme.")
+    insight: str = Field(..., description="Key descriptive or analytical insight displayed in a full-width panel above the table.")
+    unit: str = Field(default="", description="Optional unit appended to each value (e.g., '%', 'sites', 'count').")
+    show_value: bool = Field(default=True, description="Whether numeric values are displayed inside table cells.")
+    columns: List[str] = Field(..., description="List of column names.")
+    header_bg: str = Field(default="linear-gradient(135deg, #8B0000, #5D0E0E)", description="Background style for the header.")
+    grid_color: str = Field(default="#D4AF37", description="Color for table grid lines and borders.")
+    text_color: str = Field(default="#FFFFFF", description="Hex color for text inside table cells.")
+    highlight_bg: str = Field(default="rgba(93, 14, 14, 0.6)", description="Background color for highlighted row items.")
+    accent_color: str = Field(default="#FFD700", description="Hex color for visual accents.")
+    main_title_color: str = Field(default="#FFD700", description="Hex color for the main title.")
+    subtitle_color: str = Field(default="#E0E0E0", description="Hex color for the subtitle.")
+    insight_text_color: str = Field(default="#FFFFFF", description="Hex color for the insight text.")
+    rows: List[Dict[str, str | List[float]]] = Field(
+        ...,
+        description="""
+            Table row data.
+
+            Structure:
+            - rows: list of row objects
+                - label: name of the row
+                - values: list of numeric values corresponding to each column
+            Example:
+            [
+                {
+                    "label": "Row 1",
+                    "values": [1, 2, 3]
+                },
+                {
+                    "label": "Row 2",
+                    "values": [4, 5, 6]
+                }
+            ]
+            Notes:
+            - Each row must have the same number of values as columns
+        """
+    )
+
+class GenerateTableSlide7(BaseModel):
+    """Input schema for generate_table_slide_7."""
+    main_title: str = Field(..., description="Main title displayed at the top of the slide.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
+    show_legend: bool = Field(..., description="Whether to display the legend.")
+    legend_items: List[Dict[str, str]] = Field(
+        ...,
+        description="""List of legend items with label-to-color mapping.
+        Each item contains:
+        - label: (str) Legend label name that matches cell content
+        - color: (str) Hex color code for that legend item
+
+        Example:
+        [
+            {"label": "Marketing", "color": "#9a7a63"},
+            {"label": "Financial", "color": "#b7b9ab"}
+        ]"""
+    )
+    columns: List[str] = Field(..., description="List of column header labels (e.g., ['Mon', 'Tue', 'Wed', 'Thu', 'Fri']).")
+    bg_light: str = Field(default="#fefaf4", description="Hex color for the slide background.")
+    bg_dark: str = Field(default="#3a3730", description="Hex color for header background.")
+    grid_color: str = Field(default="#9a7a6344", description="Hex color for the table borders and grid lines.")
+    main_title_color: str = Field(default="#3a3730", description="Hex color for the main title.")
+    subtitle_color: str = Field(default="#3a3730aa", description="Hex color for the subtitle.")
+    text_col_default: str = Field(default="#6f7067", description="Hex color for default table cell text.")
+    rows: List[Dict[str, str | List[str | None]]] = Field(
+        ...,
+        description="""Table row data with cells mapped to legend labels.
+        Structure:
+        - label: (str) Row header name
+        - cells: (list) Cell values, each can be:
+            - None (renders with light background)
+            - A string matching a legend_items label (renders with that label's color)
+
+        Example:
+        [
+            {
+                "label": "Week 1",
+                "cells": [None, "Financial", None, None, None]
+            }
+        ]"""
     )
 
 
@@ -2780,11 +3411,17 @@ CHART_TOOLS = [
         func=generate_line_chart_slide_3,
         name="generate_line_chart_slide_3",
         description=(
-            "Generates a Line Chart slide for presenting multi-series performance data over time.\n"
-            "The slide layout is divided into three main sections:\n"
-            "- Upper section: title and subtitle.\n"
-            "- Left section (Large): SVG line chart with axes and grid.\n"
-            "- Right section (Sidebar): insight text box and legend.\n"
+            "Generates a line chart slide with a structured dark layout.\n\n"
+            "Slide layout:\n"
+            "- Top section: contains the main title and subtitle aligned to the left.\n"
+            "- Main content area is divided into two columns:\n"
+            "  • Left (larger) panel: displays the line chart visualization.\n"
+            "  • Right (smaller) panel: contains an insight text block at the top and an optional legend list below.\n\n"
+            "Additional layout elements:\n"
+            "- Chart includes axes, grid lines, multiple line series, and optional data labels.\n"
+            "- Axis titles are shown inside the chart.\n"
+            "- Legend appears as a vertical list below the insight.\n\n"
+            "The layout separates data visualization and explanatory content into two distinct panels."
         ),
         args_schema=GenerateLineChartSlide3
     ),
@@ -2813,33 +3450,296 @@ CHART_TOOLS = [
         args_schema=GeneratePieChartSlide1
     ),
     StructuredTool.from_function(
+        func=generate_pie_chart_slide_2,
+        name="generate_pie_chart_slide_2",
+        description=(
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: Contains the main title with a heavy left accent border and a cyan subtitle.\n"
+            "- Left section: Reserved for a stylistic insight box with a semi-transparent background and a vertical list of legend items with glow effects.\n"
+            "- Right section: Features a large, high-contrast SVG pie or donut chart centered in the space.\n"
+            "The layout uses a dark tech-inspired theme (#020c24) for professional data visualization."
+        ),
+        args_schema=GeneratePieChartSlide2
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_4,
+        name="generate_pie_chart_slide_4",
+        description=(
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: Reserved for the main title and subtitle with a large, bold aesthetic.\n"
+            "- Left section: Reserved for descriptive insights and a detailed legend explaining the data categories.\n"
+            "- Right section: Reserved for the visual SVG pie or donut chart, designed with a clean, high-contrast style.\n\n"
+            "The layout is designed to emphasize proportional data through a modern, pastel-themed interface."
+        ),
+        args_schema=GeneratePieChartSlide4
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_6,
+        name="generate_pie_chart_slide_6",
+        description=(
+            "The slide layout is divided into three main sections:\n"
+            "- Upper section: contains the main title with a vertical accent bar and a subtitle.\n"
+            "- Left section: occupies the majority of the left side, dedicated to a large, clean Pie or Donut chart.\n"
+            "- Right section: features a styled insight box with a bottom accent border and a clean list of legend items with values.\n"
+            "The layout uses a professional cream and gold-brown palette, ideal for financial stability and security topics."
+        ),
+        args_schema=GeneratePieChartSlide6
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_7,
+        name="generate_pie_chart_slide_7",
+        description=(
+            "The slide layout is an elegant minimalist design featuring three pie charts arranged horizontally.\n"
+            "- Top section: A clear header with a bold main title and a subtle subtitle.\n"
+            "- Main content: A row of three distinct pie/donut charts.\n"
+            "- Each chart is accompanied by a category label above and a dedicated insight text below.\n"
+            "The layout uses a refined color palette with warm neutral tones, perfect for style, agency, or minimalist infographics."
+        ),
+        args_schema=GeneratePieChartSlide7
+    ),
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_8,
+        name="generate_pie_chart_slide_8",
+        description=(
+            "The slide layout is structured into two main sections:\n"
+            "- Header section: centered at the top, displaying the main title and subtitle.\n"
+            "- Content section: arranged horizontally with three aligned parts:\n"
+            "  + Left panel: a vertical list of category insight cards with descriptive text.\n"
+            "  + Center panel: a large radial multi-arc (circular) chart visualization.\n"
+            "  + Right panel: a vertical list of value cards showing icons and highlighted numeric values.\n\n"
+            "The layout emphasizes a central visual chart, supported by detailed insights on the left and key figures on the right."
+        ),
+        args_schema=GeneratePieChartSlide8
+    ),
+
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_1,
+        name="generate_scatter_plot_chart_slide_1",
+        description=(
+            "The slide layout is structured into two main areas:\n"
+            "- Top section: displays the main title and subtitle with a vertical accent bar for visual emphasis.\n"
+            "- Left section: reserved for displaying a scatter plot chart and axis labels within a dashed container.\n"
+            "- Right section: reserved for chart description, including an insight card and a legend box.\n\n"
+            "The layout is designed to present visual data alongside supporting explanatory text in a playful, education-themed style."
+        ),
+        args_schema=GenerateScatterPlotChart1
+    ),
+    StructuredTool.from_function(
         func=generate_scatter_plot_chart_slide_2,
         name="generate_scatter_plot_chart_slide_2",
         description=(
-            "Generates a travel-themed Scatter Plot slide with a polished, presentation-ready design.\n"
-            "The slide layout is divided into three main sections:\n"
-            "- Upper section: Reserved for the main title and subtitle, featuring a strong accent border.\n"
-            "- Left section: Reserved for the analytical insight box and data legend, styled with a travel-themed shadow effect.\n"
-            "- Right section: Reserved for a large SVG scatter plot chart inside a soft-background container.\n"
-            "The layout is designed to highlight correlations between variables with a clean, hand-crafted aesthetic."
+            "The slide layout is divided into two main sections:\n"
+            "- Header section: displays the main title and subtitle at the top.\n"
+            "- Content section: uses a two-column layout:\n"
+            "  + Left area: displays a scatter plot chart visualization.\n"
+            "  + Right column: presents an insight panel with descriptive text and a legend below.\n\n"
+            "The layout emphasizes data visualization on the left and analytical interpretation on the right."
         ),
         args_schema=GenerateScatterPlotChartSlide2
+    ),
+
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_3,
+        name="generate_scatter_plot_chart_slide_3",
+        description=(
+            "The slide layout is divided into two main sections:\n"
+            "- Header section: displays the main title and subtitle at the top.\n"
+            "- Content section: uses a two-column layout:\n"
+            "  + Left column: presents an insight panel with descriptive text and a legend below.\n"
+            "  + Right column: displays the scatter plot chart visualization.\n\n"
+            "The layout emphasizes analytical interpretation on the left and data visualization on the right."
+        ),
+        args_schema=GenerateScatterPlotChartSlide3
+    ),
+
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_4,
+        name="generate_scatter_plot_chart_slide_4",
+        description=(
+            "The slide layout is structured into two main sections:\n"
+            "- Header section: displays the main title and subtitle at the top, separated by a dashed accent line.\n"
+            "- Content section: uses a two-column layout:\n"
+            "  + Left column: contains a highlighted insight box followed by a legend list.\n"
+            "  + Right column: features the scatter plot chart inside a styled container with rounded corners, border, and shadow.\n\n"
+            "The layout combines a decorative header, a visually emphasized insight panel, and a prominent chart area."
+        ),
+        args_schema=GenerateScatterPlotChartSlide4
+    ),
+
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_6,
+        name="generate_scatter_plot_chart_slide_6",
+        description=(
+            "The slide features a modern, visually rich layout with decorative background elements including soft wave shapes and floating square accents.\n\n"
+            "- Header section: positioned at the top with a split layout:\n"
+            "  + Left side: displays a large, bold main title.\n"
+            "  + Right side: shows the subtitle aligned to the right.\n\n"
+            "- Main content section: arranged in a horizontal two-column layout:\n"
+            "  + Left column: contains an insight panel styled as a soft card with a highlighted left border, followed by a vertical legend list.\n"
+            "  + Right column: displays the scatter plot chart inside a rounded container with a light background and subtle shadow.\n\n"
+            "The overall design emphasizes a clean, modern aesthetic with strong visual separation between insight content and data visualization, enhanced by decorative background elements."
+        ),
+        args_schema=GenerateScatterPlotChartSlide6
+    ),
+    StructuredTool.from_function(
+        func=generate_scatter_plot_chart_slide_7,
+        name="generate_scatter_plot_chart_slide_7",
+        description=(
+            "The slide layout uses an absolute-positioned composition with three main sections:\n"
+            "- Header section: displays the main title and subtitle at the top, spanning the full width.\n"
+            "- Chart section: positioned on the left side, showing the scatter plot visualization.\n"
+            "- Insight section: positioned on the right side as a boxed panel containing analytical text and a legend below.\n\n"
+            "The layout emphasizes visual balance with the chart on the left and interpretive insights on the right."
+        ),
+        args_schema=GenerateScatterPlotChartSlide7
+    ),
+
+    StructuredTool.from_function(
+        func=generate_bar_chart_slide_1,
+        name="generate_bar_chart_slide_1",
+        description=(
+            "Generates a Logistic Company-themed Grouped Bar Chart slide.\n\n"
+            "Slide layout:\n"
+            "- Top section: contains the main title and subtitle.\n"
+            "- Main content area is divided into two panels:\n"
+            "  • Left panel: contains an insight text block and a horizontal legend.\n"
+            "  • Right panel: displays the grouped bar chart visualization with grid lines and labeled axes.\n\n"
+            "Additional layout elements:\n"
+            "- The background is white with decorative geometric shapes at the top-left and bottom-right corners."
+        ),
+        args_schema=GenerateBarChartSlide1
     ),
     StructuredTool.from_function(
         func=generate_bar_chart_slide_2,
         name="generate_bar_chart_slide_2",
         description=(
-            "Generates a clean and modern Bar Chart slide with a refined, presentation-ready aesthetic.\n"
-            "Visual style emphasizes clarity and balance, using soft accent colors and readable typography.\n"
-            
-            "Layout:\n"
-            "- Upper section: Prominent main title with optional subtitle for context or units.\n"
-            "- Left section: Insight section highlighting key observations, accompanied by a clear legend.\n"
-            "- Right section: Structured SVG Grouped Bar Chart displayed inside a neat container.\n"
-            "Best suited for comparing multiple data series across shared categories in reports or business reviews."
+            "Generates an Ocean-themed Grouped Bar Chart slide.\n\n"
+            "Slide layout:\n"
+            "- Top section: contains the main title and subtitle.\n"
+            "- Main content area is divided into two columns:\n"
+            "  • Left column: displays a text insight block and a vertical legend.\n"
+            "  • Right column (highlighted with a blurred background): displays the grouped bar chart.\n\n"
+            "Additional layout elements:\n"
+            "- The background features a light cyan water-like gradient with soft floating decorative bubbles."
         ),
         args_schema=GenerateBarChartSlide2
     ),
+    StructuredTool.from_function(
+        func=generate_bar_chart_slide_3,
+        name="generate_bar_chart_slide_3",
+        description=(
+            "Generates an educational themed Grouped Bar Chart slide with an image capsule layout.\n\n"
+            "Slide layout:\n"
+            "- Top section: contains the main title and subtitle aligned to the left.\n"
+            "- Main content area is divided into two columns:\n"
+            "  • Left panel (larger): displays a horizontal legend at the top and the grouped bar chart visualization below it.\n"
+            "  • Right panel (smaller): displays a large, vertical, capsule-shaped image.\n\n"
+            "Additional layout elements:\n"
+            "- The background is light beige with small decorative star elements.\n"
+            "- The chart has no enclosing box, blending seamlessly with the background.\n"
+            "- This layout is highly effective for visual storytelling, combining data visualization on the left with a prominent thematic image on the right."
+        ),
+        args_schema=GenerateBarChartSlide3
+    ),
+    StructuredTool.from_function(
+        func=generate_bar_chart_slide_4,
+        name="generate_bar_chart_slide_4",
+        description=(
+            "Generates a Logistic Company-themed Grouped Bar Chart slide with a three-column layout.\n\n"
+            "Slide layout:\n"
+            "- Top section: contains the main title and subtitle aligned to the left, and a faded '2024 REPORT' text aligned to the right.\n"
+            "- Main content area is divided into three columns:\n"
+            "  • Left panel: displays the first half of the legend (category names, values, and text insights).\n"
+            "  • Center panel: displays the grouped bar chart visualization with grid lines and labeled axes.\n"
+            "  • Right panel: displays the second half of the legend.\n\n"
+            "Additional layout elements:\n"
+            "- The background is white with decorative geometric shapes at the top-left and bottom-right corners.\n"
+            "- The layout separates the chart in the center and surrounds it with detailed text insights on both sides."
+        ),
+        args_schema=GenerateBarChartSlide4
+    ),
+    StructuredTool.from_function(
+        func=generate_table_slide_1,
+        name="generate_table_slide_1",
+        description=(
+            "The slide layout is divided into two main sections:\n"
+            "- Header section: displays the main title and subtitle at the top.\n"
+            "- Content section: uses a two-column layout:\n"
+            "  + Left column: presents an insight panel with descriptive text.\n"
+            "  + Right column: displays a styled data table with columns and rows, with svg next to the right.\n\n"
+            "The layout emphasizes analytical interpretation on the left and structured data comparison on the right."
+        ),
+        args_schema=GenerateTableSlide1
+    ),
+    StructuredTool.from_function(
+        func=generate_table_slide_2,
+        name="generate_table_slide_2",
+        description=(
+            "This slide has a clean Chemistry Lab-themed layout:\n"
+            "- Upper section: features a large, bold main title with a vertical accent bar, "
+            "and a subtitle beneath it.\n"
+            "- Lower section: displays a high-contrast, rounded-corner table showing experimental data.\n"
+            "- Decorative elements include a semi-transparent top blob and a Chemistry-style beaker SVG for visual flair.\n"
+            "Overall design emphasizes readability and a professional scientific aesthetic."
+        ),
+        args_schema=GenerateTableSlide2
+    ),
+    StructuredTool.from_function(
+        func=generate_table_slide_3,
+        name="generate_table_slide_3",
+        description=(
+            "The slide layout is divided into two main sections:\n"
+            "- Upper section: displays the main title and subtitle with an Islamic luxury style, "
+            "accompanied by a decorative lantern element on the right.\n"
+            "- Lower section: contains a single full-width panel featuring a large stylized data table.\n"
+            "The table is the central focus, designed with elegant gold accents, soft glow effects, "
+            "and a refined cultural aesthetic."
+        ),
+        args_schema=GenerateTableSlide3
+    ),
+    StructuredTool.from_function(
+        func=generate_table_slide_4,
+        name="generate_table_slide_4",
+        description=(
+            "The slide layout is divided into two main sections:\n"
+            "- Header section: displays the main title and subtitle at the top with a vertical accent bar.\n"
+            "- Content section: uses a two-column layout:\n"
+            "  + Left column: presents an insight panel with highlighted text and a decorative medical-themed icon below.\n"
+            "  + Right column: displays a styled data table with columns and rows.\n\n"
+            "The layout emphasizes health insights on the left and structured data comparison on the right."
+        ),
+        args_schema=GenerateTableSlide4
+    ),
+    StructuredTool.from_function(
+        func=generate_table_slide_5,
+        name="generate_table_slide_5",
+        description=(
+            "The slide layout is divided into two main sections:\n"
+            "- Header section: displays the main title and subtitle at the top.\n"
+            "- Content section: uses a vertical layout:\n"
+            "  + Upper section: presents a full-width insight panel with descriptive text.\n"
+            "  + Lower section: displays a styled data table with columns and rows.\n\n"
+            "The layout emphasizes contextual explanation at the top and structured data comparison below."
+        ),
+        args_schema=GenerateTableSlide5
+    ),
+
+    StructuredTool.from_function(
+        func=generate_table_slide_7,
+        name="generate_table_slide_7",
+        description=(
+            "The slide layout is divided into two main sections:\n"
+            "- Header section: displays the main title and subtitle at the top.\n"
+            "- Content section: centered layout containing:\n"
+            "  + An optional horizontal legend displayed below the header.\n"
+            "  + A full-width table where rows and columns form a grid structure.\n\n"
+            "Each cell in the table is visually encoded using background colors mapped from legend items, "
+            "creating a clean and minimalist table-based infographic."
+        ),
+        args_schema=GenerateTableSlide7
+    )
+    
+
 ]
 
 # All available slide generation tools with complete parameter schemas
@@ -2867,28 +3767,14 @@ def get_tool_by_name(name: str):
 def execute_tool(tool_call: dict):
     """Execute a tool call with the provided arguments."""
     name = tool_call.get("name")
-    if name:
-        name = name.strip().lower().replace(" ", "_")
-        
     args = tool_call.get("arguments", {})
     
     if name in TOOL_MAP:
         try:
-            tool_obj = TOOL_MAP[name]
-            func = getattr(tool_obj, "func", None)
-            if func:
-                import inspect
-                sig = inspect.signature(func)
-                has_kwargs = any(p.kind == inspect.Parameter.VAR_KEYWORD for p in sig.parameters.values())
-                if not has_kwargs:
-                    # Chỉ giữ lại các tham số được định nghĩa trong chữ ký của hàm
-                    args = {k: v for k, v in args.items() if k in sig.parameters}
-            
-            result = tool_obj.invoke(args)
+            result = TOOL_MAP[name].invoke(args)
             return str(result)
         except Exception as e:
             print(f"Error executing tool '{name}': {e}")
             return None
-    else:
         print(f"Tool '{name}' not found.")
         return None
