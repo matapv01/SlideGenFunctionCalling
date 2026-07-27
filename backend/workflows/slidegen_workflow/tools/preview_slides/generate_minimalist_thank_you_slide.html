@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Thank You Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            html { font-size: 16px; width: 1920px; height: 1080px; }
+            body, html {
+                height: 1080px;
+                width: 1920px;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                background-color: #FFFFFF;
+                overflow: hidden;
+                color: #59664D;
+            }
+            
+            body {
+                position: relative;
+            }
+
+            /* --- Geometric Shapes Positioning --- */
+            .shape-rect-top-right {
+                position: absolute;
+                top: 0;
+                right: 0;
+                z-index: 1;
+            }
+
+            .shape-rect-bottom-left {
+                position: absolute;
+                bottom: 0;
+                left: 0;
+                z-index: 1;
+            }
+
+            .shape-circle-dot {
+                position: absolute;
+                top: 80px;
+                left: 80px;
+                z-index: 2;
+            }
+
+            .shape-dotted-line {
+                position: absolute;
+                bottom: 80px;
+                right: 280px; /* Positioned to the left of the date */
+                z-index: 2;
+            }
+
+            /* --- Text Content --- */
+            .main-title {
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                font-size: 13rem; /* Huge size matching the image */
+                font-weight: 700;
+                text-transform: uppercase;
+                line-height: 0.9;
+                text-align: center;
+                z-index: 10;
+                letter-spacing: -2px;
+            }
+
+            .vertical-text {
+                position: absolute;
+                top: 350px; /* Adjusted to center vertically roughly */
+                left: 100px;
+                font-size: 1.8rem;
+                font-weight: 400;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+                transform: rotate(-90deg);
+                transform-origin: left top;
+                white-space: nowrap;
+                z-index: 10;
+                color: #59664D;
+                opacity: 0.9;
+            }
+
+            .date-text {
+                position: absolute;
+                bottom: 80px;
+                right: 80px;
+                font-size: 2rem;
+                font-weight: 400;
+                text-align: right;
+                z-index: 10;
+                color: #59664D;
+            }
+
+            
+        </style>
+    </head>
+    <body>
+        
+    <div class="shape-rect-top-right">
+        <svg width="500" height="300" viewBox="0 0 500 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="500" height="300" fill="#E8E8E8"/>
+        </svg>
+    </div>
+    
+        
+    <div class="shape-rect-bottom-left">
+        <svg width="500" height="300" viewBox="0 0 500 300" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <rect width="500" height="300" fill="#E8E8E8"/>
+        </svg>
+    </div>
+    
+        
+    <div class="shape-circle-dot">
+        <svg width="60" height="60" viewBox="0 0 60 60" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="30" cy="30" r="25" fill="#C2C5AA"/> 
+            <circle cx="30" cy="30" r="25" fill="#59664D" fill-opacity="0.4"/>
+        </svg>
+    </div>
+    
+        
+    <div class="shape-dotted-line">
+        <svg width="20" height="250" viewBox="0 0 20 250" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line x1="10" y1="0" x2="10" y2="250" stroke="#E8E8E8" stroke-width="8" stroke-dasharray="15 15" stroke-linecap="square"/>
+        </svg>
+    </div>
+    
+
+        <div class="vertical-text">Timmerman Industries</div>
+        
+        <h1 class="main-title">THANK<br>YOU</h1>
+        
+        <div class="date-text">02 May, 2024</div>
+    </body>
+    </html>

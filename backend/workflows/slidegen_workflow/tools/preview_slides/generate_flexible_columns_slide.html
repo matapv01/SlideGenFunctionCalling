@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minimalist Columns Slide - Positioned Higher</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {
+            background-color: #F8F8F8 !important;
+            background-image: 
+                linear-gradient(to bottom, transparent 98%, #E0E0E0 98%),
+                url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png') !important;
+            background-repeat: repeat, repeat !important;
+            background-position: top, top !important;
+            background-size: 3.5rem 3.5rem, auto !important;
+        }
+
+        body#body.body, html#html.html {
+            height: 100vh !important;
+            width: 100vw !important;
+            font-family: 'Be Vietnam Pro', sans-serif !important;
+            color: #34495E !important;
+            overflow: hidden !important;
+            background-color: #F8F8F8 !important;
+            background-image: 
+                linear-gradient(to bottom, transparent 98%, #E0E0E0 98%),
+                url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png') !important;
+            background-repeat: repeat, repeat !important;
+            background-position: top, top !important;
+            background-size: 3.5rem 3.5rem, auto !important;
+        }
+
+        .slide-container {
+            width: 100% !important;
+            height: 100% !important;
+            display: flex !important;
+            flex-direction: column !important;
+            justify-content: flex-start !important;
+            align-items: center !important;
+            padding: 3rem 3rem !important;
+            background: transparent !important;
+        }
+
+        .main-title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: clamp(4rem, 8vw, 5rem); 
+            text-transform: uppercase;
+            margin-bottom: 10rem; 
+            font-weight: 400;
+            text-align: center;
+        }
+        .content-grid {
+            width: 100%;
+            max-width: 90rem;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 4.5rem;
+        }
+
+        .column-title {
+            font-weight: 700;
+            font-size: 3.2rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .column-description {
+            font-size: 2.2rem;
+            line-height: 2;
+        }
+
+        @media (max-width: 64rem) {
+            .content-grid {
+                grid-template-columns: 1fr;
+            }
+            body, html {
+                height: auto;
+                min-height: 100vh;
+                overflow-y: auto;
+            }
+            .slide-container {
+                padding: 3rem 2.5rem;
+            }
+        }
+    </style>
+</head>
+<body id="body" class="body">
+    <div class="slide-container">
+        <h1 class="main-title">IN TWO OR THREE COLUMNS</h1>
+        <div class="content-grid">
+            
+        <div class="column">
+            <h2 class="column-title">Yellow</h2>
+            <p class="column-description">Is the color of gold, butter and ripe lemons. In the spectrum of visible light, yellow is found between green and orange.</p>
+        </div>
+        
+        <div class="column">
+            <h2 class="column-title">Blue</h2>
+            <p class="column-description">Is the colour of the clear sky and the deep sea. It is located between violet and green on the optical spectrum.</p>
+        </div>
+        
+        <div class="column">
+            <h2 class="column-title">Red</h2>
+            <p class="column-description">Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.</p>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>

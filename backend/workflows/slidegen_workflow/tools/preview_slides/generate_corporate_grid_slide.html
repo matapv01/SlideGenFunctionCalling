@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grid Content Slide - Adjusted</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 18px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            background-color: #FFFFFF;
+        }
+
+        .slide-container {
+            width: 100%; height: 100%;
+            display: flex; position: relative;
+            border-top: 4px solid #F3F4F6;
+        }
+
+        .content-area {
+            flex: 2.5;
+            padding: 5.5rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-start;
+        }
+        
+        .color-panel {
+            flex: 1;
+            position: relative;
+            background-color: #22C55E;
+            clip-path: url(#angled-grid-divider);
+        }
+
+        .color-panel::before {
+            content: ''; position: absolute;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #16A34A;
+            clip-path: url(#angled-grid-divider);
+            transform: translateX(-1.5rem);
+            z-index: -1;
+        }
+        
+        .title-group { 
+            display: flex; 
+            align-items: center; 
+            gap: 2rem; 
+            margin-bottom: 5.5rem; 
+            padding-bottom: 0.5rem;
+        }
+        .icon-svg { width: 4.5rem; height: 4.5rem; flex-shrink: 0; }
+        .slide-title {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #6B7280;
+            text-transform: uppercase;
+            line-height: 1.2;
+        }
+        .highlight { color: #22C55E; }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3.5rem 4rem;
+            padding-left: 6rem;
+        }
+
+        .item-title { 
+            font-size: 2.75rem; /* TO HƠN */
+            font-weight: 800; 
+            color: #6B7280; 
+            margin-bottom: 1.25rem; 
+        }
+        .item-description { 
+            color: #6B7280; 
+            font-size: 2rem;  /* TO HƠN */
+            line-height: 1.9; 
+        }
+
+        @media (max-width: 64rem) {
+            .content-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+         @media (max-width: 48rem) {
+            .slide-container { flex-direction: column; }
+            .content-area, .color-panel { flex: none; width: 100%; }
+            .content-area { height: 70vh; padding: 2rem; justify-content: center; }
+            .color-panel { height: 30vh; clip-path: none; }
+            .color-panel::before { display: none; }
+            .content-grid { grid-template-columns: 1fr; padding-left: 0; text-align: center; }
+            .title-group { justify-content: center; }
+        }
+    </style>
+</head>
+<body>
+    
+    <svg width="0" height="0">
+      <defs>
+        <clipPath id="angled-grid-divider" clipPathUnits="objectBoundingBox">
+          <polygon points="0.15 0, 1 0, 1 1, 0 1" />
+        </clipPath>
+      </defs>
+    </svg>
+    
+    <div class="slide-container">
+        <div class="content-area">
+            <div class="title-group">
+                
+    <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M17 3a2.828 2.828 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5L17 3z"></path>
+    </svg>
+    
+                <h1 class="slide-title">LET'S <span class='highlight'>REVIEW</span> SOME<br>CONCEPTS</h1>
+            </div>
+            <div class="content-grid">
+                
+        <div class="grid-item">
+            <h2 class="item-title">title</h2>
+            <p class="item-description">description.</p>
+        </div>
+        
+        <div class="grid-item">
+            <h2 class="item-title">title</h2>
+            <p class="item-description">description.</p>
+        </div>
+        
+        <div class="grid-item">
+            <h2 class="item-title">title</h2>
+            <p class="item-description">description.</p>
+        </div>
+        
+        <div class="grid-item">
+            <h2 class="item-title">title</h2>
+            <p class="item-description">description.</p>
+        </div>
+        
+        <div class="grid-item">
+            <h2 class="item-title">title</h2>
+            <p class="item-description">description.</p>
+        </div>
+        
+        <div class="grid-item">
+            <h2 class="item-title">title</h2>
+            <p class="item-description">description.</p>
+        </div>
+        
+            </div>
+        </div>
+        <div class="color-panel"></div>
+    </div>
+</body>
+</html>

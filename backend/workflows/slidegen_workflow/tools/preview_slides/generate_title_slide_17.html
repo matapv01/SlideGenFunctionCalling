@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Town Hall Meeting Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-wrapper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            background-color: #F5F5F5;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .main-title {
+            font-size: 120px;
+            font-weight: 900;
+            color: #2D2D2D;
+            line-height: 1.2;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            max-width: 1400px;
+        }
+        
+        .subtitle {
+            font-size: 40px;
+            font-weight: 400;
+            color: #6B6B6B;
+            letter-spacing: 0.5px;
+            margin-top: 30px;
+        }
+        
+        /* Decorative circles - all equal size, half visible */
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+            opacity: 0.6;
+            width: 150px;
+            height: 150px;
+        }
+        
+        /* Top left corner circles */
+        .circle-tl-1 {
+            background-color: #6BA3C8;
+            top: -75px;
+            left: -75px;
+        }
+        
+        .circle-tl-2 {
+            background-color: #E8B858;
+            top: 75px;
+            left: -75px;
+        }
+        
+        /* Top right corner circles */
+        .circle-tr-1 {
+            background-color: #5DBBBB;
+            top: -75px;
+            right: -75px;
+        }
+        
+        .circle-tr-2 {
+            background-color: #6BA3C8;
+            top: 75px;
+            right: -75px;
+        }
+        
+        /* Bottom left corner circles */
+        .circle-bl-1 {
+            background-color: #5DBBBB;
+            bottom: -75px;
+            left: -75px;
+        }
+        
+        .circle-bl-2 {
+            background-color: #6BA3C8;
+            bottom: 75px;
+            left: -75px;
+        }
+        
+        /* Bottom right corner circles */
+        .circle-br-1 {
+            background-color: #5DBBBB;
+            bottom: -75px;
+            right: -75px;
+        }
+        
+        .circle-br-2 {
+            background-color: #E8B858;
+            bottom: 75px;
+            right: -75px;
+        }
+        
+
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <!-- Decorative circles in corners -->
+            <div class="circle circle-tl-1"></div>
+            <div class="circle circle-tl-2"></div>
+            
+            <div class="circle circle-tr-1"></div>
+            <div class="circle circle-tr-2"></div>
+            
+            <div class="circle circle-bl-1"></div>
+            <div class="circle circle-bl-2"></div>
+            
+            <div class="circle circle-br-1"></div>
+            <div class="circle circle-br-2"></div>
+            
+            <!-- Main content -->
+            <div class="content">
+                <h1 class="main-title">Heading of Presentation</h1>
+                <p class="subtitle">Here is where your presentation begins</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

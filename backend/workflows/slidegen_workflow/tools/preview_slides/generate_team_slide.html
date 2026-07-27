@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Slide - Dynamic Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            background-color: #F8FAFC;
+        }
+        
+        .slide-container {
+            height: 100vh;
+            width: 100vw;
+            display: flex;
+            position: relative;
+        }
+        
+        .left-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 45%;
+            height: 100%;
+            background: #14B8A6;
+            clip-path: polygon(0 0, 100% 0, 65% 100%, 0% 100%);
+            z-index: 1;
+        }
+
+        .title-container {
+            position: absolute;
+            left: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 35%;
+            text-align: center;
+            z-index: 2;
+            padding: 2rem;
+        }
+        
+        .main-title {
+            font-size: clamp(3rem, 6vw, 5rem);
+            color: #FFFFFF;
+            font-weight: 800;
+            line-height: 1.1;
+        }
+        
+        .right-content-area {
+            position: relative;
+            flex: 1;
+            padding: 4rem;
+            padding-left: 38%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2rem;
+            z-index: 2;
+        }
+        
+        .team-member-card {
+            display: flex;
+            align-items: center;
+            gap: 1.5rem;
+            background: #FFFFFF;
+            padding: 1.25rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+            /* ĐÃ XÓA: transition: transform 0.3s ease, box-shadow 0.3s ease; */
+        }
+        
+        /* ĐÃ XÓA: Khối CSS .team-member-card:hover đã được loại bỏ hoàn toàn. */
+        
+        .member-photo img {
+            width: 6.5rem;
+            height: 6.5rem;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #14B8A6;
+        }
+        
+        .member-name {
+            font-size: 1.75rem;
+            color: #111827;
+            font-weight: 600;
+            margin-bottom: 0.3rem;
+        }
+        
+        .member-role {
+            font-size: 1.1rem;
+            color: #6B7280;
+        }
+        
+        @media (max-width: 64rem) {
+            .left-background { width: 100%; height: 35%; clip-path: none; }
+            .title-container { width: 100%; top: 17.5%; }
+            .right-content-area { padding: 2rem; padding-top: 38%; }
+            .slide-container { flex-direction: column; }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="left-background"></div>
+        <div class="title-container">
+            <h1 class="main-title">Our Team</h1>
+        </div>
+        <div class="right-content-area">
+            
+        <div class="team-member-card">
+            <div class="member-photo">
+                <img src="https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=1780&auto=format=fit=crop" alt="Alex Johnson" />
+            </div>
+            <div class="member-info">
+                <h3 class="member-name">Alex Johnson</h3>
+                <p class="member-role">Lead Developer</p>
+            </div>
+        </div>
+        
+        <div class="team-member-card">
+            <div class="member-photo">
+                <img src="https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop" alt="Maria Garcia" />
+            </div>
+            <div class="member-info">
+                <h3 class="member-name">Maria Garcia</h3>
+                <p class="member-role">Product Manager</p>
+            </div>
+        </div>
+        
+        <div class="team-member-card">
+            <div class="member-photo">
+                <img src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop" alt="James Smith" />
+            </div>
+            <div class="member-info">
+                <h3 class="member-name">James Smith</h3>
+                <p class="member-role">UX/UI Designer</p>
+            </div>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>

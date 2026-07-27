@@ -1,0 +1,396 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Your main presentation title</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 1920px;
+            height: 1080px;
+            background: #F5EBE0;
+            position: relative;
+            overflow: hidden;
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        
+        /* String Lights Top */
+        .lights-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 1920px;
+            height: 150px;
+            display: block;
+            z-index: 10;
+        }
+        
+        .lights-top svg {
+            width: 1920px;
+            height: 150px;
+        }
+        
+        /* Content Container */
+        .content {
+            position: absolute;
+            top: 400px;
+            left: 200px;
+            width: 1520px;
+            text-align: center;
+            z-index: 5;
+        }
+        
+        .title {
+            font-size: 96px;
+            color: #C41E3A;
+            font-weight: 700;
+            line-height: 1.1;
+            margin: 0 0 40px 0;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+        }
+        
+        .subtitle {
+            font-size: 32px;
+            color: #3D3D3D;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-weight: 400;
+            font-style: italic;
+            margin: 0;
+        }
+        
+        /* Sparkles */
+        .sparkle {
+            position: absolute;
+            color: #C41E3A;
+            font-size: 32px;
+            opacity: 0.6;
+            z-index: 8;
+        }
+        
+        .sparkle-1 { top: 240px; left: 130px; transform: rotate(15deg); }
+        .sparkle-2 { top: 680px; left: 100px; transform: rotate(-20deg); font-size: 21px; }
+        .sparkle-3 { top: 240px; left: 1770px; transform: rotate(25deg); }
+        .sparkle-4 { top: 700px; left: 1780px; transform: rotate(-15deg); }
+        .sparkle-5 { top: 140px; left: 720px; transform: rotate(0deg); font-size: 21px; }
+        .sparkle-6 { top: 700px; left: 640px; transform: rotate(20deg); }
+        .sparkle-7 { top: 450px; left: 280px; transform: rotate(10deg); font-size: 24px; }
+        .sparkle-8 { top: 350px; left: 1600px; transform: rotate(-25deg); }
+        .sparkle-9 { top: 560px; left: 520px; transform: rotate(30deg); font-size: 19px; }
+        .sparkle-10 { top: 580px; left: 1340px; transform: rotate(-10deg); }
+        .sparkle-11 { top: 200px; left: 1100px; transform: rotate(20deg); font-size: 22px; }
+        .sparkle-12 { top: 630px; left: 1170px; transform: rotate(-30deg); font-size: 21px; }
+        
+        
+    </style>
+</head>
+<body>
+    <!-- String Lights Top -->
+    <div class="lights-top">
+        <svg viewBox="0 0 1920 150" xmlns="http://www.w3.org/2000/svg">
+            <!-- Two intertwined wire paths with smooth crossover pattern -->
+            <path d="M -20 55 Q 80 30, 180 75 Q 280 110, 380 65 Q 480 30, 580 80 Q 680 115, 780 65 Q 880 30, 980 80 Q 1080 115, 1180 65 Q 1280 30, 1380 80 Q 1480 115, 1580 65 Q 1680 30, 1780 80 Q 1880 115, 1940 70" 
+                  stroke="#2a2a2a" 
+                  stroke-width="2.5" 
+                  fill="none"
+                  stroke-linecap="round"/>
+            <path d="M -20 105 Q 80 80, 180 35 Q 280 65, 380 100 Q 480 80, 580 35 Q 680 65, 780 110 Q 880 80, 980 35 Q 1080 65, 1180 100 Q 1280 80, 1380 35 Q 1480 65, 1580 100 Q 1680 80, 1780 35 Q 1880 65, 1940 90" 
+                  stroke="#2a2a2a" 
+                  stroke-width="2.5" 
+                  fill="none"
+                  stroke-linecap="round"/>
+            
+            
+                <g transform="translate(55, 38)">
+                    <defs>
+                        <radialGradient id="grad1-0" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-0)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(180, 75)">
+                    <defs>
+                        <radialGradient id="grad1-1" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#F0D67E;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#A88B2F;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-1)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(380, 65)">
+                    <defs>
+                        <radialGradient id="grad1-2" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#7DC4D4;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#3A6B7A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-2)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(580, 80)">
+                    <defs>
+                        <radialGradient id="grad1-3" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-3)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(780, 65)">
+                    <defs>
+                        <radialGradient id="grad1-4" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#F0D67E;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#A88B2F;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-4)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(980, 80)">
+                    <defs>
+                        <radialGradient id="grad1-5" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#7DC4D4;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#3A6B7A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-5)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1180, 65)">
+                    <defs>
+                        <radialGradient id="grad1-6" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-6)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1380, 80)">
+                    <defs>
+                        <radialGradient id="grad1-7" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#F0D67E;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#A88B2F;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-7)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1580, 65)">
+                    <defs>
+                        <radialGradient id="grad1-8" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#7DC4D4;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#3A6B7A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-8)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1780, 80)">
+                    <defs>
+                        <radialGradient id="grad1-9" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad1-9)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(130, 62)">
+                    <defs>
+                        <radialGradient id="grad2-0" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-0)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(280, 88)">
+                    <defs>
+                        <radialGradient id="grad2-1" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#F0D67E;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#A88B2F;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-1)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(480, 42)">
+                    <defs>
+                        <radialGradient id="grad2-2" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#7DC4D4;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#3A6B7A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-2)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(680, 82)">
+                    <defs>
+                        <radialGradient id="grad2-3" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-3)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(880, 42)">
+                    <defs>
+                        <radialGradient id="grad2-4" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#F0D67E;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#A88B2F;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-4)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1080, 82)">
+                    <defs>
+                        <radialGradient id="grad2-5" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#7DC4D4;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#3A6B7A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-5)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1280, 42)">
+                    <defs>
+                        <radialGradient id="grad2-6" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-6)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1480, 82)">
+                    <defs>
+                        <radialGradient id="grad2-7" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#F0D67E;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#A88B2F;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-7)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1680, 42)">
+                    <defs>
+                        <radialGradient id="grad2-8" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#7DC4D4;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#3A6B7A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-8)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+                <g transform="translate(1850, 72)">
+                    <defs>
+                        <radialGradient id="grad2-9" cx="30%" cy="30%">
+                            <stop offset="0%" style="stop-color:#FFFFFF;stop-opacity:1"/>
+                            <stop offset="30%" style="stop-color:#E87676;stop-opacity:1"/>
+                            <stop offset="100%" style="stop-color:#8B1A1A;stop-opacity:1"/>
+                        </radialGradient>
+                    </defs>
+                    <ellipse cx="2" cy="2" rx="17" ry="25" fill="#000" opacity="0.12"/>
+                    <rect x="-6" y="-28" width="12" height="6" fill="#2a2a2a" rx="1"/>
+                    <ellipse cx="0" cy="0" rx="15" ry="23" fill="url(#grad2-9)"/>
+                    <ellipse cx="-4" cy="-6" rx="5" ry="8" fill="white" opacity="0.7"/>
+                </g>
+        </svg>
+    </div>
+
+    
+    <!-- Sparkles -->
+    <div class="sparkle sparkle-1">✦</div>
+    <div class="sparkle sparkle-2">✦</div>
+    <div class="sparkle sparkle-3">✦</div>
+    <div class="sparkle sparkle-4">✦</div>
+    <div class="sparkle sparkle-5">✦</div>
+    <div class="sparkle sparkle-6">✦</div>
+    <div class="sparkle sparkle-7">✦</div>
+    <div class="sparkle sparkle-8">✦</div>
+    <div class="sparkle sparkle-9">✦</div>
+    <div class="sparkle sparkle-10">✦</div>
+    <div class="sparkle sparkle-11">✦</div>
+    <div class="sparkle sparkle-12">✦</div>
+    
+    <!-- Main Content -->
+    <div class="content">
+        <h1 class="title">Your main presentation title</h1>
+        <p class="subtitle">Here is where your presentation begins</p>
+    </div>
+</body>
+</html>
+    

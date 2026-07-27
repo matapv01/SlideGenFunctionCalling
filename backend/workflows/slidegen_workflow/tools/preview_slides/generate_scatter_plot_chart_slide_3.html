@@ -1,0 +1,145 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {
+                width: 1920px;
+                height: 1080px;
+                margin: 0;
+                padding: 60px 80px;
+                overflow: hidden;
+                font-family: Inter, sans-serif;
+                background-color: #E8F5E9;
+                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
+            }
+            .header {
+                margin-bottom: 50px;
+                border-left: 12px solid #7B8FB3;
+                padding-left: 30px;
+            }
+            h1 {
+                font-size: 65px;
+                color: #4A5E7B;
+                margin: 0;
+                text-transform: uppercase;
+                letter-spacing: 2px;
+            }
+            .subtitle {
+                font-size: 28px;
+                color: #8E97A4;
+                margin-top: 5px;
+            }
+            .main-content {
+                display: flex;
+                gap: 60px;
+                align-items: flex-start;
+            }
+            .left-panel {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                gap: 40px;
+            }
+            .insight-card {
+                background: white;
+                padding: 40px;
+                border-radius: 20px;
+                box-shadow: 10px 10px 0px #7B8FB322;
+                border: 2px solid #7B8FB344;
+                font-size: 30px;
+                color: #4A5E7B;
+                line-height: 1.6;
+            }
+            .legend-container {
+                list-style: none; padding: 0; margin: 0;
+            }
+            .right-panel {
+                flex: 1.8;
+                background: white;
+                border-radius: 30px;
+                padding: 30px;
+                box-shadow: 0 15px 35px rgba(0,0,0,0.05);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header">
+            <h1>Study Time and Exam Performance Trend</h1>
+            <p class="subtitle">Study Time and Exam Performance Trend</p>
+        </div>
+        <div class="main-content">
+            <div class="left-panel">
+                <div class="insight-card">
+                    The scatter plot demonstrates a clear positive correlation between weekly self-study hours and final exam scores. Students participating in guided revision sessions consistently achieve higher scores at comparable effort levels.
+                </div>
+                <ul class="legend-container">
+                    
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; border-radius:50%; background:#3D5A80; margin-right:12px; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+                <div style="font-size:22px; color:#4A5E7B;">Independent Study Group</div>
+            </li>
+            
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; border-radius:50%; background:#EE6C4D; margin-right:12px; border:2px solid white; box-shadow:0 2px 4px rgba(0,0,0,0.1);"></div>
+                <div style="font-size:22px; color:#4A5E7B;">Guided Revision Group</div>
+            </li>
+            
+                </ul>
+            </div>
+            <div class="right-panel">
+                <svg width="1100" height="700" viewBox="0 0 1100 700">
+                    
+        <line x1="120" y1="60.0" x2="1040" y2="60.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="105" y="65.0" font-size="18" text-anchor="end" fill="#8E97A4">100</text>
+        
+        <line x1="120" y1="168.0" x2="1040" y2="168.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="105" y="173.0" font-size="18" text-anchor="end" fill="#8E97A4">90</text>
+        
+        <line x1="120" y1="276.0" x2="1040" y2="276.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="105" y="281.0" font-size="18" text-anchor="end" fill="#8E97A4">80</text>
+        
+        <line x1="120" y1="384.0" x2="1040" y2="384.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="105" y="389.0" font-size="18" text-anchor="end" fill="#8E97A4">70</text>
+        
+        <line x1="120" y1="492.0" x2="1040" y2="492.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="105" y="497.0" font-size="18" text-anchor="end" fill="#8E97A4">60</text>
+        
+        <line x1="120" y1="600.0" x2="1040" y2="600.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="105" y="605.0" font-size="18" text-anchor="end" fill="#8E97A4">50</text>
+        
+    <line x1="120" y1="600" x2="1040" y2="600" stroke="#4A5E7B" stroke-width="2"/>
+    <line x1="120" y1="60" x2="120" y2="600" stroke="#4A5E7B" stroke-width="2"/>
+    
+            <circle cx="258.0" cy="513.6" r="10" fill="#3D5A80" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="350.0" cy="438.0" r="10" fill="#3D5A80" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="442.0" cy="362.4" r="10" fill="#3D5A80" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="580.0" cy="297.59999999999997" r="10" fill="#3D5A80" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="764.0" cy="254.39999999999998" r="10" fill="#3D5A80" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="304.0" cy="405.6" r="10" fill="#EE6C4D" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="396.0" cy="330.0" r="10" fill="#EE6C4D" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="534.0" cy="222.0" r="10" fill="#EE6C4D" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="672.0" cy="168.0" r="10" fill="#EE6C4D" stroke="white" stroke-width="2" opacity="0.9" />
+            
+            <circle cx="810.0" cy="124.80000000000001" r="10" fill="#EE6C4D" stroke="white" stroke-width="2" opacity="0.9" />
+            
+    <text x="580.0" y="670" font-size="24" text-anchor="middle" font-weight="bold" fill="#4A5E7B">Weekly Self-Study Hours</text>
+    <text transform="rotate(-90)" x="-330.0" y="40" font-size="24" text-anchor="middle" font-weight="bold" fill="#4A5E7B">Final Exam Score</text>
+    
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    

@@ -1,0 +1,111 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+        <style>
+            body {
+                margin: 0;
+                background-color: #0F172A;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                color: white;
+                height: 100vh;
+                display: flex;
+                flex-direction: column;
+                overflow: hidden;
+            }
+            .upper-section {
+                padding: 60px 80px 20px 80px;
+            }
+            .main-title {
+                font-size: 70px;
+                color: #38BDF8;
+                font-weight: 800;
+                margin: 0;
+                text-transform: uppercase;
+            }
+            .subtitle {
+                font-size: 32px;
+                color: #CCCCCC;
+                opacity: 0.8;
+                margin-top: 10px;
+            }
+            .main-content {
+                display: flex;
+                flex: 1;
+                padding: 0 80px 60px 80px;
+                align-items: center;
+            }
+            .left-section {
+                flex: 1;
+                padding-right: 40px;
+            }
+            .insight-box {
+                border-left: 5px solid #F472B6;
+                padding: 20px 30px;
+                background: rgba(255, 255, 255, 0.05);
+                font-size: 34px;
+                color: #FFFFFF;
+                margin-bottom: 40px;
+                line-height: 1.4;
+            }
+            .right-section {
+                flex: 1;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            .chart-container {
+                width: 450px;
+                height: 450px;
+            }
+            svg {
+                transform: rotate(-90deg);
+                border-radius: 50%;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="upper-section">
+            <h1 class="main-title">Quarterly Revenue Breakdown</h1>
+            <div class="subtitle">Data Source: Financial Year 2025 Reports</div>
+        </div>
+        
+        <div class="main-content">
+            <div class="left-section">
+                <div class="insight-box">
+                    AI Services now account for nearly half of total revenue growth.
+                </div>
+                <div class="legend">
+                    
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: 25px; height: 25px; background: #818CF8; margin-right: 10px; border-radius: 3px;"></div>
+                <div style="color: white; font-size: 25px; margin: 0;">AI Services (55%)</div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: 25px; height: 25px; background: #2DD4BF; margin-right: 10px; border-radius: 3px;"></div>
+                <div style="color: white; font-size: 25px; margin: 0;">Cloud Hosting (25%)</div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: 25px; height: 25px; background: #FBBF24; margin-right: 10px; border-radius: 3px;"></div>
+                <div style="color: white; font-size: 25px; margin: 0;">Consulting (20%)</div>
+            </div>
+            <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                <div style="width: 25px; height: 25px; background: #FB7185; margin-right: 10px; border-radius: 3px;"></div>
+                <div style="color: white; font-size: 25px; margin: 0;">Support (10%)</div>
+            </div>
+                </div>
+            </div>
+            
+            <div class="right-section">
+                <div class="chart-container">
+                    <svg viewBox="0 0 42 42" width="100%" height="100%">
+                        <circle r="15.9" cx="21" cy="21" fill="transparent" stroke="#818CF8" stroke-width="8" stroke-dasharray="50.0 50.0" stroke-dashoffset="125" /><circle r="15.9" cx="21" cy="21" fill="transparent" stroke="#2DD4BF" stroke-width="8" stroke-dasharray="22.727272727272727 77.27272727272728" stroke-dashoffset="75.0" /><circle r="15.9" cx="21" cy="21" fill="transparent" stroke="#FBBF24" stroke-width="8" stroke-dasharray="18.181818181818183 81.81818181818181" stroke-dashoffset="52.27272727272728" /><circle r="15.9" cx="21" cy="21" fill="transparent" stroke="#FB7185" stroke-width="8" stroke-dasharray="9.090909090909092 90.9090909090909" stroke-dashoffset="34.09090909090909" />
+                        
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    

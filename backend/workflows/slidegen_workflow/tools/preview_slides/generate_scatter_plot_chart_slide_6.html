@@ -1,0 +1,98 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;800;900&display=swap');
+            html, body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                overflow: hidden; font-family: 'Montserrat', sans-serif;
+                background-color: #e5dbf1; color: #005F5F;
+            }
+            .square {
+                position: absolute; background-color: #008080;
+                width: 50px; height: 50px; opacity: 0.6; z-index: 1;
+            }
+            .waves {
+                position: absolute; bottom: -10%; left: -10%; right: -10%; height: 60%;
+                background: linear-gradient(110deg, rgba(255,255,255,0) 20%, rgba(215,188,245,0.4) 40%, rgba(255,255,255,0.6) 50%, rgba(196,160,233,0.3) 60%, rgba(255,255,255,0) 80%);
+                transform: skewY(-8deg); z-index: 0;
+            }
+            .header-container {
+                display: flex; justify-content: space-between; align-items: flex-start;
+                padding: 80px 120px 0 120px; position: relative; z-index: 10;
+            }
+            .title-box { flex: 2; }
+            .title-box h1 {
+                font-size: 80px; font-weight: 900; margin: 0;
+                line-height: 1; text-transform: uppercase; color: #005F5F;
+            }
+            .subtitle-box {
+                flex: 1; text-align: right; font-size: 30px;
+                color: #556B2F; font-weight: 400; margin-top: 15px;
+            }
+            .content-container {
+                display: flex; padding: 60px 120px; gap: 80px;
+                position: relative; z-index: 10; align-items: center;
+            }
+            .chart-area {
+                flex: 1.2; background: rgba(255,255,255,0.5);
+                border-radius: 40px; padding: 40px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.05);
+            }
+            .insight-area {
+                flex: 1; display: flex; flex-direction: column; gap: 30px;
+            }
+            .insight-text {
+                font-size: 28px; line-height: 1.5;
+                color: #2C3E50; background: rgba(255,255,255,0.3);
+                padding: 30px; border-radius: 20px; border-left: 10px solid #008080;
+            }
+            .legend-box {
+                list-style: none; padding: 0; margin: 0;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="square" style="top: 0; left: 55%; width: 70px; height: 70px;"></div>
+        <div class="square" style="top: 45%; left: 0;"></div>
+        <div class="square" style="bottom: 5%; left: 30%;"></div>
+        <div class="square" style="top: 38%; right: 0; width: 80px; height: 80px;"></div>
+        
+        <div class="waves"></div>
+
+        <div class="header-container">
+            <div class="title-box">
+                <h1>Relationship Between Study Time and Academic Performance</h1>
+            </div>
+            <p class="subtitle-box">Source: Education Analytics Report 2024 | Sample: 200 Students</p>
+        </div>
+
+        <div class="content-container">
+            <div class="insight-area">
+                <div class="insight-text">High achievers tend to study more, but optimal study time varies among students</div>
+                <ul class="legend-box">
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:#008080; margin-right:10px; border-radius:4px;"></div>
+                <span style="font-size:22px; color:#005F5F; font-weight:bold;">Average Students</span>
+            </li>
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:#FFB347; margin-right:10px; border-radius:4px;"></div>
+                <span style="font-size:22px; color:#005F5F; font-weight:bold;">High Achievers</span>
+            </li></ul>
+            </div>
+            <div class="chart-area">
+                <svg width="100%" height="100%" viewBox="0 0 1000 600" preserveAspectRatio="xMidYMid meet">
+                    <line x1="100" y1="60.0" x2="940" y2="60.0" stroke="#ccc" stroke-dasharray="4"/><line x1="100" y1="175.0" x2="940" y2="175.0" stroke="#ccc" stroke-dasharray="4"/><line x1="100" y1="290.0" x2="940" y2="290.0" stroke="#ccc" stroke-dasharray="4"/><line x1="100" y1="405.0" x2="940" y2="405.0" stroke="#ccc" stroke-dasharray="4"/><line x1="100" y1="520.0" x2="940" y2="520.0" stroke="#ccc" stroke-dasharray="4"/><circle cx="142.0" cy="510.8" r="10" fill="#008080" opacity="0.8" /><circle cx="184.0" cy="501.6" r="10" fill="#008080" opacity="0.8" /><circle cx="226.0" cy="487.8" r="10" fill="#008080" opacity="0.8" /><circle cx="268.0" cy="474.0" r="10" fill="#008080" opacity="0.8" /><circle cx="310.0" cy="460.2" r="10" fill="#008080" opacity="0.8" /><circle cx="352.0" cy="446.4" r="10" fill="#008080" opacity="0.8" /><circle cx="436.0" cy="409.6" r="10" fill="#FFB347" opacity="0.8" /><circle cx="520.0" cy="354.4" r="10" fill="#FFB347" opacity="0.8" /><circle cx="604.0" cy="290.0" r="10" fill="#FFB347" opacity="0.8" /><circle cx="688.0" cy="225.59999999999997" r="10" fill="#FFB347" opacity="0.8" /><circle cx="772.0" cy="152.0" r="10" fill="#FFB347" opacity="0.8" /><circle cx="380.0" cy="106.0" r="10" fill="#FFB347" opacity="0.8" />
+        <line x1="100" y1="60" x2="100" y2="520" stroke="#005F5F" stroke-width="2"/>
+        <line x1="100" y1="520" x2="940" y2="520" stroke="#005F5F" stroke-width="2"/>
+        <text x="550.0" y="580" font-size="22" text-anchor="middle" font-weight="bold" fill="#005F5F">Daily Study Time (minutes)</text>
+        <text transform="rotate(-90)" x="-290.0" y="40" font-size="22" text-anchor="middle" font-weight="bold" fill="#005F5F">Exam Score (Points)</text>
+    
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    

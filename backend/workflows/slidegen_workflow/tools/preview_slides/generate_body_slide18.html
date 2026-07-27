@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparison Slide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #a2c4c9;
+            color: #555555;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #a2c4c9;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
+        }
+
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
+            background-color: #ffffff;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15); /* 0 20px 40px */
+            display: flex;
+            flex-direction: column;
+            padding: 3.75rem 5rem; /* 60px 80px */
+            position: relative;
+            justify-content: center;
+        }
+        
+        .main-title {
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #555555;
+            text-align: center;
+            margin-bottom: 3rem;
+            line-height: 1.2;
+        }
+        
+        .columns-container {
+            display: flex;
+            flex: 1;
+            align-items: center;
+            justify-content: space-between;
+            gap: 2rem; /* 32px */
+            height: 100%;
+            max-width: 100%;
+        }
+        
+        .column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            padding: 1rem 2rem;
+            max-width: calc(50% - 1rem);
+        }
+        
+        .icon-container {
+            margin-bottom: 2rem;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 6rem;
+        }
+        
+        .column-title {
+            font-size: 2.8rem;
+            font-weight: 600;
+            color: #555555;
+            text-align: center;
+            margin: 0 0 1.5rem 0;
+            line-height: 1.3;
+        }
+        
+        .column-text {
+            font-size: 1.8rem;
+            color: #555555;
+            text-align: center;
+            line-height: 1.5;
+            max-width: 100%;
+        }
+        
+        .divider {
+            width: 0.125rem; /* 2px */
+            height: 60%;
+            background: #555555;
+            border: none;
+            align-self: center;
+            opacity: 0.4;
+            flex-shrink: 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="slide-inner-container">
+            <h1 class="main-title">Main title</h1>
+            
+            <div class="columns-container">
+                <div class="column">
+                    <div class="icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="90" height="90" fill="none" stroke="#a2c4c9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M14 13L3 2M14 13L9 18M14 13L16 11L20 15L18 17M14 6L17 9M9 1L3 7M20 21H4"/>
+    </svg>
+                    </div>
+                    <h2 class="column-title">Subtitle 1</h2>
+                    <p class="column-text">Content1</p>
+                </div>
+                
+                <div class="divider"></div>
+                
+                <div class="column">
+                    <div class="icon-container">
+                        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" width="90" height="90" fill="none" stroke="#a2c4c9" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 3v18M8 21h8M7 8l-4 4M17 8l4 4M5 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0M15 12a2 2 0 1 0 4 0 2 2 0 1 0-4 0"/>
+        <path d="M5 12h14"/>
+    </svg>
+                    </div>
+                    <h2 class="column-title">Subtitle 2</h2>
+                    <p class="column-text">Content2</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

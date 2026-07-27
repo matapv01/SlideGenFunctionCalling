@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Thank You For Attention</title>
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            html { font-size: 16px; width: 1920px; height: 1080px; }
+            body, html {
+                height: 1080px;
+                width: 1920px;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                overflow: hidden;
+                background-color: #FFFFFF;
+            }
+            
+            .outer-wrapper {
+                padding: 0;
+                box-sizing: border-box;
+                width: 1920px;
+                height: 1080px;
+                overflow: hidden;
+            }
+
+            /* Content wrapper for scaling */
+            .content-wrapper {
+                position: absolute;
+                left: 50%;
+                top: 50%;
+                transform: translate(-50%, -50%);
+                width: 1920px;
+                height: 1080px;
+                overflow: hidden;
+                background: #FFFFFF;
+            }
+            
+            .slide-container {
+                width: 1920px;
+                height: 1080px;
+                position: relative;
+                background-color: #FFFFFF;
+            }
+
+            /* --- Header / Logo Section --- */
+            .header {
+                position: absolute;
+                top: 50px;
+                left: 80px;
+                display: flex;
+                align-items: center;
+                gap: 20px;
+                z-index: 20;
+            }
+
+            .company-name {
+                font-size: 28px;
+                font-weight: 500;
+                color: #000;
+                letter-spacing: 1px;
+            }
+
+            /* --- Background Images --- */
+            .top-right-image {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 65%;
+                height: 60%;
+                z-index: 1;
+                overflow: hidden;
+            }
+
+            .top-right-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                /* Mask to create the diagonal feel for the image underneath */
+                clip-path: polygon(20% 0, 100% 0, 100% 100%, 0% 100%);
+            }
+
+            .bottom-right-image {
+                position: absolute;
+                bottom: 0;
+                right: 0;
+                width: 45%;
+                height: 50%;
+                z-index: 2;
+            }
+
+            .bottom-right-image img {
+                width: 100%;
+                height: 100%;
+                object-fit: cover;
+                /* Triangle cut for bottom corner */
+                clip-path: polygon(30% 0, 100% 0, 100% 100%, 0% 100%);
+            }
+
+            /* --- Main Geometric Blue Overlay --- */
+            .blue-overlay {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                z-index: 10;
+                pointer-events: none; /* Let clicks pass through if needed */
+            }
+
+            .blue-shape {
+                position: absolute;
+                top: 20%;
+                left: 0;
+                width: 110%; /* Extend slightly to ensure coverage */
+                height: 45%;
+                background: linear-gradient(90deg, #1E88E5 0%, #1565C0 100%);
+                /* Complex polygon to match the sample slide: starts flat, goes up, cuts down sharp */
+                clip-path: polygon(
+                    0% 20%,     /* Top Left Start */
+                    35% 0%,     /* Angle Up */
+                    100% 35%,   /* Top Right */
+                    100% 80%,   /* Bottom Right */
+                    75% 100%,   /* Angle Down */
+                    0% 75%      /* Bottom Left */
+                );
+                box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+                display: flex;
+                align-items: center;
+                padding-left: 80px;
+            }
+
+            .main-title {
+                font-size: 100px;
+                font-weight: 900;
+                color: #FFFFFF;
+                text-transform: capitalize;
+                line-height: 1.1;
+                margin-top: -20px; /* Slight optical adjustment */
+                text-shadow: 0 4px 10px rgba(0,0,0,0.2);
+                width: 70%;
+            }
+
+            /* --- Contact Section --- */
+            .contact-section {
+                position: absolute;
+                bottom: 80px;
+                left: 80px;
+                display: flex;
+                flex-direction: column;
+                gap: 40px;
+                z-index: 20;
+            }
+
+            .contact-item {
+                display: flex;
+                align-items: center;
+                gap: 25px;
+            }
+
+            .contact-text {
+                font-size: 32px;
+                color: #333333;
+                font-weight: 500;
+            }
+            
+            /* Decorative line under contacts */
+            .contact-line {
+                height: 2px;
+                width: 500px;
+                background-color: #1E88E5;
+                margin-top: -10px;
+                margin-left: 65px; /* Align with text */
+                opacity: 0.7;
+            }
+
+        </style>
+    </head>
+    <body>
+        <div class="outer-wrapper">
+            <div class="content-wrapper">
+                <div class="slide-container">
+                    
+                    <div class="header">
+                        
+    <svg width="50" height="50" viewBox="0 0 50 50" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M5 45H45" stroke="#1E88E5" stroke-width="4" stroke-linecap="round"/>
+        <rect x="10" y="25" width="8" height="15" fill="#1E88E5"/>
+        <rect x="22" y="15" width="8" height="25" fill="#1565C0"/>
+        <rect x="34" y="5" width="8" height="35" fill="#1E88E5"/>
+    </svg>
+    
+                        <div class="company-name">Thynk Unlimited</div>
+                    </div>
+
+                    <div class="top-right-image">
+                        <img src="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop" alt="Business Analysis">
+                    </div>
+                    
+                    <div class="blue-overlay">
+                        <div class="blue-shape">
+                            <h1 class="main-title">Thank You For Attention</h1>
+                        </div>
+                    </div>
+
+                    <div class="bottom-right-image">
+                        <img src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop" alt="Teamwork">
+                    </div>
+
+                    <div class="contact-section">
+                        <div class="contact-item">
+                            
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="10" stroke="#1E88E5" stroke-width="2"/>
+        <path d="M2 12H22" stroke="#1E88E5" stroke-width="2"/>
+        <path d="M12 2C14.5013 4.73835 15.9228 8.29203 16 12C15.9228 15.708 14.5013 19.2616 12 22C9.49872 19.2616 8.07725 15.708 8 12C8.07725 8.29203 9.49872 4.73835 12 2V2Z" stroke="#1E88E5" stroke-width="2"/>
+    </svg>
+    
+                            <div class="contact-text">www.reallygreatsite.com</div>
+                        </div>
+                        <div class="contact-line"></div>
+                        
+                        <div class="contact-item">
+                            
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <rect x="3" y="5" width="18" height="14" rx="2" stroke="#1E88E5" stroke-width="2"/>
+        <path d="M3 7L12 13L21 7" stroke="#1E88E5" stroke-width="2"/>
+    </svg>
+    
+                            <div class="contact-text">hello@reallygreatsite.com</div>
+                        </div>
+                        <div class="contact-line"></div>
+                        
+                        <div class="contact-item">
+                            
+    <svg width="40" height="40" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M22 16.92V19.92C22.0011 20.1986 21.9441 20.4742 21.8325 20.7294C21.7209 20.9846 21.5573 21.2137 21.3521 21.4019C21.1468 21.5901 20.9046 21.7331 20.6412 21.8215C20.3778 21.9099 20.0991 21.9416 19.823 21.914C16.7428 21.5796 13.7828 20.5252 11.16 18.81C8.68233 17.2023 6.64333 15.0933 5.12 12.59C3.5855 9.94723 2.66249 6.97341 2.44 3.89C2.41979 3.61483 2.45887 3.33777 2.55469 3.07693C2.6505 2.8161 2.8009 2.57745 2.99608 2.3768C3.19126 2.17614 3.42681 2.01809 3.68749 1.91295C3.94817 1.80781 4.22817 1.75803 4.51 1.767H7.51C8.00645 1.76229 8.48628 1.94162 8.86178 2.27218C9.23727 2.60274 9.48208 3.06129 9.552 3.564C9.67843 4.52055 9.91244 5.45942 10.25 6.36C10.3546 6.63854 10.3756 6.94273 10.3106 7.23277C10.2456 7.52281 10.0975 7.78508 9.885 7.985L8.615 9.255C10.0384 11.7578 12.1222 13.8416 14.625 15.265L15.895 13.995C16.1054 13.7915 16.3707 13.6508 16.6586 13.5898C16.9465 13.5288 17.2447 13.5501 17.518 13.651C18.4238 13.9902 19.3683 14.2248 20.33 14.351C20.8407 14.4239 21.3045 14.6789 21.6335 15.0678C21.9626 15.4566 22.1341 15.9525 22.115 16.455V16.92Z" stroke="#1E88E5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    
+                            <div class="contact-text">+123-456-7890</div>
+                        </div>
+                        <div class="contact-line"></div>
+                    </div>
+
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>

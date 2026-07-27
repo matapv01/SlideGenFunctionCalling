@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Main Points Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #111827;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .slide-container {
+            height: 100vh;
+            width: 100vw;
+            padding: 4rem 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .main-title {
+            font-size: 4.5rem;
+            font-weight: 700;
+            color: #10d9c4;
+            text-align: center;
+            margin-bottom: 5rem;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.3);
+            text-transform: uppercase;
+        }
+        
+        .content-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5rem;
+            max-width: 1200px;
+            width: 100%;
+            align-items: center;
+        }
+        
+        .point-column {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            /* ĐÃ XÓA: transition và hover effect */
+        }
+        
+        .icon-circle {
+            width: 170px;
+            height: 170px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 4px solid #10d9c4;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 2.5rem;
+            position: relative;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 32px rgba(16, 217, 196, 0.3);
+        }
+        
+        /* Plastic Bag Icon */
+        .plastic-bag-icon {
+            width: 90px;
+            height: 90px;
+            position: relative;
+        }
+
+        .bag-body {
+            width: 40px;
+            height: 45px;
+            background: #10d9c4;
+            border-radius: 4px 4px 12px 12px;
+            position: absolute;
+            top: 12px;
+            left: 15px;
+            border: 3px solid #0891b2;
+            box-shadow: inset 0 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .bag-handles {
+            position: absolute;
+            top: 0;
+            left: 15px;
+            width: 40px;
+            height: 20px;
+        }
+
+        .bag-handle-left {
+            width: 12px;
+            height: 16px;
+            background: transparent;
+            border: 3px solid #10d9c4;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            left: 2px;
+            border-bottom: none;
+        }
+
+        .bag-handle-right {
+            width: 12px;
+            height: 16px;
+            background: transparent;
+            border: 3px solid #10d9c4;
+            border-radius: 50%;
+            position: absolute;
+            top: 0;
+            right: 2px;
+            border-bottom: none;
+        }
+
+        .bag-details {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 30px;
+            height: 30px;
+        }
+
+        .bag-line {
+            width: 25px;
+            height: 2px;
+            background: #0891b2;
+            margin: 6px 0;
+            border-radius: 1px;
+            opacity: 0.7;
+        }
+        
+        /* Faucet Icon */
+        .faucet-icon {
+            width: 90px;
+            height: 90px;
+            position: relative;
+        }
+
+        .faucet-main {
+            width: 35px;
+            height: 20px;
+            background: #10d9c4;
+            border-radius: 18px 18px 0 0;
+            position: absolute;
+            top: 22px;
+            left: 17px;
+            border: 3px solid #0891b2;
+            border-bottom: none;
+        }
+
+        .faucet-spout {
+            width: 22px;
+            height: 12px;
+            background: #10d9c4;
+            border-radius: 0 0 11px 11px;
+            position: absolute;
+            top: 32px;
+            left: 24px;
+            border: 3px solid #0891b2;
+            border-top: none;
+        }
+
+        .faucet-lever {
+            width: 8px;
+            height: 16px;
+            background: #10d9c4;
+            border-radius: 4px;
+            position: absolute;
+            top: 8px;
+            left: 31px;
+            border: 2px solid #0891b2;
+        }
+
+        .faucet-lever::after {
+            content: '';
+            width: 14px;
+            height: 4px;
+            background: #10d9c4;
+            border-radius: 2px;
+            position: absolute;
+            top: 3px;
+            left: -3px;
+            border: 2px solid #0891b2;
+        }
+
+        .water-drops {
+            position: absolute;
+            top: 46px;
+            left: 32px;
+        }
+
+        .water-drop {
+            width: 4px;
+            height: 6px;
+            background: #10d9c4;
+            border-radius: 50% 50% 50% 0;
+            transform: rotate(-45deg);
+            position: absolute;
+            border: 1px solid #0891b2;
+        }
+
+        /* ĐÃ XÓA: Hoạt ảnh giọt nước */
+        .water-drop:nth-child(1) {
+            top: 0;
+            left: 0;
+        }
+
+        .water-drop:nth-child(2) {
+            top: 8px;
+            left: 1px;
+        }
+        
+        /* Factory Icon */
+        .factory-icon {
+            width: 90px;
+            height: 90px;
+            position: relative;
+        }
+
+        .factory-main {
+            width: 45px;
+            height: 32px;
+            background: #10d9c4;
+            border-radius: 3px;
+            position: absolute;
+            bottom: 8px;
+            left: 12px;
+            border: 3px solid #0891b2;
+        }
+
+        .factory-windows {
+            position: absolute;
+            top: 6px;
+            left: 6px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 4px;
+            width: 30px;
+        }
+
+        .factory-window {
+            width: 6px;
+            height: 6px;
+            background: #0891b2;
+            border-radius: 1px;
+        }
+
+        .factory-chimney1 {
+            width: 8px;
+            height: 25px;
+            background: #10d9c4;
+            border-radius: 4px 4px 0 0;
+            position: absolute;
+            top: 5px;
+            left: 25px;
+            border: 3px solid #0891b2;
+            border-bottom: none;
+        }
+
+        .factory-chimney2 {
+            width: 6px;
+            height: 18px;
+            background: #10d9c4;
+            border-radius: 3px 3px 0 0;
+            position: absolute;
+            top: 12px;
+            left: 42px;
+            border: 2px solid #0891b2;
+            border-bottom: none;
+        }
+
+        /* ĐÃ XÓA: Hoạt ảnh khói */
+        .smoke-cloud {
+            position: absolute;
+            top: 0;
+            left: 27px;
+        }
+
+        .smoke-puff {
+            width: 4px;
+            height: 4px;
+            background: #10d9c4;
+            border-radius: 50%;
+            position: absolute;
+            opacity: 0.8;
+        }
+
+        .smoke-puff:nth-child(1) { top: 2px; left: 0; }
+        .smoke-puff:nth-child(2) { top: -2px; left: 3px; }
+        .smoke-puff:nth-child(3) { top: -6px; left: 1px; }
+        .smoke-puff:nth-child(4) { top: -9px; left: 4px; }
+        .smoke-puff:nth-child(5) { top: -12px; left: 0px; }
+        
+        .point-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: white;
+            margin-bottom: 1.2rem;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .point-description {
+            font-size: 1.6rem;
+            color: rgba(255, 255, 255, 0.9);
+            line-height: 1.6;
+            max-width: 280px;
+            font-weight: 400;
+        }
+        
+        @media (max-width: 768px) {
+            .slide-container {
+                padding: 2rem 1rem;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+                margin-bottom: 3rem;
+                letter-spacing: 1px;
+            }
+            
+            .content-grid {
+                grid-template-columns: 1fr;
+                gap: 3rem;
+            }
+            
+            .icon-circle {
+                width: 120px;
+                height: 120px;
+            }
+            
+            .point-title {
+                font-size: 1.2rem;
+            }
+            
+            .point-description {
+                font-size: 1rem;
+                max-width: 280px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <h1 class="main-title">WRITE YOUR TOPIC OR IDEA</h1>
+        
+        <div class="content-grid">
+            <div class="point-column">
+                <div class="icon-circle">
+                    <div class="plastic-bag-icon">
+                        <div class="bag-body"></div>
+                        <div class="bag-handles">
+                            <div class="bag-handle-left"></div>
+                            <div class="bag-handle-right"></div>
+                        </div>
+                        <div class="bag-details">
+                            <div class="bag-line"></div>
+                            <div class="bag-line"></div>
+                            <div class="bag-line"></div>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="point-title">ADD A MAIN POINT</h3>
+                <p class="point-description">Briefly elaborate on what you want to discuss.</p>
+            </div>
+            
+            <div class="point-column">
+                <div class="icon-circle">
+                    <div class="faucet-icon">
+                        <div class="faucet-main"></div>
+                        <div class="faucet-spout"></div>
+                        <div class="faucet-lever"></div>
+                        <div class="water-drops">
+                            <div class="water-drop"></div>
+                            <div class="water-drop"></div>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="point-title">ADD A MAIN POINT</h3>
+                <p class="point-description">Briefly elaborate on what you want to discuss.</p>
+            </div>
+            
+            <div class="point-column">
+                <div class="icon-circle">
+                    <div class="factory-icon">
+                        <div class="factory-main"></div>
+                        <div class="factory-windows">
+                            <div class="factory-window"></div>
+                            <div class="factory-window"></div>
+                            <div class="factory-window"></div>
+                        </div>
+                        <div class="factory-chimney1"></div>
+                        <div class="factory-chimney2"></div>
+                        <div class="smoke-cloud">
+                            <div class="smoke-puff"></div>
+                            <div class="smoke-puff"></div>
+                            <div class="smoke-puff"></div>
+                            <div class="smoke-puff"></div>
+                            <div class="smoke-puff"></div>
+                        </div>
+                    </div>
+                </div>
+                <h3 class="point-title">ADD A MAIN POINT</h3>
+                <p class="point-description">Briefly elaborate on what you want to discuss.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

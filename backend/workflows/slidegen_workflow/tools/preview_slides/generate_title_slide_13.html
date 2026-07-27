@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inverse Functions Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            background: linear-gradient(135deg, #E8F4F8 0%, #D4E8F0 100%);
+        }
+
+        .slide-wrapper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .content {
+            text-align: center;
+            z-index: 10;
+            position: relative;
+            max-width: 1400px;
+        }
+
+        .main-title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-weight: 800;
+            font-size: 100px;
+            color: #1A1A4D;
+            line-height: 1.2;
+            letter-spacing: -2px;
+            margin-bottom: 30px;
+        }
+        
+        .subtitle {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-weight: 400;
+            font-size: 40px;
+            color: #1A1A4D;
+            opacity: 0.8;
+            line-height: 1.4;
+        }
+
+        /* Decorative geometric elements - rounded rectangles at diagonal angles */
+        .geo-element {
+            position: absolute;
+            border-radius: 50px;
+            opacity: 0.6;
+        }
+
+        /* Top-left corner elements */
+        .geo-1 {
+            width: 120px;
+            height: 350px;
+            background: #A8D5E2;
+            top: -50px;
+            left: -20px;
+            transform: rotate(-45deg);
+        }
+
+        .geo-2 {
+            width: 100px;
+            height: 280px;
+            background: #A8D5E2;
+            top: 20px;
+            left: 120px;
+            transform: rotate(-45deg);
+            filter: brightness(0.85);
+        }
+
+        .geo-3 {
+            width: 80px;
+            height: 220px;
+            background: #A8D5E2;
+            top: 80px;
+            left: 240px;
+            transform: rotate(-45deg);
+            filter: brightness(1.1);
+        }
+
+        /* Bottom-right corner elements */
+        .geo-4 {
+            width: 100px;
+            height: 280px;
+            background: #A8D5E2;
+            bottom: 50px;
+            right: 120px;
+            transform: rotate(-45deg);
+        }
+
+        .geo-5 {
+            width: 90px;
+            height: 240px;
+            background: #A8D5E2;
+            bottom: -30px;
+            right: 0px;
+            transform: rotate(-45deg);
+            filter: brightness(0.85);
+        }
+
+        .geo-6 {
+            width: 110px;
+            height: 300px;
+            background: #A8D5E2;
+            bottom: 100px;
+            right: 250px;
+            transform: rotate(-45deg);
+            filter: brightness(1.1);
+        }
+
+        /* Top-right small element */
+        .geo-7 {
+            width: 70px;
+            height: 180px;
+            background: #A8D5E2;
+            top: 150px;
+            right: 50px;
+            transform: rotate(-45deg);
+            filter: brightness(1.1);
+        }
+
+        /* Small circle in top-left area */
+        .geo-circle {
+            width: 80px;
+            height: 80px;
+            background: #A8D5E2;
+            border-radius: 50%;
+            top: 50px;
+            left: 50px;
+            opacity: 0.5;
+        }
+
+        /* Responsive scaling */
+        @media (max-width: 1920px) {
+            .slide-container {
+                transform: scale(0.8);
+            }
+        }
+
+        @media (max-width: 1440px) {
+            .slide-container {
+                transform: scale(0.6);
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .slide-container {
+                transform: scale(0.4);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .slide-container {
+                transform: scale(0.25);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <!-- Decorative geometric elements -->
+            <div class="geo-element geo-circle"></div>
+            <div class="geo-element geo-1"></div>
+            <div class="geo-element geo-2"></div>
+            <div class="geo-element geo-3"></div>
+            <div class="geo-element geo-4"></div>
+            <div class="geo-element geo-5"></div>
+            <div class="geo-element geo-6"></div>
+            <div class="geo-element geo-7"></div>
+
+            <!-- Content -->
+            <div class="content">
+                <h1 class="main-title">Head of Presentation</h1>
+                <p class="subtitle">Here is where your presentation begins</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

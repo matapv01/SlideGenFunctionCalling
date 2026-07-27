@@ -1,0 +1,146 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                overflow: hidden; font-family: 'Be Vietnam Pro', sans-serif;
+                background: #F8F8F8;
+            }
+            .slide-container {
+                position: relative; width: 100%; height: 100%;
+                background-image: none;
+            }
+            .header {
+                padding: 80px 100px 40px 100px;
+            }
+            h1 {
+                font-size: 64px; color: #1D3557;
+                margin: 0; font-weight: 800; letter-spacing: -1px;
+            }
+            .subtitle {
+                font-size: 28px; color: #457B9D;
+                margin-top: 15px; font-weight: 500;
+            }
+            .content-flex {
+                display: flex; padding: 0 100px; gap: 80px; align-items: flex-start;
+            }
+            .left-col {
+                flex: 1; margin-top: 40px;
+            }
+            .right-col {
+                flex: 1.5; display: flex; justify-content: center;
+            }
+            .insight-box {
+                background: rgba(71, 123, 157, 0.10);
+                padding: 40px; border-radius: 16px;
+                box-shadow: 0 8px 24px rgba(29, 53, 87, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.5);
+                font-size: 30; color: #1D3557;
+                line-height: 1.7; border-left: 4px solid #457B9D;
+                border-top: 4px solid rgba(244, 162, 97, 0.3);
+                margin-bottom: 50px; font-weight: 500; letter-spacing: 0.3px;
+            }
+            .legend-container {
+                background: #FFFFFF;
+                padding: 26px 28px;
+                border-radius: 18px;
+                display: inline-block;
+                border: 1px solid rgba(69, 123, 157, 0.18);
+                box-shadow: 0 10px 24px rgba(29, 53, 87, 0.12);
+                backdrop-filter: blur(2px);
+            }
+            .legend-title {
+                font-size: 16px;
+                text-transform: uppercase;
+                color: #2F5D78;
+                margin-bottom: 14px;
+                font-weight: 800;
+                letter-spacing: 1.2px;
+            }
+            .legend-item {
+                display: flex;
+                align-items: center;
+                margin-bottom: 12px;
+            }
+            .legend-swatch {
+                width: 22px;
+                height: 22px;
+                display: inline-block;
+                flex-shrink: 0;
+                border-radius: 999px;
+                margin-right: 12px;
+                border: 2px solid rgba(255,255,255,0.9);
+                box-shadow: 0 0 0 1px rgba(69, 123, 157, 0.2);
+            }
+            .legend-swatch-current {
+                background: #1D3557;
+            }
+            .legend-swatch-target {
+                background: #F4A261;
+            }
+            .legend-label {
+                font-size: 21px;
+                font-weight: 650;
+                color: #24465E;
+            }
+            .chart-wrapper {
+                width: 900px; height: 700px;
+            }
+            .background-blob {
+                position: absolute; bottom: -260px; left: -140px;
+                width: 460px; height: 460px; background: rgba(168, 218, 220, 0.26);
+                border-radius: 50%; z-index: -1; pointer-events: none;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="header">
+                <h1>Chỉ Số Đánh Giá Chất Lượng Dịch Vụ Chăm Sóc</h1>
+                <div class="subtitle">Báo cáo phân tích trải nghiệm khách hàng Q1/2026</div>
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe.</div>
+                    <div class="legend-container">
+                        <div class="legend-title">Chú thích</div>
+                        
+        <div class="legend-item">
+            <span class="legend-swatch legend-swatch-current"></span>
+            <span class="legend-label">Hiện tại</span>
+        </div>
+        
+        <div class="legend-item">
+            <span class="legend-swatch legend-swatch-target"></span>
+            <span class="legend-label">Mục tiêu</span>
+        </div>
+        
+                    </div>
+                </div>
+
+                <div class="right-col">
+                    <div class="chart-wrapper">
+                        <svg viewBox="0 0 900 700" width="100%" height="100%">
+                            <polygon points="450.0,294.0 498.4974226119286,322.0 498.4974226119286,378.0 450.0,406.0 401.5025773880715,378.0 401.5025773880714,322.0" fill="none" stroke="#E5E7EB" stroke-width="1" /><polygon points="450.0,238.0 546.9948452238572,294.0 546.9948452238572,406.0 450.0,462.0 353.0051547761429,406.00000000000006 353.0051547761429,294.0" fill="none" stroke="#E5E7EB" stroke-width="1" /><polygon points="450.0,182.0 595.4922678357857,266.0 595.4922678357857,434.0 450.0,518.0 304.5077321642143,434.00000000000006 304.5077321642143,266.0" fill="none" stroke="#E5E7EB" stroke-width="1" /><polygon points="450.0,126.0 643.9896904477142,238.0 643.9896904477143,461.99999999999994 450.0,574.0 256.0103095522858,462.00000000000006 256.0103095522858,237.99999999999997" fill="none" stroke="#E5E7EB" stroke-width="1" /><polygon points="450.0,70.0 692.4871130596428,210.0 692.4871130596429,489.99999999999994 450.0,630.0 207.51288694035722,490.0000000000001 207.5128869403572,209.99999999999997" fill="none" stroke="#E5E7EB" stroke-width="1" />
+                            <line x1="450.0" y1="350.0" x2="450.0" y2="70.0" stroke="#D1D5DB" stroke-width="1" /><line x1="450.0" y1="350.0" x2="692.4871130596428" y2="210.0" stroke="#D1D5DB" stroke-width="1" /><line x1="450.0" y1="350.0" x2="692.4871130596429" y2="489.99999999999994" stroke="#D1D5DB" stroke-width="1" /><line x1="450.0" y1="350.0" x2="450.0" y2="630.0" stroke="#D1D5DB" stroke-width="1" /><line x1="450.0" y1="350.0" x2="207.51288694035722" y2="490.0000000000001" stroke="#D1D5DB" stroke-width="1" /><line x1="450.0" y1="350.0" x2="207.5128869403572" y2="209.99999999999997" stroke="#D1D5DB" stroke-width="1" />
+                            
+            <polygon points="450.0,126.0 643.9896904477142,238.0 668.2384017536785,475.99999999999994 450.0,602.0 231.7615982463215,476.0000000000001 231.76159824632148,223.99999999999997" fill="#1D3557" fill-opacity="0.2" stroke="#1D3557" stroke-width="3" />
+            <circle cx="450.0" cy="126.0" r="5" fill="#1D3557" /><text x="440.0" y="166.0" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#1D3557">8</text><circle cx="643.9896904477142" cy="238.0" r="5" fill="#1D3557" /><text x="604.3486742963366" y="249.3397459621556" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#1D3557">8</text><circle cx="668.2384017536785" cy="475.99999999999994" r="5" fill="#1D3557" /><text x="638.5973856023011" y="447.3397459621556" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#1D3557">9</text><circle cx="450.0" cy="602.0" r="5" fill="#1D3557" /><text x="460.0" y="562.0" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#1D3557">9</text><circle cx="231.7615982463215" cy="476.0000000000001" r="5" fill="#1D3557" /><text x="271.40261439769904" y="464.6602540378445" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#1D3557">9</text><circle cx="231.76159824632148" cy="223.99999999999997" r="5" fill="#1D3557" /><text x="261.40261439769904" y="252.66025403784437" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#1D3557">9</text>
+        
+            <polygon points="450.0,84.0 680.3627574066606,217.0 668.2384017536785,475.99999999999994 450.0,588.0 243.88595389930364,469.0000000000001 219.63724259333932,216.99999999999997" fill="#F4A261" fill-opacity="0.2" stroke="#F4A261" stroke-width="3" />
+            <circle cx="450.0" cy="84.0" r="5" fill="#F4A261" /><text x="460.0" y="54.0" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#F4A261">9.5</text><circle cx="680.3627574066606" cy="217.0" r="5" fill="#F4A261" /><text x="711.3435195201938" y="210.6602540378444" text-anchor="start" font-size="14.0" font-weight="bold" fill="#F4A261">9.5</text><circle cx="668.2384017536785" cy="475.99999999999994" r="5" fill="#F4A261" /><text x="689.2191638672117" y="499.6602540378443" text-anchor="start" font-size="14.0" font-weight="bold" fill="#F4A261">9.0</text><circle cx="450.0" cy="588.0" r="5" fill="#F4A261" /><text x="440.0" y="618.0" text-anchor="middle" font-size="14.0" font-weight="bold" fill="#F4A261">8.5</text><circle cx="243.88595389930364" cy="469.0000000000001" r="5" fill="#F4A261" /><text x="212.9051917857705" y="475.33974596215575" text-anchor="end" font-size="14.0" font-weight="bold" fill="#F4A261">8.5</text><circle cx="219.63724259333932" cy="216.99999999999997" r="5" fill="#F4A261" /><text x="198.6564804798062" y="193.33974596215558" text-anchor="end" font-size="14.0" font-weight="bold" fill="#F4A261">9.5</text>
+        
+                            <text x="450.0" y="30.0" text-anchor="middle" font-size="20" fill="#374151" font-weight="600">Y tế</text><text x="727.1281292110203" y="190.0" text-anchor="start" font-size="20" fill="#374151" font-weight="600">Tâm lý</text><text x="727.1281292110205" y="509.99999999999994" text-anchor="start" font-size="20" fill="#374151" font-weight="600">Dinh dưỡng</text><text x="450.0" y="670.0" text-anchor="middle" font-size="20" fill="#374151" font-weight="600">Vận động</text><text x="172.87187078897966" y="510.0000000000001" text-anchor="end" font-size="20" fill="#374151" font-weight="600">Công nghệ</text><text x="172.87187078897966" y="189.99999999999997" text-anchor="end" font-size="20" fill="#374151" font-weight="600">Môi trường</text>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="background-blob"></div>
+        </div>
+    </body>
+    </html>
+    

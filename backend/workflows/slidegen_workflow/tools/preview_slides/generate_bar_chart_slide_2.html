@@ -1,0 +1,270 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+        html, body {
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            overflow: hidden;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #E0F7FA;
+            /* Hiệu ứng gradient nhẹ giống nước */
+            background: linear-gradient(135deg, #E0F7FA 0%, #B2EBF2 100%);
+        }
+
+        .container {
+            position: relative;
+            z-index: 1;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            box-sizing: border-box;
+        }
+
+        .header {
+            margin-bottom: 40px;
+        }
+
+        h1 {
+            font-size: 60px;
+            color: #3D4E5D;
+            margin: 0;
+            font-weight: 800;
+            letter-spacing: -1px;
+        }
+
+        .subtitle {
+            font-size: 26px;
+            color: #6B7280;
+            margin-top: 15px;
+            font-weight: 500;
+        }
+
+        .content-flex {
+            display: flex;
+            flex: 1;
+            gap: 60px;
+            align-items: center; 
+        }
+
+        .left-col {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .right-col {
+            flex: 1.6;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 40px;
+            padding: 20px;
+            box-shadow: 0 20px 50px rgba(0, 137, 123, 0.1);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            backdrop-filter: blur(10px);
+        }
+        
+        .insight-box {
+            font-size: 28px;
+            color: #374151;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            line-height: 1.6;
+            background: rgba(255, 255, 255, 0.5);
+            padding: 30px;
+            border-radius: 20px;
+            border-left: 6px solid #A67C52;
+        }
+        
+        .legend-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 14px;
+            margin-top: 28px;
+            width: 100%;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            min-height: 30px;
+        }
+        
+        .legend-dot {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            flex-shrink: 0;
+            border: 2px solid white;
+        }
+        
+        .legend-label {
+            font-size: 20px;
+            color: #3D4E5D;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            line-height: 1.3;
+            overflow-wrap: anywhere;
+        }
+
+    </style>
+    </head>
+    <body>
+        <div class="container">
+            <div class="header">
+                <h1>Ocean Temperature Variation by Depth</h1>
+                <div class="subtitle">Unit: °C | Data Source: Marine Research Institute 2025</div>
+            </div>
+
+            <div class="content-flex">
+                <div class="left-col">
+                    <div class="insight-box">The chart reveals a clear decline in average ocean temperatures as depth increases, with the Pacific Ocean consistently warmer than the Atlantic at all measured depths.</div>
+                    <div class="legend-container">
+            <div class="legend-item">
+                <div class="legend-dot" style="background-color:#00695C; box-shadow: 0 0 0 1px #00695C;"></div>
+                <div class="legend-label">Pacific Ocean</div>
+            </div>
+            
+            <div class="legend-item">
+                <div class="legend-dot" style="background-color:#26A69A; box-shadow: 0 0 0 1px #26A69A;"></div>
+                <div class="legend-label">Atlantic Ocean</div>
+            </div>
+            </div>
+                </div>
+
+                <div class="right-col">
+                    <svg width="1100" height="700" viewBox="0 0 1100 700">
+                        
+    <rect x="100" y="60" width="940" height="560" 
+          fill="white" fill-opacity="0.3" rx="20" ry="20" />
+    
+        <line x1="100" y1="620.0" x2="1040" y2="620.0" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        
+        <text x="85" y="625.0" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="16" fill="#6B7280" text-anchor="end">0</text>
+        
+        <line x1="100" y1="508.0" x2="1040" y2="508.0" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        
+        <text x="85" y="513.0" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="16" fill="#6B7280" text-anchor="end">6.2</text>
+        
+        <line x1="100" y1="396.0" x2="1040" y2="396.0" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        
+        <text x="85" y="401.0" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="16" fill="#6B7280" text-anchor="end">12.3</text>
+        
+        <line x1="100" y1="284.0" x2="1040" y2="284.0" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        
+        <text x="85" y="289.0" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="16" fill="#6B7280" text-anchor="end">18.5</text>
+        
+        <line x1="100" y1="172.0" x2="1040" y2="172.0" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        
+        <text x="85" y="177.0" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="16" fill="#6B7280" text-anchor="end">24.6</text>
+        
+        <line x1="100" y1="60.0" x2="1040" y2="60.0" 
+              stroke="#B2EBF2" stroke-width="2" stroke-dasharray="5,5"/>
+        
+        <text x="85" y="65.0" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="16" fill="#6B7280" text-anchor="end">30.8</text>
+        
+        <text x="570.0" y="680" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="20" fill="#3D4E5D" font-weight="bold" text-anchor="middle">Ocean Depth (meters)</text>
+        
+        <text transform="rotate(-90)" x="-350.0" y="30" font-family="'Be Vietnam Pro', sans-serif" 
+              font-size="20" fill="#3D4E5D" font-weight="bold" text-anchor="middle">Average Temperature (°C)</text>
+        
+                    <rect x="124.44" y="110.90909090909099" width="63.92" height="509.090909090909" 
+                          fill="#00695C" rx="5" ry="5"/>
+                    
+                        <text x="156.4" y="102.90909090909099" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">28°C</text>
+                        
+                    <rect x="199.64" y="147.27272727272737" width="63.92" height="472.72727272727263" 
+                          fill="#26A69A" rx="5" ry="5"/>
+                    
+                        <text x="231.6" y="139.27272727272737" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">26°C</text>
+                        
+            <text x="194.0" y="645" font-family="'Be Vietnam Pro', sans-serif" 
+                  font-size="16" fill="#3D4E5D" text-anchor="middle">Surface</text>
+            
+                    <rect x="312.44" y="220.00000000000006" width="63.92" height="399.99999999999994" 
+                          fill="#00695C" rx="5" ry="5"/>
+                    
+                        <text x="344.4" y="212.00000000000006" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">22°C</text>
+                        
+                    <rect x="387.64" y="238.1818181818182" width="63.92" height="381.8181818181818" 
+                          fill="#26A69A" rx="5" ry="5"/>
+                    
+                        <text x="419.59999999999997" y="230.1818181818182" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">21°C</text>
+                        
+            <text x="382.0" y="645" font-family="'Be Vietnam Pro', sans-serif" 
+                  font-size="16" fill="#3D4E5D" text-anchor="middle">50m</text>
+            
+                    <rect x="500.44" y="292.72727272727275" width="63.92" height="327.27272727272725" 
+                          fill="#00695C" rx="5" ry="5"/>
+                    
+                        <text x="532.4" y="284.72727272727275" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">18°C</text>
+                        
+                    <rect x="575.64" y="310.90909090909093" width="63.92" height="309.09090909090907" 
+                          fill="#26A69A" rx="5" ry="5"/>
+                    
+                        <text x="607.6" y="302.90909090909093" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">17°C</text>
+                        
+            <text x="570.0" y="645" font-family="'Be Vietnam Pro', sans-serif" 
+                  font-size="16" fill="#3D4E5D" text-anchor="middle">100m</text>
+            
+                    <rect x="688.4399999999999" y="401.81818181818187" width="63.92" height="218.18181818181816" 
+                          fill="#00695C" rx="5" ry="5"/>
+                    
+                        <text x="720.4" y="393.81818181818187" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">12°C</text>
+                        
+                    <rect x="763.64" y="420.0" width="63.92" height="199.99999999999997" 
+                          fill="#26A69A" rx="5" ry="5"/>
+                    
+                        <text x="795.6" y="412.0" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">11°C</text>
+                        
+            <text x="758.0" y="645" font-family="'Be Vietnam Pro', sans-serif" 
+                  font-size="16" fill="#3D4E5D" text-anchor="middle">200m</text>
+            
+                    <rect x="876.4399999999999" y="529.0909090909091" width="63.92" height="90.90909090909089" 
+                          fill="#00695C" rx="5" ry="5"/>
+                    
+                        <text x="908.4" y="521.0909090909091" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">5°C</text>
+                        
+                    <rect x="951.64" y="547.2727272727273" width="63.92" height="72.72727272727272" 
+                          fill="#26A69A" rx="5" ry="5"/>
+                    
+                        <text x="983.6" y="539.2727272727273" font-family="'Be Vietnam Pro', sans-serif" 
+                              font-size="14" fill="#3D4E5D" text-anchor="middle" font-weight="bold">4°C</text>
+                        
+            <text x="946.0" y="645" font-family="'Be Vietnam Pro', sans-serif" 
+                  font-size="16" fill="#3D4E5D" text-anchor="middle">500m</text>
+            
+                    </svg>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    

@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Playful Title Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; } html { font-size: 16px; }
+        body, html { height: 100vh; width: 100vw; overflow: hidden; }
+        .slide-container { width: 100%; height: 100%; background-color: #FFC947; position: relative; display: grid; grid-template-columns: 1fr 1fr; align-items: center; padding: 4rem 5rem; }
+        .slide-container::after { content: ''; position: absolute; bottom: 0; left: 0; width: 100%; height: 15%; background-color: #E8715D; z-index: 0; }
+        .text-column { z-index: 10; display: flex; flex-direction: column; justify-content: center; }
+        .main-title { font-family: 'Be Vietnam Pro', sans-serif; font-size: clamp(3.5rem, 8vw, 6.5rem); font-weight: 400; color: #2D2D2D; line-height: 1.15; margin-bottom: 2.5rem; }
+        .subtitle { font-family: 'Be Vietnam Pro', sans-serif; font-size: 2rem; color: #2D2D2D; line-height: 1.6; max-width: 45ch; font-weight: 400; }
+        .illustration-column { z-index: 5; display: flex; align-items: center; justify-content: center; }
+        .illustration-wrapper { position: relative; width: 90%; max-width: 450px; }
+        .penguin-svg { width: 100%; height: auto; filter: drop-shadow(5px 5px 10px rgba(0,0,0,0.1)); }
+        .doodle { position: absolute; opacity: 0.7; }
+        .doodle-1 { width: 6rem; top: 0; left: 25%; transform: rotate(15deg); }
+        .doodle-2 { width: 2rem; top: 2rem; right: 0; transform: rotate(25deg); }
+        .doodle-3 { width: 6rem; bottom: 5rem; right: -1rem; transform: rotate(-20deg) scaleX(-1); }
+        .doodle-4 { width: 2rem; bottom: 2rem; left: 0; transform: rotate(-15deg); }
+        @media (max-width: 48rem) { .slide-container { grid-template-columns: 1fr; text-align: center; } .text-column { order: 2; } .illustration-column { order: 1; } .subtitle { margin: 0 auto; } }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="text-column"><h1 class="main-title">Introduction<br>to penguins</h1><p class="subtitle">Introduce penguins here. Mention their characteristics and unique behaviors.</p></div>
+        <div class="illustration-column">
+            <div class="illustration-wrapper">
+                <svg class="doodle doodle-1" viewBox="0 0 100 50"><path d="M 10 40 Q 30 10 50 25 T 90 20" stroke="#89CFF0" stroke-width="8" fill="none" stroke-linecap="round"/></svg>
+                <svg class="doodle doodle-2" viewBox="0 0 30 30"><path d="M15 2 L19 11 L29 11 L21 17 L24 27 L15 21 L6 27 L9 17 L1 11 L11 11 Z" fill="#89CFF0"/></svg>
+                <svg class="doodle doodle-3" viewBox="0 0 100 50"><path d="M 10 20 Q 30 40 50 25 T 90 30" stroke="#89CFF0" stroke-width="8" fill="none" stroke-linecap="round"/></svg>
+                <svg class="doodle doodle-4" viewBox="0 0 30 30"><path d="M15 2 L19 11 L29 11 L21 17 L24 27 L15 21 L6 27 L9 17 L1 11 L11 11 Z" fill="#89CFF0"/></svg>
+                <svg class="penguin-svg" viewBox="0 0 200 220" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0, 10)"><path d="M 80 200 Q 70 205 60 200 L 65 210 Z" fill="#E8B48E"/><path d="M 120 200 Q 130 205 140 200 L 135 210 Z" fill="#E8B48E"/><path d="M 100 0 C 40 0, 10 60, 10 130 Q 10 200, 100 200 Q 190 200, 190 130 C 190 60, 160 0, 100 0 Z" fill="#2D2D2D"/><path d="M 100 55 C 70 55, 50 80, 50 130 Q 50 180, 100 180 Q 150 180, 150 130 C 150 80, 130 55, 100 55 Z" fill="#FFFFFF"/><path d="M 100 20 C 140 20, 160 60, 150 90 L 100 80 L 50 90 C 40 60, 60 20, 100 20 Z" fill="#FFFFFF"/><rect x="65" y="80" width="70" height="25" fill="#D92E2E" rx="5"/><path d="M 90 65 L 110 65 L 100 78 Z" fill="#FF8C61"/><circle cx="85" cy="55" r="5" fill="#2D2D2D"/><circle cx="115" cy="55" r="5" fill="#2D2D2D"/><circle cx="70" cy="65" r="8" fill="#FADADD" opacity="0.8"/><circle cx="130" cy="65" r="8" fill="#FADADD" opacity="0.8"/><path d="M 80 90 L 65 160 L 85 155 L 95 95 Z" fill="#D92E2E" transform="rotate(-5, 80, 90)"/><rect x="68" y="98" width="12" height="5" fill="#FFFFFF"/><rect x="67" y="110" width="14" height="5" fill="#FFFFFF"/><rect x="66" y="122" width="16" height="5" fill="#FFFFFF"/><rect x="65" y="134" width="18" height="5" fill="#FFFFFF"/><path d="M 65 160 L 63 168 M 70 158 L 68 166 M 75 157 L 73 165 M 80 156 L 78 164 M 85 155 L 83 163" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round"/><path d="M 95 18 Q 100 10 105 18" stroke="#2D2D2D" stroke-width="2" fill="none" stroke-linecap="round"/></g></svg>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
