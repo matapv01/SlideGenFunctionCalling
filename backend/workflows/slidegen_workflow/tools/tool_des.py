@@ -210,14 +210,14 @@ class GenerateIntroSlide1Input(BaseModel):
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
-    image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="Path to the image file for the left side.")
+    image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="Path to the image file for the left side. Recommended image size: 600x750px (portrait).")
 
 
 class GenerateElegantIntroSlideInput(BaseModel):
     """Input schema for generate_elegant_intro_slide."""
     main_title: str = Field(..., description="The large title displayed in the left column. Default: 'Write Your Topic or Idea Here'.")
     subtitle: str = Field(..., description="The smaller subtitle text below the main title. Default: 'Briefly elaborate on what you want to discuss.'.")
-    image_url: str = Field(default="https://images.pexels.com/photos/3807735/pexels-photo-3807735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the main image to be displayed on the right.")
+    image_url: str = Field(default="https://images.pexels.com/photos/3807735/pexels-photo-3807735.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the main image to be displayed on the right. Recommended image size: 560x420px (landscape, 4:3 ratio).")
     background_color: str = Field(default="#EAE3D9", description="Background color of the slide.")
     text_color: str = Field(default="#4A403A", description="Main text color for titles and descriptions.")
     decoration_color_start: str = Field(default="#F7DC6F", description="The starting color for the gold gradient decorations.")
@@ -236,7 +236,7 @@ class GenerateDynamicIntroSlideInput(BaseModel):
     """Input schema for generate_dynamic_intro_slide."""
     main_title: str = Field(..., description="The large, bold title for the slide. Default: 'Innovate. Create. Inspire.'.")
     subtitle: str = Field(..., description="The smaller subtitle text below the main title. Default: 'This is where we outline our core mission and the driving force behind our vision.'.")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop", description="URL for the full-height image on the right.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop", description="URL for the full-height image on the right. Recommended image size: 960x1080px (portrait, covers right half of slide).")
     primary_color: str = Field(default="#4F46E5", description="The primary (brighter) color for the main part of the text block.")
     secondary_color: str = Field(default="#3730A3", description="The secondary (darker) color for the footer area of the text block.")
     text_color: str = Field(default="#FFFFFF", description="The color for the text.")
@@ -261,7 +261,7 @@ class GenerateElegantAgendaSlideInput(BaseModel):
         "Thực hiện kế hoạch",
         "Đội ngũ của chúng tôi"
     ]""")
-    image_url: str = Field(default="A high-quality Unsplash image", description="URL of the image to be displayed on the left. A professional desk photo is recommended. Default: A high-quality Unsplash image.")
+    image_url: str = Field(default="A high-quality Unsplash image", description="URL of the image to be displayed on the left. A professional desk photo is recommended. Recommended image size: 500x400px (landscape). Default: A high-quality Unsplash image.")
     accent_color: str = Field(default="#EAD6D6", description="The color of the decorative rectangle behind the image (hex code).")
     bg_color: str = Field(default="#FCFCFC", description="The main background color of the slide (hex code).")
     title_color: str = Field(default="#1F2937", description="Color for the main title (hex code).")
@@ -294,7 +294,7 @@ class GenerateMissionSlideInput(BaseModel):
     top_text: str = Field(..., description="A small heading displayed above the main title (e.g., 'Our Purpose', 'Core Philosophy'). Default: 'Subheading or Category'.")
     title: str = Field(..., description="The main, concise title of the slide. Default: 'Your Main Title Here'.")
     subtitle: str = Field(..., description="The main descriptive text, displayed in a larger, prominent area below the title. Default: 'Elaborate on your key message or provide a call to action. This text can be a bit longer.'.")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", description="URL of the image to be displayed in the right column.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?q=80&w=2084&auto=format&fit=crop", description="URL of the image to be displayed in the right column. Recommended image size: 400x1000px (tall portrait).")
     image_alt_text: str = Field(default="A team collaborating in a modern office, representing mission and goals", description="Alternative text for the image, for accessibility.")
     background_color_left: str = Field(default="#F5EBE0", description="Background color for the top content area in the left column (warm beige).")
     text_color_title: str = Field(default="#4E443F", description="Text color for the main title (dark brown).")
@@ -309,7 +309,7 @@ class GenerateTrainingIntroSlideInput(BaseModel):
     bg_color: str = Field(default="#3a3a3a", description="Background color for the slide (hex code). Default: '#3a3a3a' (dark gray).")
     title_color: str = Field(default="#b8d89f", description="Color for the main title (hex code). Default: '#b8d89f' (light green).")
     text_color: str = Field(default="#e8d7a8", description="Color for the description text (hex code). Default: '#e8d7a8' (light yellow).")
-    image_url: str = Field(default="https://images.pexels.com/photos/3587620/pexels-photo-3587620.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL of the image to display in bottom section.")
+    image_url: str = Field(default="https://images.pexels.com/photos/3587620/pexels-photo-3587620.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL of the image to display in bottom section. Recommended image size: 1920x600px (wide landscape, bottom banner).")
 
 class GenerateBusinessIntroSlideInput(BaseModel):
     """Input schema for generate_business_intro_slide."""
@@ -347,7 +347,7 @@ class GenerateTitleSlide5Input(BaseModel):
     year: str = Field(default="20XX", description="Year displayed in the top-right corner of the slide.")
     main_title: str = Field(default="Your Title Here", description="The main title text for the notebook cover design.")
     bottom_text: str = Field(default="Here is where your presentation begins", description="Text displayed at the bottom-right of the slide.")
-    image_path: str = Field(default="Image/generate_title_slide_5/Default_1.jpg", description="Path to the image displayed in the polaroid frame.")
+    image_path: str = Field(default="Image/generate_title_slide_5/Default_1.jpg", description="Path to the image displayed in the polaroid frame. Recommended image size: 444x457px (square-like portrait).")
     bg_color: str = Field(default="#b8c8d4", description="Background color of the slide in hex format.")
     text_color: str = Field(default="#2c3e50", description="Color of all text elements in hex format.")
     show_clover: bool = Field(default=True, description="Whether to display the four-leaf clover decoration.")
@@ -484,7 +484,7 @@ class GenerateIntroSlideInput(BaseModel):
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
     main_title_font_style: str = Field(default="italic", description="CSS font style for the main title.")
-    image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide.")
+    image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide. Recommended image size: 600x750px (portrait, displayed in right panel).")
 
 class GenerateEmployeeIntroSlideInput(BaseModel):
     """Input schema for generate_employee_intro_slide."""
@@ -703,7 +703,7 @@ class GenerateProcessStepsSlideInput(BaseModel):
 class GenerateImageCutoutListSlideInput(BaseModel):
     """Input schema for generate_image_cutout_list_slide."""
     list_items: List[str] = Field(...,description=f"""A list of items to display, each with a 'title' (main point) and a 'description' (elaboration). default=[ {{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}},{{"title": "Add a main point", "description": "Elaborate on what you want to discuss."}}]""")
-    background_image_url: str = Field(default="https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?q=80&w=2940&auto=format&fit=crop", description="URL for the single, continuous background image that spans the entire slide. An atmospheric or abstract office photo is recommended.")
+    background_image_url: str = Field(default="https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?q=80&w=2940&auto=format&fit=crop", description="URL for the single, continuous background image that spans the entire slide. An atmospheric or abstract office photo is recommended. Recommended image size: 1920x1080px (landscape, full slide background).")
     content_bg_color: str = Field(default="#1A1A22", description="Background color for the main content panel that sits on top of the image.")
     text_heading_color: str = Field(default="#FFFFFF", description="Color for the main heading of each list item.")
     text_color: str = Field(default="#C0C0C0", description="Color for the secondary text (description).")
@@ -726,9 +726,9 @@ class GenerateBodySlide4Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
     subtitle_color: str = Field(default="#333333", description="CSS color for subtitles.")
-    image_url_1: str = Field(default="Image/generate_body_slide4/Default_1.png", description="Path to the first image file.")
-    image_url_2: str = Field(default="Image/generate_body_slide4/Default_2.png", description="Path to the second image file.")
-    image_url_3: str = Field(default="Image/generate_body_slide4/Default_3.png", description="Path to the third image file.")
+    image_url_1: str = Field(default="Image/generate_body_slide4/Default_1.png", description="Path to the first image file. Recommended image size: 500x240px (landscape, 2:1 ratio).")
+    image_url_2: str = Field(default="Image/generate_body_slide4/Default_2.png", description="Path to the second image file. Recommended image size: 500x240px (landscape, 2:1 ratio).")
+    image_url_3: str = Field(default="Image/generate_body_slide4/Default_3.png", description="Path to the third image file. Recommended image size: 500x240px (landscape, 2:1 ratio).")
 
 class GenerateBodySlide5Input(BaseModel):
     """Input schema for generate_body_slide5."""
@@ -746,10 +746,10 @@ class GenerateBodySlide5Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#6b9d34", description="CSS color for subtitles.")
     content_color: str = Field(default="#555555", description="CSS color for content text.")
-    image_url_1: str = Field(default="Image/generate_body_slide5/Default_1.png", description="Path to the first image file.")
-    image_url_2: str = Field(default="Image/generate_body_slide5/Default_2.png", description="Path to the second image file.")
-    image_url_3: str = Field(default="Image/generate_body_slide5/Default_3.png", description="Path to the third image file.")
-    image_url_4: str = Field(default="Image/generate_body_slide5/Default_4.png", description="Path to the fourth image file.")
+    image_url_1: str = Field(default="Image/generate_body_slide5/Default_1.png", description="Path to the first image file. Recommended image size: 300x400px (portrait, 3:4 ratio).")
+    image_url_2: str = Field(default="Image/generate_body_slide5/Default_2.png", description="Path to the second image file. Recommended image size: 300x400px (portrait, 3:4 ratio).")
+    image_url_3: str = Field(default="Image/generate_body_slide5/Default_3.png", description="Path to the third image file. Recommended image size: 300x400px (portrait, 3:4 ratio).")
+    image_url_4: str = Field(default="Image/generate_body_slide5/Default_4.png", description="Path to the fourth image file. Recommended image size: 300x400px (portrait, 3:4 ratio).")
 
 
 class GenerateBodySlide10Input(BaseModel):
@@ -766,7 +766,7 @@ class GenerateBodySlide10Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
     subtitle_color: str = Field(default="#333333", description="CSS color for all subtitle text in the three content sections.")
     content_color: str = Field(default="#555555", description="CSS color for all content/body text in the three sections.")
-    image_url: str = Field(default="Image/generate_body_slide10/Default_1.png", description="Path to the image file for the left side.")
+    image_url: str = Field(default="Image/generate_body_slide10/Default_1.png", description="Path to the image file for the left side. Recommended image size: 500x450px (landscape, displayed in left column).")
     icon1: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the first section's icon. Should be a valid SVG element with proper xmlns attribute.")
     icon2: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the second section's icon. Should be a valid SVG element with proper xmlns attribute.")
     icon3: str = Field(default="<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"24\" height=\"24\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\">...</svg>", description="Complete SVG code for the third section's icon. Should be a valid SVG element with proper xmlns attribute.")
@@ -806,9 +806,9 @@ class GenerateBodySlide12Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title text.")
     content_color: str = Field(default="#555555", description="CSS color for all content/body text including main content and image section content.")
     subtitle_color: str = Field(default="#333333", description="CSS color for all subtitle text in the three image sections.")
-    image_url_1: str = Field(default="Image/generate_body_slide12/Default_1.png", description="Path to the first image file.")
-    image_url_2: str = Field(default="Image/generate_body_slide12/Default_2.png", description="Path to the second image file.")
-    image_url_3: str = Field(default="Image/generate_body_slide12/Default_3.png", description="Path to the third image file.")
+    image_url_1: str = Field(default="Image/generate_body_slide12/Default_1.png", description="Path to the first image file. Recommended image size: 400x300px (landscape, 4:3 ratio).")
+    image_url_2: str = Field(default="Image/generate_body_slide12/Default_2.png", description="Path to the second image file. Recommended image size: 400x300px (landscape, 4:3 ratio).")
+    image_url_3: str = Field(default="Image/generate_body_slide12/Default_3.png", description="Path to the third image file. Recommended image size: 400x300px (landscape, 4:3 ratio).")
 
 
 class GenerateBodySlide15Input(BaseModel):
@@ -817,7 +817,7 @@ class GenerateBodySlide15Input(BaseModel):
     subtitle: str = Field(..., description="Subtitle for the right column, appears as a section header (e.g., 'Subtitle').")
     content1: str = Field(..., description="First content text section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
     content2: str = Field(..., description="Second content text section. Should use HTML tags to highlight key phrases: <b>bold</b>, <i>italic</i>, <u>underline</u>, or <span style=\"color: #...;\">colored text</span>. For structured content with main points and sub-points, use <ul> and <li> tags. Example: 'Empowering <b>talented teams</b> through <i>professional development</i>: <ul><li>Continuous <u>learning</u></li><li>Career <span style=\"color: #9b59b6;\">advancement</span></li><li>Collaborative culture</li></ul>'")
-    image_url: str = Field(default="Image/generate_body_slide15/Default_1.png", description="Path to the background image for the slide.")
+    image_url: str = Field(default="Image/generate_body_slide15/Default_1.png", description="Path to the background image for the slide. Recommended image size: 800x800px (square, for right column).")
     main_bg_color: str = Field(default="#ffffff", description="CSS background color for the slide.")
     accent_color: str = Field(default="#d5e8b9", description="CSS color for accents, such as the title accent block.")
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
@@ -1025,7 +1025,7 @@ class GenerateReferenceSlideInput(BaseModel):
     """Input schema for generate_reference_slide."""
     main_title: str = Field(..., description="The main, bold title at the top of the text column. Default: 'CONTENT'.")
     reference_items: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a reference or key point. Each item should have 'title' and 'description' keys. Default: [{'title': 'PRIMARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}, {'title': 'SECONDARY REFERENCE TITLE', 'description': 'Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.'}].")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop", description="URL for the full-height image in the right column.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1543269865-cbf427effbad?q=80&w=2070&auto=format&fit=crop", description="URL for the full-height image in the right column. Recommended image size: 800x1080px (portrait, covers right column).")
     bg_color: str = Field(default="#FFFFFF", description="The background color for the text column.")
     text_color: str = Field(default="#1F2937", description="The main text color for all text elements.")
     accent_color: str = Field(default="#3B82F6", description="The color for the decorative divider below the main title.")
@@ -1051,7 +1051,7 @@ class GenerateTextWithImageSlideInput(BaseModel):
     """Input schema for generate_text_with_image_slide."""
     title: str = Field(..., description="The introductory headline for the text column, styled to be smaller. Default: 'Tiltle'.")
     text_content: str = Field(..., description="The main paragraph or body text, displayed in a large font to be the central focus of the text column. Default: 'Content.'.")
-    image_url: str = Field(default="https://images.pexels.com/photos/1778412/pexels-photo-1778412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the full-height image on the right side.")
+    image_url: str = Field(default="https://images.pexels.com/photos/1778412/pexels-photo-1778412.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the full-height image on the right side. Recommended image size: 800x1080px (portrait, covers right side).")
     text_color: str = Field(default="#34495E", description="The color for all text elements.")
     bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
     doodle_border_url: str = Field(default="https://i.imgur.com/Qy2O1vN.png", description="URL for the seamless doodle image used as a border at the bottom.")
@@ -1079,7 +1079,7 @@ class GenerateGeometricSplitContentSlide2Input(BaseModel):
 
 class GenerateGeometricImageContentSlideInput(BaseModel):
     """Input schema for generate_geometric_image_content_slide."""
-    image_url: str = Field(default="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2574&auto=format&fit=crop", description="The URL for the main image to be displayed in the custom-shaped container.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1557804506-669a67965ba0?q=80&w=2574&auto=format&fit=crop", description="The URL for the main image to be displayed in the custom-shaped container. Recommended image size: 1000x1080px (portrait).")
     main_title: str = Field(..., description="The main title for the slide. Use a `<span class='highlight'>` tag to highlight a specific word. Default: 'A picture is worth a <span class='highlight'>thousand</span> words'.")
     description: str = Field(..., description="The paragraph of text that describes or complements the image. Default: 'A complex idea can be conveyed with just a single still image, namely making it possible to absorb large amounts of data quickly.'.")
     bg_color: str = Field(default="#0F172A", description="The dark background color of the slide.")
@@ -1147,7 +1147,7 @@ class GenerateMethodologySlideInput(BaseModel):
     quantitative_text: str = Field(..., description="Description text for quantitative methods. Default: 'Quantitative research methods involve collecting and analyzing numerical data to quantify relationships, trends, and patterns. In our research proposal, quantitative methods will be employed to measure the prevalence, frequency, and magnitude of certain phenomena related to the new product.'")
     image_url: str = Field(
         default="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2340&auto=format&fit=crop",
-        description="URL for the professional image displayed on the right side"
+        description="URL for the professional image displayed on the right side. Recommended image size: 700x780px (portrait, right column)."
     )
     bg_color: str = Field(default="#F5F5F5", description="Background color for the slide")
     custom_css: str = Field(default="", description="Additional custom CSS for advanced styling")
@@ -1248,7 +1248,7 @@ class GenerateClassicContentSlideInput(BaseModel):
     )
     image_url: str = Field(
         default="https://images.unsplash.com/photo-1460925895917-afdab827c52f?q=80&w=2015", 
-        description="URL of the illustrative image on the right side."
+        description="URL of the illustrative image on the right side. Recommended image size: 800x880px (portrait, right column with rounded corners)."
     )
     theme_color: str = Field(
         default="#2563EB", 
@@ -1291,7 +1291,7 @@ class GenerateCorporateTeamSlideInput(BaseModel):
     team_members: List[Dict[str, str]] = Field(..., description="An array of objects, each representing a team member with their own photo. Default: [{'name': 'Olivia Chen', 'role': 'Lead Designer', 'image_url': 'https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Ben Carter', 'role': 'Photographer', 'image_url': 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Aisha Khan', 'role': 'Content Strategist', 'image_url': 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop'}, {'name': 'Leo Martinez', 'role': 'Illustrator', 'image_url': 'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop'}]")
     text_color: str = Field(default="#4A403A", description="The main text color for names.")
     role_color: str = Field(default="#6B7280", description="The secondary text color for roles.")
-    bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background.")
+    bg_url: str = Field(default="https://www.toptal.com/designers/subtlepatterns/uploads/paper.png", description="URL for the repeating paper texture background. Recommended image size: 1920x1080px (landscape, full slide background).")
 
 # === SLIDE CẢM ƠN CLASSES ===
 
@@ -1408,8 +1408,8 @@ class GenerateModernContactSlideInput(BaseModel):
     secondary_color: str = Field(default="#1565C0", description="Darker shade (hex code) for gradients/depth.")
     text_color: str = Field(default="#FFFFFF", description="Color of the main title text on the colored background.")
     contact_text_color: str = Field(default="#333333", description="Color of the contact details on the white background.")
-    top_image_url: str = Field(default="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop", description="URL for the top-right background image (charts/abstract).")
-    bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop", description="URL for the bottom-right corner image (team/office).")
+    top_image_url: str = Field(default="https://images.unsplash.com/photo-1551288049-bebda4e38f71?q=80&w=2070&auto=format&fit=crop", description="URL for the top-right background image (charts/abstract). Recommended image size: 400x300px (landscape).")
+    bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=2070&auto=format&fit=crop", description="URL for the bottom-right corner image (team/office). Recommended image size: 400x300px (landscape).")
     show_logo: Optional[bool] = Field(default=True, description="Whether to display the logo placeholder.")
 
 class GenerateClosingSlideInput(BaseModel):
@@ -1417,7 +1417,7 @@ class GenerateClosingSlideInput(BaseModel):
     main_text: str = Field(default="THANK\nYOU!", description="The large closing text displayed on the right. Use newline characters for multiple lines.")
     quote_text: str = Field(default="“Efficiency opens up more time to focus on the things that really matter.”", description="A closing thought, quote, or secondary message displayed on the left.")
     contact_text: str = Field(default="@reallygreatsite", description="Contact information or social media handle.")
-    image_url: str = Field(default="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the feature image which will be masked in a circle.")
+    image_url: str = Field(default="https://images.pexels.com/photos/3183150/pexels-photo-3183150.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1", description="URL for the feature image which will be masked in a circle. Recommended image size: 400x400px (square, will be cropped to circle).")
     bg_color: str = Field(default="#FDFBF7", description="Background color of the slide (hex code). Default is a warm off-white.")
     primary_color: str = Field(default="#263238", description="Color for the text and main graphic elements (hex code). Default is dark slate.")
     accent_shape_color: str = Field(default="#DDE6ED", description="Color for the decorative background shape behind the image (hex code).")
@@ -1478,18 +1478,18 @@ class GenerateBrandCollaborationClosingSlideInput(BaseModel):
     bg_color: str = Field(default="#F5F2EB", description="The background color (Hex code). Default: Light Paper Beige.")
     left_image_url: str = Field(
         default="https://images.unsplash.com/photo-1519052537078-e6302a4968d4?q=80&w=1740&auto=format&fit=crop", 
-        description="URL for the large vertical image on the left."
+        description="URL for the large vertical image on the left. Recommended image size: 460x650px (portrait)."
     )
     right_image_url: str = Field(
-        default="https://images.unsplash.com/photo-1483985988355-763728e1935b?q=80&w=1740&auto=format&fit=crop", 
-        description="URL for the smaller image on the right."
+        default="https://images.unsplash.com/photo-1549490349-8643362247b5?q=80&w=1887&auto=format&fit=crop", 
+        description="URL for the smaller image on the right. Recommended image size: 250x280px (portrait)."
     )
 
 class GenerateMilitaryThankYouSlideInput(BaseModel):
     """Input schema for generate_military_thank_you_slide."""
     main_text: str = Field(default="THANK YOU", description="The main large text on the slide, typically 'THANK YOU' or a section title.")
     description: str = Field(default="Contact us for further information.", description="Small descriptive paragraph or contact details displayed below the title.")
-    bg_image_url: str = Field(default="https://images.unsplash.com/photo-1590236141044-bc849495115d?q=80&w=1920", description="URL for the background image showing military personnel or equipment.")
+    bg_image_url: str = Field(default="https://images.unsplash.com/photo-1590236141044-bc849495115d?q=80&w=1920", description="URL for the background image showing military personnel or equipment. Recommended image size: 1920x1080px (landscape, full slide background).")
     primary_color: str = Field(default="#4B5320", description="The primary olive green/military color for the design accents (Hex).")
     secondary_color: str = Field(default="#556B2F", description="The secondary lighter green or accent color (Hex).")
     text_color: str = Field(default="#000000", description="The color of the typography (Hex).")
@@ -1510,7 +1510,7 @@ class GenerateCreativeThankYouInput(BaseModel):
     """Input schema for generate_creative_thank_you_slide ."""
     main_title: str = Field(default="Any Questions?", description="The large main title text displayed prominently (e.g., 'Any Questions?', 'Thank You').")
     subtitle: str = Field(default="THANKS FOR WATCHING", description="Subtitle text displayed below or above the main title, typically in uppercase.")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop", description="URL of the background or decorative image to display on the slide.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1516321497487-e288fb19713f?q=80&w=2940&auto=format&fit=crop", description="URL of the background or decorative image to display on the slide. Recommended image size: 700x720px (square-like portrait).")
     bg_gradient_start: str = Field(default="#F5F3F0", description="Starting color of the background gradient (Hex code).")
     bg_gradient_end: str = Field(default="#F5F3F0", description="Ending color of the background gradient (Hex code).")
     accent_color: str = Field(default="#BE123C", description="Accent color for decorative elements and highlights (Hex code).")
@@ -1530,7 +1530,7 @@ class GenerateMinimalistThankYouInput2(BaseModel):
 class GenerateElegantThankYouInput(BaseModel):
     main_title: str = Field(default="Thank You", description="The stylized, decorative thank you text displayed in elegant script or serif font.")
     subtitle: str = Field(default="FOR YOUR KIND ATTENTION", description="Subtitle text displayed below the main title, typically in uppercase letters.")
-    bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="URL of the elegant or sophisticated background image to display on the slide.")
+    bg_image: str = Field(default="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop", description="URL of the elegant or sophisticated background image to display on the slide. Recommended image size: 1920x1080px (landscape, full slide background).")
     overlay_color: str = Field(default="rgba(255, 255, 255, 0.85)", description="Semi-transparent overlay color applied over the background image to ensure text readability (RGBA format).")
 
 
@@ -1670,7 +1670,7 @@ class GenerateLineChartSlide3(BaseModel):
     y_axis_max: float = Field(default=140, description="Maximum value of Y-axis. If None, auto-calculated from data with 10% padding.")
     colors: List[str] = Field(default=["#00F2FF", "#8B5CF6", "#EC4899"], description="List of colors for each line series. Each series gets a color in order.")
     time_points: List[str] = Field(..., description="List of time points on X-axis (e.g., ['Jan', 'Feb', 'Mar', ...] or ['2019', '2020', ...]).")
-    series: List[Dict[str, Union[str, List[float]]]] = Field(
+    series: List[Dict[str,str | List[float]]] = Field(
         ...,
         description="""
         Line chart series data.
@@ -2457,7 +2457,7 @@ class GenerateBarChartSlide3(BaseModel):
     subtitle_color: str = Field(default="#8E97A4", description="Hex color for the subtitle text.")
     image_url: str = Field(
         default="https://images.unsplash.com/photo-1503676260728-1c00da094a0b?q=80&w=2022&auto=format&fit=crop",
-        description="URL of the image to display in the right capsule panel."
+        description="URL of the image to display in the right capsule panel. Recommended image size: 500x800px (portrait, capsule shape with rounded corners)."
     )
 
 class GenerateBarChartSlide4(BaseModel):

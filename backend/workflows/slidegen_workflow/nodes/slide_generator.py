@@ -2,6 +2,7 @@
 
 import json
 import time
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from openai import OpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
@@ -9,6 +10,7 @@ from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.ddgs_tool import search_ddgs_images
 from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
@@ -61,6 +63,156 @@ def _extract_style_params(tool_call: dict) -> dict:
     style_args = {k: v for k, v in args.items() if k not in _CONTENT_KEYS}
     result["arguments"] = style_args
     return result
+
+
+# ── Image-injection helpers ──────────────────────────────────────────────────
+
+_IMAGE_PARAM_KEYWORDS = ("image_url", "background_image_url")
+
+
+def _get_image_params_in_order(tool) -> list:
+    """
+    Return the list of image-URL parameter names for *tool*, preserving
+    the declaration order from the schema.
+    E.g. ['image_url_1', 'image_url_2', 'image_url_3']
+    """
+    try:
+        schema = tool.args_schema.model_json_schema()
+        props = schema.get("properties", {})
+        return [
+            k for k in props
+            if any(kw in k for kw in _IMAGE_PARAM_KEYWORDS)
+        ]
+    except Exception:
+        return []
+
+
+_SEARCH_SPEC_SYSTEM = """You are an image search assistant.
+Given the slide content, generate DuckDuckGo image search specifications for each image parameter.
+Return ONLY a valid JSON array — no markdown, no explanation."""
+
+_SEARCH_SPEC_HUMAN = """Slide content:
+{slide_content}
+
+Image parameters needed (in order):
+{image_params}
+
+For each parameter, return:
+- "for_param": the parameter name
+- "query": 1-3 English nouns describing the most relevant image subject (NO adjectives, NO filler words)
+- "layout": one of "Wide", "Tall", "Square", or null
+- "size": one of "Large", "Medium", "Small", or null
+
+Example output:
+[
+  {{"for_param": "image_url_1", "query": "AI diagnosis", "layout": "Wide", "size": "Large"}},
+  {{"for_param": "image_url_2", "query": "surgical robot", "layout": "Wide", "size": "Large"}}
+]"""
+
+
+def _format_content_as_str(content) -> str:
+    """Safely convert slide content (str, dict, list) to a plain string."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        parts = []
+        for k, v in content.items():
+            if isinstance(v, list):
+                parts.extend([str(item) for item in v])
+            elif isinstance(v, (str, int, float)):
+                parts.append(str(v))
+            elif isinstance(v, dict):
+                parts.append(_format_content_as_str(v))
+        return "\n".join(parts) if parts else json.dumps(content, ensure_ascii=False)
+    if isinstance(content, list):
+        return "\n".join([_format_content_as_str(item) for item in content])
+    return str(content) if content is not None else ""
+
+
+def _build_search_specs(image_params: list, slide_content, planner_llm) -> list:
+    """
+    Ask the planner LLM (small, fast call) to fill search specs for each
+    image parameter based on slide content.
+    Returns a list of dicts: [{for_param, query, layout, size}, ...]
+    Falls back to using the first line of slide_content as query.
+    """
+    if not image_params:
+        return []
+
+    content_str = _format_content_as_str(slide_content)
+    base_query = content_str.split("\n")[0][:40].strip() if content_str else "abstract background"
+    fallback = [
+        {"for_param": p, "query": f"{base_query} {i+1}", "layout": "Wide", "size": "Large"}
+        for i, p in enumerate(image_params)
+    ]
+
+    if not planner_llm:
+        return fallback
+
+    try:
+        human_msg = _SEARCH_SPEC_HUMAN.format(
+            slide_content=content_str[:800],
+            image_params=json.dumps(image_params)
+        )
+        messages = [
+            {"role": "system", "content": _SEARCH_SPEC_SYSTEM},
+            {"role": "user", "content": human_msg}
+        ]
+        response = planner_llm.invoke(messages)
+        raw = getattr(response, "content", "").strip()
+        # Strip markdown fences if present
+        if "```" in raw:
+            raw = raw.split("```")[1].split("```")[0].strip()
+            if raw.startswith("json"):
+                raw = raw[4:].strip()
+        specs = json.loads(raw)
+        if isinstance(specs, list) and len(specs) == len(image_params):
+            print(f"  [IMAGE SPECS] LLM returned {len(specs)} search spec(s): {[s.get('query') for s in specs]}")
+            return specs
+    except Exception as e:
+        print(f"  ⚠️ [IMAGE SPECS] LLM call failed ({e}), using fallback queries")
+
+    return fallback
+
+
+def _run_searches_parallel(search_specs: list) -> dict:
+    """
+    Execute all search_ddgs_images calls in parallel.
+    Returns {param_name: url_string_or_None}
+    """
+    if not search_specs:
+        return {}
+
+    url_map = {}
+
+    def _do_search(spec):
+        param = spec["for_param"]
+        query = spec.get("query", "abstract background")
+        layout = spec.get("layout") or None
+        size = spec.get("size") or None
+        try:
+            result_json = search_ddgs_images(
+                query=query,
+                layout=layout,
+                size=size,
+                max_results=3
+            )
+            urls = json.loads(result_json)
+            url = urls[0] if urls else None
+            print(f"  [IMAGE INJECT] '{param}' ← query='{query}' → {url}")
+            return param, url
+        except Exception as e:
+            print(f"  ⚠️ [IMAGE INJECT] search failed for '{param}': {e}")
+            return param, None
+
+    max_workers = max(1, len(search_specs))
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
+        futures = {executor.submit(_do_search, spec): spec for spec in search_specs}
+        for future in as_completed(futures):
+            param, url = future.result()
+            url_map[param] = url
+
+    return url_map
 
 
 def create_default_html(content_data) -> str:
@@ -156,6 +308,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     previous_slide_function_call = state.get('previous_accepted_tool_call', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
     
+    if isinstance(current_text, (dict, list)):
+        current_text = _format_content_as_str(current_text)
     if not current_text:
         current_text = "Default slide content"
         
@@ -388,6 +542,22 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
             continue
             
+        # ── IMAGE INJECTION PIPELINE ──────────────────────────────────────
+        chosen_tool = tool_lookup[tool_name]
+        image_params = _get_image_params_in_order(chosen_tool)
+
+        if image_params:
+            print(f"  [IMAGE INJECT] Tool '{tool_name}' has {len(image_params)} image param(s): {image_params}")
+            # LLM fills search specs (query, layout, size) for each param
+            search_specs = _build_search_specs(image_params, current_text, planner_llm)
+            # All searches run in parallel
+            url_map = _run_searches_parallel(search_specs)
+            # Override LLM-filled image URLs with real ones
+            for param, url in url_map.items():
+                if url:
+                    tool_call_dict["arguments"][param] = url
+        # ─────────────────────────────────────────────────────────────────
+
         try:
             html_content = execute_tool(tool_call_dict)
         except Exception as e:
