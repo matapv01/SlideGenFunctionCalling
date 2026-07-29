@@ -151,7 +151,14 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     current_text = state.get("current_slide_text", "")
     current_plan = state.get('current_slide_plan')
     current_context_map = state.get('current_slide_context_map')
-    previous_evaluation = state.get('vlm_feedback', "No evaluation yet.")
+    vlm_fb = state.get('vlm_feedback', '')
+    executor_fb = state.get('executor_feedback', '')
+    eval_parts = []
+    if executor_fb:
+        eval_parts.append(f"[EXECUTOR VALIDATION FEEDBACK]\n{executor_fb}")
+    if vlm_fb and vlm_fb != "No feedback provided.":
+        eval_parts.append(f"[VLM VISUAL FEEDBACK]\n{vlm_fb}")
+    previous_evaluation = "\n\n".join(eval_parts) if eval_parts else "No evaluation yet."
     previous_function_call = state.get('current_tool_call', {})
     previous_slide_function_call = state.get('previous_accepted_tool_call', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
@@ -300,6 +307,9 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 design_instruction=design_instruction,
                 slide_content=current_text
             )
+
+            if previous_evaluation and previous_evaluation != "No evaluation yet.":
+                qwen_user_prompt += f"\n\n[PREVIOUS EVALUATION / ERRORS TO CORRECT]\n{previous_evaluation}"
 
             if retry_feedback:
                 qwen_user_prompt += f"\n\n[PREVIOUS ERROR TO CORRECT]\n{retry_feedback}"
