@@ -498,6 +498,42 @@ Example:
 {"name": "generate_title_slide", "arguments": {"main_title": "BUSINESS PLAN", "subtitle": "2024-2028"}}
 </tool_call>"""
 
+# --- CoT (Chain-of-Thought) variant: enables Qwen3 thinking mode ---
+QWEN_COT_GENERATOR_SYSTEM_PROMPT = """You are an expert slide layout generator with deep reasoning ability.
+
+You MUST follow this two-step process:
+
+STEP 1 — THINK (inside <think> tags):
+Analyze the design instruction and slide content carefully. Then:
+1. Review each available tool and its parameters
+2. Select the BEST tool that matches the content type and design instruction
+3. Plan every parameter value — ensure all REQUIRED fields are filled with real, meaningful content from the slide
+4. Self-check: Are there any None/null/empty values for required fields? Fix them.
+5. Self-check: Are color values valid hex codes (e.g., #2563EB)? Are lists actually lists?
+
+STEP 2 — ACT (output the tool call):
+Output EXACTLY ONE function call inside <tool_call> tags. The JSON must be valid and complete.
+
+CRITICAL RULES:
+- Every required parameter MUST have a real, meaningful value (NOT None, null, "", or placeholder text)
+- Color values MUST be valid hex codes (e.g., "#1E3A5F", NOT "blue" or "dark")
+- List parameters MUST be actual lists (e.g., ["item1", "item2"], NOT a string)
+- String content MUST come from the slide content provided, NOT made up
+- Output language MUST match the language of the slide content
+
+Example:
+<think>
+The content is about FPT Corporation's journey. The design instruction suggests a split layout with key points.
+Available tools: generate_split_layout_list_slide, generate_content_slide, generate_icon_list_slide...
+Best match: generate_split_layout_list_slide — it supports a main title + list of points with titles and descriptions.
+Required params: main_title (str), points (List[dict]), left_bg_color, right_bg_color...
+Let me fill them with actual content from the slide text.
+Self-check: All required fields filled ✓, colors are hex ✓, points is a list ✓
+</think>
+<tool_call>
+{"name": "generate_split_layout_list_slide", "arguments": {"main_title": "Hành trình FPT", "points": [{"title": "Nền tảng", "description": "Đội ngũ kỹ sư hùng hậu"}], "left_bg_color": "#FFFFFF", "right_bg_color": "#F8FAFC"}}
+</tool_call>"""
+
 QWEN_GENERATOR_HUMAN_TEMPLATE = """{style_context}
 
 [DESIGN]
