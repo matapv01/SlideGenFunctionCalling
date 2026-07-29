@@ -209,7 +209,7 @@ class GenerateIntroSlide1Input(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
-    main_title_font_style: str = Field(default="normal", description="CSS font style for the main title (e.g. normal, italic).")
+    main_title_font_style: str = Field(default="italic", description="CSS font style for the main title (e.g. normal, italic).")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="Path to the image file for the left side. Recommended image size: 600x750px (portrait).")
 
 
@@ -483,7 +483,7 @@ class GenerateIntroSlideInput(BaseModel):
     title_color: str = Field(default="#333333", description="CSS color for the main title.")
     subtitle_color: str = Field(default="#555555", description="CSS color for the subtitles.")
     line_color: str = Field(default="#e6c35c", description="CSS color for the horizontal divider line.")
-    main_title_font_style: str = Field(default="normal", description="CSS font style for the main title (e.g. normal, italic).")
+    main_title_font_style: str = Field(default="italic", description="CSS font style for the main title (e.g. normal, italic).")
     image_url: str = Field(default="Image/generate_intro_slide1/Default_1.png", description="URL or path to the image displayed on the slide. Recommended image size: 600x750px (portrait, displayed in right panel).")
 
 class GenerateEmployeeIntroSlideInput(BaseModel):
@@ -1702,9 +1702,9 @@ class GenerateRadarChartSlide1(BaseModel):
     This schema describes parameters used to generate a radar chart slide
     """
     # ===== CONTENT =====
-    main_title: str = Field(..., description="Main title of the radar chart slide.")
-    subtitle: str = Field(..., description="Subtitle providing context such as report source or timeframe.")
-    insight: str = Field(..., description="Key takeaway or analysis derived from the radar chart.")
+    main_title: str = Field(..., description="Main title of the radar chart slide.Example :'Chỉ Số Đánh Giá Chất Lượng Dịch Vụ Chăm Sóc'.")
+    subtitle: str = Field(..., description="Subtitle providing context such as report source or timeframe. Example: 'Báo cáo phân tích trải nghiệm khách hàng Q1/2026'.")
+    insight: str = Field(..., description="Key takeaway or analysis derived from the radar chart. Example'Dịch vụ 'Tâm lý & Đồng cảm' đạt điểm cao nhất (9.2/10), phản ánh sự tận tâm của đội ngũ điều dưỡng. Tuy nhiên, khía cạnh 'Công nghệ hỗ trợ' vẫn còn dư địa để cải thiện nhằm tối ưu hóa quy trình theo dõi sức khỏe.'.")
     # ===== DISPLAY OPTIONS =====
     unit: str = Field(..., description="Unit of measurement (e.g., điểm, %, level).")
     show_value: bool = Field(default=True, description="Show value labels on each data point.")
@@ -1756,7 +1756,7 @@ class GeneratePieChartSlide1(BaseModel):
     unit: str = Field(default="%", description="Unit of measurement for the values (e.g., %, $, users). This may be displayed in labels or legends.")
     show_value: bool = Field(default=True, description="Controls whether numeric values are displayed directly on the pie chart slices.")
     show_legend: bool = Field(default=True, description="Controls whether the legend (mapping colors to labels) is displayed on the slide.")
-    colors: List[str] = Field(default=["#5FD9D3", "#4ABFB9", "#36A6A0", "#248C87"], description="List of colors for pie chart slices. Each color corresponds to an item in 'items' by index order.")
+    colors: List[str] = Field(default=["#818CF8", "#2DD4BF", "#FBBF24", "#FB7185"], description="List of colors for pie chart slices. Each color corresponds to an item in 'items' by index order.")
     items: List[Dict[str, str | float]] = Field(..., 
         description=(
             "List of data points for the pie chart. "
@@ -1764,9 +1764,9 @@ class GeneratePieChartSlide1(BaseModel):
             "Example: {\"label\": \"AI Services\", \"value\": 45}"
         )
     )
-    accent_color: str = Field(default="#5FD9D3", description="Primary accent color used for highlights and borders.")
-    main_title_color: str = Field(default="#5FD9D3", description="Color of the main title.")
-    subtitle_color: str = Field(default="#FFFFFF", description="Color of the subtitle.")
+    accent_color: str = Field(default="#F472B6", description="Primary accent color used for highlights and borders.")
+    main_title_color: str = Field(default="#38BDF8", description="Color of the main title.")
+    subtitle_color: str = Field(default="#CCCCCC", description="Color of the subtitle.")
     insight_text_color: str = Field(default="#FFFFFF", description="Color of the insight text.")
     background_color: str = Field(default="#0F172A", description="Background color of the slide.")
 
@@ -1774,10 +1774,10 @@ class GeneratePieChartSlide2(BaseModel):
     """
     Input schema for generate_pie_chart_slide_2.
     """
-    main_title: str = Field(..., description="Primary heading of the slide.")
-    subtitle: str = Field(..., description="Secondary text displayed below the main title.")
-    insight: str = Field(..., description="Key analytical takeaway from the chart.")
-    unit: str = Field(..., description="Unit of measurement for the values.")
+    main_title: str = Field(..., description="Primary heading of the slide.Example: 'Technology Market Share 2024'.")
+    subtitle: str = Field(..., description="Secondary text displayed below the main title. Example: 'Source: Global Tech Market Report'.")
+    insight: str = Field(..., description="Key analytical takeaway from the chart.Example: 'AI services dominate the market with nearly half of the total share'.")
+    unit: str = Field(..., description="Unit of measurement for the values.Example: '%'.")
     show_value: bool = Field(default=True, description="Whether to display numeric values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to display the legend.")
     items: List[Dict[str, str | float]] = Field(
@@ -1807,9 +1807,9 @@ class GeneratePieChartSlide4(BaseModel):
     This schema defines all parameters required to generate
     a modern pie/donut chart slide with SVG rendering.
     """
-    main_title: str = Field(..., description="Main title of the slide (10–60 characters).")
-    subtitle: str = Field(..., description="Subtitle or data source displayed below the title.")
-    insight: str = Field(..., description="Short analytical insight highlighting the key takeaway from the chart.")
+    main_title: str = Field(..., description="Main title of the slide (10–60 characters). Example: 'Global Ecosystem Distribution'.")
+    subtitle: str = Field(..., description="Subtitle or data source displayed below the title. Example: 'Source: International Nature Conservation Report'.")
+    insight: str = Field(..., description="Short analytical insight highlighting the key takeaway from the chart.Example: 'Forests make up the largest share of Earth's ecosystems,supporting the highest biodiversity, while oceans and wetlands, play crucial roles in climate regulation and wildlife habitats.'.")
     unit: str = Field(default="%", description="Unit displayed in values (%, $, users, etc.).")
     show_value: bool = Field(default=True, description="Whether to display percentage values on chart slices.")
     show_legend: bool = Field(default=True, description="Whether to display the legend block.")
@@ -1969,16 +1969,16 @@ class GenerateScatterPlotChart1(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_1."""
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Early Childhood Development Analysis'")
     subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Correlation between Play Time and Social Skill Scores'")
-    insight: str = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot.")
+    insight: str = Field(..., description="Key analytical insight shown in the right panel, summarizing trends or correlations in the scatter plot. Example: 'Data shows a strong positive correlation: children with more than 4 hours of structured play weekly exhibit 30% higher social integration scores.'.")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Play Time (Hours)').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Social Skill Score (0-100)').")
     unit: str = Field(..., description="Unit displayed with values (e.g., 'pts', 'points').")
     show_value: bool = Field(default=False, description="Whether numeric values are displayed above each scatter point.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed for different data series.")
-    x_axis_min: float = Field(default=None, description="Minimum value for X-axis. If not provided, it is computed from data.")
-    x_axis_max: float = Field(default=None, description="Maximum value for X-axis. If not provided, it is computed from data.")
-    y_axis_min: float = Field(default=None, description="Minimum value for Y-axis. If not provided, it is computed from data.")
-    y_axis_max: float = Field(default=None, description="Maximum value for Y-axis. If not provided, it is computed from data.")
+    x_axis_min: float = Field(default=0, description="Minimum value for X-axis. If not provided, it is computed from data.")
+    x_axis_max: float = Field(default=8, description="Maximum value for X-axis. If not provided, it is computed from data.")
+    y_axis_min: float = Field(default=30, description="Minimum value for Y-axis. If not provided, it is computed from data.")
+    y_axis_max: float = Field(default=200, description="Maximum value for Y-axis. If not provided, it is computed from data.")
     series: List[Dict[str, str | List[Dict[str, float]]]] = Field(
         ...,
         description="""
@@ -2148,7 +2148,7 @@ class GenerateScatterPlotChartSlide3(BaseModel):
 class GenerateScatterPlotChartSlide4(BaseModel):
     """Input schema for generate_scatter_plot_chart_slide_4."""   
     main_title: str = Field(..., description="Main title displayed at the top of the slide (10–60 characters). Example: 'Study Effort Drives Skill Mastery'")
-    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Online Course Analysis – Q4 2024'")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title, typically indicating context or data source. Example: 'Data from Online Python Course – Q4 2024 Cohort'.")
     insight: str = Field(..., description="Key analytical insight shown in the left panel, summarizing trends or correlations in the scatter plot. Example: 'Higher weekly study hours generally lead to better skill assessment scores.'")
     x_axis: str = Field(..., description="Label for the X-axis (e.g., 'Weekly Study Hours').")
     y_axis: str = Field(..., description="Label for the Y-axis (e.g., 'Final Skill Assessment Score').")
@@ -2293,15 +2293,15 @@ class GenerateScatterPlotChartSlide7(BaseModel):
 
 class GenerateBarChartSlide1(BaseModel):
     """Input schema for generate_bar_chart_slide_1"""
-    main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters).")
-    subtitle: str = Field(..., description="Subtitle displayed below the main title.")
-    insight: str = Field(..., description="Text insight or general description.")
-    categories: List[str] = Field(..., description="List of categories for the X-axis.")
+    main_title: str = Field(..., description="Main title displayed at the top of the slide (10-60 characters). Example: 'Quarterly Logistics Performance'.")
+    subtitle: str = Field(..., description="Subtitle displayed below the main title.Example :'Performance metrics across key operational hubs'.")
+    insight: str = Field(..., description="Text insight or general description. Example:'Despite global headwinds, we maintained strong market share and improved delivery efficiency.'")
+    categories: List[str] = Field(..., description="List of categories for the X-axis.Example:'Q1,Q2,Q3,Q4'")
     series: List[Dict[str, str | List[float]]] = Field(
         ...,
         description="List of numeric values corresponding to each category for the bar sizes and labels. Example: {\"name\": \"Import\", \"data\": [45, 52, 68, 58]}"
     )
-    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M').")
+    unit: str = Field(..., description="Unit appended to values (e.g., '%', 'M','tons',).")
     show_value: bool = Field(default=True, description="Whether numeric values are displayed above chart bars.")
     show_legend: bool = Field(default=True, description="Whether legend is displayed on the left panel.")
     colors: List[str] = Field(default=["#1B2559", "#FF6B35", "#4B5563", "#9CA3AF"], description="List of hex colors for the bars and icons.")
