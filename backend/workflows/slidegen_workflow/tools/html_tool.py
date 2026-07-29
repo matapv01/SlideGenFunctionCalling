@@ -491,6 +491,7 @@ def generate_intro_slide1(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
+    main_title_font_style="italic",
     image_url="Image/generate_intro_slide1/Default_1.png"        # Thêm tham số cho URL ảnh
 ):
     """
@@ -618,7 +619,7 @@ def generate_intro_slide1(
             color: {title_color};
             margin: 0 0 2.5rem 0; 
             font-weight: 800;
-            font-style: {DEFAULT_FONT_FAMILY};
+            font-style: {main_title_font_style};
             line-height: 1.1;
             text-align: center;
             letter-spacing: -0.02em;
@@ -3103,7 +3104,7 @@ def generate_title_slide_5(
     year="20XX",
     main_title="Your Title Here",
     bottom_text="Here is where your presentation begins",
-    image_path="Image/generate_title_slide_5/Default_1.jpg",
+    image_url="Image/generate_title_slide_5/Default_1.jpg",
     bg_color="#b8c8d4",
     text_color="#2c3e50",
     show_clover=True,
@@ -3276,7 +3277,7 @@ def generate_title_slide_5(
 
     <div class="image-container">
         <div class="polaroid">
-            <img src="{image_path}" alt="Notebook Cover Image">
+            <img src="{image_url}" alt="Notebook Cover Image">
         </div>
     </div>
     
@@ -4644,6 +4645,7 @@ def generate_intro_slide(
     title_color="#333333",
     subtitle_color="#555555",
     line_color="#e6c35c",
+    main_title_font_style="normal",
     image_url="Image/generate_intro_slide1/Default_1.png"
 ):
     """
@@ -4770,7 +4772,7 @@ def generate_intro_slide(
             color: {title_color};
             margin: 0 0 3rem 0;
             font-weight: bold;
-            font-style: {DEFAULT_FONT_FAMILY};
+            font-style: {main_title_font_style};
             line-height: 1.2;
             text-align: center !important;
             display: block;
@@ -9394,6 +9396,7 @@ def generate_body_slide15(
     # Main parameters
     main_title="MainTitle",
     
+    subtitle="Subtitle",
     # Content parameters
     content1="""
         <ul>SubTitle1
@@ -9576,15 +9579,23 @@ def generate_body_slide15(
             margin-bottom: 0.75rem;
         }}
 
+        .slide-subtitle {{
+            font-size: 2rem;
+            color: {subtitle_color};
+            margin-top: -1rem;
+            margin-bottom: 2rem;
+            font-weight: 500;
+        }}
     </style>
 </head>
 <body>
     <div class="slide-inner-container">
         <!-- Title Section -->
-        <div class="title-section">
+        <div class="title-section" style="margin-bottom: 1rem;">
             <div class="title-accent"></div>
             <h1 class="main-title">{main_title}</h1>
         </div>
+        <h2 class="slide-subtitle">{subtitle}</h2>
         
         <!-- Content Layout -->
         <div class="content-layout">
@@ -12631,6 +12642,7 @@ def generate_split_layout_list_slide(
     dark_text_color="#6F6254",
     divider_color="#D3CFC7",
     # Font control parameters
+    font_size_multiplier=1.0,
     main_title_font_size=None,
     point_title_font_size=None,
     point_description_font_size=None,
@@ -13218,7 +13230,7 @@ def generate_flexible_columns_slide(
 
 
 def generate_text_with_image_slide(
-    title="Tiltle Tiltle TiltleTiltle Tiltle",
+    title="Tiltle.",
     text_content="Content.",
     image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1920&q=80",
     text_color="#34495E",
@@ -15276,7 +15288,8 @@ def generate_colorful_team_grid_slide(
     ],
     bg_color="#F8FAFC",
     title_color="#111827",
-    card_text_color="#1F2937"
+    card_text_color="#1F2937",
+    subtitle_color="#1F2937"
 ):
     """
     Generates a vibrant, STATIC team slide with a spacious and balanced grid layout.
@@ -18764,7 +18777,7 @@ def generate_tech_thank_you_slide(
 
 def generate_minimalist_thank_you_slide_2(
     main_title="END.",
-    footer_note="Copyright 2026 Studio",
+    footer_note="2026 Portfolio Studio",
     text_color="#000000",
     bg_color="#FFFFFF",
 ):
