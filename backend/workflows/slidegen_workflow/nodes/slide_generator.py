@@ -12,6 +12,7 @@ from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOO
 from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
+    QWEN_COT_GENERATOR_SYSTEM_PROMPT,
     QWEN_GENERATOR_HUMAN_TEMPLATE,
     HUMAN_PROMPT_TEMPLATE,
     CONTENT_PROMPT,
@@ -316,8 +317,11 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 qwen_user_prompt += f"\n\n[PREVIOUS EVALUATION / ERRORS TO CORRECT]\n{full_feedback.strip()}"
 
             # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
+            use_cot = state.get("use_cot", True)
+            qwen_base_sys = QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT
+            full_qwen_system_prompt = generator_system_prompt + "\n\n" + qwen_base_sys
             messages = [
-                {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
+                {"role": "system", "content": full_qwen_system_prompt},
                 {"role": "user", "content": qwen_user_prompt},
             ]
             model_name, base_url = _get_qwen_config(llm)

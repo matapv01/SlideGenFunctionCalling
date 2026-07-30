@@ -33,6 +33,10 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
     QWEN_COT_GENERATOR_SYSTEM_PROMPT,
     QWEN_GENERATOR_HUMAN_TEMPLATE,
+    MATH_EQUATION_RULES,
+    SLIDE_TYPE_PROMPTS,
+    CONTENT_PROMPT,
+    INTRO_PROMPT,
 )
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
 from backend.config import EXECUTOR_MAX_RETRIES
@@ -157,7 +161,12 @@ def run_single_test(
     tool_desc_text = build_tool_description_text(tool_schemas)
     
     # Select system prompt
-    system_prompt = QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT
+    slide_type_prompt = SLIDE_TYPE_PROMPTS.get(category, INTRO_PROMPT)
+    if category == 'CONTENT_TOOLS':
+        slide_type_prompt = CONTENT_PROMPT.format(highlight_instruction="- Highlight key phrases with <span style='font-weight: bold;'>")
+    generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + slide_type_prompt
+    
+    system_prompt = generator_system_prompt + "\n\n" + (QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT)
     
     # Build user prompt
     user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
@@ -377,7 +386,7 @@ def main():
             print(f"     {cat}: {cat_pass}/{len(cat_results)} pass")
     
     # Save results
-    output_path = os.path.join(os.path.dirname(__file__), "test_cot_results.json")
+    output_path = os.path.join(os.path.dirname(__file__), "test_cot_results_2_new_prompt.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
     print(f"\n  💾 Detailed results saved to: {output_path}")
