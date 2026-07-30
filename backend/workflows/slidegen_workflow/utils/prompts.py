@@ -491,7 +491,15 @@ Please analyze this document and create a hierarchical structure with appropriat
 
 # ================================= QWEN GENERATOR PROMPTS =================================
 
-QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY a function call. Do NOT use thinking mode. Do NOT output <think> tags.
+QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY a function call inside <tool_call> tags. Do NOT use thinking mode. Do NOT output <think> tags.
+
+CRITICAL JSON FORMATTING RULES:
+1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
+2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside string values as `\"` or use single quotes `'` inside HTML. NEVER put raw literal newlines in JSON strings.
+3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
+4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
+5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
+6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
 
 Example:
 <tool_call>
@@ -510,9 +518,10 @@ Analyze the design instruction and slide content carefully. Then:
 3. Plan every parameter value — ensure all REQUIRED fields are filled with real, meaningful content from the slide
 4. Self-check: Are there any None/null/empty values for required fields? Fix them.
 5. Self-check: Are color values valid hex codes (e.g., #2563EB)? Are lists actually lists?
+6. Self-check JSON syntax: Are all open brackets properly closed? Are quotes escaped? No trailing commas?
 
 STEP 2 — ACT (output the tool call):
-Output EXACTLY ONE function call inside <tool_call> tags. The JSON must be valid and complete.
+Output EXACTLY ONE function call inside <tool_call> tags. The JSON must be strictly valid and complete.
 
 CRITICAL RULES:
 - Every required parameter MUST have a real, meaningful value (NOT None, null, "", or placeholder text)
@@ -521,6 +530,14 @@ CRITICAL RULES:
 - String content MUST come from the slide content provided, NOT made up
 - Output language MUST match the language of the slide content
 
+CRITICAL JSON FORMATTING & SYNTAX RULES:
+1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
+2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside string values as `\"` or use single quotes `'` inside HTML. NEVER put raw literal newlines in JSON strings.
+3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
+4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
+5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
+6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
+
 Example:
 <think>
 The content is about FPT Corporation's journey. The design instruction suggests a split layout with key points.
@@ -528,7 +545,7 @@ Available tools: generate_split_layout_list_slide, generate_content_slide, gener
 Best match: generate_split_layout_list_slide — it supports a main title + list of points with titles and descriptions.
 Required params: main_title (str), points (List[dict]), left_bg_color, right_bg_color...
 Let me fill them with actual content from the slide text.
-Self-check: All required fields filled ✓, colors are hex ✓, points is a list ✓
+Self-check: All required fields filled ✓, colors are hex ✓, points is a list ✓, JSON brackets matched ✓
 </think>
 <tool_call>
 {"name": "generate_split_layout_list_slide", "arguments": {"main_title": "Hành trình FPT", "points": [{"title": "Nền tảng", "description": "Đội ngũ kỹ sư hùng hậu"}], "left_bg_color": "#FFFFFF", "right_bg_color": "#F8FAFC"}}
