@@ -308,11 +308,12 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 slide_content=current_text
             )
 
-            if previous_evaluation and previous_evaluation != "No evaluation yet.":
-                qwen_user_prompt += f"\n\n[PREVIOUS EVALUATION / ERRORS TO CORRECT]\n{previous_evaluation}"
+            if previous_function_call and previous_function_call != {}:
+                qwen_user_prompt += f"\n\n[YOUR PREVIOUS TOOL CALL ATTEMPT]\n{json.dumps(previous_function_call, indent=2)}"
 
-            if retry_feedback:
-                qwen_user_prompt += f"\n\n[PREVIOUS ERROR TO CORRECT]\n{retry_feedback}"
+            full_feedback = (previous_evaluation if previous_evaluation != "No evaluation yet." else "") + retry_feedback
+            if full_feedback.strip():
+                qwen_user_prompt += f"\n\n[PREVIOUS EVALUATION / ERRORS TO CORRECT]\n{full_feedback.strip()}"
 
             # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
             messages = [
