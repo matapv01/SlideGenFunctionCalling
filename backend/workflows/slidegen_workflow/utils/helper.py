@@ -247,14 +247,23 @@ def parse_tool_call_json(text: str) -> Optional[dict]:
     if not text:
         return None
     cleaned = text.strip()
-    # Strip <tool_call>...</tool_call> wrapper
-    if "<tool_call>" in cleaned and "</tool_call>" in cleaned:
-        cleaned = cleaned.split("<tool_call>")[-1].split("</tool_call>")[0].strip()
+
+    # 1. Try extracting from <tool_call> tag (even if closing tag is missing)
+    tool_call_match = re.search(r"<tool_call>\s*(\{.*)", cleaned, re.DOTALL)
+    if tool_call_match:
+        raw_json_str = tool_call_match.group(1)
+        if "</tool_call>" in raw_json_str:
+            raw_json_str = raw_json_str.split("</tool_call>")[0].strip()
+        cleaned = raw_json_str.strip()
+
+    # 2. Try code blocks ```json ... ```
+    if "```json" in cleaned:
+        cleaned = cleaned.split("```json")[1].split("```")[0].strip()
+    elif "```" in cleaned:
+        cleaned = cleaned.split("```")[1].split("```")[0].strip()
+
+    # 3. Direct JSON parse
     try:
-        if "```json" in cleaned:
-            cleaned = cleaned.split("```json")[1].split("```")[0].strip()
-        elif "```" in cleaned:
-            cleaned = cleaned.split("```")[1].split("```")[0].strip()
         parsed = json.loads(cleaned)
         if isinstance(parsed, list) and len(parsed) > 0:
             parsed = parsed[0]
@@ -265,6 +274,20 @@ def parse_tool_call_json(text: str) -> Optional[dict]:
             }
     except Exception:
         pass
+
+    # 4. Fallback: Search for any JSON object containing "name" and "arguments" / "args"
+    try:
+        json_obj_match = re.search(r'\{[^{}]*"name"\s*:\s*"[^"]+"\s*,\s*"(?:arguments|args)"\s*:\s*\{.*?\}\s*\}', text, re.DOTALL)
+        if json_obj_match:
+            parsed = json.loads(json_obj_match.group(0))
+            if isinstance(parsed, dict) and "name" in parsed:
+                return {
+                    "name": parsed["name"],
+                    "arguments": parsed.get("arguments") or parsed.get("args") or {}
+                }
+    except Exception:
+        pass
+
     return None
 
 
