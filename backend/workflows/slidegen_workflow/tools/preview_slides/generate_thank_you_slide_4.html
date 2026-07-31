@@ -1,0 +1,88 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Thank You Slide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background: linear-gradient(135deg, #5B9BD5 0%, #A8D8F0 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .speech-bubble {
+            position: relative;
+            background-color: #FFFFFF;
+            padding: 60px 120px;
+            border-radius: 20px;
+            box-shadow: 
+                0 20px 60px rgba(0, 0, 0, 0.3),
+                0 10px 30px rgba(0, 0, 0, 0.2);
+        }
+        
+        .speech-tail {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 50px solid transparent;
+            border-right: 50px solid transparent;
+            border-top: 50px solid #FFFFFF;
+            filter: drop-shadow(0 10px 20px rgba(0, 0, 0, 0.2));
+        }
+        
+        .thank-you-text {
+            font-size: 5rem;
+            font-weight: 900;
+            color: #2C5F8D;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            text-align: center;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            text-shadow: 
+                3px 3px 0px rgba(0, 0, 0, 0.1),
+                -1px -1px 0px rgba(255, 255, 255, 0.5);
+        }
+        
+        /* Responsive scaling for smaller screens */
+        @media screen and (max-width: 1920px) {
+            .slide-container {
+                width: 100vw;
+                height: 100vh;
+                transform-origin: center;
+            }
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="speech-bubble">
+            <div class="thank-you-text">THANK YOU!</div>
+            
+        <div class="speech-tail"></div>
+    
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Section Slide - Main Title Here</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f0;
+            position: relative;
+        }
+        
+        /* Top-left circles - partially visible */
+        .circle-group-top {
+            position: absolute;
+            top: -60px;
+            left: -60px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .circle {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+        }
+        
+        .circle-blue {
+            background-color: #6B9FBD;
+        }
+        
+        .circle-yellow {
+            background-color: #E8B44F;
+        }
+        
+        .circle-teal {
+            background-color: #6FBAAA;
+        }
+        
+        /* Bottom-right circles - partially visible */
+        .circle-group-bottom {
+            position: absolute;
+            bottom: -60px;
+            right: -60px;
+            display: flex;
+            gap: 10px;
+        }
+        
+        /* Content */
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            max-width: 1400px;
+        }
+        
+        .main-title {
+            font-size: 90px;
+            font-weight: 700;
+            color: #E8B44F;
+            line-height: 1.1;
+            margin-bottom: 30px;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 36px;
+            font-weight: 400;
+            color: #666666;
+            line-height: 1.4;
+        }
+        
+    </style>
+</head>
+<body>
+            <!-- Top-left decorative circles -->
+            <div class="circle-group-top">
+                <div class="circle circle-blue"></div>
+                <div class="circle circle-yellow"></div>
+                <div class="circle circle-teal"></div>
+            </div>
+            
+            <!-- Bottom-right decorative circles -->
+            <div class="circle-group-bottom">
+                <div class="circle circle-blue"></div>
+                <div class="circle circle-yellow"></div>
+                <div class="circle circle-teal"></div>
+            </div>
+            
+            <!-- Main content -->
+            <div class="content">
+                <h1 class="main-title">Main Title Here</h1>
+                <p class="subtitle">You could enter a subtitle here if you need it</p>
+            </div>
+</body>
+</html>

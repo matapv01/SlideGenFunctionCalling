@@ -1,0 +1,179 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Main Title Here - Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            body {
+                margin: 0;
+                padding: 0;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                overflow: hidden;
+            }
+            
+            .slide-container {
+                width: 1920px;
+                height: 1080px;
+                background: #9BD89B;
+                position: relative;
+                display: flex;
+                justify-content: center;
+                align-items: center;
+            }
+            
+            .notebook {
+                width: 1400px;
+                height: 700px;
+                background: #FFFFFF;
+                border-radius: 0 15px 15px 0;
+                box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+                position: relative;
+                display: flex;
+                flex-direction: column;
+                align-items: center;
+                justify-content: center;
+                padding: 60px 100px 60px 140px;
+                background-image: 
+                    repeating-linear-gradient(
+                        to bottom,
+                        transparent 0px,
+                        transparent 39px,
+                        rgba(180, 180, 180, 0.25) 39px,
+                        rgba(180, 180, 180, 0.25) 40px
+                    ),
+                    linear-gradient(
+                        to right,
+                        transparent 0px,
+                        transparent 89px,
+                        rgba(255, 100, 100, 0.4) 89px,
+                        rgba(255, 100, 100, 0.4) 92px,
+                        transparent 92px
+                    );
+            }
+            
+            .spiral-binding {
+                position: absolute;
+                left: 15px;
+                top: 40px;
+                bottom: 40px;
+                width: 60px;
+                display: flex;
+                flex-direction: column;
+                justify-content: space-around;
+                align-items: center;
+                z-index: 10;
+            }
+            
+            .spiral-ring {
+                width: 35px;
+                height: 45px;
+                border: 5px solid #2a2a2a;
+                border-radius: 50%;
+                background: linear-gradient(to right, rgba(0,0,0,0.1) 0%, transparent 50%, rgba(255,255,255,0.3) 100%);
+                box-shadow: inset -2px 0 4px rgba(0,0,0,0.3), inset 2px 0 4px rgba(255,255,255,0.3);
+            }
+            
+            .sticky-notes {
+                position: absolute;
+                top: -50px;
+                right: 200px;
+                display: flex;
+                flex-direction: row;
+                gap: 30px;
+                z-index: 5;
+            }
+            
+            .sticky-note {
+                width: 180px;
+                height: 100px;
+                border-radius: 3px;
+                box-shadow: 0 6px 15px rgba(0,0,0,0.2);
+                position: relative;
+            }
+            
+            .sticky-note::before {
+                content: '';
+                position: absolute;
+                top: -10px;
+                left: 50%;
+                transform: translateX(-50%);
+                width: 60px;
+                height: 20px;
+                background: rgba(255, 255, 255, 0.4);
+                border-radius: 2px;
+            }
+            
+            .section-number {
+                font-size: 4rem;
+                font-weight: 900;
+                color: #4A4A4A;
+                font-family: 'Be Vietnam Pro', sans-serif;
+            }
+            
+            .main-title {
+                font-size: 4rem;
+                font-weight: 900;
+                color: #A84A3A;
+                text-align: center;
+                margin-bottom: 50px;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                letter-spacing: 1px;
+                width: 100%;
+                max-width: 1200px;
+                z-index: 3;
+            }
+            
+            .subtitle {
+                font-size: 2rem;
+                font-weight: 400;
+                color: #5A5A5A;
+                text-align: center;
+                line-height: 1.6;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                width: 100%;
+                max-width: 1200px;
+                z-index: 3;
+            }
+            
+            
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="notebook">
+                <div class="spiral-binding">
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                    <div class="spiral-ring"></div>
+                </div>
+                
+                
+        <div class="sticky-notes">
+            <div class="sticky-note" style="background: #FFD966;"></div>
+            <div class="sticky-note" style="background: #FFB3B3;"></div>
+        </div>
+        
+                
+                <div class="main-title">Main Title Here</div>
+                <div class="subtitle">You can enter a subtitle here if you need it</div>
+            </div>
+        </div>
+    </body>
+    </html>
+    

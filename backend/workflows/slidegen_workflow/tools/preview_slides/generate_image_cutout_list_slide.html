@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key Points Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { font-size: 16px; }
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            overflow: hidden;
+            background-color: #111;
+        }
+        
+        .slide-container {
+            width: 100%; height: 100vh;
+            position: relative;
+            background-image: url('https://images.unsplash.com/photo-1541746972996-4e0b0f43e02a?q=80&w=2940&auto=format&fit=crop');
+            background-size: cover;
+            background-position: center;
+        }
+        
+        .content-panel {
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 70%;
+            height: 100%;
+            background-color: #1A1A22;
+            display: flex;
+            align-items: center;
+            justify-content: flex-start;
+            padding: 4rem 4rem 4rem 6rem;
+            box-sizing: border-box;
+        }
+        
+        .decorative-spinner {
+            position: absolute;
+            top: 2rem;
+            right: 3rem;
+            animation: spin 10s linear infinite;
+        }
+
+
+        .list-container {
+            width: 100%;
+            max-width: 35rem; /* 560px */
+            position: relative;
+            padding-left: 1.5rem;
+        }
+        
+        /* The vertical guide line */
+        .list-container::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0.5rem;
+            bottom: 0.5rem;
+            width: 2px;
+            background-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .list-item {
+            position: relative;
+            padding-left: 3rem;
+            margin-bottom: 3.5rem;
+        }
+        .list-item:last-child { margin-bottom: 0; }
+
+        /* The custom bullet point */
+        .list-item::before {
+            content: '';
+            position: absolute;
+            left: -0.6rem; /* -(dot_width/2) */
+            top: 0.5rem;
+            width: 1.2rem;
+            height: 1.2rem;
+            background-color: #8A63D2;
+            border-radius: 50%;
+        }
+        
+        .item-title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 600;
+            color: #FFFFFF;
+            margin: 0 0 0.5rem 0;
+        }
+        
+        .item-description {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 1.6rem;
+            color: #C0C0C0;
+            line-height: 1.6;
+            margin: 0;
+            opacity: 0.9;
+        }
+
+        @media (max-width: 48em) {
+            .content-panel {
+                width: 100%;
+                padding: 2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="content-panel">
+            
+    <svg class="decorative-spinner" width="60" height="60" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <g fill="none" stroke="#8A63D2" stroke-width="4">
+            <circle cx="50" cy="50" r="45" stroke-dasharray="2.9 8.8" transform="rotate(0 50 50)"/>
+        </g>
+    </svg>
+    
+            <div class="list-container">
+                <div class="list-item">
+            <h3 class="item-title">Add a main point</h3>
+            <p class="item-description">Elaborate on what you want to discuss.</p>
+        </div><div class="list-item">
+            <h3 class="item-title">Add a main point</h3>
+            <p class="item-description">Elaborate on what you want to discuss.</p>
+        </div><div class="list-item">
+            <h3 class="item-title">Add a main point</h3>
+            <p class="item-description">Elaborate on what you want to discuss.</p>
+        </div><div class="list-item">
+            <h3 class="item-title">Add a main point</h3>
+            <p class="item-description">Elaborate on what you want to discuss.</p>
+        </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,113 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            html, body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                background-color: #ffffff; overflow: hidden;
+            }
+            
+            /* Decorative Elements */
+            .left-shape {
+                position: absolute;
+                width: 1200px;
+                height: 1200px;
+                background-color: #f1fcf4;
+                border-radius: 50%;
+                left: -450px;
+                top: -100px;
+                z-index: 0;
+            }
+            .dot-grid {
+                position: absolute;
+                top: 80px;
+                left: 350px;
+                display: grid;
+                grid-template-columns: repeat(10, 15px);
+                gap: 15x;
+                z-index: 1;
+            }
+  
+            
+            /* Header */
+            .header {
+                margin-bottom: 40px;
+                padding: 80px 100px 0 100px;
+                position: relative;
+                z-index: 2;
+            }
+            h1 {
+                font-size: 64px;
+                font-weight: 800;
+                color: #1F2937;
+                margin: 0;
+            }
+            .subtitle {
+                font-size: 30px;
+                color: #4B5563;
+                margin-top: 15px;
+            }
+            
+            /* Main Content Flex */
+            .main-flex {
+                display: flex;
+                height: calc(100vh - 300px);
+                gap: 60px;
+                padding: 0 100px 80px 100px;
+                position: relative;
+                z-index: 2;
+            }
+            .left-panel {
+                flex: 1;
+                display: flex;
+                flex-direction: column;
+                justify-content: flex-start;
+            }
+            .right-panel {
+                flex: 1.5;
+                background: rgba(255, 255, 255, 0.6);
+                border-radius: 40px;
+                padding: 40px;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.08);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+            }
+            .insight {
+                font-size: 28px;
+                color: #374151;
+                line-height: 1.7;
+                background: #f8fafc;
+                border-left: 5px solid #4F46E5;
+                padding: 35px 40px;
+                border-radius: 16px;
+            }
+        </style>
+    </head>
+    <body>
+        <!-- Decorative Background Elements -->
+        <div class="left-shape"></div>
+        
+        <!-- Header -->
+        <div class="header">
+            <h1>Model Accuracy Converges with Minor Overfitting</h1>
+            <p class="subtitle">ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)ResNet-18 trained on CIFAR-10 Dataset (30 Epochs)</p>
+        </div>
+        
+        <!-- Main Content -->
+        <div class="main-flex">
+            <div class="left-panel">
+                <div class="insight">Training and validation accuracy both increase steadily during the first 15 epochs, indicating effective learning and rapid convergence. After epoch 20, training accuracy continues to improve while validation accuracy plateaus, suggesting mild overfitting. The gap remains controlled, implying overall stable generalization performance.</div>
+            </div>
+            <div class="right-panel">
+                <svg width="1000" height="500" viewBox="0 0 1000 500">
+                    <line x1="80" y1="440.0" x2="960" y2="440.0" stroke="#e2e8f0" stroke-width="1" /><line x1="80" y1="345.0" x2="960" y2="345.0" stroke="#e2e8f0" stroke-width="1" /><line x1="80" y1="250.0" x2="960" y2="250.0" stroke="#e2e8f0" stroke-width="1" /><line x1="80" y1="155.0" x2="960" y2="155.0" stroke="#e2e8f0" stroke-width="1" /><line x1="80" y1="60.0" x2="960" y2="60.0" stroke="#e2e8f0" stroke-width="1" /><path d="M 80.0 440 L 80.0 408.3333333333333 L 226.66666666666666 300.6666666666667 L 373.3333333333333 218.33333333333331 L 520.0 161.33333333333337 L 666.6666666666666 123.33333333333331 L 813.3333333333334 98.0 L 960.0 79.0 L 960.0 440 Z" fill="#4F46E5" fill-opacity="0.1" /><path d="M 80.0 408.3333333333333 L 226.66666666666666 300.6666666666667 L 373.3333333333333 218.33333333333331 L 520.0 161.33333333333337 L 666.6666666666666 123.33333333333331 L 813.3333333333334 98.0 L 960.0 79.0" fill="none" stroke="#4F46E5" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="80.0" cy="408.3333333333333" r="8" fill="white" stroke="#4F46E5" stroke-width="4" /><circle cx="226.66666666666666" cy="300.6666666666667" r="8" fill="white" stroke="#4F46E5" stroke-width="4" /><circle cx="373.3333333333333" cy="218.33333333333331" r="8" fill="white" stroke="#4F46E5" stroke-width="4" /><circle cx="520.0" cy="161.33333333333337" r="8" fill="white" stroke="#4F46E5" stroke-width="4" /><circle cx="666.6666666666666" cy="123.33333333333331" r="8" fill="white" stroke="#4F46E5" stroke-width="4" /><circle cx="813.3333333333334" cy="98.0" r="8" fill="white" stroke="#4F46E5" stroke-width="4" /><circle cx="960.0" cy="79.0" r="8" fill="white" stroke="#4F46E5" stroke-width="4" /><path d="M 80.0 440 L 80.0 421.0 L 226.66666666666666 313.33333333333337 L 373.3333333333333 230.99999999999997 L 520.0 174.0 L 666.6666666666666 142.33333333333331 L 813.3333333333334 136.0 L 960.0 136.0 L 960.0 440 Z" fill="#22C55E" fill-opacity="0.1" /><path d="M 80.0 421.0 L 226.66666666666666 313.33333333333337 L 373.3333333333333 230.99999999999997 L 520.0 174.0 L 666.6666666666666 142.33333333333331 L 813.3333333333334 136.0 L 960.0 136.0" fill="none" stroke="#22C55E" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" /><circle cx="80.0" cy="421.0" r="8" fill="white" stroke="#22C55E" stroke-width="4" /><circle cx="226.66666666666666" cy="313.33333333333337" r="8" fill="white" stroke="#22C55E" stroke-width="4" /><circle cx="373.3333333333333" cy="230.99999999999997" r="8" fill="white" stroke="#22C55E" stroke-width="4" /><circle cx="520.0" cy="174.0" r="8" fill="white" stroke="#22C55E" stroke-width="4" /><circle cx="666.6666666666666" cy="142.33333333333331" r="8" fill="white" stroke="#22C55E" stroke-width="4" /><circle cx="813.3333333333334" cy="136.0" r="8" fill="white" stroke="#22C55E" stroke-width="4" /><circle cx="960.0" cy="136.0" r="8" fill="white" stroke="#22C55E" stroke-width="4" /><text x="80.0" y="480" font-size="18" text-anchor="middle" fill="#64748b">Epoch 1</text><text x="226.66666666666666" y="480" font-size="18" text-anchor="middle" fill="#64748b">Epoch 5</text><text x="373.3333333333333" y="480" font-size="18" text-anchor="middle" fill="#64748b">Epoch 10</text><text x="520.0" y="480" font-size="18" text-anchor="middle" fill="#64748b">Epoch 15</text><text x="666.6666666666666" y="480" font-size="18" text-anchor="middle" fill="#64748b">Epoch 20</text><text x="813.3333333333334" y="480" font-size="18" text-anchor="middle" fill="#64748b">Epoch 25</text><text x="960.0" y="480" font-size="18" text-anchor="middle" fill="#64748b">Epoch 30</text>
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html>
+    

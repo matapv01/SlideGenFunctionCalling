@@ -1,0 +1,206 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+
+    <style>
+
+    html,body{
+    width:1920px;
+    height:1080px;
+    margin:0;
+    padding:0;
+    overflow:hidden;
+    font-family:'Inter, sans-serif';
+    background:#F8F6F1;
+    --accent-color: #C9A227;
+    --main-title-color: #3A2F1F;
+    --subtitle-color: #6B5E3B;
+    --insight-text-color: #4B4030;
+    --main-title-font-size: 70px;
+    --subtitle-font-size: 32px;
+    --insight-font-size: 34px;
+    --color-0: #C9A227;
+    --color-1: #A8892F;
+    --color-2: #7A6525;
+    --color-3: #4F4318;
+    }
+
+    .header{
+    position:absolute;
+    top:80px;
+    left:100px;
+    border-left:12px solid var(--accent-color);
+    padding-left:35px;
+    }
+
+    h1{
+    font-size:var(--main-title-font-size);
+    color:var(--main-title-color);
+    margin:0;
+    text-transform:uppercase;
+    letter-spacing:2px;
+    }
+
+    .subtitle{
+    font-size:var(--subtitle-font-size);
+    color:var(--subtitle-color);
+    margin-top:10px;
+    }
+
+    .chart{
+    position:absolute;
+    left:100px;
+    top:260px;
+    }
+
+    .insight{
+    position:absolute;
+    right:120px;
+    top:320px;
+    width:640px;
+    background:white;
+    padding:45px;
+    border-radius:20px;
+    box-shadow:20px 20px 60px rgba(139,115,85,0.1);
+    border-bottom:8px solid var(--accent-color);
+    }
+
+    .insight-text{
+    font-size:var(--insight-font-size);
+    color:var(--insight-text-color);
+    line-height:1.6;
+    font-style:italic;
+    }
+
+    .legend{
+    position:absolute;
+    right:550px;
+    top:750px;
+    width:300px;
+    }
+
+    </style>
+    </head>
+
+    <body>
+
+    <div class="header">
+    <h1>Global Personal Investment Allocation</h1>
+    <div class="subtitle">Source: International Financial Market Report</div>
+    </div>
+
+    <div class="chart">
+    <svg width="900" height="700" viewBox="0 0 900 700">
+    
+        <path d="M 450.0 350.0 L 450.0 70.0 A 280 280 0 0 1 536.5247584249853 616.295824562643 Z" fill="#C9A227" stroke="#F5EFE6" stroke-width="3"/>
+        
+            <text x="643.586914756647" y="319.33884485211473"
+            font-size="20"
+            text-anchor="middle"
+            fill="white"
+            font-weight="600"
+            style="text-shadow:1px 1px 2px rgba(0,0,0,0.3)">
+            45.0%
+            </text>
+            
+        <path d="M 450.0 350.0 L 536.5247584249853 616.295824562643 A 280 280 0 0 1 183.70417543735704 436.5247584249853 Z" fill="#A8892F" stroke="#F5EFE6" stroke-width="3"/>
+        
+            <text x="361.01786205104884" y="524.6372787409201"
+            font-size="20"
+            text-anchor="middle"
+            fill="white"
+            font-weight="600"
+            style="text-shadow:1px 1px 2px rgba(0,0,0,0.3)">
+            25.0%
+            </text>
+            
+        <path d="M 450.0 350.0 L 183.70417543735704 436.5247584249853 A 280 280 0 0 1 285.4201293581075 123.47524157501473 Z" fill="#7A6525" stroke="#F5EFE6" stroke-width="3"/>
+        
+            <text x="263.5929228061499" y="289.4326691025103"
+            font-size="20"
+            text-anchor="middle"
+            fill="white"
+            font-weight="600"
+            style="text-shadow:1px 1px 2px rgba(0,0,0,0.3)">
+            20.0%
+            </text>
+            
+        <path d="M 450.0 350.0 L 285.4201293581075 123.47524157501473 A 280 280 0 0 1 449.99999999999994 70.0 Z" fill="#4F4318" stroke="#F5EFE6" stroke-width="3"/>
+        
+            <text x="389.43266910251026" y="163.59292280614991"
+            font-size="20"
+            text-anchor="middle"
+            fill="white"
+            font-weight="600"
+            style="text-shadow:1px 1px 2px rgba(0,0,0,0.3)">
+            10.0%
+            </text>
+            
+    </svg>
+    </div>
+
+    <div class="insight">
+    <div class="insight-text">"Stocks remain the dominant investment choice for long-term wealth growth, while bonds and real estate continue to provide stability and diversification in global personal portfolios."</div>
+    </div>
+
+    <div class="legend">
+    
+            <div style="display:flex; align-items:center; margin-bottom:18px;">
+                <div style="width:24px;height:24px;background:#C9A227;
+                border-radius:4px;margin-right:15px;"></div>
+
+                <div style="font-size:24px;color:#3A2F1F;flex:1;">
+                    Stocks
+                </div>
+
+                <div style="font-size:24px;color:#C9A227;font-weight:bold;">
+                    45%
+                </div>
+            </div>
+            
+            <div style="display:flex; align-items:center; margin-bottom:18px;">
+                <div style="width:24px;height:24px;background:#A8892F;
+                border-radius:4px;margin-right:15px;"></div>
+
+                <div style="font-size:24px;color:#3A2F1F;flex:1;">
+                    Bonds
+                </div>
+
+                <div style="font-size:24px;color:#C9A227;font-weight:bold;">
+                    25%
+                </div>
+            </div>
+            
+            <div style="display:flex; align-items:center; margin-bottom:18px;">
+                <div style="width:24px;height:24px;background:#7A6525;
+                border-radius:4px;margin-right:15px;"></div>
+
+                <div style="font-size:24px;color:#3A2F1F;flex:1;">
+                    Real Estate
+                </div>
+
+                <div style="font-size:24px;color:#C9A227;font-weight:bold;">
+                    20%
+                </div>
+            </div>
+            
+            <div style="display:flex; align-items:center; margin-bottom:18px;">
+                <div style="width:24px;height:24px;background:#4F4318;
+                border-radius:4px;margin-right:15px;"></div>
+
+                <div style="font-size:24px;color:#3A2F1F;flex:1;">
+                    Commodities
+                </div>
+
+                <div style="font-size:24px;color:#C9A227;font-weight:bold;">
+                    10%
+                </div>
+            </div>
+            
+    </div>
+
+    </body>
+    </html>
+    

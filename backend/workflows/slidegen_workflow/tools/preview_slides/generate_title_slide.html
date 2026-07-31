@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BUSINESS PLAN</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { font-size: 16px; width: 1920px; height: 1080px; }
+        body, html {
+            height: 1080px;
+            width: 1920px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a4b8c 0%, #2a6cb7 100%);
+            position: relative;
+            color: #FFFFFF;
+            padding: 60px;
+            box-sizing: border-box;
+        }
+        
+        /* Content wrapper for scaling */
+        .content-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }
+        
+        .outer-wrapper {
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }
+
+        .content-frame {
+            width: 90%;
+            max-width: 1200px;
+            padding: 80px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 5;
+        }
+        
+        .content-frame:not(.no-border) {
+            border: 2px dashed rgba(255, 255, 255, 0.3);
+        }
+        
+        .title {
+            font-size: 6rem;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 20px;
+            z-index: 10;
+            letter-spacing: 2px;
+        }
+        
+        .subtitle {
+            font-size: 4rem;
+            text-align: center;
+            z-index: 10;
+        }
+        
+        /* Decorative triangles */
+        .triangle {
+            position: absolute;
+            width: 0;
+            height: 0;
+            opacity: 0.2;
+            z-index: 1;
+        }
+        
+        .triangle-1 {
+            border-left: 100px solid transparent;
+            border-right: 100px solid transparent;
+            border-bottom: 200px solid rgba(255, 255, 255, 0.1);
+            top: 10%;
+            left: 5%;
+            transform: rotate(15deg);
+        }
+        
+        .triangle-2 {
+            border-left: 80px solid transparent;
+            border-right: 80px solid transparent;
+            border-bottom: 160px solid rgba(255, 255, 255, 0.1);
+            top: 20%;
+            right: 10%;
+            transform: rotate(-25deg);
+        }
+        
+        .triangle-3 {
+            border-left: 120px solid transparent;
+            border-right: 120px solid transparent;
+            border-bottom: 240px solid rgba(255, 255, 255, 0.1);
+            bottom: 5%;
+            left: 15%;
+            transform: rotate(45deg);
+        }
+        
+        .triangle-4 {
+            border-left: 90px solid transparent;
+            border-right: 90px solid transparent;
+            border-bottom: 180px solid rgba(255, 255, 255, 0.1);
+            bottom: 15%;
+            right: 5%;
+            transform: rotate(-35deg);
+        }
+        
+        /* City skyline */
+        .skyline {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 100px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 100"><path d="M0,100 L0,70 L20,70 L20,40 L40,40 L40,60 L60,60 L60,50 L80,50 L80,80 L100,80 L100,60 L120,60 L120,30 L140,30 L140,50 L160,50 L160,70 L180,70 L180,50 L200,50 L200,30 L220,30 L220,40 L240,40 L240,60 L260,60 L260,50 L280,50 L280,70 L300,70 L300,40 L320,40 L320,60 L340,60 L340,50 L360,50 L360,30 L380,30 L380,60 L400,60 L400,40 L420,40 L420,70 L440,70 L440,50 L460,50 L460,60 L480,60 L480,30 L500,30 L500,50 L520,50 L520,40 L540,40 L540,60 L560,60 L560,70 L580,70 L580,50 L600,50 L600,40 L620,40 L620,60 L640,60 L640,30 L660,30 L660,50 L680,50 L680,70 L700,70 L700,60 L720,60 L720,40 L740,40 L740,50 L760,50 L760,30 L780,30 L780,60 L800,60 L800,50 L820,50 L820,70 L840,70 L840,40 L860,40 L860,60 L880,60 L880,50 L900,50 L900,30 L920,30 L920,60 L940,60 L940,40 L960,40 L960,70 L980,70 L980,50 L1000,50 L1000,100 Z" fill="black" opacity="0.3"/></svg>');
+            background-size: cover;
+            opacity: 0.3;
+            display: block;
+            z-index: 2;
+        }
+        
+        @media (max-width: 768px) {
+            .outer-wrapper {
+                transform: scale(0.4);
+                transform-origin: top left;
+            }
+        }
+        
+        @media (max-width: 480px) {
+            .outer-wrapper {
+                transform: scale(0.25);
+                transform-origin: top left;
+            }
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <!-- Decorative triangles -->
+                <div class="triangle triangle-1"></div>
+                <div class="triangle triangle-2"></div>
+                <div class="triangle triangle-3"></div>
+                <div class="triangle triangle-4"></div>
+                
+                <!-- Content -->
+                <div class="content-frame">
+                    <h1 class="title">BUSINESS PLAN</h1>
+                    <div class="subtitle">2026 - 2030</div>
+                </div>
+                
+                <!-- City skyline -->
+                <div class="skyline"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,343 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    html, body {
+        width: 1920px;
+        height: 1080px;
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+        font-family: Inter, sans-serif;
+        background-color: #FFFFFF;
+        position: relative;
+    }
+    
+    /* Decorative Background Elements based on reference */
+    .bg-shape-top {
+        position: absolute;
+        top: -500px;
+        left: 0;
+        width: 400px;
+        height: 150px;
+        background: #1B2559; /* Navy */
+        clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
+        z-index: 0;
+    }
+    .bg-shape-accent {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 150px;
+        height: 150px;
+        background: #FF6B35; /* Orange */
+        clip-path: polygon(0 0, 80% 0, 0 80%);
+        z-index: 1;
+    }
+    .bg-shape-bottom {
+        position: absolute;
+        bottom: 0;
+        right: 0;
+        width: 150px;
+        height: 150px;
+        background: #1B2559;
+        clip-path: polygon(100% 0, 100% 100%, 0% 100%);
+        z-index: 0;
+    }
+    
+    .container {
+        position: relative;
+        z-index: 10;
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        padding: 60px 80px 40px 80px;
+        box-sizing: border-box;
+    }
+    
+    .header {
+        margin-bottom: 40px;
+        padding-left: 20px;
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-end;
+    }
+    
+    .title-group h1 {
+        font-size: 64px;
+        color: #FF6B35; /* Orange Title like 'Logistic' */
+        margin: 0;
+        margin-bottom: 15px;
+        line-height: 1.2;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+    }
+    
+    .title-group h1 span {
+        color: #1B2559; /* Navy part like 'Company' */
+    }
+    
+    .subtitle {
+        font-size: 28px;
+        color: #6B7280;
+        margin-top: 15px;
+        font-weight: 400;
+        line-height: 1.4;
+    }
+
+    .main-content {
+        display: flex;
+        flex: 1;
+        gap: 40px;
+        align-items: center;
+        justify-content: space-between;
+    }
+    
+    .left-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .center-panel {
+        flex: 2;
+        background: #FFFFFF;
+        padding: 20px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+    }
+
+    .right-panel {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+    }
+    
+    .footer-mark {
+        position: absolute;
+        bottom: 30px;
+        right: 40px;
+        color: white;
+        font-size: 20px;
+        font-weight: bold;
+        z-index: 10;
+    }
+
+    </style>
+    </head>
+    <body>
+
+    <div class="bg-shape-top"></div>
+    <div class="bg-shape-accent"></div>
+    <div class="bg-shape-bottom"></div>
+    <div class="footer-mark"></div>
+
+    <div class="container">
+        <div class="header">
+            <div class="title-group">
+                <h1>Business Inforgraphic</h1>
+                <div class="subtitle">Detailed shipment analysis for the fiscal year 2024</div>
+            </div>
+            <div style="font-size: 24px; color: #1B2559; font-weight: bold; opacity: 0.5;">2024 REPORT</div>
+        </div>
+
+        <div class="main-content">
+            <div class="left-panel">
+                <div style="display:flex; flex-direction:column; gap:30px; margin-top:30px;">
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:Inter, sans-serif; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:#1B2559; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">20%</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">North America</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">North America's shipment volume increased by 15% compared to last year.</div>
+                </div>
+            
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:Inter, sans-serif; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:#FF6B35; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">10%</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">Europe</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">Europe experienced a significant growth of 25% in shipment volume.</div>
+                </div>
+            
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:Inter, sans-serif; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:#4B5563; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">5%</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">Asia</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">Asia had a steady increase of 10% in shipment volume.</div>
+                </div>
+            </div>
+            </div>
+
+            <div class="center-panel">
+                <div>
+                    <svg width="1150" height="650" viewBox="0 0 1150 650">
+                        
+        <line x1="100" y1="570.0" x2="1100" y2="570.0" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        
+        <text x="85" y="575.0" font-family="Inter, sans-serif" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">0</text>
+        
+        <line x1="100" y1="468.0" x2="1100" y2="468.0" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        
+        <text x="85" y="473.0" font-family="Inter, sans-serif" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">8.8</text>
+        
+        <line x1="100" y1="366.0" x2="1100" y2="366.0" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        
+        <text x="85" y="371.0" font-family="Inter, sans-serif" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">17.6</text>
+        
+        <line x1="100" y1="264.0" x2="1100" y2="264.0" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        
+        <text x="85" y="269.0" font-family="Inter, sans-serif" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">26.4</text>
+        
+        <line x1="100" y1="162.0" x2="1100" y2="162.0" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        
+        <text x="85" y="167.0" font-family="Inter, sans-serif" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">35.2</text>
+        
+        <line x1="100" y1="60.0" x2="1100" y2="60.0" 
+              stroke="#E5E7EB" stroke-width="1" stroke-dasharray="0"/>
+        
+        <text x="85" y="65.0" font-family="Inter, sans-serif" font-size="16" 
+              fill="#9CA3AF" text-anchor="end">44</text>
+        
+            <rect x="116.66666666666667" y="338.1818181818182" width="113.33333333333331" height="231.8181818181818" 
+                  fill="#1B2559" rx="4" ry="4" />
+            
+                <text x="173.33333333333331" y="330.1818181818182" 
+                      font-family="Inter, sans-serif" font-size="14" fill="#1B2559" font-weight="bold" text-anchor="middle">
+                    20%
+                </text>
+                
+        <text x="183.33333333333331" y="600" 
+              font-family="Inter, sans-serif" font-size="18" fill="#1B2559" font-weight="bold" text-anchor="middle">
+            North America
+        </text>
+        
+            <rect x="283.3333333333333" y="454.0909090909091" width="113.33333333333331" height="115.9090909090909" 
+                  fill="#FF6B35" rx="4" ry="4" />
+            
+                <text x="340.0" y="446.0909090909091" 
+                      font-family="Inter, sans-serif" font-size="14" fill="#FF6B35" font-weight="bold" text-anchor="middle">
+                    10%
+                </text>
+                
+        <text x="349.99999999999994" y="600" 
+              font-family="Inter, sans-serif" font-size="18" fill="#1B2559" font-weight="bold" text-anchor="middle">
+            Europe
+        </text>
+        
+            <rect x="450.0" y="512.0454545454545" width="113.33333333333331" height="57.95454545454545" 
+                  fill="#4B5563" rx="4" ry="4" />
+            
+                <text x="506.66666666666663" y="504.0454545454545" 
+                      font-family="Inter, sans-serif" font-size="14" fill="#4B5563" font-weight="bold" text-anchor="middle">
+                    5%
+                </text>
+                
+        <text x="516.6666666666666" y="600" 
+              font-family="Inter, sans-serif" font-size="18" fill="#1B2559" font-weight="bold" text-anchor="middle">
+            Asia
+        </text>
+        
+            <rect x="616.6666666666666" y="512.0454545454545" width="113.33333333333331" height="57.95454545454545" 
+                  fill="#9CA3AF" rx="4" ry="4" />
+            
+                <text x="673.3333333333333" y="504.0454545454545" 
+                      font-family="Inter, sans-serif" font-size="14" fill="#9CA3AF" font-weight="bold" text-anchor="middle">
+                    5%
+                </text>
+                
+        <text x="683.3333333333334" y="600" 
+              font-family="Inter, sans-serif" font-size="18" fill="#1B2559" font-weight="bold" text-anchor="middle">
+            South America
+        </text>
+        
+            <rect x="783.3333333333333" y="106.36363636363637" width="113.33333333333331" height="463.6363636363636" 
+                  fill="#85BA2A" rx="4" ry="4" />
+            
+                <text x="839.9999999999999" y="98.36363636363637" 
+                      font-family="Inter, sans-serif" font-size="14" fill="#85BA2A" font-weight="bold" text-anchor="middle">
+                    40%
+                </text>
+                
+        <text x="850.0" y="600" 
+              font-family="Inter, sans-serif" font-size="18" fill="#1B2559" font-weight="bold" text-anchor="middle">
+            Africa
+        </text>
+        
+            <rect x="949.9999999999999" y="338.1818181818182" width="113.33333333333331" height="231.8181818181818" 
+                  fill="#5561D2" rx="4" ry="4" />
+            
+                <text x="1006.6666666666665" y="330.1818181818182" 
+                      font-family="Inter, sans-serif" font-size="14" fill="#5561D2" font-weight="bold" text-anchor="middle">
+                    20%
+                </text>
+                
+        <text x="1016.6666666666666" y="600" 
+              font-family="Inter, sans-serif" font-size="18" fill="#1B2559" font-weight="bold" text-anchor="middle">
+            Australia
+        </text>
+        
+        <text transform="rotate(-90)" x="-325.0" y="30" 
+              font-family="Inter, sans-serif" font-size="18" fill="#6B7280" text-anchor="middle">
+            Percentage
+        </text>
+        
+                    </svg>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div style="display:flex; flex-direction:column; gap:30px; margin-top:30px;">
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:Inter, sans-serif; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:#9CA3AF; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">5%</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">South America</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">South America's shipment volume remained stable with a slight increase of 5%.</div>
+                </div>
+            
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:Inter, sans-serif; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:#85BA2A; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">40%</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">Africa</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">Africa saw a remarkable growth of 40% in shipment volume.</div>
+                </div>
+            
+                <div style="display:flex; flex-direction:column; gap:8px; font-family:Inter, sans-serif; color:#000;">
+                    <div style="display:flex; align-items:center; gap:10px;">
+                        <span style="width:24px; height:24px; background-color:#5561D2; border-radius:50%; border: 1px solid #000; display:inline-block;"></span>
+                        <span style="font-size:28px;">20%</span>
+                    </div>
+                    <div style="font-size:26px; padding-left:34px;">Australia</div>
+                    <div style="font-size:22px; padding-left:34px; line-height:1.4; max-width:300px;">Australia experienced a moderate increase of 20% in shipment volume.</div>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    </body>
+    </html>
+    

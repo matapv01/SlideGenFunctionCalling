@@ -1,0 +1,32 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Main Title Here</title>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            * { margin:0; padding:0; box-sizing:border-box; }
+            body { font-family: 'Be Vietnam Pro', sans-serif; background-color:#d4e8d4; min-height:100vh; display:flex; align-items:center; justify-content:center; overflow:hidden; }
+            .text-frame { width:1100px; padding:60px 80px; border-radius:24px; background:#faf8f0; border:5px solid #2d3e50; box-shadow:0 12px 36px rgba(0,0,0,0.12); text-align:center; position:relative; }
+            .main-title { font-size:56px; font-weight:900; color:#2d3e50; margin:0; }
+            .subtitle { font-size:34px; color:#6b7280; margin-top:12px; line-height:1.2; }
+            .bandage-core { width:220px; height:70px; border-radius:24px; background:#e17b6a; box-shadow:0 8px 24px rgba(0,0,0,0.12); }
+            
+        </style>
+    </head>
+    <body>
+        <!-- Bandage (single element) positioned above the frame -->
+        <div style="position:absolute; left:50%; top:32%; transform:translate(-50%,-50%); z-index:40;">
+            <div class="bandage-core"></div>
+        </div>
+
+        <!-- Centered text frame with title above subtitle -->
+        <div class="text-frame">
+            <h1 class="main-title">Main Title Here</h1>
+            <p class="subtitle">Here is where your presentation begins</p>
+        </div>
+    </body>
+    </html>
+    

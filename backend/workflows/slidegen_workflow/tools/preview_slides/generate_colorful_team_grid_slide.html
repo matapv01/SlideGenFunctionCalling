@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Team Members Slide - Spacious Design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; width: 1920px; height: 1080px; }
+        body, html {
+            height: 1080px;
+            width: 1920px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #F8FAFC;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            background-color: #F8FAFC;
+            display: grid;
+            grid-template-columns: 1fr 1.2fr;
+            align-items: center;
+            gap: 80px;
+            padding: 80px 120px;
+        }
+
+        .text-column { padding-right: 40px; }
+
+        .main-title {
+            font-size: 110px;
+            font-weight: 800;
+            line-height: 1.2;
+            color: #111827;
+            margin-bottom: 20px;
+        }
+        
+        .title-divider {
+            height: 8px;
+            width: 120px;
+            background: linear-gradient(90deg, #8A44A1, #2E9A94, #F3C314);
+            border: none;
+            border-radius: 4px;
+            margin-bottom: 40px;
+        }
+        
+        .team-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+        }
+        
+        .team-card {
+            position: relative;
+            background-color: #FFFFFF;
+            border-radius: 20px;
+            padding-top: 80px; 
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+        
+        .member-photo {
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            object-fit: cover;
+            display: block;
+            position: absolute;
+            top: -60px; 
+            left: 50%;
+            transform: translateX(-50%);
+            border: 8px solid var(--member-color);
+            background-color: white;
+        }
+        
+        .member-info {
+            padding: 30px 20px 40px;
+            color: #1F2937;
+        }
+        
+        .member-name {
+            font-size: 36px;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .member-role {
+            font-size: 24px;
+            font-weight: 400;
+            opacity: 0.8;
+        }
+
+        /* Content wrapper for scaling */
+        .content-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }
+        
+        .outer-wrapper {
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <div class="text-column">
+                    <h1 class="main-title">Add a Team Members Page</h1>
+                    <hr class="title-divider" />
+                </div>
+                <div class="team-grid">
+                    
+        <div class="team-card" style="--member-color: #8A44A1;">
+            <img class="member-photo" src="https://images.unsplash.com/photo-1580489944761-15a19d654956?q=80&w=1887&auto=format=fit=crop" alt="Olivia Chen" />
+            <div class="member-info">
+                <h2 class="member-name">Olivia Chen</h2>
+                <p class="member-role">Lead Designer</p>
+            </div>
+        </div>
+        
+        <div class="team-card" style="--member-color: #2E9A94;">
+            <img class="member-photo" src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=1887&auto=format=fit=crop" alt="Ben Carter" />
+            <div class="member-info">
+                <h2 class="member-name">Ben Carter</h2>
+                <p class="member-role">Frontend Developer</p>
+            </div>
+        </div>
+        
+        <div class="team-card" style="--member-color: #D93B58;">
+            <img class="member-photo" src="https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=1887&auto=format=fit=crop" alt="Aisha Khan" />
+            <div class="member-info">
+                <h2 class="member-name">Aisha Khan</h2>
+                <p class="member-role">Project Manager</p>
+            </div>
+        </div>
+        
+        <div class="team-card" style="--member-color: #F3C314;">
+            <img class="member-photo" src="https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=1887&auto=format=fit=crop" alt="Leo Martinez" />
+            <div class="member-info">
+                <h2 class="member-name">Leo Martinez</h2>
+                <p class="member-role">Marketing Head</p>
+            </div>
+        </div>
+        
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
