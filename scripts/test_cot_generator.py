@@ -410,10 +410,39 @@ def main():
             print(f"     {cat}: {cat_pass}/{len(cat_results)} pass")
     
     # Save results
-    output_path = os.path.join(os.path.dirname(__file__), "test_cot_results_2_new_prompt.json")
+    output_dir = os.path.join(os.path.dirname(__file__), "result_test_CoT")
+    os.makedirs(output_dir, exist_ok=True)
+
+    output_path = os.path.join(output_dir, "test_cot_results.json")
     with open(output_path, "w", encoding="utf-8") as f:
         json.dump(results, f, indent=2, ensure_ascii=False)
     print(f"\n  💾 Detailed results saved to: {output_path}")
+
+    # Also save text summary format to result_test_CoT/result_summary.txt
+    summary_txt_path = os.path.join(output_dir, "result_summary.txt")
+    with open(summary_txt_path, "w", encoding="utf-8") as f_txt:
+        f_txt.write("======================================================================\n")
+        f_txt.write("  📊 RESULTS SUMMARY\n")
+        f_txt.write("======================================================================\n")
+        f_txt.write(f"  Pass Rate:          {passed}/{total} ({100*passed/total:.1f}%)\n")
+        f_txt.write(f"  First-Try Pass:     {first_try_pass}/{total} ({100*first_try_pass/total:.1f}%)\n")
+        f_txt.write(f"  Tool Name Match:    {tool_matches}/{total} ({100*tool_matches/total:.1f}%)\n")
+        f_txt.write(f"  Avg Attempts:       {avg_attempts:.1f}\n")
+        f_txt.write(f"  Avg Total Latency:  {avg_latency:.1f}s\n")
+        f_txt.write(f"  CoT Enabled:        {use_cot}\n\n")
+        if all_errors:
+            f_txt.write(f"  📋 ERROR BREAKDOWN ({len(all_errors)} total errors):\n")
+            for etype, count in sorted(error_types.items(), key=lambda x: -x[1]):
+                f_txt.write(f"     {etype}: {count}\n")
+            f_txt.write("\n")
+        if len(categories) > 1:
+            f_txt.write("  📋 PER-CATEGORY BREAKDOWN:\n")
+            for cat in sorted(categories):
+                cat_results = [r for r in results if r["category"] == cat]
+                cat_pass = sum(1 for r in cat_results if r["final_status"] == "pass")
+                f_txt.write(f"     {cat}: {cat_pass}/{len(cat_results)} pass\n")
+
+    print(f"  💾 Summary text saved to: {summary_txt_path}")
     
     print(f"\n{'='*70}")
     print(f"  ✨ Done!")
