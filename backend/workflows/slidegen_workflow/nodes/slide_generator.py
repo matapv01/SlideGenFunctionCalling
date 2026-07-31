@@ -1,5 +1,5 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_generator.py
-
+import os
 import json
 import time
 from openai import OpenAI
@@ -9,6 +9,7 @@ from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOOLS_DICT
+from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
 from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
@@ -103,6 +104,45 @@ def create_default_html(content_data) -> str:
 
 
 
+def _build_tool_description_text(tool_schemas: list) -> str:
+    """Build a structured section listing available layout tools and parameter constraints for the LLM."""
+    lines = [
+        "AVAILABLE LAYOUT TOOLS (YOU MUST SELECT EXACTLY ONE TOOL FROM THIS LIST):",
+        "Below are the allowed layout tools for this slide. You MUST pick the single best matching tool from this list and strictly supply all required parameters:"
+    ]
+    for schema in tool_schemas:
+        func = schema.get("function", {})
+        name = func.get("name", "?")
+        desc = func.get("description", "")
+        params = func.get("parameters", {})
+        properties = params.get("properties", {})
+        required = params.get("required", [])
+        
+        lines.append(f"\n• Tool Name: `{name}`")
+        lines.append(f"  Description: {desc}")
+        
+        param_desc_list = []
+        for prop_name, prop_spec in properties.items():
+            prop_type = prop_spec.get("type", "any")
+            is_req = " (REQUIRED)" if prop_name in required else ""
+            
+            if prop_type == "array":
+                item_spec = prop_spec.get("items", {})
+                if item_spec.get("type") == "object":
+                    item_props = list(item_spec.get("properties", {}).keys())
+                    param_desc_list.append(f"`{prop_name}`: List[dict with keys: {item_props}]{is_req}")
+                else:
+                    item_type = item_spec.get("type", "string")
+                    param_desc_list.append(f"`{prop_name}`: List[{item_type}]{is_req}")
+            else:
+                param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req}")
+                
+        if param_desc_list:
+            lines.append(f"  Parameters: {', '.join(param_desc_list)}")
+            
+    return "\n".join(lines)
+
+
 def _get_qwen_tokenizer(model_name: str):
     if model_name not in _tokenizer_cache:
         tok = AutoTokenizer.from_pretrained(model_name)
@@ -113,21 +153,39 @@ def _get_qwen_tokenizer(model_name: str):
 
 
 def _get_qwen_config(llm):
-    """Extract (model_name, base_url) from any LLM wrapper."""
-    if hasattr(llm, 'model_name'):
-        return llm.model_name, getattr(llm, 'openai_api_base', None)
-    if hasattr(llm, 'model'):
-        return llm.model, getattr(llm, 'base_url', None)
-    return 'Qwen/Qwen3-8B', None
+    """Extract (model_name, base_url, api_key) from any LLM wrapper or environment."""
+    model_name = (
+        getattr(llm, 'model_name', None) or 
+        getattr(llm, 'model', None) or 
+        os.environ.get("OPENAI_MODEL", "Qwen/Qwen3-8B")
+    )
+    base_url = (
+        getattr(llm, 'openai_api_base', None) or 
+        getattr(llm, 'base_url', None) or 
+        os.environ.get("OPENAI_BASE_URL", None)
+    )
+    api_key = (
+        getattr(llm, 'openai_api_key', None) or 
+        getattr(llm, 'api_key', None) or 
+        os.environ.get("NVIDIA_API_KEY") or 
+        os.environ.get("OPENAI_API_KEY") or 
+        'not-needed'
+    )
+    return model_name, base_url, api_key
+
 
 def _check_is_qwen(llm) -> bool:
-    """Helper to detect if the loaded LLM is a Qwen variant."""
+    """Helper to detect if the loaded LLM is a Qwen variant or NVIDIA API Qwen."""
     model_name = ""
     for attr in ["model", "model_name", "model_id"]:
         if hasattr(llm, attr):
             model_name = str(getattr(llm, attr)).lower()
             break
-    return "qwen" in model_name
+    if not model_name:
+        model_name = os.environ.get("OPENAI_MODEL", "").lower()
+    
+    base_url = str(getattr(llm, 'base_url', '') or getattr(llm, 'openai_api_base', '') or os.environ.get("OPENAI_BASE_URL", "")).lower()
+    return "qwen" in model_name or "nvidia" in base_url or "nvidia" in model_name
 
 def generate_slide(state: State, config: RunnableConfig) -> State:
     """
@@ -185,13 +243,20 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 print(f"  -> Reusing transition tool for consistency: {prev_transition_tool_name}")
                 
     if not my_tools:
-        retrieved_tools = tool_retriever.get_relevant_tools(
-            category=tool_category,
-            query=creative_thought,
-            top_k=TOOL_RETRIEVER_TOP_K,
-            current_slide_index=idx
-        )
-        my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
+        if tool_retriever:
+            try:
+                retrieved_tools = tool_retriever.get_relevant_tools(
+                    category=tool_category,
+                    query=creative_thought,
+                    top_k=TOOL_RETRIEVER_TOP_K,
+                    current_slide_index=idx
+                )
+                my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
+            except Exception as e:
+                print(f"⚠️ tool_retriever error ({e}), falling back to category tools for '{tool_category}'")
+                my_tools = all_tools_dict.get(tool_category, [])
+        else:
+            my_tools = all_tools_dict.get(tool_category, [])
         
     if not my_tools:
         my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
@@ -279,172 +344,138 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     human_template = HUMAN_PROMPT_TEMPLATE
             
     is_qwen = _check_is_qwen(llm)
-    print(f"  -> Model Mode: {'LOCAL QWEN' if is_qwen else 'GEMINI / API'}")
+    model_name, base_url, api_key = _get_qwen_config(llm)
+    print(f"  -> Model Mode: {'QWEN / OPENAI API (' + str(model_name) + ' @ ' + str(base_url or 'Local') + ')' if is_qwen else 'GEMINI / API'}")
     
-    retry_feedback = ""
+    # Format human prompt variables
+    human_vars = {
+        "slide_context_map": current_context_map,
+        "previous_slide_function_call": style_context_str,
+        "recent_tools": recent_tools_str,
+        "slide_plan": json.dumps(current_plan, indent=2),
+        "slide_content": current_text,
+        "previous_function_call": json.dumps(previous_function_call, indent=2),
+        "previous_evaluation": previous_evaluation,
+        "slide_index": idx + 1,
+        "length_slide_chunks": length_slide_chunks,
+    }
     
-    for attempt in range(1, MAX_REMAKE + 1):
-        print(f"🔁 Slide generation attempt {attempt}/{MAX_REMAKE}")
-        
-        # Format human prompt variables
-        human_vars = {
-            "slide_context_map": current_context_map,
-            "previous_slide_function_call": style_context_str,
-            "recent_tools": recent_tools_str,
-            "slide_plan": json.dumps(current_plan, indent=2),
-            "slide_content": current_text,
-            "previous_function_call": json.dumps(previous_function_call, indent=2),
-            "previous_evaluation": previous_evaluation + retry_feedback,
-            "slide_index": idx + 1,
-            "length_slide_chunks": length_slide_chunks,
-        }
-        
-        # A. QWEN LOCAL EXECUTION PATH (Native JSON tool call)
-        if is_qwen:
-            tool_schemas = [format_tool_for_qwen(t) for t in my_tools]
+    # A. QWEN LOCAL EXECUTION PATH (Native JSON tool call)
+    if is_qwen:
+        tool_schemas = [format_tool_for_qwen(t) for t in my_tools]
 
-            qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
-                style_context=style_context_str,
-                design_instruction=design_instruction,
-                slide_content=current_text
-            )
-
-            if previous_function_call and previous_function_call != {}:
-                qwen_user_prompt += f"\n\n[YOUR PREVIOUS TOOL CALL ATTEMPT]\n{json.dumps(previous_function_call, indent=2)}"
-
-            full_feedback = (previous_evaluation if previous_evaluation != "No evaluation yet." else "") + retry_feedback
-            if full_feedback.strip():
-                qwen_user_prompt += f"\n\n[PREVIOUS EVALUATION / ERRORS TO CORRECT]\n{full_feedback.strip()}"
-
-            # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
-            use_cot = state.get("use_cot", True)
-            qwen_base_sys = QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT
-            full_qwen_system_prompt = generator_system_prompt + "\n\n" + qwen_base_sys
-            messages = [
-                {"role": "system", "content": full_qwen_system_prompt},
-                {"role": "user", "content": qwen_user_prompt},
-            ]
-            model_name, base_url = _get_qwen_config(llm)
-            tokenizer = _get_qwen_tokenizer(model_name)
-            prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
-
-            # Call Qwen via raw completions endpoint (avoids server-side template override)
-            client = OpenAI(base_url=base_url, api_key=getattr(llm, 'openai_api_key', 'not-needed'))
-            resp = client.completions.create(
-                model=model_name,
-                prompt=prompt,
-                max_tokens=getattr(llm, 'max_tokens', 1024) or 1024,
-                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
-                stop=["<|im_end|>"],
-            )
-            content = (resp.choices[0].text or "").strip()
-            
-        # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
-        else:
-            gemini_vars = {**human_vars, "design_instruction": design_instruction}
-            llm_with_tools = llm.bind_tools(my_tools)
-            slidegen_prompt = ChatPromptTemplate.from_messages([
-                ("system", system_prompt),
-                ("human", human_template)
-            ])
-            slide_generator_runnable = slidegen_prompt | llm_with_tools
-            response = slide_generator_runnable.invoke(gemini_vars)
-            
-        # 3. Parse JSON / Extract tool call
-        tool_call_dict = None
-
-        if is_qwen:
-            # Qwen path: raw text from completions endpoint
-            from backend.workflows.slidegen_workflow.utils.helper import parse_tool_call_json
-            tool_call_dict = parse_tool_call_json(content)
-        else:
-            # Gemini path: structured tool calls
-            if hasattr(response, "tool_calls") and response.tool_calls:
-                tc = response.tool_calls[0]
-                tool_call_dict = {
-                    "name": tc.get("name"),
-                    "arguments": tc.get("args", {})
-                }
-            else:
-                content = getattr(response, "content", "")
-                try:
-                    cleaned_text = content.strip()
-                    if "```json" in cleaned_text:
-                        cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
-                    elif "```" in cleaned_text:
-                        cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
-
-                    parsed_json = json.loads(cleaned_text)
-                    if isinstance(parsed_json, list) and len(parsed_json) > 0:
-                        parsed_json = parsed_json[0]
-
-                    if isinstance(parsed_json, dict) and "name" in parsed_json:
-                        tool_call_dict = {
-                            "name": parsed_json["name"],
-                            "arguments": parsed_json.get("arguments") or parsed_json.get("args") or {}
-                        }
-                except Exception as parse_err:
-                    print(f"⚠️ Fallback JSON parsing failed: {parse_err}")
-                
-        if not tool_call_dict:
-            error_msg = "You did NOT generate any function call."
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
-            continue
-            
-        tool_name = tool_call_dict["name"]
-        tool_args = tool_call_dict["arguments"]
-        tool_lookup = {t.name: t for t in my_tools}
-        
-        # Validation checks
-        if tool_name not in tool_lookup:
-            error_msg = f"Tool '{tool_name}' is NOT AVAILABLE. Valid tools are: {list(tool_lookup.keys())}"
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
-            continue
-            
-        try:
-            html_content = execute_tool(tool_call_dict)
-        except Exception as e:
-            error_msg = f"Tool '{tool_name}' CRASHED during execution: {e}"
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
-            continue
-            
-        if not html_content:
-            error_msg = f"Tool '{tool_name}' returned EMPTY output."
-            print(f"❌ {error_msg}")
-            retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
-            continue
-            
-        # Success
-        print(f"✅ Tool '{tool_name}' generated and executed successfully.")
-        state["current_tool_call"] = tool_call_dict
-        state["current_html_content"] = html_content
-        
-        # Record tool usage for temporal decay tracking
-        tool_retriever.record_tool_usage(
-            category=tool_category,
-            tool_name=tool_name,
-            slide_index=idx
+        qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
+            style_context=style_context_str,
+            design_instruction=design_instruction,
+            slide_content=current_text
         )
 
-        if slide_type == "TRANSITION_TOOLS":
-            state["previous_transition_tool_call"] = tool_call_dict
+        if previous_function_call and previous_function_call != {}:
+            qwen_user_prompt += f"\n\n[YOUR PREVIOUS TOOL CALL ATTEMPT]\n{json.dumps(previous_function_call, indent=2)}"
+
+        full_feedback = (previous_evaluation if previous_evaluation != "No evaluation yet." else "")
+        if full_feedback.strip():
+            qwen_user_prompt += f"\n\n[PREVIOUS EVALUATION / ERRORS TO CORRECT]\n{full_feedback.strip()}"
+
+        # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
+        use_cot = state.get("use_cot", True)
+        qwen_base_sys = QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT
+        tool_desc_text = _build_tool_description_text(tool_schemas)
+        full_qwen_system_prompt = generator_system_prompt + "\n\n" + qwen_base_sys + "\n\n" + tool_desc_text
+        messages = [
+            {"role": "system", "content": full_qwen_system_prompt},
+            {"role": "user", "content": qwen_user_prompt},
+        ]
+        model_name, base_url, api_key = _get_qwen_config(llm)
+        client = OpenAI(base_url=base_url, api_key=api_key)
         
-        # Save things that used to be saved by slide_preparer to state, just in case they are used downstream
-        state["candidate_tools"] = my_tools
-        state["style_context_str"] = style_context_str
-        state["design_instruction"] = design_instruction
+        try:
+            # Primary API path: OpenAI-compatible ChatCompletions (works for NVIDIA API, vLLM, OpenAI)
+            resp = client.chat.completions.create(
+                model=model_name,
+                messages=messages,
+                max_tokens=getattr(llm, 'max_tokens', 2000) or 2000,
+                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+            )
+            content = (resp.choices[0].message.content or "").strip()
+        except Exception as api_err:
+            print(f"⚠️ ChatCompletions API failed ({api_err}), attempting local raw completions fallback...")
+            try:
+                tokenizer = _get_qwen_tokenizer(model_name)
+                prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
+                resp = client.completions.create(
+                    model=model_name,
+                    prompt=prompt,
+                    max_tokens=getattr(llm, 'max_tokens', 1024) or 1024,
+                    temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+                    stop=["<|im_end|>"],
+                )
+                content = (resp.choices[0].text or "").strip()
+            except Exception as fallback_err:
+                print(f"❌ Qwen generation failed: {fallback_err}")
+                content = ""
         
-        break
-        
+    # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
     else:
-        # ❌ ALL ATTEMPTS FAILED - Return default HTML to avoid crashing the graph
-        print(f"❌ ALL {MAX_REMAKE} attempts failed for slide {idx + 1}. Generating default slide.")
-        default_html = create_default_html(current_text)
-        state["current_html_content"] = default_html
-        state["current_tool_call"] = {"name": "default_fallback", "arguments": {}}
+        gemini_vars = {**human_vars, "design_instruction": design_instruction}
+        llm_with_tools = llm.bind_tools(my_tools)
+        slidegen_prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            ("human", human_template)
+        ])
+        slide_generator_runnable = slidegen_prompt | llm_with_tools
+        response = slide_generator_runnable.invoke(gemini_vars)
+        
+    # 3. Parse JSON / Extract tool call
+    tool_call_dict = None
+
+    if is_qwen:
+        # Qwen path: raw text from completions endpoint
+        from backend.workflows.slidegen_workflow.utils.helper import parse_tool_call_json
+        tool_call_dict = parse_tool_call_json(content)
+    else:
+        # Gemini path: structured tool calls
+        if hasattr(response, "tool_calls") and response.tool_calls:
+            tc = response.tool_calls[0]
+            tool_call_dict = {
+                "name": tc.get("name"),
+                "arguments": tc.get("args", {})
+            }
+        else:
+            content = getattr(response, "content", "")
+            try:
+                cleaned_text = content.strip()
+                if "```json" in cleaned_text:
+                    cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
+                elif "```" in cleaned_text:
+                    cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
+
+                parsed_json = json.loads(cleaned_text)
+                if isinstance(parsed_json, list) and len(parsed_json) > 0:
+                    parsed_json = parsed_json[0]
+
+                if isinstance(parsed_json, dict) and "name" in parsed_json:
+                    tool_call_dict = {
+                        "name": parsed_json["name"],
+                        "arguments": parsed_json.get("arguments") or parsed_json.get("args") or {}
+                    }
+            except Exception as parse_err:
+                print(f"⚠️ Fallback JSON parsing failed: {parse_err}")
+            
+    if not tool_call_dict:
+        print("❌ You did NOT generate any function call. Setting default fallback.")
+        tool_call_dict = {"name": "default_fallback", "arguments": {}}
+        
+    print(f"✅ Generated Tool Call: {tool_call_dict.get('name')}")
+    state["current_tool_call"] = tool_call_dict
+    
+    # Save helper state variables for downstream nodes
+    state["candidate_tools"] = my_tools
+    state["style_context_str"] = style_context_str
+    state["design_instruction"] = design_instruction
+
+    if slide_type == "TRANSITION_TOOLS":
+        state["previous_transition_tool_call"] = tool_call_dict
     
     print(f"Time taken: {time.time() - start_time:.2f} seconds.")
     return state
