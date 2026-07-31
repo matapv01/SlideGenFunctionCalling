@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Slide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #a50044;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            background-color: #a50044;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
+        }
+
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
+            background-color: #0f172a;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            position: relative;
+            overflow: hidden;
+            display: flex;
+        }
+        
+        .left-content {
+            flex: 0 0 60%;
+            height: 100%;
+            position: relative;
+            background-color: #0f172a;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .right-content {
+            flex: 0 0 40%;
+            height: 100%;
+            background-color: #a50044;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .image-container {
+            width: 80%;
+            height: 70%;
+            background-color: white;
+            border-radius: 1rem;
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+            overflow: hidden;
+            position: relative;
+            z-index: 3;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .accent-bar-top {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 4rem; /* 64px - larger for better visibility */
+            height: 2rem; /* 32px */
+            background-color: rgba(0, 86, 179, 0.15);
+            z-index: 1;
+        }
+        
+        .accent-bar-middle {
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 4rem; /* 64px - larger */
+            background-color: rgba(0, 86, 179, 0.15);
+            transform: translateY(-50%);
+            z-index: 1;
+        }
+        
+        .content-box {
+            background-color: rgba(0, 86, 179, 0.15);
+            padding: 5rem; /* 80px - much larger padding */
+            border-radius: 0.5rem;
+            z-index: 2;
+            position: relative;
+            width: 90%; /* 90% of left-content width */
+            height: 85%; /* 85% of left-content height */
+            max-width: none; /* Remove max-width constraint */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .main-title {
+            font-size: 5.5rem !important;
+            color: #ffffff;
+            margin: 0 0 3rem 0;
+            font-weight: bold;
+            font-style: 'Be Vietnam Pro', sans-serif;
+            line-height: 1.2;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+        
+        .subtitle {
+            font-size: 2.5rem !important;
+            color: #cbd5e1;
+            margin: 1rem 0;
+            line-height: 1.4;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+        
+        .divider {
+            width: 80%; /* 80% width instead of 100% */
+            height: 0.25rem; /* 4px - thicker */
+            background-color: #0056b3;
+            margin: 3rem auto 0 auto; /* 48px top margin, centered */
+            border-radius: 0.125rem;
+        }
+        
+        .decorative-element {
+            position: absolute;
+            background-color: rgba(0, 86, 179, 0.15);
+            opacity: 0.5;
+            z-index: 1;
+        }
+        
+        .deco-1 {
+            top: 1rem;
+            right: 1rem;
+            width: 4rem; /* 64px - smaller so they don't interfere with image */
+            height: 4rem;
+            border-radius: 50%;
+        }
+        
+        .deco-2 {
+            bottom: 1rem;
+            right: 1rem;
+            width: 3rem; /* 48px - smaller square */
+            height: 3rem;
+            transform: rotate(45deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="slide-inner-container">
+            <!-- Accent bars -->
+            <div class="accent-bar-top"></div>
+            <div class="accent-bar-middle"></div>
+            
+            <!-- Left content area -->
+            <div class="left-content">
+                <div class="content-box">
+                    <h1 class="main-title">PHẦN 2: SỰ NGHIỆP QUỐC TẾ & DI SẢN</h1>
+                    <p class="subtitle">Chân sút vĩ đại nhất lịch sử Brazil</p>
+                    <p class="subtitle">Huy chương Vàng Olympic & Kỹ thuật đỉnh cao</p>
+                    <div class="divider"></div>
+                </div>
+            </div>
+            
+            <!-- Right content area -->
+            <div class="right-content">
+                <div class="image-container">
+                    <img src="https://media.gettyimages.com/id/1332874430/photo/yokohama-japan-gold-medalists-of-team-brazil-celebrate-on-the-podium-during-the-mens-football.jpg?s=612x612&w=gi&k=20&c=FHr3yjb46xb4KvE_DZTSKfnJXreNrc99yuG2KgGyqPE=" alt="slide visual">
+                </div>
+                <div class="decorative-element deco-1"></div>
+                <div class="decorative-element deco-2"></div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

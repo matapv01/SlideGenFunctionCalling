@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text and Image Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: #F9FAFB;
+            overflow: hidden;
+            background-color: #F8F8F8;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .text-column {
+            flex: 1.5; /* Takes more space */
+            padding: 2rem 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* Layered background for the text column only */
+            background-image: url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png');
+            background-repeat: repeat;
+            background-position: center;
+            background-size: auto;
+        }
+        
+        .image-column {
+            flex: 1; /* Takes less space */
+            background-image: url('https://thumbs.dreamstime.com/z/contrast-manual-labor-automation-manufacturing-line-creative-image-highlighting-contrast-traditional-284168296.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: clamp(3rem, 4vw, 4rem);
+            font-weight: 400;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-content {
+            font-size: 2rem;
+            line-height: 1.8;
+            max-width: 35ch; /* Limit line length for readability */
+        }
+        
+        /* --- Responsive Design --- */
+        @media (max-width: 48rem) { /* 768px */
+            .slide-container {
+                flex-direction: column;
+            }
+            .text-column {
+                height: 60vh;
+                padding: 2rem 2rem 4rem 2rem;
+                justify-content: center;
+                text-align: center;
+            }
+            .text-content {
+                margin: 0 auto;
+            }
+            .image-column {
+                height: 40vh;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="text-column">
+            <h1 class="title">1. Giới thiệu<br>1.1. Sự cần thiết của slide và vấn đề tạo thủ công</h1>
+            <p class="text-content">Hiện nay, các slide thuyết trình được sử dụng rộng rãi để truyền đạt thông tin trong các tác vụ liên quan đến học tập cũng như công việc.<br>Dù vậy, việc tạo slide một cách thủ công có thể tốn rất nhiều thời gian.<br>Do đó, người ta đã nghĩ đến việc sử dụng <span style="color: #00BFFF; font-weight: bold;">AI</span> như một cách hiệu quả để giải quyết vấn đề này.</p>
+        </div>
+        <div class="image-column"></div>
+    </div>
+</body>
+</html>

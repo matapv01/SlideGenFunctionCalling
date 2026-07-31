@@ -7,6 +7,12 @@ export default defineConfig(() => ({
   server: {
     host: "::",
     port: 5173,
+    proxy: {
+      "/api": {
+        target: "http://127.0.0.1:12008",
+        changeOrigin: true,
+      },
+    },
     hmr: {
       overlay: false,
     },

@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en"> 
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission and Goals - Adjusted Layout</title>
+    <style>
+        :root {
+            --base-font-size: 16px; 
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            font-size: var(--base-font-size);
+        }
+        
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            background-color: #111827; 
+            display: flex;
+            overflow: hidden;
+        }
+        
+        .left-column {
+            /* ĐÃ SỬA ĐỔI: Tăng không gian cho cột văn bản (từ 2 thành 3) */
+            flex: 3; 
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            overflow-y: auto; 
+        }
+
+        .left-column-top-content {
+            background-color: #1a1a1a;
+            padding: 3rem 4rem; /* Điều chỉnh lại padding */
+            border-top-right-radius: 1.5rem; 
+            border-bottom-right-radius: 1.5rem; 
+            /* ĐÃ SỬA ĐỔI: Giảm chiều cao tối thiểu để nhường không gian cho description */
+            min-height: 45vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .top-text {
+            /* ĐÃ SỬA ĐỔI: Giảm kích thước chữ */
+            font-size: 1.3rem;
+            color: #FFD700;
+            margin-bottom: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.05em;
+        }
+        
+        .main-title {
+            /* ĐÃ SỬA ĐỔI: Giảm kích thước chữ của tiêu đề chính */
+            font-size: clamp(3rem, 5vw, 5rem); 
+            color: #FFFFFF;
+            font-weight: 700;
+            line-height: 1.2;
+            margin-bottom: 1rem;
+        }
+        
+        .subtitle-text {
+            /* ĐÃ SỬA ĐỔI: Tăng kích thước chữ của description và padding */
+            font-size: 1.85rem; 
+            color: #E5E7EB;
+            line-height: 1.7;
+            padding: 3rem 4rem; 
+            flex-grow: 1;
+            font-weight: 400;
+        }
+        
+        .right-column {
+            /* ĐÃ SỬA ĐỔI: Giữ nguyên flex: 1 để cột trái rộng hơn */
+            flex: 1; 
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            padding: 2rem; 
+        }
+        
+        .right-column img {
+            display: block;
+            width: 100%; 
+            height: 100%; 
+            object-fit: cover; 
+            border-radius: 1rem; 
+        }
+
+        @media (max-width: 48rem) { 
+            .slide-container {
+                flex-direction: column;
+            }
+            .left-column, .right-column {
+                flex: none; /* Reset flex ratio on mobile */
+            }
+            .left-column {
+                order: 1;
+                width: 100%; 
+                height: auto; 
+            }
+            .left-column-top-content {
+                border-radius: 0; 
+                padding: 2.5rem 2rem;
+                min-height: 0; 
+            }
+            .main-title {
+                font-size: clamp(2rem, 7vw, 2.8rem);
+            }
+            .subtitle-text {
+                font-size: 1.1rem;
+                padding: 2rem;
+            }
+            .right-column {
+                order: 2;
+                width: 100%; 
+                height: 40vh; 
+                padding: 1.5rem; 
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="left-column">
+            <div class="left-column-top-content">
+                <p class="top-text">GIỚI THIỆU</p>
+                <h1 class="main-title">Lionel Messi</h1>
+            </div>
+            <p class="subtitle-text">Huyền thoại bóng đá sống mãi cùng thời gian</p>
+        </div>
+        <div class="right-column">
+            <img src="https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&cs=tinysrgb&w=1600" alt="https://images.pexels.com/photos/317356/pexels-photo-317356.jpeg?auto=compress&cs=tinysrgb&w=1600">
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Simple Meeting Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #0F172A;
+            overflow: hidden;
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* Top left circle decoration */
+        .circle-top {
+            position: absolute;
+            top: -350px;
+            left: -350px;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background-color: #1E293B;
+            z-index: 1;
+        }
+
+        /* Bottom right circle decoration */
+        .circle-bottom {
+            position: absolute;
+            top: 730px;
+            left: 1570px;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background-color: #EAB308;
+            z-index: 1;
+        }
+
+        /* Content container */
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            max-width: 1400px;
+            padding: 0 100px;
+        }
+
+        .subtitle {
+            font-size: 32px;
+            font-weight: 400;
+            color: #F8FAFC;
+            margin-bottom: 40px;
+            letter-spacing: 0.5px;
+        }
+
+        .main-title {
+            font-size: 100px;
+            font-weight: 800;
+            color: #EAB308;
+            letter-spacing: 8px;
+            line-height: 1.1;
+            margin-bottom: 30px;
+        }
+
+        .accent-line {
+            width: 180px;
+            height: 6px;
+            background-color: #EAB308;
+            margin: 0 auto;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Decorative circles -->
+    <div class="circle-top"></div>
+    <div class="circle-bottom"></div>
+    
+    <!-- Main content -->
+    <div class="content">
+        <div class="subtitle">Huyền thoại bóng đá sống mãi cùng thời gian</div>
+        <h1 class="main-title">LIONEL MESSI</h1>
+        <div class="accent-line"></div>
+    </div>
+</body>
+</html>

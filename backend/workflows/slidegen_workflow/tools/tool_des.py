@@ -1,6 +1,6 @@
 # Auto-generated from tools.py preserving all original parameter schemas
 # This conversion maintains the exact parameter definitions from the source
-
+import json
 from typing import List, Dict, Optional, Union
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
@@ -2713,7 +2713,6 @@ class GenerateTableSlide7(BaseModel):
         ]"""
     )
 
-
 INTRO_TOOLS = [
     # === SLIDE INTRO ===
     StructuredTool.from_function(
@@ -3768,3 +3767,55 @@ def execute_tool(tool_call: dict):
             return None
         print(f"Tool '{name}' not found.")
         return None
+
+
+
+
+def execute_tool_plan(tool_calls: list, tool_lookup: dict = None) -> tuple:
+    """
+    Execute one generator response: HTML slide tool FIRST, then Search 1..N.
+
+    No LLM is invoked here. Search results are connected to HTML image
+    parameters deterministically by schema/runtime declaration order.
+    Returns (html_output, final_html_tool_call, search_history).
+    """
+    from backend.workflows.slidegen_workflow.executors.tool_plan_executor import (
+        execute_image_search_plan,
+    )
+
+    if tool_lookup is None:
+        tool_lookup = {t.name: t for tools in TOOLS_DICT.values() for t in tools}
+
+    print(
+        "\n🚀 [EXECUTE TOOL PLAN] Raw ordered calls:\n"
+        f"{json.dumps(tool_calls, indent=2, ensure_ascii=False)}"
+    )
+    final_tool_call, search_history = execute_image_search_plan(
+        tool_calls=tool_calls,
+        tool_lookup=tool_lookup,
+    )
+    tool_name = final_tool_call.get("name", "unknown_tool")
+    original_html_call = tool_calls[0]   # bản gốc từ LLM (image_url = "") — HTML tool FIRST
+    search_calls = tool_calls[1:]        # search_ddgs_images calls từ LLM — AFTER
+
+    # Build execution matrix theo cấu trúc training: tool_call trước, image_tool_call_N sau
+    execution_matrix: dict = {"tool_call": original_html_call}
+    for i, call in enumerate(search_calls, start=1):
+        result_url = search_history[i - 1].get("result_url", "") if i - 1 < len(search_history) else ""
+        execution_matrix[f"image_tool_call_{i}"] = {
+            **call,
+            "result_url": result_url,   # URL thực đã tìm được (chỉ để log, không lưu dataset)
+        }
+
+    print(
+        "  📦 [PIPELINE TOOL CALL EXECUTION MATRIX]:\n"
+        f"{json.dumps(execution_matrix, indent=2, ensure_ascii=False)}"
+    )
+
+    print(f"  🎨 [RENDER HTML] Executing tool '{tool_name}' to generate slide HTML...")
+    html_out = execute_tool(final_tool_call)
+    if html_out:
+        print(f"  ✅ [SUCCESS] Tool '{tool_name}' rendered HTML successfully ({len(html_out)} bytes).")
+    else:
+        print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render HTML.")
+    return html_out, final_tool_call, search_history

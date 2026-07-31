@@ -39,13 +39,22 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
                 print(f"⚠️ Slide {idx + 1} conversion failed or skipped.")
 
     # Lưu thông tin slide cuối cùng (với đường dẫn HTML đã convert nếu thành công)
+    # Thu thập image_tool_call_1, _2, ... từ state (do slide_generator lưu riêng)
+    image_call_fields = {}
+    _i = 1
+    while f"current_image_tool_call_{_i}" in state:
+        image_call_fields[f"image_tool_call_{_i}"] = state[f"current_image_tool_call_{_i}"]
+        _i += 1
+
     final_slide_data = {
         "index": idx,
-        "tool_call": state['current_tool_call'],
+        "tool_call": state['current_tool_call'],  # html_call gốc từ LLM (image_url = "") — LLM sinh TRƯỚC
+        **image_call_fields,                      # image_tool_call_1, _2, ... — LLM sinh SAU (dựa vào tool_call)
         "html_path": converted_html_path,
         "png_path": state.get('current_image_path', ''),
         "original_text": state['current_slide_text']
     }
+
     state['final_slides'].append(final_slide_data)
 
     # NOTE: Chunk popping is now handled in next_slide_provider.py for proper sync

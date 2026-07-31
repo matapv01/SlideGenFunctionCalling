@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Grid Slide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #38BDF8; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
+        }
+
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
+            background-color: #111827;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.5rem; /* 40px */
+        }
+        
+        .title-accent {
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, #38BDF8, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+        }
+        
+        .main-title {
+            font-size: 3.5rem;
+            color: #FFFFFF;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .content-layout {
+            display: flex;
+            width: 100%;
+            flex: 1;
+            gap: 2.5rem; /* 40px */
+        }
+        
+        .image-section {
+            flex: 2;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            border-left: 0.25rem solid #38BDF8; /* accent border */
+        }
+        
+        .image-grid {
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 1rem; /* 16px */
+        }
+        
+        .image-card {
+            position: relative;
+            border-radius: 0.75rem; /* 12px */
+            overflow: hidden;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .image-card:hover {
+            transform: scale(1.05) rotate(1deg); /* hover effect */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+            z-index: 2;
+        }
+        
+        .image-container {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+        
+        .image-card:hover .image-container img {
+            transform: scale(1.1); /* zoom effect on hover */
+        }
+        
+        .image-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 0.5rem; /* 8px - increased overlay */
+            background: linear-gradient(90deg, #38BDF8, rgba(213, 232, 185, 0.8));
+            transition: all 0.3s ease;
+        }
+        
+        .image-card:hover .image-overlay {
+            height: 25%; /* expand overlay on hover */
+            background: linear-gradient(to top, #38BDF8, transparent);
+        }
+        
+        .content-sections {
+            flex: 3;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            grid-template-rows: 1fr 1fr;
+            gap: 2rem;
+        }
+        
+        .content-item {
+            background: rgba(255,255,255,0.9);
+            border-radius: 1rem; /* 16px */
+            padding: 2rem;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border-left: 0.25rem solid #38BDF8; /* subtitle color border */
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .content-item:hover {
+            transform: translateY(-0.25rem); /* -4px hover lift */
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.15);
+        }
+        
+        .content-item::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, #38BDF8, rgba(107, 157, 52, 0.6));
+            transform: scaleX(0);
+            transition: transform 0.3s ease;
+            transform-origin: left;
+        }
+        
+        .content-item:hover::before {
+            transform: scaleX(1);
+        }
+        
+        .subtitle {
+            font-size: 2rem;
+            color: #38BDF8;
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+            position: relative;
+        }
+        
+        .subtitle::after {
+            content: '';
+            position: absolute;
+            bottom: -0.25rem; /* -4px */
+            left: 0;
+            width: 2rem; /* 32px */
+            height: 0.125rem; /* 2px */
+            background: #38BDF8;
+            border-radius: 0.0625rem; /* 1px */
+        }
+        
+        .content {
+            font-size: 1.6rem;
+            color: #CBD5E1;
+            margin: 0;
+            line-height: 1.6;
+            padding: 1rem;
+            background: rgba(107, 157, 52, 0.05); /* subtitle color with low opacity */
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.3s ease;
+        }
+        
+        .content-item:hover .content {
+            background: rgba(107, 157, 52, 0.1);
+            transform: translateX(0.25rem); /* 4px */
+        }
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {
+            body {
+                padding: 3rem 5rem;
+            }
+            
+            .content-layout {
+                flex-direction: column;
+                gap: 2rem;
+            }
+            
+            .image-section {
+                flex: none;
+                height: 20rem;
+            }
+            
+            .content-sections {
+                flex: none;
+                gap: 1rem;
+            }
+        }
+        
+        @media screen and (max-width: 50rem) {
+            body {
+                padding: 2rem 3rem;
+            }
+            
+            .slide-inner-container {
+                padding: 2rem 3rem;
+            }
+            
+            .content-sections {
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(4, 1fr);
+            }
+            
+            .content-item {
+                padding: 1rem;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.25rem;
+            }
+            
+            .content {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-inner-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">6. Tầm ảnh hưởng và vị thế trong V-Pop</h1>
+        </div>
+        
+        <!-- Content Layout -->
+        <div class="content-layout">
+            <!-- Image Section -->
+            <div class="image-section">
+                <div class="image-grid">
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="https://kyluc.vn/Userfiles/Upload/images/he-sinh-thai-ky-luc-so.jpg" alt="Image 1">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="https://vieclam123.vn/upload/news/thumb/khoang-cach-the-he-la-gi-nguyen-do-cua-khoang-cach-the-he-la-gi.jpg" alt="Image 2">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="https://nguyenhuuduc.vn/wp-content/uploads/2023/09/Xu-huong-la-gi.png" alt="Image 3">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
+                    <div class="image-card">
+                        <div class="image-container">
+                            <img src="https://danhgiadoanhnghiep.vn/uploads/noidung/images/c01(1).jpg" alt="Image 4">
+                            <div class="image-overlay"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Content Sections -->
+            <div class="content-sections">
+                <div class="content-item">
+                    <h3 class="subtitle">Kỷ lục trực tuyến</h3>
+                    <p class="content">Đạt <span style="font-weight: bold; color: #38BDF8;">hàng triệu lượt xem</span> và phá vỡ nhiều kỷ lục trên các nền tảng trực tuyến.</p>
+                </div>
+                <div class="content-item">
+                    <h3 class="subtitle">Biểu tượng thế hệ</h3>
+                    <p class="content">Là biểu tượng của <span style="font-weight: bold; color: #38BDF8;">thế hệ nghệ sĩ trẻ</span>, truyền cảm hứng mạnh mẽ.</p>
+                </div>
+                <div class="content-item">
+                    <h3 class="subtitle">Định hình xu hướng</h3>
+                    <p class="content"><span style="font-weight: bold; color: #38BDF8;">Phong cách thời trang</span> và hình ảnh tạo xu hướng trên mạng xã hội.</p>
+                </div>
+                <div class="content-item">
+                    <h3 class="subtitle">Vươn tầm quốc tế</h3>
+                    <p class="content">Góp phần quan trọng trong việc <span style="font-weight: bold; color: #38BDF8;">nâng tầm V-Pop</span> ra thị trường quốc tế.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

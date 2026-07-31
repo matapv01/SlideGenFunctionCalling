@@ -1,0 +1,155 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Notebook Cover Design</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+            background: #E3F2FD;
+            background-image: 
+                repeating-linear-gradient(0deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px),
+                repeating-linear-gradient(90deg, rgba(255,255,255,0.03) 0px, transparent 1px, transparent 2px, rgba(255,255,255,0.03) 3px);
+            position: relative;
+        }
+        
+        .top-left {
+            position: absolute;
+            top: 60px;
+            left: 120px;
+            font-size: 30px;
+            color: #0D47A1;
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        
+        .top-right {
+            position: absolute;
+            top: 60px;
+            right: 120px;
+            font-size: 24px;
+            color: #0D47A1;
+            font-weight: bold;
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        
+        .text-content {
+            position: absolute;
+            top: 330px;
+            left: 120px;
+            max-width: 1000px;
+            z-index: 1;
+        }
+        
+        .main-title {
+            font-size: 120px;
+            color: #0D47A1;
+            line-height: 1.2;
+            font-weight: 400;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            margin: 0;
+        }
+
+        .image-container {
+            position: absolute;
+            right: 200px;
+            top: 240px;
+            z-index: 2;
+        }
+
+        .polaroid {
+            position: relative;
+            width: 480px;
+            height: 530px;
+            background: white;
+            padding: 18px;
+            padding-bottom: 55px;
+            box-shadow: 0 15px 50px rgba(0,0,0,0.35);
+            transform: rotate(6deg);
+        }
+
+        .polaroid img {
+            width: 444px;
+            height: 457px;
+            object-fit: cover;
+        }
+        
+        .clover {
+            position: absolute;
+            bottom: 30px;
+            left: 120px;
+            z-index: 10;
+        }
+        
+        .bottom-text {
+            position: absolute;
+            bottom: 60px;
+            right: 120px;
+            font-size: 30px;
+            color: #0D47A1;
+            font-family: 'Be Vietnam Pro', sans-serif;
+        }
+        
+        .top-line {
+            position: absolute;
+            top: 120px;
+            left: 120px;
+            width: 1680px;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #8b4513 20%, #8b4513 80%, transparent);
+        }
+        
+        .horizontal-line {
+            position: absolute;
+            bottom: 120px;
+            left: 120px;
+            width: 1680px;
+            height: 3px;
+            background: linear-gradient(to right, transparent, #8b4513 20%, #8b4513 80%, transparent);
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="top-left">Những kỷ niệm đẹp</div>
+    <div class="top-right">2024</div>
+    
+    <div class="text-content">
+        <div class="main-title">Doraemon:<br>Mèo Máy Đến Từ Tương Lai</div>
+    </div>
+
+    <div class="image-container">
+        <div class="polaroid">
+            <img src="https://wallpapers.com/images/hd/emotional-doraemon-and-nobita-xyu72vuh2onm4ngw.jpg" alt="Notebook Cover Image">
+        </div>
+    </div>
+    
+    <div class="clover">
+    <svg viewBox="0 0 100 100" style="width: 180px; height: 180px;">
+        <g fill="#2d5f3f">
+            <circle cx="35" cy="35" r="15"/>
+            <circle cx="65" cy="35" r="15"/>
+            <circle cx="35" cy="65" r="15"/>
+            <circle cx="65" cy="65" r="15"/>
+            <circle cx="50" cy="50" r="8"/>
+            <rect x="48" y="65" width="4" height="25" fill="#2d5f3f"/>
+        </g>
+    </svg>
+    </div>
+    <div class="top-line"></div>
+    <div class="horizontal-line"></div>
+    <div class="bottom-text">Khám phá thế giới của tình bạn, phép màu và những bảo bối kỳ diệu</div>
+</body>
+</html>
+    

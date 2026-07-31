@@ -8,7 +8,8 @@ from langchain_core.runnables import RunnableConfig
 from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
-from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool_plan, TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
 from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
@@ -20,10 +21,14 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     INTRO_PROMPT,
     MATH_EQUATION_RULES,
     SLIDE_PREPARER_SYSTEM_PROMPT,
-    SLIDE_PREPARER_HUMAN_TEMPLATE
+    SLIDE_PREPARER_HUMAN_TEMPLATE,
+    IMAGE_SEARCH_EXECUTION_PLAN_RULES,
 )
+
 from backend.workflows.slidegen_workflow.utils.helper import (
-    format_tool_for_qwen, QWEN_CHAT_TEMPLATE, get_slide_style_context
+    format_tool_for_qwen,
+    parse_tool_calls_json,
+    QWEN_CHAT_TEMPLATE,
 )
 
 _tokenizer_cache = {}
@@ -61,6 +66,28 @@ def _extract_style_params(tool_call: dict) -> dict:
     style_args = {k: v for k, v in args.items() if k not in _CONTENT_KEYS}
     result["arguments"] = style_args
     return result
+
+
+
+
+
+def _format_content_as_str(content) -> str:
+    """Safely convert slide content (str, dict, list) to a plain string."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        parts = []
+        for k, v in content.items():
+            if isinstance(v, list):
+                parts.extend([str(item) for item in v])
+            elif isinstance(v, (str, int, float)):
+                parts.append(str(v))
+            elif isinstance(v, dict):
+                parts.append(_format_content_as_str(v))
+        return "\n".join(parts) if parts else json.dumps(content, ensure_ascii=False)
+    if isinstance(content, list):
+        return "\n".join([_format_content_as_str(item) for item in content])
+    return str(content) if content is not None else ""
 
 
 def create_default_html(content_data) -> str:
@@ -156,6 +183,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     previous_slide_function_call = state.get('previous_accepted_tool_call', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
     
+    if isinstance(current_text, (dict, list)):
+        current_text = _format_content_as_str(current_text)
     if not current_text:
         current_text = "Default slide content"
         
@@ -266,9 +295,22 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         except Exception as e:
             print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
             
-    # Assign prepared values
-    system_prompt = generator_system_prompt
+    # Assign prepared values. The image-search plan is produced by this same
+    # generator invocation; no later LLM call is allowed to create search specs.
+    system_prompt = (
+        generator_system_prompt
+        + "\n\n"
+        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+    )
+    qwen_system_prompt = (
+        QWEN_GENERATOR_SYSTEM_PROMPT
+        + "\n\n"
+        + generator_system_prompt
+        + "\n\n"
+        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+    )
     human_template = HUMAN_PROMPT_TEMPLATE
+    generator_tools = [SEARCH_DDGS_TOOL, *my_tools]
             
     is_qwen = _check_is_qwen(llm)
     print(f"  -> Model Mode: {'LOCAL QWEN' if is_qwen else 'GEMINI / API'}")
@@ -293,7 +335,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
         # A. QWEN LOCAL EXECUTION PATH (Native JSON tool call)
         if is_qwen:
-            tool_schemas = [format_tool_for_qwen(t) for t in my_tools]
+            tool_schemas = [format_tool_for_qwen(t) for t in generator_tools]
 
             qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
                 style_context=style_context_str,
@@ -306,7 +348,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
 
             # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
             messages = [
-                {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
+                {"role": "system", "content": qwen_system_prompt},
                 {"role": "user", "content": qwen_user_prompt},
             ]
             model_name, base_url = _get_qwen_config(llm)
@@ -318,7 +360,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             resp = client.completions.create(
                 model=model_name,
                 prompt=prompt,
-                max_tokens=getattr(llm, 'max_tokens', 1024) or 1024,
+                max_tokens=max(getattr(llm, 'max_tokens', 1024) or 1024, 1536),
                 temperature=getattr(llm, 'temperature', 0.5) or 0.5,
                 stop=["<|im_end|>"],
             )
@@ -327,7 +369,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
         else:
             gemini_vars = {**human_vars, "design_instruction": design_instruction}
-            llm_with_tools = llm.bind_tools(my_tools)
+            llm_with_tools = llm.bind_tools(generator_tools)
             slidegen_prompt = ChatPromptTemplate.from_messages([
                 ("system", system_prompt),
                 ("human", human_template)
@@ -335,50 +377,39 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             slide_generator_runnable = slidegen_prompt | llm_with_tools
             response = slide_generator_runnable.invoke(gemini_vars)
             
-        # 3. Parse JSON / Extract tool call
-        tool_call_dict = None
+        # 3. Parse the complete ordered plan: Search 1..N, then HTML tool.
+        tool_calls = []
 
         if is_qwen:
             # Qwen path: raw text from completions endpoint
-            from backend.workflows.slidegen_workflow.utils.helper import parse_tool_call_json
-            tool_call_dict = parse_tool_call_json(content)
+            tool_calls = parse_tool_calls_json(content)
         else:
             # Gemini path: structured tool calls
             if hasattr(response, "tool_calls") and response.tool_calls:
-                tc = response.tool_calls[0]
-                tool_call_dict = {
-                    "name": tc.get("name"),
-                    "arguments": tc.get("args", {})
-                }
+                tool_calls = [
+                    {
+                        "name": tc.get("name"),
+                        "arguments": tc.get("args", {}),
+                    }
+                    for tc in response.tool_calls
+                ]
             else:
                 content = getattr(response, "content", "")
-                try:
-                    cleaned_text = content.strip()
-                    if "```json" in cleaned_text:
-                        cleaned_text = cleaned_text.split("```json")[1].split("```")[0].strip()
-                    elif "```" in cleaned_text:
-                        cleaned_text = cleaned_text.split("```")[1].split("```")[0].strip()
+                tool_calls = parse_tool_calls_json(content)
 
-                    parsed_json = json.loads(cleaned_text)
-                    if isinstance(parsed_json, list) and len(parsed_json) > 0:
-                        parsed_json = parsed_json[0]
-
-                    if isinstance(parsed_json, dict) and "name" in parsed_json:
-                        tool_call_dict = {
-                            "name": parsed_json["name"],
-                            "arguments": parsed_json.get("arguments") or parsed_json.get("args") or {}
-                        }
-                except Exception as parse_err:
-                    print(f"⚠️ Fallback JSON parsing failed: {parse_err}")
-                
-        if not tool_call_dict:
-            error_msg = "You did NOT generate any function call."
+        if not tool_calls:
+            error_msg = "You did NOT generate an ordered tool-call plan."
             print(f"❌ {error_msg}")
             retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
             continue
-            
-        tool_name = tool_call_dict["name"]
-        tool_args = tool_call_dict["arguments"]
+
+        print(
+            f"\n🤖 [GENERATOR OUTPUT] Slide {idx + 1} — {len(tool_calls)} tool call(s):\n"
+            + json.dumps(tool_calls, indent=2, ensure_ascii=False)
+        )
+
+        html_tool_call = tool_calls[0]
+        tool_name = html_tool_call["name"]
         tool_lookup = {t.name: t for t in my_tools}
         
         # Validation checks
@@ -389,9 +420,13 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             continue
             
         try:
-            html_content = execute_tool(tool_call_dict)
+            # Execute Search 1..N, rule-map their URLs, then render HTML.
+            html_content, final_tool_call, search_history = execute_tool_plan(
+                tool_calls,
+                tool_lookup=tool_lookup,
+            )
         except Exception as e:
-            error_msg = f"Tool '{tool_name}' CRASHED during execution: {e}"
+            error_msg = f"Tool plan for '{tool_name}' is invalid or crashed: {e}"
             print(f"❌ {error_msg}")
             retry_feedback += f"\n❌ PREVIOUS ERROR: {error_msg}"
             continue
@@ -403,9 +438,17 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             continue
             
         # Success
-        print(f"✅ Tool '{tool_name}' generated and executed successfully.")
-        state["current_tool_call"] = tool_call_dict
+        original_html_call = tool_calls[0]   # bản gốc từ LLM (image_url = "") — HTML tool FIRST
+        search_calls = tool_calls[1:]        # search_ddgs_images calls từ LLM — AFTER
+
+        state["current_tool_plan"] = tool_calls
+        state["current_search_history"] = search_history
+        state["current_tool_call"] = original_html_call
         state["current_html_content"] = html_content
+
+        # Lưu từng search call thành key riêng: current_image_tool_call_1, _2, ...
+        for _i, _call in enumerate(search_calls, start=1):
+            state[f"current_image_tool_call_{_i}"] = _call
         
         # Record tool usage for temporal decay tracking
         tool_retriever.record_tool_usage(
@@ -415,7 +458,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         )
 
         if slide_type == "TRANSITION_TOOLS":
-            state["previous_transition_tool_call"] = tool_call_dict
+            state["previous_transition_tool_call"] = final_tool_call
         
         # Save things that used to be saved by slide_preparer to state, just in case they are used downstream
         state["candidate_tools"] = my_tools
