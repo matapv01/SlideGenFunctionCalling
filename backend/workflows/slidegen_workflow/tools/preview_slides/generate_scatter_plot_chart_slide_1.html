@@ -1,0 +1,83 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&display=swap');
+            body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
+                background-color: #7b92f7; font-family: 'Montserrat', sans-serif;
+                background-image: radial-gradient(#ffffff 2px, transparent 2px); background-size: 60px 60px;
+            }
+            .header-box {
+                position: absolute; top: 60px; left: 100px; width: 1720px;
+            }
+            .main-title {
+                font-size: 70px; font-weight: 700; color: #ffffff; margin: 0;
+                text-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+            }
+            .subtitle-text {
+                font-size: 32px; color: #3d4a85; margin-top: 10px; font-weight: 700;
+            }
+            .chart-container {
+                position: absolute; top: 280px; left: 80px; width: 1050px; height: 650px;
+                background: rgba(255, 255, 255, 0.1); border-radius: 30px; border: 5px dashed rgba(255,255,255,0.4);
+            }
+            .insight-container {
+                position: absolute; top: 280px; right: 100px; width: 550px;
+            }
+            .insight-card {
+                background: #fffbe6; border: 8px solid #ffffff; border-radius: 40px;
+                padding: 40px; box-shadow: 0 10px 20px rgba(0,0,0,0.1); margin-bottom: 40px;
+            }
+            .insight-content {
+                font-size: 28px; color: #3d4a85; line-height: 1.4; font-weight: 400;
+            }
+            .legend-box {
+                background: rgba(255, 255, 255, 0.2); border-radius: 30px; padding: 30px; border: 4px solid #ffffff;
+                list-style: none; margin: 0; margin-top: 50px;
+            }
+            .sticker {
+                position: absolute; font-size: 80px; background: #ffffff; border-radius: 20px; padding: 10px;
+                border: 5px solid #ffffff; box-shadow: 5px 5px 0px rgba(0,0,0,0.1);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="sticker" style="top: 40px; right: 80px; transform: rotate(15deg);">✏️</div>
+        <div class="sticker" style="top: 80px; right: 170px; transform: rotate(-10deg);">🎨</div>
+        
+        <div class="header-box">
+            <h1 class="main-title">Early Childhood Development Analysis</h1>
+            <div class="subtitle-text">Correlation between Play Time and Social Skill Scores</div>
+        </div>
+
+        <div class="chart-container">
+            <svg width="1050" height="650" viewBox="0 0 1050 650">
+                <line x1="100" y1="570.0" x2="990" y2="570.0" stroke="rgba(255,255,255,0.3)" stroke-width="1" /><text x="85" y="576.0" font-size="18" text-anchor="end" fill="#ffffff">30</text><line x1="100" y1="468.0" x2="990" y2="468.0" stroke="rgba(255,255,255,0.3)" stroke-width="1" /><text x="85" y="474.0" font-size="18" text-anchor="end" fill="#ffffff">64</text><line x1="100" y1="366.0" x2="990" y2="366.0" stroke="rgba(255,255,255,0.3)" stroke-width="1" /><text x="85" y="372.0" font-size="18" text-anchor="end" fill="#ffffff">98</text><line x1="100" y1="264.0" x2="990" y2="264.0" stroke="rgba(255,255,255,0.3)" stroke-width="1" /><text x="85" y="270.0" font-size="18" text-anchor="end" fill="#ffffff">132</text><line x1="100" y1="162.0" x2="990" y2="162.0" stroke="rgba(255,255,255,0.3)" stroke-width="1" /><text x="85" y="168.0" font-size="18" text-anchor="end" fill="#ffffff">166</text><line x1="100" y1="60.0" x2="990" y2="60.0" stroke="rgba(255,255,255,0.3)" stroke-width="1" /><text x="85" y="66.0" font-size="18" text-anchor="end" fill="#ffffff">200</text><circle cx="322.5" cy="525.0" r="12" fill="#FF6B6B" stroke="#ffffff" stroke-width="3" /><circle cx="489.375" cy="486.0" r="12" fill="#FF6B6B" stroke="#ffffff" stroke-width="3" /><circle cx="656.25" cy="444.0" r="12" fill="#FF6B6B" stroke="#ffffff" stroke-width="3" /><circle cx="789.75" cy="405.0" r="12" fill="#FF6B6B" stroke="#ffffff" stroke-width="3" /><circle cx="266.875" cy="540.0" r="12" fill="#4ECDC4" stroke="#ffffff" stroke-width="3" /><circle cx="545.0" cy="465.0" r="12" fill="#4ECDC4" stroke="#ffffff" stroke-width="3" /><circle cx="711.875" cy="426.0" r="12" fill="#4ECDC4" stroke="#ffffff" stroke-width="3" /><circle cx="878.75" cy="384.0" r="12" fill="#4ECDC4" stroke="#ffffff" stroke-width="3" /><line x1="100" y1="570" x2="990" y2="570" stroke="#ffffff" stroke-width="4" stroke-linecap="round" /><line x1="100" y1="60" x2="100" y2="570" stroke="#ffffff" stroke-width="4" stroke-linecap="round" /><text x="545.0" y="630" font-size="22" text-anchor="middle" fill="#ffffff" font-weight="700">Weekly Play Time (Hours)</text><text transform="rotate(-90)" x="-315.0" y="35" font-size="22" text-anchor="middle" fill="#ffffff" font-weight="700">Social Skill Score (0-100)</text>
+            </svg>
+        </div>
+
+        <div class="insight-container">
+            <div class="insight-card">
+                <div style="font-size: 30px; font-weight: 700; color: #3d4a85; margin-bottom: 15px;">Key Insight 💡</div>
+                <div class="insight-content">Data shows a strong positive correlation: children with more than 4 hours of structured play weekly exhibit 30% higher social integration scores.</div>
+            </div>
+            <ul class="legend-box">
+                
+            <li style="display:flex; align-items:center; margin-bottom:15px;">
+                <div style="width:24px; height:24px; background:#FF6B6B; border:3px solid #ffffff; border-radius:50%; margin-right:15px;"></div>
+                <span style="font-size:24px; font-weight:700; color:#3d4a85;">Group A (Ages 3-4)</span>
+            </li>
+            
+            <li style="display:flex; align-items:center; margin-bottom:15px;">
+                <div style="width:24px; height:24px; background:#4ECDC4; border:3px solid #ffffff; border-radius:50%; margin-right:15px;"></div>
+                <span style="font-size:24px; font-weight:700; color:#3d4a85;">Group B (Ages 5-6)</span>
+            </li>
+            
+            </ul>
+        </div>
+    </body>
+    </html>
+    

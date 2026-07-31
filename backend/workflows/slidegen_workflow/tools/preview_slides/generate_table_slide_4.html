@@ -1,0 +1,227 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+    <style>
+    :root {
+      --font-family: 'Inter', sans-serif;
+      --main-title-font-size: 70px;
+      --subtitle-font-size: 30px;
+      --insight-font-size: 28px;
+    }
+
+    html, body {
+      width:1920px;
+      height:1080px;
+      margin:0;
+      padding:0;
+      overflow:hidden;
+      font-family: var(--font-family);
+      background: radial-gradient(circle at 20% 20%, #4A2B52 0%, #2D1B33 100%);
+      color: white;
+    }
+
+    .medical-pattern {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160' viewBox='0 0 160 160'%3E%3Cpath stroke='rgba(255,255,255,0.05)' stroke-width='3' stroke-linejoin='round' fill='none' d='M0,80 L40,80 L50,40 L70,120 L80,80 L160,80'/%3E%3Cpath fill='rgba(255,255,255,0.03)' d='M125,25 h10 v10 h10 v10 h-10 v10 h-10 v-10 h-10 v-10 h10 z'/%3E%3C/svg%3E");
+      background-size: 160px 160px;
+      z-index: 0;
+    }
+
+    .content-container {
+      position: relative;
+      z-index: 1;
+      padding: 80px 100px;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      box-sizing: border-box;
+    }
+
+    .header-section {
+      margin-bottom: 60px;
+      border-left: 12px solid #E89CB4;
+      padding-left: 40px;
+    }
+
+    h1 {
+      font-size: var(--main-title-font-size);
+      font-weight: 800;
+      color: #4ADE80;
+      margin: 0;
+      text-transform: uppercase;
+      letter-spacing: -1px;
+    }
+
+    .subtitle {
+      font-size: var(--subtitle-font-size);
+      color: #64748B;
+      margin-top: 15px;
+      font-weight: 300;
+    }
+
+    .main-grid {
+      display: flex;
+      gap: 60px;
+      flex: 1;
+      align-items: flex-start;
+    }
+
+    .left-column {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 40px;
+    }
+
+    .insight-panel {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 50px;
+      border-radius: 30px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .insight-text {
+      font-size: var(--insight-font-size);
+      color: #2DD4BF;
+      line-height: 1.6;
+      font-style: italic;
+    }
+
+    .table-panel {
+      flex: 2;
+    }
+
+    .accent-bar {
+      width: 80px;
+      height: 6px;
+      background: #E89CB4;
+      margin-bottom: 30px;
+      border-radius: 3px;
+    }
+
+    </style>
+    </head>
+    <body>
+    <div class="medical-pattern"></div>
+    <div class="content-container">
+        <div class="header-section">
+        <h1>Average Blood Pressure by Age Group</h1>
+        <div class="subtitle">Unit: mmHg | Data Source: National Health Survey 2025</div>
+        </div>
+
+        <div class="main-grid">
+        <div class="left-column">
+            <div class="insight-panel">
+            <div class="accent-bar"></div>
+            <div class="insight-text">
+                "Healthcare is important, Keep your health in check!"
+            </div>
+            </div>
+            <div class="medical-svg" style="display:flex; justify-content:center; align-items:center; flex:1; opacity: 0.3;">
+            <svg width="250" height="250" viewBox="0 0 24 24" fill="none" stroke="#E89CB4" stroke-width="1" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M22 12h-4l-3 9L9 3l-3 9H2"></path>
+            </svg>
+            </div>
+        </div>
+
+        <div class="table-panel">
+            
+    <table style="border-collapse:collapse; width:100%; background:rgba(255,255,255,0.05); border-radius:20px; overflow:hidden; backdrop-filter:blur(10px);">
+    <thead>
+        <tr>
+        <th style="padding:25px; background:#5D3B6B; border-bottom:2px solid #E89CB4; font-size:22px; color:#FFFFFF; text-transform:uppercase; text-align:left;">
+            Metric / Category
+        </th>
+        
+    <th style="padding:25px; background:#5D3B6B; border-bottom:2px solid #E89CB4; font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
+        18-25
+    </th>
+    
+    <th style="padding:25px; background:#5D3B6B; border-bottom:2px solid #E89CB4; font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
+        26-35
+    </th>
+    
+    <th style="padding:25px; background:#5D3B6B; border-bottom:2px solid #E89CB4; font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
+        36-45
+    </th>
+    
+    <th style="padding:25px; background:#5D3B6B; border-bottom:2px solid #E89CB4; font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
+        46-60
+    </th>
+    
+    <th style="padding:25px; background:#5D3B6B; border-bottom:2px solid #E89CB4; font-size:22px; color:#FFFFFF; text-transform:uppercase; letter-spacing:1px;">
+        60+
+    </th>
+    
+        </tr>
+    </thead>
+    <tbody>
+        
+    <tr style="transition: background 0.3s;">
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); font-weight:600; font-size:24px; color:#E89CB4; background:rgba(232, 156, 180, 0.15);">
+        Male
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        118mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        122mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        128mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        135mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        142mmHg
+        </td>
+        
+    </tr>
+    
+    <tr style="transition: background 0.3s;">
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); font-weight:600; font-size:24px; color:#E89CB4; background:rgba(232, 156, 180, 0.15);">
+        Female
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        112mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        118mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        124mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        130mmHg
+        </td>
+        
+        <td style="padding:25px; border-bottom:1px solid rgba(255, 255, 255, 0.1); text-align:center; font-size:24px; color:#FFFFFF;">
+        138mmHg
+        </td>
+        
+    </tr>
+    
+    </tbody>
+    </table>
+    
+        </div>
+        </div>
+    </div>
+    </body>
+    </html>
+    

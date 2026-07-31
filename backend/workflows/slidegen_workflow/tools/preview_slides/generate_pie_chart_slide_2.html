@@ -1,0 +1,232 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <meta charset="UTF-8">
+
+    <style>
+
+    html,body{
+        width:1920px;
+        height:1080px;
+        margin:0;
+        padding:0;
+        overflow:hidden;
+        font-family:Inter, sans-serif;
+        background: linear-gradient(135deg, #020c24, #1a2a4a, #5FD9D3);
+        color:white;
+        --accent-color: #5FD9D3;
+        --main-title-color: #5FD9D3;
+        --subtitle-color: #FFFFFF;
+        --insight-text-color: #FFFFFF;
+        --main-title-font-size: 70px;
+        --subtitle-font-size: 32px;
+        --insight-font-size: 34px;
+    }
+
+    .bg-decoration{
+        position:absolute;
+        width:100%;
+        height:100%;
+        z-index:0;
+        background:radial-gradient(circle at 90% 90%, #1a2a4a 0%, transparent 50%);
+    }
+
+    .container{
+    position:relative;
+    z-index:1;
+    padding:80px 100px;
+    height:920px;
+    display:flex;
+    flex-direction:column;
+    }
+
+    .header-box{
+    margin-bottom:60px;
+    border-left:10px solid var(--accent-color);
+    padding-left:35px;
+    }
+
+    h1{
+        font-size: var(--main-title-font-size);
+        color: var(--main-title-color);
+        margin:0;
+        text-transform:uppercase;
+        letter-spacing:2px;
+    }
+
+    .subtitle{
+        font-size: var(--subtitle-font-size);
+        color: var(--subtitle-color);
+        margin-top:10px;
+        opacity:0.8;
+    }
+
+    .content-grid{
+    display:flex;
+    flex:1;
+    gap:80px;
+    align-items:center;
+    }
+
+    .left-col{
+    flex:1;
+    display:flex;
+    flex-direction:column;
+    }
+
+    .insight-box{
+        background:rgba(255,255,255,0.05);
+        border:2px solid var(--accent-color);
+        border-radius:25px;
+        box-shadow:0 0 15px var(--accent-color)AA;
+        padding:35px;
+        margin-bottom:40px;
+        font-size: var(--insight-font-size);
+        color: var(--insight-text-color);
+        line-height:1.5;
+    }
+
+    .right-col{
+    flex:1.2;
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    }
+
+    .right-col svg{
+    max-width:100%;
+    height:auto;
+    }
+
+    </style>
+    </head>
+
+    <body>
+
+    <div class="bg-decoration"></div>
+
+    <div class="container">
+
+    <div class="header-box">
+    <h1>Technology Market Share 2024</h1>
+    <div class="subtitle">Source: Global Tech Market Report</div>
+    </div>
+
+    <div class="content-grid">
+
+    <div class="left-col">
+
+    <div class="insight-box">
+    AI services dominate the market with nearly half of the total share, while cloud infrastructure and cybersecurity continue to grow steadily.
+    </div>
+
+    <div class="legend-container">
+    
+            <div style="display:flex;align-items:center;margin-bottom:20px;">
+                <div style="width:24px;height:24px;background:#32CD32;
+                border-radius:4px;margin-right:15px;
+                box-shadow:0 0 10px #32CD3266;"></div>
+
+                <div style="color:white;font-size:24px;">
+                AI Services
+                <span style="color:#5FD9D3;opacity:0.8;">
+                (45.0%)
+                </span>
+                </div>
+            </div>
+            
+            <div style="display:flex;align-items:center;margin-bottom:20px;">
+                <div style="width:24px;height:24px;background:#FF7F50;
+                border-radius:4px;margin-right:15px;
+                box-shadow:0 0 10px #FF7F5066;"></div>
+
+                <div style="color:white;font-size:24px;">
+                Cloud Infrastructure
+                <span style="color:#5FD9D3;opacity:0.8;">
+                (25.0%)
+                </span>
+                </div>
+            </div>
+            
+            <div style="display:flex;align-items:center;margin-bottom:20px;">
+                <div style="width:24px;height:24px;background:#FFD700;
+                border-radius:4px;margin-right:15px;
+                box-shadow:0 0 10px #FFD70066;"></div>
+
+                <div style="color:white;font-size:24px;">
+                Cybersecurity
+                <span style="color:#5FD9D3;opacity:0.8;">
+                (18.0%)
+                </span>
+                </div>
+            </div>
+            
+            <div style="display:flex;align-items:center;margin-bottom:20px;">
+                <div style="width:24px;height:24px;background:#8A2BE2;
+                border-radius:4px;margin-right:15px;
+                box-shadow:0 0 10px #8A2BE266;"></div>
+
+                <div style="color:white;font-size:24px;">
+                IoT Platforms
+                <span style="color:#5FD9D3;opacity:0.8;">
+                (12.0%)
+                </span>
+                </div>
+            </div>
+            
+    </div>
+
+    </div>
+
+    <div class="right-col">
+
+    <svg width="1000" height="700" viewBox="0 0 1000 700">
+    
+        <path d="M 500.0 350.0 L 500.0 70.0 A 280 280 0 0 1 586.5247584249853 616.295824562643 Z" fill="#32CD32" stroke="#5FD9D3" stroke-width="3"/>
+        
+            <text x="693.586914756647" y="319.33884485211473" fill="white"
+            font-size="20" font-weight="bold"
+            text-anchor="middle"
+            dominant-baseline="middle">
+            45.0%
+            </text>
+            
+        <path d="M 500.0 350.0 L 586.5247584249853 616.295824562643 A 280 280 0 0 1 233.70417543735704 436.5247584249853 Z" fill="#FF7F50" stroke="#5FD9D3" stroke-width="3"/>
+        
+            <text x="411.01786205104884" y="524.6372787409201" fill="white"
+            font-size="20" font-weight="bold"
+            text-anchor="middle"
+            dominant-baseline="middle">
+            25.0%
+            </text>
+            
+        <path d="M 500.0 350.0 L 233.70417543735704 436.5247584249853 A 280 280 0 0 1 308.3268103399672 145.88878432200477 Z" fill="#FFD700" stroke="#5FD9D3" stroke-width="3"/>
+        
+            <text x="310.1577004187883" y="301.2567821156884" fill="white"
+            font-size="20" font-weight="bold"
+            text-anchor="middle"
+            dominant-baseline="middle">
+            18.0%
+            </text>
+            
+        <path d="M 500.0 350.0 L 308.3268103399672 145.88878432200477 A 280 280 0 0 1 499.99999999999994 70.0 Z" fill="#8A2BE2" stroke="#5FD9D3" stroke-width="3"/>
+        
+            <text x="427.84758767380316" y="167.76380876590272" fill="white"
+            font-size="20" font-weight="bold"
+            text-anchor="middle"
+            dominant-baseline="middle">
+            12.0%
+            </text>
+            
+    </svg>
+
+    </div>
+
+    </div>
+
+    </div>
+
+    </body>
+    </html>
+    

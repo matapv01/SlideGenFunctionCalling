@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Employee Transition Plan</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            background: #0d4d3d;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .content-wrapper {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            padding: 80px 150px;
+            z-index: 2;
+        }
+
+        .main-content {
+            max-width: 900px;
+        }
+        
+        .main-title {
+            color: #FFFFFF;
+            font-size: 96px;
+            font-weight: 700;
+            line-height: 1.1;
+            margin-bottom: 40px;
+        }
+        
+        .subtitle {
+            color: #FFFFFF;
+            font-size: 24px;
+            line-height: 1.6;
+            font-weight: 400;
+            max-width: 700px;
+        }
+        
+        .decorative-circles {
+            position: absolute;
+            right: 0;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 900px;
+            height: 900px;
+            z-index: 1;
+        }
+        
+        .circle {
+            position: absolute;
+            border-radius: 50%;
+        }
+        
+        .circle-1 {
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle at 25% 25%, #0a3d2f, #051f18, #000000);
+            top: -80px;
+            right: 180px;
+            opacity: 0.95;
+            box-shadow: 
+                0 40px 100px rgba(0, 0, 0, 0.5),
+                inset 0 0 80px rgba(45, 212, 191, 0.1);
+        }
+        
+        .circle-2 {
+            width: 520px;
+            height: 520px;
+            background: radial-gradient(circle at 35% 35%, #10855b, #0a5a3e, #042820);
+            top: 40px;
+            right: 120px;
+            opacity: 0.9;
+            box-shadow: 
+                0 35px 80px rgba(16, 133, 91, 0.4),
+                inset 0 0 60px rgba(45, 212, 191, 0.15);
+        }
+        
+        .circle-3 {
+            width: 450px;
+            height: 450px;
+            background: radial-gradient(circle at 30% 30%, #2dd4bf, #16a174, #0e7557);
+            top: 140px;
+            right: 60px;
+            opacity: 0.95;
+            box-shadow: 
+                0 30px 70px rgba(45, 212, 191, 0.3),
+                inset 0 0 50px rgba(255, 255, 255, 0.1);
+        }
+        
+        .circle-4 {
+            width: 380px;
+            height: 380px;
+            background: radial-gradient(circle at 25% 25%, #FFFFFF, #d1fae5, #a7f3d0);
+            top: 250px;
+            right: 10px;
+            opacity: 1;
+            box-shadow: 
+                0 25px 60px rgba(255, 255, 255, 0.2),
+                inset 0 0 40px rgba(45, 212, 191, 0.2);
+        }
+        
+        .circle-accent-1 {
+            width: 250px;
+            height: 250px;
+            background: radial-gradient(circle at 50% 50%, rgba(45, 212, 191, 0.4), rgba(45, 212, 191, 0.1), transparent);
+            top: -120px;
+            right: 450px;
+            opacity: 0.7;
+            filter: blur(30px);
+        }
+        
+        .circle-accent-2 {
+            width: 180px;
+            height: 180px;
+            background: radial-gradient(circle at 50% 50%, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.1), transparent);
+            bottom: -80px;
+            right: 300px;
+            opacity: 0.6;
+            filter: blur(35px);
+        }
+        
+        .circle-accent-3 {
+            width: 320px;
+            height: 320px;
+            background: radial-gradient(circle at 50% 50%, rgba(16, 133, 91, 0.5), rgba(16, 133, 91, 0.2), transparent);
+            top: 50%;
+            right: 650px;
+            transform: translateY(-50%);
+            opacity: 0.5;
+            filter: blur(40px);
+        }
+        
+        .circle-ring {
+            width: 700px;
+            height: 700px;
+            border: 3px solid rgba(45, 212, 191, 0.2);
+            top: -100px;
+            right: 150px;
+            opacity: 0.4;
+        }
+        
+        .circle-ring-2 {
+            width: 500px;
+            height: 500px;
+            border: 2px solid rgba(255, 255, 255, 0.15);
+            top: 100px;
+            right: 200px;
+            opacity: 0.3;
+        }
+        
+        /* Responsive wrapper for preview */
+        .wrapper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: #1a1a1a;
+        }
+        
+        .scale-container {
+            transform-origin: center center;
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="wrapper">
+        <div class="scale-container" id="scaleContainer">
+            <div class="slide-container">
+                <div class="decorative-circles">
+                    <div class="circle circle-ring"></div>
+                    <div class="circle circle-ring-2"></div>
+                    <div class="circle circle-accent-1"></div>
+                    <div class="circle circle-accent-2"></div>
+                    <div class="circle circle-accent-3"></div>
+                    <div class="circle circle-1"></div>
+                    <div class="circle circle-2"></div>
+                    <div class="circle circle-3"></div>
+                    <div class="circle circle-4"></div>
+                </div>
+                
+                <div class="content-wrapper">
+                    <div class="main-content">
+                        <h1 class="main-title">Employee Transition Plan</h1>
+                        <p class="subtitle">Use the following infographics to outline how your team or company will manage responsibilities and workflow during employee movement.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

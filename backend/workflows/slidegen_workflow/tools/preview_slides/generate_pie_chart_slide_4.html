@@ -1,0 +1,139 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+    <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+    body {
+        width:1920px;
+        height:1080px;
+        margin:0;
+        padding:0;
+        font-family:'Inter, sans-serif', sans-serif;
+        background: linear-gradient(135deg,#e0f7f1 0%,#f7f3ff 100%);
+        position:relative;
+        overflow:hidden;
+        --colors-0: #5FD9D3;
+        --colors-1: #4ABFB9;
+        --colors-2: #36A6A0;
+        --colors-3: #248C87;
+        --accent-color: #38B2AC;
+        --main-title-color: #2C7A7B;
+        --subtitle-color: #4A5568;
+        --insight-text-color: #2D3748;
+        --main-title-font-size: 70px;
+        --subtitle-font-size: 32px;
+        --insight-font-size: 34px;
+    }
+
+    .blob {
+        position:absolute;
+        filter:blur(40px);
+        opacity:0.6;
+    }
+
+    .title-block {
+        position:absolute;
+        top:80px;
+        left:100px;
+        font-size: var(--main-title-font-size);
+        color: var(--main-title-color);
+        font-weight:800;
+    }
+
+    .subtitle-block {
+        position:absolute;
+        top:160px;
+        left:100px;
+        font-size: var(--subtitle-font-size);
+        color: var(--subtitle-color);
+    }
+
+    .insight-block {
+        position:absolute;
+        top:260px;
+        left:100px;
+        width:520px;
+        background:rgba(255,255,255,0.5);
+        backdrop-filter:blur(10px);
+        border-radius:30px;
+        padding:40px;
+        font-size: var(--insight-font-size);
+        color: var(--insight-text-color);
+        line-height:1.6;
+    }
+
+    .legend-block {
+        position:absolute;
+        top:700px;
+        left:100px;
+        width:520px;
+    }
+
+    .chart-block {
+        position:absolute;
+        top:160px;
+        right:120px;
+        width:800px;
+        height:800px;
+    }
+    </style>
+    </head>
+
+    <body>
+
+    <div class="blob" style="width:600px;height:600px;background:#63E6BE;top:-200px;left:-100px;border-radius:40% 60% 70% 30%;"></div>
+
+    <div class="blob" style="width:500px;height:500px;background:#B197FC;bottom:-100px;right:-100px;border-radius:30% 70% 50% 50%;"></div>
+
+    <div class="title-block">
+    Global Ecosystem Distribution
+    </div>
+
+    <div class="subtitle-block">
+    Source: International Nature Conservation Report
+    </div>
+
+    <div class="insight-block">
+    Forests make up the largest share of Earth's ecosystems, supporting the highest biodiversity, while oceans and wetlands play crucial roles in climate regulation and wildlife habitats.
+    </div>
+
+    <div class="legend-block">
+    
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <div style="width:24px; height:24px; background:#5FD9D3; border-radius:6px; margin-right:15px;"></div>
+                <div style="font-size:24px; color:#2D3748;">
+                    <strong>Forests</strong>: 40% (40.0%)
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <div style="width:24px; height:24px; background:#4ABFB9; border-radius:6px; margin-right:15px;"></div>
+                <div style="font-size:24px; color:#2D3748;">
+                    <strong>Oceans</strong>: 30% (30.0%)
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <div style="width:24px; height:24px; background:#36A6A0; border-radius:6px; margin-right:15px;"></div>
+                <div style="font-size:24px; color:#2D3748;">
+                    <strong>Grasslands</strong>: 18% (18.0%)
+                </div>
+            </div>
+            <div style="display:flex; align-items:center; margin-bottom:20px;">
+                <div style="width:24px; height:24px; background:#248C87; border-radius:6px; margin-right:15px;"></div>
+                <div style="font-size:24px; color:#2D3748;">
+                    <strong>Wetlands</strong>: 12% (12.0%)
+                </div>
+            </div>
+    </div>
+
+    <div class="chart-block">
+    <svg viewBox="0 0 800 800" width="100%" height="100%">
+    <path d="M 400.0 80.0 A 320 320 0 0 1 588.0912807335915 658.8854381999831 L 512.8547684401549 555.33126291999 A 192.0 192.0 0 0 0 400.0 208.0 Z" fill="#5FD9D3" stroke="#ffffff" stroke-width="3" /><text x="643.4704681715593" y="320.89164944001345" fill="white" font-size="24" font-weight="bold" text-anchor="middle" dominant-baseline="middle">40.0%</text><path d="M 588.0912807335915 658.8854381999831 A 320 320 0 0 1 95.66191478555089 498.8854381999832 L 217.39714887133053 459.3312629199899 A 192.0 192.0 0 0 0 512.8547684401549 555.33126291999 Z" fill="#4ABFB9" stroke="#ffffff" stroke-width="3" /><text x="320.89164944001345" y="643.4704681715593" fill="white" font-size="24" font-weight="bold" text-anchor="middle" dominant-baseline="middle">30.0%</text><path d="M 95.66191478555089 498.8854381999832 A 320 320 0 0 1 180.94492610281964 166.7300392251483 L 268.5669556616918 260.038023535089 A 192.0 192.0 0 0 0 217.39714887133053 459.3312629199899 Z" fill="#36A6A0" stroke="#ffffff" stroke-width="3" /><text x="152.04271075107044" y="336.3353888857971" fill="white" font-size="24" font-weight="bold" text-anchor="middle" dominant-baseline="middle">18.0%</text><path d="M 180.94492610281964 166.7300392251483 A 320 320 0 0 1 399.99999999999994 80.0 L 399.99999999999994 208.0 A 192.0 192.0 0 0 0 268.5669556616918 260.038023535089 Z" fill="#248C87" stroke="#ffffff" stroke-width="3" /><text x="305.76011451272245" y="161.97721961260763" fill="white" font-size="24" font-weight="bold" text-anchor="middle" dominant-baseline="middle">12.0%</text>
+    <circle cx="400" cy="400" r="192.0" fill="transparent"/>
+    </svg>
+    </div>
+
+    </body>
+    </html>
+    

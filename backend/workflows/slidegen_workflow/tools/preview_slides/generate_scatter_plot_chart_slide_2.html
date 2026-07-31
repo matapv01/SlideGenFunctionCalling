@@ -1,0 +1,94 @@
+
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+            body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: 'Inter', sans-serif; background-color: #FEF9E1; color: #2C3E50;
+                display: grid; 
+                grid-template-rows: 280px 1fr;
+                grid-template-columns: 1fr;
+                row-gap: 20px;
+                overflow: hidden;
+            }
+            .header-section {
+                padding: 20px 100px 20px 100px;
+            }
+            h1 {
+                font-size: 72px; color: #005F5F; margin: 0; font-weight: 800; 
+                text-transform: uppercase; letter-spacing: -1px;
+                border-left: 12px solid #008080; padding-left: 35px;
+            }
+            .subtitle {
+                font-size: 32px; color: #556B2F; margin: 10px 0 0 47px; font-weight: 400;
+            }
+            .content-area {
+                display: grid; 
+                grid-template-columns: 500px 1fr;
+                gap: 80px;
+                padding: 10px 100px 60px 100px;
+                position: center;
+            }
+            .left-panel {
+                display: grid;
+                grid-template-rows: auto auto;
+                gap: 40px;
+                align-content: space-around;
+            }
+            .insight-box {
+                background: #FFFFFF; padding: 30px; border-radius: 30px; 
+                box-shadow: 15px 15px 0px rgba(0, 128, 128, 0.1);
+                border: 3px solid #008080; font-size: 28px; line-height: 1.5;
+            }
+            .legend-area {
+                padding-left: 10px;
+                list-style: none; margin: 0;
+            }
+            .right-panel {
+                display: flex; align-items: center; justify-content: center;
+                background: rgba(255, 255, 255, 0.5); border-radius: 40px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="header-section">
+            <h1>Relationship Between Travel Distance and Spending</h1>
+            <div class="subtitle">Source: Tourist Behavior Survey 2024 | Sample: 200 Trips</div>
+        </div>
+        <div class="content-area">
+            <div class="left-panel">
+                <div class="insight-box">
+                    The scatter plot indicates a strong positive correlation between travel distance and total spending.
+                </div>
+                <ul class="legend-area">
+                    
+            <li style="display:flex; align-items:center; margin:0 0 15px 0;">
+                <span style="display:inline-block; width:24px; height:24px; border-radius:50%; background:#008080; border:3px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:15px;"></span>
+                <span style="font-size:24px; font-weight:500; color:#2C3E50;">Domestic Travelers</span>
+            </li>
+            
+            <li style="display:flex; align-items:center; margin:0 0 15px 0;">
+                <span style="display:inline-block; width:24px; height:24px; border-radius:50%; background:#FFB347; border:3px solid white; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-right:15px;"></span>
+                <span style="font-size:24px; font-weight:500; color:#2C3E50;">International Travelers</span>
+            </li>
+            
+                </ul>
+            </div>
+            <div class="right-panel">
+                <svg width="1100" height="700" viewBox="0 0 1100 700">
+                    <line x1="120" y1="600.0" x2="1060" y2="600.0" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" /><text x="105" y="608.0" font-size="20" text-anchor="end" fill="#556B2F">0</text><line x1="120" y1="494.0" x2="1060" y2="494.0" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" /><text x="105" y="502.0" font-size="20" text-anchor="end" fill="#556B2F">1200</text><line x1="120" y1="388.0" x2="1060" y2="388.0" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" /><text x="105" y="396.0" font-size="20" text-anchor="end" fill="#556B2F">2400</text><line x1="120" y1="282.0" x2="1060" y2="282.0" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" /><text x="105" y="290.0" font-size="20" text-anchor="end" fill="#556B2F">3600</text><line x1="120" y1="176.0" x2="1060" y2="176.0" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" /><text x="105" y="184.0" font-size="20" text-anchor="end" fill="#556B2F">4800</text><line x1="120" y1="70.0" x2="1060" y2="70.0" stroke="#E5E7EB" stroke-width="2" stroke-dasharray="8,4" /><text x="105" y="78.0" font-size="20" text-anchor="end" fill="#556B2F">6000</text><text x="120.0" y="640" font-size="20" text-anchor="middle" fill="#556B2F">0</text><text x="308.0" y="640" font-size="20" text-anchor="middle" fill="#556B2F">2400</text><text x="496.0" y="640" font-size="20" text-anchor="middle" fill="#556B2F">4800</text><text x="684.0" y="640" font-size="20" text-anchor="middle" fill="#556B2F">7200</text><text x="872.0" y="640" font-size="20" text-anchor="middle" fill="#556B2F">9600</text><text x="1060.0" y="640" font-size="20" text-anchor="middle" fill="#556B2F">12000</text>
+        <line x1="120" y1="600" x2="1060" y2="600" stroke="#008080" stroke-width="4" />
+        <line x1="120" y1="70" x2="120" y2="600" stroke="#008080" stroke-width="4" />
+    <circle cx="131.75" cy="573.5" r="12" fill="#008080" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="143.5" cy="560.25" r="12" fill="#008080" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="159.16666666666666" cy="538.1666666666666" r="12" fill="#008080" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="182.66666666666666" cy="520.5" r="12" fill="#008080" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="214.0" cy="502.83333333333337" r="12" fill="#008080" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="276.66666666666663" cy="467.5" r="12" fill="#008080" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="355.0" cy="379.16666666666663" r="12" fill="#FFB347" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="511.6666666666667" cy="317.3333333333333" r="12" fill="#FFB347" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="668.3333333333334" cy="246.66666666666669" r="12" fill="#FFB347" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="825.0" cy="176.0" r="12" fill="#FFB347" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="981.6666666666666" cy="114.16666666666669" r="12" fill="#FFB347" stroke="white" stroke-width="3" opacity="0.9" /><circle cx="315.83333333333337" cy="158.33333333333331" r="12" fill="#FFB347" stroke="white" stroke-width="3" opacity="0.9" />
+        <text x="590.0" y="680" font-size="26" text-anchor="middle" font-weight="600" fill="#005F5F">Travel Distance (km)</text>
+        <text transform="rotate(-90)" x="-335.0" y="35" font-size="26" text-anchor="middle" font-weight="600" fill="#005F5F">Total Travel Spending (USD)</text>
+    
+                </svg>
+            </div>
+        </div>
+    </body>
+    </html> 
+    

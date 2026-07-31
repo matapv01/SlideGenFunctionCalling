@@ -1,0 +1,74 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&display=swap" rel="stylesheet">
+        <style>
+            body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0; overflow: hidden;
+                background-color: #efe5d8; font-family: 'Playfair Display', serif; color: #3e2f25;
+                background-image: radial-gradient(rgba(0,0,0,0.02) 1px, transparent 1px); background-size: 8px 8px;
+            }
+            .corner { position: absolute; width: 100px; height: 100px; border: 3px solid #a06d4f; z-index: 10; }
+            .top-left { top: 30px; left: 30px; border-right: none; border-bottom: none; border-radius: 20px 0 0 0; }
+            .top-right { top: 30px; right: 30px; border-left: none; border-bottom: none; border-radius: 0 20px 0 0; }
+            .bottom-left { bottom: 30px; left: 30px; border-right: none; border-top: none; border-radius: 0 0 0 20px; }
+            .bottom-right { bottom: 30px; right: 30px; border-left: none; border-top: none; border-radius: 0 0 20px 0; }
+            
+            .header-container {
+                position: absolute; top: 80px; left: 120px; width: 1680px;
+                text-align: left; border-bottom: 2px solid #a06d4f; padding-bottom: 20px;
+            }
+            .main-title { font-size: 60px; font-weight: 600; margin: 0; }
+            .subtitle-text { font-size: 28px; color: #5a4638; margin-top: 10px; font-style: italic; }
+            
+            .chart-panel { position: absolute; top: 280px; left: 100px; width: 1100px; height: 700px; }
+            
+            .insight-panel {
+                position: absolute; top: 280px; right: 120px; width: 500px;
+                background: rgba(255, 255, 255, 0.3); border: 1.5px solid #a06d4f;
+                padding: 40px; border-radius: 10px;
+            }
+            .insight-title { font-size: 24px; font-weight: 600; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; border-bottom: 1px solid #a06d4f; }
+            .insight-content { font-size: 30px; color: #3e2f25; line-height: 1.5; }
+            .legend-container { margin-top: 40px; list-style: none; padding: 0; margin-left: 0; }
+        </style>
+    </head>
+    <body>
+        <div class="corner top-left"></div>
+        <div class="corner top-right"></div>
+        <div class="corner bottom-left"></div>
+        <div class="corner bottom-right"></div>
+
+        <div class="header-container">
+            <h1 class="main-title">Relationship Between App Usage Time and Monthly Spending</h1>
+            <div class="subtitle-text">Source: Mobile App Analytics Report 2024 | Sample: 200 Users</div>
+        </div>
+
+        <div class="chart-panel">
+            <svg width="1100" height="700" viewBox="0 0 1100 700">
+                <line x1="100" y1="620.0" x2="1060" y2="620.0" stroke="#c8a98d" stroke-dasharray="4,4" stroke-width="1" /><text x="85" y="626.0" font-size="18" text-anchor="end" fill="#5a4638">0</text><line x1="100" y1="508.0" x2="1060" y2="508.0" stroke="#c8a98d" stroke-dasharray="4,4" stroke-width="1" /><text x="85" y="514.0" font-size="18" text-anchor="end" fill="#5a4638">60</text><line x1="100" y1="396.0" x2="1060" y2="396.0" stroke="#c8a98d" stroke-dasharray="4,4" stroke-width="1" /><text x="85" y="402.0" font-size="18" text-anchor="end" fill="#5a4638">120</text><line x1="100" y1="284.0" x2="1060" y2="284.0" stroke="#c8a98d" stroke-dasharray="4,4" stroke-width="1" /><text x="85" y="290.0" font-size="18" text-anchor="end" fill="#5a4638">180</text><line x1="100" y1="172.0" x2="1060" y2="172.0" stroke="#c8a98d" stroke-dasharray="4,4" stroke-width="1" /><text x="85" y="178.0" font-size="18" text-anchor="end" fill="#5a4638">240</text><line x1="100" y1="60.0" x2="1060" y2="60.0" stroke="#c8a98d" stroke-dasharray="4,4" stroke-width="1" /><text x="85" y="66.0" font-size="18" text-anchor="end" fill="#5a4638">300</text><circle cx="172.0" cy="601.3333333333334" r="10" fill="#a06d4f" fill-opacity="0.7" stroke="#3e2f25" stroke-width="1.5" /><circle cx="244.0" cy="582.6666666666666" r="10" fill="#a06d4f" fill-opacity="0.7" stroke="#3e2f25" stroke-width="1.5" /><circle cx="316.0" cy="554.6666666666666" r="10" fill="#a06d4f" fill-opacity="0.7" stroke="#3e2f25" stroke-width="1.5" /><circle cx="676.0" cy="396.0" r="10" fill="#6b8e23" fill-opacity="0.7" stroke="#3e2f25" stroke-width="1.5" /><circle cx="820.0" cy="284.0" r="10" fill="#6b8e23" fill-opacity="0.7" stroke="#3e2f25" stroke-width="1.5" /><circle cx="964.0" cy="153.33333333333331" r="10" fill="#6b8e23" fill-opacity="0.7" stroke="#3e2f25" stroke-width="1.5" /><line x1="100" y1="620" x2="1060" y2="620" stroke="#a06d4f" stroke-width="2" /><line x1="100" y1="60" x2="100" y2="620" stroke="#a06d4f" stroke-width="2" /><text x="580.0" y="680" font-size="22" text-anchor="middle" fill="#3e2f25" font-weight="600">App Usage Time (minutes/day)</text><text transform="rotate(-90)" x="-340.0" y="35" font-size="22" text-anchor="middle" fill="#3e2f25" font-weight="600">Monthly Digital Spending (USD)</text>
+            </svg>
+        </div>
+
+        <div class="insight-panel">
+            <div class="insight-title">Phân tích dữ liệu</div>
+            <div class="insight-content"></div>
+            <ul class="legend-container">
+                
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:#a06d4f; border:1px solid #3e2f25; border-radius:50%; margin-right:12px;"></div>
+                <span style="font-size:22px; color:#3e2f25;">Casual Users</span>
+            </li>
+            
+            <li style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:#6b8e23; border:1px solid #3e2f25; border-radius:50%; margin-right:12px;"></div>
+                <span style="font-size:22px; color:#3e2f25;">Power Users</span>
+            </li>
+            
+            </ul>
+        </div>
+    </body>
+    </html>
+    

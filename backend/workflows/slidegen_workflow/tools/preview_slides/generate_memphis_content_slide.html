@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Memphis Content Slide - 20/80 Layout</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; } html { font-size: 16px; }
+        body, html { height: 100vh; width: 100vw; overflow: hidden; }
+        .slide-container { width: 100%; height: 100%; display: flex; flex-direction: column; position: relative; color: #FFFFFF; }
+        .top-panel, .bottom-panel { position: relative; overflow: hidden; display: flex; justify-content: center; }
+        .top-panel { background-color: #19114B; flex-basis: 20%; align-items: center; }
+        .bottom-panel { background-color: #403271; flex-basis: 80%; align-items: flex-start; padding-top: 6rem; }
+        .panel-content { width: 100%; max-width: 75rem; padding: 2rem 4rem; }
+        .main-title { font-family: 'Be Vietnam Pro', sans-serif; font-size: 3rem; font-weight: 600; text-align: center; }
+        .content-list { font-family: 'Be Vietnam Pro', sans-serif; list-style: none; margin-bottom: 3rem; }
+        .content-list li { font-size: 2rem; line-height: 1.7; padding-left: 2.5rem; position: relative; margin-bottom: 0.5rem; }
+        .content-list li::before { content: ''; position: absolute; left: 0; top: 50%; transform: translateY(-50%); width: 1rem; height: 1rem; border-radius: 50%; border: 2px solid #FBBF24; }
+        .concluding-text { font-family: 'Be Vietnam Pro', sans-serif; font-size: 2rem; line-height: 1.7; max-width: 60ch; }
+        .shape { position: absolute; }
+        .shape-tl-1 { width: 4rem; height: 4rem; border: 2px dashed #F87171; top: 2rem; left: 2rem; transform: rotate(-25deg); }
+        .shape-tl-2 { width: 0; height: 0; border-left: 1.5rem solid transparent; border-right: 1.5rem solid transparent; border-bottom: 2.5rem solid #F87171; top: 3.5rem; left: 7rem; transform: rotate(20deg); opacity: 0.8; }
+        .shape-tr-1 { width: 6rem; height: 6rem; border: 2px dashed #FBBF24; border-radius: 50%; top: 1rem; right: 1rem; }
+        .shape-tr-2 { width: 0; height: 0; border-left: 2rem solid transparent; border-right: 2rem solid transparent; border-bottom: 3.5rem solid #60A5FA; top: 2rem; right: 8rem; transform: rotate(25deg); }
+        .shape-bl-1 { width: 1.5rem; height: 1.5rem; background-color: #60A5FA; bottom: 2rem; left: 5rem; }
+        .shape-bl-2 { width: 0; height: 0; border-right: 2rem solid #60A5FA; border-top: 1.5rem solid transparent; border-bottom: 1.5rem solid transparent; bottom: 3rem; left: 2rem; }
+        .shape-br-1 { width: 5rem; height: 5rem; background-color: #F87171; border-radius: 50%; bottom: 3rem; right: 4rem; opacity: 0.8; }
+        .shape-br-2 { width: 0; height: 0; border-left: 2.5rem solid transparent; border-right: 2.5rem solid transparent; border-bottom: 4rem solid #FBBF24; bottom: 7rem; right: 9rem; transform: rotate(45deg); opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="top-panel">
+            <div class="panel-content"><h1 class="main-title">This is a slide title</h1></div>
+            <div class="shape shape-tl-1"></div><div class="shape shape-tl-2"></div>
+            <div class="shape shape-tr-1"></div><div class="shape shape-tr-2"></div>
+        </div>
+        <div class="bottom-panel">
+            <div class="panel-content"><ul class="content-list"><li>Here you have a list of items</li><li>And some text</li><li>But remember not to overload your slides with content</li></ul><p class="concluding-text">Your audience will listen to you or read the content, but won't do both.</p></div>
+            <div class="shape shape-bl-1"></div><div class="shape shape-bl-2"></div>
+            <div class="shape shape-br-1"></div><div class="shape shape-br-2"></div>
+        </div>
+    </div>
+</body>
+</html>
