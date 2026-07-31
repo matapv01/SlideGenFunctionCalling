@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reference Slide - Enhanced</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .text-column {
+            flex: 0.6; 
+            background-color: #001e3d;
+            color: #FFFFFF;
+            padding: 5rem 6rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .image-column {
+            flex: 0.4;
+            background-image: url('https://icdn.football-espana.net/wp-content/uploads/2025/04/Barcelona-Supercup.jpeg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .main-title {
+            font-size: 5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        
+        .title-divider {
+            width: 100px;
+            height: 5px;
+            background: #EDBB00;
+            border: none;
+            border-radius: 3px;
+            margin-bottom: 4rem;
+        }
+
+        .references-list {
+            display: flex;
+            flex-direction: column;
+            gap: 3rem;
+        }
+
+        .reference-title {
+            font-size: 2.4rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            margin-bottom: 1rem;
+        }
+
+        .reference-description {
+            font-size: 2rem;
+            line-height: 1.7;
+            font-weight: 400;
+            max-width: 45rem;
+        }
+        
+        @media (max-width: 64rem) {
+             .text-column { padding: 4rem; }
+        }
+
+        @media (max-width: 48rem) {
+            .slide-container {
+                flex-direction: column-reverse; 
+                overflow-y: auto;
+                height: auto;
+                min-height: 100vh;
+            }
+            .text-column, .image-column {
+                flex: none;
+                width: 100%;
+            }
+            .image-column {
+                height: 20rem; 
+            }
+             .text-column {
+                padding: 3rem 2rem;
+             }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="text-column">
+            <h1 class="main-title">THÀNH TÍCH QUỐC NỘI ĐÁNG NỂ</h1>
+            <hr class="title-divider" />
+            <div class="references-list">
+                
+        <div class="reference-item">
+            <h2 class="reference-title"><span style="color: #EDBB00; font-size: 1.5em;">28</span> DANH HIỆU LA LIGA</h2>
+            <p class="reference-description">Nắm giữ kỷ lục về số lần đăng quang tại giải đấu vô địch quốc gia hàng đầu Tây Ban Nha.</p>
+        </div>
+        
+        <div class="reference-item">
+            <h2 class="reference-title"><span style="color: #EDBB00; font-size: 1.5em;">32</span> COPA DEL REY</h2>
+            <p class="reference-description">Thống trị đấu trường Cúp Nhà vua với số lượng danh hiệu kỷ lục trong lịch sử bóng đá Tây Ban Nha.</p>
+        </div>
+        
+        <div class="reference-item">
+            <h2 class="reference-title"><span style="color: #EDBB00; font-size: 1.5em;">15</span> SIÊU CÚP TÂY BAN NHA</h2>
+            <p class="reference-description">Bao gồm 15 danh hiệu Supercopa de España cùng nhiều cúp quốc nội danh giá khác.</p>
+        </div>
+        
+            </div>
+        </div>
+        <div class="image-column"></div>
+    </div>
+</body>
+</html>

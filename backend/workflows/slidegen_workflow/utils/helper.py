@@ -212,7 +212,7 @@ Available tools:
 {% endfor %}
 </tools>
 
-Output ONLY a JSON function call within <tool_call> tags.
+Output ONLY ordered JSON function calls, each within its own <tool_call> tags.
 Example: <tool_call>{% raw %}{"name": "generate_title_slide", "arguments": {"main_title": "Title"}}{% endraw %}</tool_call>
 <|im_end|>
 {%- else %}
@@ -238,34 +238,99 @@ Example: <tool_call>{% raw %}{"name": "generate_title_slide", "arguments": {"mai
 {%- endif %}"""
 
 
+def _normalize_tool_call(value) -> Optional[dict]:
+    """Normalize common native/raw tool-call shapes to {name, arguments}."""
+    if not isinstance(value, dict):
+        return None
+
+    function_value = value.get("function")
+    if isinstance(function_value, dict):
+        name = function_value.get("name")
+        arguments = function_value.get("arguments", {})
+    else:
+        name = value.get("name")
+        arguments = value.get("arguments")
+        if arguments is None:
+            arguments = value.get("args", {})
+
+    if not name:
+        return None
+    if isinstance(arguments, str):
+        try:
+            arguments = json.loads(arguments)
+        except Exception:
+            return None
+    if not isinstance(arguments, dict):
+        return None
+    return {"name": name, "arguments": arguments}
+
+
+def _normalize_tool_call_collection(value) -> List[dict]:
+    if isinstance(value, dict) and isinstance(value.get("tool_calls"), list):
+        values = value["tool_calls"]
+    elif isinstance(value, list):
+        values = value
+    else:
+        values = [value]
+    return [
+        normalized
+        for item in values
+        if (normalized := _normalize_tool_call(item)) is not None
+    ]
+
+
+def parse_tool_calls_json(text: str) -> List[dict]:
+    """
+    Extract all ordered tool calls from Qwen/raw model output.
+
+    Supported forms:
+      - repeated <tool_call>{...}</tool_call> blocks
+      - {"tool_calls": [{...}, ...]}
+      - a raw JSON list of tool calls
+      - a single raw tool call
+    """
+    if not text:
+        return []
+
+    cleaned = text.strip()
+    tagged_calls = re.findall(
+        r"<tool_call>\s*(.*?)\s*</tool_call>",
+        cleaned,
+        flags=re.DOTALL,
+    )
+    if tagged_calls:
+        result = []
+        for raw_call in tagged_calls:
+            try:
+                parsed_call = json.loads(raw_call)
+            except Exception:
+                continue
+            result.extend(_normalize_tool_call_collection(parsed_call))
+        return result
+
+    if "```json" in cleaned:
+        cleaned = cleaned.split("```json", 1)[1].split("```", 1)[0].strip()
+    elif "```" in cleaned:
+        cleaned = cleaned.split("```", 1)[1].split("```", 1)[0].strip()
+
+    try:
+        parsed = json.loads(cleaned)
+    except Exception:
+        return []
+
+    return _normalize_tool_call_collection(parsed)
+
+
 def parse_tool_call_json(text: str) -> Optional[dict]:
     """
     Robustly extract a tool call dict from LLM output text.
     Handles <tool_call> tags, ```json blocks, ``` blocks, and raw JSON.
     Returns None if parsing fails.
     """
-    if not text:
-        return None
-    cleaned = text.strip()
-    # Strip <tool_call>...</tool_call> wrapper
-    if "<tool_call>" in cleaned and "</tool_call>" in cleaned:
-        cleaned = cleaned.split("<tool_call>")[-1].split("</tool_call>")[0].strip()
-    try:
-        if "```json" in cleaned:
-            cleaned = cleaned.split("```json")[1].split("```")[0].strip()
-        elif "```" in cleaned:
-            cleaned = cleaned.split("```")[1].split("```")[0].strip()
-        parsed = json.loads(cleaned)
-        if isinstance(parsed, list) and len(parsed) > 0:
-            parsed = parsed[0]
-        if isinstance(parsed, dict) and "name" in parsed:
-            return {
-                "name": parsed["name"],
-                "arguments": parsed.get("arguments") or parsed.get("args") or {}
-            }
-    except Exception:
-        pass
-    return None
+    calls = parse_tool_calls_json(text)
+    # Preserve the historical behavior for multi-call output: callers that only
+    # understand one tool should receive the final slide HTML tool.
+    return calls[-1] if calls else None
 
 
 def render_html_to_png(html_content: str, output_path: str) -> None:

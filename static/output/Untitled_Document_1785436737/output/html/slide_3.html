@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Team Presentation - Polaroid Style</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        /* OVERRIDE EDITOR BACKGROUND - HIGHEST SPECIFICITY */
+        div[style*="background: white"], 
+        div[style*="background: #FFFFFF"],
+        div[style*="background-color: white"],
+        div[style*="background-color: #FFFFFF"],
+        #canvas,
+        [data-bg*="#FFFFFF"] {
+            background: url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png') repeat center !important;
+            background-color: #F8F8F8 !important;
+        }
+        
+        html#html.html { font-size: 16px !important; }
+        
+        body#body.body, html#html.html {
+            height: 100vh !important; 
+            width: 100vw !important; 
+            font-family: 'Be Vietnam Pro', sans-serif !important; 
+            overflow: hidden !important; 
+            background-color: #F8F8F8 !important; 
+            background-image: url('https://www.toptal.com/designers/subtlepatterns/uploads/paper.png') !important;
+            background-repeat: repeat !important;
+            background-position: center !important;
+            background-size: auto !important;
+        }
+        
+        .slide-container { 
+            width: 100% !important; 
+            height: 100% !important; 
+            display: flex !important; 
+            flex-direction: column !important;
+            background: transparent !important;
+        }
+        .title-section { width: 100%; display: flex; justify-content: center; align-items: center; padding: 4rem 4rem 2rem 4rem; }
+        .main-title { font-family: 'Be Vietnam Pro', sans-serif; font-size: clamp(2.5rem, 6vw, 4rem); font-weight: 400; color: #000000; margin: 0; text-align: center; }
+        .content-section { flex: 1; width: 100%; display: flex; justify-content: center; align-items: center; padding: 0 4rem 4rem 4rem; }
+        .team-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 3rem; width: 100%; max-width: 80rem; }
+        .polaroid-card {
+            background: #FFFFFF; padding: 1rem 1rem 1.5rem 1rem; border-radius: 0.25rem;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .polaroid-card:nth-child(4n+1) { transform: rotate(-4deg); }
+        .polaroid-card:nth-child(4n+2) { transform: rotate(2deg); }
+        .polaroid-card:nth-child(4n+3) { transform: rotate(5deg); }
+        .polaroid-card:nth-child(4n+4) { transform: rotate(-2deg); }
+        .member-photo { width: 100%; display: block; margin-bottom: 1rem; }
+        .member-info { text-align: center; }
+        .member-name { font-family: 'Be Vietnam Pro', sans-serif; font-size: 1.75rem; color: #000000; margin-bottom: 0.25rem; }
+        .member-role { font-size: 1rem; color: #374151; line-height: 1.5; }
+        @media (max-width: 48rem) { body, html { height: auto; min-height: 100vh; overflow-y: auto; } }
+    </style>
+</head>
+<body id="body" class="body">
+    <div class="slide-container">
+        <div class="title-section">
+            <h1 class="main-title">Các Nhân Vật Chính</h1>
+        </div>
+        <div class="content-section">
+            <div class="team-grid"><div class="polaroid-card"><img class="member-photo" src="https://www.freepnglogos.com/uploads/doraemon-png/doraemon-character-free-download-8.png" alt="Doraemon" /><div class="member-info"><h2 class="member-name">Doraemon</h2><p class="member-role">Chú mèo máy thân thiện, luôn sẵn lòng giúp đỡ Nobita bằng các bảo bối.</p></div></div><div class="polaroid-card"><img class="member-photo" src="https://i.pinimg.com/originals/8c/7f/20/8c7f20c9393a510bd68c8ea62590a2e8.jpg?nii=t" alt="Nobita Nobi" /><div class="member-info"><h2 class="member-name">Nobita Nobi</h2><p class="member-role">Cậu bé hậu đậu, yếu đuối nhưng có trái tim nhân ái.</p></div></div><div class="polaroid-card"><img class="member-photo" src="https://wibu.com.vn/wp-content/uploads/2024/08/Shizuka.jpg" alt="Shizuka Minamoto" /><div class="member-info"><h2 class="member-name">Shizuka Minamoto</h2><p class="member-role">Cô bạn đáng yêu, thông minh và là người Nobita thầm yêu.</p></div></div><div class="polaroid-card"><img class="member-photo" src="https://i.pinimg.com/1200x/53/60/79/536079c1068dbc83854a742fa1cb75d2.jpg" alt="Suneo Honekawa" /><div class="member-info"><h2 class="member-name">Suneo Honekawa</h2><p class="member-role">Cậu bé giàu có, khoe khoang và thường xuyên trêu chọc Nobita.</p></div></div><div class="polaroid-card"><img class="member-photo" src="https://i.pinimg.com/originals/92/8e/bc/928ebc1447bf3400ed472af14815254d.jpg?nii=t" alt="Takeshi Gouda (Jaian)" /><div class="member-info"><h2 class="member-name">Takeshi Gouda (Jaian)</h2><p class="member-role">Cậu bé to con, hay bắt nạt nhưng cũng rất trung thành.</p></div></div></div>
+        </div>
+    </div>
+</body>
+</html>

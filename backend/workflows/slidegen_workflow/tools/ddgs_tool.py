@@ -1,8 +1,13 @@
-"""
-DuckDuckGo Search (DDGS) Tool - Tìm kiếm hình ảnh từ DuckDuckGo
-"""
+"""DuckDuckGo image search tool used by the slide execution plan."""
+
 import json
 import logging
+import math
+import re
+from typing import Literal, Optional
+
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel, Field
 
 try:
     from ddgs import DDGS
@@ -15,6 +20,104 @@ logger = logging.getLogger(__name__)
 _IMAGE_CACHE = {}
 
 
+def _to_int(value) -> Optional[int]:
+    try:
+        if value is None:
+            return None
+        return int(str(value).replace(",", "").strip())
+    except (TypeError, ValueError):
+        return None
+
+
+def _parse_target_dimensions(description: str) -> tuple[Optional[int], Optional[int]]:
+    """Extract the first WxH pixel hint from an image parameter description."""
+    if not description:
+        return None, None
+    match = re.search(r"(\d{2,5})\s*[xX\u00d7]\s*(\d{2,5})", description)
+    if not match:
+        return None, None
+    return int(match.group(1)), int(match.group(2))
+
+
+def _target_ratio(layout: str = None, target_width: int = None, target_height: int = None) -> float:
+    if target_width and target_height and target_width > 0 and target_height > 0:
+        return target_width / target_height
+    if layout == "Tall":
+        return 3 / 4
+    if layout == "Square":
+        return 1.0
+    return 16 / 9
+
+
+def _minimum_max_dimension(size: str = None) -> int:
+    if size == "Small":
+        return 200
+    if size == "Medium":
+        return 400
+    return 900
+
+
+def _layout_penalty(width: int, height: int, layout: str = None) -> float:
+    if not width or not height:
+        return 2.0
+    ratio = width / height
+    if layout == "Tall":
+        return 0.0 if height > width else 4.0
+    if layout == "Wide":
+        return 0.0 if width > height else 4.0
+    if layout == "Square":
+        return 0.0 if 0.80 <= ratio <= 1.25 else 3.0
+    return 0.0
+
+
+def _rank_image_results(
+    results: list[dict],
+    *,
+    target_description: str = None,
+    layout: str = None,
+    size: str = None,
+) -> list[dict]:
+    """
+    Prefer DDGS results whose metadata fits the selected image slot.
+
+    DuckDuckGo supports coarse filters such as layout/size, but not exact
+    960x1080-style constraints. Its results include width/height metadata, so
+    rank locally after search and keep the best URLs first.
+    """
+    target_width, target_height = _parse_target_dimensions(target_description or "")
+    ratio_goal = _target_ratio(layout, target_width, target_height)
+    min_dimension = _minimum_max_dimension(size)
+    explicit_max_dimension = max(target_width or 0, target_height or 0)
+
+    def score(item_with_index: tuple[int, dict]) -> float:
+        index, item = item_with_index
+        width = _to_int(item.get("width"))
+        height = _to_int(item.get("height"))
+        if not width or not height:
+            return 100.0 + index
+
+        ratio = width / height
+        ratio_penalty = abs(math.log(max(ratio, 0.01) / ratio_goal)) * 6.0
+        orientation_penalty = _layout_penalty(width, height, layout)
+
+        max_dimension = max(width, height)
+        size_penalty = 0.0
+        if max_dimension < min_dimension:
+            size_penalty += (min_dimension - max_dimension) / min_dimension * 6.0
+        if explicit_max_dimension and max_dimension < explicit_max_dimension * 0.70:
+            size_penalty += 4.0
+
+        return ratio_penalty + orientation_penalty + size_penalty + (index * 0.02)
+
+    return [
+        item
+        for _, item in sorted(
+            enumerate(results),
+            key=score,
+        )
+    ]
+
+
 def search_ddgs_images(
     query: str,
     region: str = "wt-wt",
@@ -25,45 +128,25 @@ def search_ddgs_images(
     type_image: str = "photo",
     layout: str = None,
     license_image: str = None,
-    max_results: int = 3
+    max_results: int = 3,
+    target_description: str = None,
 ):
     """
     Search and return a JSON list of real image URLs from DuckDuckGo.
-
-    STEP 1 — PLAN BEFORE CALLING:
-    You have already chosen which slide tool to call (e.g. generate_dynamic_intro_slide).
-    Before calling that slide tool, do the following:
-      a) Read its full parameter schema and identify ALL image parameters (any param whose description mentions URL, image, photo).
-      b) For EACH image parameter, call THIS search tool once to get a real URL.
-      c) Only AFTER collecting all image URLs, call the slide tool with those URLs filled in.
-    Use the description of each image parameter to fill in the search parameters below correctly.
-
-    STEP 2 — Choose `query`: 1-2 English nouns only — the single most prominent subject.
-    Examples: 'mountain', 'lion', 'city skyline', 'teamwork', 'ocean'.
-    NO adjectives (beautiful, stunning, modern), NO filler words (image, photo, background, wallpaper).
-
-    STEP 3 — Choose `layout` based on image orientation hints in the description:
-    - "full-height", "tall", "right side", "left side", "portrait", "vertical" → layout="Tall"
-    - "background", "panoramic", "wide", "banner", "full-width", "landscape"  → layout="Wide"
-    - "circle", "avatar", "square", "thumbnail", "icon"                       → layout="Square"
-    - No hint                                                                  → layout=None
-
-    STEP 4 — Choose `size` based on how large the image appears in the slide:
-    - Image fills a large section (e.g., half the slide, full background) → size="Large"
-    - Image is medium-sized (e.g., a card image, column image)           → size="Medium"
-    - Image is small (e.g., avatar, thumbnail, icon)                     → size="Small"
-
-    STEP 5 — Choose `color` only if the slide has a strong theme color (e.g., all blue slide → color="Blue").
-    Otherwise leave color=None.
-
-    STEP 6 — Set `type_image="photo"` for realistic images (default). Use "clipart" or "gif" only if slide explicitly needs it.
-
-    OTHER RULES:
-    - Use this tool ONLY when the slide tool has image parameters (image_url, image_url_1, image_url_2, etc.).
-    - If a slide requires N images, call this tool N times with separate, specific queries.
-    - NEVER call this tool if the slide tool does not accept image arguments.
     """
-    cache_key = query.lower().strip()
+    cache_key = (
+        query.lower().strip(),
+        region,
+        safesearch,
+        timelimit,
+        size,
+        color,
+        type_image,
+        layout,
+        license_image,
+        max_results,
+        target_description,
+    )
     if cache_key in _IMAGE_CACHE:
         logger.info(f"⚡ [CACHE HIT] '{query}'")
         return _IMAGE_CACHE[cache_key]
@@ -86,6 +169,12 @@ def search_ddgs_images(
         logger.info(f"DDGS search: '{query}' - Found {len(results)} images")
 
         if results:
+            results = _rank_image_results(
+                results,
+                target_description=target_description,
+                layout=layout,
+                size=size,
+            )
             urls = [res.get("image") for res in results if res.get("image")]
             if urls:
                 res_json = json.dumps(urls[:3], ensure_ascii=False)
@@ -104,3 +193,53 @@ def search_ddgs_images(
     res_fallback_json = json.dumps(fallback_urls, ensure_ascii=False)
     _IMAGE_CACHE[cache_key] = res_fallback_json
     return res_fallback_json
+
+
+class SearchDDGSImagesInput(BaseModel):
+    """Arguments the slide generator is allowed to choose for one image search."""
+
+    query: str = Field(
+        ...,
+        min_length=1,
+        description=(
+            "A concise English image query derived from the slide content and "
+            "the semantic role of this exact image slot. Use 2-5 concrete nouns "
+            "or noun phrases. Do not include URLs, pixel sizes, orientation "
+            "words, or generic words such as image, photo, wallpaper, beautiful, "
+            "or modern."
+        ),
+    )
+    layout: Optional[Literal["Wide", "Tall", "Square"]] = Field(
+        default=None,
+        description=(
+            "Image orientation derived from the corresponding image parameter "
+            "description in the selected slide tool schema. Use Tall for "
+            "portrait, vertical, full-height, or height greater than width; "
+            "Wide for landscape, horizontal, banner, background, full-width, "
+            "or width greater than height; Square for avatar, circle, profile, "
+            "logo, icon, square, or near-equal width and height."
+        ),
+    )
+    size: Optional[Literal["Large", "Medium", "Small"]] = Field(
+        default="Large",
+        description=(
+            "Requested image size derived from the image parameter description "
+            "and visual importance. Use Large for max dimension >= 900px, hero, "
+            "background, full-height, full-width, half-slide, or main feature "
+            "images; Medium for cards, portraits, thumbnails, profile/team "
+            "photos, or max dimension around 400-899px; Small for icons, logos, "
+            "badges, decorations, or max dimension below 400px."
+        ),
+    )
+
+
+SEARCH_DDGS_TOOL = StructuredTool.from_function(
+    func=search_ddgs_images,
+    name="search_ddgs_images",
+    description=(
+        "Search for one real image needed by a slide. Emit one call for each "
+        "image parameter, in the same declaration order as the final slide "
+        "HTML tool. All image-search calls must appear before the slide tool."
+    ),
+    args_schema=SearchDDGSImagesInput,
+)

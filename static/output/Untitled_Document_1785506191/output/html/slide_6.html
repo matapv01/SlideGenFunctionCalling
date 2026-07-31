@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery Slide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #EDBB00; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
+        }
+
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
+            background-color: #0F172A;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2rem; /* 32px */
+        }
+        
+        .title-accent {
+            width: 2.5rem; /* 40px - tăng kích thước */
+            height: 2.5rem; /* 40px */
+            background-color: #EDBB00;
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+        }
+        
+        .main-title {
+            font-size: 4.5rem;
+            color: #FFFFFF;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .content-bar {
+            width: 100%;
+            background: linear-gradient(135deg, #EDBB00, rgba(213, 232, 185, 0.8));
+            padding: 1.5rem 2.5rem;
+            margin-bottom: 2rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            color: #FFFFFF;
+            font-size: 1.6rem;
+            font-weight: 500;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            border: 0.125rem solid rgba(255,255,255,0.3);
+        }
+        
+        .image-gallery {
+            display: flex;
+            justify-content: space-between;
+            flex: 1;
+            gap: 2rem; /* 32px - tạo gap giữa items */
+            align-items: stretch;
+        }
+        
+        .image-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1.25rem;
+            padding: 2rem;
+            box-shadow: 0 0.75rem 1.5rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+        }
+        
+        .image-item:hover {
+            transform: translateY(-0.5rem); /* 8px - hover effect */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+        }
+        
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 18rem; /* 288px - tăng chiều cao */
+            margin-bottom: 1.5rem; /* 24px */
+            overflow: hidden;
+            border-radius: 0.75rem; /* 12px */
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .image-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border: 0.25rem solid #EDBB00; /* 4px border all around */
+            border-radius: 0.75rem; /* 12px */
+            box-sizing: border-box;
+            z-index: 1;
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 0.5rem; /* 8px */
+            transition: transform 0.3s ease;
+        }
+        
+        .image-item:hover .image-container img {
+            transform: scale(1.05); /* zoom effect on hover */
+        }
+        
+        .subtitle {
+            font-size: 2rem;
+            color: #EDBB00;
+            margin: 0 0 1rem 0;
+            font-weight: 600;
+            text-align: center;
+            color: #EDBB00;
+        }
+        
+        .image-content {
+            font-size: 1.5rem;
+            color: #FFFFFF;
+            margin: 0;
+            text-align: center;
+            line-height: 1.6;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {
+            body {
+                padding: 3rem 5rem;
+            }
+            
+            .image-gallery {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .image-container {
+                height: 15rem;
+            }
+        }
+        
+        @media screen and (max-width: 50rem) {
+            body {
+                padding: 2rem 3rem;
+            }
+            
+            .slide-inner-container {
+                padding: 2rem 3rem;
+            }
+            
+            .title-font-size {
+                font-size: 2rem;
+            }
+            
+            .content-font-size {
+                font-size: 1rem;
+            }
+            
+            .subtitle-font-size {
+                font-size: 1.25rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-inner-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">NHỮNG CÚ ĂN BA LỊCH SỬ</h1>
+        </div>
+        
+        <!-- Content Bar -->
+        <div class="content-bar">
+            Câu lạc bộ Tây Ban Nha <span style="font-weight: bold; color: #EDBB00;">đầu tiên</span> giành <span style="font-weight: bold; color: #EDBB00;">cú ăn ba</span> vào năm <span style="font-weight: bold; color: #EDBB00;">2009</span>.<br>Lặp lại thành tích vô tiền khoáng hậu này vào năm <span style="font-weight: bold; color: #EDBB00;">2015</span>.<br>Đội bóng vinh quang với <span style="font-weight: bold; color: #EDBB00;">cú ăn 6 vĩ đại</span> năm <span style="font-weight: bold; color: #EDBB00;">2009</span>.
+        </div>
+        
+        <!-- Image Gallery -->
+        <div class="image-gallery">
+            <!-- Image Item 1 -->
+            <div class="image-item">
+                <div class="image-container">
+                    <div class="image-border"></div>
+                    <img src="https://i.pinimg.com/originals/f1/87/00/f18700c064bacfce8a36e9f1742591b1.jpg" alt="Image 1">
+                </div>
+                <h3 class="subtitle">La Liga</h3>
+                <p class="image-content">Chiến thắng tại giải vô địch quốc gia với sức mạnh áp đảo và lối đá tấn công quyến rũ.</p>
+            </div>
+            
+            <!-- Image Item 2 -->
+            <div class="image-item">
+                <div class="image-container">
+                    <div class="image-border"></div>
+                    <img src="https://www.aljazeera.com/wp-content/uploads/2025/03/GettyImages-2144487502-1743417210.jpg?w=770&resize=770,513&quality=80" alt="Image 2">
+                </div>
+                <h3 class="subtitle">Copa del Rey</h3>
+                <p class="image-content">Chinh phục đấu trường cúp quốc nội, khẳng định bản lĩnh trong những trận cầu sinh tử.</p>
+            </div>
+            
+            <!-- Image Item 3 -->
+            <div class="image-item">
+                <div class="image-container">
+                    <div class="image-border"></div>
+                    <img src="https://assets.khelnow.com/news/uploads/2025/01/Champions-League-trophy-GettyImages-2155086791-scaled.jpg" alt="Image 3">
+                </div>
+                <h3 class="subtitle">Champions League</h3>
+                <p class="image-content">Đỉnh cao vinh quang khi đánh bại những đối thủ mạnh nhất để lên ngôi vương châu Âu.</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

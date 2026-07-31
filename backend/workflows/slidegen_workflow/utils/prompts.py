@@ -94,6 +94,44 @@ Provide detailed feedback on what works well and what needs improvement, then ma
 
 # ================================= SLIDE GENERATION PROMPTS =================================
 
+IMAGE_SEARCH_EXECUTION_PLAN_RULES = """
+🖼️ **CRITICAL — SLIDE-FIRST IMAGE SEARCH PLAN:**
+
+Return one ordered tool-call plan. The slide HTML tool comes FIRST; image searches come AFTER.
+
+1. Choose the final slide HTML tool and inspect its complete parameter schema.
+2. Call the slide HTML tool FIRST with all text/style/layout parameters filled in.
+   - For EVERY image URL/path parameter, leave the value as an empty string "".
+   - Do NOT invent, guess, or fill any image URL.
+3. After the slide HTML tool, for EVERY image URL/path parameter you left empty,
+   emit exactly one `search_ddgs_images` call in schema declaration order:
+   - Call 1 maps to the first image parameter.
+   - Call 2 maps to the second image parameter.
+   - Call N maps to the Nth image parameter.
+4. For each `search_ddgs_images` call fill the arguments:
+   - `query`: derive from the slide content and the semantic role of that specific
+     image slot. Use 2-5 concise English nouns/noun phrases. Do not include pixel
+     sizes, orientation words, URLs, or generic words like image/photo/wallpaper/
+     beautiful/modern.
+   - `layout` and `size`: derive from the image parameter description in the slide
+     tool schema (words like portrait, landscape, banner, avatar, full-height,
+     background, and any pixel hint such as 960x1080px).
+5. Choose `layout` strictly from the image slot description:
+   - `Tall`: portrait, vertical, full-height, or height > width.
+   - `Wide`: landscape, horizontal, banner, background, full-width, or width > height.
+   - `Square`: square, avatar, circle, profile, logo, icon, or near-equal dimensions.
+6. Choose `size` strictly from the image slot description and visual importance:
+   - `Large`: max dimension >= 900px, full-height, full-width, background, hero,
+     half-slide, or main feature image.
+   - `Medium`: cards, portraits, thumbnails, profile/team photos, or 400–899px.
+   - `Small`: icons, logos, badges, small decorations, or below 400px.
+7. For nested objects (e.g. team members), keep each nested `image_url` as an empty
+   string so the executor can discover and inject the real URL later.
+8. If the selected slide tool has NO image parameters, emit ONLY the slide HTML tool
+   with no search calls after it.
+9. Output no prose, markdown, or extra tool calls after the last search call.
+"""
+
 # Critical rule for math/equations - include in all slide prompts
 # NOTE: Use {{ and }} to escape braces for LangChain template
 MATH_EQUATION_RULES = """
@@ -129,8 +167,7 @@ INTRO_PROMPT = """
    Every sentence, bullet point, or idea = separate line with <br>!
 3. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-4. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
-   ⚠️ MUST use NUMERIC seed (e.g., seed/347/1600/900) NOT text! Text seeds cause 404s!
+4. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
 5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
    ✅ CORRECT: `<math-field>E = mc^2</math-field>`
    ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
@@ -151,8 +188,7 @@ TRANSITION_PROMPT = """
 1. CONTENT: 3-6 words ONLY
 2. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
-   ⚠️ MUST use NUMERIC seed (e.g., seed/523/1600/900) NOT text! Text seeds cause 404s!
+3. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
 4. MATH/EQUATIONS: If you need formulas, use: `<math-field>formula</math-field>`
    ❌ FORBIDDEN: Unicode superscripts/subscripts like ², ³, ₂, ₃ — use LaTeX instead!
 5. CONSISTENCY: {previous_transition_context}
@@ -181,8 +217,7 @@ CONTENT_PROMPT = """
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
    ❌ NO style attributes except for key phrase highlights!
 4. CONTENT: Concise, no filler words
-5. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where [NUMBER] is an integer and in the range of 100-999
-   ⚠️ MUST use NUMERIC seed (e.g., seed/789/1600/900) NOT text! Text seeds cause 404s!
+5. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
 6. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
    ✅ CORRECT: `<math-field>E = mc^2</math-field>`
    ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
@@ -200,7 +235,7 @@ THANK_YOU_PROMPT = """
 
 **RULES:**
 1. CONTENT: "Thank You" ONLY
-2. IMAGE: seed/success/1600/900 or gradient
+2. IMAGES: Follow the ordered image-search execution-plan rules.
 3. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
 
 Generate simple, HIGHLY VISIBLE function call.
@@ -218,8 +253,7 @@ TEAM_PROMPT = """
 1. CONTENT: Name + role only
 2. HTML: Use <br> or <p> for line breaks ONLY
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
-3. IMAGE: Use https://picsum.photos/seed/[NUMBER]/1600/900 where NUMBER is 100-999
-   ⚠️ MUST use NUMERIC seed (e.g., seed/456/1600/900) NOT text! Text seeds cause 404s!
+3. IMAGES: Follow the ordered image-search execution-plan rules. Nested member image fields must remain empty placeholders.
 4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
 
 Generate professional, READABLE function call.
@@ -491,9 +525,12 @@ Please analyze this document and create a hierarchical structure with appropriat
 
 # ================================= QWEN GENERATOR PROMPTS =================================
 
-QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY a function call. Do NOT use thinking mode. Do NOT output <think> tags.
+QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY ordered function calls. Do NOT use thinking mode. Do NOT output <think> tags.
 
 Example:
+<tool_call>
+{"name": "search_ddgs_images", "arguments": {"query": "business meeting", "layout": "Wide", "size": "Large"}}
+</tool_call>
 <tool_call>
 {"name": "generate_title_slide", "arguments": {"main_title": "BUSINESS PLAN", "subtitle": "2024-2028"}}
 </tool_call>"""
