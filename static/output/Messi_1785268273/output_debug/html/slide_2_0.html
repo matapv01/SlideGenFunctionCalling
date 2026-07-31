@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text and Image Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: #ffffff;
+            overflow: hidden;
+            background-color: #F8F8F8;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .text-column {
+            flex: 1.5; /* Takes more space */
+            padding: 2rem 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* Layered background for the text column only */
+            background-image: url('https://images.pexels.com/photos/2341290/pexels-photo-2341290.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1');
+            background-repeat: repeat;
+            background-position: center;
+            background-size: auto;
+        }
+        
+        .image-column {
+            flex: 1; /* Takes less space */
+            background-image: url('https://assets.goal.com/images/v3/getty-2224836166/crop/MM5DENRXGI5DCNJQGM5G433XMU5DENB2GIZTK===/GettyImages-2224836166.jpg?auto=webp&format=pjpg&width=2048&quality=60');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: clamp(3rem, 4vw, 4rem);
+            font-weight: 400;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-content {
+            font-size: 2rem;
+            line-height: 1.8;
+            max-width: 35ch; /* Limit line length for readability */
+        }
+        
+        /* --- Responsive Design --- */
+        @media (max-width: 48rem) { /* 768px */
+            .slide-container {
+                flex-direction: column;
+            }
+            .text-column {
+                height: 60vh;
+                padding: 2rem 2rem 4rem 2rem;
+                justify-content: center;
+                text-align: center;
+            }
+            .text-content {
+                margin: 0 auto;
+            }
+            .image-column {
+                height: 40vh;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="text-column">
+            <h1 class="title">1. Giới thiệu</h1>
+            <p class="text-content"><span style="font-weight: bold; color: #fbbf24;">Lionel Andrés Messi Cuccittini</span>, sinh ngày 24 tháng 6 năm 1987 tại thành phố <span style="font-weight: bold; color: #fbbf24;">Rosario</span>, tỉnh <span style="font-weight: bold; color: #fbbf24;">Santa Fe</span>, <span style="font-weight: bold; color: #fbbf24;">Argentina</span>, được mệnh danh là một trong những cầu thủ vĩ đại nhất lịch sử bóng đá thế giới. Biệt danh <span style="font-weight: bold; color: #fbbf24;">“El Pulga”</span> (Bọ chét) gắn liền với anh không chỉ vì vóc dáng nhỏ bé mà còn bởi sự nhanh nhẹn và khả năng xoay sở phi thường trên sân cỏ.<br><br>Ngay từ khi còn nhỏ, Messi đã thể hiện năng khiếu thiên bẩm dù phải đối mặt với căn bệnh thiếu hụt hormone tăng trưởng đe dọa sự nghiệp. Nhờ sự hỗ trợ của gia đình và CLB <span style="font-weight: bold; color: #fbbf24;">Barcelona</span>, anh đã vượt qua mọi khó khăn để bước vào con đường trở thành một huyền thoại sống.</p>
+        </div>
+        <div class="image-column"></div>
+    </div>
+</body>
+</html>

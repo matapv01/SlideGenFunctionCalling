@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Content Slide - High-Tech Design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; width: 1920px; height: 1080px; }
+        body, html {
+            height: 1080px;
+            width: 1920px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: linear-gradient(135deg, #0F172A, #1E293B);
+            color: #D1D5DB;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            padding: 80px 120px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            text-align: center;
+        }
+
+        .main-title {
+            font-size: 90px;
+            font-weight: 800;
+            color: #FFFFFF;
+            text-transform: uppercase;
+            text-align: center;
+            margin-bottom: 80px;
+            line-height: 1.2;
+        }
+        .highlight { color: #22D3EE; }
+        
+        .columns-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 80px;
+            flex: 1;
+            align-items: center;
+        }
+
+        .column-card {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-top: 3px solid #22D3EE;
+            box-shadow: 0 0 30px rgba(34, 211, 238, 0.1);
+            padding: 60px 50px;
+            border-radius: 20px;
+            height: 100%;
+        }
+
+        .card-header {
+            margin-bottom: 40px;
+            color: #22D3EE;
+        }
+        .column-icon {
+            width: 80px;
+            height: 80px;
+        }
+
+        .column-title {
+            font-size: 48px;
+            font-weight: 700;
+            color: #FFFFFF;
+            margin-bottom: 25px;
+            line-height: 1.3;
+        }
+        .column-description {
+            font-size: 28px;
+            line-height: 1.7;
+            color: #D1D5DB;
+            text-align: center;
+        }
+
+        /* Content wrapper for scaling */
+        .content-wrapper {
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+            width: 1920px;
+            height: 1080px;
+            overflow: visible;
+            background: inherit;
+        }
+        
+        .outer-wrapper {
+            padding: 0;
+            box-sizing: border-box;
+            width: 1920px;
+            height: 1080px;
+            overflow: hidden;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <h1 class="main-title">SPLIT YOUR CONTENT</h1>
+                <div class="columns-grid">
+                    
+        <div class="column-card">
+            <div class="card-header">
+                <svg class="column-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a7 7 0 0 0-7 7c0 2.38 1.19 4.47 3 5.74V17a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1v-2.26c1.81-1.27 3-3.36 3-5.74A7 7 0 0 0 12 2M9 21a1 1 0 0 0 1 1h4a1 1 0 0 0 1-1v-1H9z"/></svg>
+            </div>
+            <h2 class="column-title">Title One</h2>
+            <p class="column-description">Description for the first column goes here. Elaborate on your point with clear and concise text.</p>
+        </div>
+        
+        <div class="column-card">
+            <div class="card-header">
+                <svg class="column-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2a10 10 0 1 0 10 10A10 10 0 0 0 12 2m0 18a8 8 0 1 1 8-8a8 8 0 0 1-8 8m0-14a6 6 0 1 0 6 6a6 6 0 0 0-6-6m0 10a4 4 0 1 1 4-4a4 4 0 0 1-4 4m0-6a2 2 0 1 0 2 2a2 2 0 0 0-2-2"/></svg>
+            </div>
+            <h2 class="column-title">Title Two</h2>
+            <p class="column-description">Description for the second column. This layout is perfect for comparing two ideas side-by-side.</p>
+        </div>
+        
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

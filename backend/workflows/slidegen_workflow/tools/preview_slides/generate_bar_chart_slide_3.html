@@ -1,0 +1,132 @@
+
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                background-color: #FDF5E6; /* Light beige */
+                font-family: Inter, sans-serif;
+                display: flex; flex-direction: column;
+                overflow: hidden;
+            }
+            .top-bar {
+                padding: 60px 100px 20px 100px;
+            }
+            .title-box {
+                display: inline-block;
+            }
+            h1 { margin: 0; font-size: 65px; color: #4A5E7B; text-transform: capitalize; }
+            .subtitle { font-size: 28px; color: #8E97A4; margin-top: 10px; padding-left: 20px; }
+            
+            .content-area {
+                display: flex;
+                flex: 1;
+                padding: 0 80px 60px 80px;
+                gap: 40px;
+            }
+            .left-panel {
+                flex: 1.5;
+                display: flex; flex-direction: column;
+                justify-content: flex-start;
+            }
+            .legend-container {
+                display: flex;
+                gap: 30px;
+                margin-bottom: 40px;
+                padding-left: 20px;
+            }
+            .chart-panel {
+                display: flex; align-items: flex-start; justify-content: flex-start;
+            }
+            .right-panel {
+                flex: 1;
+                display: flex; align-items: center; justify-content: center;
+            }
+            .image-capsule {
+                width: 500px;
+                height: 800px;
+                border-radius: 250px;
+                object-fit: cover;
+                box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+            }
+            .decoration-star {
+                position: absolute; color: white; font-size: 40px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="decoration-star" style="top:40px; left:40px;">✦</div>
+        <div class="decoration-star" style="top:100px; left:80px;">✦</div>
+        
+        <div class="top-bar">
+            <div class="title-box">
+                <h1>Student Performance Analysis</h1>
+            </div>
+            <div class="subtitle">Comparing average grades across different subjects</div>
+        </div>
+
+        <div class="content-area">
+            <div class="left-panel">
+                <div class="legend-container">
+                    
+            <div style="display:flex; align-items:center;">
+                <div style="width:24px; height:24px; background:#4A5E7B; border-radius:50%; margin-right:12px;"></div>
+                <div style="font-size:24px; color:#4A5E7B; font-weight:500;">Class A</div>
+            </div>
+            
+            <div style="display:flex; align-items:center;">
+                <div style="width:24px; height:24px; background:#F5B041; border-radius:50%; margin-right:12px;"></div>
+                <div style="font-size:24px; color:#4A5E7B; font-weight:500;">Class B</div>
+            </div>
+            
+                </div>
+                <div class="chart-panel">
+                    <svg width="1100" height="600" viewBox="0 0 1100 600">
+                        
+        <line x1="100" y1="60.0" x2="1060" y2="60.0" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="85" y="66.0" font-size="18" text-anchor="end" fill="#8E97A4">101</text>
+        
+        <line x1="100" y1="152.0" x2="1060" y2="152.0" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="85" y="158.0" font-size="18" text-anchor="end" fill="#8E97A4">81</text>
+        
+        <line x1="100" y1="244.0" x2="1060" y2="244.0" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="85" y="250.0" font-size="18" text-anchor="end" fill="#8E97A4">61</text>
+        
+        <line x1="100" y1="336.0" x2="1060" y2="336.0" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="85" y="342.0" font-size="18" text-anchor="end" fill="#8E97A4">40</text>
+        
+        <line x1="100" y1="428.0" x2="1060" y2="428.0" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="85" y="434.0" font-size="18" text-anchor="end" fill="#8E97A4">20</text>
+        
+        <line x1="100" y1="520.0" x2="1060" y2="520.0" stroke="#E5E7EB" stroke-dasharray="5,5" />
+        <text x="85" y="526.0" font-size="18" text-anchor="end" fill="#8E97A4">-0</text>
+        <text x="220.0" y="560" font-size="20" text-anchor="middle" fill="#4A5E7B" font-weight="bold">Math</text>
+                <rect x="129.0" y="133.63636363636368" width="86.0" height="386.3636363636363" fill="#4A5E7B" rx="8" />
+                <text x="172.0" y="123.63636363636368" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">85%</text>
+                <rect x="225.0" y="156.36363636363637" width="86.0" height="363.6363636363636" fill="#F5B041" rx="8" />
+                <text x="268.0" y="146.36363636363637" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">80%</text><text x="460.0" y="560" font-size="20" text-anchor="middle" fill="#4A5E7B" font-weight="bold">Science</text>
+                <rect x="369.0" y="101.81818181818181" width="86.0" height="418.1818181818182" fill="#4A5E7B" rx="8" />
+                <text x="412.0" y="91.81818181818181" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">92%</text>
+                <rect x="465.0" y="120.0" width="86.0" height="400.0" fill="#F5B041" rx="8" />
+                <text x="508.0" y="110.0" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">88%</text><text x="700.0" y="560" font-size="20" text-anchor="middle" fill="#4A5E7B" font-weight="bold">English</text>
+                <rect x="609.0" y="165.45454545454544" width="86.0" height="354.54545454545456" fill="#4A5E7B" rx="8" />
+                <text x="652.0" y="155.45454545454544" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">78%</text>
+                <rect x="705.0" y="147.27272727272725" width="86.0" height="372.72727272727275" fill="#F5B041" rx="8" />
+                <text x="748.0" y="137.27272727272725" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">82%</text><text x="940.0" y="560" font-size="20" text-anchor="middle" fill="#4A5E7B" font-weight="bold">History</text>
+                <rect x="849.0" y="156.36363636363637" width="86.0" height="363.6363636363636" fill="#4A5E7B" rx="8" />
+                <text x="892.0" y="146.36363636363637" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">80%</text>
+                <rect x="945.0" y="179.09090909090912" width="86.0" height="340.9090909090909" fill="#F5B041" rx="8" />
+                <text x="988.0" y="169.09090909090912" font-size="16" text-anchor="middle" fill="#4A5E7B" font-weight="bold">75%</text><text x="600.0" y="590" font-size="22" text-anchor="middle" fill="#4A5E7B" font-weight="600">Subjects</text><text transform="rotate(-90)" x="-300.0" y="30" font-size="22" text-anchor="middle" fill="#4A5E7B" font-weight="600">Average Score</text>
+                    </svg>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <img class="image-capsule" src="https://encrypted-tbn0.gstatic.com/images?q=tbn:ANd9GcT3jt3HxXUeFzHPpte0_XVx2FuYiUqYEXELOaVwMGPLuRo0onkYXLylC7dg&s=10" alt="Decoration">
+            </div>
+        </div>
+    </body>
+    </html>
+    

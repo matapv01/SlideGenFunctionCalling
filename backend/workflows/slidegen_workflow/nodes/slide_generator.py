@@ -8,9 +8,10 @@ from langchain_core.runnables import RunnableConfig
 from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
-from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOOLS_DICT, execute_tool_plan
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
 from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K, COT_MAX_TOKENS
+from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
     QWEN_COT_GENERATOR_SYSTEM_PROMPT,
@@ -22,10 +23,14 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     INTRO_PROMPT,
     MATH_EQUATION_RULES,
     SLIDE_PREPARER_SYSTEM_PROMPT,
-    SLIDE_PREPARER_HUMAN_TEMPLATE
+    SLIDE_PREPARER_HUMAN_TEMPLATE,
+    IMAGE_SEARCH_EXECUTION_PLAN_RULES,
 )
+
 from backend.workflows.slidegen_workflow.utils.helper import (
-    format_tool_for_qwen, QWEN_CHAT_TEMPLATE, get_slide_style_context
+    format_tool_for_qwen,
+    parse_tool_calls_json,
+    QWEN_CHAT_TEMPLATE,
 )
 
 _tokenizer_cache = {}
@@ -63,6 +68,28 @@ def _extract_style_params(tool_call: dict) -> dict:
     style_args = {k: v for k, v in args.items() if k not in _CONTENT_KEYS}
     result["arguments"] = style_args
     return result
+
+
+
+
+
+def _format_content_as_str(content) -> str:
+    """Safely convert slide content (str, dict, list) to a plain string."""
+    if isinstance(content, str):
+        return content
+    if isinstance(content, dict):
+        parts = []
+        for k, v in content.items():
+            if isinstance(v, list):
+                parts.extend([str(item) for item in v])
+            elif isinstance(v, (str, int, float)):
+                parts.append(str(v))
+            elif isinstance(v, dict):
+                parts.append(_format_content_as_str(v))
+        return "\n".join(parts) if parts else json.dumps(content, ensure_ascii=False)
+    if isinstance(content, list):
+        return "\n".join([_format_content_as_str(item) for item in content])
+    return str(content) if content is not None else ""
 
 
 def create_default_html(content_data) -> str:
@@ -222,6 +249,8 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     previous_slide_function_call = state.get('previous_accepted_tool_call', {})
     length_slide_chunks = state.get('length_slide_chunks', 0)
     
+    if isinstance(current_text, (dict, list)):
+        current_text = _format_content_as_str(current_text)
     if not current_text:
         current_text = "Default slide content"
         
@@ -339,9 +368,22 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         except Exception as e:
             print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
             
-    # Assign prepared values
-    system_prompt = generator_system_prompt
+    # Assign prepared values. The image-search plan is produced by this same
+    # generator invocation; no later LLM call is allowed to create search specs.
+    system_prompt = (
+        generator_system_prompt
+        + "\n\n"
+        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+    )
+    qwen_system_prompt = (
+        QWEN_GENERATOR_SYSTEM_PROMPT
+        + "\n\n"
+        + generator_system_prompt
+        + "\n\n"
+        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+    )
     human_template = HUMAN_PROMPT_TEMPLATE
+    generator_tools = [SEARCH_DDGS_TOOL, *my_tools]
             
     is_qwen = _check_is_qwen(llm)
     model_name, base_url, api_key = _get_qwen_config(llm)

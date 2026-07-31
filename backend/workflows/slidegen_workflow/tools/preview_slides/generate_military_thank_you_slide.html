@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <title>THANK YOU</title>
+        <style>
+            * { margin: 0; padding: 0; box-sizing: border-box; }
+            html { width: 1920px; height: 1080px; font-size: 16px; }
+            body {
+                width: 1920px; height: 1080px;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                overflow: hidden;
+                background-color: #f0f0f0;
+            }
+
+            .outer-wrapper {
+                width: 1920px; height: 1080px;
+                overflow: hidden;
+                position: relative;
+            }
+
+            .content-wrapper {
+                position: absolute;
+                width: 1920px; height: 1080px;
+                display: flex;
+                align-items: center;
+            }
+
+            /* Image Background with Overlay */
+            .bg-image {
+                position: absolute;
+                right: 0; top: 0;
+                width: 100%; height: 100%;
+                background: url('https://images.unsplash.com/photo-1590236141044-bc849495115d?q=80&w=1920') center/cover no-repeat;
+                z-index: 1;
+            }
+            
+            .bg-overlay {
+                position: absolute;
+                width: 100%; height: 100%;
+                background: rgba(255, 255, 255, 0.2);
+                z-index: 2;
+            }
+
+            /* Geometric Accents */
+            .diagonal-block {
+                position: absolute;
+                left: -100px; top: 0;
+                width: 450px;
+                height: 100%;
+                background: #4B5320;
+                transform: skewX(-15deg);
+                z-index: 3;
+                box-shadow: 20px 0 50px rgba(0,0,0,0.2);
+            }
+
+            .separator-line {
+                position: absolute;
+                left: calc(450px + 20px); top: 0;
+                width: 15px;
+                height: 100%;
+                background: white;
+                transform: skewX(-15deg);
+                z-index: 3;
+            }
+
+            /* Content Area */
+            .text-content {
+                position: absolute;
+                right: 150px;
+                width: 800px;
+                z-index: 10;
+                text-align: left;
+            }
+
+            .main-title {
+                font-size: 180px;
+                line-height: 0.9;
+                font-weight: 900;
+                color: #000000;
+                margin-bottom: 40px;
+                text-transform: uppercase;
+                letter-spacing: -5px;
+            }
+
+            .description {
+                font-size: 28px;
+                line-height: 1.6;
+                color: #000000;
+                max-width: 700px;
+                font-weight: 400;
+            }
+
+            /* SVG Placeholder for badges/icons */
+            .badge-container {
+                position: absolute;
+                left: 100px;
+                top: 50%;
+                transform: translateY(-50%);
+                z-index: 5;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="outer-wrapper">
+            <div class="bg-image"></div>
+            <div class="bg-overlay"></div>
+            
+            <div class="content-wrapper">
+                <div class="diagonal-block"></div>
+                <div class="separator-line"></div>
+                
+                <div class="badge-container">
+                    <svg width="120" height="120" viewBox="0 0 24 24" fill="white" xmlns="http://www.w3.org/2000/svg">
+                        <path d="M12 2L4.5 20.29L5.21 21L12 18L18.79 21L19.5 20.29L12 2Z" />
+                    </svg>
+                </div>
+
+                <div class="text-content">
+                    <h1 class="main-title">THANK YOU</h1>
+                    <p class="description">Lorem ipsum dolor sit amet, consectetur adipiscing elit. In luctus fermentum risus nec feugiat. Nunc condimentum mauris blandit orci convallis dapibus.</p>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>

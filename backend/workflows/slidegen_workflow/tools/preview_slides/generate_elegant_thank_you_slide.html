@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 1920px; height: 1080px; font-family: 'Be Vietnam Pro', sans-serif; overflow: hidden; }
+        
+        .bg-img {
+            position: absolute; width: 100%; height: 100%;
+            object-fit: cover; z-index: 1;
+        }
+
+        .glass-card {
+            position: absolute; left: 560px; top: 290px;
+            width: 800px; height: 500px;
+            background-color: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            z-index: 5;
+            display: flex; flex-direction: column; justify-content: center; align-items: center;
+            box-shadow: 0 40px 100px rgba(0,0,0,0.1);
+        }
+
+        .title {
+            font-size: 110px; font-style: italic; color: #4A403A; margin-bottom: 20px;
+        }
+
+        .subtitle {
+            font-size: 24px; letter-spacing: 6px; color: #8B7E74;
+        }
+    </style>
+</head>
+<body>
+    <img src="https://images.unsplash.com/photo-1497366811353-6870744d04b2?q=80&w=2069&auto=format&fit=crop" class="bg-img">
+    <div class="glass-card">
+        <h1 class="title">Thank You</h1>
+        <p class="subtitle">FOR YOUR KIND ATTENTION</p>
+    </div>
+</body>
+</html>

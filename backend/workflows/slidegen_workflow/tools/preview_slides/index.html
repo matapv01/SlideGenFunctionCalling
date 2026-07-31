@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="utf-8">
+<title>Slide Previews</title>
+<style>
+body { font-family: sans-serif; display: flex; margin: 0; padding: 0; height: 100vh; overflow: hidden; }
+#sidebar { width: 350px; background: #f8f9fa; border-right: 1px solid #ccc; padding: 15px; overflow-y: auto; }
+#content { flex: 1; display: flex; flex-direction: column; background: #333; }
+.topbar { background: #222; color: white; padding: 10px; display: flex; justify-content: space-between; align-items: center; }
+.topbar a { color: #4da6ff; text-decoration: none; font-size: 14px; }
+.iframe-wrapper { flex: 1; position: relative; background: #333; overflow: hidden; }
+/* Scale the iframe so it fits the screen but renders at 1920x1080 internally */
+.scaler { width: 1920px; height: 1080px; position: absolute; left: 50%; top: 50%; transform-origin: center center; background: white; box-shadow: 0 10px 30px rgba(0,0,0,0.5); transition: transform 0.2s; }
+iframe { width: 1920px; height: 1080px; border: none; }
+ul { list-style: none; padding: 0; margin: 0; }
+li { margin: 8px 0; }
+a.slide-link { text-decoration: none; color: #333; display: block; padding: 8px 12px; border-radius: 4px; background: white; border: 1px solid #e0e0e0; transition: 0.2s; }
+a.slide-link:hover { background: #e9ecef; border-color: #adb5bd; }
+a.slide-link.active { background: #007bff; color: white; border-color: #007bff; }
+</style>
+</head>
+<body>
+<div id="sidebar">
+    <h3 style="margin-top:0">All Slides</h3>
+    <ul id="slide-list">
+<li><a href="generate_bar_chart_slide_1.html" class="slide-link" onclick="loadSlide(this, 'generate_bar_chart_slide_1.html'); return false;">generate_bar_chart_slide_1</a></li>
+<li><a href="generate_bar_chart_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_bar_chart_slide_2.html'); return false;">generate_bar_chart_slide_2</a></li>
+<li><a href="generate_bar_chart_slide_3.html" class="slide-link" onclick="loadSlide(this, 'generate_bar_chart_slide_3.html'); return false;">generate_bar_chart_slide_3</a></li>
+<li><a href="generate_bar_chart_slide_4.html" class="slide-link" onclick="loadSlide(this, 'generate_bar_chart_slide_4.html'); return false;">generate_bar_chart_slide_4</a></li>
+<li><a href="generate_big_concept_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_big_concept_slide.html'); return false;">generate_big_concept_slide</a></li>
+<li><a href="generate_body_slide10.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide10.html'); return false;">generate_body_slide10</a></li>
+<li><a href="generate_body_slide11.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide11.html'); return false;">generate_body_slide11</a></li>
+<li><a href="generate_body_slide12.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide12.html'); return false;">generate_body_slide12</a></li>
+<li><a href="generate_body_slide15.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide15.html'); return false;">generate_body_slide15</a></li>
+<li><a href="generate_body_slide18.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide18.html'); return false;">generate_body_slide18</a></li>
+<li><a href="generate_body_slide19.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide19.html'); return false;">generate_body_slide19</a></li>
+<li><a href="generate_body_slide20.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide20.html'); return false;">generate_body_slide20</a></li>
+<li><a href="generate_body_slide4.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide4.html'); return false;">generate_body_slide4</a></li>
+<li><a href="generate_body_slide5.html" class="slide-link" onclick="loadSlide(this, 'generate_body_slide5.html'); return false;">generate_body_slide5</a></li>
+<li><a href="generate_brand_collaboration_closing_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_brand_collaboration_closing_slide.html'); return false;">generate_brand_collaboration_closing_slide</a></li>
+<li><a href="generate_business_intro_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_business_intro_slide.html'); return false;">generate_business_intro_slide</a></li>
+<li><a href="generate_business_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_business_thank_you_slide.html'); return false;">generate_business_thank_you_slide</a></li>
+<li><a href="generate_business_transition_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_business_transition_slide.html'); return false;">generate_business_transition_slide</a></li>
+<li><a href="generate_classic_content_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_classic_content_slide.html'); return false;">generate_classic_content_slide</a></li>
+<li><a href="generate_closing_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_closing_slide.html'); return false;">generate_closing_slide</a></li>
+<li><a href="generate_colorful_team_grid_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_colorful_team_grid_slide.html'); return false;">generate_colorful_team_grid_slide</a></li>
+<li><a href="generate_company_mission_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_company_mission_slide.html'); return false;">generate_company_mission_slide</a></li>
+<li><a href="generate_comparison_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_comparison_slide.html'); return false;">generate_comparison_slide</a></li>
+<li><a href="generate_content_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_content_slide.html'); return false;">generate_content_slide</a></li>
+<li><a href="generate_corporate2_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_corporate2_thank_you_slide.html'); return false;">generate_corporate2_thank_you_slide</a></li>
+<li><a href="generate_corporate_content_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_corporate_content_slide.html'); return false;">generate_corporate_content_slide</a></li>
+<li><a href="generate_corporate_grid_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_corporate_grid_slide.html'); return false;">generate_corporate_grid_slide</a></li>
+<li><a href="generate_corporate_multicolumn_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_corporate_multicolumn_slide.html'); return false;">generate_corporate_multicolumn_slide</a></li>
+<li><a href="generate_corporate_team_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_corporate_team_slide.html'); return false;">generate_corporate_team_slide</a></li>
+<li><a href="generate_corporate_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_corporate_thank_you_slide.html'); return false;">generate_corporate_thank_you_slide</a></li>
+<li><a href="generate_creative_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_creative_thank_you_slide.html'); return false;">generate_creative_thank_you_slide</a></li>
+<li><a href="generate_dusk_transition_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_dusk_transition_slide.html'); return false;">generate_dusk_transition_slide</a></li>
+<li><a href="generate_dynamic_intro_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_dynamic_intro_slide.html'); return false;">generate_dynamic_intro_slide</a></li>
+<li><a href="generate_elegant_agenda_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_elegant_agenda_slide.html'); return false;">generate_elegant_agenda_slide</a></li>
+<li><a href="generate_elegant_intro_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_elegant_intro_slide.html'); return false;">generate_elegant_intro_slide</a></li>
+<li><a href="generate_elegant_points_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_elegant_points_slide.html'); return false;">generate_elegant_points_slide</a></li>
+<li><a href="generate_elegant_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_elegant_thank_you_slide.html'); return false;">generate_elegant_thank_you_slide</a></li>
+<li><a href="generate_employee_intro_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_employee_intro_slide.html'); return false;">generate_employee_intro_slide</a></li>
+<li><a href="generate_flexible_columns_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_flexible_columns_slide.html'); return false;">generate_flexible_columns_slide</a></li>
+<li><a href="generate_geometric_grid_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_geometric_grid_slide.html'); return false;">generate_geometric_grid_slide</a></li>
+<li><a href="generate_geometric_image_content_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_geometric_image_content_slide.html'); return false;">generate_geometric_image_content_slide</a></li>
+<li><a href="generate_geometric_split_content_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_geometric_split_content_slide.html'); return false;">generate_geometric_split_content_slide</a></li>
+<li><a href="generate_geometric_split_content_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_geometric_split_content_slide_2.html'); return false;">generate_geometric_split_content_slide_2</a></li>
+<li><a href="generate_icon_list_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_icon_list_slide.html'); return false;">generate_icon_list_slide</a></li>
+<li><a href="generate_image_cutout_list_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_image_cutout_list_slide.html'); return false;">generate_image_cutout_list_slide</a></li>
+<li><a href="generate_intro_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_intro_slide.html'); return false;">generate_intro_slide</a></li>
+<li><a href="generate_intro_slide1.html" class="slide-link" onclick="loadSlide(this, 'generate_intro_slide1.html'); return false;">generate_intro_slide1</a></li>
+<li><a href="generate_introduction_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_introduction_slide.html'); return false;">generate_introduction_slide</a></li>
+<li><a href="generate_line_chart_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_line_chart_slide_2.html'); return false;">generate_line_chart_slide_2</a></li>
+<li><a href="generate_line_chart_slide_3.html" class="slide-link" onclick="loadSlide(this, 'generate_line_chart_slide_3.html'); return false;">generate_line_chart_slide_3</a></li>
+<li><a href="generate_main_points_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_main_points_slide.html'); return false;">generate_main_points_slide</a></li>
+<li><a href="generate_memphis_content_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_memphis_content_slide.html'); return false;">generate_memphis_content_slide</a></li>
+<li><a href="generate_memphis_grid_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_memphis_grid_slide.html'); return false;">generate_memphis_grid_slide</a></li>
+<li><a href="generate_memphis_multicolumn_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_memphis_multicolumn_slide.html'); return false;">generate_memphis_multicolumn_slide</a></li>
+<li><a href="generate_methodology_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_methodology_slide.html'); return false;">generate_methodology_slide</a></li>
+<li><a href="generate_military_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_military_thank_you_slide.html'); return false;">generate_military_thank_you_slide</a></li>
+<li><a href="generate_minimalist_sage_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_minimalist_sage_slide.html'); return false;">generate_minimalist_sage_slide</a></li>
+<li><a href="generate_minimalist_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_minimalist_slide.html'); return false;">generate_minimalist_slide</a></li>
+<li><a href="generate_minimalist_tech_list_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_minimalist_tech_list_slide.html'); return false;">generate_minimalist_tech_list_slide</a></li>
+<li><a href="generate_minimalist_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_minimalist_thank_you_slide.html'); return false;">generate_minimalist_thank_you_slide</a></li>
+<li><a href="generate_minimalist_thank_you_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_minimalist_thank_you_slide_2.html'); return false;">generate_minimalist_thank_you_slide_2</a></li>
+<li><a href="generate_minimalist_title_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_minimalist_title_slide.html'); return false;">generate_minimalist_title_slide</a></li>
+<li><a href="generate_mission_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_mission_slide.html'); return false;">generate_mission_slide</a></li>
+<li><a href="generate_modern_contact_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_modern_contact_slide.html'); return false;">generate_modern_contact_slide</a></li>
+<li><a href="generate_pie_chart_slide_1.html" class="slide-link" onclick="loadSlide(this, 'generate_pie_chart_slide_1.html'); return false;">generate_pie_chart_slide_1</a></li>
+<li><a href="generate_pie_chart_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_pie_chart_slide_2.html'); return false;">generate_pie_chart_slide_2</a></li>
+<li><a href="generate_pie_chart_slide_4.html" class="slide-link" onclick="loadSlide(this, 'generate_pie_chart_slide_4.html'); return false;">generate_pie_chart_slide_4</a></li>
+<li><a href="generate_pie_chart_slide_6.html" class="slide-link" onclick="loadSlide(this, 'generate_pie_chart_slide_6.html'); return false;">generate_pie_chart_slide_6</a></li>
+<li><a href="generate_pie_chart_slide_7.html" class="slide-link" onclick="loadSlide(this, 'generate_pie_chart_slide_7.html'); return false;">generate_pie_chart_slide_7</a></li>
+<li><a href="generate_pie_chart_slide_8.html" class="slide-link" onclick="loadSlide(this, 'generate_pie_chart_slide_8.html'); return false;">generate_pie_chart_slide_8</a></li>
+<li><a href="generate_planning_phase_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_planning_phase_slide.html'); return false;">generate_planning_phase_slide</a></li>
+<li><a href="generate_playful_title_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_playful_title_slide.html'); return false;">generate_playful_title_slide</a></li>
+<li><a href="generate_process_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_process_slide.html'); return false;">generate_process_slide</a></li>
+<li><a href="generate_process_steps_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_process_steps_slide.html'); return false;">generate_process_steps_slide</a></li>
+<li><a href="generate_quote_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_quote_slide.html'); return false;">generate_quote_slide</a></li>
+<li><a href="generate_radar_chart_slide_1.html" class="slide-link" onclick="loadSlide(this, 'generate_radar_chart_slide_1.html'); return false;">generate_radar_chart_slide_1</a></li>
+<li><a href="generate_reference_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_reference_slide.html'); return false;">generate_reference_slide</a></li>
+<li><a href="generate_research_proposal_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_research_proposal_slide.html'); return false;">generate_research_proposal_slide</a></li>
+<li><a href="generate_research_proposal_transition_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_research_proposal_transition_slide.html'); return false;">generate_research_proposal_transition_slide</a></li>
+<li><a href="generate_scatter_plot_chart_slide_1.html" class="slide-link" onclick="loadSlide(this, 'generate_scatter_plot_chart_slide_1.html'); return false;">generate_scatter_plot_chart_slide_1</a></li>
+<li><a href="generate_scatter_plot_chart_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_scatter_plot_chart_slide_2.html'); return false;">generate_scatter_plot_chart_slide_2</a></li>
+<li><a href="generate_scatter_plot_chart_slide_3.html" class="slide-link" onclick="loadSlide(this, 'generate_scatter_plot_chart_slide_3.html'); return false;">generate_scatter_plot_chart_slide_3</a></li>
+<li><a href="generate_scatter_plot_chart_slide_4.html" class="slide-link" onclick="loadSlide(this, 'generate_scatter_plot_chart_slide_4.html'); return false;">generate_scatter_plot_chart_slide_4</a></li>
+<li><a href="generate_scatter_plot_chart_slide_6.html" class="slide-link" onclick="loadSlide(this, 'generate_scatter_plot_chart_slide_6.html'); return false;">generate_scatter_plot_chart_slide_6</a></li>
+<li><a href="generate_scatter_plot_chart_slide_7.html" class="slide-link" onclick="loadSlide(this, 'generate_scatter_plot_chart_slide_7.html'); return false;">generate_scatter_plot_chart_slide_7</a></li>
+<li><a href="generate_section_header_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide.html'); return false;">generate_section_header_slide</a></li>
+<li><a href="generate_section_header_slide_10.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_10.html'); return false;">generate_section_header_slide_10</a></li>
+<li><a href="generate_section_header_slide_12.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_12.html'); return false;">generate_section_header_slide_12</a></li>
+<li><a href="generate_section_header_slide_15.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_15.html'); return false;">generate_section_header_slide_15</a></li>
+<li><a href="generate_section_header_slide_17.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_17.html'); return false;">generate_section_header_slide_17</a></li>
+<li><a href="generate_section_header_slide_18.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_18.html'); return false;">generate_section_header_slide_18</a></li>
+<li><a href="generate_section_header_slide_5.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_5.html'); return false;">generate_section_header_slide_5</a></li>
+<li><a href="generate_section_header_slide_6.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_6.html'); return false;">generate_section_header_slide_6</a></li>
+<li><a href="generate_section_header_slide_8.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_8.html'); return false;">generate_section_header_slide_8</a></li>
+<li><a href="generate_section_header_slide_9.html" class="slide-link" onclick="loadSlide(this, 'generate_section_header_slide_9.html'); return false;">generate_section_header_slide_9</a></li>
+<li><a href="generate_service_roadmap_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_service_roadmap_slide.html'); return false;">generate_service_roadmap_slide</a></li>
+<li><a href="generate_split_content_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_split_content_slide.html'); return false;">generate_split_content_slide</a></li>
+<li><a href="generate_split_layout_list_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_split_layout_list_slide.html'); return false;">generate_split_layout_list_slide</a></li>
+<li><a href="generate_table_slide_1.html" class="slide-link" onclick="loadSlide(this, 'generate_table_slide_1.html'); return false;">generate_table_slide_1</a></li>
+<li><a href="generate_table_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_table_slide_2.html'); return false;">generate_table_slide_2</a></li>
+<li><a href="generate_table_slide_3.html" class="slide-link" onclick="loadSlide(this, 'generate_table_slide_3.html'); return false;">generate_table_slide_3</a></li>
+<li><a href="generate_table_slide_4.html" class="slide-link" onclick="loadSlide(this, 'generate_table_slide_4.html'); return false;">generate_table_slide_4</a></li>
+<li><a href="generate_table_slide_5.html" class="slide-link" onclick="loadSlide(this, 'generate_table_slide_5.html'); return false;">generate_table_slide_5</a></li>
+<li><a href="generate_table_slide_7.html" class="slide-link" onclick="loadSlide(this, 'generate_table_slide_7.html'); return false;">generate_table_slide_7</a></li>
+<li><a href="generate_team_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_team_slide.html'); return false;">generate_team_slide</a></li>
+<li><a href="generate_tech_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_tech_thank_you_slide.html'); return false;">generate_tech_thank_you_slide</a></li>
+<li><a href="generate_text_with_image_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_text_with_image_slide.html'); return false;">generate_text_with_image_slide</a></li>
+<li><a href="generate_thank_you_decorative_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_thank_you_decorative_slide.html'); return false;">generate_thank_you_decorative_slide</a></li>
+<li><a href="generate_thank_you_slide_3.html" class="slide-link" onclick="loadSlide(this, 'generate_thank_you_slide_3.html'); return false;">generate_thank_you_slide_3</a></li>
+<li><a href="generate_thank_you_slide_4.html" class="slide-link" onclick="loadSlide(this, 'generate_thank_you_slide_4.html'); return false;">generate_thank_you_slide_4</a></li>
+<li><a href="generate_thank_you_slide_5.html" class="slide-link" onclick="loadSlide(this, 'generate_thank_you_slide_5.html'); return false;">generate_thank_you_slide_5</a></li>
+<li><a href="generate_thank_you_slide_6.html" class="slide-link" onclick="loadSlide(this, 'generate_thank_you_slide_6.html'); return false;">generate_thank_you_slide_6</a></li>
+<li><a href="generate_thank_you_slide_7.html" class="slide-link" onclick="loadSlide(this, 'generate_thank_you_slide_7.html'); return false;">generate_thank_you_slide_7</a></li>
+<li><a href="generate_thank_you_so_much_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_thank_you_so_much_slide.html'); return false;">generate_thank_you_so_much_slide</a></li>
+<li><a href="generate_timeline_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_timeline_slide.html'); return false;">generate_timeline_slide</a></li>
+<li><a href="generate_title_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide.html'); return false;">generate_title_slide</a></li>
+<li><a href="generate_title_slide_11.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_11.html'); return false;">generate_title_slide_11</a></li>
+<li><a href="generate_title_slide_12.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_12.html'); return false;">generate_title_slide_12</a></li>
+<li><a href="generate_title_slide_13.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_13.html'); return false;">generate_title_slide_13</a></li>
+<li><a href="generate_title_slide_15.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_15.html'); return false;">generate_title_slide_15</a></li>
+<li><a href="generate_title_slide_17.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_17.html'); return false;">generate_title_slide_17</a></li>
+<li><a href="generate_title_slide_18.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_18.html'); return false;">generate_title_slide_18</a></li>
+<li><a href="generate_title_slide_2.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_2.html'); return false;">generate_title_slide_2</a></li>
+<li><a href="generate_title_slide_3.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_3.html'); return false;">generate_title_slide_3</a></li>
+<li><a href="generate_title_slide_5.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_5.html'); return false;">generate_title_slide_5</a></li>
+<li><a href="generate_title_slide_7.html" class="slide-link" onclick="loadSlide(this, 'generate_title_slide_7.html'); return false;">generate_title_slide_7</a></li>
+<li><a href="generate_training_intro_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_training_intro_slide.html'); return false;">generate_training_intro_slide</a></li>
+<li><a href="generate_vision_mission_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_vision_mission_slide.html'); return false;">generate_vision_mission_slide</a></li>
+<li><a href="generate_watercolor_thank_you_slide.html" class="slide-link" onclick="loadSlide(this, 'generate_watercolor_thank_you_slide.html'); return false;">generate_watercolor_thank_you_slide</a></li>
+
+    </ul>
+</div>
+<div id="content">
+    <div class="topbar">
+        <div>
+            <span id="current-slide" style="font-weight:bold; margin-right: 15px;">Select a slide</span>
+            <span style="color:#aaa; font-size:12px;">(Rendered at 1920x1080, scaled to fit)</span>
+        </div>
+        <a id="open-new-tab" href="#" target="_blank">Open in New Tab &#8599;</a>
+    </div>
+    <div class="iframe-wrapper">
+        <div class="scaler">
+            <iframe id="preview_frame" src="about:blank"></iframe>
+        </div>
+    </div>
+</div>
+<script>
+function resizeScaler() {
+    var wrapper = document.querySelector('.iframe-wrapper');
+    var scaler = document.querySelector('.scaler');
+    var w = wrapper.clientWidth - 40; // 40px padding
+    var h = wrapper.clientHeight - 40;
+    var scale = Math.min(w / 1920, h / 1080);
+    scaler.style.transform = 'translate(-50%, -50%) scale(' + scale + ')';
+}
+
+window.addEventListener('resize', resizeScaler);
+
+function loadSlide(el, filename) {
+    // Update active class
+    var links = document.querySelectorAll('.slide-link');
+    links.forEach(l => l.classList.remove('active'));
+    el.classList.add('active');
+    
+    // Update iframe and title
+    document.getElementById('preview_frame').src = filename;
+    document.getElementById('current-slide').innerText = el.innerText;
+    document.getElementById('open-new-tab').href = filename;
+}
+
+// Automatically load the first slide
+window.onload = function() {
+    resizeScaler();
+    var firstLink = document.querySelector('.slide-link');
+    if(firstLink) {
+        firstLink.click();
+    }
+};
+</script>
+</body>
+</html>

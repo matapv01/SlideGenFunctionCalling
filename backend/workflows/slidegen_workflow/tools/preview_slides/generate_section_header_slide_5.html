@@ -1,0 +1,106 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Section Slide</title>
+        <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+            }
+            
+            html {
+                width: 1920px;
+                height: 1080px;
+            }
+            
+            body {
+                width: 1920px;
+                height: 1080px;
+                font-family: 'Be Vietnam Pro', sans-serif;
+                background: #1a3d4a;
+                color: #ffffff;
+                position: relative;
+                overflow: hidden;
+            }
+            
+            /* Title on left */
+            .section-title {
+                position: absolute;
+                top: 280px;
+                left: 80px;
+                width: 800px;
+                font-size: 5rem;
+                font-weight: 900;
+                line-height: 1.1;
+                letter-spacing: 0.02em;
+                text-transform: uppercase;
+                z-index: 2;
+            }
+            
+            /* Stripes on right */
+            .stripes {
+                position: absolute;
+                top: 0;
+                right: 0;
+                width: 960px;
+                height: 1080px;
+                display: flex;
+                gap: 30px;
+                opacity: 0.3;
+            }
+            
+            .stripe {
+                flex: 1;
+                background: #2a5566;
+            }
+            
+            /* Curved line */
+            .curved-line {
+                position: absolute;
+                bottom: 80px;
+                left: 660px;
+                width: 600px;
+                height: 200px;
+            }
+            
+            
+        </style>
+    </head>
+    <body>
+        <h1 class="section-title">THIS IS THE TITLE OF THIS SECTION</h1>
+        
+        <div class="stripes">
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+            <div class="stripe"></div>
+        </div>
+        
+        
+        <svg class="curved-line" viewBox="0 0 600 200" xmlns="http://www.w3.org/2000/svg">
+            <path d="M 0 100 Q 150 50, 300 100 T 600 100" 
+                  stroke="#2a5566" 
+                  stroke-width="2" 
+                  fill="none"
+                  opacity="0.4"/>
+        </svg>
+        
+    </body>
+    </html>
+    

@@ -1,0 +1,110 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Geometric Thank You Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            margin: 0;
+            padding: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #e5e5e5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        .slide-container {
+            width: 100vw;
+            height: 100vh;
+            max-width: 100%;
+            max-height: 100%;
+            background: #f5f5f5;
+            position: relative;
+            overflow: hidden;
+            padding: 3vw;
+            border: 3px solid #1a1a1a;
+        }
+        
+        .content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+        }
+        
+        .main-text {
+            font-size: 8rem;
+            font-weight: 700;
+            color: #2d3748;
+            line-height: 1.2;
+        }
+        
+        .circle {
+            position: absolute;
+            background: #fbbf24;
+            border-radius: 50%;
+        }
+        
+        .quarter-circle {
+            position: absolute;
+            width: 280px;
+            height: 280px;
+            background: #2c5f6f;
+        }
+        
+        .quarter-circle.top-left {
+            top: 0;
+            left: 0;
+            border-radius: 0 0 100% 0;
+        }
+        
+        .quarter-circle.bottom-right {
+            bottom: 0;
+            right: 0;
+            border-radius: 100% 0 0 0;
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        
+        <!-- Top Left Quarter Circle -->
+        <div class="quarter-circle top-left"></div>
+        
+        <!-- Bottom Right Quarter Circle -->
+        <div class="quarter-circle bottom-right"></div>
+        
+        
+        
+        <!-- Top Right Circles -->
+        <div class="circle" style="top: 50px; right: 120px; width: 150px; height: 150px;"></div>
+        <div class="circle" style="top: 50px; right: 290px; width: 150px; height: 150px;"></div>
+        <div class="circle" style="top: 220px; right: 205px; width: 150px; height: 150px;"></div>
+        
+        <!-- Bottom Left Half Circle -->
+        <div class="circle" style="bottom: -75px; left: 50px; width: 150px; height: 150px;"></div>
+        
+        
+        <div class="content">
+            <div class="main-text">Thank you!</div>
+        </div>
+    </div>
+</body>
+</html>

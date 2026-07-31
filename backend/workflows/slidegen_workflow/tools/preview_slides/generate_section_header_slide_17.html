@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Schedule Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #f5f3ed;
+            overflow: hidden;
+        }
+        
+        .slide-wrapper {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .slide-container {
+            width: 1920px;
+            height: 1080px;
+            background-color: #f5f3ed;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        /* Decorative circles */
+        .circle-left {
+            position: absolute;
+            width: 550px;
+            height: 550px;
+            border-radius: 50%;
+            background-color: #e8b558;
+            top: -275px;
+            left: -275px;
+        }
+        
+        .circle-right {
+            position: absolute;
+            width: 550px;
+            height: 550px;
+            border-radius: 50%;
+            background-color: #d9653b;
+            bottom: -275px;
+            right: -275px;
+        }
+        
+        /* Horizontal bars */
+        .bar-top {
+            position: absolute;
+            width: 780px;
+            height: 35px;
+            background-color: #6b7f82;
+            top: 85px;
+            right: 0;
+        }
+        
+        .bar-bottom {
+            position: absolute;
+            width: 780px;
+            height: 35px;
+            background-color: #6b7f82;
+            bottom: 200px;
+            left: 115px;
+        }
+        
+        /* Content */
+        .content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+        }
+        
+        .main-title {
+            font-size: 110px;
+            font-weight: 700;
+            color: #d4af6a;
+            letter-spacing: 8px;
+            line-height: 1.1;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+        }
+        
+        .subtitle {
+            font-size: 42px;
+            font-weight: 400;
+            color: #7a8288;
+            max-width: 1100px;
+            line-height: 1.4;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <div class="slide-container">
+            <!-- Decorative elements -->
+            <div class="circle-left"></div>
+            <div class="circle-right"></div>
+            <div class="bar-top"></div>
+            <div class="bar-bottom"></div>
+            
+            <!-- Main content -->
+            <div class="content">
+                <div class="main-title">PROJECT SCHEDULE</div>
+                <div class="subtitle">You could enter a subtitle here if you need it</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

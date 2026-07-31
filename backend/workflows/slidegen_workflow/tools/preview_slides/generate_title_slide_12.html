@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Elegant Black and White Thesis Defense</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #F5F5F5;
+            overflow: hidden;
+        }
+        
+        .slide-wrapper {
+            width: 1920px;
+            height: 1080px;
+            position: relative;
+            overflow: hidden;
+            margin: 0 auto;
+        }
+        
+        /* Border frame */
+        .border-frame {
+            position: absolute;
+            top: 160px;
+            left: 160px;
+            right: 160px;
+            bottom: 160px;
+            border: 3px solid #000000;
+            z-index: 2;
+        }
+        
+        /* Large decorative circle */
+        .decorative-circle {
+            position: absolute;
+            top: 50%;
+            right: -200px;
+            transform: translateY(-50%);
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background-color: #E5E5E5;
+            z-index: 1;
+        }
+        
+        /* Content area */
+        .content-wrapper {
+            position: absolute;
+            top: 50%;
+            left: 300px;
+            transform: translateY(-50%);
+            z-index: 3;
+            max-width: 1100px;
+        }
+        
+        .main-title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 88px;
+            font-weight: 900;
+            color: #000000;
+            line-height: 1.1;
+            margin-bottom: 40px;
+            letter-spacing: -1px;
+        }
+        
+        .subtitle {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 36px;
+            font-weight: 400;
+            color: #000000;
+            line-height: 1.4;
+            opacity: 0.8;
+        }
+        
+        /* Responsive scaling */
+        @media (max-width: 1920px) {
+            .slide-wrapper {
+                transform: scale(0.9);
+            }
+        }
+        
+        @media (max-width: 1600px) {
+            .slide-wrapper {
+                transform: scale(0.75);
+            }
+        }
+        
+        @media (max-width: 1280px) {
+            .slide-wrapper {
+                transform: scale(0.6);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .slide-wrapper {
+                transform: scale(0.35);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-wrapper">
+        <!-- Decorative circle -->
+        <div class="decorative-circle"></div>
+        
+        <!-- Border frame -->
+        <div class="border-frame"></div>
+        
+        <!-- Content -->
+        <div class="content-wrapper">
+            <h1 class="main-title">Elegant Black and White Thesis Defense</h1>
+            <p class="subtitle">Here is where your presentation begins</p>
+        </div>
+    </div>
+</body>
+</html>

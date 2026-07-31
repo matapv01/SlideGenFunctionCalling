@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"><title>Multi-Column Content Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; } html { font-size: 18px; }
+        body, html { height: 100vh; width: 100vw; font-family: 'Be Vietnam Pro', sans-serif; overflow: hidden; background-color: #FFFFFF; }
+        .slide-container { width: 100%; height: 100%; display: flex; position: relative; border-top: 6px solid #F3F4F6; }
+        .content-area { flex: 2; padding: 4rem 5rem; display: flex; flex-direction: column; justify-content: center; }
+        .color-panel { flex: 1; position: relative; background: linear-gradient(135deg, #8B5CF6 0%, #7C3AED 100%); clip-path: url(#angled-multi-divider); }
+        .color-panel::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: linear-gradient(135deg, #7C3AED 0%, #6D28D9 100%); clip-path: url(#angled-multi-divider); transform: translateX(-2rem); z-index: -1; }
+        .title-group { display: flex; align-items: center; gap: 1.5rem; margin-bottom: 5rem; }
+        .icon-svg { width: 4.5rem; height: 4.5rem; flex-shrink: 0; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.1)); }
+        .slide-title { font-size: 3.5rem; font-weight: 800; color: #4B5563; text-transform: uppercase; line-height: 1.1; letter-spacing: 0.5px; }
+        .highlight { color: #8B5CF6; text-shadow: 0 2px 4px rgba(139, 92, 246, 0.3); }
+        .columns-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 3rem; padding-left: 5rem; }
+        .info-column {
+            position: relative; padding: 2.5rem 2rem;
+            background: linear-gradient(135deg, #F8FAFC 0%, #F1F5F9 100%);
+            border-radius: 16px; border: 1px solid #E2E8F0;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .info-column::before { content: ''; position: absolute; top: 0; left: 0; width: 100%; height: 4px; background: linear-gradient(90deg, #8B5CF6, #7C3AED); border-radius: 16px 16px 0 0; }
+        .column-title { font-size: 2.2rem; font-weight: 700; color: #4B5563; margin-bottom: 1.2rem; text-transform: uppercase; letter-spacing: 0.5px; }
+        .column-description { color: #4B5563; font-size: 1.6rem; line-height: 1.7; font-weight: 400; }
+        @media (max-width: 1400px) { .slide-title { font-size: 3rem; } .column-title { font-size: 1.9rem; } .column-description { font-size: 1.4rem; } }
+        @media (max-width: 1200px) { .content-area { padding: 3rem 4rem; } .columns-grid { gap: 2rem; padding-left: 3rem; } }
+    </style>
+</head>
+<body>
+    <svg width="0" height="0"><defs><clipPath id="angled-multi-divider" clipPathUnits="objectBoundingBox"><polygon points="0.15 0, 1 0, 1 1, 0 1" /></clipPath></defs></svg>
+    <div class="slide-container">
+        <div class="content-area"><div class="title-group"><svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg><h1 class="slide-title">IN TWO OR THREE<br><span class='highlight'>COLUMNS</span></h1></div><div class="columns-grid"><div class="info-column"><h2 class="column-title">Yellow</h2><p class="column-description">Is the color of gold, butter and ripe lemons.</p></div><div class="info-column"><h2 class="column-title">Blue</h2><p class="column-description">Is the colour of the clear sky and the deep sea.</p></div><div class="info-column"><h2 class="column-title">Red</h2><p class="column-description">Is the color of blood, and because of this it has historically been associated with sacrifice, danger and courage.</p></div></div></div>
+        <div class="color-panel"></div>
+    </div>
+</body>
+</html>

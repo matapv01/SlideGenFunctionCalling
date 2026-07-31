@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate Content Slide - Bright Design</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            background-color: #FDFCFB;
+        }
+
+        .slide-container {
+            width: 100%; height: 100%;
+            display: flex; position: relative;
+        }
+
+        .accent-panel {
+            flex: 1;
+            background-color: #1E3A8A;
+            clip-path: url(#angled-title-panel);
+            display: flex;
+            align-items: center;
+            padding: 4rem;
+        }
+
+        .slide-title {
+            font-size: clamp(3.5rem, 6vw, 6rem);
+            font-weight: 800;
+            color: #FFFFFF;
+            text-transform: uppercase;
+            max-width: 15ch;
+            line-height: 1.1;
+        }
+        .highlight { color: #FDFCFB; opacity: 0.8; }
+        
+        .content-column {
+            flex: 1.2;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            gap: 2rem;
+        }
+
+        .list-item-card {
+            background: #FFFFFF;
+            border-radius: 1rem;
+            padding: 2.5rem;
+            position: relative;
+            overflow: hidden;
+            border: 1px solid #E5E7EB;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.07);
+            /* ĐÃ XÓA: transition */
+        }
+        /* ĐÃ XÓA: khối :hover */
+
+        .item-number {
+            position: absolute;
+            top: -1rem; right: 1rem;
+            font-size: 5rem;
+            font-weight: 800;
+            color: rgba(30, 41, 59, 0.05);
+            z-index: 1;
+        }
+        .item-content { position: relative; z-index: 2; }
+
+        .list-item-title {
+            font-size: 2.2rem;
+            font-weight: 700;
+            color: #1E3A8A;
+            margin-bottom: 1rem;
+        }
+        .list-item-description {
+            font-size: 1.6rem;
+            line-height: 1.6;
+            color: #333333;
+        }
+        
+        @media (max-width: 64rem) {
+            .slide-container { flex-direction: column; }
+            .accent-panel { flex: 0.5; width: 100%; clip-path: none; text-align: center; }
+            .slide-title { max-width: none; }
+            .content-column { flex: 1; width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    
+    <svg width="0" height="0">
+      <defs>
+        <clipPath id="angled-title-panel" clipPathUnits="objectBoundingBox">
+          <polygon points="0 0, 1 0, 0.85 1, 0 1" />
+        </clipPath>
+      </defs>
+    </svg>
+    
+    <div class="slide-container">
+        <div class="accent-panel">
+            <h1 class="slide-title">CÁC CHỨC VỤ VÀ <span class='highlight'>DẤU ẤN</span> QUAN TRỌNG</h1>
+        </div>
+        <div class="content-column">
+            
+        <div class="list-item-card">
+            <div class="item-content">
+                <h3 class="list-item-title">Ủy ban Trung ương Đảng</h3>
+                <p class="list-item-description">Tham gia Ủy ban Trung ương Đảng từ năm 1994, đóng góp quan trọng trong việc hoạch định các chủ trương, đường lối chiến lược của Đảng.</p>
+            </div>
+        </div>
+        
+        <div class="list-item-card">
+            <div class="item-content">
+                <h3 class="list-item-title">Bí thư Thành ủy Hà Nội</h3>
+                <p class="list-item-description">Từng giữ cương vị người đứng đầu Đảng bộ Thủ đô, để lại dấu ấn sâu sắc trong sự nghiệp phát triển và đổi mới Hà Nội.</p>
+            </div>
+        </div>
+        
+        <div class="list-item-card">
+            <div class="item-content">
+                <h3 class="list-item-title">Chủ tịch Quốc hội</h3>
+                <p class="list-item-description">Đảm nhiệm chức vụ Chủ tịch Quốc hội khóa XI và XII, dẫn dắt các hoạt động lập pháp và giám sát tối cao của Nhà nước.</p>
+            </div>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>

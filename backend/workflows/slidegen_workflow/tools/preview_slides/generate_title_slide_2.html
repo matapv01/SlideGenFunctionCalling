@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Corporate Title Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            background-color: #FFFFFF;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            position: relative;
+            border-top: 4px solid #F3F4F6;
+        }
+
+        .text-column {
+            flex: 1;
+            padding: 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .color-column {
+            flex: 1;
+            position: relative;
+            background-color: #06B6D4;
+            clip-path: url(#angled-title-divider);
+        }
+
+        .color-column::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #0E7490;
+            clip-path: url(#angled-title-divider);
+            transform: translateX(-1.5rem);
+            z-index: -1;
+        }
+        
+        .icon-svg {
+            width: 3rem;
+            height: 3rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .main-title {
+            font-size: clamp(2.5rem, 7vw, 6rem);
+            font-weight: 800;
+            color: #6B7280;
+            line-height: 1.1;
+            text-transform: uppercase;
+        }
+        
+        .highlight {
+            color: #06B6D4;
+        }
+        
+        @media (max-width: 48rem) {
+            .text-column { text-align: center; align-items: center; }
+            .color-column { display: none; }
+        }
+
+    </style>
+</head>
+<body>
+    
+    <svg width="0" height="0">
+      <defs>
+        <clipPath id="angled-title-divider" clipPathUnits="objectBoundingBox">
+          <polygon points="0.3 0, 1 0, 1 1, 0 1" />
+        </clipPath>
+      </defs>
+    </svg>
+    
+    <div class="slide-container">
+        <div class="text-column">
+            
+    <svg class="icon-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="#D1D5DB" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M3 3v18h18"/>
+        <path d="m19 9-5 5-4-4-3 3"/>
+    </svg>
+    
+            <h1 class="main-title">THIS IS YOUR<br><span class='highlight'>PRESENTATION</span><br>TITLE</h1>
+        </div>
+        <div class="color-column"></div>
+    </div>
+</body>
+</html>

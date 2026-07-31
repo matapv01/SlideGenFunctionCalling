@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bright Tech List Slide</title>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body, html {
+            height: 100vh; width: 100vw; font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+            background-color: #ABB0EA;
+            background-image: 
+                radial-gradient(circle, rgba(0, 0, 0, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, #ABB0EA, #A2CFED);
+            background-size: 25px 25px, 100% 100%;
+        }
+        .slide-container {
+            width: 100%; height: 100%; display: flex;
+            align-items: center; position: relative;
+        }
+        
+        /* ĐÃ XÓA: Toàn bộ CSS cho tên lửa và animation peek */
+
+        .accent-border {
+            position: absolute;
+            left: 4rem; top: 4rem; bottom: 4rem;
+            width: 5px;
+            background: #6366F1;
+            border-radius: 3px;
+        }
+        
+        .content-wrapper {
+            z-index: 10;
+            padding: 4rem 4rem 4rem 8rem;
+            max-width: 70%;
+        }
+        
+        .slide-title {
+            font-size: clamp(calc(4rem * 1.0), calc((5vw + 1.5rem) * 1.0), calc(6.5rem * 1.0));
+            font-weight: 800; color: #1F2937;
+            margin-bottom: 3rem;
+        }
+        .item-list { list-style: none; margin-bottom: 2.5rem; }
+        .list-item {
+            display: flex; align-items: flex-start;
+            font-size: clamp(calc(1.8rem * 1.0), calc((2vw + 0.5rem) * 1.0), calc(2.4rem * 1.0));
+            color: #1F2937; line-height: 1.8;
+            margin-bottom: 1.5rem;
+        }
+        .bullet-icon {
+            width: 1.2em; height: 1.2em;
+            margin-right: 1.2rem; margin-top: 0.2em;
+            flex-shrink: 0;
+        }
+        .concluding-text {
+            font-size: clamp(calc(1.8rem * 1.0), calc((2vw + 0.5rem) * 1.0), calc(2.4rem * 1.0));
+            color: #1F2937; line-height: 1.8;
+            border-left: 4px solid #6366F1;
+            padding-left: 1.5rem;
+            font-style: italic;
+        }
+        
+        @media (max-width: 768px) {
+            .content-wrapper { max-width: 90%; padding: 4rem 2rem; }
+            .accent-border { left: 1.5rem; top: 2rem; bottom: 2rem; }
+            .slide-container { justify-content: center; text-align: center; }
+            .list-item, .concluding-text { text-align: left; }
+        }
+        
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="accent-border"></div>
+        
+        <div class="content-wrapper">
+            <h1 class="slide-title">This is a slide title</h1>
+            <ul class="item-list">
+                <li class="list-item">
+    <svg class="bullet-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke="#6366F1" stroke-width="2" fill="#FFFFFF" />
+        <circle cx="12" cy="12" r="4" fill="#6366F1" />
+    </svg>
+    <span>Here you have a list of items</span></li><li class="list-item">
+    <svg class="bullet-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke="#6366F1" stroke-width="2" fill="#FFFFFF" />
+        <circle cx="12" cy="12" r="4" fill="#6366F1" />
+    </svg>
+    <span>And some text</span></li><li class="list-item">
+    <svg class="bullet-icon" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+        <circle cx="12" cy="12" r="9" stroke="#6366F1" stroke-width="2" fill="#FFFFFF" />
+        <circle cx="12" cy="12" r="4" fill="#6366F1" />
+    </svg>
+    <span>But remember not to overload your slides with content</span></li>
+            </ul>
+            <p class="concluding-text">Your audience will listen to you or read the content, but won’t do both.</p>
+        </div>
+    </div>
+</body>
+</html>

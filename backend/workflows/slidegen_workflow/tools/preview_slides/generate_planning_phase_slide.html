@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Planning Phase</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            width: 1920px;
+            height: 1080px;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #1A4D4D;
+            color: white;
+            overflow: hidden;
+            padding: 80px 100px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .title {
+            font-size: 90px;
+            font-weight: 300;
+            color: #C5E898;
+            margin-bottom: 100px;
+            letter-spacing: 2px;
+        }
+        
+        .markers-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-bottom: 60px;
+            padding: 0 60px;
+        }
+        
+        .phase-marker {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: flex-end;
+        }
+        
+        .marker-pin {
+            width: 180px;
+            height: 180px;
+            background-color: var(--marker-bg);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3);
+        }
+        
+        .marker-icon {
+            width: 90px;
+            height: 90px;
+        }
+        
+        .timeline-container {
+            padding: 0 60px;
+        }
+        
+        .timeline-items {
+            display: flex;
+            justify-content: space-between;
+            background: linear-gradient(to right, #FFFFFF 0%, #FFFFFF 100%);
+            background-size: 100% 3px;
+            background-position: center 15px;
+            background-repeat: no-repeat;
+        }
+        
+        .timeline-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .timeline-track-segment {
+            height: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 30px;
+        }
+        
+        .timeline-dot {
+            width: 30px;
+            height: 30px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            border: 5px solid #1A4D4D;
+        }
+        
+        .phase-name {
+            font-size: 38px;
+            font-weight: 600;
+            color: white;
+            margin-bottom: 20px;
+            letter-spacing: 0.5px;
+        }
+        
+        .phase-description {
+            font-size: 22px;
+            line-height: 1.6;
+            color: rgba(255, 255, 255, 0.9);
+            padding: 0 20px;
+            text-align: center;
+        }
+        
+        
+    </style>
+</head>
+<body>
+    <h1 class="title">Planning Phase</h1>
+    
+    <div class="markers-container">
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: #C5E898;">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: #1A4D4D;">
+                    <path d="M30,25 Q30,15 40,15 Q45,15 45,20 Q50,15 55,20 Q60,15 60,25 Q60,30 55,35 Q60,40 55,45 Q55,50 50,50 Q45,55 40,50 Q35,55 30,50 Q25,50 25,45 Q20,40 25,35 Q20,30 30,25 Z" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="42" cy="30" r="3" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <circle cx="48" cy="35" r="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                    <path d="M35,30 Q35,35 40,35" fill="none" stroke="currentColor" stroke-width="2"/>
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: #4ECDC4;">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: #1A4D4D;">
+                    <rect x="28" y="20" width="30" height="35" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <circle cx="43" cy="32" r="8" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <path d="M40,32 L42,34 L46,30" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"/>
+                    <line x1="32" y1="45" x2="38" y2="45" stroke="currentColor" stroke-width="2"/>
+                    <line x1="32" y1="50" x2="36" y2="50" stroke="currentColor" stroke-width="2"/>
+                    <path d="M48,30 L52,26 L54,28" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: #C5E898;">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: #1A4D4D;">
+                    <rect x="30" y="23" width="28" height="20" rx="2" fill="none" stroke="currentColor" stroke-width="2.5"/>
+                    <line x1="33" y1="27" x2="55" y2="27" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="33" y1="31" x2="55" y2="31" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="33" y1="35" x2="55" y2="35" stroke="currentColor" stroke-width="1.5"/>
+                    <line x1="33" y1="39" x2="50" y2="39" stroke="currentColor" stroke-width="1.5"/>
+                    <path d="M52,45 L55,52 L58,45 L55,48 Z" fill="currentColor" stroke="currentColor" stroke-width="1.5" stroke-linejoin="round"/>
+                </svg>
+            </div>
+        </div>
+        <div class="phase-marker">
+            <div class="marker-pin" style="--marker-bg: #4ECDC4;">
+                <svg viewBox="0 0 80 80" class="marker-icon" style="color: #1A4D4D;">
+                    <path d="M32,25 L32,35 Q32,38 35,38 Q38,38 38,35 L38,25 L48,25 L48,35 L58,35 L58,45 L48,45 L48,55 L38,55 L38,45 Q38,42 35,42 Q32,42 32,45 L32,55 L22,55 L22,45 L22,35 L32,35 Z" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linejoin="round"/>
+                    <circle cx="35" cy="30" r="2" fill="currentColor"/>
+                    <circle cx="43" cy="40" r="2" fill="currentColor"/>
+                </svg>
+            </div>
+        </div>
+    </div>
+    
+    <div class="timeline-container">
+        <div class="timeline-items">
+            
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Planning</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Analysis</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Design</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        <div class="timeline-item">
+            <div class="timeline-track-segment">
+                <div class="timeline-dot"></div>
+            </div>
+            <h3 class="phase-name">Implementation</h3>
+            <p class="phase-description">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do.</p>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>

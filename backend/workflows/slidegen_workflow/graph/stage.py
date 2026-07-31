@@ -57,6 +57,8 @@ class State(TypedDict, total=False):
     current_slide_text: str
     current_slide_plan: Dict
     current_slide_context_map: str
+    current_tool_plan: List[Dict]
+    current_search_history: List[Dict]
     current_tool_call: Dict
     current_html_content: str
     current_html_path: str

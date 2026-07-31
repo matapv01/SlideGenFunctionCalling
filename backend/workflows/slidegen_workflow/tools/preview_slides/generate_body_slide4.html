@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Gallery Slide</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { 
+            font-size: 16px; 
+            width: 100vw; 
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background-color: #d5e8b9; /* Full viewport accent background */
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5rem 7.5rem; /* 80px 120px */
+        }
+
+        .slide-inner-container {
+            width: 100%;
+            height: 100%;
+            max-width: 105rem; /* 1680px */
+            max-height: 57.5rem; /* 920px */
+            background-color: #ffffff;
+            border-radius: 1rem; /* 16px */
+            box-shadow: 0 1.25rem 2.5rem rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 3rem 4rem; /* 48px 64px */
+            position: relative;
+        }
+        
+        .title-section {
+            display: flex;
+            align-items: center;
+            margin-bottom: 2.5rem; /* 40px */
+        }
+        
+        .title-accent {
+            width: 2.5rem; /* 40px - increased size */
+            height: 2.5rem; /* 40px */
+            background: linear-gradient(135deg, #d5e8b9, rgba(213, 232, 185, 0.8));
+            margin-right: 1.25rem; /* 20px */
+            border-radius: 0.5rem; /* 8px */
+            box-shadow: 0 0.25rem 0.5rem rgba(0,0,0,0.1);
+        }
+        
+        .main-title {
+            font-size: 3.5rem;
+            color: #333333;
+            font-weight: 600;
+            margin: 0;
+        }
+        
+        .content-bar {
+            width: 100%;
+            background: linear-gradient(135deg, #d5e8b9, rgba(213, 232, 185, 0.9));
+            padding: 1.5rem 2.5rem; /* 24px 40px */
+            margin-bottom: 2.5rem; /* 40px */
+            border-radius: 0.75rem; /* 12px */
+            text-align: center;
+            color: #555555;
+            font-size: 1.6rem;
+            font-weight: 500;
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .content-bar::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 0.25rem; /* 4px */
+            background: linear-gradient(90deg, #333333, #d5e8b9);
+        }
+        
+        .image-gallery {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            flex: 1;
+            align-items: stretch;
+            gap: 2rem; /* 32px */
+        }
+        
+        .image-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: rgba(255,255,255,0.9);
+            border-radius: 1.25rem; /* 20px */
+            padding: 2rem; /* 32px */
+            box-shadow: 0 0.5rem 1rem rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            border: 0.125rem solid transparent; /* 2px */
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .image-item:hover {
+            transform: translateY(-0.5rem); /* -8px hover lift */
+            box-shadow: 0 1rem 2rem rgba(0,0,0,0.15);
+            border-color: #d5e8b9;
+        }
+        
+        .image-container {
+            position: relative;
+            width: 100%;
+            height: 15rem; /* 240px - increased height */
+            margin-bottom: 1.25rem; /* 20px */
+            overflow: hidden;
+            border-radius: 0.75rem; /* 12px */
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        }
+        
+        .image-border {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-left: 0.5rem solid #d5e8b9; /* 8px */
+            border-radius: 0.75rem 0 0 0.75rem; /* 12px */
+            z-index: 1;
+            transition: all 0.3s ease;
+        }
+        
+        .image-item:hover .image-border {
+            border-left-width: 1rem; /* 16px - expand on hover */
+            background: linear-gradient(to right, #d5e8b9, transparent 70%);
+        }
+        
+        .image-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+            border-radius: 0.75rem; /* 12px */
+        }
+        
+        .image-item:hover .image-container img {
+            transform: scale(1.05); /* zoom effect on hover */
+        }
+        
+        .subtitle {
+            font-size: 2rem;
+            color: #333333;
+            margin: 0 0 1rem 0; /* 16px */
+            font-weight: 600;
+            text-align: center;
+            position: relative;
+        }
+        
+        .subtitle::after {
+            content: '';
+            position: absolute;
+            bottom: -0.25rem; /* -4px */
+            left: 50%;
+            transform: translateX(-50%);
+            width: 2rem; /* 32px */
+            height: 0.125rem; /* 2px */
+            background: #d5e8b9;
+            border-radius: 0.0625rem; /* 1px */
+            transition: width 0.3s ease;
+        }
+        
+        .image-item:hover .subtitle::after {
+            width: 4rem; /* 64px - expand underline on hover */
+        }
+        
+        .image-content {
+            font-size: 1.5rem;
+            color: #555555;
+            margin: 0;
+            text-align: center;
+            line-height: 1.6;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1.25rem; /* 20px */
+            background: rgba(213, 232, 185, 0.1);
+            border-radius: 0.5rem; /* 8px */
+            transition: all 0.3s ease;
+        }
+        
+        .image-item:hover .image-content {
+            background: rgba(213, 232, 185, 0.2);
+            transform: translateY(-0.125rem); /* -2px */
+        }
+        
+        /* Responsive design */
+        @media screen and (max-width: 75rem) {
+            body {
+                padding: 3rem 5rem;
+            }
+            
+            .image-gallery {
+                flex-direction: column;
+                gap: 1.5rem;
+            }
+            
+            .image-item {
+                flex-direction: row;
+                align-items: center;
+            }
+            
+            .image-container {
+                width: 40%;
+                height: 12rem;
+                margin-bottom: 0;
+                margin-right: 1.5rem;
+            }
+            
+            .content-area {
+                flex: 1;
+            }
+        }
+        
+        @media screen and (max-width: 50rem) {
+            body {
+                padding: 2rem 3rem;
+            }
+            
+            .slide-inner-container {
+                padding: 2rem 3rem;
+            }
+            
+            .image-item {
+                flex-direction: column;
+                padding: 1rem;
+            }
+            
+            .image-container {
+                width: 100%;
+                height: 10rem;
+                margin-right: 0;
+                margin-bottom: 1rem;
+            }
+            
+            .main-title {
+                font-size: 2rem;
+            }
+            
+            .subtitle {
+                font-size: 1.25rem;
+            }
+            
+            .image-content {
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-inner-container">
+        <!-- Title Section -->
+        <div class="title-section">
+            <div class="title-accent"></div>
+            <h1 class="main-title">MainTitle</h1>
+        </div>
+        
+        <!-- Content Bar -->
+        <div class="content-bar">
+            Content
+        </div>
+        
+        <!-- Image Gallery -->
+        <div class="image-gallery">
+            <!-- Image Item 1 -->
+            <div class="image-item">
+                <div class="image-container">
+                    <div class="image-border"></div>
+                    <img src="Image/generate_body_slide4/Default_1.png" alt="Image 1">
+                </div>
+                <div class="content-area">
+                    <h3 class="subtitle">Subtitle1</h3>
+                    <p class="image-content">Content1</p>
+                </div>
+            </div>
+            
+            <!-- Image Item 2 -->
+            <div class="image-item">
+                <div class="image-container">
+                    <div class="image-border"></div>
+                    <img src="Image/generate_body_slide4/Default_2.png" alt="Image 2">
+                </div>
+                <div class="content-area">
+                    <h3 class="subtitle">Subtitle2</h3>
+                    <p class="image-content">Content2</p>
+                </div>
+            </div>
+            
+            <!-- Image Item 3 -->
+            <div class="image-item">
+                <div class="image-container">
+                    <div class="image-border"></div>
+                    <img src="Image/generate_body_slide4/Default_3.png" alt="Image 3">
+                </div>
+                <div class="content-area">
+                    <h3 class="subtitle">Subtitle3</h3>
+                    <p class="image-content">Content3</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

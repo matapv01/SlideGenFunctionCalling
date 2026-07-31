@@ -212,7 +212,7 @@ Available tools:
 {% endfor %}
 </tools>
 
-Output ONLY a JSON function call within <tool_call> tags.
+Output ONLY ordered JSON function calls, each within its own <tool_call> tags.
 Example: <tool_call>{% raw %}{"name": "generate_title_slide", "arguments": {"main_title": "Title"}}{% endraw %}</tool_call>
 <|im_end|>
 {%- else %}
@@ -238,14 +238,60 @@ Example: <tool_call>{% raw %}{"name": "generate_title_slide", "arguments": {"mai
 {%- endif %}"""
 
 
-def parse_tool_call_json(text: str) -> Optional[dict]:
+def _normalize_tool_call(value) -> Optional[dict]:
+    """Normalize common native/raw tool-call shapes to {name, arguments}."""
+    if not isinstance(value, dict):
+        return None
+
+    function_value = value.get("function")
+    if isinstance(function_value, dict):
+        name = function_value.get("name")
+        arguments = function_value.get("arguments", {})
+    else:
+        name = value.get("name")
+        arguments = value.get("arguments")
+        if arguments is None:
+            arguments = value.get("args", {})
+
+    if not name:
+        return None
+    if isinstance(arguments, str):
+        try:
+            arguments = json.loads(arguments)
+        except Exception:
+            return None
+    if not isinstance(arguments, dict):
+        return None
+    return {"name": name, "arguments": arguments}
+
+
+def _normalize_tool_call_collection(value) -> List[dict]:
+    if isinstance(value, dict) and isinstance(value.get("tool_calls"), list):
+        values = value["tool_calls"]
+    elif isinstance(value, list):
+        values = value
+    else:
+        values = [value]
+    return [
+        normalized
+        for item in values
+        if (normalized := _normalize_tool_call(item)) is not None
+    ]
+
+
+def parse_tool_calls_json(text: str) -> List[dict]:
     """
-    Robustly extract a tool call dict from LLM output text.
-    Handles <tool_call> tags, ```json blocks, ``` blocks, and raw JSON.
-    Returns None if parsing fails.
+    Extract all ordered tool calls from Qwen/raw model output.
+
+    Supported forms:
+      - repeated <tool_call>{...}</tool_call> blocks
+      - {"tool_calls": [{...}, ...]}
+      - a raw JSON list of tool calls
+      - a single raw tool call
     """
     if not text:
-        return None
+        return []
+
     cleaned = text.strip()
 
     # 1. Try extracting from <tool_call> tag (even if closing tag is missing)
@@ -265,13 +311,6 @@ def parse_tool_call_json(text: str) -> Optional[dict]:
     # 3. Direct JSON parse
     try:
         parsed = json.loads(cleaned)
-        if isinstance(parsed, list) and len(parsed) > 0:
-            parsed = parsed[0]
-        if isinstance(parsed, dict) and "name" in parsed:
-            return {
-                "name": parsed["name"],
-                "arguments": parsed.get("arguments") or parsed.get("args") or {}
-            }
     except Exception:
         pass
 

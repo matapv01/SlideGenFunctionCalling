@@ -71,7 +71,8 @@ class SqliteProjectRepository(ProjectRepository):
             cursor.execute("SELECT * FROM projects WHERE id = ?", (project_id,))
             row = cursor.fetchone()
             project = self._map_project(row)
-            project.slides = self.get_project_slides(project_id)
+            if project:
+                project.slides = self.get_project_slides(project_id)
             return project
 
 

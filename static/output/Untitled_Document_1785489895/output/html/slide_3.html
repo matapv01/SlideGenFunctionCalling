@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text and Image Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            color: #FFFFFF;
+            overflow: hidden;
+            background-color: #F8F8F8;
+        }
+
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+        }
+
+        .text-column {
+            flex: 1.5; /* Takes more space */
+            padding: 2rem 4rem;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            /* Layered background for the text column only */
+            background-image: url('https://singlecolorimage.com/get/0b0e14/1920x1080');
+            background-repeat: repeat;
+            background-position: center;
+            background-size: auto;
+        }
+        
+        .image-column {
+            flex: 1; /* Takes less space */
+            background-image: url('https://people.com/thmb/KzUXxbAwpy0KK2zn5ihh3anKrNg=/4000x0/filters:no_upscale():max_bytes(150000):strip_icc():focal(574x0:576x2)/young-sheldon-Iain-Armitage-050625-874ac70765cc4e99be6ac5110f33183f.jpg');
+            background-size: cover;
+            background-position: center;
+        }
+
+        .title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: clamp(3rem, 4vw, 4rem);
+            font-weight: 400;
+            text-transform: uppercase;
+            margin-bottom: 1.5rem;
+        }
+        
+        .text-content {
+            font-size: 2rem;
+            line-height: 1.8;
+            max-width: 35ch; /* Limit line length for readability */
+        }
+        
+        /* --- Responsive Design --- */
+        @media (max-width: 48rem) { /* 768px */
+            .slide-container {
+                flex-direction: column;
+            }
+            .text-column {
+                height: 60vh;
+                padding: 2rem 2rem 4rem 2rem;
+                justify-content: center;
+                text-align: center;
+            }
+            .text-content {
+                margin: 0 auto;
+            }
+            .image-column {
+                height: 40vh;
+            }
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="text-column">
+            <h1 class="title"><span style="color: #FFD700; font-size: 1.2em; letter-spacing: 2px;">3. H\u00c0NH TR\u00ccNH V\u01af\u1ee2T KH\u00d3</span></h1>
+            <p class="text-content">Ngay t\u1eeb khi c\u00f2n nh\u1ecf, Messi \u0111\u00e3 th\u1ec3 hi\u1ec7n <span style="font-weight: bold; color: #FFD700;">n\u0103ng khi\u1ebfu thi\u00ean b\u1ea9m</span>.<br><br>Tuy nhi\u00ean, anh t\u1eebng ph\u1ea3i \u0111\u1ed1i m\u1eb7t v\u1edbi c\u0103n b\u1ec7nh thi\u1ebfu h\u1ee5t hormone t\u0103ng tr\u01b0\u1edfng, \u0111e d\u1ecda s\u1ef1 nghi\u1ec7p ngay t\u1eeb l\u00fac kh\u1edfi \u0111\u1ea7u.<br><br>Nh\u1edd s\u1ef1 h\u1ed7 tr\u1ee3 c\u1ee7a gia \u0111\u00ecnh v\u00e0 CLB Barcelona, Messi \u0111\u00e3 <span style="font-weight: bold; color: #FFD700;">v\u01b0\u1ee3t qua kh\u00f3 kh\u0103n</span> v\u00e0 b\u01b0\u1edbc v\u00e0o con \u0111\u01b0\u1eddng tr\u1edf th\u00e0nh huy\u1ec1n tho\u1ea1i.</p>
+        </div>
+        <div class="image-column"></div>
+    </div>
+</body>
+</html>

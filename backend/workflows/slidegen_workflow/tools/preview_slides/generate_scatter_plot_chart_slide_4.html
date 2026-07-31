@@ -1,0 +1,139 @@
+
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+        <meta charset="UTF-8">
+        <style>
+            @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+            html, body {
+                width: 1920px; height: 1080px; margin: 0; padding: 0;
+                font-family: 'Inter', sans-serif; background-color: #FFFFFF; overflow: hidden;
+            }
+            .slide-container {
+                width: 100%; height: 100%; position: relative;
+                background-image: radial-gradient(circle at 20px 20px, #f1f1f1 2px, transparent 0);
+                background-size: 40px 40px;
+            }
+            .top-section {
+                padding: 60px 100px 20px 100px;
+                border-bottom: 2px dashed #F59E0B;
+            }
+            .main-content {
+                display: flex; padding: 40px 100px; gap: 60px;
+            }
+            .left-column {
+                flex: 1; display: flex; flex-direction: column;
+            }
+            .right-column {
+                flex: 2; background: #FAFAFA; border-radius: 40px; 
+                padding: 30px; box-shadow: 15px 15px 0px #F59E0B;
+                border: 3px solid #333;
+            }
+            .insight-box {
+                background: #FFF9E6; padding: 35px; border-radius: 20px;
+                border: 2px solid #F59E0B; margin-bottom: 40px;
+                font-size: 26px; color: #374151;
+                line-height: 1.6; position: relative;
+            }
+            .insight-box::before {
+                content: "💡 Insight"; position: absolute; top: -20px; left: 20px;
+                background: #F59E0B; color: white; padding: 5px 15px;
+                border-radius: 10px; font-weight: bold; font-size: 20px;
+            }
+            h1 { margin: 0; font-size: 64px; color: #1F2937; }
+            .subtitle { font-size: 28px; color: #6B7280; margin-top: 10px; }
+        </style>
+    </head>
+    <body>
+        <div class="slide-container">
+            <div class="top-section">
+                <h1>Study Effort Drives Skill Mastery</h1>
+                <div class="subtitle">Data from Online Python Course – Q4 2024 Cohort</div>
+            </div>
+            <div class="main-content">
+                <div class="left-column">
+                    <div class="insight-box">The scatter plot shows a strong positive relationship between weekly study hours and final skill assessment scores</div>
+                    <div class="legend-container">
+            <div style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:#4F46E5; border-radius:50%; margin-right:12px;"></div>
+                <span style="font-size:22px; color:#1F2937;">Self-Paced Learners</span>
+            </div>
+            
+            <div style="display:flex; align-items:center; margin-bottom:12px;">
+                <div style="width:20px; height:20px; background:#F59E0B; border-radius:50%; margin-right:12px;"></div>
+                <span style="font-size:22px; color:#1F2937;">Instructor-Led Learners</span>
+            </div>
+            </div>
+                </div>
+                <div class="right-column">
+                    <div>
+                        <svg width="1100" height="700" viewBox="0 0 1100 700">
+                            
+        <line x1="100" y1="60.0" x2="1040" y2="60.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="85" y="66.0" font-size="18" text-anchor="end" fill="#9CA3AF">100.0</text>
+        
+        <line x1="100" y1="168.0" x2="1040" y2="168.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="85" y="174.0" font-size="18" text-anchor="end" fill="#9CA3AF">88.0</text>
+        
+        <line x1="100" y1="276.0" x2="1040" y2="276.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="85" y="282.0" font-size="18" text-anchor="end" fill="#9CA3AF">76.0</text>
+        
+        <line x1="100" y1="384.0" x2="1040" y2="384.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="85" y="390.0" font-size="18" text-anchor="end" fill="#9CA3AF">64.0</text>
+        
+        <line x1="100" y1="492.0" x2="1040" y2="492.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="85" y="498.0" font-size="18" text-anchor="end" fill="#9CA3AF">52.0</text>
+        
+        <line x1="100" y1="600.0" x2="1040" y2="600.0" stroke="#E5E7EB" stroke-width="1" />
+        <text x="85" y="606.0" font-size="18" text-anchor="end" fill="#9CA3AF">40.0</text>
+        
+    <line x1="100" y1="60" x2="100" y2="600" stroke="#374151" stroke-width="2"/>
+    <line x1="100" y1="600" x2="1040" y2="600" stroke="#374151" stroke-width="2"/>
+    
+        <text x="100.0" y="630" font-size="18" text-anchor="middle" fill="#9CA3AF">0.0</text>
+        
+        <text x="288.0" y="630" font-size="18" text-anchor="middle" fill="#9CA3AF">5.0</text>
+        
+        <text x="476.0" y="630" font-size="18" text-anchor="middle" fill="#9CA3AF">10.0</text>
+        
+        <text x="664.0" y="630" font-size="18" text-anchor="middle" fill="#9CA3AF">15.0</text>
+        
+        <text x="852.0" y="630" font-size="18" text-anchor="middle" fill="#9CA3AF">20.0</text>
+        
+        <text x="1040.0" y="630" font-size="18" text-anchor="middle" fill="#9CA3AF">25.0</text>
+        
+            <circle cx="250.4" cy="465.0" r="12" fill="#4F46E5" fill-opacity="0.7" stroke="#4F46E5" stroke-width="2" />
+            
+            <circle cx="325.6" cy="420.0" r="12" fill="#4F46E5" fill-opacity="0.7" stroke="#4F46E5" stroke-width="2" />
+            
+            <circle cx="400.8" cy="348.0" r="12" fill="#4F46E5" fill-opacity="0.7" stroke="#4F46E5" stroke-width="2" />
+            
+            <circle cx="476.0" cy="312.0" r="12" fill="#4F46E5" fill-opacity="0.7" stroke="#4F46E5" stroke-width="2" />
+            
+            <circle cx="626.4000000000001" cy="222.0" r="12" fill="#4F46E5" fill-opacity="0.7" stroke="#4F46E5" stroke-width="2" />
+            
+            <circle cx="288.0" cy="168.0" r="12" fill="#4F46E5" fill-opacity="0.7" stroke="#4F46E5" stroke-width="2" />
+            
+            <circle cx="325.6" cy="330.0" r="12" fill="#F59E0B" fill-opacity="0.7" stroke="#F59E0B" stroke-width="2" />
+            
+            <circle cx="438.4" cy="258.0" r="12" fill="#F59E0B" fill-opacity="0.7" stroke="#F59E0B" stroke-width="2" />
+            
+            <circle cx="551.2" cy="195.0" r="12" fill="#F59E0B" fill-opacity="0.7" stroke="#F59E0B" stroke-width="2" />
+            
+            <circle cx="664.0" cy="150.0" r="12" fill="#F59E0B" fill-opacity="0.7" stroke="#F59E0B" stroke-width="2" />
+            
+            <circle cx="776.8" cy="105.0" r="12" fill="#F59E0B" fill-opacity="0.7" stroke="#F59E0B" stroke-width="2" />
+            
+            <circle cx="852.0" cy="87.0" r="12" fill="#F59E0B" fill-opacity="0.7" stroke="#F59E0B" stroke-width="2" />
+            
+    <text x="570.0" y="680" font-size="22" text-anchor="middle" font-weight="bold" fill="#1F2937">Weekly Study Hours</text>
+    <text transform="rotate(-90)" x="-330.0" y="30" font-size="22" text-anchor="middle" font-weight="bold" fill="#1F2937">Final Skill Assessment Score</text>
+    
+                        </svg>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </body>
+    </html>
+    
