@@ -293,44 +293,41 @@ def parse_tool_calls_json(text: str) -> List[dict]:
         return []
 
     cleaned = text.strip()
-    tagged_calls = re.findall(
-        r"<tool_call>\s*(.*?)\s*</tool_call>",
-        cleaned,
-        flags=re.DOTALL,
-    )
-    if tagged_calls:
-        result = []
-        for raw_call in tagged_calls:
-            try:
-                parsed_call = json.loads(raw_call)
-            except Exception:
-                continue
-            result.extend(_normalize_tool_call_collection(parsed_call))
-        return result
 
+    # 1. Try extracting from <tool_call> tag (even if closing tag is missing)
+    tool_call_match = re.search(r"<tool_call>\s*(\{.*)", cleaned, re.DOTALL)
+    if tool_call_match:
+        raw_json_str = tool_call_match.group(1)
+        if "</tool_call>" in raw_json_str:
+            raw_json_str = raw_json_str.split("</tool_call>")[0].strip()
+        cleaned = raw_json_str.strip()
+
+    # 2. Try code blocks ```json ... ```
     if "```json" in cleaned:
-        cleaned = cleaned.split("```json", 1)[1].split("```", 1)[0].strip()
+        cleaned = cleaned.split("```json")[1].split("```")[0].strip()
     elif "```" in cleaned:
-        cleaned = cleaned.split("```", 1)[1].split("```", 1)[0].strip()
+        cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
+    # 3. Direct JSON parse
     try:
         parsed = json.loads(cleaned)
     except Exception:
-        return []
+        pass
 
-    return _normalize_tool_call_collection(parsed)
+    # 4. Fallback: Search for any JSON object containing "name" and "arguments" / "args"
+    try:
+        json_obj_match = re.search(r'\{[^{}]*"name"\s*:\s*"[^"]+"\s*,\s*"(?:arguments|args)"\s*:\s*\{.*?\}\s*\}', text, re.DOTALL)
+        if json_obj_match:
+            parsed = json.loads(json_obj_match.group(0))
+            if isinstance(parsed, dict) and "name" in parsed:
+                return {
+                    "name": parsed["name"],
+                    "arguments": parsed.get("arguments") or parsed.get("args") or {}
+                }
+    except Exception:
+        pass
 
-
-def parse_tool_call_json(text: str) -> Optional[dict]:
-    """
-    Robustly extract a tool call dict from LLM output text.
-    Handles <tool_call> tags, ```json blocks, ``` blocks, and raw JSON.
-    Returns None if parsing fails.
-    """
-    calls = parse_tool_calls_json(text)
-    # Preserve the historical behavior for multi-call output: callers that only
-    # understand one tool should receive the final slide HTML tool.
-    return calls[-1] if calls else None
+    return None
 
 
 def render_html_to_png(html_content: str, output_path: str) -> None:

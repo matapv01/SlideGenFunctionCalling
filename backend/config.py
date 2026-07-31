@@ -135,6 +135,14 @@ FAISS_FORCE_REBUILD = False  # Changed to False - only rebuild when tools change
 # --- VLM Evaluation (Visual Language Model) ---
 VLM_MAX_RETRIES = 3
 
+# --- Executor Validator Configuration ---
+# Max retries when executor detects logic errors (None, missing params, type mismatch)
+EXECUTOR_MAX_RETRIES = int(os.getenv("EXECUTOR_MAX_RETRIES", "5"))
+# Enable CoT (Chain-of-Thought) thinking mode for Qwen generator
+ENABLE_COT_THINKING = os.getenv("ENABLE_COT_THINKING", "true").lower() in ("1", "true", "yes")
+# Max tokens for CoT generation (should be higher than non-CoT to account for thinking block)
+COT_MAX_TOKENS = int(os.getenv("COT_MAX_TOKENS", "4096"))
+
 # --- Playwright Browser Configuration ---
 BROWSER_VIEWPORT_WIDTH = 1920
 BROWSER_VIEWPORT_HEIGHT = 1080

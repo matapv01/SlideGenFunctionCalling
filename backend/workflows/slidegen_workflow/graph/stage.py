@@ -74,6 +74,8 @@ class State(TypedDict, total=False):
     llm : Any
     vlm_decision: str
     vlm_feedback: str
+    executor_decision: str  # "pass" or "fail" from tool_call_executor
+    executor_feedback: str  # Detailed error description from executor
 
     # History and final results
     messages: List[Dict[str, Any]]

@@ -1,0 +1,912 @@
+{
+  "summary": {
+    "total": 50,
+    "passed": 49,
+    "pass_rate_pct": 98.0,
+    "first_try_pass_pct": 18.0,
+    "tool_match_pct": 18.0,
+    "avg_attempts": 2.16,
+    "avg_latency_s": 29.32,
+    "attempts_breakdown": {
+      "attempt_1": 9,
+      "attempt_2": 30,
+      "attempt_3": 6,
+      "attempt_4": 4,
+      "attempt_5": 0,
+      "failed": 1
+    }
+  },
+  "results": [
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_training_intro_slide",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_company_mission_slide",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 16.86
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 1,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_body_slide10",
+      "use_cot": true,
+      "attempts": 4,
+      "final_status": "pass",
+      "predicted_tool": "generate_body_slide19",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 65.28
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_quote_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_body_slide19",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 36.87
+    },
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 3,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_radar_chart_slide_1",
+      "use_cot": true,
+      "attempts": 5,
+      "final_status": "fail",
+      "predicted_tool": "generate_table_slide_1",
+      "tool_name_match": false,
+      "executor_errors": [
+        "EMPTY_STRING",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "EMPTY_STRING",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 57.56
+    },
+    {
+      "category": "TEAM_TOOLS",
+      "slide_index": 4,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_team_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_team_slide",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 16.62
+    },
+    {
+      "category": "TRANSITION_TOOLS",
+      "slide_index": 5,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_dusk_transition_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_section_header_slide_6",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 21.03
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 6,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_classic_content_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_classic_content_slide",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 22.34
+    },
+    {
+      "category": "THANK_YOU_TOOLS",
+      "slide_index": 7,
+      "doc_id": 18,
+      "ground_truth_tool": "generate_elegant_thank_you_slide",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_creative_thank_you_slide",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 52.27
+    },
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_training_intro_slide",
+      "use_cot": true,
+      "attempts": 4,
+      "final_status": "pass",
+      "predicted_tool": "generate_introduction_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 34.36
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 1,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_body_slide10",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_classic_content_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 26.68
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_body_slide12",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_content_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 21.05
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 3,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_classic_content_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_split_layout_list_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "UNKNOWN_TOOL"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 46.05
+    },
+    {
+      "category": "TRANSITION_TOOLS",
+      "slide_index": 4,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_section_header_slide_6",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_research_proposal_transition_slide",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 27.13
+    },
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 5,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_bar_chart_slide_2",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_line_chart_slide_2",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 25.27
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 6,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_comparison_slide",
+      "use_cot": true,
+      "attempts": 4,
+      "final_status": "pass",
+      "predicted_tool": "generate_body_slide11",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 36.6
+    },
+    {
+      "category": "TEAM_TOOLS",
+      "slide_index": 7,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_colorful_team_grid_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_team_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 23.53
+    },
+    {
+      "category": "THANK_YOU_TOOLS",
+      "slide_index": 8,
+      "doc_id": 19,
+      "ground_truth_tool": "generate_elegant_thank_you_slide",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_thank_you_so_much_slide",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 17.99
+    },
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_minimalist_title_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_introduction_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 29.57
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 1,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_reference_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_content_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 19.15
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_body_slide11",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_content_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 24.74
+    },
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 3,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_bar_chart_slide_2",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_line_chart_slide_2",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 23.75
+    },
+    {
+      "category": "TRANSITION_TOOLS",
+      "slide_index": 4,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_section_header_slide_6",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_section_header_slide_6",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 11.43
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 5,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_body_slide11",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_text_with_image_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 24.02
+    },
+    {
+      "category": "TEAM_TOOLS",
+      "slide_index": 6,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_colorful_team_grid_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_team_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 22.18
+    },
+    {
+      "category": "TEAM_TOOLS",
+      "slide_index": 7,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_colorful_team_grid_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_colorful_team_grid_slide",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 12.39
+    },
+    {
+      "category": "THANK_YOU_TOOLS",
+      "slide_index": 8,
+      "doc_id": 20,
+      "ground_truth_tool": "generate_business_thank_you_slide",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_thank_you_slide_5",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 13.56
+    },
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_training_intro_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_introduction_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 35.88
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 1,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_corporate_grid_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_classic_content_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 18.63
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_body_slide11",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_split_layout_list_slide",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 17.14
+    },
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 3,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_line_chart_slide_3",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_line_chart_slide_3",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 41.31
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 4,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_classic_content_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_icon_list_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 26.04
+    },
+    {
+      "category": "TRANSITION_TOOLS",
+      "slide_index": 5,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_section_header_slide_6",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_section_header_slide_6",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 27.87
+    },
+    {
+      "category": "TEAM_TOOLS",
+      "slide_index": 6,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_colorful_team_grid_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_team_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "EMPTY_LIST"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 49.46
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 7,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_body_slide11",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_split_layout_list_slide",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 51.19
+    },
+    {
+      "category": "THANK_YOU_TOOLS",
+      "slide_index": 8,
+      "doc_id": 21,
+      "ground_truth_tool": "generate_elegant_thank_you_slide",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_minimalist_thank_you_slide_2",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 20.26
+    },
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_introduction_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_introduction_slide",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 15.6
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 1,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_body_slide11",
+      "use_cot": true,
+      "attempts": 4,
+      "final_status": "pass",
+      "predicted_tool": "generate_body_slide19",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 66.02
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_classic_content_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_content_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 22.12
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 3,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_planning_phase_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_icon_list_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 18.45
+    },
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 4,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_bar_chart_slide_2",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_line_chart_slide_3",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 52.37
+    },
+    {
+      "category": "TRANSITION_TOOLS",
+      "slide_index": 5,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_dusk_transition_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_section_header_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 20.49
+    },
+    {
+      "category": "TEAM_TOOLS",
+      "slide_index": 6,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_team_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_team_slide",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 13.6
+    },
+    {
+      "category": "THANK_YOU_TOOLS",
+      "slide_index": 7,
+      "doc_id": 22,
+      "ground_truth_tool": "generate_corporate2_thank_you_slide",
+      "use_cot": true,
+      "attempts": 1,
+      "final_status": "pass",
+      "predicted_tool": "generate_thank_you_so_much_slide",
+      "tool_name_match": false,
+      "executor_errors": [],
+      "thinking_text": "",
+      "latency_seconds": 25.05
+    },
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 23,
+      "ground_truth_tool": "generate_introduction_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_minimalist_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 25.07
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 1,
+      "doc_id": 23,
+      "ground_truth_tool": "generate_body_slide11",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_content_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 28.6
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 23,
+      "ground_truth_tool": "generate_vision_mission_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_body_slide11",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 17.89
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 3,
+      "doc_id": 23,
+      "ground_truth_tool": "generate_process_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_split_layout_list_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "UNKNOWN_TOOL"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 43.18
+    },
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 4,
+      "doc_id": 23,
+      "ground_truth_tool": "generate_bar_chart_slide_2",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_bar_chart_slide_1",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 47.2
+    },
+    {
+      "category": "TRANSITION_TOOLS",
+      "slide_index": 5,
+      "doc_id": 23,
+      "ground_truth_tool": "generate_section_header_slide_6",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_section_header_slide_6",
+      "tool_name_match": true,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 17.71
+    },
+    {
+      "category": "TEAM_TOOLS",
+      "slide_index": 6,
+      "doc_id": 23,
+      "ground_truth_tool": "generate_colorful_team_grid_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_team_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 36.71
+    }
+  ]
+}

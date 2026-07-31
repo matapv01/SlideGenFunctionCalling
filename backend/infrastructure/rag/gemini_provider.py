@@ -175,18 +175,8 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
             print(f"  - FAILED to build and save retriever for '{category}': {e}")
 
     def _precompute_embeddings(self):
-        """Pre-compute embeddings for all tool descriptions at init time.
-        This avoids expensive per-slide embed_query calls during MMR."""
-        print("  - Pre-computing tool description embeddings for MMR cache...")
-        for category, tools in self.tools_dict.items():
-            for tool in tools:
-                if tool.name not in self._embedding_cache:
-                    try:
-                        emb = np.array(self.embeddings.embed_query(tool.description))
-                        self._embedding_cache[tool.name] = emb
-                    except Exception as e:
-                        print(f"  - WARNING: Failed to embed '{tool.name}': {e}")
-        print(f"  - Cached {len(self._embedding_cache)} tool embeddings.")
+        """Lazy embedding: Tool description embeddings are computed on-demand during MMR to avoid hitting API rate limits at startup."""
+        print("  - ToolRetriever ready (lazy embedding enabled for MMR cache).")
 
     def _apply_temporal_decay(
         self, 
@@ -259,15 +249,30 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         if not config.TOOL_RETRIEVER_ENABLE_MMR or len(candidate_names) <= top_k:
             return candidate_names[:top_k]
         
-        # Use cached embeddings — no API calls needed
+        # Use cached or lazily computed embeddings for candidate tools
         candidate_embeddings = {}
         valid_candidates = []
+
+        # Tool object lookup map
+        tool_lookup = {}
+        for category_tools in self.tools_dict.values():
+            for tool in category_tools:
+                tool_lookup[tool.name] = tool
+
         for name in candidate_names:
+            if name not in self._embedding_cache and name in tool_lookup:
+                try:
+                    desc = getattr(tool_lookup[name], 'description', '')
+                    if desc:
+                        emb = np.array(self.embeddings.embed_query(desc))
+                        self._embedding_cache[name] = emb
+                except Exception:
+                    pass
+
             if name in self._embedding_cache:
                 candidate_embeddings[name] = self._embedding_cache[name]
                 valid_candidates.append(name)
             else:
-                # Fallback: still include but skip for diversity calc
                 valid_candidates.append(name)
         
         top_k_int = int(top_k)
@@ -405,6 +410,13 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
         selected_tools = [category_tool_map[name] for name in selected_tool_names if name in category_tool_map]
         
         return selected_tools
+
+    def retrieve_tools(self, query: str, category: str, top_k: int = 5) -> List[Tuple[str, Any]]:
+        """
+        Retrieves relevant tools matching the ToolRetrieveProvider interface protocol.
+        """
+        tools = self.get_relevant_tools(category=category, query=query, top_k=top_k)
+        return [(tool.name, tool) if hasattr(tool, 'name') else (str(tool), tool) for tool in tools]
 
     def record_tool_usage(self, category: str, tool_name: str, slide_index: int):
         """
