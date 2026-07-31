@@ -10,7 +10,7 @@ from transformers import AutoTokenizer
 from backend.workflows.slidegen_workflow.graph.stage import State
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOOLS_DICT
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
-from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K
+from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K, COT_MAX_TOKENS
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
     QWEN_COT_GENERATOR_SYSTEM_PROMPT,
@@ -370,8 +370,12 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             slide_content=current_text
         )
 
-        if previous_function_call and previous_function_call != {}:
-            qwen_user_prompt += f"\n\n[YOUR PREVIOUS TOOL CALL ATTEMPT]\n{json.dumps(previous_function_call, indent=2)}"
+        prev_tool_to_show = previous_function_call
+        if prev_tool_to_show.get("name") == "default_fallback" and state.get("last_valid_tool_call"):
+            prev_tool_to_show = state["last_valid_tool_call"]
+
+        if prev_tool_to_show and prev_tool_to_show != {} and prev_tool_to_show.get("name") != "default_fallback":
+            qwen_user_prompt += f"\n\n[YOUR PREVIOUS TOOL CALL ATTEMPT]\n{json.dumps(prev_tool_to_show, indent=2)}"
 
         full_feedback = (previous_evaluation if previous_evaluation != "No evaluation yet." else "")
         if full_feedback.strip():
@@ -391,10 +395,11 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
         try:
             # Primary API path: OpenAI-compatible ChatCompletions (works for NVIDIA API, vLLM, OpenAI)
+            max_tokens_val = getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 2000)
             resp = client.chat.completions.create(
                 model=model_name,
                 messages=messages,
-                max_tokens=getattr(llm, 'max_tokens', 2000) or 2000,
+                max_tokens=max_tokens_val,
                 temperature=getattr(llm, 'temperature', 0.5) or 0.5,
             )
             content = (resp.choices[0].message.content or "").strip()
@@ -406,7 +411,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 resp = client.completions.create(
                     model=model_name,
                     prompt=prompt,
-                    max_tokens=getattr(llm, 'max_tokens', 1024) or 1024,
+                    max_tokens=max_tokens_val,
                     temperature=getattr(llm, 'temperature', 0.5) or 0.5,
                     stop=["<|im_end|>"],
                 )
@@ -465,9 +470,13 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     if not tool_call_dict:
         print("❌ You did NOT generate any function call. Setting default fallback.")
         tool_call_dict = {"name": "default_fallback", "arguments": {}}
+    else:
+        # Save valid parsed tool call for retry memory
+        state["last_valid_tool_call"] = tool_call_dict
         
     print(f"✅ Generated Tool Call: {tool_call_dict.get('name')}")
     state["current_tool_call"] = tool_call_dict
+    state["raw_llm_response"] = content
     
     # Save helper state variables for downstream nodes
     state["candidate_tools"] = my_tools
