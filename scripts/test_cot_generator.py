@@ -27,7 +27,7 @@ import requests
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 load_dotenv()
 
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 from backend.workflows.slidegen_workflow.utils.helper import format_tool_for_qwen, parse_tool_call_json
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
@@ -121,17 +121,41 @@ def build_tool_schemas(tools: list) -> list:
 
 
 def build_tool_description_text(tool_schemas: list) -> str:
-    """Build a compact text listing of available tools for chat-based models."""
-    lines = ["Available tools:"]
+    """Build a structured section listing available layout tools and parameter constraints for the LLM."""
+    lines = [
+        "🛠️ AVAILABLE LAYOUT TOOLS (YOU MUST SELECT EXACTLY ONE TOOL FROM THIS LIST):",
+        "Below are the allowed layout tools for this slide. You MUST pick the single best matching tool from this list and strictly supply all required parameters:"
+    ]
     for schema in tool_schemas:
         func = schema.get("function", {})
         name = func.get("name", "?")
-        desc = func.get("description", "")[:120]
+        desc = func.get("description", "")[:180]
         params = func.get("parameters", {})
-        required = [k for k, v in params.items() if "default" not in v]
-        lines.append(f"\n- {name}: {desc}")
-        if required:
-            lines.append(f"  Required params: {', '.join(required)}")
+        properties = params.get("properties", {})
+        required = params.get("required", [])
+        
+        lines.append(f"\n• Tool Name: `{name}`")
+        lines.append(f"  Description: {desc}")
+        
+        param_desc_list = []
+        for prop_name, prop_spec in properties.items():
+            prop_type = prop_spec.get("type", "any")
+            is_req = " (REQUIRED)" if prop_name in required else ""
+            
+            if prop_type == "array":
+                item_spec = prop_spec.get("items", {})
+                if item_spec.get("type") == "object":
+                    item_props = list(item_spec.get("properties", {}).keys())
+                    param_desc_list.append(f"`{prop_name}`: List[dict with keys: {item_props}]{is_req}")
+                else:
+                    item_type = item_spec.get("type", "string")
+                    param_desc_list.append(f"`{prop_name}`: List[{item_type}]{is_req}")
+            else:
+                param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req}")
+                
+        if param_desc_list:
+            lines.append(f"  Parameters: {', '.join(param_desc_list)}")
+            
     return "\n".join(lines)
 
 

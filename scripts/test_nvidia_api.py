@@ -2,7 +2,7 @@ import os
 import sys
 import requests
 from dotenv import load_dotenv
-
+from openai import OpenAI
 def test_nvidia_api():
     # Load .env file
     load_dotenv()
@@ -58,5 +58,45 @@ def test_nvidia_api():
     except Exception as e:
         print(f"❌ ERROR: {e}")
 
+def test_openai_sdk_with_nvidia():
+    load_dotenv()
+    
+    api_key = os.environ.get("NVIDIA_API_KEY")
+    base_url = os.environ.get("OPENAI_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip("/")
+    model = os.environ.get("OPENAI_MODEL", "Qwen/Qwen3-Next-80B-A3B-Instruct")
+    
+    if not api_key:
+        print("❌ ERROR: NVIDIA_API_KEY is not set in .env file")
+        return
+        
+    print(f"🔄 Testing NVIDIA API via OpenAI SDK (chat.completions.create)...")
+    print(f"Base URL: {base_url}")
+    print(f"Model: {model}")
+    print("-" * 60)
+    
+    client = OpenAI(base_url=base_url, api_key=api_key)
+    
+    messages = [
+        {"role": "system", "content": "You are a helpful assistant."},
+        {"role": "user", "content": "Nói xin chào bằng tiếng Tây Ban Nha"}
+    ]
+    
+    try:
+        resp = client.chat.completions.create(
+            model=model,
+            messages=messages,
+            temperature=0.3,
+            max_tokens=500,
+        )
+        content = resp.choices[0].message.content
+        print("✅ SUCCESS! OpenAI SDK returned:")
+        print("-" * 60)
+        print(content)
+        print("-" * 60)
+        
+    except Exception as e:
+        print(f"❌ ERROR: {e}")
+
+
 if __name__ == "__main__":
-    test_nvidia_api()
+    test_openai_sdk_with_nvidia()
