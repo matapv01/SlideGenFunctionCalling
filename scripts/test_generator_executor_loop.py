@@ -1,20 +1,29 @@
 """
-HƯỚNG DẪN CHẠY BENCHMARK: GENERATOR 🔄 EXECUTOR LOOP
+========================================================================================
+🚀 HƯỚNG DẪN CHẠY BENCHMARK: GENERATOR 🔄 EXECUTOR LOOP
+========================================================================================
 
-Chạy mặc định (Mẫu từ index 0 đến 4):
+🎯 Chạy 1 mẫu duy nhất theo Dataset Index (Ví dụ: mẫu #119):
+    python scripts/test_generator_executor_loop.py --sample 119
+
+🔍 Chạy 1 mẫu kèm in CHI TIẾT JSON Output của Generator để debug:
+    python scripts/test_generator_executor_loop.py --sample 119 -v
+
+📦 Chạy mặc định (Mẫu từ index 0 đến 4):
     python scripts/test_generator_executor_loop.py
 
-Chạy theo khoảng index cụ thể (Ví dụ: từ mẫu 0 đến mẫu 49):
+📍 Chạy theo khoảng index cụ thể (Ví dụ: từ mẫu 0 đến mẫu 49):
     python scripts/test_generator_executor_loop.py --start 0 --end 49
 
-Chạy ngẫu nhiên N mẫu trong dataset (Ví dụ: 10 mẫu):
+🎲 Chạy ngẫu nhiên N mẫu trong dataset (Ví dụ: 10 mẫu):
     python scripts/test_generator_executor_loop.py --n 10
 
-Chạy kèm tùy chỉnh số lần thử lại tối đa (max retries):
+🔄 Chạy kèm tùy chỉnh số lần thử lại tối đa (max retries):
     python scripts/test_generator_executor_loop.py --start 0 --end 49 --max-retries 3
 
-Kết quả sẽ tự động lưu vào thư mục:
+💾 Kết quả chi tiết sẽ tự động lưu vào thư mục:
     C:\\vscode\\SlideGen\\scripts\\result_test_CoT\\test_generator_executor_results_start<start>_end<end>.json
+========================================================================================
 """
 
 from typing import Optional
@@ -75,9 +84,10 @@ def test_single_sample_loop(sample: dict, config: dict, max_retries: int = 5) ->
         "latency_seconds": 0.0,
     }
     
+    slide_idx = sample.get("slide_index", 0)
     state = {
-        "current_slide_index": sample.get("slide_index", 0),
-        "length_slide_chunks": 5,
+        "current_slide_index": slide_idx,
+        "length_slide_chunks": max(5, slide_idx + 1),
         "current_slide_text": sample.get("slide_content", ""),
         "current_slide_plan": {
             "action": category,
@@ -100,6 +110,16 @@ def test_single_sample_loop(sample: dict, config: dict, max_retries: int = 5) ->
         tool_call = state.get("current_tool_call", {})
         predicted_name = tool_call.get("name", "default_fallback")
         result["predicted_tool"] = predicted_name
+        
+        # If verbose mode is enabled, print raw LLM output for THIS attempt immediately
+        if config.get("verbose"):
+            raw_resp = state.get("raw_llm_response", "")
+            print(f"\n  📄 [Attempt {attempt}] RAW LLM RESPONSE:")
+            print("     " + raw_resp.replace("\n", "\n     ") if raw_resp else "     (Empty response)")
+            print(f"\n  📦 [Attempt {attempt}] PARSED TOOL CALL:")
+            print(f"     Name: {predicted_name}")
+            print("     Arguments:")
+            print(json.dumps(tool_call.get("arguments", {}), indent=8, ensure_ascii=False))
         
         # 2. Run Node: tool_call_executor
         state = tool_call_executor(state, config)
@@ -125,7 +145,9 @@ def run_benchmark(
     num_samples: Optional[int] = None,
     start_index: Optional[int] = None,
     end_index: Optional[int] = None,
+    sample_index: Optional[int] = None,
     max_retries: int = backend_config.EXECUTOR_MAX_RETRIES,
+    verbose: bool = False,
     seed: int = 42
 ):
     dataset_path = os.path.join(os.path.dirname(__file__), "..", "rl", "data", "sft_function_call_dataset.json")
@@ -136,8 +158,15 @@ def run_benchmark(
     with open(dataset_path, "r", encoding="utf-8") as f:
         dataset = json.load(f)
         
-    # Range slicing logic
-    if start_index is not None or end_index is not None:
+    # Range / Single sample slicing logic
+    if sample_index is not None:
+        if 0 <= sample_index < len(dataset):
+            test_samples = [dataset[sample_index]]
+            print(f"🎯 Selected SINGLE sample: Dataset Index #{sample_index}")
+        else:
+            print(f"❌ sample_index {sample_index} out of range (0..{len(dataset)-1})")
+            return
+    elif start_index is not None or end_index is not None:
         start_idx = max(0, start_index if start_index is not None else 0)
         end_idx = min(len(dataset), (end_index + 1) if end_index is not None else len(dataset))
         test_samples = dataset[start_idx:end_idx]
@@ -180,7 +209,8 @@ def run_benchmark(
             "planner_llm": llm,
             "tools_dict": TOOLS_DICT,
             "tool_retriever": tool_retriever,
-        }
+        },
+        "verbose": verbose or (sample_index is not None)
     }
     
     results = []
@@ -196,9 +226,9 @@ def run_benchmark(
         
         result, final_state = test_single_sample_loop(sample, config, max_retries=max_retries)
         results.append(result)
-        
+
         status_icon = "✅" if result["final_status"] == "pass" else "❌"
-        print(f"  {status_icon} Result: {result['final_status'].upper()} (Attempt {result['attempts']}/{max_retries}, {result['latency_seconds']}s)")
+        print(f"\n  {status_icon} Result: {result['final_status'].upper()} (Attempt {result['attempts']}/{max_retries}, {result['latency_seconds']}s)")
         print(f"     Predicted Tool: {result['predicted_tool']}")
 
     # 📊 Compute Benchmark Statistics
@@ -209,6 +239,12 @@ def run_benchmark(
     avg_attempts = sum(r["attempts"] for r in results) / total if total else 0
     avg_latency = sum(r["latency_seconds"] for r in results) / total if total else 0
 
+    # Breakdown by attempt count
+    attempts_counter = Counter(r["attempts"] for r in results if r["final_status"] == "pass")
+    failed_count = sum(1 for r in results if r["final_status"] != "pass")
+    attempts_breakdown = {f"attempt_{att}": attempts_counter.get(att, 0) for att in range(1, max_retries + 1)}
+    attempts_breakdown["failed"] = failed_count
+
     print("\n" + "=" * 80)
     print("📊 BENCHMARK RESULTS SUMMARY")
     print("=" * 80)
@@ -218,6 +254,14 @@ def run_benchmark(
     print(f"  Avg Attempts:       {avg_attempts:.1f}")
     print(f"  Avg Total Latency:  {avg_latency:.1f}s")
     
+    print("\n  📋 ATTEMPTS BREAKDOWN (Passed samples):")
+    for att in range(1, max_retries + 1):
+        cnt = attempts_counter.get(att, 0)
+        pct = (100 * cnt / total) if total else 0
+        print(f"     Attempt {att}: {cnt}/{total} ({pct:.1f}%)")
+    if failed_count > 0:
+        print(f"     Failed (>{max_retries} attempts): {failed_count}/{total} ({100*failed_count/total:.1f}%)")
+
     # Error breakdown
     all_errors = []
     for r in results:
@@ -256,6 +300,7 @@ def run_benchmark(
                 "tool_match_pct": round(100 * tool_matches / total, 1),
                 "avg_attempts": round(avg_attempts, 2),
                 "avg_latency_s": round(avg_latency, 2),
+                "attempts_breakdown": attempts_breakdown
             },
             "results": results
         }, f_json, indent=2, ensure_ascii=False)
@@ -267,19 +312,24 @@ def run_benchmark(
 if __name__ == "__main__":
     import argparse
     parser = argparse.ArgumentParser(description="Test Generator 🔄 Executor Loop Benchmark")
+    parser.add_argument("--sample", type=int, default=None, help="Run a single dataset index sample (e.g., --sample 119)")
     parser.add_argument("--start", type=int, default=None, help="Start sample index in dataset (0-indexed)")
     parser.add_argument("--end", type=int, default=None, help="End sample index in dataset (0-indexed, inclusive)")
     parser.add_argument("--n", type=int, default=None, help="Number of random samples to test")
     parser.add_argument("--max-retries", type=int, default=backend_config.EXECUTOR_MAX_RETRIES, help="Max retries per sample")
+    parser.add_argument("-v", "--verbose", action="store_true", help="Print full Generator output arguments")
     args, _ = parser.parse_known_args()
 
-    # Default to testing samples index 0 to 4 if no args passed
-    if args.start is None and args.end is None and args.n is None:
-        run_benchmark(start_index=0, end_index=4, max_retries=args.max_retries)
+    # Default behavior
+    if args.sample is not None:
+        run_benchmark(sample_index=args.sample, max_retries=args.max_retries, verbose=args.verbose)
+    elif args.start is None and args.end is None and args.n is None:
+        run_benchmark(start_index=0, end_index=4, max_retries=args.max_retries, verbose=args.verbose)
     else:
         run_benchmark(
             num_samples=args.n,
             start_index=args.start,
             end_index=args.end,
-            max_retries=args.max_retries
+            max_retries=args.max_retries,
+            verbose=args.verbose
         )

@@ -1,12 +1,12 @@
 {
   "summary": {
     "total": 5,
-    "passed": 4,
-    "pass_rate_pct": 80.0,
-    "first_try_pass_pct": 20.0,
+    "passed": 5,
+    "pass_rate_pct": 100.0,
+    "first_try_pass_pct": 0.0,
     "tool_match_pct": 0.0,
-    "avg_attempts": 2.8,
-    "avg_latency_s": 94.2
+    "avg_attempts": 2.6,
+    "avg_latency_s": 50.38
   },
   "results": [
     {
@@ -15,48 +15,21 @@
       "doc_id": 0,
       "ground_truth_tool": "generate_introduction_slide",
       "use_cot": true,
-      "attempts": 1,
+      "attempts": 2,
       "final_status": "pass",
-      "predicted_tool": "generate_business_intro_slide",
+      "predicted_tool": "generate_minimalist_slide",
       "tool_name_match": false,
-      "executor_errors": [],
+      "executor_errors": [
+        "MISSING_REQUIRED_PARAM"
+      ],
       "thinking_text": "",
-      "latency_seconds": 34.04
+      "latency_seconds": 60.94
     },
     {
       "category": "CONTENT_TOOLS",
       "slide_index": 1,
       "doc_id": 0,
       "ground_truth_tool": "generate_split_layout_list_slide",
-      "use_cot": true,
-      "attempts": 4,
-      "final_status": "pass",
-      "predicted_tool": "generate_main_points_slide",
-      "tool_name_match": false,
-      "executor_errors": [
-        "UNKNOWN_TOOL",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM"
-      ],
-      "thinking_text": "",
-      "latency_seconds": 218.35
-    },
-    {
-      "category": "CONTENT_TOOLS",
-      "slide_index": 2,
-      "doc_id": 0,
-      "ground_truth_tool": "generate_main_points_slide",
       "use_cot": true,
       "attempts": 2,
       "final_status": "pass",
@@ -69,7 +42,27 @@
         "MISSING_REQUIRED_PARAM"
       ],
       "thinking_text": "",
-      "latency_seconds": 80.04
+      "latency_seconds": 33.63
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 0,
+      "ground_truth_tool": "generate_main_points_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_body_slide19",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 104.55
     },
     {
       "category": "CHART_TOOLS",
@@ -77,28 +70,18 @@
       "doc_id": 0,
       "ground_truth_tool": "generate_bar_chart_slide_2",
       "use_cot": true,
-      "attempts": 5,
-      "final_status": "fail",
+      "attempts": 2,
+      "final_status": "pass",
       "predicted_tool": "generate_radar_chart_slide_1",
       "tool_name_match": false,
       "executor_errors": [
         "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "UNKNOWN_TOOL",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "UNKNOWN_TOOL",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
-        "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM"
       ],
       "thinking_text": "",
-      "latency_seconds": 70.47
+      "latency_seconds": 21.71
     },
     {
       "category": "CONTENT_TOOLS",
@@ -106,21 +89,23 @@
       "doc_id": 0,
       "ground_truth_tool": "generate_body_slide10",
       "use_cot": true,
-      "attempts": 2,
+      "attempts": 4,
       "final_status": "pass",
-      "predicted_tool": "generate_main_points_slide",
+      "predicted_tool": "generate_body_slide19",
       "tool_name_match": false,
       "executor_errors": [
         "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM",
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM",
         "MISSING_REQUIRED_PARAM"
       ],
       "thinking_text": "",
-      "latency_seconds": 68.11
+      "latency_seconds": 31.06
     }
   ]
 }

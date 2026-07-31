@@ -1,0 +1,41 @@
+{
+  "summary": {
+    "total": 1,
+    "passed": 1,
+    "pass_rate_pct": 100.0,
+    "first_try_pass_pct": 0.0,
+    "tool_match_pct": 0.0,
+    "avg_attempts": 3.0,
+    "avg_latency_s": 171.04,
+    "attempts_breakdown": {
+      "attempt_1": 0,
+      "attempt_2": 0,
+      "attempt_3": 1,
+      "attempt_4": 0,
+      "attempt_5": 0,
+      "failed": 0
+    }
+  },
+  "results": [
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 3,
+      "doc_id": 13,
+      "ground_truth_tool": "generate_radar_chart_slide_1",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_bar_chart_slide_2",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 171.04
+    }
+  ]
+}
