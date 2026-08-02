@@ -388,6 +388,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     is_qwen = _check_is_qwen(llm)
     model_name, base_url, api_key = _get_qwen_config(llm)
     print(f"  -> Model Mode: {'QWEN / OPENAI API (' + str(model_name) + ' @ ' + str(base_url or 'Local') + ')' if is_qwen else 'GEMINI / API'}")
+    content = ""
     
     # Format human prompt variables
     human_vars = {
@@ -404,7 +405,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     
     # A. QWEN LOCAL EXECUTION PATH (Native JSON tool call)
     if is_qwen:
-        tool_schemas = [format_tool_for_qwen(t) for t in my_tools]
+        tool_schemas = [format_tool_for_qwen(t) for t in generator_tools]
 
         qwen_user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
             style_context=style_context_str,
@@ -427,7 +428,15 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         use_cot = state.get("use_cot", True)
         qwen_base_sys = QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT
         tool_desc_text = _build_tool_description_text(tool_schemas)
-        full_qwen_system_prompt = generator_system_prompt + "\n\n" + qwen_base_sys + "\n\n" + tool_desc_text
+        full_qwen_system_prompt = (
+            generator_system_prompt
+            + "\n\n"
+            + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+            + "\n\n"
+            + qwen_base_sys
+            + "\n\n"
+            + tool_desc_text
+        )
         messages = [
             {"role": "system", "content": full_qwen_system_prompt},
             {"role": "user", "content": qwen_user_prompt},
@@ -465,7 +474,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
     else:
         gemini_vars = {**human_vars, "design_instruction": design_instruction}
-        llm_with_tools = llm.bind_tools(my_tools)
+        llm_with_tools = llm.bind_tools(generator_tools)
         slidegen_prompt = ChatPromptTemplate.from_messages([
             ("system", system_prompt),
             ("human", human_template)
@@ -475,21 +484,25 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
     # 3. Parse JSON / Extract tool call
     tool_call_dict = None
+    tool_plan = []
 
     if is_qwen:
         # Qwen path: raw text from completions endpoint
-        from backend.workflows.slidegen_workflow.utils.helper import parse_tool_call_json
-        tool_call_dict = parse_tool_call_json(content)
+        tool_plan = parse_tool_calls_json(content)
     else:
         # Gemini path: structured tool calls
         if hasattr(response, "tool_calls") and response.tool_calls:
-            tc = response.tool_calls[0]
-            tool_call_dict = {
-                "name": tc.get("name"),
-                "arguments": tc.get("args", {})
-            }
+            tool_plan = [
+                {
+                    "name": tc.get("name"),
+                    "arguments": tc.get("args", {}),
+                }
+                for tc in response.tool_calls
+            ]
+            content = json.dumps({"tool_calls": tool_plan}, ensure_ascii=False)
         else:
             content = getattr(response, "content", "")
+            tool_plan = parse_tool_calls_json(content)
             try:
                 cleaned_text = content.strip()
                 if "```json" in cleaned_text:
@@ -509,19 +522,26 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             except Exception as parse_err:
                 print(f"⚠️ Fallback JSON parsing failed: {parse_err}")
             
+    for call in tool_plan:
+        if call.get("name") != SEARCH_DDGS_TOOL.name:
+            tool_call_dict = call
+            break
+
     if not tool_call_dict:
         print("❌ You did NOT generate any function call. Setting default fallback.")
         tool_call_dict = {"name": "default_fallback", "arguments": {}}
+        tool_plan = [tool_call_dict]
     else:
         # Save valid parsed tool call for retry memory
         state["last_valid_tool_call"] = tool_call_dict
         
     print(f"✅ Generated Tool Call: {tool_call_dict.get('name')}")
     state["current_tool_call"] = tool_call_dict
+    state["current_tool_plan"] = tool_plan
     state["raw_llm_response"] = content
     
     # Save helper state variables for downstream nodes
-    state["candidate_tools"] = my_tools
+    state["candidate_tools"] = generator_tools
     state["style_context_str"] = style_context_str
     state["design_instruction"] = design_instruction
 

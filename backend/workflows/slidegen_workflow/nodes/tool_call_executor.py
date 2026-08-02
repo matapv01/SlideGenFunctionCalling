@@ -14,6 +14,7 @@ If validation fails  → state["executor_decision"] = "fail" + feedback
 import re
 import json
 import logging
+import html
 from typing import Dict, List, Tuple, Optional
 
 try:
@@ -22,10 +23,34 @@ except ImportError:
     RunnableConfig = None  # Allow standalone usage without LangGraph
 
 from backend.workflows.slidegen_workflow.graph.stage import State
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool, execute_tool_plan
 from backend.config import EXECUTOR_MAX_RETRIES
 
 logger = logging.getLogger(__name__)
+
+
+def _fallback_html_for_failed_tool(tool_call: dict, reason: str) -> str:
+    tool_name = html.escape(str(tool_call.get("name", "unknown_tool")))
+    safe_reason = html.escape(str(reason))
+    return f"""<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    body {{ margin: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; }}
+    .slide {{ width: 80%; max-width: 1200px; text-align: center; }}
+    h1 {{ font-size: 56px; margin-bottom: 24px; }}
+    p {{ font-size: 26px; line-height: 1.4; color: #475569; }}
+  </style>
+</head>
+<body>
+  <div class="slide">
+    <h1>{tool_name}</h1>
+    <p>Fallback slide rendered because tool execution failed.</p>
+    <p>{safe_reason}</p>
+  </div>
+</body>
+</html>"""
 
 # ─── Regex patterns ───────────────────────────────────────────────────
 HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
@@ -267,6 +292,37 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         print(f"  ✅ PASS — Tool call is valid!")
         state['executor_decision'] = 'pass'
         state['executor_feedback'] = ''
+        tool_plan = state.get("current_tool_plan") or [tool_call]
+        try:
+            html_content, final_tool_call, search_history = execute_tool_plan(tool_plan)
+            if not html_content:
+                raise ValueError("Slide HTML tool returned empty content.")
+        except Exception as e:
+            print(f"  FAIL - Tool plan execution failed: {e}")
+            state['executor_decision'] = 'fail'
+            state['executor_feedback'] = (
+                "EXECUTOR TOOL PLAN FAILED:\n"
+                f"- {e}\n\n"
+                "Regenerate a valid slide-first plan: one slide HTML tool first, "
+                "then one search_ddgs_images call for each image parameter."
+            )
+            state['retry_count'] = retry_count + 1
+            if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
+                fallback_html = execute_tool(tool_call) or _fallback_html_for_failed_tool(tool_call, str(e))
+                state['current_tool_plan'] = [tool_call]
+                state['current_search_history'] = []
+                state['current_html_content'] = fallback_html
+            return state
+
+        for key in list(state.keys()):
+            if isinstance(key, str) and key.startswith("current_image_tool_call_"):
+                state.pop(key, None)
+        for i, call in enumerate(search_history, start=1):
+            state[f"current_image_tool_call_{i}"] = call
+
+        state['current_tool_call'] = final_tool_call
+        state['current_search_history'] = search_history
+        state['current_html_content'] = html_content
     else:
         error_report = "\n".join(f"  • {e}" for e in errors)
         print(f"  ❌ FAIL — {len(errors)} error(s) found:")
@@ -279,5 +335,13 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
             + "\n\nFix ALL errors above and regenerate the tool call."
         )
         state['retry_count'] = retry_count + 1
+        if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
+            fallback_html = execute_tool(tool_call) or _fallback_html_for_failed_tool(
+                tool_call,
+                "; ".join(errors),
+            )
+            state['current_tool_plan'] = [tool_call]
+            state['current_search_history'] = []
+            state['current_html_content'] = fallback_html
     
     return state

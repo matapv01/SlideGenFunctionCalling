@@ -94,6 +94,7 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
     print(f"Reset retry_count: {state['retry_count']}")
 
     state['previous_accepted_tool_call'] = state['current_tool_call']
+    state['previous_image_path'] = state.get('current_image_path', '')
     end_time = time.time()
     print(f"Finalization of slide took {end_time - start_time:.2f} seconds.")
     return state

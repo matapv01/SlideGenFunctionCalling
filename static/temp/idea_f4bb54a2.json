@@ -1,0 +1,55 @@
+{
+  "title": "Viết về Neymar",
+  "slide_chunks": [
+    {
+      "position": 0,
+      "title": "Neymar: Hành Trình Một Huyền Thoại",
+      "content": "Title: Neymar: Hành Trình Một Huyền Thoại\nSubtitle: Từ Sao Mai Brazil Đến Ngôi Sao Toàn Cầu",
+      "slide_type": "intro"
+    },
+    {
+      "position": 1,
+      "title": "Sự Khởi Đầu Rực Rỡ tại Santos",
+      "content": "- Gia nhập học viện Santos từ khi còn nhỏ.\n- Ra mắt đội một ở tuổi 17, nhanh chóng tạo ấn tượng.\n- Nổi lên như một tài năng trẻ sáng giá của bóng đá Brazil.",
+      "slide_type": "content"
+    },
+    {
+      "position": 2,
+      "title": "Những Thành Công Đầu Tiên",
+      "content": "- Dẫn dắt Santos vô địch Copa Libertadores 2011.\n- Giành nhiều giải thưởng cá nhân danh giá tại Brazil.\n- Trở thành mục tiêu săn đón của các câu lạc bộ hàng đầu châu Âu.",
+      "slide_type": "content"
+    },
+    {
+      "position": -1,
+      "title": "TRANSITION",
+      "content": "Tiếp theo: Chinh Phục Châu Âu và Đỉnh Cao Quốc Tế",
+      "slide_type": "transition"
+    },
+    {
+      "position": 3,
+      "title": "Dấu Ấn tại Barcelona",
+      "content": "- Chuyển đến Barcelona vào năm 2013.\n- Cùng Messi và Suarez tạo nên bộ ba MSN huyền thoại.\n- Giành cú ăn ba lịch sử (Champions League, La Liga, Copa del Rey) mùa 2014-2015.",
+      "slide_type": "content"
+    },
+    {
+      "position": 4,
+      "title": "Chuyển Đến PSG và Đội Tuyển Brazil",
+      "content": "- Trở thành cầu thủ đắt giá nhất thế giới khi gia nhập Paris Saint-Germain.\n- Tiếp tục gặt hái nhiều danh hiệu quốc nội với PSG.\n- Là cầu thủ ghi bàn hàng đầu mọi thời đại của đội tuyển quốc gia Brazil.",
+      "slide_type": "content"
+    },
+    {
+      "position": -2,
+      "title": "THANK_YOU",
+      "content": "Lời cảm ơn chân thành",
+      "slide_type": "thank_you"
+    }
+  ],
+  "enable_transition_slides": true,
+  "enable_thank_you_slide": true,
+  "prompt": "Viết về Neymar và sự nghiệp",
+  "is_from_idea": true,
+  "metadata": {
+    "content_length": "brief",
+    "generated_by": "IdeaWorkflowAgent"
+  }
+}

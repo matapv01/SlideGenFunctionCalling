@@ -1,0 +1,77 @@
+{
+  "title": "Viết về Neymar",
+  "slide_chunks": [
+    {
+      "type": "title_slide",
+      "title": "Viết về Neymar",
+      "subtitle": "Hành trình của một siêu sao bóng đá"
+    },
+    {
+      "type": "transition_slide",
+      "title": "Phần 1: Giới thiệu chung & Phong cách chơi",
+      "subtitle": "Khám phá những nét cơ bản về Neymar"
+    },
+    {
+      "type": "content_slide",
+      "title": "Giới thiệu chung về Neymar",
+      "content": [
+        "Tên đầy đủ: Neymar da Silva Santos Júnior",
+        "Ngày sinh: 5 tháng 2 năm 1992",
+        "Nơi sinh: Mogi das Cruzes, Brazil",
+        "Quốc tịch: Brazil",
+        "Vị trí sở trường: Tiền đạo cánh, tiền vệ tấn công",
+        "Tổng quan: Nổi tiếng với khả năng ghi bàn và kiến tạo xuất sắc, là một trong những cầu thủ xuất sắc nhất thế hệ của mình.",
+        "Thành tích chung: Hơn 400 bàn thắng và 250 pha kiến tạo trong sự nghiệp."
+      ]
+    },
+    {
+      "type": "content_slide",
+      "title": "Phong cách chơi đặc trưng",
+      "content": [
+        "Vị trí: Thường thi đấu ở cánh trái trong sơ đồ 4-3-3, tận dụng tốc độ và kỹ năng đi bóng.",
+        "Kỹ năng nổi bật:",
+        "- Khả năng đi bóng lắt léo, kỹ thuật cá nhân điêu luyện.",
+        "- Nhãn quan chiến thuật tốt, khả năng kiến tạo cơ hội.",
+        "- Dứt điểm đa dạng, hiệu quả.",
+        "- Tốc độ và sự linh hoạt trong di chuyển.",
+        "Mô tả: Một cầu thủ tấn công toàn diện, có khả năng tạo đột biến cao."
+      ]
+    },
+    {
+      "type": "transition_slide",
+      "title": "Phần 2: Sự nghiệp & Thành tựu nổi bật",
+      "subtitle": "Những dấu mốc quan trọng trong sự nghiệp lẫy lừng"
+    },
+    {
+      "type": "content_slide",
+      "title": "Hành trình sự nghiệp và các thành tựu",
+      "content": [
+        "Sự nghiệp CLB:",
+        "- Santos FC (2009–2013): Khởi đầu ấn tượng, giành Copa Libertadores.",
+        "- FC Barcelona (2013–2017): Cùng Messi và Suarez tạo nên bộ ba \"MSN\" huyền thoại, giành Champions League, La Liga.",
+        "- Paris Saint-Germain (2017–2023): Giành nhiều danh hiệu Ligue 1, vào chung kết Champions League.",
+        "- Al-Hilal (2023–nay): Tiếp tục hành trình tại Saudi Pro League.",
+        "Sự nghiệp Quốc tế (ĐTQG Brazil):",
+        "- Ra mắt năm 2010.",
+        "- Vượt qua Pelé để trở thành cầu thủ ghi nhiều bàn thắng nhất cho ĐTQG Brazil với 79 bàn sau 128 trận.",
+        "- Giành Cúp Liên đoàn các châu lục (Confederations Cup) 2013."
+      ]
+    },
+    {
+      "type": "thank_you_slide",
+      "title": "Cảm ơn",
+      "content": [
+        "Cảm ơn quý vị đã lắng nghe!",
+        "\"Bóng đá không chỉ là một trò chơi; nó là một nghệ thuật.\" - Neymar"
+      ]
+    }
+  ],
+  "enable_transition_slides": true,
+  "enable_thank_you_slide": true,
+  "prompt": "Viết về Neymar",
+  "is_from_idea": true,
+  "metadata": {
+    "content_length": "brief",
+    "generated_by": "IdeaWorkflowAgent"
+  }
+}
