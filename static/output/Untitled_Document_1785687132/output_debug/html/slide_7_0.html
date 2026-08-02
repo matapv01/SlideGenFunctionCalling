@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html, body { width: 1920px; height: 1080px; font-family: 'Be Vietnam Pro', sans-serif; 
+                      background: linear-gradient(135deg, #0F172A, #0F172A); overflow: hidden; }
+        
+        .aurora-1 {
+            position: absolute; width: 800px; height: 800px; 
+            background: #FBCFE8; filter: blur(120px); border-radius: 50%;
+            top: -200px; right: -200px; opacity: 0.6;
+        }
+
+        .image-container {
+            position: absolute; left: 150px; top: 180px;
+            width: 700px; height: 720px;
+            border-radius: 40px; overflow: hidden;
+            box-shadow: 0 30px 60px rgba(0,0,0,0.1);
+            z-index: 5;
+        }
+
+        .text-container {
+            position: absolute; left: 950px; top: 400px;
+            width: 800px;
+            z-index: 10;
+        }
+
+        .subtitle {
+            font-size: 32px;
+            font-weight: 700;
+            color: #FBBF24;
+            letter-spacing: 8px;
+            margin-bottom: 20px;
+        }
+
+        .title {
+            font-size: 120px;
+            font-weight: 900;
+            color: #1F2937;
+            line-height: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="aurora-1"></div>
+    <div class="image-container">
+        <img src="https://static.vecteezy.com/system/resources/previews/030/697/815/large_2x/navy-blue-minimalist-wallpaper-high-quality-4k-hdr-free-photo.jpg" style="width: 100%; height: 100%; object-fit: cover;">
+    </div>
+    <div class="text-container">
+        <p class="subtitle">Lời cảm ơn chân thành</p>
+        <h1 class="title">THANK YOU</h1>
+    </div>
+</body>
+</html>

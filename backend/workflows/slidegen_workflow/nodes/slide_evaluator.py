@@ -3,12 +3,13 @@
 import json
 from langchain_core.messages import HumanMessage
 from langchain_core.prompts import ChatPromptTemplate
+from langchain_core.runnables import RunnableConfig
 from backend.workflows.slidegen_workflow.utils.helper import image_to_base64
 from backend.workflows.slidegen_workflow.graph.stage import State, Evaluation
 from backend.workflows.slidegen_workflow.utils.prompts import EVALUATION_PROMPT
 
 
-def slide_evaluator(state: State) -> State:
+def slide_evaluator(state: State, config: RunnableConfig) -> State:
     """
     Sử dụng VLM và with_structured_output
     đảm bảo phản hồi có cấu trúc.
@@ -69,7 +70,10 @@ def slide_evaluator(state: State) -> State:
     vlm_message = HumanMessage(content=message_content)
 
     # Use structured output with the LLM
-    llm = state['llm']
+    configurable = config.get("configurable", {}) if config else {}
+    llm = configurable.get('llm') or state.get('llm')
+    if not llm:
+        raise ValueError("LLM instance not found for slide evaluator.")
 
     structured_llm = llm.with_structured_output(Evaluation)
 

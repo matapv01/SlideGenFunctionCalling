@@ -294,7 +294,23 @@ def parse_tool_calls_json(text: str) -> List[dict]:
 
     cleaned = text.strip()
 
-    # 1. Try extracting from <tool_call> tag (even if closing tag is missing)
+    # 1. Try extracting repeated <tool_call>...</tool_call> blocks first.
+    tool_call_blocks = re.findall(
+        r"<tool_call>\s*(.*?)\s*</tool_call>",
+        cleaned,
+        flags=re.DOTALL,
+    )
+    if tool_call_blocks:
+        calls: List[dict] = []
+        for block in tool_call_blocks:
+            try:
+                parsed = json.loads(block.strip())
+            except Exception:
+                continue
+            calls.extend(_normalize_tool_call_collection(parsed))
+        return calls
+
+    # 2. Try extracting from a single unclosed <tool_call> tag.
     tool_call_match = re.search(r"<tool_call>\s*(\{.*)", cleaned, re.DOTALL)
     if tool_call_match:
         raw_json_str = tool_call_match.group(1)
@@ -302,32 +318,44 @@ def parse_tool_calls_json(text: str) -> List[dict]:
             raw_json_str = raw_json_str.split("</tool_call>")[0].strip()
         cleaned = raw_json_str.strip()
 
-    # 2. Try code blocks ```json ... ```
+    # 3. Try code blocks ```json ... ```
     if "```json" in cleaned:
         cleaned = cleaned.split("```json")[1].split("```")[0].strip()
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
-    # 3. Direct JSON parse
+    # 4. Direct JSON parse
     try:
         parsed = json.loads(cleaned)
+        return _normalize_tool_call_collection(parsed)
     except Exception:
         pass
 
-    # 4. Fallback: Search for any JSON object containing "name" and "arguments" / "args"
+    # 5. Fallback: Search for any JSON object containing "name" and "arguments" / "args"
     try:
         json_obj_match = re.search(r'\{[^{}]*"name"\s*:\s*"[^"]+"\s*,\s*"(?:arguments|args)"\s*:\s*\{.*?\}\s*\}', text, re.DOTALL)
         if json_obj_match:
             parsed = json.loads(json_obj_match.group(0))
-            if isinstance(parsed, dict) and "name" in parsed:
-                return {
-                    "name": parsed["name"],
-                    "arguments": parsed.get("arguments") or parsed.get("args") or {}
-                }
+            return _normalize_tool_call_collection(parsed)
     except Exception:
         pass
 
-    return None
+    return []
+
+
+def parse_tool_call_json(text: str) -> Optional[dict]:
+    """
+    Return the primary slide HTML tool call from raw model output.
+
+    If image-search calls are present, prefer the first non-search call so both
+    legacy search-first outputs and the current slide-first plan resolve to the
+    actual slide generator tool.
+    """
+    calls = parse_tool_calls_json(text)
+    for call in calls:
+        if call.get("name") != "search_ddgs_images":
+            return call
+    return calls[0] if calls else None
 
 
 def render_html_to_png(html_content: str, output_path: str) -> None:
