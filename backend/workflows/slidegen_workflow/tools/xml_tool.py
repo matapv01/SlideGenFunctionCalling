@@ -2388,3 +2388,775 @@ def generate_three_ideas_slide_xml(
     ).decode("utf-8")
 
     return xml_content
+
+
+def generate_our_history_slide_xml(
+    title: str = "OUR HISTORY",
+    event_titles: list[str] = [
+        "SATURN",
+        "MARS",
+        "NEPTUNE",
+    ],
+    event_descriptions: list[str] = [
+        "Saturn is composed of hydrogen and helium.",
+        "Despite being red, Mars is actually a cold place.",
+        "Neptune is the farthest planet from the Sun.",
+        "Neptune is the farthest planet from the Sun.",
+
+    ],
+    event_years: list[str] = [
+        "XX",
+        "XX",
+        "XX",
+        "XX"
+    ],
+    image_url: str = (
+        "https://images.unsplash.com/"
+        "photo-1495474472287-4d71bcdd2085"
+        "?q=85&w=1200&auto=format&fit=crop"
+    ),
+    background_color: str = "#151515",
+    title_color: str = "#FFFFFF",
+    heading_color: str = "#FFFFFF",
+    body_color: str = "#F2F2F2",
+    year_color: str = "#FFFFFF",
+    line_color: str = "#E8E8E8",
+) -> str:
+    """
+    Generate XML for a split-layout history slide.
+
+    The layout features a dark content area on the left and a
+    tall image panel on the right. The left area contains a large
+    title at the top and multiple vertically stacked history
+    sections. Each section includes a heading, a description,
+    a year marker, and a thin vertical separator line.
+    """
+
+
+    canvas_width = 1600
+    canvas_height = 900
+
+    image_x = 1155
+    image_y = 0
+    image_width = 445
+    image_height = 900
+
+    content_x = 80
+    content_width = 1000
+    content_top = 60
+    content_bottom = 835
+    available_height = content_bottom - content_top
+
+    title_block_x = 200
+    title_block_width = 700
+
+    text_column_x = 70
+    text_column_width = 700
+
+    year_column_x = 820
+    year_column_width = 120
+
+    line_x = 870
+
+    # =====================================================
+    # Font measurement helpers
+    # =====================================================
+
+    def normalize_font_name(name: str) -> str:
+        return "".join(
+            char.lower()
+            for char in name
+            if char.isalnum()
+        )
+
+    def font_directories() -> list[Path]:
+        directories: list[Path] = []
+
+        windir = os.environ.get("WINDIR")
+        if windir:
+            directories.append(Path(windir) / "Fonts")
+
+        directories.extend(
+            [
+                Path("/usr/share/fonts"),
+                Path("/usr/local/share/fonts"),
+                Path.home() / ".fonts",
+                Path.home() / "Library/Fonts",
+                Path("/Library/Fonts"),
+            ]
+        )
+
+        return [
+            path
+            for path in directories
+            if path.exists()
+        ]
+
+    def resolve_font_path(
+        font_name: str,
+        bold: bool = False,
+    ) -> Path:
+        aliases = {
+            "Arial": "arial",
+            "Calibri": "calibri",
+            "Aptos": "aptos",
+            "Helvetica": "helvetica",
+        }
+
+        normalized = normalize_font_name(
+            aliases.get(font_name, font_name)
+        )
+
+        candidates: list[tuple[int, Path]] = []
+
+        for directory in font_directories():
+            try:
+                files = directory.rglob("*")
+            except OSError:
+                continue
+
+            for path in files:
+                if path.suffix.lower() not in {
+                    ".ttf",
+                    ".otf",
+                    ".ttc",
+                }:
+                    continue
+
+                stem = normalize_font_name(path.stem)
+
+                if normalized not in stem:
+                    continue
+
+                score = 70
+
+                if stem == normalized:
+                    score += 30
+
+                has_bold = any(
+                    token in stem
+                    for token in (
+                        "bold",
+                        "bd",
+                        "semibold",
+                    )
+                )
+
+                if bold and has_bold:
+                    score += 20
+                elif bold:
+                    score -= 10
+                elif has_bold:
+                    score -= 10
+
+                candidates.append((score, path))
+
+        if candidates:
+            candidates.sort(
+                key=lambda item: item[0],
+                reverse=True,
+            )
+            return candidates[0][1]
+
+        fallback = (
+            "DejaVuSans-Bold.ttf"
+            if bold
+            else "DejaVuSans.ttf"
+        )
+
+        font = ImageFont.truetype(
+            fallback,
+            12,
+        )
+        font_path = getattr(font, "path", None)
+
+        if not font_path:
+            raise ValueError(
+                f"Font '{font_name}' was not found"
+            )
+
+        return Path(font_path)
+
+    canvas_dpi = 120.0
+
+    def pt_to_canvas(point_size: float) -> float:
+        return point_size * canvas_dpi / 72.0
+
+    def load_font(
+        font_path: Path,
+        font_size_pt: float,
+    ) -> ImageFont.FreeTypeFont:
+        return ImageFont.truetype(
+            str(font_path),
+            max(
+                1,
+                round(pt_to_canvas(font_size_pt)),
+            ),
+        )
+
+    def measure_text_width(
+        text: str,
+        font_path: Path,
+        font_size_pt: float,
+    ) -> float:
+        font = load_font(
+            font_path,
+            font_size_pt,
+        )
+
+        if hasattr(font, "getlength"):
+            return float(font.getlength(text))
+
+        left, _, right, _ = font.getbbox(text)
+        return float(right - left)
+
+    def measure_line_height(
+        font_path: Path,
+        font_size_pt: float,
+        line_spacing: float,
+    ) -> float:
+        font = load_font(
+            font_path,
+            font_size_pt,
+        )
+        ascent, descent = font.getmetrics()
+
+        return float(ascent + descent) * line_spacing
+
+    def break_long_word(
+        word: str,
+        font_path: Path,
+        font_size_pt: float,
+        max_width: float,
+    ) -> list[str]:
+        parts: list[str] = []
+        current = ""
+
+        for char in word:
+            candidate = current + char
+
+            if (
+                current
+                and measure_text_width(
+                    candidate,
+                    font_path,
+                    font_size_pt,
+                )
+                > max_width
+            ):
+                parts.append(current)
+                current = char
+            else:
+                current = candidate
+
+        if current:
+            parts.append(current)
+
+        return parts or [""]
+
+    def wrap_text(
+        text: str,
+        font_path: Path,
+        font_size_pt: float,
+        max_width: float,
+    ) -> list[str]:
+        result: list[str] = []
+
+        for paragraph in text.splitlines() or [text]:
+            words = paragraph.split()
+
+            if not words:
+                result.append("")
+                continue
+
+            current = ""
+
+            for word in words:
+                if (
+                    measure_text_width(
+                        word,
+                        font_path,
+                        font_size_pt,
+                    )
+                    > max_width
+                ):
+                    pieces = break_long_word(
+                        word,
+                        font_path,
+                        font_size_pt,
+                        max_width,
+                    )
+                else:
+                    pieces = [word]
+
+                for piece in pieces:
+                    candidate = (
+                        piece
+                        if not current
+                        else f"{current} {piece}"
+                    )
+
+                    if (
+                        not current
+                        or measure_text_width(
+                            candidate,
+                            font_path,
+                            font_size_pt,
+                        )
+                        <= max_width
+                    ):
+                        current = candidate
+                    else:
+                        result.append(current)
+                        current = piece
+
+            if current:
+                result.append(current)
+
+        return result or [""]
+
+    def layout_text(
+        text: str,
+        *,
+        font_path: Path,
+        font_size: float,
+        max_width: float,
+        line_spacing: float,
+        padding: float = 4,
+    ) -> dict:
+        lines = wrap_text(
+            text,
+            font_path,
+            font_size,
+            max_width,
+        )
+
+        line_height = measure_line_height(
+            font_path,
+            font_size,
+            line_spacing,
+        )
+
+        return {
+            "text": "\n".join(lines),
+            "lines": lines,
+            "font_size": font_size,
+            "height": len(lines) * line_height + padding,
+        }
+
+    # =====================================================
+    # Typography settings
+    # =====================================================
+
+    title_font_name = "Arial"
+    heading_font_name = "Arial"
+    body_font_name = "Arial"
+    year_font_name = "Arial"
+
+    title_font_path = resolve_font_path(
+        title_font_name,
+        bold=True,
+    )
+    heading_font_path = resolve_font_path(
+        heading_font_name,
+        bold=True,
+    )
+    body_font_path = resolve_font_path(
+        body_font_name,
+        bold=False,
+    )
+    year_font_path = resolve_font_path(
+        year_font_name,
+        bold=True,
+    )
+
+    title_font_size = 56.0
+    title_min_font_size = 38.0
+
+    heading_font_size = 34.0
+    heading_min_font_size = 24.0
+
+    body_font_size = 25.0
+    body_min_font_size = 17.0
+
+    year_font_size = 28.0
+    year_min_font_size = 20.0
+
+    title_line_spacing = 0.95
+    heading_line_spacing = 0.98
+    body_line_spacing = 1.08
+    year_line_spacing = 1.0
+
+    title_to_items_gap = 64.0
+    item_gap = 42.0
+    heading_to_body_gap = 10.0
+
+    minimum_title_gap = 30.0
+    minimum_item_gap = 18.0
+
+    # =====================================================
+    # Fit the complete content layout
+    # =====================================================
+
+    def calculate_layouts(
+        current_title_size: float,
+        current_heading_size: float,
+        current_body_size: float,
+        current_year_size: float,
+    ) -> dict:
+        title_layout = layout_text(
+            title,
+            font_path=title_font_path,
+            font_size=current_title_size,
+            max_width=title_block_width,
+            line_spacing=title_line_spacing,
+            padding=6,
+        )
+
+        item_layouts: list[dict] = []
+
+        for event_title, event_description, event_year in zip(
+            event_titles,
+            event_descriptions,
+            event_years,
+        ):
+            heading_layout = layout_text(
+                event_title,
+                font_path=heading_font_path,
+                font_size=current_heading_size,
+                max_width=text_column_width,
+                line_spacing=heading_line_spacing,
+                padding=2,
+            )
+
+            body_layout = layout_text(
+                event_description,
+                font_path=body_font_path,
+                font_size=current_body_size,
+                max_width=text_column_width,
+                line_spacing=body_line_spacing,
+                padding=2,
+            )
+
+            year_layout = layout_text(
+                event_year,
+                font_path=year_font_path,
+                font_size=current_year_size,
+                max_width=year_column_width,
+                line_spacing=year_line_spacing,
+                padding=2,
+            )
+
+            text_block_height = (
+                heading_layout["height"]
+                + heading_to_body_gap
+                + body_layout["height"]
+            )
+
+            line_height = max(
+                84.0,
+                body_layout["height"] + 26.0,
+            )
+
+            item_layouts.append(
+                {
+                    "heading": heading_layout,
+                    "body": body_layout,
+                    "year": year_layout,
+                    "text_block_height": text_block_height,
+                    "line_height": line_height,
+                    "height": max(
+                        text_block_height,
+                        year_layout["height"] + line_height,
+                    ),
+                }
+            )
+
+        total_height = (
+            title_layout["height"]
+            + title_to_items_gap
+            + sum(item["height"] for item in item_layouts)
+            + item_gap * max(0, len(item_layouts) - 1)
+        )
+
+        return {
+            "title": title_layout,
+            "items": item_layouts,
+            "total_height": total_height,
+        }
+
+    layouts = calculate_layouts(
+        title_font_size,
+        heading_font_size,
+        body_font_size,
+        year_font_size,
+    )
+
+    for _ in range(260):
+        if layouts["total_height"] <= available_height:
+            break
+
+        changed = False
+
+        if (
+            title_to_items_gap > minimum_title_gap
+            or item_gap > minimum_item_gap
+        ):
+            title_to_items_gap = max(
+                minimum_title_gap,
+                title_to_items_gap - 2,
+            )
+            item_gap = max(
+                minimum_item_gap,
+                item_gap - 2,
+            )
+            changed = True
+
+        elif body_font_size > body_min_font_size:
+            body_font_size = max(
+                body_min_font_size,
+                body_font_size - 0.5,
+            )
+            changed = True
+
+        elif heading_font_size > heading_min_font_size:
+            heading_font_size = max(
+                heading_min_font_size,
+                heading_font_size - 0.5,
+            )
+            changed = True
+
+        elif year_font_size > year_min_font_size:
+            year_font_size = max(
+                year_min_font_size,
+                year_font_size - 0.5,
+            )
+            changed = True
+
+        elif title_font_size > title_min_font_size:
+            title_font_size = max(
+                title_min_font_size,
+                title_font_size - 0.5,
+            )
+            changed = True
+
+        if not changed:
+            break
+
+        layouts = calculate_layouts(
+            title_font_size,
+            heading_font_size,
+            body_font_size,
+            year_font_size,
+        )
+
+    if layouts["total_height"] > available_height:
+        raise ValueError(
+            "The content is too long to fit without overlap. "
+            f"Required height: {layouts['total_height']:.1f}px; "
+            f"available height: {available_height:.1f}px."
+        )
+
+    remaining_space = available_height - layouts["total_height"]
+
+    if remaining_space > 0:
+        if len(layouts["items"]) > 1:
+            extra_gap = min(
+                34.0,
+                remaining_space / max(1, len(layouts["items"]) - 1),
+            )
+            item_gap += extra_gap
+            layouts = calculate_layouts(
+                title_font_size,
+                heading_font_size,
+                body_font_size,
+                year_font_size,
+            )
+        else:
+            title_to_items_gap += min(remaining_space, 50.0)
+            layouts = calculate_layouts(
+                title_font_size,
+                heading_font_size,
+                body_font_size,
+                year_font_size,
+            )
+
+    # =====================================================
+    # Build XML
+    # =====================================================
+
+    presentation = ET.Element(
+        "presentation",
+        {
+            "schemaVersion": "1.0",
+            "width": str(canvas_width),
+            "height": str(canvas_height),
+            "slideWidthInches": "13.333",
+            "slideHeightInches": "7.5",
+        },
+    )
+
+    slide = ET.SubElement(
+        presentation,
+        "slide",
+        {"background": background_color},
+    )
+
+    def add(tag: str, **attrs):
+        return ET.SubElement(
+            slide,
+            tag,
+            {
+                key: str(value)
+                for key, value in attrs.items()
+                if value is not None
+            },
+        )
+
+    def textbox(text: str, **attrs):
+        node = add("textbox", **attrs)
+        node.text = text
+        return node
+
+    add(
+        "image",
+        src=image_url,
+        x=image_x,
+        y=image_y,
+        width=image_width,
+        height=image_height,
+    )
+
+    cursor_y = float(content_top)
+
+    textbox(
+        layouts["title"]["text"],
+        x=title_block_x,
+        y=cursor_y,
+        width=title_block_width,
+        height=layouts["title"]["height"],
+        font=title_font_name,
+        size=layouts["title"]["font_size"],
+        min_font_size=layouts["title"]["font_size"],
+        bold="true",
+        color=title_color,
+        align="center",
+        vertical_align="top",
+        single_line="false",
+        max_lines=len(layouts["title"]["lines"]),
+        overflow="clip",
+        line_spacing=title_line_spacing,
+        safety_ratio=1.0,
+        margin_left=0,
+        margin_right=0,
+        margin_top=0,
+        margin_bottom=0,
+    )
+
+    cursor_y += (
+        layouts["title"]["height"]
+        + title_to_items_gap
+    )
+
+    for index, item in enumerate(layouts["items"]):
+        item_top = cursor_y
+
+        textbox(
+            item["heading"]["text"],
+            x=text_column_x,
+            y=item_top,
+            width=text_column_width,
+            height=item["heading"]["height"],
+            font=heading_font_name,
+            size=item["heading"]["font_size"],
+            min_font_size=item["heading"]["font_size"],
+            bold="true",
+            color=heading_color,
+            align="right",
+            vertical_align="top",
+            single_line="false",
+            max_lines=len(item["heading"]["lines"]),
+            overflow="clip",
+            line_spacing=heading_line_spacing,
+            safety_ratio=1.0,
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+        textbox(
+            item["body"]["text"],
+            x=text_column_x,
+            y=item_top + item["heading"]["height"] + heading_to_body_gap,
+            width=text_column_width,
+            height=item["body"]["height"],
+            font=body_font_name,
+            size=item["body"]["font_size"],
+            min_font_size=item["body"]["font_size"],
+            color=body_color,
+            align="right",
+            vertical_align="top",
+            single_line="false",
+            max_lines=len(item["body"]["lines"]),
+            overflow="clip",
+            line_spacing=body_line_spacing,
+            safety_ratio=1.0,
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+        textbox(
+            item["year"]["text"],
+            x=year_column_x,
+            y=item_top + 2,
+            width=year_column_width,
+            height=item["year"]["height"],
+            font=year_font_name,
+            size=item["year"]["font_size"],
+            min_font_size=item["year"]["font_size"],
+            bold="true",
+            color=year_color,
+            align="center",
+            vertical_align="top",
+            single_line="false",
+            max_lines=len(item["year"]["lines"]),
+            overflow="clip",
+            line_spacing=year_line_spacing,
+            safety_ratio=1.0,
+            margin_left=0,
+            margin_right=0,
+            margin_top=0,
+            margin_bottom=0,
+        )
+
+        add(
+            "line",
+            x1=line_x,
+            y1=item_top + item["year"]["height"] + 18,
+            x2=line_x,
+            y2=item_top + item["year"]["height"] + 18 + item["line_height"],
+            color=line_color,
+            width=1.2,
+        )
+
+        cursor_y += item["height"]
+
+        if index < len(layouts["items"]) - 1:
+            cursor_y += item_gap
+
+    raw_xml = ET.tostring(
+        presentation,
+        encoding="utf-8",
+    )
+
+    xml_content = minidom.parseString(
+        raw_xml
+    ).toprettyxml(
+        indent="  ",
+        encoding="UTF-8",
+    ).decode("utf-8")
+
+    return xml_content
