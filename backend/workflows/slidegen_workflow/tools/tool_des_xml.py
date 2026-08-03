@@ -12,7 +12,7 @@ from langchain_core.tools import StructuredTool
 from backend.workflows.slidegen_workflow.tools.xml_tool import (
     #slide intro
     generate_modern_cover_slide_xml,
-
+    generate_it_sales_proposal_cover_inline_vector_xml_closer,
     #slide transition
     generate_transition_headline_slide_xml,
 
@@ -26,6 +26,10 @@ from backend.workflows.slidegen_workflow.tools.xml_tool import (
     generate_split_content_slide_xml,
     generate_picture_quote_slide_xml,
     generate_bullet_content_slide_xml,
+    generate_client_snapshot_slide_xml,
+    generate_how_forge_works_slide_xml,
+    generate_implementation_timeline_slide_xml,
+    generate_problem_slide_xml,
 )
 
 # ===========================================================================================
@@ -42,6 +46,21 @@ class GenerateModernCoverSlideInput(BaseModel):
     dark_panel_color: str = Field(default="#23242B", description="Color of the dark diagonal panel displayed on the left side.")
     accent_color: str = Field(default="#98F033", description="Color of the accent bar aligned with the diagonal panel boundary.")
     title_color: str = Field(default="#98F033", description="Color of the main title text.")
+
+class GenerateItSalesProposalCoverInlineVectorCloserInput(BaseModel):
+    """Input schema for generate_it_sales_proposal_cover_inline_vector_xml_closer."""
+
+    brand_name: str = Field(..., description="Brand name displayed near the top of the slide. example: 'FORGE'")
+    title: str = Field(..., description="Main proposal title displayed in the center-right content area. example: 'IT Software Sales Proposal'")
+    subtitle: str = Field(..., description="Supporting subtitle displayed inside the horizontal bar. example: 'Modern productivity for secure, high-performing teams'")
+    prepared_for: str = Field(..., description="Client or organization name displayed in the bottom-left footer. example: 'Value Financials'")
+    date_text: str = Field(..., description="Date text displayed in the bottom-right footer. example: 'June 2035'")
+    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
+    title_color: str = Field(default="#F7F2FF", description="Color of the main proposal title.")
+    subtitle_color: str = Field(default="#FFFFFF", description="Color of the subtitle text.")
+    subtitle_bar_color: str = Field(default="#6545A2", description="Color of the horizontal subtitle bar.")
+    brand_color: str = Field(default="#F7F2FF", description="Color of the brand icon and brand name.")
+    footer_color: str = Field(default="#F7F2FF", description="Color of the footer text.")
 
 # === SLIDE TRANSITION CLASSES ===
 class GenerateTransitionHeadlineSlideInput(BaseModel):
@@ -110,7 +129,6 @@ class GenerateContentCreationSlideInput(BaseModel):
         description="Color of the body text and section titles.",
     )
 
-
 class GenerateAiContentSlideInput(BaseModel):
     """Input schema for generate_ai_content_slide_xml."""
 
@@ -147,7 +165,6 @@ class GenerateAiContentSlideInput(BaseModel):
         description="Color of the intro, bullet, and footer text.",
     )
 
-
 class GenerateTwoIdeasSlideInput(BaseModel):
     """Input schema for generate_two_ideas_slide_xml."""
 
@@ -183,8 +200,6 @@ class GenerateTwoIdeasSlideInput(BaseModel):
         default="#F1F1F1",
         description="Color of each idea description.",
     )
-
-
 
 class GenerateThreeIdeasSlideInput(BaseModel):
     """Input schema for generate_three_ideas_slide_xml."""
@@ -293,6 +308,57 @@ class GenerateBulletContentSlideInput(BaseModel):
     bullet_color: str = Field(default="#98F20F", description="Color of the bullet markers.")
     body_color: str = Field(default="#FFFFFF", description="Color of the bullet and closing text.")
 
+class GenerateClientSnapshotSlideInput(BaseModel):
+    """Input schema for generate_client_snapshot_slide_xml."""
+
+    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Client snapshot'")
+    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'About Value Financials'")
+    client_details: List[str] = Field(..., description="List of client information and goals displayed as structured bullet points. example: ['Industry: Financial services and banking', 'Team size: 300+ employees', 'Primary goals:', '  Improve cross-team collaboration']")
+    top_image_url: str = Field(default="https://images.unsplash.com/photo-1552664730-d307ca884978?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
+    bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
+    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
+    title_color: str = Field(default="#A678FF", description="Color of the main title.")
+    subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
+    body_color: str = Field(default="#F7F2FF", description="Color of the client details text.")
+
+class GenerateHowForgeWorksSlideInput(BaseModel):
+    """Input schema for generate_how_forge_works_slide_xml."""
+
+    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'How Forge works'")
+    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'From setup to daily use, Forge fits into how your team operates.'")
+    steps: List[Dict[str, str]] = Field(..., description="List of process steps displayed as vertically connected cards. Each item must contain a 'step' label and a 'content' description. example: [{'step': 'Step 1', 'content': 'Connect teams, files, and existing systems'}, {'step': 'Step 2', 'content': 'Configure shared workspaces and approval workflows'}]")
+    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
+    title_color: str = Field(default="#A678FF", description="Color of the main title.")
+    subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
+    step_label_color: str = Field(default="#FFFFFF", description="Color of the step labels.")
+    step_body_color: str = Field(default="#F7F2FF", description="Color of the step descriptions.")
+    arrow_color: str = Field(default="#FFFFFF", description="Color of the arrows connecting the step cards.")
+
+class GenerateImplementationTimelineSlideInput(BaseModel):
+    """Input schema for generate_implementation_timeline_slide_xml."""
+
+    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Implementation timeline'")
+    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'Forge offers a structured rollout designed for minimal disruption'")
+    timeline_items: List[Dict[str, str]] = Field(..., description="List of timeline milestones displayed across a horizontal timeline. Each item must contain a 'label' and a 'content' field. example: [{'label': 'Week 1', 'content': 'Kickoff and workspace setup'}, {'label': 'Week 2', 'content': 'Workflow configuration and security policies'}]")
+    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
+    title_color: str = Field(default="#A678FF", description="Color of the main title.")
+    subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
+    timeline_color: str = Field(default="#A678FF", description="Color of the timeline line and milestone circles.")
+    label_color: str = Field(default="#F7F2FF", description="Color of the milestone labels.")
+    content_color: str = Field(default="#F7F2FF", description="Color of the milestone descriptions.")
+
+class GenerateProblemSlideInput(BaseModel):
+    """Input schema for generate_problem_slide_xml."""
+
+    title: str = Field(..., description="Main problem statement title displayed in the lower-left area. example: 'The problem'")
+    description: str = Field(..., description="Supporting description displayed below the main title. example: 'Keeping commercial spaces clean sounds simple—but many businesses struggle with:'")
+    problem_items: List[str] = Field(..., description="List of problem statements displayed inside large rounded cards. Supports up to five items. example: ['Missed cleaning tasks', 'Different cleaners every visit', 'Spaces that don’t stay clean for long']")
+    card_colors: List[str] = Field(default=["#DDF2A6", "#9ED98C", "#00580A", "#7BC96F", "#4FA95C"], description="List of background colors applied cyclically to the problem cards.")
+    card_text_colors: List[str] = Field(default=["#07520B", "#07520B", "#FFFFFF", "#07520B", "#FFFFFF"], description="List of text colors applied cyclically to the problem cards.")
+    background_color: str = Field(default="#F7F7F2", description="Background color of the slide.")
+    title_color: str = Field(default="#07520B", description="Color of the main title.")
+    description_color: str = Field(default="#07520B", description="Color of the supporting description.")
+
 INTRO_TOOLS = [
 
     StructuredTool.from_function(
@@ -300,6 +366,12 @@ INTRO_TOOLS = [
     name="generate_modern_cover_slide_xml",
     description="Generates a modern intro slide with a large image on the right, a dark diagonal panel on the left, a bright accent bar aligned with the diagonal boundary, and a large presentation title inside the dark panel. Ideal for presentation covers, opening slides, project introductions, business proposals, portfolios, and modern corporate presentations.",
     args_schema=GenerateModernCoverSlideInput,
+    ),
+    StructuredTool.from_function(
+    func=generate_it_sales_proposal_cover_inline_vector_xml_closer,
+    name="generate_it_sales_proposal_cover_inline_vector_xml_closer",
+    description="Generates a premium software sales proposal cover slide with an inline vector ribbon decoration, a brand mark, a large proposal title, a horizontal subtitle bar, client information, and a date footer. Ideal for IT proposals, software sales presentations, business offers, and technology pitch decks.",
+    args_schema=GenerateItSalesProposalCoverInlineVectorCloserInput,
     ),
 ]
 
@@ -359,6 +431,30 @@ CONTENT_TOOLS = [
     description="Generates a diagonal split-content slide with a full-slide image, a dark panel on the left, a bright accent bar, a title, a bullet list, and supporting closing text. Ideal for key points, summaries, recommendations, feature lists, and instructional content.",
     args_schema=GenerateBulletContentSlideInput,
     ),  
+    StructuredTool.from_function(
+    func=generate_client_snapshot_slide_xml,
+    name="generate_client_snapshot_slide_xml",
+    description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
+    args_schema=GenerateClientSnapshotSlideInput,
+    ),
+    StructuredTool.from_function(
+    func=generate_how_forge_works_slide_xml,
+    name="generate_how_forge_works_slide_xml",
+    description="Generates a process overview slide with a title and subtitle on the left, an abstract vector decoration, and vertically connected process-step cards on the right. Ideal for workflows, implementation plans, onboarding processes, operating models, and step-by-step explanations.",
+    args_schema=GenerateHowForgeWorksSlideInput,
+    ),
+    StructuredTool.from_function(
+    func=generate_implementation_timeline_slide_xml,
+    name="generate_implementation_timeline_slide_xml",
+    description="Generates an implementation timeline slide with a large title and subtitle, an abstract vector decoration, and horizontally arranged milestones containing labels and descriptions. Ideal for project schedules, rollout plans, implementation phases, product roadmaps, and delivery timelines.",
+    args_schema=GenerateImplementationTimelineSlideInput,
+    ),
+    StructuredTool.from_function(
+    func=generate_problem_slide_xml,
+    name="generate_problem_slide_xml",
+    description="Generates a problem statement slide with up to five large rounded cards hanging from the top edge, each containing a problem item, plus a title and supporting description in the lower-left area. Ideal for presenting pain points, business challenges, customer problems, operational issues, and project motivations.",
+    args_schema=GenerateProblemSlideInput,
+    ),
     
 ]
 
