@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="810" height="455" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#D2DADE">
+    <image src="https://images.unsplash.com/photo-1625064757761-c9bccabf1163?auto=format&amp;fit=crop&amp;q=80&amp;w=1800" x="0" y="27" width="498" height="225"/>
+    <textbox x="575" y="24" width="220" height="170" font="Georgia" size="48" min_font_size="38" color="#68767C" single_line="false" max_lines="2" overflow="shrink" line_spacing="0.95" safety_ratio="0.97">Content
+Creation</textbox>
+    <shape type="ellipse" x="445" y="42" width="82" height="82" fill="none" line_color="#AEB9BE" line_width="16"/>
+    <shape type="rectangle" x="436" y="43" width="17" height="90" fill="#E7EBED" line_color="none"/>
+    <shape type="rectangle" x="459" y="43" width="17" height="90" fill="#E7EBED" line_color="none"/>
+    <shape type="rounded_rectangle" x="568" y="205" width="229" height="250" fill="#E4AAA2" line_color="none"/>
+    <image src="https://images.unsplash.com/photo-1552113125-81af17f36b57?auto=format&amp;fit=crop&amp;q=80&amp;w=1000" x="568" y="205" width="229" height="250"/>
+    <textbox x="34" y="295" width="230" height="28" font="Arial" size="17" bold="true" color="#111111" single_line="true" min_font_size="13" overflow="shrink">Original Content</textbox>
+    <textbox x="34" y="332" width="250" height="93" font="Arial" size="12" min_font_size="10" color="#111111" single_line="false" max_lines="5" overflow="shrink" line_spacing="1.18" safety_ratio="0.96">Develop unique visuals, videos, and copy that align with your brand's message and resonate with your audience's interests. Create content that not only captures attention but also conveys the essence of your brand.</textbox>
+    <textbox x="330" y="295" width="210" height="28" font="Arial" size="17" bold="true" color="#111111" single_line="true" min_font_size="13" overflow="shrink">Curated Content</textbox>
+    <textbox x="330" y="332" width="225" height="93" font="Arial" size="12" min_font_size="10" color="#111111" single_line="false" max_lines="5" overflow="shrink" line_spacing="1.18" safety_ratio="0.96">Share valuable curated content from reputable sources in your industry such as articles, videos, and graphics to enhance your original material and engage your audience in discussions.</textbox>
+  </slide>
+</presentation>
