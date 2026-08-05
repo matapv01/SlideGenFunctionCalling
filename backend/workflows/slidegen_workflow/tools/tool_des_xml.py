@@ -10,475 +10,366 @@ from langchain_core.tools import StructuredTool
 
 # Import all slide generation functions from xml_tool
 from backend.workflows.slidegen_workflow.tools.xml_tool import (
-    #slide intro
-    generate_modern_cover_slide_xml,
-    generate_it_sales_proposal_cover_inline_vector_xml_closer,
-    #slide transition
-    generate_transition_headline_slide_xml,
-
-    #slide content
-    generate_three_ideas_slide_xml,
-    generate_content_creation_slide_xml,
-    generate_ai_content_slide_xml,
-    generate_two_ideas_slide_xml,
-    generate_our_history_slide_xml,
-    generate_instructions_slide_xml,
-    generate_split_content_slide_xml,
-    generate_picture_quote_slide_xml,
-    generate_bullet_content_slide_xml,
-    generate_client_snapshot_slide_xml,
-    generate_how_forge_works_slide_xml,
-    generate_implementation_timeline_slide_xml,
-    generate_problem_slide_xml,
+    generate_intro_slide_xml,
+    generate_warm_intro_slide_xml,
+    generate_elegant_education_slide_xml,
+    generate_creative_team_slide_xml,
+    generate_grid_team_slide_xml,
+    generate_online_notebook_slide_xml,
+    generate_classic_toc_slide_xml,
+    generate_notebook_section_slide_xml,
+    generate_science_2col_slide_xml,
+    generate_thank_you_slide_xml,
+    generate_thank_you_watching_slide_xml,
+    generate_about_me_slide_xml,
+    generate_content_2col_slide_xml
 )
+
 
 # ===========================================================================================
 # PYDANTIC INPUT SCHEMAS ORDERED ACCORDING TO IMPORT SEQUENCE
 # ===========================================================================================
 
 # === SLIDE INTRO CLASSES ===
-class GenerateModernCoverSlideInput(BaseModel):
-    """Input schema for generate_modern_cover_slide_xml."""
 
-    title: str = Field(..., description="Main presentation title displayed inside the dark diagonal panel on the left. example: 'THIS IS YOUR PRESENTATION TITLE'")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=85&w=1600&auto=format&fit=crop", description="URL for a landscape image sized 1085 × 900 px with an approximately 1.21:1 aspect ratio.")    
-    background_color: str = Field(default="#F4F4F4", description="Background color of the slide.")
-    dark_panel_color: str = Field(default="#23242B", description="Color of the dark diagonal panel displayed on the left side.")
-    accent_color: str = Field(default="#98F033", description="Color of the accent bar aligned with the diagonal panel boundary.")
-    title_color: str = Field(default="#98F033", description="Color of the main title text.")
+class GenerateElegantEducationSlideInput(BaseModel):
+    title: str = Field(
+        default="Elegant Education\nPack for Students",
+        description="The main title of the presentation, displayed in large bold text.",
+    )
+    subtitle: str = Field(
+        default="Here is where your presentation begins",
+        description="The subtitle displayed below the main title.",
+    )
+    background_color: str = Field(
+        default="#FFFFFF",
+        description="Background color for the slide (default: #FFFFFF).",
+    )
+    title_color: str = Field(
+        default="#3F474A",
+        description="Color of the main title text.",
+    )
+    subtitle_color: str = Field(
+        default="#515558",
+        description="Color of the subtitle text.",
+    )
 
-class GenerateItSalesProposalCoverInlineVectorCloserInput(BaseModel):
-    """Input schema for generate_it_sales_proposal_cover_inline_vector_xml_closer."""
+class GenerateOnlineNotebookSlideInput(BaseModel):
+    title: str = Field(
+        default="ONLINE NOTEBOOK",
+        description="The main title of the presentation. It will be split into two parts divided by a line.",
+    )
+    subtitle: str = Field(
+        default="Here is where your presentation begins",
+        description="The subtitle displayed below the main title.",
+    )
+    background_color: str = Field(
+        default="#FFFFFF",
+        description="Background color for the slide (default: #FFFFFF).",
+    )
+    title_color: str = Field(
+        default="#1D4984",
+        description="Color of the main title text.",
+    )
+    subtitle_color: str = Field(
+        default="#2C3E50",
+        description="Color of the subtitle text.",
+    )
 
-    brand_name: str = Field(..., description="Brand name displayed near the top of the slide. example: 'FORGE'")
-    title: str = Field(..., description="Main proposal title displayed in the center-right content area. example: 'IT Software Sales Proposal'")
-    subtitle: str = Field(..., description="Supporting subtitle displayed inside the horizontal bar. example: 'Modern productivity for secure, high-performing teams'")
-    prepared_for: str = Field(..., description="Client or organization name displayed in the bottom-left footer. example: 'Value Financials'")
-    date_text: str = Field(..., description="Date text displayed in the bottom-right footer. example: 'June 2035'")
-    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
-    title_color: str = Field(default="#F7F2FF", description="Color of the main proposal title.")
-    subtitle_color: str = Field(default="#FFFFFF", description="Color of the subtitle text.")
-    subtitle_bar_color: str = Field(default="#6545A2", description="Color of the horizontal subtitle bar.")
-    brand_color: str = Field(default="#F7F2FF", description="Color of the brand icon and brand name.")
-    footer_color: str = Field(default="#F7F2FF", description="Color of the footer text.")
+class GenerateClassicTocSlideInput(BaseModel):
+    title: str = Field(
+        default="Table of contents",
+        description="The main title of the slide.",
+    )
+    items: list[dict] = Field(
+        default=None,
+        description="List of table of content items. Each dict should have 'number' (e.g. '01'), 'title' (MUST be short, 1-3 words max), and 'description' (MUST be very short, 3-6 words maximum). Maximum 6 items.",
+    )
+    background_color: str = Field(
+        default="#EBE4D5",
+        description="Background color for the slide (default: #EBE4D5).",
+    )
+    theme_color: str = Field(
+        default="#4A3F35",
+        description="Color of the borders and text (default: #4A3F35).",
+    )
 
-# === SLIDE TRANSITION CLASSES ===
-class GenerateTransitionHeadlineSlideInput(BaseModel):
-    """Input schema for generate_transition_headline_slide_xml."""
+class GenerateNotebookSectionSlideInput(BaseModel):
+    number: str = Field(
+        default="01",
+        description="Section number, typically a 2-digit string like '01', '02'.",
+    )
+    title: str = Field(
+        default="Introduction",
+        description="Main section title. Should be 1-3 words max.",
+    )
+    subtitle: str = Field(
+        default="You can enter a subtitle here if you need it",
+        description="Optional subtitle for the section. Usually a short phrase or sentence.",
+    )
 
-    title: str = Field(..., description="Large transition headline displayed inside the dark diagonal panel. example: 'Messi và sự nghiệp của anh ấy'")
-    subtitle: str = Field(..., description="Supporting subtitle displayed below the main headline. example: 'Let’s start with the first set of slides'")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=85&w=1600&auto=format&fit=crop", description="URL for a full-slide landscape image sized 1600 × 900 px with a 16:9 aspect ratio.")
-    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
-    dark_panel_color: str = Field(default="#292A30", description="Color of the dark diagonal panel.")
-    accent_color: str = Field(default="#98F20F", description="Color of the slanted accent bar.")
-    title_color: str = Field(default="#98F20F", description="Color of the main headline.")
-    subtitle_color: str = Field(default="#2ED329", description="Color of the supporting subtitle.")
-
-# === SLIDE CONTENT CLASSES ===
-
-class GenerateContentCreationSlideInput(BaseModel):
-    """Input schema for generate_content_creation_slide_xml."""
-
+class GenerateScience2ColSlideInput(BaseModel):
     main_title: str = Field(
-        ...,
-        description="Main slide title shown on the upper-right area. example: 'CONTENT CREATION'",
+        default="From molecules to life",
+        description="The main title at the top of the slide.",
     )
-    original_title: str = Field(
-        ...,
-        description="Heading for the first content block. example: 'Original Content'",
+    col1_title: str = Field(
+        default="Column 1",
+        description="Title for the first column.",
     )
-    original_description: str = Field(
-        ...,
-        description="Description text for the original content block. example: 'Develop unique visuals, videos, and copy that align with your brand's message and resonate with your audience's interests. Create content that not only captures attention but also conveys the essence of your brand.'",
+    col1_desc: str = Field(
+        default="Description for the first column.",
+        description="Main text content for the first column. Should be a paragraph.",
     )
-    curated_title: str = Field(
-        ...,
-        description="Heading for the second content block.  example: 'Curated Content'",
+    col2_title: str = Field(
+        default="Column 2",
+        description="Title for the second column.",
     )
-    curated_description: str = Field(
-        ...,
-        description="Description text for the curated content block. example: 'Share valuable curated content from reputable sources in your industry such as articles, videos, and graphics to enhance your original material and engage your audience in discussions.'"
+    col2_desc: str = Field(
+        default="Description for the second column.",
+        description="Main text content for the second column. Should be a paragraph.",
     )
-    main_image_url: str = Field(
-        default="https://images.unsplash.com/photo-1625064757761-c9bccabf1163?auto=format&fit=crop&q=80&w=1800",
-        description="URL for a landscape image sized 498 × 225 px with an approximately 2.21:1 aspect ratio.",
+
+class GenerateThankYouSlideInput(BaseModel):
+    title: str = Field(
+        default="Thank You",
+        description="The main text at the top, usually 'Thank You'.",
     )
-    portrait_image_url: str = Field(
-        default="https://images.unsplash.com/photo-1552113125-81af17f36b57?auto=format&fit=crop&q=80&w=1000",
-        description="URL for a near-square portrait image sized 229 × 250 px with an approximately 0.92:1 aspect ratio.",
+    message: str = Field(
+        default="We appreciate your trust and confidence in us. Your support is invaluable, and we look forward to serving you again.",
+        description="A short gratitude message displayed below the title.",
+    )
+
+class GenerateThankYouWatchingSlideInput(BaseModel):
+    title: str = Field(
+        default="THANK YOU",
+        description="The main title, usually 'THANK YOU'.",
+    )
+    message: str = Field(
+        default="for watching",
+        description="A short sub-message displayed below the title, like 'for watching'.",
+    )
+
+class GenerateAboutMeSlideInput(BaseModel):
+    title: str = Field(
+        default="About Me",
+        description="The main title text.",
+    )
+    paragraph: str = Field(
+        default="Lorem ipsum dolor amet, consectetur adipiscing elit, sed eiusmod tempor incididunt ut labore dolore magna aliqua. Lorem ipsum dolor amet, consectetur adipiscing elit, sed eiusmod tempor incididunt ut labore dolore magna aliqua.",
+        description="The paragraph text about the person.",
+    )
+    image_url: str = Field(
+        default="https://picsum.photos/seed/portrait/600/800",
+        description="The URL for the portrait image (will be cropped as an oval).",
+    )
+
+class GenerateContent2ColSlideInput(BaseModel):
+    title: str = Field(
+        default="CONTENT",
+        description="The main title text.",
+    )
+    subtitle_1: str = Field(
+        default="PRIMARY REFERENCE TITLE",
+        description="The first subtitle.",
+    )
+    paragraph_1: str = Field(
+        default="Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.",
+        description="The text content for the first section.",
+    )
+    subtitle_2: str = Field(
+        default="SECONDARY REFERENCE TITLE",
+        description="The second subtitle.",
+    )
+    paragraph_2: str = Field(
+        default="Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.",
+        description="The text content for the second section.",
+    )
+    image_url: str = Field(
+        default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop",
+        description="The URL for the image on the right half.",
+    )
+
+class GenerateIntroSlideInput(BaseModel):
+    title: str = Field(
+        default="Your Presentation Title",
+        description="The main title of the presentation.",
+    )
+    subtitle: str = Field(
+        default="Here is where your presentation begins",
+        description="The subtitle displayed below the main title.",
     )
     background_color: str = Field(
-        default="#D2DADE",
+        default="#F2F3EC",
         description="Background color of the slide.",
     )
     title_color: str = Field(
-        default="#68767C",
+        default="#333333",
         description="Color of the main title text.",
     )
-    accent_color: str = Field(
-        default="#E4AAA2",
-        description="Accent color for the rounded rectangle behind the portrait.",
-    )
-    decoration_color: str = Field(
-        default="#AEB9BE",
-        description="Color of the decorative ellipse and bars.",
-    )
-    text_color: str = Field(
-        default="#111111",
-        description="Color of the body text and section titles.",
+    subtitle_color: str = Field(
+        default="#666666",
+        description="Color of the subtitle text.",
     )
 
-class GenerateAiContentSlideInput(BaseModel):
-    """Input schema for generate_ai_content_slide_xml."""
+class GenerateWarmIntroSlideInput(BaseModel):
+    """Input schema for generate_warm_intro_slide_xml."""
 
     title: str = Field(
         ...,
-        description="Main title text displayed at the top-left of the slide. example: 'THE SLIDE TITLE GOES HERE'",
+        description="Main slide title. example: 'Intro Template'",
     )
-    intro_text: str = Field(
+    subtitle: str = Field(
         ...,
-        description="Introductory paragraph displayed under the title. example: 'Do you know what helps you make your point clear? Lists like this one:'",
-    )
-    bullet_items: List[str] = Field(
-        ...,
-        description="List of bullet points displayed in the body area. example: ['They are simple', 'You can organize your ideas clearly', 'You will never forget to buy milk!']",
-    )
-    footer_text: str = Field(
-        ...,
-        description="Footer note displayed below the bullet list. example: 'You can replace the image. Just right-click on it and select \"Replace image\"'",
-    )
-    image_url: str = Field(
-        default="https://images.unsplash.com/photo-1485827404703-89b55fcc595e?q=85&w=1400&auto=format&fit=crop",
-        description="URL for a portrait image sized 700 × 820 px with an approximately 0.85:1 aspect ratio.",
+        description="Subtitle or short description below the main title. example: 'Choose a topic and audience to generate a tailored introductory presentation'",
     )
     background_color: str = Field(
-        default="#E3EAED",
+        default="#F2E6DF",
         description="Background color of the slide.",
     )
     title_color: str = Field(
-        default="#101010",
+        default="#5C4640",
         description="Color of the main title text.",
     )
-    text_color: str = Field(
-        default="#1B1B1B",
-        description="Color of the intro, bullet, and footer text.",
+    subtitle_color: str = Field(
+        default="#A0716A",
+        description="Color of the subtitle text.",
     )
 
-class GenerateTwoIdeasSlideInput(BaseModel):
-    """Input schema for generate_two_ideas_slide_xml."""
+class GenerateCreativeTeamSlideInput(BaseModel):
+    """Input schema for generate_creative_team_slide_xml."""
 
     title: str = Field(
-        ...,
-        description="Main title text displayed in the content area. example: 'TWO IDEAS'",
+        default="Our Creative Team",
+        description="Main slide title.",
     )
-    idea_titles: List[str] = Field(
-        ...,
-        description="List of idea headings. Must have the same length as idea_descriptions. example: ['Venus', 'Mercury']",
-    )
-    idea_descriptions: List[str] = Field(
-        ...,
-        description="List of supporting descriptions for each idea title. example: ['Venus is the second planet from the Sun.', 'Mercury is the closest planet to the Sun.']",
-    )
-    image_url: str = Field(
-        default="https://images.unsplash.com/photo-1529139574466-a303027c1d8b?q=85&w=1200&auto=format&fit=crop",
-        description="URL for a portrait image sized 520 × 900 px with an approximately 0.58:1 aspect ratio.",
+    members: list[dict] = Field(
+        default=None,
+        description="List of team members. Each dictionary should have 'name', 'role', and 'image_url'. Maximum 4 members.",
     )
     background_color: str = Field(
-        default="#1A1A1A",
+        default="#FAFAFA",
         description="Background color of the slide.",
     )
     title_color: str = Field(
-        default="#FFFFFF",
+        default="#4A4036",
         description="Color of the main title text.",
     )
-    heading_color: str = Field(
-        default="#FFFFFF",
-        description="Color of each idea heading.",
-    )
-    body_color: str = Field(
-        default="#F1F1F1",
-        description="Color of each idea description.",
-    )
 
-class GenerateThreeIdeasSlideInput(BaseModel):
-    """Input schema for generate_three_ideas_slide_xml."""
+class GenerateGridTeamSlideInput(BaseModel):
+    """Input schema for generate_grid_team_slide_xml."""
+
     title: str = Field(
-        ...,
-        description="Main title text displayed at the top of the slide. example: 'THREE IDEAS' ",
+        default="Add a Team\nMembers\nPage",
+        description="Main slide title.",
     )
-    idea_titles: List[str] = Field(
-        ... ,
-        description="List of idea headings. Must have the same length as idea_descriptions. example: ['Mercury', 'Mars', 'Venus']",
-    )
-    idea_descriptions: List[str] = Field(
-        ...,
-        description="List of supporting descriptions for each idea title. example: ['Mercury is the closest planet to the Sun.', 'Mars is known as the Red Planet.', 'Venus has a thick, toxic atmosphere.']",
-    )
-    image_url: str = Field(
-        default="https://images.unsplash.com/photo-1594035910387-fea47794261f?q=85&w=1200&auto=format&fit=crop",
-        description="URL for a portrait image sized 535 × 900 px with an approximately 0.59:1 aspect ratio.",
+    members: list[dict] = Field(
+        default=None,
+        description="List of team members. Each dictionary should have 'name', 'role', and 'image_url'. Maximum 4 members.",
     )
     background_color: str = Field(
-        default="#181818",
+        default="#F8FAFC",
         description="Background color of the slide.",
     )
     title_color: str = Field(
-        default="#FFFFFF",
+        default="#1A2530",
         description="Color of the main title text.",
     )
-    heading_color: str = Field(
-        default="#FFFFFF",
-        description="Color of each idea heading.",
-    )
-    body_color: str = Field(
-        default="#F2F2F2",
-        description="Color of each idea description.",
-    )
 
-class GenerateOurHistorySlideInput(BaseModel):
-    """Input schema for generate_our_history_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top of the content area. example: 'OUR HISTORY'")
-    event_titles: List[str] = Field(..., description="List of event headings displayed in vertically stacked history sections. Must have the same length as event_descriptions and event_years. example: ['SATURN', 'MARS', 'NEPTUNE']")
-    event_descriptions: List[str] = Field(..., description="List of supporting descriptions for each history event. Must have the same length as event_titles and event_years. example: ['Saturn is composed of hydrogen and helium.', 'Despite being red, Mars is actually a cold place.', 'Neptune is the farthest planet from the Sun.']")
-    event_years: List[str] = Field(..., description="List of year or timeline labels displayed beside each history event. Must have the same length as event_titles and event_descriptions. example: ['1998', '2005', '2024']")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1495474472287-4d71bcdd2085?q=85&w=1200&auto=format&fit=crop", description="URL for a portrait image sized 445 × 900 px with an approximately 1:2 aspect ratio.")    
-    background_color: str = Field(default="#151515", description="Background color of the slide.")
-    title_color: str = Field(default="#FFFFFF", description="Color of the main title text.")
-    heading_color: str = Field(default="#FFFFFF", description="Color of each event heading.")
-    body_color: str = Field(default="#F2F2F2", description="Color of each event description.")
-    year_color: str = Field(default="#FFFFFF", description="Color of each year or timeline label.")
-    line_color: str = Field(default="#E8E8E8", description="Color of the vertical timeline separator lines.")
-
-class GenerateInstructionsSlideInput(BaseModel):
-    """Input schema for generate_instructions_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top-left of the dark content panel. example: 'INSTRUCTIONS FOR USE'")
-    left_heading: str = Field(..., description="Heading for the left instruction column. example: 'EDIT IN GOOGLE SLIDES'")
-    left_paragraphs: List[str] = Field(..., description="List of instructional paragraphs displayed under the left heading. example: ['Click on the button under the presentation preview that says “Use as Google Slides Theme”.', 'You will get a copy of this document on your Google Drive and will be able to edit, add or delete slides.', 'You have to be signed in to your Google account.']")
-    right_heading: str = Field(..., description="Heading for the right instruction column. example: 'EDIT IN POWERPOINT®'")
-    right_paragraphs: List[str] = Field(..., description="List of instructional paragraphs displayed under the right heading. example: ['Click on the button under the presentation preview that says “Download as PowerPoint template”. You will get a .pptx file that you can edit in PowerPoint.', 'Remember to download and install the fonts used in this presentation.']")
-    footer_text: str = Field(..., description="Information or licensing text displayed near the bottom-left of the slide. example: 'More info on how to use this template at slidescarnival.com/help-use-presentation-template'")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1497032628192-86f99bcd76bc?q=85&w=1600&auto=format&fit=crop", description="URL for a near-square portrait image sized 840 × 900 px with an approximately 0.93:1 aspect ratio.")    
-    background_color: str = Field(default="#F3F4F7", description="Background color of the slide.")
-    dark_panel_color: str = Field(default="#34343B", description="Color of the dark diagonal content panel on the left side.")
-    accent_color: str = Field(default="#98F20F", description="Color of the slanted accent bar aligned with the diagonal panel boundary.")
-    title_color: str = Field(default="#98F20F", description="Color of the main title text.")
-    heading_color: str = Field(default="#FFFFFF", description="Color of the left and right column headings.")
-    body_color: str = Field(default="#FFFFFF", description="Color of the instructional paragraph text.")
-    footer_color: str = Field(default="#39C62F", description="Color of the footer information text.")
-
-class GenerateSplitContentSlideInput(BaseModel):
-    """Input schema for generate_split_content_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top-left of the dark diagonal content panel. example: 'YOU CAN ALSO SPLIT YOUR CONTENT'")
-    column_titles: List[str] = Field(..., description="List of column headings displayed below the main title. Must have the same length as column_descriptions. example: ['White', 'Black']")
-    column_descriptions: List[str] = Field(..., description="List of supporting descriptions for each column heading. Must have the same length as column_titles. example: ['White is the color of milk and fresh snow.', 'Black is the color of ebony and outer space.']")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1497366754035-f200968a6e72?q=85&w=1600&auto=format&fit=crop", description="URL for a full-slide landscape image rendered at 1600 × 900 px with a 16:9 aspect ratio. The image covers the entire slide, while a dark diagonal panel overlays most of the left side. Use a wide, high-resolution image with the main subject positioned toward the right side so it remains visible and is not obscured by the content panel.")    
-    background_color: str = Field(default="#F3F4F7", description="Background color of the slide.")
-    dark_panel_color: str = Field(default="#34343B", description="Color of the dark diagonal content panel covering the left side.")
-    accent_color: str = Field(default="#98F20F", description="Color of the bright slanted accent bar aligned with the diagonal boundary.")
-    title_color: str = Field(default="#98F20F", description="Color of the main slide title.")
-    heading_color: str = Field(default="#FFFFFF", description="Color of the column headings.")
-    body_color: str = Field(default="#FFFFFF", description="Color of the column description text.")
-
-class GeneratePictureQuoteSlideInput(BaseModel):
-    """Input schema for generate_picture_quote_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed in the right content panel. example: 'A PICTURE IS WORTH THOUSAND WORDS'")
-    content: str = Field(..., description="Supporting text displayed below the title. example: 'A complex idea can be conveyed with just a single still image.'")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=85&w=1600&auto=format&fit=crop", description="URL for a landscape image sized 1010 × 900 px with an approximately 1.12:1 aspect ratio.")
-    background_color: str = Field(default="#FFFFFF", description="Background color of the slide and right content panel.")
-    accent_color: str = Field(default="#98F20F", description="Color of the slanted accent bar.")
-    title_color: str = Field(default="#7CCF1A", description="Color of the main title text.")
-    body_color: str = Field(default="#858392", description="Color of the supporting text.")
-
-class GenerateBulletContentSlideInput(BaseModel):
-    """Input schema for generate_bullet_content_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top-left of the dark diagonal panel. example: 'THIS IS A SLIDE TITLE'")
-    bullet_items: List[str] = Field(..., description="List of bullet points displayed below the title. example: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content']")
-    closing_text: str = Field(..., description="Supporting text displayed below the bullet list. example: 'Your audience will listen to you or read the content, but won’t do both.'")
-    image_url: str = Field(default="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=85&w=1600&auto=format&fit=crop", description="URL for a full-slide landscape image sized 1600 × 900 px with a 16:9 aspect ratio.")
-    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
-    dark_panel_color: str = Field(default="#2D2E34", description="Color of the dark diagonal panel.")
-    accent_color: str = Field(default="#98F20F", description="Color of the slanted accent bar.")
-    title_color: str = Field(default="#98F20F", description="Color of the main title.")
-    bullet_color: str = Field(default="#98F20F", description="Color of the bullet markers.")
-    body_color: str = Field(default="#FFFFFF", description="Color of the bullet and closing text.")
-
-class GenerateClientSnapshotSlideInput(BaseModel):
-    """Input schema for generate_client_snapshot_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Client snapshot'")
-    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'About Value Financials'")
-    client_details: List[str] = Field(..., description="List of client information and goals displayed as structured bullet points. example: ['Industry: Financial services and banking', 'Team size: 300+ employees', 'Primary goals:', '  Improve cross-team collaboration']")
-    top_image_url: str = Field(default="https://images.unsplash.com/photo-1552664730-d307ca884978?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
-    bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
-    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
-    title_color: str = Field(default="#A678FF", description="Color of the main title.")
-    subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
-    body_color: str = Field(default="#F7F2FF", description="Color of the client details text.")
-
-class GenerateHowForgeWorksSlideInput(BaseModel):
-    """Input schema for generate_how_forge_works_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'How Forge works'")
-    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'From setup to daily use, Forge fits into how your team operates.'")
-    steps: List[Dict[str, str]] = Field(..., description="List of process steps displayed as vertically connected cards. Each item must contain a 'step' label and a 'content' description. example: [{'step': 'Step 1', 'content': 'Connect teams, files, and existing systems'}, {'step': 'Step 2', 'content': 'Configure shared workspaces and approval workflows'}]")
-    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
-    title_color: str = Field(default="#A678FF", description="Color of the main title.")
-    subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
-    step_label_color: str = Field(default="#FFFFFF", description="Color of the step labels.")
-    step_body_color: str = Field(default="#F7F2FF", description="Color of the step descriptions.")
-    arrow_color: str = Field(default="#FFFFFF", description="Color of the arrows connecting the step cards.")
-
-class GenerateImplementationTimelineSlideInput(BaseModel):
-    """Input schema for generate_implementation_timeline_slide_xml."""
-
-    title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Implementation timeline'")
-    subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'Forge offers a structured rollout designed for minimal disruption'")
-    timeline_items: List[Dict[str, str]] = Field(..., description="List of timeline milestones displayed across a horizontal timeline. Each item must contain a 'label' and a 'content' field. example: [{'label': 'Week 1', 'content': 'Kickoff and workspace setup'}, {'label': 'Week 2', 'content': 'Workflow configuration and security policies'}]")
-    background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
-    title_color: str = Field(default="#A678FF", description="Color of the main title.")
-    subtitle_color: str = Field(default="#F7F2FF", description="Color of the subtitle.")
-    timeline_color: str = Field(default="#A678FF", description="Color of the timeline line and milestone circles.")
-    label_color: str = Field(default="#F7F2FF", description="Color of the milestone labels.")
-    content_color: str = Field(default="#F7F2FF", description="Color of the milestone descriptions.")
-
-class GenerateProblemSlideInput(BaseModel):
-    """Input schema for generate_problem_slide_xml."""
-
-    title: str = Field(..., description="Main problem statement title displayed in the lower-left area. example: 'The problem'")
-    description: str = Field(..., description="Supporting description displayed below the main title. example: 'Keeping commercial spaces clean sounds simple—but many businesses struggle with:'")
-    problem_items: List[str] = Field(..., description="List of problem statements displayed inside large rounded cards. Supports up to five items. example: ['Missed cleaning tasks', 'Different cleaners every visit', 'Spaces that don’t stay clean for long']")
-    card_colors: List[str] = Field(default=["#DDF2A6", "#9ED98C", "#00580A", "#7BC96F", "#4FA95C"], description="List of background colors applied cyclically to the problem cards.")
-    card_text_colors: List[str] = Field(default=["#07520B", "#07520B", "#FFFFFF", "#07520B", "#FFFFFF"], description="List of text colors applied cyclically to the problem cards.")
-    background_color: str = Field(default="#F7F7F2", description="Background color of the slide.")
-    title_color: str = Field(default="#07520B", description="Color of the main title.")
-    description_color: str = Field(default="#07520B", description="Color of the supporting description.")
-
+# ==========================================================
+# CÁC CÔNG CỤ (TOOLS) ĐƯỢC ĐĂNG KÝ VỚI AI
+# ==========================================================
 INTRO_TOOLS = [
-
     StructuredTool.from_function(
-    func=generate_modern_cover_slide_xml,
-    name="generate_modern_cover_slide_xml",
-    description="Generates a modern intro slide with a large image on the right, a dark diagonal panel on the left, a bright accent bar aligned with the diagonal boundary, and a large presentation title inside the dark panel. Ideal for presentation covers, opening slides, project introductions, business proposals, portfolios, and modern corporate presentations.",
-    args_schema=GenerateModernCoverSlideInput,
+        func=generate_intro_slide_xml,
+        name="generate_intro_slide_xml",
+        description="Generates an introductory cover slide with an abstract SVG blob background, a large centered main title, and a subtitle below it. Ideal for the opening slide of a presentation, title covers, and introductions.",
+        args_schema=GenerateIntroSlideInput,
     ),
     StructuredTool.from_function(
-    func=generate_it_sales_proposal_cover_inline_vector_xml_closer,
-    name="generate_it_sales_proposal_cover_inline_vector_xml_closer",
-    description="Generates a premium software sales proposal cover slide with an inline vector ribbon decoration, a brand mark, a large proposal title, a horizontal subtitle bar, client information, and a date footer. Ideal for IT proposals, software sales presentations, business offers, and technology pitch decks.",
-    args_schema=GenerateItSalesProposalCoverInlineVectorCloserInput,
+        func=generate_warm_intro_slide_xml,
+        name="generate_warm_intro_slide_xml",
+        description="Generates an introductory cover slide with a warm-toned abstract watercolor SVG background and right-aligned text. Ideal for artistic, modern, and warm opening slides.",
+        args_schema=GenerateWarmIntroSlideInput,
     ),
+    StructuredTool.from_function(
+        func=generate_elegant_education_slide_xml,
+        name="generate_elegant_education_slide_xml",
+        description="Generates an elegant educational introductory slide with a white background, grey abstract shapes on the left, a hexagonal geometric pattern and a brown circle on the top right, and a brown bar along the bottom edge. Ideal for academic or professional education presentations.",
+        args_schema=GenerateElegantEducationSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_online_notebook_slide_xml,
+        name="generate_online_notebook_slide_xml",
+        description="Generates an 'Online Notebook' introductory cover slide with a left-side diagonal blue area, a central white ticket badge containing the title, and decorative elements like an eraser, notebook paper, and pen. The title is split into two parts by a horizontal divider line. Ideal for education, training, or playful presentations.",
+        args_schema=GenerateOnlineNotebookSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_notebook_section_slide_xml,
+        name="generate_notebook_section_slide_xml",
+        description="Generate a 'Back to School' notebook section slide. It has a grid background, large section number, handwritten title, and playful vector decorations like a balloon, backpack, autumn leaves, and crayons.",
+        args_schema=GenerateNotebookSectionSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_science_2col_slide_xml,
+        name="generate_science_2col_slide_xml",
+        description="Generate a 2-column science/biology style slide with pale green background, hexagon patterns, and a molecule graphic. Good for comparisons or side-by-side content.",
+        args_schema=GenerateScience2ColSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_slide_xml,
+        name="generate_thank_you_slide_xml",
+        description="Generate a handwritten watercolor style 'Thank You' slide with a large cursive title, floating hearts, and a bouquet of daisies.",
+        args_schema=GenerateThankYouSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_watching_slide_xml,
+        name="generate_thank_you_watching_slide_xml",
+        description="Generate a boho/abstract 'Thank You for watching' slide with torn paper shapes, line-art branches, and 3D bold marker text.",
+        args_schema=GenerateThankYouWatchingSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_about_me_slide_xml,
+        name="generate_about_me_slide_xml",
+        description="Generate a minimalist elegant 'About Me' slide with a left text area, organic wavy corner blobs, and an oval portrait frame.",
+        args_schema=GenerateAboutMeSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_content_2col_slide_xml,
+        name="generate_content_2col_slide_xml",
+        description="Generate a clean 2-column content slide with a large title, accent line, two text sections on the left, and a full-height image on the right.",
+        args_schema=GenerateContent2ColSlideInput,
+    )
 ]
-
-CONTENT_TOOLS = [
-    # === XML CONTENT SLIDES ===
-    StructuredTool.from_function(
-        func=generate_content_creation_slide_xml,
-        name="generate_content_creation_slide_xml",
-        description="""Generates a content-creation slide with a large image on the left, a portrait image on the right, and two text content blocks for original content and curated content. Ideal for marketing, editorial, brand storytelling, and content strategy presentations.""",
-        args_schema=GenerateContentCreationSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_ai_content_slide_xml,
-        name="generate_ai_content_slide_xml",
-        description="""Generates a flexible AI/content slide with a large title, intro text, bullet list, footer note, and a right-side image panel. Ideal for explaining a concept, feature list, process notes, or educational content.""",
-        args_schema=GenerateAiContentSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_two_ideas_slide_xml,
-        name="generate_two_ideas_slide_xml",
-        description="""Generates a two-ideas slide with a full-height image panel on the left and a dark content area on the right containing a title, two idea headings, and supporting descriptions. Ideal for comparing two concepts or presenting two key points.""",
-        args_schema=GenerateTwoIdeasSlideInput
-    ),
-    StructuredTool.from_function(
-        func=generate_three_ideas_slide_xml,
-        name="generate_three_ideas_slide_xml",
-        description="""Generates a split-layout three-ideas slide with a dark content area, a large title, three idea headings, three supporting descriptions, and a full-height image panel on the right. Ideal for explaining three concepts, comparisons, highlights, or key points.""",
-        args_schema=GenerateThreeIdeasSlideInput
-    ),
-    StructuredTool.from_function(
-    func=generate_our_history_slide_xml,
-    name="generate_our_history_slide_xml",
-    description="Generates a split-layout history slide with a dark content area on the left and a full-height image panel on the right. The content area contains a large title and multiple vertically stacked history events, with right-aligned headings and descriptions, year markers, and vertical separator lines. Ideal for company histories, project milestones, product evolution, timelines, and organizational growth.",
-    args_schema=GenerateOurHistorySlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_instructions_slide_xml,
-    name="generate_instructions_slide_xml",
-    description="Generates an instructional split-layout slide with a dark diagonal content panel on the left, a large workspace image on the right, a main title, two instruction columns, a footer information block, and a slanted accent bar. Ideal for usage instructions, onboarding guides, presentation tutorials, setup steps, and documentation slides.",
-    args_schema=GenerateInstructionsSlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_split_content_slide_xml,
-    name="generate_split_content_slide_xml",
-    description="Generates a split-content slide with a full-slide workspace image, a dark diagonal content panel on the left, a large title, multiple text columns, and a bright slanted accent bar aligned with the panel boundary. Ideal for comparisons, paired concepts, contrasting ideas, feature summaries, and side-by-side content presentations.",
-    args_schema=GenerateSplitContentSlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_picture_quote_slide_xml,
-    name="generate_picture_quote_slide_xml",
-    description="Generates a split image-and-text slide with a large image on the left, a white content panel on the right, a slanted accent bar, a title, and supporting text. Ideal for quotes, key messages, visual statements, and concept highlights.",
-    args_schema=GeneratePictureQuoteSlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_bullet_content_slide_xml,
-    name="generate_bullet_content_slide_xml",
-    description="Generates a diagonal split-content slide with a full-slide image, a dark panel on the left, a bright accent bar, a title, a bullet list, and supporting closing text. Ideal for key points, summaries, recommendations, feature lists, and instructional content.",
-    args_schema=GenerateBulletContentSlideInput,
-    ),  
-    StructuredTool.from_function(
-    func=generate_client_snapshot_slide_xml,
-    name="generate_client_snapshot_slide_xml",
-    description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
-    args_schema=GenerateClientSnapshotSlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_how_forge_works_slide_xml,
-    name="generate_how_forge_works_slide_xml",
-    description="Generates a process overview slide with a title and subtitle on the left, an abstract vector decoration, and vertically connected process-step cards on the right. Ideal for workflows, implementation plans, onboarding processes, operating models, and step-by-step explanations.",
-    args_schema=GenerateHowForgeWorksSlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_implementation_timeline_slide_xml,
-    name="generate_implementation_timeline_slide_xml",
-    description="Generates an implementation timeline slide with a large title and subtitle, an abstract vector decoration, and horizontally arranged milestones containing labels and descriptions. Ideal for project schedules, rollout plans, implementation phases, product roadmaps, and delivery timelines.",
-    args_schema=GenerateImplementationTimelineSlideInput,
-    ),
-    StructuredTool.from_function(
-    func=generate_problem_slide_xml,
-    name="generate_problem_slide_xml",
-    description="Generates a problem statement slide with up to five large rounded cards hanging from the top edge, each containing a problem item, plus a title and supporting description in the lower-left area. Ideal for presenting pain points, business challenges, customer problems, operational issues, and project motivations.",
-    args_schema=GenerateProblemSlideInput,
-    ),
-    
-]
-
-# All available slide generation tools with complete parameter schemas
-
 TRANSITION_TOOLS = [
     StructuredTool.from_function(
-    func=generate_transition_headline_slide_xml,
-    name="generate_transition_headline_slide_xml",
-    description="Generates a transition slide with a full-slide image, a dark diagonal panel on the left, a bright slanted accent bar, a large headline, and a supporting subtitle. Ideal for section introductions, chapter transitions, topic dividers, and presentation milestones.",
-    args_schema=GenerateTransitionHeadlineSlideInput,
-    ),
-
-
+        func=generate_classic_toc_slide_xml,
+        name="generate_classic_toc_slide_xml",
+        description="Generates a classic vintage 'Table of contents' slide with a decorative border and a 2x3 grid for items. Ideal for historical, classic, or elegant presentations. Supports up to 6 items.",
+        args_schema=GenerateClassicTocSlideInput,
+    )
 ]
-TEAM_TOOLS = []
+TEAM_TOOLS = [
+    StructuredTool.from_function(
+        func=generate_creative_team_slide_xml,
+        name="generate_creative_team_slide_xml",
+        description="Generates a team introduction slide with 4 polaroid-style photos rotated dynamically. Ideal for introducing key team members.",
+        args_schema=GenerateCreativeTeamSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_grid_team_slide_xml,
+        name="generate_grid_team_slide_xml",
+        description="Generates a team members slide with a 2x2 grid layout on the right and a large title on the left. The photos are circular with colorful borders.",
+        args_schema=GenerateGridTeamSlideInput,
+    )
+]
 THANK_YOU_TOOLS = []
 CHART_TOOLS = []
 
-ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
+ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
 
 TOOLS_DICT = {'INTRO_TOOLS': INTRO_TOOLS,
                'TRANSITION_TOOLS': TRANSITION_TOOLS,
-               'CONTENT_TOOLS': CONTENT_TOOLS,
                'TEAM_TOOLS': TEAM_TOOLS,
                'THANK_YOU_TOOLS': THANK_YOU_TOOLS,
                 'CHART_TOOLS': CHART_TOOLS
