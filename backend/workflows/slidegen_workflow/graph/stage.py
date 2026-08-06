@@ -1,5 +1,6 @@
 # src/graph/stage.py
-from typing import List, Dict, TypedDict, Any, Literal
+from typing import List, Dict, Any, Literal
+from typing_extensions import TypedDict
 from pydantic import BaseModel, Field
 
 # Define the allowed tool categories based on your TOOLS_DICT keys
@@ -38,6 +39,7 @@ class State(TypedDict, total=False):
     docx_file: str
     slide_options: Dict  # Options for slide generation
     workflow_mode: str  # Workflow mode (auto, no_structure, manual)
+    output_format: str  # XML-only output format
 
 
     # Document processing state
@@ -60,9 +62,8 @@ class State(TypedDict, total=False):
     current_tool_plan: List[Dict]
     current_search_history: List[Dict]
     current_tool_call: Dict
-    current_html_content: str
-    current_html_path: str
-    current_image_path: str
+    current_xml_content: str
+    current_xml_path: str
     previous_image_path: str
     previous_accepted_tool_call: Dict
     previous_slide_context: slide_context

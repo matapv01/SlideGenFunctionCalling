@@ -11,7 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { resolveSlideBackground } from "@/lib/slideBackground";
 import { AppLayout } from "@/components/AppLayout";
-import { LazySlidePreview } from "@/components/LazySlidePreview";
+import { ProjectSlidePreview } from "@/components/ProjectSlidePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const Projects = () => {
@@ -69,12 +69,12 @@ const Projects = () => {
                 
                 if (slidesRes.slides && slidesRes.slides.length > 0) {
                   const slide = slidesRes.slides[0];
-                  const rawHtml = slide.html_content || slide.html || '';
-                  const { backgroundColor, backgroundImage } = resolveSlideBackground(slide.design_settings, rawHtml);
+                  const rawContent = slide.xmlContent || slide.xml_content || slide.html_content || slide.html || slide.content || '';
+                  const { backgroundColor, backgroundImage } = resolveSlideBackground(slide.design_settings, rawContent);
                   
                   return {
                     id: project.id,
-                    html: rawHtml,
+                    html: rawContent,
                     bg: backgroundColor,
                     bgImg: backgroundImage,
                     count,
@@ -276,7 +276,7 @@ const Projects = () => {
                   </div>
                   {!selectMode && (
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${project.id}`); }}>
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor?project=${project.id}`); }}>
                         <Edit className="mr-1 h-3 w-3" /> {t.projects_edit}
                       </Button>
                       <DropdownMenu>
@@ -303,9 +303,9 @@ const Projects = () => {
                 <CardContent>
                   <div className="aspect-video overflow-hidden rounded-lg bg-muted/50 relative">
                     {firstSlides[project.id] ? (
-                      <LazySlidePreview
+                      <ProjectSlidePreview
                         slideId={`project-thumb-${project.id}`}
-                        htmlContent={firstSlides[project.id]}
+                        content={firstSlides[project.id]}
                         backgroundColor={firstSlideBackgrounds[project.id]}
                         backgroundImage={firstSlideBackgroundImages[project.id]}
                         className="absolute inset-0"
@@ -351,7 +351,7 @@ const Projects = () => {
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/view/${project.id}`); }}>
                         <Eye className="mr-1 h-3 w-3" /> {t.projects_view}
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${project.id}`); }}>
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor?project=${project.id}`); }}>
                         <Edit className="mr-1 h-3 w-3" /> {t.projects_edit}
                       </Button>
                       <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); setRenameId(project.id); setRenameName(project.name); }}>

@@ -1,118 +1,89 @@
-# File: backend/application/services/slide_service.py
+"""Build editor payloads from XML workflow artifacts."""
 
-import re
 import logging
+import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
-from typing import List, Dict, Any
-from backend.config import (
-    STATIC_DIR,
-)
+from typing import Any, Dict, List
+
+from backend.config import STATIC_DIR
 
 logger = logging.getLogger(__name__)
 
 
 class SlideService:
-    """Service for slide operations"""
+    """Service for XML slide operations."""
 
-    def __init__(self, static_dir: Path):
+    def __init__(self, static_dir: Path = STATIC_DIR):
         self.static_dir = static_dir
 
-    def build_slides_from_output(self, output_folder: str) -> List[Dict[str, Any]]:
-        """Build slides data from output folder"""
+    def build_slides_from_output(
+        self,
+        output_folder: str,
+        output_format: str = "xml",
+    ) -> List[Dict[str, Any]]:
+        if str(output_format or "xml").lower() != "xml":
+            raise ValueError("This service is XML-only; output_format must be 'xml'.")
+        return self.build_xml_slides_from_output(output_folder)
+
+    def build_xml_slides_from_output(self, output_folder: str) -> List[Dict[str, Any]]:
+        root_folder = Path(output_folder)
+        xml_dir = root_folder / "output" / "xml"
+        if not xml_dir.exists():
+            xml_dir = root_folder / "xml"
+        if not xml_dir.exists():
+            raise FileNotFoundError("XML directory not found in output")
+
+        png_dir = root_folder / "output" / "png"
+        if not png_dir.exists():
+            png_dir = root_folder / "png"
+
+        def slide_index(path: Path):
+            match = re.search(r"slide_(\d+)", path.stem)
+            return int(match.group(1)) if match else float("inf")
+
         slides = []
+        for index, xml_file in enumerate(sorted(xml_dir.glob("*.xml"), key=slide_index)):
+            xml_content = xml_file.read_text(encoding="utf-8")
+            metadata = {
+                "title": f"Slide {index + 1}",
+                "backgroundColor": "white",
+                "elements": [],
+                "format": "xml",
+                "sourceFile": xml_file.name,
+            }
+            try:
+                root = ET.fromstring(xml_content)
+                slide_node = root.find("./slide")
+                if slide_node is not None:
+                    metadata["backgroundColor"] = slide_node.get("background", "white")
+                    metadata["canvasWidth"] = root.get("width", "1600")
+                    metadata["canvasHeight"] = root.get("height", "900")
+            except ET.ParseError as exc:
+                logger.warning("Invalid XML in %s: %s", xml_file.name, exc)
 
-        # Prioritize converted slides
-        converted_dir = Path(output_folder) / 'converted'
-        html_dir = Path(output_folder) / 'html'
-        png_dir = Path(output_folder) / 'png'
+            preview_url = None
+            png_file = png_dir / f"{xml_file.stem}.png"
+            if png_file.exists():
+                try:
+                    relative_path = png_file.relative_to(self.static_dir)
+                    preview_url = f"/static/{relative_path.as_posix()}"
+                except ValueError:
+                    preview_url = None
 
-        # Choose HTML directory
-        source_html_dir = converted_dir if converted_dir.exists() else html_dir
-        use_converted = converted_dir.exists()
-
-        if not source_html_dir.exists():
-            raise FileNotFoundError("HTML directory not found in output")
-
-        logger.info(f"Building slides from {'converted' if use_converted else 'original'} HTML directory")
-
-        # Sort files by slide number (extract "slide_X" pattern)
-        def extract_slide_number(filepath):
-            """Extract slide number from filename like 'slide_1_0.html' or 'converted_slide_1_0.html'"""
-            filename = filepath.stem  # Get filename without extension
-            # Match patterns: slide_1, slide_1_0, converted_slide_1, converted_slide_1_0
-            match = re.search(r'slide_(\d+)(?:_(\d+))?', filename)
-            if match:
-                slide_num = int(match.group(1))  # First number (slide index)
-                retry_num = int(match.group(2)) if match.group(2) else 0  # Second number (retry attempt)
-                return (slide_num, retry_num)
-            return (float('inf'), 0)  # Put unmatched files at the end
-
-        html_files = sorted(
-            [f for f in source_html_dir.iterdir() if f.suffix == '.html'],
-            key=extract_slide_number
-        )
-
-        for index, html_file in enumerate(html_files):
-            with open(html_file, 'r', encoding='utf-8') as f:
-                content = f.read()
-
-            # Fix image paths
-            content = re.sub(
-                r'src="([^"]*)"',
-                lambda m: f'src="/api/images/{m.group(1)}"' if not m.group(1).startswith(('http', '/', 'data:')) else m.group(0),
-                content
+            slides.append(
+                {
+                    "content": xml_content,
+                    "xmlContent": xml_content,
+                    "type": "xml",
+                    "format": "xml",
+                    "isConverted": False,
+                    "preview": preview_url,
+                    "title": metadata["title"],
+                    "backgroundColor": metadata["backgroundColor"],
+                    "elements": metadata["elements"],
+                    "metadata": metadata,
+                }
             )
 
-            # Extract metadata
-            slide_metadata = self.extract_slide_metadata(content, html_file.name)
-
-            # Find preview image
-            preview_url = None
-            if use_converted and html_file.name.startswith('converted_'):
-                original_name = html_file.name.replace('converted_', '')
-                png_file = original_name.replace('.html', '.png')
-            else:
-                png_file = html_file.name.replace('.html', '.png')
-
-            png_path = png_dir / png_file
-            if png_path.exists():
-                relative_path = png_path.relative_to(self.static_dir)
-                preview_url = f"/static/{relative_path.as_posix()}"
-
-            slides.append({
-                "content": content,
-                "type": "html" if not use_converted else "html_absolute",
-                "isConverted": use_converted,
-                "preview": preview_url,
-                "title": slide_metadata.get("title", f"Slide {index + 1}"),
-                "backgroundColor": slide_metadata.get("backgroundColor", "white"),
-                "elements": slide_metadata.get("elements", []),
-                "metadata": slide_metadata
-            })
-
         return slides
-
-    def extract_slide_metadata(self, html_content: str, filename: str) -> Dict[str, Any]:
-        """Extract metadata from HTML content"""
-        metadata = {
-            "title": filename.replace('.html', '').replace('slide_', 'Slide '),
-            "backgroundColor": "white",
-            "elements": []
-        }
-
-        try:
-            # Extract title from h1, h2 tags
-            title_match = re.search(r'<h[12][^>]*>([^<]+)</h[12]>', html_content, re.IGNORECASE)
-            if title_match:
-                metadata["title"] = title_match.group(1).strip()
-
-            # Extract background color
-            bg_match = re.search(r'background(?:-color)?:\s*([^;]+)', html_content)
-            if bg_match:
-                metadata["backgroundColor"] = bg_match.group(1).strip()
-
-        except Exception as e:
-            logger.warning(f"Error extracting metadata from {filename}: {e}")
-
-        return metadata
-

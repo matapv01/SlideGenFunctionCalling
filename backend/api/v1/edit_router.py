@@ -70,7 +70,7 @@ async def create_manual_session(
             filename=safe_name,
             full_text=full_text,
             paragraphs=paragraphs_data,
-            docx_path=str(temp_path)
+            docx_path=str(temp_path),
         )
 
         logger.info("✅ Manual session created: %s (%s paragraphs)", session_id, len(paragraphs_data))
@@ -110,6 +110,7 @@ async def get_current_structure(
             document_structure = persisted.get("document_structure", document_structure)
             session_data["document_title"] = document_title
             session_data["document_structure"] = document_structure
+            session_data["output_format"] = persisted.get("output_format", session_data.get("output_format", "xml"))
         except Exception as exc:
             logger.warning("Failed to read persisted structure for session %s: %s", session_id, exc)
 
@@ -117,7 +118,8 @@ async def get_current_structure(
         "document_title": document_title,
         "document_text": session_data.get("document_text", ""),
         "document_structure": document_structure,
-        "can_edit": True
+        "can_edit": True,
+        "output_format": session_data.get("output_format", "xml"),
     }
 
 
@@ -133,6 +135,7 @@ async def update_structure(
             session_id=request.session_id,
             document_structure=[node.model_dump() for node in request.document_structure],
             intro_slide=request.intro_slide.model_dump() if request.intro_slide else None,
+            slide_options={"output_format": request.output_format},
         )
 
         return result
@@ -152,6 +155,13 @@ async def approve_structure(
 ):
     """Xác nhận cấu trúc và chuẩn bị dữ liệu cho AI Workflow qua manual_workflow."""
     try:
+        persisted = manual_workflow_service.get_persisted_structure(request.session_id) or {}
+        persisted["output_format"] = request.output_format
+        if persisted:
+            file_path = TEMP_DIR / f"structure_{request.session_id}.json"
+            with open(file_path, "w", encoding="utf-8") as f:
+                import json
+                json.dump(persisted, f, indent=2, ensure_ascii=False)
         return await manual_workflow_service.approve_structure_from_session(request.session_id)
     except FileNotFoundError as e:
         raise HTTPException(status_code=404, detail=str(e))

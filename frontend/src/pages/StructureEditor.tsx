@@ -16,6 +16,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import type { OutputFormat } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -101,6 +102,7 @@ const StructureEditor = () => {
   const [approveDialogOpen, setApproveDialogOpen] = useState(false);
   const [parseErrors, setParseErrors] = useState<string[]>([]);
   const [leftWidth, setLeftWidth] = useState(70);
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>("xml");
 
   const parsedStructureRef = useRef<any[] | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -144,6 +146,7 @@ const StructureEditor = () => {
     try {
       const data = await api.getStructure(sessionId!);
       setDocumentTitle(data.document_title || "Untitled");
+      setOutputFormat("xml");
       
       let markdown = "";
       
@@ -385,14 +388,14 @@ const StructureEditor = () => {
 
     setSaving(true);
     try {
-      await api.updateStructure(sessionId, parsedStructureRef.current);
-      const result = await api.approveStructure(sessionId);
+      await api.updateStructure(sessionId, parsedStructureRef.current, undefined, outputFormat);
+      const result = await api.approveStructure(sessionId, outputFormat);
 
       toast({
         title: "Đã duyệt cấu trúc!",
         description: `${result.slide_types?.length || 0} slides đã chuẩn bị`,
       });
-      navigate(`/streaming/manual`, { state: { sessionId, documentTitle } });
+      navigate(`/streaming/manual`, { state: { sessionId, documentTitle, outputFormat: result.output_format || outputFormat } });
     } catch (err: any) {
       toast({ title: "Lỗi", description: err.message, variant: "destructive" });
     } finally {

@@ -16,7 +16,18 @@ class StructureService:
         # In-memory session storage
         self._sessions: Dict[str, Dict] = {}
 
-    def create_session(self, filename: str, full_text: str, paragraphs: List[Dict], docx_path: str) -> str:
+    def create_session(
+        self,
+        filename: str,
+        full_text: str,
+        paragraphs: List[Dict],
+        docx_path: str,
+        output_format: str = "xml",
+    ) -> str:
+        normalized_output_format = str(output_format or "xml").lower()
+        if normalized_output_format != "xml":
+            raise ValueError("This service is XML-only; output_format must be 'xml'.")
+
         session_id = str(uuid.uuid4())
         self._sessions[session_id] = {
             'document_title': filename.replace('.docx', ''),
@@ -24,16 +35,29 @@ class StructureService:
             'paragraphs': paragraphs,
             'document_structure': [],
             'docx_file': docx_path,
-            'filename': filename
+            'filename': filename,
+            'output_format': normalized_output_format,
         }
         return session_id
 
     def get_session(self, session_id: str) -> Optional[Dict]:
         return self._sessions.get(session_id)
 
-    def update_session_structure(self, session_id: str, structure: List[Dict], intro_slide: Optional[Dict] = None):
+    def update_session_structure(
+        self,
+        session_id: str,
+        structure: List[Dict],
+        intro_slide: Optional[Dict] = None,
+        output_format: Optional[str] = None,
+    ):
         if session_id not in self._sessions:
             self._sessions[session_id] = {}
+
+        if output_format is not None:
+            normalized_output_format = str(output_format or "xml").lower()
+            if normalized_output_format != "xml":
+                raise ValueError("This service is XML-only; output_format must be 'xml'.")
+            self._sessions[session_id]["output_format"] = "xml"
         
         self._sessions[session_id]["document_structure"] = structure
         
@@ -58,7 +82,8 @@ class StructureService:
             json.dump({
                 "session_id": session_id,
                 "document_title": document_title,
-                "document_structure": merged_structure
+                "document_structure": merged_structure,
+                "output_format": self._sessions[session_id].get("output_format", "xml"),
             }, f, indent=2, ensure_ascii=False)
 
     def _merge_title_content_nodes(self, nodes: List[Dict]) -> List[Dict]:

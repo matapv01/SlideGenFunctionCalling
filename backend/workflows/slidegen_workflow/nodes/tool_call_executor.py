@@ -14,7 +14,6 @@ If validation fails  → state["executor_decision"] = "fail" + feedback
 import re
 import json
 import logging
-import html
 from typing import Dict, List, Tuple, Optional
 
 try:
@@ -23,34 +22,31 @@ except ImportError:
     RunnableConfig = None  # Allow standalone usage without LangGraph
 
 from backend.workflows.slidegen_workflow.graph.stage import State
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool, execute_tool_plan
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
+    TOOLS_DICT as XML_TOOLS_DICT,
+    execute_tool as execute_xml_tool,
+    execute_tool_plan as execute_xml_tool_plan,
+)
 from backend.config import EXECUTOR_MAX_RETRIES
 
 logger = logging.getLogger(__name__)
 
 
-def _fallback_html_for_failed_tool(tool_call: dict, reason: str) -> str:
-    tool_name = html.escape(str(tool_call.get("name", "unknown_tool")))
-    safe_reason = html.escape(str(reason))
-    return f"""<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="UTF-8">
-  <style>
-    body {{ margin: 0; width: 100vw; height: 100vh; display: flex; align-items: center; justify-content: center; font-family: Arial, sans-serif; background: #f8fafc; color: #0f172a; }}
-    .slide {{ width: 80%; max-width: 1200px; text-align: center; }}
-    h1 {{ font-size: 56px; margin-bottom: 24px; }}
-    p {{ font-size: 26px; line-height: 1.4; color: #475569; }}
-  </style>
-</head>
-<body>
-  <div class="slide">
-    <h1>{tool_name}</h1>
-    <p>Fallback slide rendered because tool execution failed.</p>
-    <p>{safe_reason}</p>
-  </div>
-</body>
-</html>"""
+def _fallback_xml_for_failed_tool(tool_call: dict, reason: str) -> str:
+    """Return a valid XML slide so generation can still be finalized."""
+    from xml.sax.saxutils import escape
+
+    tool_name = escape(str(tool_call.get("name", "unknown_tool")))
+    safe_reason = escape(str(reason))
+    return f'''<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#F8FAFC">
+    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#F8FAFC" line_color="none" />
+    <textbox x="180" y="260" width="1240" height="100" font="Arial" size="52" bold="true" color="#0F172A" align="center" vertical_align="middle">{tool_name}</textbox>
+    <textbox x="180" y="390" width="1240" height="80" font="Arial" size="28" color="#475569" align="center" vertical_align="middle">Fallback XML slide</textbox>
+    <textbox x="180" y="500" width="1240" height="120" font="Arial" size="20" color="#64748B" align="center" vertical_align="middle">{safe_reason}</textbox>
+  </slide>
+</presentation>'''
 
 # ─── Regex patterns ───────────────────────────────────────────────────
 HEX_COLOR_RE = re.compile(r"^#(?:[0-9a-fA-F]{3}){1,2}$")
@@ -88,10 +84,10 @@ PLACEHOLDER_PATTERNS = [
 ]
 
 
-def _build_tool_schema_lookup() -> Dict[str, Dict]:
-    """Build a lookup: tool_name -> {required_fields, field_types} from TOOLS_DICT."""
+def _build_tool_schema_lookup(tools_dict: Dict) -> Dict[str, Dict]:
+    """Build a lookup: tool_name -> schema metadata for one output format."""
     lookup = {}
-    for _category, tools_list in TOOLS_DICT.items():
+    for _category, tools_list in tools_dict.items():
         for tool in tools_list:
             schema = tool.args  # Pydantic schema dict
             required = set()
@@ -110,17 +106,21 @@ def _build_tool_schema_lookup() -> Dict[str, Dict]:
 
 
 # Module-level cache
-_TOOL_SCHEMA_LOOKUP: Optional[Dict] = None
+_TOOL_SCHEMA_LOOKUPS: Dict[str, Dict] = {}
 
 
-def _get_schema_lookup() -> Dict:
-    global _TOOL_SCHEMA_LOOKUP
-    if _TOOL_SCHEMA_LOOKUP is None:
-        _TOOL_SCHEMA_LOOKUP = _build_tool_schema_lookup()
-    return _TOOL_SCHEMA_LOOKUP
+def _get_schema_lookup(tools_dict: Dict = XML_TOOLS_DICT, cache_key: str = "xml") -> Dict:
+    if cache_key not in _TOOL_SCHEMA_LOOKUPS:
+        _TOOL_SCHEMA_LOOKUPS[cache_key] = _build_tool_schema_lookup(tools_dict)
+    return _TOOL_SCHEMA_LOOKUPS[cache_key]
 
 
-def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) -> Tuple[bool, List[str]]:
+def validate_tool_call(
+    tool_call: dict,
+    available_tool_names: List[str] = None,
+    tools_dict: Dict = XML_TOOLS_DICT,
+    format_name: str = "xml",
+) -> Tuple[bool, List[str]]:
     """
     Validate a tool call dict against known schemas.
     
@@ -144,7 +144,7 @@ def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) 
         errors.append(f"INVALID_TOOL_NAME_TYPE: 'name' should be string, got {type(tool_name).__name__}.")
         return False, errors
     
-    schema_lookup = _get_schema_lookup()
+    schema_lookup = _get_schema_lookup(tools_dict, format_name)
 
     # Check if tool exists in available tools (if provided) or in global registry
     if available_tool_names and tool_name not in available_tool_names:
@@ -257,7 +257,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
     Executor / Validator Node.
     
     Validates the tool call generated by slide_generator before passing
-    to render_html. If validation fails, sets executor_decision="fail"
+    to render_xml. If validation fails, sets executor_decision="fail"
     with feedback so the graph can route back to generate_slide.
     """
     idx = state.get('current_slide_index', 0)
@@ -277,6 +277,18 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         state['retry_count'] = retry_count + 1
         return state
     
+    configurable = config.get("configurable", {}) if config else {}
+    requested_output_format = str(
+        configurable.get("output_format")
+        or state.get("output_format")
+        or "xml"
+    ).lower()
+    if requested_output_format != "xml":
+        raise ValueError("This workflow is XML-only; output_format must be 'xml'.")
+    active_tools_dict = XML_TOOLS_DICT
+    active_execute_tool = execute_xml_tool
+    active_execute_tool_plan = execute_xml_tool_plan
+
     tool_name = tool_call.get('name', '???')
     print(f"  Tool: {tool_name}")
     print(f"  Args keys: {list(tool_call.get('arguments', {}).keys())}")
@@ -286,7 +298,12 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
     available_names = [t.name for t in candidate_tools] if candidate_tools else None
     
     # Run validation
-    is_valid, errors = validate_tool_call(tool_call, available_names)
+    is_valid, errors = validate_tool_call(
+        tool_call,
+        available_names,
+        tools_dict=active_tools_dict,
+        format_name="xml",
+    )
     
     if is_valid:
         print(f"  ✅ PASS — Tool call is valid!")
@@ -294,24 +311,35 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         state['executor_feedback'] = ''
         tool_plan = state.get("current_tool_plan") or [tool_call]
         try:
-            html_content, final_tool_call, search_history = execute_tool_plan(tool_plan)
-            if not html_content:
-                raise ValueError("Slide HTML tool returned empty content.")
+            slide_content, final_tool_call, search_history = active_execute_tool_plan(
+                tool_plan,
+                tool_lookup={
+                    tool.name: tool
+                    for tools in active_tools_dict.values()
+                    for tool in tools
+                },
+            )
+            if not slide_content:
+                raise ValueError("Slide XML tool returned empty content.")
         except Exception as e:
             print(f"  FAIL - Tool plan execution failed: {e}")
             state['executor_decision'] = 'fail'
             state['executor_feedback'] = (
                 "EXECUTOR TOOL PLAN FAILED:\n"
                 f"- {e}\n\n"
-                "Regenerate a valid slide-first plan: one slide HTML tool first, "
+                "Regenerate a valid slide-first plan: one slide XML tool first, "
                 "then one search_ddgs_images call for each image parameter."
             )
             state['retry_count'] = retry_count + 1
             if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-                fallback_html = execute_tool(tool_call) or _fallback_html_for_failed_tool(tool_call, str(e))
+                fallback_content = active_execute_tool(tool_call)
+                if not fallback_content:
+                    fallback_content = (
+                        _fallback_xml_for_failed_tool(tool_call, str(e))
+                    )
                 state['current_tool_plan'] = [tool_call]
                 state['current_search_history'] = []
-                state['current_html_content'] = fallback_html
+                state['current_xml_content'] = fallback_content
             return state
 
         for key in list(state.keys()):
@@ -322,7 +350,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
 
         state['current_tool_call'] = final_tool_call
         state['current_search_history'] = search_history
-        state['current_html_content'] = html_content
+        state['current_xml_content'] = slide_content
     else:
         error_report = "\n".join(f"  • {e}" for e in errors)
         print(f"  ❌ FAIL — {len(errors)} error(s) found:")
@@ -336,12 +364,13 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         )
         state['retry_count'] = retry_count + 1
         if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-            fallback_html = execute_tool(tool_call) or _fallback_html_for_failed_tool(
-                tool_call,
-                "; ".join(errors),
-            )
+            fallback_content = active_execute_tool(tool_call)
+            if not fallback_content:
+                fallback_content = (
+                    _fallback_xml_for_failed_tool(tool_call, "; ".join(errors))
+                )
             state['current_tool_plan'] = [tool_call]
             state['current_search_history'] = []
-            state['current_html_content'] = fallback_html
+            state['current_xml_content'] = fallback_content
     
     return state

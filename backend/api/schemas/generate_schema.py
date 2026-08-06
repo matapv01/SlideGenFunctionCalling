@@ -1,7 +1,7 @@
 # File: backend/schemas/generate_schema.py
 
 from pydantic import BaseModel, Field
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 
 class SlideChunk(BaseModel):
     """Individual slide content structure"""
@@ -13,6 +13,7 @@ class SlideOptionsBase(BaseModel):
     """Base class for slide generation options"""
     enable_transition_slides: bool = True
     enable_thank_you_slide: bool = True
+    output_format: Literal["xml"] = "xml"
 
 class IdeaStructureRequest(SlideOptionsBase):
     title: str = Field(..., min_length=1)
@@ -24,6 +25,7 @@ class IdeaStructureResponse(BaseModel):
     filename: str
     slide_count: int
     is_from_idea: bool = True
+    output_format: Literal["xml"] = "xml"
 
 class IdeaStructureDetailResponse(SlideOptionsBase):
     session_id: str
@@ -42,3 +44,4 @@ class ManualSessionResponse(BaseModel):
     success: bool
     session_id: str
     document_title: str
+    output_format: Literal["xml"] = "xml"

@@ -65,7 +65,7 @@ const PresentationMode = () => {
       return;
     }
 
-    navigate(`/editor/${projectId}?slide=${currentSlide}`, { replace: true });
+    navigate(`/editor?project=${projectId}&slide=${currentSlide}`, { replace: true });
   }, [navigate, projectId, currentSlide]);
 
   const exitPresentation = useCallback(() => {

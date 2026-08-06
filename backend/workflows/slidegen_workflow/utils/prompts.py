@@ -97,13 +97,13 @@ Provide detailed feedback on what works well and what needs improvement, then ma
 IMAGE_SEARCH_EXECUTION_PLAN_RULES = """
 🖼️ **CRITICAL — SLIDE-FIRST IMAGE SEARCH PLAN:**
 
-Return one ordered tool-call plan. The slide HTML tool comes FIRST; image searches come AFTER.
+Return one ordered tool-call plan. The slide XML tool comes FIRST; image searches come AFTER.
 
-1. Choose the final slide HTML tool and inspect its complete parameter schema.
-2. Call the slide HTML tool FIRST with all text/style/layout parameters filled in.
+1. Choose the final slide XML tool and inspect its complete parameter schema.
+2. Call the slide XML tool FIRST with all text/style/layout parameters filled in.
    - For EVERY image URL/path parameter, leave the value as an empty string "".
    - Do NOT invent, guess, or fill any image URL.
-3. After the slide HTML tool, for EVERY image URL/path parameter you left empty,
+3. After the slide XML tool, for EVERY image URL/path parameter you left empty,
    emit exactly one `search_ddgs_images` call in schema declaration order:
    - Call 1 maps to the first image parameter.
    - Call 2 maps to the second image parameter.
@@ -127,7 +127,7 @@ Return one ordered tool-call plan. The slide HTML tool comes FIRST; image search
    - `Small`: icons, logos, badges, small decorations, or below 400px.
 7. For nested objects (e.g. team members), keep each nested `image_url` as an empty
    string so the executor can discover and inject the real URL later.
-8. If the selected slide tool has NO image parameters, emit ONLY the slide HTML tool
+8. If the selected slide tool has NO image parameters, emit ONLY the slide XML tool
    with no search calls after it.
 9. Output no prose, markdown, or extra tool calls after the last search call.
 """
@@ -165,7 +165,7 @@ INTRO_PROMPT = """
    ✅ CORRECT: "Smart Contract Security<br>Detecting Vulnerabilities<br>A Community Project"
    ❌ WRONG: "Smart Contract Security Detecting Vulnerabilities A Community Project"
    Every sentence, bullet point, or idea = separate line with <br>!
-3. HTML: Use <br> or <p> for line breaks ONLY
+3. TEXT: Keep line breaks concise inside XML text values
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 4. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
 5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
@@ -186,7 +186,7 @@ TRANSITION_PROMPT = """
 
 **RULES:**
 1. CONTENT: 3-6 words ONLY
-2. HTML: Use <br> or <p> for line breaks ONLY
+2. TEXT: Keep line breaks concise inside XML text values
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
 3. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
 4. MATH/EQUATIONS: If you need formulas, use: `<math-field>formula</math-field>`
@@ -205,24 +205,40 @@ CONTENT_PROMPT = """
 ❌ FORBIDDEN: Gray on gray, #555 on #333, #ccc on #fff, colored text on colored bg
 
 **RULES:**
-1. HIGHLIGHT 2-3 key phrases ONLY:
-   {highlight_instruction}
-   Example: "AI improves <span style="font-weight: bold;">efficiency</span> by 80%"
-   ⚠️ ONLY use <span style="font-weight:bold"> for KEY PHRASES!
-2. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
+1. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
    ✅ CORRECT: "Lost $3.35B in 2025<br>630 security incidents<br>37% increase vs 2024"
    ❌ WRONG: "Lost $3.35B in 2025 630 security incidents 37% increase vs 2024"
    Every bullet point, fact, or sentence = separate line with <br>!
-3. HTML: Use <br> or <p> for line breaks ONLY
+2. TEXT: Keep line breaks concise inside XML text values
    ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
-   ❌ NO style attributes except for key phrase highlights!
-4. CONTENT: Concise, no filler words
-5. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
-6. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
+   ❌ NO style attributes!
+3. CONTENT: Concise, no filler words
+4. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
+5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
    ✅ CORRECT: `<math-field>E = mc^2</math-field>`
    ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
 
 Generate READABLE, professional function call.
+"""
+
+# XML slides use plain editable text.
+XML_CONTENT_PROMPT = """
+🎯 XML CONTENT SLIDE - Main information!
+
+**CRITICAL: TEXT COLOR MUST BE EASY TO READ VS BACKGROUND!**
+⚠️ Dark background (#000, #1a1a1a, #2c3e50) → #FFFFFF or very light text
+⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → #000000 or very dark text
+❌ FORBIDDEN: Gray on gray, #555 on #333, #ccc on #fff, colored text on colored bg
+
+**RULES:**
+1. TEXT: Keep text values concise and editable. Preserve the meaning and language of the source content.
+2. LINE BREAKS: Keep each bullet point, fact, or sentence concise.
+3. CONTENT: Concise, no filler words.
+4. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
+5. MATH/EQUATIONS: If you need formulas, use LaTeX wrapped with proper <math-field> tags.
+6. OUTPUT: Return only the selected XML tool call arguments; do not add prose.
+
+Generate a readable, professional XML function call.
 """
 
 THANK_YOU_PROMPT = """
@@ -251,7 +267,7 @@ TEAM_PROMPT = """
 
 **RULES:**
 1. CONTENT: Name + role only
-2. HTML: Use <br> or <p> for line breaks ONLY
+2. TEXT: Keep line breaks concise inside XML text values
    ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
 3. IMAGES: Follow the ordered image-search execution-plan rules. Nested member image fields must remain empty placeholders.
 4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
@@ -529,7 +545,7 @@ QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY 
 
 CRITICAL JSON FORMATTING RULES:
 1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside string values as `\"` or use single quotes `'` inside HTML. NEVER put raw literal newlines in JSON strings.
+2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\"`. NEVER put raw literal newlines in JSON strings.
 3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
 4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
 5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
@@ -569,7 +585,7 @@ CRITICAL RULES:
 
 CRITICAL JSON FORMATTING & SYNTAX RULES:
 1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside string values as `\"` or use single quotes `'` inside HTML. NEVER put raw literal newlines in JSON strings.
+2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\"`. NEVER put raw literal newlines in JSON strings.
 3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
 4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
 5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
@@ -616,6 +632,6 @@ SLIDE_PREPARER_HUMAN_TEMPLATE = """---
 Based on the information above, write a detailed visual styling instruction (in English, 3-4 bullet points) for the next slide. Describe:
 1. What theme color and background color to use to match the previous slide.
 2. The recommended text layout structure (e.g. key-value cards, bullet list, comparison columns).
-3. Any specific formatting rules (e.g. font sizes, highlight color span tags).
+3. Any specific formatting rules (e.g. font sizes and spacing).
 4. What LANGUAGE to generate the slide text in (match the language of the [CURRENT SLIDE CONTENT] above).
 Keep it concise and clear."""

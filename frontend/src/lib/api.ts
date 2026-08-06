@@ -88,6 +88,8 @@ interface SlidesResponse {
   total: number;
 }
 
+export type OutputFormat = "xml";
+
 // Auth
 export const api = {
   // Auth endpoints - match backend /api/auth/*
@@ -169,30 +171,35 @@ export const api = {
     request<{ message: string }>(`/projects/${id}`, { method: "DELETE" }),
 
   // Upload endpoints - /api/generate/docx*
-  uploadDocx: (file: File) => {
+  uploadDocx: (file: File, options: { outputFormat?: OutputFormat } = {}) => {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("output_format", options.outputFormat ?? "xml");
     return request<any>("/generate/docx", { method: "POST", body: formData });
   },
 
   // Upload for streaming workflow
   uploadDocxForStream: (file: File, options: {
     workflow_mode?: string;
+    outputFormat?: OutputFormat;
   } = {}) => {
     const formData = new FormData();
     formData.append("file", file);
     formData.append("workflow_mode", options.workflow_mode ?? "auto_no_heading");
+    formData.append("output_format", options.outputFormat ?? "xml");
     return request<{ filename: string }>("/generate/docx/prepare-stream", { method: "POST", body: formData });
   },
 
   // Upload for manual structure editing workflow
-  uploadDocxForManual: (file: File) => {
+  uploadDocxForManual: (file: File, options: { outputFormat?: OutputFormat } = {}) => {
     const formData = new FormData();
     formData.append("file", file);
+    formData.append("output_format", options.outputFormat ?? "xml");
     return request<{
       success: boolean;
       session_id: string;
       document_title: string;
+      output_format?: OutputFormat;
     }>("/generate/docx/manual-session", { method: "POST", body: formData });
   },
 
@@ -203,19 +210,21 @@ export const api = {
       document_text: string;
       document_structure: any[];
       can_edit: boolean;
+      output_format?: OutputFormat;
     }>(`/structure/current?session_id=${sessionId}`),
 
-  updateStructure: (sessionId: string, documentStructure: any[], introSlide?: any) =>
+  updateStructure: (sessionId: string, documentStructure: any[], introSlide?: any, outputFormat: OutputFormat = "xml") =>
     request<{ success: boolean }>("/structure/update", {
       method: "PUT",
       body: JSON.stringify({
         session_id: sessionId,
         document_structure: documentStructure,
         intro_slide: introSlide,
+        output_format: outputFormat,
       }),
     }),
 
-  approveStructure: (sessionId: string) =>
+  approveStructure: (sessionId: string, outputFormat: OutputFormat = "xml") =>
     request<{
       success: boolean;
       session_id: string;
@@ -225,9 +234,10 @@ export const api = {
       slide_positions: any[];
       slide_context_maps: string[];
       slide_types: string[];
+      output_format?: OutputFormat;
     }>("/structure/approve", {
       method: "POST",
-      body: JSON.stringify({ session_id: sessionId }),
+      body: JSON.stringify({ session_id: sessionId, output_format: outputFormat }),
     }),
 
   // Markdown Parser endpoints - /api/generate/markdown/*
@@ -282,17 +292,17 @@ export const api = {
   deleteSlide: (slideId: string | number) =>
     request<{ message: string }>(`/slides/${slideId}`, { method: "DELETE" }),
 
-  // Conversion endpoints - /api/convert/*
-  convertSlides: (projectName: string) =>
-    request<{ success: boolean; conversion_result: any; message: string }>("/convert/", {
+  exportXmlToPptx: (xmlContent: string, fileName: string = "presentation") =>
+    request<{
+      success: boolean;
+      download_url?: string;
+      filename?: string;
+      message: string;
+      error?: string;
+    }>("/export/xml-pptx", {
       method: "POST",
-      body: JSON.stringify({ project_name: projectName }),
+      body: JSON.stringify({ xml_content: xmlContent, file_name: fileName }),
     }),
-
-  getConversionStatus: (projectName: string) =>
-    request<{ project_name: string; status: any; has_converted: boolean }>(
-      `/convert/status/${encodeURIComponent(projectName)}`
-    ),
 
   // Capture/Export endpoints - /api/capture/* and /api/export/*
   captureSlidesBatch: (slides: Array<{ html_content: string; slide_name?: string }>) =>
@@ -319,8 +329,6 @@ export const api = {
 
   // Health check endpoints
   health: () => request<{ status: string; services: any }>("/health"),
-
-  converterHealth: () => request<{ healthy: boolean; message: string; details?: any }>("/convert/health"),
 
   // Temp file serving - /api/temp/*
   getTempFileUrl: (path: string) =>
@@ -356,12 +364,14 @@ export const api = {
     title?: string;
     prompt: string;
     content_length?: string;
+    output_format?: OutputFormat;
   }) =>
     request<{
       session_id: string;
       filename: string;
       slide_count: number;
       is_from_idea: boolean;
+      output_format?: OutputFormat;
     }>("/generate/idea/structure", {
       method: "POST",
       body: JSON.stringify(data),
@@ -373,6 +383,7 @@ export const api = {
         success: boolean;
         session_id: string;
         document_title: string;
+        output_format?: OutputFormat;
       }>(`/generate/idea/structure/${encodeURIComponent(sessionId)}/manual-session`, {
         method: "POST",
       }),

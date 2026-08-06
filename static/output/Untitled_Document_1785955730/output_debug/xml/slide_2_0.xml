@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#102A43">
+    <image src="https://img.freepik.com/premium-photo/vintage-style-world-map-parchment-paper_36682-386115.jpg?w=2000" x="0" y="0" width="1600" height="900"/>
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#102A43" line_color="none"/>
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#D4AF37" line_color="none"/>
+    <textbox x="70.0" y="186.2" width="399.8266666666666" height="315.6" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" size="38.0" min_font_size="38.0" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="5" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2. Thời niên thiếu và Hành trình tìm đường cứu nước</textbox>
+    <textbox x="70.0" y="513.8" width="300.8933333333333" height="200.0" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="19.0" min_font_size="19.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="6" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">• Khát vọng cứu nước mãnh liệt
+• Hành trình bôn ba khắp năm châu
+• Tìm ra con đường giải phóng dân tộc</textbox>
+  </slide>
+</presentation>

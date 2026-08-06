@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#001F3F">
+    <image src="https://wallpapers.com/images/hd/fc-barcelona-desktop-3x80lpne7co7olnn.jpg" x="0" y="0" width="1600" height="900"/>
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#002B5B" line_color="none"/>
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#A50044" line_color="none"/>
+    <textbox x="70.0" y="213.04" width="440.352" height="201.92000000000002" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" size="40.0" min_font_size="40.0" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Chương 1: Kỷ Nguyên Vàng Son</textbox>
+    <textbox x="70.0" y="446.96000000000004" width="313.41866666666664" height="240.0" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="20.0" min_font_size="20.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="7" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">• Sự khởi đầu và vươn lên tại La Masia
+• Biểu tượng và đội trưởng của Barca
+• Phong cách chơi bóng và tầm ảnh hưởng</textbox>
+  </slide>
+</presentation>

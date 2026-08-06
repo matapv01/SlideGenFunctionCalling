@@ -21,9 +21,6 @@ CAPTURES_DIR = STATIC_DIR / "captures"
 for directory in [UPLOAD_DIR, OUTPUT_DIR, TEMP_DIR, CAPTURES_DIR]:
     directory.mkdir(parents=True, exist_ok=True)
 
-# Feature flags
-DISABLE_CONVERTER = os.getenv('DISABLE_CONVERTER', '0').lower() in ('1', 'true', 'yes')
-
 # CORS settings
 CORS_ORIGINS = [
     "http://localhost",            # nginx port 80 (production)

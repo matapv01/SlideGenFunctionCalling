@@ -22,11 +22,13 @@ class ManualWorkflowService(BaseWorkflowService):
         session_id: str,
         document_structure: List[Dict[str, Any]],
         intro_slide: Optional[Dict[str, Any]] = None,
+        slide_options: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         workflow_state = await run_manual_update_workflow(
             session_id=session_id,
             document_structure=document_structure,
             intro_slide=intro_slide,
+            slide_options=slide_options or {},
             graph_config={},
         )
 
@@ -40,12 +42,13 @@ class ManualWorkflowService(BaseWorkflowService):
         session_id: str,
         document_title: str,
         document_structure: List[Dict[str, Any]],
+        slide_options: Optional[Dict[str, Any]] = None,
     ) -> Dict[str, Any]:
         workflow_state = await run_manual_approve_workflow(
             session_id=session_id,
             document_title=document_title,
             document_structure=document_structure,
-            slide_options={},
+            slide_options=slide_options or {},
             graph_config={},
         )
 
@@ -61,9 +64,11 @@ class ManualWorkflowService(BaseWorkflowService):
 
         document_title = persisted.get("document_title", "Untitled")
         document_structure = persisted.get("document_structure", [])
+        slide_options = {"output_format": persisted.get("output_format", "xml")}
 
         return await self.approve_structure(
             session_id=session_id,
             document_title=document_title,
             document_structure=document_structure,
+            slide_options=slide_options,
         )

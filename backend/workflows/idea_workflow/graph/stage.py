@@ -1,6 +1,7 @@
 # File: backend/workflows/idea_workflow/graph/stage.py
 
-from typing import TypedDict, List, Dict, Any
+from typing import List, Dict, Any
+from typing_extensions import TypedDict
 
 class State(TypedDict):
     """

@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import { useParams, useNavigate, useLocation } from "react-router-dom";
 import { CheckCircle2, Loader2, AlertCircle, RefreshCw, Home, Eye, FileText, Sparkles, PenTool, ExternalLink, Presentation, X, ChevronLeft, ChevronRight } from "lucide-react";
@@ -10,17 +10,82 @@ import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { cn } from "@/lib/utils";
-import { ReadOnlySlide } from "@/components/ReadOnlySlide";
-import { resolveSlideBackground } from "@/lib/slideBackground";
+import { XmlSlideCanvas } from "@/components/XmlSlideCanvas";
+import { parseXmlSlide } from "@/lib/xmlSlide";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 interface SlideThumb {
   index: number;
-  html: string;
+  xml: string;
   title?: string;
-  backgroundColor?: string;
-  backgroundImage?: string;
 }
+
+const escapeXmlText = (value: string) =>
+  value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+
+const XmlSlidePreview = ({
+  xmlContent,
+  className,
+}: {
+  xmlContent: string;
+  className?: string;
+}) => {
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  const document = useMemo(() => {
+    try {
+      return parseXmlSlide(xmlContent);
+    } catch {
+      return null;
+    }
+  }, [xmlContent]);
+
+  useEffect(() => {
+    const container = containerRef.current;
+    if (!container || !document) return;
+
+    const updateScale = () => {
+      const rect = container.getBoundingClientRect();
+      const nextScale = Math.min(rect.width / document.width, rect.height / document.height);
+      setScale(Number.isFinite(nextScale) && nextScale > 0 ? nextScale : 1);
+    };
+
+    updateScale();
+    const observer = new ResizeObserver(updateScale);
+    observer.observe(container);
+    return () => observer.disconnect();
+  }, [document]);
+
+  if (!document) {
+    return (
+      <div className={cn("flex items-center justify-center bg-white p-4 text-xs text-muted-foreground", className)}>
+        Preview unavailable
+      </div>
+    );
+  }
+
+  return (
+    <div ref={containerRef} className={cn("flex items-center justify-center overflow-hidden bg-white", className)}>
+      <div style={{ width: document.width * scale, height: document.height * scale }}>
+        <div style={{ width: document.width, height: document.height, transform: `scale(${scale})`, transformOrigin: "top left" }}>
+          <XmlSlideCanvas
+            slide={document.slides[0]}
+            canvasWidth={document.width}
+            canvasHeight={document.height}
+            selectedId={null}
+            readOnly
+            viewport="bare"
+            onSelect={() => {}}
+            onChange={() => {}}
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const Streaming = () => {
   const { projectId } = useParams();
@@ -174,37 +239,29 @@ const Streaming = () => {
       const data = JSON.parse(e.data);
       const slideIndex = data.slide_index ?? data.index ?? slides.length;
       const slideTitle = data.title || `Slide ${slideIndex + 1}`;
+      let slideContent = data.xml || data.content;
+      const contentPath = data.xml_path || data.content_path;
       
-      let htmlContent = data.html;
-      
-      // If html_path is provided, fetch the actual HTML content from the temp file
-      if (!htmlContent && data.html_path) {
+      if (!slideContent && contentPath) {
         try {
-          const response = await fetch(api.getTempFileUrl(data.html_path));
+          const response = await fetch(api.getTempFileUrl(contentPath));
           if (response.ok) {
-            htmlContent = await response.text();
+            slideContent = await response.text();
           }
         } catch (err) {
-          console.error("Failed to fetch slide HTML:", err);
+          console.error("Failed to fetch slide data:", err);
         }
       }
       
       // Fallback placeholder if fetch fails
-      if (!htmlContent) {
-        htmlContent = `<div class="p-4 text-center">
-          <p class="text-lg font-semibold">${slideTitle}</p>
-          <p class="text-sm text-muted-foreground">Slide ${slideIndex + 1} completed</p>
-        </div>`;
+      if (!slideContent) {
+        slideContent = `<?xml version="1.0" encoding="UTF-8"?><presentation schemaVersion="1.0" width="1600" height="900"><slide background="#ffffff"><textbox x="520" y="390" width="560" height="90" size="30" align="center">${escapeXmlText(slideTitle)}</textbox></slide></presentation>`;
       }
-      
-      const { backgroundColor, backgroundImage } = resolveSlideBackground(data.design_settings, htmlContent);
       
       setSlides((prev) => [...prev, { 
         index: slideIndex, 
-        html: htmlContent, 
-        title: slideTitle,
-        backgroundColor,
-        backgroundImage
+        xml: slideContent,
+        title: slideTitle
       }]);
     });
 
@@ -588,11 +645,8 @@ const Streaming = () => {
                     
                     {/* Thumbnail */}
                     <div className="aspect-video overflow-hidden rounded-lg bg-gradient-to-br from-muted/50 to-muted border relative">
-                      <ReadOnlySlide
-                        slideId={`streaming-thumb-${slide.index}`}
-                        htmlContent={slide.html}
-                        backgroundColor={slide.backgroundColor}
-                        backgroundImage={slide.backgroundImage}
+                      <XmlSlidePreview
+                        xmlContent={slide.xml}
                         className="absolute inset-0"
                       />
                       
@@ -619,7 +673,7 @@ const Streaming = () => {
           <div className="mt-10 flex flex-col sm:flex-row justify-center gap-4 animate-fade-in">
             <Button 
               size="lg"
-              onClick={() => navigate(`/editor/${finalProjectId}`)}
+              onClick={() => navigate(`/editor?project=${finalProjectId}`)}
               className="bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700 text-white shadow-lg hover:shadow-xl transition-all hover:scale-105"
             >
               <ExternalLink className="mr-2 h-4 w-4" /> {t.streaming_go_editor}
@@ -656,11 +710,8 @@ const Streaming = () => {
           </DialogHeader>
           <div className="aspect-video overflow-hidden rounded-xl bg-gradient-to-br from-muted/50 to-muted border-2 shadow-inner relative">
             {previewSlide && (
-              <ReadOnlySlide
-                slideId={`streaming-preview-${previewSlide.index}`}
-                htmlContent={previewSlide.html}
-                backgroundColor={previewSlide.backgroundColor}
-                backgroundImage={previewSlide.backgroundImage}
+              <XmlSlidePreview
+                xmlContent={previewSlide.xml}
                 className="absolute inset-0"
               />
             )}
@@ -734,13 +785,10 @@ const Streaming = () => {
           {/* Slide content - Full screen with maintained aspect ratio */}
           <div className="flex-1 flex items-center justify-center bg-black">
             <div className="w-full h-full relative flex items-center justify-center p-4 md:p-8 overflow-hidden">
-              {slides[currentSlideIndex]?.html ? (
-                <ReadOnlySlide
-                  slideId={`streaming-present-${currentSlideIndex}`}
-                  htmlContent={slides[currentSlideIndex].html}
-                  backgroundColor={slides[currentSlideIndex].backgroundColor}
-                  backgroundImage={slides[currentSlideIndex].backgroundImage}
-                  className="w-full h-full flex items-center justify-center"
+              {slides[currentSlideIndex]?.xml ? (
+                <XmlSlidePreview
+                  xmlContent={slides[currentSlideIndex].xml}
+                  className="absolute inset-0"
                 />
               ) : (
                 <div className="flex h-full items-center justify-center text-gray-400">

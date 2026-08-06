@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#102A43">
+    <image src="https://c8.alamy.com/comp/KH8XBC/ho-chi-minh-1890-1969-vietnamese-nationalist-leader-portrait-KH8XBC.jpg" x="860" y="30" width="700" height="820"/>
+    <textbox x="120" y="76.0" width="690" height="339.2" font="Arial" size="54.0" min_font_size="54.0" bold="true" color="#D4AF37" align="left" vertical_align="top" single_line="false" max_lines="4" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">TƯ TƯỞNG HỒ
+CHÍ MINH VÀ
+ẢNH HƯỞNG
+SÂU RỘNG</textbox>
+    <textbox x="120" y="429.2" width="690" height="100.5" font="Arial" size="18.0" min_font_size="18.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Tư tưởng của Chủ tịch Hồ Chí Minh không chỉ là tài
+sản tinh thần vô giá của dân tộc mà còn có sức lan
+tỏa quốc tế mạnh mẽ:</textbox>
+    <textbox x="120" y="543.7" width="690" height="200.40000000000003" font="Arial" size="18.0" min_font_size="18.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="6" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">• Kim chỉ nam cho mọi hành động cách mạng của
+Đảng và nhân dân Việt Nam.
+• Đề cao các giá trị cốt lõi về tinh thần đoàn kết dân
+tộc, độc lập và tự do.
+• Đóng góp quan trọng vào phong trào giải phóng dân
+tộc và hòa bình thế giới.</textbox>
+    <textbox x="120" y="758.1000000000001" width="690" height="69.0" font="Arial" size="18.0" min_font_size="18.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Di sản tư tưởng của Người tiếp tục soi sáng con
+đường phát triển của đất nước.</textbox>
+  </slide>
+</presentation>

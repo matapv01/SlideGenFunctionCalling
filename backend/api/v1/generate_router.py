@@ -29,10 +29,8 @@ from backend.api.dependencies import (
     get_slidegen_workflow_service,
     get_idea_service,
     get_subscription_service,
-    get_conversion_service
 )
 from backend.application.services.subscription_service import SubscriptionService
-from backend.application.services.conversion_service import ConversionService
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
 from backend.api.rate_limiting import idea_structure_rate_limiter, idea_stream_rate_limiter
 from backend.api.constants import EventTypes, SourceTypes, FilePatterns
@@ -97,32 +95,17 @@ def sanitize_event_data(event_type: str, data: dict):
     """Helper to mark temp files for frontend viewer"""
     new_data = data.copy()
     if event_type == 'slide_completed':
-        if 'html_path' in new_data: new_data['is_temp'] = True
+        if 'xml_path' in new_data: new_data['is_temp'] = True
         if 'image_path' in new_data: new_data['is_temp'] = True
     return new_data
 
 
-def ensure_converted_slides(output_folder: Path, conversion_service: Optional[ConversionService]) -> None:
-    """Best-effort conversion pass to ensure converted HTML exists for import/view."""
-    if conversion_service is None:
-        return
-
+def count_workflow_slides(output_folder: Path, output_format: str = "xml") -> int:
+    """Count generated XML artifacts."""
+    folder_name = "xml"
     base_output = output_folder / "output"
-    html_folder = (base_output / "html") if (base_output / "html").exists() else (output_folder / "html")
-
-    if not html_folder.exists():
-        logger.warning(f"Conversion skipped: HTML folder not found at {html_folder}")
-        return
-
-    converted_folder = output_folder / "converted"
-    converted_folder.mkdir(parents=True, exist_ok=True)
-
-    result = conversion_service.convert_slides_batch(html_folder, converted_folder)
-    logger.info(
-        "Idea/manual conversion batch complete: %s success, %s failed",
-        len(result.get("success", [])),
-        len(result.get("failed", []))
-    )
+    slide_dir = (base_output / folder_name) if (base_output / folder_name).exists() else (output_folder / folder_name)
+    return len(list(slide_dir.glob("*.xml"))) if slide_dir.exists() else 0
 
 
 def _to_idea_text(value: Optional[str], fallback: str = "") -> str:
@@ -169,6 +152,7 @@ def _parse_intro_title_subtitle(raw_content: str, fallback_title: str) -> tuple[
 @router.post("/docx")
 async def generate_from_docx_normal(
     file: UploadFile = File(...),
+    output_format: str = Form("xml"),
     current_user: UserResponse = Depends(get_current_active_user),
     project_service: ProjectService = Depends(get_project_service),
     slide_service: SlideService = Depends(get_slide_service),
@@ -212,10 +196,16 @@ async def generate_from_docx_normal(
         if not slidegen_workflow_service.is_available():
             raise HTTPException(503, "Dịch vụ workflow không khả dụng")
 
+        normalized_output_format = output_format.strip().lower()
+        if normalized_output_format != "xml":
+            raise HTTPException(400, "This workflow is XML-only; output_format must be xml")
+
+        slide_options = {"output_format": normalized_output_format}
         output_folder_path = await slidegen_workflow_service.process_docx(
             docx_path=str(temp_path),
             output_folder=str(output_folder),
-            router_flags=False
+            router_flags=False,
+            slide_options=slide_options,
         )
 
         if not output_folder_path:
@@ -227,12 +217,12 @@ async def generate_from_docx_normal(
             project_name=project_name,
             source_type='docx',
             source_data={'filename': file.filename},
-            slide_options={},
+            slide_options=slide_options,
             output_folder=output_folder
         )
 
         # 4. Build Response
-        slides = slide_service.build_slides_from_output(str(output_folder))
+        slides = slide_service.build_slides_from_output(str(output_folder), normalized_output_format)
         return JSONResponse({"slides": slides, "project_name": project_name})
 
     except Exception as e:
@@ -248,6 +238,7 @@ async def prepare_docx_stream(
     workflow_mode: str = Form("auto_no_heading"),
     enable_transition_slides: str = Form("true"),
     enable_thank_you_slide: str = Form("true"),
+    output_format: str = Form("xml"),
     current_user: UserResponse = Depends(get_current_active_user),
     subscription_service: SubscriptionService = Depends(get_subscription_service)
 ):
@@ -277,10 +268,15 @@ async def prepare_docx_stream(
     # Estimate slide count and validate subscription limits
     _check_docx_slide_limit(temp_path, subscription_service, user)
 
+    normalized_output_format = output_format.strip().lower()
+    if normalized_output_format != "xml":
+        raise HTTPException(400, "This workflow is XML-only; output_format must be xml")
+
     options = {
         "workflow_mode": workflow_mode.strip() or "auto_no_heading",
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
-        "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on')
+        "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on'),
+        "output_format": normalized_output_format,
     }
     with open(TEMP_DIR / f"{file.filename}.options.json", "w") as f:
         json.dump(options, f)
@@ -394,12 +390,10 @@ async def stream_docx_generation(
             )
 
             # Lấy số lượng slide thực tế từ kết quả workflow thay vì slide_options
-            actual_slide_count = 0
-            _html_dir = output_folder / "output" / "html"
-            if not _html_dir.exists():
-                _html_dir = output_folder / "html"
-            if _html_dir.exists():
-                actual_slide_count = len(list(_html_dir.glob("*.html")))
+            actual_slide_count = count_workflow_slides(
+                output_folder,
+                slide_options.get("output_format", "xml"),
+            )
 
             workflow_temp_dir = str(output_folder)
 
@@ -430,6 +424,7 @@ async def stream_docx_generation(
 @router.post("/docx/manual-session", response_model=ManualSessionResponse)
 async def create_manual_session_from_docx(
     file: UploadFile = File(...),
+    output_format: str = Form("xml"),
     current_user: UserResponse = Depends(get_current_active_user),
     structure_service: StructureService = Depends(get_structure_service),
     subscription_service: SubscriptionService = Depends(get_subscription_service)
@@ -459,6 +454,10 @@ async def create_manual_session_from_docx(
     _check_docx_slide_limit(temp_path, subscription_service, user)
 
     try:
+        normalized_output_format = output_format.strip().lower()
+        if normalized_output_format != "xml":
+            raise HTTPException(400, "This workflow is XML-only; output_format must be xml")
+
         # Increment usage counter
         subscription_service.increment_usage(current_user.id, "docx_upload")
 
@@ -480,13 +479,15 @@ async def create_manual_session_from_docx(
             filename=file.filename,
             full_text=full_text,
             paragraphs=paragraphs_data,
-            docx_path=str(temp_path)
+            docx_path=str(temp_path),
+            output_format=normalized_output_format,
         )
 
         return {
         "success": True,
         "session_id": session_id,
         "document_title": file.filename.replace('.docx', ''),
+        "output_format": normalized_output_format,
         }
     except Exception as e:
         logger.error(f"Manual upload error: {e}")
@@ -530,7 +531,8 @@ async def generate_idea_structure(
             prompt=data.get('prompt', '').strip(),
             content_length=content_length,
             enable_transition=data.get('enable_transition_slides', True),
-            enable_thank_you=data.get('enable_thank_you_slide', True)
+            enable_thank_you=data.get('enable_thank_you_slide', True),
+            output_format=data.get('output_format', 'xml'),
         )
     except Exception as e:
         logger.error(f"Idea structure error: {e}")
@@ -557,6 +559,7 @@ async def convert_idea_to_manual_session(
 
     document_title = _to_idea_text(idea_data.get("title"), "Untitled")
     slide_chunks = idea_data.get("slide_chunks", [])
+    output_format = "xml"
 
     if not slide_chunks:
         raise HTTPException(status_code=400, detail="Idea session không có slide chunk để chuyển đổi")
@@ -600,7 +603,8 @@ async def convert_idea_to_manual_session(
         filename=f"{document_title}.docx",
         full_text=full_text,
         paragraphs=[],
-        docx_path=""
+        docx_path="",
+        output_format=output_format,
     )
 
     intro_node = {
@@ -618,13 +622,15 @@ async def convert_idea_to_manual_session(
     structure_service.update_session_structure(
         session_id=manual_session_id,
         structure=structure_with_intro,
-        intro_slide=None
+        intro_slide=None,
+        output_format=output_format,
     )
 
     return {
         "success": True,
         "session_id": manual_session_id,
         "document_title": document_title,
+        "output_format": output_format,
     }
 
 
@@ -634,7 +640,6 @@ async def stream_idea_generation(
     current_user: UserResponse = Depends(idea_stream_rate_limiter),
     project_service: ProjectService = Depends(get_project_service),
     slidegen_workflow_service: SlideGenWorkflowService = Depends(get_slidegen_workflow_service),
-    conversion_service: ConversionService = Depends(get_conversion_service)
 ):
     """Step 2 Idea: SSE Generation"""
     try:
@@ -654,30 +659,29 @@ async def stream_idea_generation(
             queue.put_nowait((event_type, safe_data))
 
         async def run_bg():
+            idea_slide_options = {
+                'enable_transition_slides': idea_data.get('enable_transition_slides'),
+                'enable_thank_you_slide': idea_data.get('enable_thank_you_slide'),
+                'output_format': 'xml',
+            }
             res = await slidegen_workflow_service.process_chunks(
                 slide_chunks=idea_data.get('slide_chunks', []),
                 title=title,
                 output_folder=str(output_folder),
                 callback=callback,
-                slide_options={
-                    'enable_transition_slides': idea_data.get('enable_transition_slides'),
-                    'enable_thank_you_slide': idea_data.get('enable_thank_you_slide')
-                }
+                slide_options=idea_slide_options
             )
             
             if not res:
                 await queue.put(('error_event', {'message': "Workflow failed"}))
                 return
 
-            # Ensure idea output has converted HTML (absolute positioning), matching full docx flow.
-            ensure_converted_slides(output_folder, conversion_service)
-
             pid = project_service.import_project_from_workflow(
                 user_id=current_user.id,
                 project_name=f"idea_{session_id}",
                 source_type='idea',
                 source_data=idea_data,
-                slide_options={},
+                slide_options=idea_slide_options,
                 output_folder=output_folder
             )
 
@@ -737,6 +741,7 @@ async def get_idea_structure(
             slide_chunks=sanitized_chunks,
             enable_transition_slides=data.get('enable_transition_slides', True),
             enable_thank_you_slide=data.get('enable_thank_you_slide', True),
+            output_format=data.get('output_format', 'xml'),
             metadata=data.get('metadata', {})
         )
     except HTTPException:
@@ -763,6 +768,7 @@ async def update_idea_structure(
             'slide_chunks': [chunk.dict() for chunk in request.slide_chunks],
             'enable_transition_slides': request.enable_transition_slides,
             'enable_thank_you_slide': request.enable_thank_you_slide,
+            'output_format': request.output_format,
             'prompt': existing_data.get('prompt', ''),  # Keep original prompt
             'is_from_idea': True,
             'metadata': existing_data.get('metadata', {})
@@ -777,6 +783,7 @@ async def update_idea_structure(
             slide_chunks=updated_data['slide_chunks'],
             enable_transition_slides=updated_data['enable_transition_slides'],
             enable_thank_you_slide=updated_data['enable_thank_you_slide'],
+            output_format=updated_data.get('output_format', 'xml'),
             metadata=updated_data.get('metadata', {})
         )
     except HTTPException:
@@ -818,6 +825,7 @@ async def stream_manual_generation(
             slide_options = {
                 'enable_transition_slides': data.get('enable_transition_slides', False),
                 'enable_thank_you_slide': data.get('enable_thank_you_slide', False),
+                'output_format': 'xml',
             }
             slide_chunks = data.get('slide_chunks', [])
             logger.info(f"[Manual Stream] Starting with {len(slide_chunks)} chunks, options={slide_options}")
@@ -838,19 +846,19 @@ async def stream_manual_generation(
                 project_name=title,
                 source_type='manual_structure',
                 source_data={'session_id': session_id, 'title': title},
-                slide_options={'manual_mode': True},
+                slide_options={**slide_options, 'manual_mode': True},
                 output_folder=output_folder
             )
 
             workflow_temp_dir = str(output_folder)
 
-            # Derive actual generated slide count from output HTML files to avoid 0-total regressions.
+            # Derive actual generated slide count from XML files to avoid 0-total regressions.
             actual_slide_count = 0
             try:
-                _out = Path(output_folder)
-                _html_dir = (_out / "output" / "html") if (_out / "output" / "html").exists() else (_out / "html")
-                if _html_dir.exists():
-                    actual_slide_count = len(list(_html_dir.glob("*.html")))
+                actual_slide_count = count_workflow_slides(
+                    output_folder,
+                    slide_options.get('output_format', 'xml'),
+                )
             except Exception as count_err:
                 logger.warning(f"[Manual Stream] Could not count generated slides: {count_err}")
 

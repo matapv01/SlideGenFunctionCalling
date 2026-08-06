@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#000000">
+    <image src="https://static.wixstatic.com/media/601bbb_721b5a6a28eb44bba7c5f0bfb4f6db1f~mv2.jpg/v1/fill/w_1778,h_2114,al_c,q_90,enc_avif,quality_auto/601bbb_721b5a6a28eb44bba7c5f0bfb4f6db1f~mv2.jpg" x="860" y="30" width="700" height="820"/>
+    <textbox x="120" y="76.0" width="690" height="103.68" font="Arial" size="62.0" min_font_size="62.0" bold="true" color="#D4AF37" align="left" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. GIỚI THIỆU</textbox>
+    <textbox x="120" y="193.68" width="690" height="148.8" font="Arial" size="20.0" min_font_size="20.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="4" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lionel Messi được mệnh danh là một trong
+những cầu thủ vĩ đại nhất lịch sử bóng đá thế
+giới với tài năng thiên bẩm và nghị lực phi
+thường.</textbox>
+    <textbox x="120" y="356.48" width="690" height="373.2" font="Arial" size="20.0" min_font_size="20.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="10" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">• **Lionel Andrés Messi Cuccittini**, sinh ngày
+24/06/1987 tại **Rosario, Argentina**.
+• Biệt danh **“El Pulga”** (Bọ chét) gắn liền với
+sự nhanh nhẹn và linh hoạt phi thường.
+• Từng đối mặt với căn bệnh **thiếu hụt
+hormone tăng trưởng** đe dọa sự nghiệp từ thuở
+nhỏ.
+• Nhờ sự hỗ trợ từ gia đình và **Barcelona**,
+anh đã vượt qua nghịch cảnh để trở thành huyền
+thoại.</textbox>
+    <textbox x="120" y="743.6800000000001" width="690" height="77.4" font="Arial" size="20.0" min_font_size="20.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Hành trình từ cậu bé nhỏ con đến vị vua của
+bóng đá thế giới.</textbox>
+  </slide>
+</presentation>

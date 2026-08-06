@@ -238,7 +238,7 @@ docker-compose.yml
     ├─ Environment: 
     │  ├─ .env file (API keys)
     │  ├─ EMBEDDING_DEVICE: cpu (FAISS)
-    │  └─ DISABLE_CONVERTER: 0/1
+    │  └─ EMBEDDING_DEVICE: cpu/cuda
     │
     ├─ Volumes:
     │  ├─ slidegen_db: SQLite database persistence

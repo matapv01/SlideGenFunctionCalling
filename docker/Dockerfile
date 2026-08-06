@@ -53,10 +53,8 @@ WORKDIR /app
 # ── System dependencies + Node.js 22 ────────────────────────────────────────
 RUN apt-get update && apt-get install -y --no-install-recommends \
         curl \
-        gnupg \
         ca-certificates \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
+        fonts-dejavu \
     && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
@@ -76,15 +74,6 @@ RUN playwright install chromium --with-deps \
 # ── Application source ────────────────────────────────────────────────────────
 COPY backend/ ./backend/
 COPY migrate_db.py .
-
-# ── Converter Node.js deps ────────────────────────────────────────────────────
-# PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true: reuse Playwright's Chromium at runtime
-# without downloading a second Chromium binary via Puppeteer
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/local/bin/chromium-playwright
-RUN cd backend/infrastructure/converter \
-    && npm install --legacy-peer-deps \
-    && npm install puppeteer --legacy-peer-deps
 
 # ── Frontend (pre-built static files) ────────────────────────────────────────
 COPY --from=frontend-builder /app/frontend/dist ./frontend/dist/

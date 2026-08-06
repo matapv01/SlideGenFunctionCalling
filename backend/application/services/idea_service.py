@@ -20,7 +20,8 @@ class IdeaService:
         prompt: str, 
         content_length: str, 
         enable_transition: bool, 
-        enable_thank_you: bool
+        enable_thank_you: bool,
+        output_format: str = "xml",
     ) -> dict:
         
         logger.info(f"💡 IdeaService: Requesting structure for '{title}'")
@@ -58,6 +59,7 @@ class IdeaService:
             'slide_chunks': slide_chunks,
             'enable_transition_slides': enable_transition,
             'enable_thank_you_slide': enable_thank_you,
+            'output_format': 'xml',
             'prompt': prompt,
             'is_from_idea': True, # Cờ đánh dấu nguồn gốc
             'metadata': {
@@ -76,7 +78,8 @@ class IdeaService:
                 'session_id': session_id,
                 'filename': temp_filename,
                 'slide_count': len(slide_chunks),
-                'is_from_idea': True
+                'is_from_idea': True,
+                'output_format': save_data['output_format'],
             }
         except Exception as e:
             logger.error(f"Failed to save temp file: {e}")

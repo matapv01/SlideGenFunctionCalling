@@ -1,100 +1,80 @@
-# File: src/nodes/finalize_slide.py
+"""Finalize XML slides and emit streaming progress."""
+
+import time
 
 from backend.workflows.slidegen_workflow.graph.stage import State
 from langchain_core.runnables import RunnableConfig
-import time
-import os
 
 
 def finalize_slide(state: State, config: RunnableConfig) -> State:
-    """
-    Lưu slide đã được chấp nhận và cập nhật context.
-    """
     start_time = time.time()
-    idx = state['current_slide_index']
-    print(f"\n---------------- Executing Node: finalize_slide (Slide {idx + 1}) ----------------")
-
-    # Ghi log thông tin slide
-    print(f"Finalizing slide {idx + 1}")
-    print(f"HTML path: {state.get('current_html_path', 'N/A')}")
-    print(f"Image path: {state.get('current_image_path', 'N/A')}")
-
-    # Thực hiện convert ngay tại đây nếu có conversion_service
-    html_path = state.get('current_html_path', '')
-    converted_html_path = html_path
-    conversion_service = config.get('configurable', {}).get('conversion_service')
-
-    if html_path and os.path.exists(html_path) and conversion_service:
-        output_folder = config.get('configurable', {}).get('output_folder')
-        if output_folder:
-            converted_folder = os.path.join(output_folder, "converted")
-            os.makedirs(converted_folder, exist_ok=True)
-            converted_path = os.path.join(converted_folder, f"converted_{os.path.basename(html_path)}")
-
-            success = conversion_service.convert_single_slide(html_path, converted_path)
-            if success and os.path.exists(converted_path):
-                converted_html_path = converted_path
-                print(f"✅ Slide {idx + 1} converted successfully on the fly!")
-            else:
-                print(f"⚠️ Slide {idx + 1} conversion failed or skipped.")
-
-    # Lưu thông tin slide cuối cùng (với đường dẫn HTML đã convert nếu thành công)
-    # Thu thập image_tool_call_1, _2, ... từ state (do slide_generator lưu riêng)
-    image_call_fields = {}
-    _i = 1
-    while f"current_image_tool_call_{_i}" in state:
-        image_call_fields[f"image_tool_call_{_i}"] = state[f"current_image_tool_call_{_i}"]
-        _i += 1
+    idx = state["current_slide_index"]
+    xml_path = state.get("current_xml_path", "")
+    configurable = config.get("configurable", {}) if config else {}
 
     final_slide_data = {
         "index": idx,
-        "tool_call": state['current_tool_call'],  # html_call gốc từ LLM (image_url = "") — LLM sinh TRƯỚC
-        **image_call_fields,                      # image_tool_call_1, _2, ... — LLM sinh SAU (dựa vào tool_call)
-        "html_path": converted_html_path,
-        "png_path": state.get('current_image_path', ''),
-        "original_text": state['current_slide_text']
+        "tool_call": state["current_tool_call"],
+        "xml_path": xml_path,
+        "content_path": xml_path,
+        "format": "xml",
+        "png_path": "",
+        "original_text": state.get("current_slide_text", ""),
     }
+    state.setdefault("final_slides", []).append(final_slide_data)
 
-    state['final_slides'].append(final_slide_data)
-
-    # NOTE: Chunk popping is now handled in next_slide_provider.py for proper sync
-    # No need to pop here anymore - it's already been popped when the chunk was selected
-
-    # Emit streaming event for slide completion
-    stream_callback = config.get('configurable', {}).get('stream_callback')
+    stream_callback = config.get("configurable", {}).get("stream_callback")
     if stream_callback:
-        # Extract slide title from text
-        slide_text = state.get('current_slide_text', {})
-        slide_title = slide_text.get('title', 'Untitled') if isinstance(slide_text, dict) else 'Untitled'
+        slide_text = state.get("current_slide_text", {})
+        slide_title = (
+            slide_text.get("title", "Untitled")
+            if isinstance(slide_text, dict)
+            else "Untitled"
+        )
+        total_slides = len(state["final_slides"]) + len(state.get("slide_chunks", []))
+        current = len(state["final_slides"])
+        percentage = current / total_slides * 100 if total_slides else 0
+        stream_callback(
+            "slide_completed",
+            {
+                "index": idx,
+                "title": slide_title,
+                "xml_path": xml_path,
+                "content_path": xml_path,
+                "format": "xml",
+                "png_path": "",
+                "current": current,
+                "total": total_slides,
+            },
+        )
+        stream_callback(
+            "progress",
+            {
+                "current": current,
+                "total": total_slides,
+                "percentage": percentage,
+                "title": "Creating slides",
+                "message": f"Completed {current}/{total_slides} slides",
+            },
+        )
 
-        # Total = slides đã tạo + slides còn lại trong queue
-        total_slides = len(state['final_slides']) + len(state.get('slide_chunks', []))
-        percentage = (len(state['final_slides']) / total_slides * 100) if total_slides > 0 else 0
+    state["retry_count"] = 0
+    state["previous_accepted_tool_call"] = state["current_tool_call"]
 
-        stream_callback('slide_completed', {
-            'index': idx,
-            'title': slide_title,
-            'html_path': converted_html_path,
-            'png_path': state.get('current_image_path', ''),
-            'current': len(state['final_slides']),
-            'total': total_slides
-        })
+    # Feed accepted XML tool usage back into the retriever. This enables the
+    # temporal-decay component on the next slides instead of keeping an empty
+    # usage history throughout the workflow.
+    tool_retriever = configurable.get("tool_retriever")
+    tool_call = state.get("current_tool_call") or {}
+    tool_name = tool_call.get("name")
+    tool_category = (state.get("current_slide_plan") or {}).get("action")
+    if tool_retriever and tool_name and tool_category and tool_name != "default_fallback":
+        try:
+            tool_retriever.record_tool_usage(tool_category, tool_name, idx)
+        except Exception as exc:
+            print(f"Warning: could not record FAISS tool usage for {tool_name}: {exc}")
 
-        stream_callback('progress', {
-            'current': len(state['final_slides']),
-            'total': total_slides,
-            'percentage': percentage,
-            'title': 'Creating slides',
-            'message': f'Completed {len(state["final_slides"])}/{total_slides} slides'
-        })
-    print(f"Đã thêm slide {idx + 1} vào danh sách final_slides (tổng: {len(state['final_slides'])})")
-
-    # Reset retry_count cho slide tiếp theo
-    state['retry_count'] = 0
-    print(f"Reset retry_count: {state['retry_count']}")
-
-    state['previous_accepted_tool_call'] = state['current_tool_call']
-    state['previous_image_path'] = state.get('current_image_path', '')
-    end_time = time.time()
-    print(f"Finalization of slide took {end_time - start_time:.2f} seconds.")
+    state["previous_image_path"] = ""
+    print(f"Added XML slide {idx + 1} to final_slides (total: {len(state['final_slides'])})")
+    print(f"Finalization of XML slide took {time.time() - start_time:.2f} seconds.")
     return state

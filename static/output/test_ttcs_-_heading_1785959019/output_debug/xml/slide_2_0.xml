@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://www.decorilla.com/online-decorating/wp-content/uploads/2022/03/Modern-Office-Interior-with-Open-Floor-Plan-scaled.jpeg" x="0" y="0" width="1600" height="900"/>
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#F8F9FA" line_color="none"/>
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#0056B3" line_color="none"/>
+    <textbox x="70.0" y="160.29999999999995" width="528.5333333333333" height="65.69999999999999" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" size="39.0" min_font_size="39.0" bold="true" color="#0056B3" align="left" vertical_align="top" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">MỤC LỤC</textbox>
+    <textbox x="70.0" y="237.99999999999994" width="291.0" height="497.0" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="19.5" min_font_size="19.5" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="15" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. Tóm tắt dự án
+2. Tổng quan về Innovatech Solutions
+3. Tầm nhìn và Sứ mệnh
+4. Phân tích Thị trường và Đối thủ cạnh tranh
+5. Mục tiêu Chiến lược
+6. Lộ trình Phát triển Sản phẩm/Dịch vụ
+7. Dự phóng Tài chính
+8. Lời cảm ơn</textbox>
+  </slide>
+</presentation>

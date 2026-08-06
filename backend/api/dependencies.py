@@ -8,16 +8,14 @@ from backend.config import (
 )
 from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
-from typing import Optional
 import os
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 
 # --- 1. Imports Interfaces (Ports) ---
 from backend.domain.ports.user_repository import UserRepository
 from backend.domain.ports.project_repository import ProjectRepository
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.domain.ports.capture_provider import CaptureProvider
-from backend.domain.ports.convert_provider import ConvertProvider
 from backend.domain.ports.parser_provider import ParserProvider
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 
@@ -26,7 +24,6 @@ from backend.infrastructure.llm.gemini_provider import GeminiLLMProvider
 from backend.infrastructure.database.repositories.sqlite_user_repo import SqliteUserRepository
 from backend.infrastructure.database.repositories.sqlite_project_repo import SqliteProjectRepository
 from backend.infrastructure.capture.playwright_provider import PlaywrightCaptureProvider
-from backend.infrastructure.converter.nodejs_provider import NodeJsConvertProvider
 from backend.infrastructure.parser.markitdown_parser import MarkItDownParser
 from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
 
@@ -36,7 +33,6 @@ from backend.application.services.user_service import UserService
 from backend.application.services.project_service import ProjectService
 from backend.application.services.idea_service import IdeaService
 from backend.application.services.capture_service import CaptureService
-from backend.application.services.conversion_service import ConversionService
 from backend.application.services.structure_service import StructureService
 from backend.application.services.slide_service import SlideService
 from backend.application.services.doc_workflow_service import DocWorkflowService
@@ -58,9 +54,7 @@ GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
 
 # 2. Infrastructure Global Instances
 _capture_infra = PlaywrightCaptureProvider()
-_converter_infra = NodeJsConvertProvider()
 _parser_infra = MarkItDownParser()
-_conversion_service = ConversionService(converter_infra=_converter_infra)
 
 _idea_llm = GeminiLLMProvider(
     api_keys=[GEMINI_API_KEY] if GEMINI_API_KEY else [],
@@ -90,8 +84,7 @@ _slide_service = SlideService(static_dir=STATIC_DIR)
 
 _idea_workflow_service = IdeaWorkflowService(
     project_dir=str(PROJECT_DIR),
-    llm_provider=_idea_llm,
-    conversion_service=_conversion_service
+    llm_provider=_idea_llm
 )
 
 _manual_workflow_service = ManualWorkflowService(
@@ -110,8 +103,7 @@ _slidegen_workflow_service = SlideGenWorkflowService(
     capture_provider=_capture_infra,
     parser_provider=_parser_infra,
     tool_retriever=_retriever_infra,
-    doc_workflow_service=_doc_workflow_service,
-    conversion_service=_conversion_service
+    doc_workflow_service=_doc_workflow_service
 )
 
 def get_user_repo() -> UserRepository:
@@ -128,10 +120,6 @@ def get_llm_provider() -> LLMProvider:
 
 def get_capture_infra() -> CaptureProvider:
     return _capture_infra
-
-
-def get_converter_infra() -> ConvertProvider:
-    return _converter_infra
 
 
 def get_auth_service(user_repo: UserRepository = Depends(get_user_repo)) -> AuthService:
@@ -166,15 +154,10 @@ def get_capture_service(
     return CaptureService(captures_dir=CAPTURES_DIR, slide_capture=infra)
 
 
-def get_conversion_service() -> ConversionService:
-    return _conversion_service
-
-
 def get_project_service(
-    project_repo: ProjectRepository = Depends(get_project_repo),
-    conversion_service: ConversionService = Depends(get_conversion_service)
+    project_repo: ProjectRepository = Depends(get_project_repo)
 ) -> ProjectService:
-    return ProjectService(project_repo, conversion_service)
+    return ProjectService(project_repo)
 
 
 def get_structure_service() -> StructureService:

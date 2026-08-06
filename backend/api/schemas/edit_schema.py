@@ -1,7 +1,7 @@
 # File: backend/schemas/edit_schema.py
 
 from pydantic import BaseModel
-from typing import List, Optional, Dict, Any
+from typing import List, Optional, Dict, Any, Literal
 
 class DocumentNode(BaseModel):
     """Schema chuẩn khớp với cả logic gộp node của Frontend"""
@@ -24,16 +24,19 @@ class StructureResponse(BaseModel):
     document_text: Optional[str] = ""
     document_structure: List[DocumentNode]
     can_edit: bool = True
+    output_format: Literal["xml"] = "xml"
 
 class StructureUpdateRequest(BaseModel):
     """Schema gửi lên khi người dùng nhấn Save hoặc thay đổi cấu trúc"""
     session_id: str
     document_structure: List[DocumentNode]
     intro_slide: Optional[DocumentNode] = None
+    output_format: Literal["xml"] = "xml"
 
 class StructureApproveRequest(BaseModel):
     """Schema gửi lên khi người dùng nhấn Approve để bắt đầu tạo slide"""
     session_id: str
+    output_format: Literal["xml"] = "xml"
 
 class ApprovedStructureResponse(BaseModel):
     """Schema trả về sau khi Approve (dạng phẳng để đưa vào Workflow)"""
@@ -45,3 +48,4 @@ class ApprovedStructureResponse(BaseModel):
     slide_positions: List[Any]
     slide_context_maps: List[str]
     slide_types: List[str]
+    output_format: Literal["xml"] = "xml"

@@ -3,7 +3,6 @@
 from fastapi import APIRouter
 from backend.api.v1.authentication_router import router as auth_router
 from backend.api.v1.capture_router import router as capture_router
-from backend.api.v1.converter_router import router as converter_router
 from backend.api.v1.edit_router import router as edit_router
 from backend.api.v1.export_router import router as export_router
 from backend.api.v1.image_router import router as image_router
@@ -26,7 +25,6 @@ def create_router():
 
     # Include router for infrastructure-related endpoints
     router.include_router(capture_router)
-    router.include_router(converter_router)
 
     # Include router for structure editing and slide management
     router.include_router(edit_router)

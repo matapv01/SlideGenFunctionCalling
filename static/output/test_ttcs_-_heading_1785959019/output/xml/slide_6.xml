@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#FFFFFF" line_color="none"/>
+    <line x1="800" y1="0" x2="800" y2="94" color="#0056B3" width="1.1"/>
+    <textbox x="100.0" y="165.0" width="1400.0" height="81.0" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="48.0" min_font_size="22.0" color="#0056B3" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">2.2. TẦM NHÌN VÀ SỨ MỆNH</textbox>
+    <shape type="rect" x="26.0" y="336.0" width="738.0" height="485.0" fill="#F4F7FA" line_color="none"/>
+    <shape type="rect" x="26.0" y="336.0" width="738.0" height="98.0" fill="#0056B3" line_color="none"/>
+    <svg name="card_star" x="367.0" y="357.0" width="56" height="56" pixel_width="216" pixel_height="216">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;72&quot; height=&quot;72&quot; viewBox=&quot;0 0 72 72&quot;&gt;
+  &lt;path d=&quot;M36 5 L44.3 26.2 L67 26.2 L48.8 40.1 L55.8 66 L36 50.3 L16.2 66 L23.2 40.1 L5 26.2 L27.7 26.2 Z&quot;
+        fill=&quot;#FFFFFF&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="61.0" y="494.0" width="668.0" height="35.7" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="20.0" min_font_size="18.0" color="#0056B3" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.05" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">TẦM NHÌN CỦA CHÚNG TÔI</textbox>
+    <textbox x="61.0" y="563.7" width="668.0" height="226.92000000000002" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="18" min_font_size="16.0" color="#333333" align="center" vertical_align="top" bold="false" italic="false" single_line="false" max_lines="6" overflow="shrink" reflow_on_resize="true" line_spacing="1.22" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">1. Trở thành đối tác công nghệ tin cậy hàng đầu cho SMEs tại Việt Nam, thúc đẩy thành công qua các giải pháp đổi mới.
+2. Xây dựng môi trường làm việc sáng tạo, giúp tài năng công nghệ phát triển và đóng góp cho xã hội.</textbox>
+    <shape type="rect" x="836.0" y="336.0" width="738.0" height="485.0" fill="#F4F7FA" line_color="none"/>
+    <shape type="rect" x="836.0" y="336.0" width="738.0" height="98.0" fill="#0056B3" line_color="none"/>
+    <svg name="card_star" x="1177.0" y="357.0" width="56" height="56" pixel_width="216" pixel_height="216">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;72&quot; height=&quot;72&quot; viewBox=&quot;0 0 72 72&quot;&gt;
+  &lt;path d=&quot;M36 5 L44.3 26.2 L67 26.2 L48.8 40.1 L55.8 66 L36 50.3 L16.2 66 L23.2 40.1 L5 26.2 L27.7 26.2 Z&quot;
+        fill=&quot;#FFFFFF&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="871.0" y="494.0" width="668.0" height="35.7" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="20.0" min_font_size="18.0" color="#0056B3" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.05" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">SỨ MỆNH CỦA CHÚNG TÔI</textbox>
+    <textbox x="871.0" y="563.7" width="668.0" height="226.92000000000002" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="18" min_font_size="16.0" color="#333333" align="center" vertical_align="top" bold="false" italic="false" single_line="false" max_lines="6" overflow="shrink" reflow_on_resize="true" line_spacing="1.22" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">1. Cung cấp giải pháp phần mềm chất lượng cao, tùy chỉnh theo nhu cầu đặc thù để tối ưu hóa hiệu quả kinh doanh.
+2. Đồng hành cùng khách hàng trong suốt quá trình chuyển đổi số, đảm bảo sự hài lòng và thành công bền vững.</textbox>
+  </slide>
+</presentation>

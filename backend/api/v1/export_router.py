@@ -6,13 +6,84 @@ from backend.api.schemas.capture_schema import (
     CaptureSlideItem, 
     CaptureMultipleSlidesRequest, 
 )
-from backend.api.schemas.export_schema import PDFExportResponse
+from backend.api.schemas.export_schema import (
+    PDFExportResponse,
+    PowerPointExportRequest,
+    PowerPointExportResponse,
+)
 from backend.api.dependencies import get_capture_service
 from backend.application.services.capture_service import CaptureService
+from backend.config import CAPTURES_DIR, TEMP_DIR
+from pathlib import Path
+import re
+import tempfile
+import uuid
 import logging
 
 router = APIRouter(prefix="/export", tags=["EXPORT"])
 logger = logging.getLogger("SlideGen-export")
+
+
+def _safe_export_stem(value: str) -> str:
+    stem = Path(value or "presentation").stem
+    stem = re.sub(r"[^A-Za-z0-9._-]+", "_", stem).strip("._")
+    return stem[:80] or "presentation"
+
+
+@router.post("/xml-pptx", response_model=PowerPointExportResponse)
+async def export_xml_to_powerpoint(request: PowerPointExportRequest):
+    """Convert the current XML document to an editable .pptx file."""
+    if not request.xml_content.strip():
+        raise HTTPException(status_code=400, detail="XML content is empty")
+
+    try:
+        # Import lazily so the rest of the API can still boot when the optional
+        # PowerPoint dependency is unavailable.
+        from backend.infrastructure.converter.convert_universal import XMLSlideConverter
+    except Exception as exc:
+        logger.exception("PowerPoint converter is unavailable")
+        raise HTTPException(
+            status_code=503,
+            detail=f"PowerPoint converter is unavailable: {exc}",
+        ) from exc
+
+    stem = _safe_export_stem(request.file_name)
+    filename = f"{stem}_{uuid.uuid4().hex[:8]}.pptx"
+    output_path = Path(CAPTURES_DIR) / filename
+    Path(CAPTURES_DIR).mkdir(parents=True, exist_ok=True)
+    Path(TEMP_DIR).mkdir(parents=True, exist_ok=True)
+
+    try:
+        with tempfile.TemporaryDirectory(
+            dir=str(TEMP_DIR),
+            prefix="slidegen_pptx_",
+        ) as work_dir:
+            xml_path = Path(work_dir) / "presentation.xml"
+            xml_path.write_text(request.xml_content, encoding="utf-8")
+            XMLSlideConverter(
+                xml_path=xml_path,
+                output_path=output_path,
+                open_after_convert=False,
+            ).convert()
+
+        if not output_path.exists() or output_path.stat().st_size == 0:
+            raise RuntimeError("Converter did not create a valid PPTX file")
+
+        logger.info("Created PowerPoint export: %s", output_path)
+        return {
+            "success": True,
+            "download_url": f"/capture/download-capture/{filename}",
+            "filename": filename,
+            "message": "PowerPoint exported successfully",
+        }
+    except Exception as exc:
+        output_path.unlink(missing_ok=True)
+        logger.exception("XML to PowerPoint export failed")
+        return {
+            "success": False,
+            "message": "Could not export PowerPoint",
+            "error": str(exc),
+        }
 
 
 @router.post("/slide-pdf", response_model=PDFExportResponse)

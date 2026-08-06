@@ -10,6 +10,7 @@ import { api } from "@/lib/api";
 import { resolveSlideBackground } from "@/lib/slideBackground";
 import { AppLayout } from "@/components/AppLayout";
 import { ReadOnlySlide } from "@/components/ReadOnlySlide";
+import { ProjectSlidePreview } from "@/components/ProjectSlidePreview";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const ViewProject = () => {
@@ -176,9 +177,9 @@ const ViewProject = () => {
                 <CardContent className="p-4">
                   <div className="aspect-video overflow-hidden rounded-lg bg-muted mb-3 relative">
                     {slide.html ? (
-                      <ReadOnlySlide
+                      <ProjectSlidePreview
                         slideId={`thumb-${slide.id || i}`}
-                        htmlContent={slide.html}
+                        content={slide.html_content || slide.html || slide.content || ""}
                         backgroundColor={slide.backgroundColor}
                         backgroundImage={slide.backgroundImage}
                         className="absolute inset-0"
@@ -190,7 +191,7 @@ const ViewProject = () => {
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium">{t.view_slide_n} {i + 1}</span>
                     <div className="flex items-center gap-1">
-                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor/${projectId}?slide=${i}`); }}>
+                      <Button variant="ghost" size="sm" onClick={(e) => { e.stopPropagation(); navigate(`/editor?project=${projectId}&slide=${i}`); }}>
                         <Edit className="mr-1 h-3 w-3" /> {t.view_edit}
                       </Button>
                       <Button variant="ghost" size="sm" className="text-destructive hover:text-destructive" onClick={(e) => { e.stopPropagation(); setDeleteSlideId(slide.id); }}>
@@ -267,9 +268,9 @@ const ViewProject = () => {
           <div className="flex-1 flex items-center justify-center">
             <div className="w-full h-full bg-white overflow-hidden relative">
               {slides[currentSlideIndex]?.html ? (
-                <ReadOnlySlide
+                <ProjectSlidePreview
                   slideId={`present-view-${currentSlideIndex}`}
-                  htmlContent={slides[currentSlideIndex].html}
+                  content={slides[currentSlideIndex].html_content || slides[currentSlideIndex].html || slides[currentSlideIndex].content || ""}
                   backgroundColor={slides[currentSlideIndex].backgroundColor}
                   backgroundImage={slides[currentSlideIndex].backgroundImage}
                   className="absolute inset-0"

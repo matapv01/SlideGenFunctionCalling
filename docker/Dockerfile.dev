@@ -1,5 +1,5 @@
 # ── Dev image: tất cả tools đủ để develop trong Docker ──────────────────────
-# Includes: Python 3.11, uv, Node.js 22, npm, Playwright Chromium, Puppeteer
+# Includes: Python 3.11, uv, Node.js 22, npm, and Playwright Chromium
 #
 # Usage:
 #   docker compose -f docker-compose.dev.yml up --build
@@ -14,6 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
         gnupg \
         ca-certificates \
         git \
+        fonts-dejavu \
     && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
     && apt-get install -y --no-install-recommends nodejs \
     && apt-get clean \
@@ -56,24 +57,13 @@ RUN playwright install chromium --with-deps \
     && echo "[DEV] Playwright Chromium → $CHROMIUM_PATH"
 
 # ── Puppeteer: dùng lại Chromium của Playwright, không download riêng ────────
-ENV PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=true \
-    PUPPETEER_EXECUTABLE_PATH=/usr/local/bin/chromium-playwright
-
 # ── Python env ───────────────────────────────────────────────────────────────
 ENV PYTHONPATH=/app \
     PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1
 
-# ── Converter Node.js deps (cached) ──────────────────────────────────────────
 # Copy chỉ package.json để cache layer; node_modules sẽ được preserve bởi
 # named volume trong docker-compose.dev.yml
-COPY backend/infrastructure/converter/package.json /tmp/converter-pkg/package.json
-RUN mkdir -p /app/backend/infrastructure/converter \
-    && cp /tmp/converter-pkg/package.json /app/backend/infrastructure/converter/ \
-    && cd /app/backend/infrastructure/converter \
-    && npm install --legacy-peer-deps \
-    && npm install puppeteer --legacy-peer-deps
-
 # ── Frontend Node.js deps (cached) ───────────────────────────────────────────
 # Tương tự: chỉ copy lockfile để cache layer; node_modules preserve bởi volume
 COPY frontend/package.json frontend/package-lock.json /tmp/frontend-pkg/

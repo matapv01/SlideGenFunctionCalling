@@ -2,12 +2,11 @@
 
 import re
 import zipfile
-from typing import List, Dict, Optional, Union
+from typing import List, Union
 from pathlib import Path
 from fastapi import HTTPException
 from backend.domain.entities.project import Project, Slide
 from backend.domain.ports.project_repository import ProjectRepository
-from backend.application.services.conversion_service import ConversionService
 from backend.api.schemas.project_schema import ProjectCreate, ProjectUpdate, SlideCreate, SlideUpdate
 import logging
 
@@ -15,9 +14,8 @@ logger = logging.getLogger(__name__)
 
 
 class ProjectService:
-    def __init__(self, project_repo: ProjectRepository, conversion_service: Optional[ConversionService] = None):
+    def __init__(self, project_repo: ProjectRepository):
         self.repo = project_repo
-        self.conversion_service = conversion_service
 
 
     def create_project(self, user_id: int, data: Union[ProjectCreate, dict]) -> int:
@@ -174,7 +172,7 @@ class ProjectService:
     def extract_slide_index(self, path):
         """
         Extract slide index from filename like:
-        slide_10_0.html → 10
+        slide_10_0.xml → 10
         """
         match = re.search(r"slide_(\d+)", path.stem)
         return int(match.group(1)) if match else float("inf")
@@ -190,10 +188,13 @@ class ProjectService:
         output_folder: Path
     ) -> int:
         """
-        Import project từ kết quả workflow AI.
-        Xử lý giải nén, convert HTML, và lưu vào DB.
+        Import project từ kết quả XML workflow AI.
+        Lưu các XML slide vào DB.
         """
         try:
+            if str((slide_options or {}).get("output_format", "xml")).lower() != "xml":
+                raise ValueError("This workflow is XML-only; output_format must be 'xml'.")
+
             # 1. Create Project
             project_id = self.repo.create_project(
                 user_id=user_id,
@@ -211,62 +212,41 @@ class ProjectService:
                 generation_params={}
             )
 
-            # 3. Handle File Extraction & Conversion
-            # Workflow có thể tạo subfolder "output/" bên trong output_folder
-            sub_output = output_folder / "output"
-            base = sub_output if sub_output.exists() else output_folder
-            html_folder = base / "html"
-            # Converted folder can be at base/converted/ or output_folder/converted/
-            # (finalize_slide saves to output_folder/converted/, html goes to output_folder/output/html/)
-            converted_folder = base / "converted"
-            if not (converted_folder.exists() and any(converted_folder.iterdir())):
-                root_converted = output_folder / "converted"
-                if root_converted.exists() and any(root_converted.iterdir()):
-                    converted_folder = root_converted
+            if str((slide_options or {}).get("output_format", "xml")).lower() == "xml":
+                sub_output = output_folder / "output"
+                base = sub_output if sub_output.exists() else output_folder
+                xml_folder = base / "xml"
+                xml_files = sorted(xml_folder.glob("*.xml"), key=self.extract_slide_index)
+                logger.info(f"Found {len(xml_files)} XML files in {xml_folder}")
 
-            # 4. Insert Slides to DB
-            # Ưu tiên lấy file đã convert
-            use_converted = converted_folder.exists() and any(converted_folder.iterdir())
-            source_dir = converted_folder if use_converted else html_folder
-            
-            if not source_dir.exists():
-                logger.error(f"❌ No source_dir found: {source_dir}")
+                for idx, xml_file in enumerate(xml_files):
+                    with open(xml_file, "r", encoding="utf-8") as file:
+                        xml_content = file.read()
+
+                    slide = Slide(
+                        id=None,
+                        project_id=project_id,
+                        slide_index=idx,
+                        slide_type="intro" if idx == 0 else "content",
+                        title=f"Slide {idx + 1}",
+                        content_text="",
+                        # The current DB schema stores the editable payload in
+                        # html_content; design_settings carries its format.
+                        html_content=xml_content,
+                        design_settings={"format": "xml", "source_file": xml_file.name},
+                    )
+                    self.repo.create_slide(slide)
+
+                self.repo.update_project(
+                    project_id=project_id,
+                    slide_count=len(xml_files),
+                    status="completed",
+                )
+                logger.info(f"Imported XML project {project_id} successfully")
                 return project_id
 
-            html_files = sorted(source_dir.glob("*.html"), key=self.extract_slide_index)
-            logger.info(f"📄 Found {len(html_files)} HTML files in {source_dir}")
-
-            for idx, html_file in enumerate(html_files):
-                with open(html_file, 'r', encoding='utf-8') as f:
-                    html_content = f.read()
-
-                # Determine slide type logic
-                slide_type = 'content'
-                name_lower = html_file.stem.lower()
-                if 'intro' in name_lower or idx == 0: slide_type = 'intro'
-                elif 'transition' in name_lower: slide_type = 'transition'
-                elif 'thank' in name_lower: slide_type = 'thank_you'
-
-                slide = Slide(
-                    id=None,
-                    project_id=project_id,
-                    slide_index=idx,
-                    slide_type=slide_type,
-                    title=f"Slide {idx + 1}",
-                    content_text="", # Có thể để trống hoặc tách text từ HTML nếu cần
-                    html_content=html_content,
-                    design_settings={}
-                )
-                self.repo.create_slide(slide)
-
-            # 5. Finalize Project
-            self.repo.update_project(
-                project_id=project_id,
-                slide_count=len(html_files),
-                status='completed'
-            )
-            
-            logger.info(f"✅ Imported project {project_id} successfully")
+            logger.warning("XML output directory was not found; project imported without slides")
+            self.repo.update_project(project_id, slide_count=0, status="completed")
             return project_id
 
         except Exception as e:

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://wallpapers.com/images/hd/lionel-messi-celebrating-world-cup-victory-3ouh9zzaibaw83md.jpg" x="0" y="0" width="1600" height="900" fit="cover" crop_x="0.55" crop_y="0.5"/>
+    <svg name="orange_arrow_panel" x="0" y="0" width="1600" height="900" pixel_width="3200" pixel_height="1800">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;900&quot; viewBox=&quot;0 0 1600 900&quot;&gt;
+  &lt;defs&gt;
+    &lt;filter id=&quot;softWhite&quot; x=&quot;-5%&quot; y=&quot;-10%&quot; width=&quot;115%&quot; height=&quot;120%&quot;&gt;
+      &lt;feDropShadow dx=&quot;0&quot; dy=&quot;4&quot; stdDeviation=&quot;7&quot; flood-color=&quot;#ffffff&quot; flood-opacity=&quot;0.35&quot;/&gt;
+    &lt;/filter&gt;
+  &lt;/defs&gt;
+
+  &lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1600&quot; height=&quot;900&quot; fill=&quot;#000000&quot; opacity=&quot;0.2&quot;/&gt;
+
+  &lt;path
+    d=&quot;
+      M 0 220
+      L 1100 220
+      C 1180 220 1236 252 1288 326
+      L 1364 435
+      L 1288 544
+      C 1236 618 1180 650 1100 650
+      L 0 650
+      Z
+    &quot;
+    fill=&quot;#1A1A1A&quot;
+    opacity=&quot;0.7&quot;
+    filter=&quot;url(#softWhite)&quot;
+  /&gt;
+
+  &lt;path
+    d=&quot;
+      M -60 188
+      L 1112 188
+      C 1215 188 1276 232 1345 334
+      L 1420 444
+      L 1345 554
+      C 1276 656 1215 698 1112 698
+      L -60 698
+    &quot;
+    fill=&quot;none&quot;
+    stroke=&quot;#DAA520&quot;
+    stroke-width=&quot;70&quot;
+    stroke-linecap=&quot;square&quot;
+    stroke-linejoin=&quot;round&quot;
+    opacity=&quot;0.76&quot;
+  /&gt;
+
+  &lt;path
+    d=&quot;
+      M -60 188
+      L 1112 188
+      C 1215 188 1276 232 1345 334
+      L 1420 444
+      L 1345 554
+      C 1276 656 1215 698 1112 698
+      L -60 698
+    &quot;
+    fill=&quot;none&quot;
+    stroke=&quot;#DAA520&quot;
+    stroke-width=&quot;30&quot;
+    stroke-linecap=&quot;square&quot;
+    stroke-linejoin=&quot;round&quot;
+    opacity=&quot;0.32&quot;
+  /&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="78.0" y="364.505" width="1100.0" height="111.14999999999999" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="60.0" min_font_size="22.0" bold="true" color="#FFFFFF" align="left" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lionel Messi</textbox>
+    <textbox x="78.0" y="505.655" width="1180.0" height="51.84" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="24.0" min_font_size="10.0" bold="false" color="#DAA520" align="left" vertical_align="top" single_line="false" max_lines="5" overflow="shrink" reflow_on_resize="true" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Huyền thoại bóng đá sống mãi cùng thời gian</textbox>
+  </slide>
+</presentation>

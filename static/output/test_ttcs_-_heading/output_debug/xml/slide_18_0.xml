@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#1E1B4B">
+    <image src="https://thumbs.dreamstime.com/b/dark-themed-financial-dashboard-featuring-various-charts-graphs-includes-line-dark-themed-financial-dashboard-featuring-389634631.jpg" x="1065" y="0" width="535" height="900"/>
+    <textbox x="58" y="42.0" width="930" height="192.2" font="Arial" size="58.0" min_font_size="58.0" bold="true" color="#A678FF" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2.6. DỰ PHÓNG TÀI
+CHÍNH CHỦ YẾU</textbox>
+    <textbox x="58" y="266.2" width="930" height="65.72" font="Arial" size="38.0" min_font_size="38.0" bold="true" color="#FFFFFF" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">DOANH THU DỰ KIẾN</textbox>
+    <textbox x="58" y="341.91999999999996" width="930" height="109.92" font="Arial" size="19.5" min_font_size="19.5" color="#E0E7FF" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Năm 1: 10 tỷ; Năm 2: 25 tỷ; Năm 3: 50 tỷ VNĐ. Tăng trưởng ổn
+định 20-25%/năm từ năm thứ 4. Nguồn thu từ phát triển phần mềm
+và phí tư vấn.</textbox>
+    <textbox x="58" y="488.42" width="930" height="65.72" font="Arial" size="38.0" min_font_size="38.0" bold="true" color="#FFFFFF" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">CHI PHÍ VẬN HÀNH</textbox>
+    <textbox x="58" y="564.14" width="930" height="74.28" font="Arial" size="19.5" min_font_size="19.5" color="#E0E7FF" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Phân bổ ngân sách: Lương nhân sự (60%), Marketing &amp; Bán hàng
+(15%), R&amp;D (10%), và Chi phí vận hành văn phòng (10%).</textbox>
+    <textbox x="58" y="675.0" width="930" height="65.72" font="Arial" size="38.0" min_font_size="38.0" bold="true" color="#FFFFFF" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">KÊU GỌI ĐẦU TƯ (5 TỶ VNĐ)</textbox>
+    <textbox x="58" y="750.72" width="930" height="74.28" font="Arial" size="19.5" min_font_size="19.5" color="#E0E7FF" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Kêu gọi 5 TỶ VNĐ vốn hạt giống để hoàn thiện sản phẩm, mở rộng
+đội ngũ kinh doanh và đảm bảo vận hành trong 12 tháng đầu tiên.</textbox>
+  </slide>
+</presentation>

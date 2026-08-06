@@ -26,6 +26,8 @@ def approve_manual_structure(state: State) -> State:
 
     structure = state.get("document_structure", [])
     title = state.get("document_title", "Untitled")
+    slide_options = state.get("slide_options", {}) or {}
+    output_format = "xml"
 
     # 1) Extract special slides
     intro_slide, thank_you_slide, filtered_structure = _extract_special_slides(structure)
@@ -51,7 +53,13 @@ def approve_manual_structure(state: State) -> State:
         _add_slide(gen_context, thank_you_slide, ["999"], "THANK YOU SLIDE", "thank_you")
 
     # 4) Sort + format
-    final_result = _sort_and_format_results(gen_context, session_id, title, renumbered_structure)
+    final_result = _sort_and_format_results(
+        gen_context,
+        session_id,
+        title,
+        renumbered_structure,
+        output_format,
+    )
 
     # 5) Persist approved file for downstream stream endpoint
     TEMP_DIR.mkdir(parents=True, exist_ok=True)
@@ -64,6 +72,7 @@ def approve_manual_structure(state: State) -> State:
     state["slide_positions"] = final_result.get("slide_positions", [])
     state["slide_context_maps"] = final_result.get("slide_context_maps", [])
     state["slide_types"] = final_result.get("slide_types", [])
+    state["slide_options"] = {**slide_options, "output_format": output_format}
     state["approved_result"] = final_result
 
     context_maps = state["slide_context_maps"]
@@ -167,6 +176,7 @@ def _sort_and_format_results(
     session_id: str,
     title: str,
     outline: List[Dict[str, Any]],
+    output_format: str = "xml",
 ) -> Dict[str, Any]:
     combined = list(zip(ctx["content"], ctx["positions"], ctx["maps"], ctx["types"]))
 
@@ -224,4 +234,5 @@ def _sort_and_format_results(
         "slide_positions": list(s_pos),
         "slide_context_maps": list(s_maps),
         "slide_types": list(s_types),
+        "output_format": output_format,
     }

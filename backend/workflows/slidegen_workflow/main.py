@@ -7,7 +7,7 @@ import logging
 from typing import Optional, Callable, Dict, Any, Tuple
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
 from backend.workflows.manual_workflow.main import run_manual_workflow
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT as XML_TOOLS_DICT
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.domain.ports.capture_provider import CaptureProvider
 from backend.domain.ports.parser_provider import ParserProvider
@@ -26,8 +26,7 @@ def _setup_output_dirs(output_folder: str) -> Tuple[str, str]:
     output_debug_dir = os.path.join(output_folder, "output_debug")
     
     for base in [output_dir, output_debug_dir]:
-        os.makedirs(os.path.join(base, "html"), exist_ok=True)
-        os.makedirs(os.path.join(base, "png"), exist_ok=True)
+        os.makedirs(os.path.join(base, "xml"), exist_ok=True)
         
     return output_dir, output_debug_dir
 
@@ -63,14 +62,20 @@ async def main_workflow(
         capture_provider: CaptureProvider = infra_providers['capture_provider']
         parser_provider: ParserProvider = infra_providers['parser_provider']
         tool_retriever: ToolRetrieveProvider = infra_providers['tool_retriever']
-        conversion_service = infra_providers.get('conversion_service')
 
         # Vì các node cần LangChain Runnable, ta lấy từ client
         langchain_llm = llm_provider.llm_client 
         planner_llm = planner_llm_provider.llm_client
 
-        # 2. Setup Graph
-        workflow = build_workflow(router_flags)
+        _slide_options = dict(slide_options or {})
+        output_format = str(_slide_options.get("output_format", "xml")).lower()
+        if output_format != "xml":
+            raise ValueError("This workflow is XML-only; output_format must be 'xml'.")
+        _slide_options["output_format"] = "xml"
+        active_tools_dict = XML_TOOLS_DICT
+
+        # 2. XML is the only generation artifact, so no HTML/VLM path is built.
+        workflow = build_workflow(router_flags=False)
         app = workflow.compile()
 
         # 3. Graph Config (Inject công cụ vào các Node)
@@ -81,8 +86,8 @@ async def main_workflow(
                 "tool_retriever": tool_retriever,
                 "capture_provider": capture_provider,
                 "parser_provider": parser_provider,
-                "tools_dict": TOOLS_DICT,
-                "conversion_service": conversion_service,
+                "tools_dict": active_tools_dict,
+                "output_format": output_format,
                 "output_folder": output_folder,
                 "temp_dir": output_dir,
                 "temp_debug_dir": output_debug_dir,
@@ -91,8 +96,6 @@ async def main_workflow(
             "recursion_limit": 500
         }
 
-        _slide_options = slide_options or {}
-
         # 4. Feed preprocessed doc state into planning/generation workflow
         if not doc_state or not doc_state.get("slide_chunks"):
             raise ValueError("Preprocessed document state has no slide chunks")
@@ -100,6 +103,7 @@ async def main_workflow(
         initial_input = {
             "docx_file": docx_file,
             "workflow_mode": _slide_options.get("workflow_mode", "auto_no_heading"),
+            "output_format": output_format,
             "document_title": doc_state.get("document_title"),
             "document_structure": doc_state.get("document_structure", []),
             "document_outline": doc_state.get("document_outline", []),
@@ -151,16 +155,22 @@ async def main_workflow_from_chunks(
         capture_provider: CaptureProvider = infra_providers['capture_provider']
         parser_provider: ParserProvider = infra_providers['parser_provider']
         tool_retriever: ToolRetrieveProvider = infra_providers['tool_retriever']
-        conversion_service = infra_providers.get('conversion_service')
         langchain_llm = llm_provider.llm_client
         planner_llm = planner_llm_provider.llm_client
 
+        _slide_options = dict(slide_options or {})
+        output_format = str(_slide_options.get("output_format", "xml")).lower()
+        if output_format != "xml":
+            raise ValueError("This workflow is XML-only; output_format must be 'xml'.")
+        _slide_options["output_format"] = "xml"
+        active_tools_dict = XML_TOOLS_DICT
+
         # Router flag is False because we don't need to route document conversion
-        workflow = build_workflow(router_flags=False) 
+        workflow = build_workflow(router_flags=False)
         app = workflow.compile()
 
-        if slide_options is None:
-            slide_options = {"enable_transition_slides": True, "enable_thank_you_slide": True}
+        if not slide_options:
+            _slide_options.update({"enable_transition_slides": True, "enable_thank_you_slide": True})
 
         # --- CONFIG & INPUT ---
         graph_config = {
@@ -170,8 +180,8 @@ async def main_workflow_from_chunks(
                 "tool_retriever": tool_retriever,
                 "capture_provider": capture_provider,
                 "parser_provider": parser_provider,
-                "tools_dict": TOOLS_DICT,
-                "conversion_service": conversion_service,
+                "tools_dict": active_tools_dict,
+                "output_format": output_format,
                 "output_folder": output_folder,
                 "max_retries": 1,
                 "temp_dir": output_dir,
@@ -190,14 +200,15 @@ async def main_workflow_from_chunks(
             "final_slides": [],
             "all_debug_info": [],
             "vlm_decision": "accept",
-            "slide_options": slide_options
+            "slide_options": _slide_options,
+            "output_format": output_format,
         }
 
         # Run standalone manual workflow first to normalize chunks/context maps.
         manual_state = await run_manual_workflow(
             slide_chunks=slide_chunks,
             title=title,
-            slide_options=slide_options,
+            slide_options=_slide_options,
             graph_config=graph_config,
         )
 

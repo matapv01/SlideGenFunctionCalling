@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://images.alphacoders.com/139/1394824.png" x="0" y="0" width="1600" height="900"/>
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#1A1A1A" line_color="none"/>
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#FFD700" line_color="none"/>
+    <textbox x="70.0" y="347.68" width="439.7173333333333" height="68.64" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" size="40.0" min_font_size="40.0" bold="true" color="#FFD700" align="left" vertical_align="top" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">TRANSITION</textbox>
+    <textbox x="70.0" y="448.32" width="376.2506666666667" height="104.0" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="20.0" min_font_size="20.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Tiếp theo: Kỷ lục quốc tế và tầm ảnh hưởng toàn cầu</textbox>
+  </slide>
+</presentation>

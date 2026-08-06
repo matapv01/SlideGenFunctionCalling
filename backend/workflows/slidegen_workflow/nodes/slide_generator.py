@@ -8,7 +8,7 @@ from langchain_core.runnables import RunnableConfig
 from transformers import AutoTokenizer
 
 from backend.workflows.slidegen_workflow.graph.stage import State
-from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool, TOOLS_DICT, execute_tool_plan
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT as XML_TOOLS_DICT
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
 from backend.config import MAX_REMAKE, TOOL_RETRIEVER_TOP_K, COT_MAX_TOKENS
 from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
@@ -17,10 +17,7 @@ from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_COT_GENERATOR_SYSTEM_PROMPT,
     QWEN_GENERATOR_HUMAN_TEMPLATE,
     HUMAN_PROMPT_TEMPLATE,
-    CONTENT_PROMPT,
-    TRANSITION_PROMPT,
-    SLIDE_TYPE_PROMPTS,
-    INTRO_PROMPT,
+    XML_CONTENT_PROMPT,
     MATH_EQUATION_RULES,
     SLIDE_PREPARER_SYSTEM_PROMPT,
     SLIDE_PREPARER_HUMAN_TEMPLATE,
@@ -90,45 +87,6 @@ def _format_content_as_str(content) -> str:
     if isinstance(content, list):
         return "\n".join([_format_content_as_str(item) for item in content])
     return str(content) if content is not None else ""
-
-
-def create_default_html(content_data) -> str:
-    """Create default HTML when unable to get from LLM"""
-    # Handle both dict and string formats
-    if isinstance(content_data, dict):
-        title = content_data.get('heading', 'Slide')
-        content_text = content_data.get('text_content', 'Default slide content')
-    else:
-        content_text = content_data if content_data else "Default slide content"
-        title = "Slide"
-    
-    lines = content_text.split('\n')
-    if not title:
-        title = lines[0] if lines else "Slide"
-    content_html = '<br>'.join(lines[1:]) if len(lines) > 1 else content_text
-    
-    html = f"""<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>{title}</title>
-    <style>
-        body {{ font-family: Arial, sans-serif; margin: 0; padding: 20px; background-color: #f5f5f5; }}
-        .slide {{ width: 800px; height: 600px; margin: 0 auto; background-color: white; border-radius: 10px; box-shadow: 0 4px 8px rgba(0,0,0,0.1); padding: 40px; position: relative; }}
-        .title {{ font-size: 32px; color: #2c3e50; margin-bottom: 30px; text-align: center; }}
-        .content {{ font-size: 24px; line-height: 1.5; color: #34495e; }}
-    </style>
-</head>
-<body>
-    <div class="slide">
-        <div class="title">{title}</div>
-        <div class="content">{content_html}</div>
-    </div>
-</body>
-</html>"""
-    return html
-
-
 
 
 def _build_tool_description_text(tool_schemas: list) -> str:
@@ -229,7 +187,17 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         raise ValueError("LLM instance not found in config.")
         
     tool_retriever = configurable.get('tool_retriever')
-    all_tools_dict = configurable.get('tools_dict', TOOLS_DICT)
+    all_tools_dict = configurable.get('tools_dict', XML_TOOLS_DICT)
+    requested_output_format = str(
+        configurable.get('output_format')
+        or state.get('output_format')
+        or 'xml'
+    ).lower()
+    if requested_output_format != 'xml':
+        raise ValueError("This workflow is XML-only; output_format must be 'xml'.")
+    output_format = 'xml'
+    # The XML FAISS retriever is injected through the workflow config. Keep it
+    # enabled so the LLM receives only the most relevant tools for this slide.
     planner_llm = configurable.get('planner_llm') or llm
     
     # 2. Get dynamic data from state
@@ -281,6 +249,10 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                     current_slide_index=idx
                 )
                 my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
+                print(
+                    f"  -> FAISS selected {len(retrieved_tools)} tools for '{tool_category}': "
+                    f"{[tool.name for tool in retrieved_tools]}"
+                )
             except Exception as e:
                 print(f"⚠️ tool_retriever error ({e}), falling back to category tools for '{tool_category}'")
                 my_tools = all_tools_dict.get(tool_category, [])
@@ -292,16 +264,10 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         
     print(f"  -> Prepared {len(my_tools)} tools: {[t.name for t in my_tools]}")
     
-    # 4. Build per-slide-type system prompt for the API generator
+    # 4. XML is the only active generation prompt.
     slide_type = current_plan.get('action', 'CONTENT_TOOLS')
-    if slide_type == 'CONTENT_TOOLS':
-        if 'highlight_color' in state:
-            highlight_instruction = f"- MUST use this color: {state['highlight_color']} (maintain consistency!)"
-        else:
-            highlight_instruction = "- This is the FIRST content slide - choose ONE color from the list and use it consistently"
-        generator_system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
-        
-    elif slide_type == 'TRANSITION_TOOLS':
+    generator_system_prompt = XML_CONTENT_PROMPT
+    if slide_type == 'TRANSITION_TOOLS':
         previous_transition = state.get('previous_transition_tool_call', {})
         if previous_transition:
             prev_tool_name = previous_transition.get('name', 'unknown')
@@ -322,10 +288,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
 * ONLY change the text content to match the new section heading"""
         else:
             transition_context = "* This is the FIRST transition slide - establish a strong, consistent style that will be reused for ALL future transitions"
-        generator_system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
-        
-    else:
-        generator_system_prompt = SLIDE_TYPE_PROMPTS.get(slide_type, INTRO_PROMPT)
+        generator_system_prompt += f"\n\n{transition_context}"
         
     generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + generator_system_prompt
     
@@ -370,17 +333,29 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             
     # Assign prepared values. The image-search plan is produced by this same
     # generator invocation; no later LLM call is allowed to create search specs.
+    image_search_rules = IMAGE_SEARCH_EXECUTION_PLAN_RULES
+    output_format_rules = """
+
+OUTPUT FORMAT: XML
+- Use only the selected XML slide tool from the available list.
+- The tool must return the complete XML presentation/slide content.
+- Do not generate HTML, CSS, markdown, or a prose explanation.
+- Keep text values as plain editable text accepted by the XML tool schema.
+"""
+
     system_prompt = (
         generator_system_prompt
         + "\n\n"
-        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+        + image_search_rules
+        + output_format_rules
     )
     qwen_system_prompt = (
         QWEN_GENERATOR_SYSTEM_PROMPT
         + "\n\n"
         + generator_system_prompt
         + "\n\n"
-        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+        + image_search_rules
+        + output_format_rules
     )
     human_template = HUMAN_PROMPT_TEMPLATE
     generator_tools = [SEARCH_DDGS_TOOL, *my_tools]
@@ -431,11 +406,12 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         full_qwen_system_prompt = (
             generator_system_prompt
             + "\n\n"
-            + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+            + image_search_rules
             + "\n\n"
             + qwen_base_sys
             + "\n\n"
             + tool_desc_text
+            + output_format_rules
         )
         messages = [
             {"role": "system", "content": full_qwen_system_prompt},

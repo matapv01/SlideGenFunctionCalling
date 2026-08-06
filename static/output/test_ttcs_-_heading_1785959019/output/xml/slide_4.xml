@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://imgcdn.stablediffusionweb.com/2024/12/16/a9df3e1c-e0b8-4c4e-b52d-520675e0e9ef.jpg" x="1065" y="0" width="535" height="900"/>
+    <textbox x="58" y="42.0" width="930" height="163.7" font="Arial" size="49.5" min_font_size="49.5" bold="true" color="#0056B3" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2.1. TỔNG QUAN VỀ
+INNOTECH SOLUTIONS</textbox>
+    <textbox x="58" y="237.7" width="930" height="46.12" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#0056B3" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lĩnh vực hoạt động</textbox>
+    <textbox x="58" y="293.82" width="930" height="100.20000000000002" font="Arial" size="18.0" min_font_size="18.0" color="#333333" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Phát triển phần mềm theo yêu cầu, tư vấn giải pháp Cloud và triển khai
+hệ thống An ninh mạng. Chúng tôi tập trung tạo ra các sản phẩm đáp
+ứng chính xác nhu cầu của từng khách hàng.</textbox>
+    <textbox x="58" y="453.18999999999994" width="930" height="46.12" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#0056B3" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Đội ngũ cốt lõi</textbox>
+    <textbox x="58" y="509.30999999999995" width="930" height="100.20000000000002" font="Arial" size="18.0" min_font_size="18.0" color="#333333" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Đội ngũ bao gồm các kỹ sư phần mềm giàu kinh nghiệm, chuyên gia tư
+vấn giải pháp và các nhà quản lý dự án tận tâm với hơn 10 năm kinh
+nghiệm trong ngành.</textbox>
+    <textbox x="58" y="668.68" width="930" height="46.12" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#0056B3" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lợi thế cạnh tranh</textbox>
+    <textbox x="58" y="724.8" width="930" height="100.20000000000002" font="Arial" size="18.0" min_font_size="18.0" color="#333333" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Sự kết hợp giữa chuyên môn kỹ thuật sâu rộng, quy trình làm việc linh
+hoạt theo mô hình Agile và cam kết hỗ trợ khách hàng tận tình là yếu tố
+tạo nên sự khác biệt.</textbox>
+  </slide>
+</presentation>

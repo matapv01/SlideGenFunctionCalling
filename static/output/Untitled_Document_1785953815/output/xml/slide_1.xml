@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#001F3F">
+    <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;900&quot; viewBox=&quot;0 0 1600 900&quot;&gt;
+  &lt;defs&gt;
+    &lt;radialGradient id=&quot;topLeft&quot; cx=&quot;0%&quot; cy=&quot;0%&quot; r=&quot;72%&quot;&gt;
+      &lt;stop offset=&quot;0%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0.86&quot;/&gt;
+      &lt;stop offset=&quot;42%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0.46&quot;/&gt;
+      &lt;stop offset=&quot;68%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0.18&quot;/&gt;
+      &lt;stop offset=&quot;100%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0&quot;/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id=&quot;bottomRight&quot; cx=&quot;100%&quot; cy=&quot;100%&quot; r=&quot;72%&quot;&gt;
+      &lt;stop offset=&quot;0%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0.86&quot;/&gt;
+      &lt;stop offset=&quot;42%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0.46&quot;/&gt;
+      &lt;stop offset=&quot;68%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0.18&quot;/&gt;
+      &lt;stop offset=&quot;100%&quot; stop-color=&quot;#A50044&quot; stop-opacity=&quot;0&quot;/&gt;
+    &lt;/radialGradient&gt;
+  &lt;/defs&gt;
+  &lt;rect width=&quot;1600&quot; height=&quot;900&quot; fill=&quot;url(#topLeft)&quot;/&gt;
+  &lt;rect width=&quot;1600&quot; height=&quot;900&quot; fill=&quot;url(#bottomRight)&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <image src="https://wallpaperaccess.com/full/8645309.jpg" x="112.0" y="92.0" width="650.0" height="716.0"/>
+    <shape type="rectangle" x="838.0" y="92.0" width="650.0" height="716.0" fill="#002B5B" line_color="none"/>
+    <textbox x="900.0" y="236.0" width="526.0" height="187.12" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="53.0" min_font_size="51.0" color="#FFFFFF" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.04" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Messi và Barca</textbox>
+    <textbox x="948.0" y="453.12" width="430.0" height="35.0" font="Georgia" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="20.0" min_font_size="18.0" italic="true" color="#F0F0F0" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Một Huyền Thoại Vĩ Đại</textbox>
+    <textbox x="983.0" y="678.0" width="360.0" height="26.0" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="15.0" min_font_size="14.0" color="#A50044" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">HUYỀN THOẠI</textbox>
+    <textbox x="983.0" y="714.0" width="360.0" height="30.0" font="Arial" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="16.5" min_font_size="15.5" bold="true" color="#FFFFFF" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">LIONEL MESSI</textbox>
+  </slide>
+</presentation>

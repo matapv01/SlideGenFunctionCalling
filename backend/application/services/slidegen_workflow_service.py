@@ -25,8 +25,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
         capture_provider: CaptureProvider,
         parser_provider: ParserProvider,
         tool_retriever: ToolRetrieveProvider,
-        doc_workflow_service: DocWorkflowService,
-        conversion_service=None
+        doc_workflow_service: DocWorkflowService
     ):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
@@ -35,7 +34,6 @@ class SlideGenWorkflowService(BaseWorkflowService):
         self.parser_provider = parser_provider
         self.tool_retriever = tool_retriever
         self.doc_workflow_service = doc_workflow_service
-        self.conversion_service = conversion_service
 
     def _get_providers(self) -> Dict[str, Any]:
         """Gói các providers cần thiết để inject vào workflow"""
@@ -44,8 +42,7 @@ class SlideGenWorkflowService(BaseWorkflowService):
             "planner_llm_provider": self.planner_llm_provider,
             "capture_provider": self.capture_provider,
             "parser_provider": self.parser_provider,
-            "tool_retriever": self.tool_retriever,
-            "conversion_service": self.conversion_service
+            "tool_retriever": self.tool_retriever
         }
 
     async def process_docx(self, docx_path: str, output_folder: str = None, **kwargs) -> Optional[str]:

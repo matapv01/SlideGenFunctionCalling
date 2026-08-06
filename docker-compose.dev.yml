@@ -7,7 +7,7 @@
 #   12008 — FastAPI backend  (hot reload — tự reload khi sửa backend/)
 #   5173  — Vite dev server  (HMR — tự reload khi sửa frontend/src/)
 #
-# Node trick: named volumes (converter_node_modules, frontend_node_modules)
+# Node trick: keep frontend node_modules in a named volume
 # được khởi tạo từ image → không bị overwrite bởi bind mount host directory.
 
 services:
@@ -24,7 +24,6 @@ services:
     environment:
       LOG_LEVEL: DEBUG
       EMBEDDING_DEVICE: cpu
-      DISABLE_CONVERTER: "0"
     volumes:
       # ── Source code (live edits) ────────────────────────────────────────────
       - ./backend:/app/backend
@@ -35,7 +34,6 @@ services:
       # ── Preserve node_modules từ image (không bị host override) ─────────────
       # Docker khởi tạo named volume từ image content lần đầu chạy.
       # Sau đó volume giữ nguyên dù bind mount backend/ hay frontend/ lên trên.
-      - converter_node_modules:/app/backend/infrastructure/converter/node_modules
       - frontend_node_modules:/app/frontend/node_modules
 
       # ── Persistent data ─────────────────────────────────────────────────────
@@ -43,6 +41,5 @@ services:
       - huggingface_cache:/root/.cache/huggingface
 
 volumes:
-  converter_node_modules:
   frontend_node_modules:
   huggingface_cache:

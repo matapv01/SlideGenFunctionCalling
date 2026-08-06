@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#121212">
+    <image src="https://thumbs.dreamstime.com/z/concert-purple-stage-lights-illustration-crowd-enthusiastic-energy-atmosphere-engaging-visual-317282894.jpg" x="0" y="0" width="1600" height="542.0" fit="cover" crop_x="0.48" crop_y="0.42"/>
+    <svg x="0" y="0" width="1600" height="542.0" pixel_width="1600" pixel_height="542">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;542&quot; viewBox=&quot;0 0 1600 542&quot;&gt;
+  &lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1600&quot; height=&quot;542&quot; fill=&quot;#000000&quot; opacity=&quot;0.68&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <svg x="295" y="102" width="330" height="330" pixel_width="340" pixel_height="340">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;340&quot; height=&quot;340&quot; viewBox=&quot;0 0 340 340&quot;&gt;
+  &lt;path d=&quot;M156 8 L28 136 L156 264&quot; fill=&quot;none&quot; stroke=&quot;#BC13FE&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;square&quot; stroke-linejoin=&quot;miter&quot;/&gt;
+  &lt;path d=&quot;M199 8 L71 136 L199 264&quot; fill=&quot;none&quot; stroke=&quot;#BC13FE&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;square&quot; stroke-linejoin=&quot;miter&quot;/&gt;
+  &lt;path d=&quot;M156 264 L232 188&quot; fill=&quot;none&quot; stroke=&quot;#BC13FE&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;square&quot;/&gt;
+  &lt;path d=&quot;M199 264 L275 188&quot; fill=&quot;none&quot; stroke=&quot;#BC13FE&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;square&quot;/&gt;
+  &lt;path d=&quot;M156 8 L232 84&quot; fill=&quot;none&quot; stroke=&quot;#BC13FE&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;square&quot;/&gt;
+  &lt;path d=&quot;M199 8 L275 84&quot; fill=&quot;none&quot; stroke=&quot;#BC13FE&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;square&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="568.0" y="232.0" width="680.0" height="93.1" font="Georgia" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="58.0" min_font_size="56.0" bold="true" color="#BC13FE" align="left" vertical_align="middle" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">THANK YOU</textbox>
+    <shape type="rectangle" x="0" y="542.0" width="1600" height="330.0" fill="#121212" line_color="none"/>
+    <textbox x="140.0" y="672.6800000000001" width="1320.0" height="56.64" font="Georgia" font_path="/usr/share/fonts/truetype/fonts-japanese-gothic.ttf" size="28.0" min_font_size="26.0" color="#F2F2F2" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.18" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Cảm ơn quý vị đã lắng nghe!</textbox>
+    <shape type="rectangle" x="0" y="872.0" width="1600" height="28.0" fill="#BC13FE" line_color="none"/>
+  </slide>
+</presentation>

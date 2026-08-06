@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#1A1A1A">
+    <image src="https://cdn.wallpapersafari.com/11/51/KSwVtp.jpg" x="0" y="0" width="1600" height="900" fit="cover" crop_x="0.5" crop_y="0.48"/>
+    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#000000" opacity="0.15" line_color="none"/>
+    <shape type="rect" x="362.0" y="174.0" width="876.0" height="60.0" fill="#1A1A1A" opacity="0.96" line_color="none"/>
+    <shape type="rect" x="0" y="364.15" width="1600" height="155.7" fill="#1A1A1A" opacity="0.96" line_color="none"/>
+    <shape type="rect" x="12.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="62.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="112.0" y="176.0" width="32" height="56" fill="#1A1A1A" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="162.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="212.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="262.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="312.0" y="176.0" width="32" height="56" fill="#1A1A1A" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1256.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1306.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1356.0" y="176.0" width="32" height="56" fill="#1A1A1A" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1406.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1456.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1506.0" y="176.0" width="32" height="56" fill="#F1C40F" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1556.0" y="176.0" width="32" height="56" fill="#1A1A1A" opacity="0.98" line_color="none"/>
+    <textbox x="390.0" y="182.0" width="820.0" height="44.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="18.0" min_font_size="10.0" color="#F1C40F" align="center" vertical_align="middle" bold="false" italic="false" single_line="false" overflow="shrink" reflow_on_resize="true" max_lines="4" line_spacing="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Huyền thoại bóng đá sống mãi cùng thời gian</textbox>
+    <textbox x="185.0" y="382.15" width="1230.0" height="119.69999999999999" font="Times New Roman" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed-Italic.ttf" size="64.0" min_font_size="18.0" color="#FFFFFF" align="center" vertical_align="middle" bold="false" italic="true" single_line="false" overflow="shrink" reflow_on_resize="true" max_lines="4" line_spacing="0.95" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">LIONEL MESSI</textbox>
+  </slide>
+</presentation>

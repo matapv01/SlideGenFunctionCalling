@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#1A1A1A">
+    <image src="https://image.tensorartassets.com/cdn-cgi/image/w=600/model_showcase/867384382455855182/a5effebc-1d46-3a88-bb2f-47a49bbb3491.png" x="1065" y="0" width="535" height="900"/>
+    <textbox x="58" y="42.0" width="930" height="192.2" font="Arial" size="58.0" min_font_size="58.0" bold="true" color="#FFFFFF" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">NGUỒN GỐC VÀ
+CẢM HỨNG</textbox>
+    <textbox x="58" y="266.2" width="930" height="65.72" font="Arial" size="38.0" min_font_size="38.0" bold="true" color="#FF8C00" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">THẦN THOẠI TÂY DU KÝ</textbox>
+    <textbox x="58" y="341.91999999999996" width="930" height="106.68" font="Arial" size="18.5" min_font_size="18.5" color="#FFFFFF" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lấy cảm hứng từ nhân vật &lt;span style=&quot;font-weight: bold;&quot;&gt;Tôn Ngộ
+Không (Sun Wukong)&lt;/span&gt; trong danh tác &lt;span
+style=&quot;font-weight: bold;&quot;&gt;Tây Du Ký&lt;/span&gt;.</textbox>
+    <textbox x="58" y="471.68" width="930" height="65.72" font="Arial" size="38.0" min_font_size="38.0" bold="true" color="#FF8C00" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">ĐIỆN ẢNH VÕ THUẬT</textbox>
+    <textbox x="58" y="547.4" width="930" height="106.68" font="Arial" size="18.5" min_font_size="18.5" color="#FFFFFF" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Kết hợp ảnh hưởng từ điện ảnh hành động Hồng Kông qua &lt;span
+style=&quot;font-weight: bold;&quot;&gt;Jackie Chan&lt;/span&gt; và &lt;span
+style=&quot;font-weight: bold;&quot;&gt;Bruce Lee&lt;/span&gt;.</textbox>
+    <textbox x="58" y="677.16" width="930" height="65.72" font="Arial" size="38.0" min_font_size="38.0" bold="true" color="#FF8C00" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">SỰ RA ĐỜI NĂM 1984</textbox>
+    <textbox x="58" y="752.88" width="930" height="72.12" font="Arial" size="18.5" min_font_size="18.5" color="#FFFFFF" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Chính thức ra mắt lần đầu trong chương &lt;span style=&quot;font-weight:
+bold;&quot;&gt;Dragon Ball&lt;/span&gt; đầu tiên, mở đầu một huyền thoại.</textbox>
+  </slide>
+</presentation>

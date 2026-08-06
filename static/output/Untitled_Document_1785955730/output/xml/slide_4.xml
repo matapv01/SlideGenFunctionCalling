@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#102A43">
+    <image src="https://statics.vinpearl.com/ho-chi-minh-mausoleum-2_1662727248.jpeg" x="0" y="0" width="1600" height="900"/>
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#102A43" line_color="none"/>
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#D4AF37" line_color="none"/>
+    <textbox x="70.0" y="281.03999999999996" width="408.6186666666666" height="201.92000000000002" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" size="40.0" min_font_size="40.0" bold="true" color="#D4AF37" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Di Sản và Giá Trị Vĩnh Cửu</textbox>
+    <textbox x="70.0" y="514.96" width="345.152" height="104.0" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="20.0" min_font_size="20.0" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">4. Tiếp theo: Hành trình di sản và những giá trị trường tồn cùng dân tộc</textbox>
+  </slide>
+</presentation>

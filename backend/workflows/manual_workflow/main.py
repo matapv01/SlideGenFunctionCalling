@@ -54,6 +54,7 @@ async def run_manual_update_workflow(
     session_id: str,
     document_structure: List[Dict[str, Any]],
     intro_slide: Optional[Dict[str, Any]],
+    slide_options: Optional[Dict[str, Any]],
     graph_config: Dict[str, Any],
 ) -> State:
     """Run manual update workflow to persist editor structure."""
@@ -64,6 +65,7 @@ async def run_manual_update_workflow(
         "session_id": session_id,
         "document_structure": document_structure,
         "intro_slide": intro_slide or {},
+        "slide_options": slide_options or {},
     }
 
     final_state: State = await app.ainvoke(initial_input, config=graph_config)

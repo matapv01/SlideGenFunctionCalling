@@ -239,7 +239,7 @@ SEARCH_DDGS_TOOL = StructuredTool.from_function(
     description=(
         "Search for one real image needed by a slide. Emit one call for each "
         "image parameter, in the same declaration order as the final slide "
-        "HTML tool. All image-search calls must appear after the slide HTML tool."
+        "XML tool. All image-search calls must appear after the slide XML tool."
     ),
     args_schema=SearchDDGSImagesInput,
 )

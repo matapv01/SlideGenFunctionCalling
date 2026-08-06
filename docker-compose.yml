@@ -29,7 +29,6 @@ services:
       - .env
     environment:
       EMBEDDING_DEVICE: cpu
-      DISABLE_CONVERTER: "0"
     volumes:
       - ./.env:/app/.env:ro
       - slidegen_db:/app/backend/infrastructure/database

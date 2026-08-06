@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#1A1A1A">
+    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#1A1A1A" line_color="none"/>
+    <image src="https://i.pinimg.com/originals/d2/5b/1b/d25b1b4ce730a596e3ed31179dc54e16.jpg" x="72.0" y="82.0" width="620.0" height="736.0" fit="cover" crop_x="0.5" crop_y="0.42"/>
+    <shape type="rect" x="748.0" y="82.0" width="724.0" height="736.0" fill="#262626" line_color="none"/>
+    <shape type="rect" x="778.0" y="122.0" width="26.0" height="656.0" fill="#D4AF37" line_color="none"/>
+    <shape type="rect" x="1416.0" y="122.0" width="26.0" height="656.0" fill="#D4AF37" line_color="none"/>
+    <textbox x="860.0" y="149.0" width="500.0" height="43.0" font="Times New Roman" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="25.0" min_font_size="12.0" color="#D4AF37" align="center" vertical_align="middle" bold="false" italic="false" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">1. Giới thiệu</textbox>
+    <textbox x="860.0" y="226.0" width="500.0" height="156.4" font="Times New Roman" font_path="/usr/share/fonts/truetype/freefont/FreeSansOblique.ttf" size="50.5" min_font_size="22.0" color="#D4AF37" align="center" vertical_align="middle" bold="false" italic="true" single_line="false" max_lines="4" overflow="shrink" reflow_on_resize="true" line_spacing="0.92" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Lionel Andrés Messi</textbox>
+    <textbox x="860.0" y="424.4" width="500.0" height="326.59999999999997" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="13.5" min_font_size="9.0" color="#FFFFFF" align="center" vertical_align="top" bold="false" italic="false" single_line="false" max_lines="10" overflow="shrink" reflow_on_resize="true" line_spacing="1.42" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Lionel Andrés Messi Cuccittini sinh ngày 24 tháng 6 năm 1987 tại Rosario, Argentina. Được mệnh danh là một trong những cầu thủ vĩ đại nhất lịch sử, biệt danh “El Pulga” gắn liền với anh bởi sự nhanh nhẹn và khả năng xoay sở phi thường. Ngay từ nhỏ, Messi đã đối mặt với căn bệnh thiếu hụt hormone tăng trưởng đe dọa sự nghiệp. Nhờ ý chí kiên cường cùng sự hỗ trợ từ gia đình và CLB Barcelona, anh đã vượt qua nghịch cảnh để viết nên trang sử huyền thoại của bóng đá thế giới.</textbox>
+  </slide>
+</presentation>

@@ -13,6 +13,8 @@ def update_manual_structure(state: State) -> State:
 
     structure = state.get("document_structure", [])
     intro_slide = state.get("intro_slide")
+    slide_options = state.get("slide_options", {}) or {}
+    output_format = "xml"
 
     document_title = "Untitled Document"
     if intro_slide:
@@ -34,6 +36,7 @@ def update_manual_structure(state: State) -> State:
                 "session_id": session_id,
                 "document_title": document_title,
                 "document_structure": merged_structure,
+                "output_format": output_format,
             },
             f,
             indent=2,
@@ -42,6 +45,7 @@ def update_manual_structure(state: State) -> State:
 
     state["document_title"] = document_title
     state["document_structure"] = merged_structure
+    state["slide_options"] = {**slide_options, "output_format": output_format}
     state["update_result"] = {"success": True, "message": "Cấu trúc đã được lưu"}
     return state
 

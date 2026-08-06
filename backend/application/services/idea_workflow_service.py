@@ -1,7 +1,7 @@
 # File: backend/application/services/idea_workflow_service.py
 
 import logging
-from typing import Dict, Any, List, Optional
+from typing import Dict, Any
 from backend.domain.ports.llm_provider import LLMProvider
 from backend.application.services.base_workflow_service import BaseWorkflowService
 
@@ -13,10 +13,9 @@ class IdeaWorkflowService(BaseWorkflowService):
     Nhiệm vụ: Nhận Prompt -> Gọi Agent -> Trả về JSON Structure.
     """
 
-    def __init__(self, project_dir: str, llm_provider: LLMProvider, conversion_service=None):
+    def __init__(self, project_dir: str, llm_provider: LLMProvider):
         super().__init__(project_dir)
         self.llm_provider = llm_provider
-        self.conversion_service = conversion_service
 
     async def generate_structure_from_idea(
         self, 

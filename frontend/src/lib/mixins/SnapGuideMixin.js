@@ -1,6 +1,15 @@
 // Mixin: snap-to-grid / smart alignment guide lines
 export const SnapGuideMixin = {
 
+    // Keep the snap feel consistent in screen pixels while the slide is
+    // zoomed to fit the editor viewport.
+    getSnapThreshold() {
+        const scale = Number.isFinite(this.currentScale) && this.currentScale > 0
+            ? this.currentScale
+            : 1;
+        return Math.max(6, 8 / scale);
+    },
+
     getSnapBounds(el) {
         if (this.getElementBounds) {
             const b = this.getElementBounds(el);
@@ -22,122 +31,91 @@ export const SnapGuideMixin = {
     snapToGuides(el, x, y) {
         const guides = [];
         const dragBounds = this.getSnapBounds(el);
-        const elW     = dragBounds.width;
-        const elH     = dragBounds.height;
-        const canvasW = this.canvas.offsetWidth;
-        const canvasH = this.canvas.offsetHeight;
+        const elW = dragBounds.width;
+        const elH = dragBounds.height;
+        const canvasW = this.canvas.offsetWidth || 1920;
+        const canvasH = this.canvas.offsetHeight || 1080;
+        const threshold = this.getSnapThreshold();
 
-        // --- Canvas edge snaps ---
-        if (Math.abs(x) < this.snapThreshold) {
-            x = 0;
-            guides.push({ type: 'vertical', pos: 0, from: 0, to: canvasH });
-        }
-        if (Math.abs(x + elW - canvasW) < this.snapThreshold) {
-            x = canvasW - elW;
-            guides.push({ type: 'vertical', pos: canvasW, from: 0, to: canvasH });
-        }
-        if (Math.abs(y) < this.snapThreshold) {
-            y = 0;
-            guides.push({ type: 'horizontal', pos: 0, from: 0, to: canvasW });
-        }
-        if (Math.abs(y + elH - canvasH) < this.snapThreshold) {
-            y = canvasH - elH;
-            guides.push({ type: 'horizontal', pos: canvasH, from: 0, to: canvasW });
-        }
+        // Each object exposes three alignment anchors per axis: start,
+        // center and end. The dragged object is tested against all of them.
+        const dX = [x, x + elW / 2, x + elW];
+        const dY = [y, y + elH / 2, y + elH];
+        const xCandidates = [];
+        const yCandidates = [];
 
-        // --- Canvas center snaps ---
-        const centerX = canvasW / 2;
-        const centerY = canvasH / 2;
-        if (Math.abs(x + elW / 2 - centerX) < this.snapThreshold) {
-            x = centerX - elW / 2;
-            guides.push({ type: 'vertical', pos: centerX, from: 0, to: canvasH });
-        }
-        if (Math.abs(y + elH / 2 - centerY) < this.snapThreshold) {
-            y = centerY - elH / 2;
-            guides.push({ type: 'horizontal', pos: centerY, from: 0, to: canvasW });
-        }
+        const addTarget = (left, top, width, height, priority) => {
+            const targetX = [left, left + width / 2, left + width];
+            const targetY = [top, top + height / 2, top + height];
 
-        // --- Element-to-element snapping ---
-        const otherElements = Array.from(this.canvas.querySelectorAll('[data-selectable]'))
-            .filter(other => !this.selectedElements.includes(other));
-
-        if (otherElements.length > 0) {
-            let snapX = null, snapY = null;
-            let minDistX = this.snapThreshold, minDistY = this.snapThreshold;
-            let pendingXGuide = null, pendingYGuide = null;
-
-            const dL = x,       dR  = x + elW,     dCX = x + elW / 2;
-            const dT = y,       dB  = y + elH,     dCY = y + elH / 2;
-
-            otherElements.forEach(other => {
-                const otherBounds = this.getSnapBounds(other);
-                const oL  = otherBounds.left;
-                const oT  = otherBounds.top;
-                const oW  = otherBounds.width;
-                const oH  = otherBounds.height;
-                const oR  = oL + oW;
-                const oB  = oT + oH;
-                const oCX = oL + oW / 2;
-                const oCY = oT + oH / 2;
-
-                // X-axis: 3 dragged points × 3 target points = 9 combinations
-                [
-                    { dragPt: dL,  snapPt: oL,  newX: oL },
-                    { dragPt: dL,  snapPt: oCX, newX: oCX },
-                    { dragPt: dL,  snapPt: oR,  newX: oR },
-                    { dragPt: dCX, snapPt: oL,  newX: oL  - elW / 2 },
-                    { dragPt: dCX, snapPt: oCX, newX: oCX - elW / 2 },
-                    { dragPt: dCX, snapPt: oR,  newX: oR  - elW / 2 },
-                    { dragPt: dR,  snapPt: oL,  newX: oL  - elW },
-                    { dragPt: dR,  snapPt: oCX, newX: oCX - elW },
-                    { dragPt: dR,  snapPt: oR,  newX: oR  - elW },
-                ].forEach(({ dragPt, snapPt, newX }) => {
-                    const dist = Math.abs(dragPt - snapPt);
-                    if (dist < minDistX) {
-                        minDistX = dist;
-                        snapX    = newX;
-                        pendingXGuide = {
-                            type: 'vertical', pos: snapPt,
-                            from: Math.min(dT, oT),
-                            to:   Math.max(dB, oB),
-                        };
-                    }
-                });
-
-                // Y-axis: 3 × 3 combinations
-                [
-                    { dragPt: dT,  snapPt: oT,  newY: oT },
-                    { dragPt: dT,  snapPt: oCY, newY: oCY },
-                    { dragPt: dT,  snapPt: oB,  newY: oB },
-                    { dragPt: dCY, snapPt: oT,  newY: oT  - elH / 2 },
-                    { dragPt: dCY, snapPt: oCY, newY: oCY - elH / 2 },
-                    { dragPt: dCY, snapPt: oB,  newY: oB  - elH / 2 },
-                    { dragPt: dB,  snapPt: oT,  newY: oT  - elH },
-                    { dragPt: dB,  snapPt: oCY, newY: oCY - elH },
-                    { dragPt: dB,  snapPt: oB,  newY: oB  - elH },
-                ].forEach(({ dragPt, snapPt, newY }) => {
-                    const dist = Math.abs(dragPt - snapPt);
-                    if (dist < minDistY) {
-                        minDistY = dist;
-                        snapY    = newY;
-                        pendingYGuide = {
-                            type: 'horizontal', pos: snapPt,
-                            from: Math.min(dL, oL),
-                            to:   Math.max(dR, oR),
-                        };
-                    }
+            dX.forEach((dragAnchor, dragIndex) => {
+                targetX.forEach(targetAnchor => {
+                    xCandidates.push({
+                        distance: Math.abs(dragAnchor - targetAnchor),
+                        value: targetAnchor - [0, elW / 2, elW][dragIndex],
+                        guide: {
+                            type: 'vertical',
+                            pos: targetAnchor,
+                            from: 0,
+                            to: canvasH,
+                        },
+                        priority,
+                    });
                 });
             });
 
-            if (snapX !== null) { x = snapX; if (pendingXGuide) guides.push(pendingXGuide); }
-            if (snapY !== null) { y = snapY; if (pendingYGuide) guides.push(pendingYGuide); }
+            dY.forEach((dragAnchor, dragIndex) => {
+                targetY.forEach(targetAnchor => {
+                    yCandidates.push({
+                        distance: Math.abs(dragAnchor - targetAnchor),
+                        value: targetAnchor - [0, elH / 2, elH][dragIndex],
+                        guide: {
+                            type: 'horizontal',
+                            pos: targetAnchor,
+                            from: 0,
+                            to: canvasW,
+                        },
+                        priority,
+                    });
+                });
+            });
+        };
+
+        // Slide edges and center are always available targets.
+        addTarget(0, 0, canvasW, canvasH, 1);
+
+        // Align against every other top-level selectable element. Object
+        // alignment wins ties against a slide-wide target.
+        const otherElements = Array.from(this.canvas.querySelectorAll('[data-selectable]'))
+            .filter(other => !this.selectedElements.includes(other))
+            .filter(other => other !== el && !other.classList?.contains('smart-guide'));
+
+        otherElements.forEach(other => {
+            const bounds = this.getSnapBounds(other);
+            if (bounds.width > 0 && bounds.height > 0) {
+                addTarget(bounds.left, bounds.top, bounds.width, bounds.height, 2);
+            }
+        });
+
+        const best = (candidates) => candidates
+            .filter(candidate => candidate.distance <= threshold)
+            .sort((a, b) => a.distance - b.distance || b.priority - a.priority)[0] || null;
+
+        const bestX = best(xCandidates);
+        const bestY = best(yCandidates);
+        if (bestX) {
+            x = bestX.value;
+            guides.push(bestX.guide);
+        }
+        if (bestY) {
+            y = bestY.value;
+            guides.push(bestY.guide);
         }
 
         return { x, y, guides };
     },
 
     drawSmartGuides(guides) {
-        // Cancel any pending post-drag clear — guides are actively needed
         if (this._guideTimeout) {
             clearTimeout(this._guideTimeout);
             this._guideTimeout = null;
@@ -148,62 +126,58 @@ export const SnapGuideMixin = {
             return;
         }
 
-        // Build deduplicated key → guide map
         const incoming = new Map();
-        guides.forEach(g => {
-            const key = `${g.type}-${Math.round(g.pos)}`;
-            if (!incoming.has(key)) incoming.set(key, g);
+        guides.forEach(guide => {
+            const key = `${guide.type}-${Math.round(guide.pos)}`;
+            if (!incoming.has(key)) incoming.set(key, guide);
         });
 
-        // Update existing guides in-place (prevents 1-frame flicker), remove stale ones
-        this.canvas.querySelectorAll('.smart-guide').forEach(el => {
-            const key = el.dataset.guideKey;
+        // Reuse existing line nodes to avoid flicker during fast pointer moves.
+        this.canvas.querySelectorAll('.smart-guide').forEach(line => {
+            const key = line.dataset.guideKey;
             if (!incoming.has(key)) {
-                el.remove();
-            } else {
-                // Update span so the line stretches correctly as element moves
-                const guide = incoming.get(key);
-                if (guide.type === 'vertical') {
-                    const from = guide.from ?? 0;
-                    const to   = guide.to   ?? this.canvas.offsetHeight;
-                    el.style.top    = `${from}px`;
-                    el.style.height = `${to - from}px`;
-                } else {
-                    const from = guide.from ?? 0;
-                    const to   = guide.to   ?? this.canvas.offsetWidth;
-                    el.style.left  = `${from}px`;
-                    el.style.width = `${to - from}px`;
-                }
-                incoming.delete(key); // already handled
+                line.remove();
+                return;
             }
+
+            const guide = incoming.get(key);
+            if (guide.type === 'vertical') {
+                line.style.top = `${guide.from ?? 0}px`;
+                line.style.height = `${(guide.to ?? this.canvas.offsetHeight) - (guide.from ?? 0)}px`;
+            } else {
+                line.style.left = `${guide.from ?? 0}px`;
+                line.style.width = `${(guide.to ?? this.canvas.offsetWidth) - (guide.from ?? 0)}px`;
+            }
+            incoming.delete(key);
         });
 
-        // Create brand-new guide elements for keys not yet on canvas
         incoming.forEach((guide, key) => {
             const line = document.createElement('div');
-            line.className        = 'smart-guide';
+            line.className = 'smart-guide';
             line.dataset.guideKey = key;
-            line.style.position       = 'absolute';
+            line.style.position = 'absolute';
             line.style.backgroundColor = '#ff3d82';
-            line.style.pointerEvents   = 'none';
-            line.style.zIndex          = '10000';
+            line.style.pointerEvents = 'none';
+            line.style.zIndex = '10000';
+            line.style.borderRadius = '999px';
+            line.style.opacity = '0.9';
 
             if (guide.type === 'vertical') {
                 const from = guide.from ?? 0;
-                const to   = guide.to   ?? this.canvas.offsetHeight;
-                line.style.left      = `${guide.pos}px`;
-                line.style.top       = `${from}px`;
-                line.style.width     = '1.5px';
-                line.style.height    = `${to - from}px`;
-                line.style.boxShadow = '0 0 5px 1px rgba(255, 61, 130, 0.7)';
+                const to = guide.to ?? this.canvas.offsetHeight;
+                line.style.left = `${guide.pos}px`;
+                line.style.top = `${from}px`;
+                line.style.width = '2px';
+                line.style.height = `${to - from}px`;
+                line.style.boxShadow = '0 0 6px 1px rgba(255, 61, 130, 0.65)';
             } else {
                 const from = guide.from ?? 0;
-                const to   = guide.to   ?? this.canvas.offsetWidth;
-                line.style.top       = `${guide.pos}px`;
-                line.style.left      = `${from}px`;
-                line.style.height    = '1.5px';
-                line.style.width     = `${to - from}px`;
-                line.style.boxShadow = '0 0 5px 1px rgba(255, 61, 130, 0.7)';
+                const to = guide.to ?? this.canvas.offsetWidth;
+                line.style.top = `${guide.pos}px`;
+                line.style.left = `${from}px`;
+                line.style.height = '2px';
+                line.style.width = `${to - from}px`;
+                line.style.boxShadow = '0 0 6px 1px rgba(255, 61, 130, 0.65)';
             }
 
             this.canvas.appendChild(line);
@@ -211,11 +185,10 @@ export const SnapGuideMixin = {
     },
 
     clearSmartGuides() {
-        // Cancel any scheduled clear first
         if (this._guideTimeout) {
             clearTimeout(this._guideTimeout);
             this._guideTimeout = null;
         }
-        this.canvas.querySelectorAll('.smart-guide').forEach(g => g.remove());
+        this.canvas.querySelectorAll('.smart-guide').forEach(guide => guide.remove());
     },
 };

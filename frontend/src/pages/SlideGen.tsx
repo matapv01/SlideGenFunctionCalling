@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { api } from "@/lib/api";
+import type { OutputFormat } from "@/lib/api";
 import { AppLayout } from "@/components/AppLayout";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
@@ -31,6 +32,7 @@ const SlideGen = () => {
   const [ideaTitle, setIdeaTitle] = useState("");
   const [ideaDescription, setIdeaDescription] = useState("");
   const [ideaContentLength, setIdeaContentLength] = useState("standard");
+  const [outputFormat, setOutputFormat] = useState<OutputFormat>("xml");
   const [isUploading, setIsUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
@@ -61,13 +63,14 @@ const SlideGen = () => {
     try {
       if (workflowMode === "manual") {
         // Manual mode: upload for structure editing
-        const res = await api.uploadDocxForManual(file);
+        const res = await api.uploadDocxForManual(file, { outputFormat });
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_opening_structure });
         navigate(`/structure?session=${res.session_id}`);
       } else {
         // Auto modes: upload for streaming workflow
         const res = await api.uploadDocxForStream(file, {
           workflow_mode: workflowMode,
+          outputFormat,
         });
         toast({ title: t.slidegen_toast_success, description: t.slidegen_toast_starting });
         navigate(`/streaming/docx`, { state: { filename: res.filename } });
@@ -101,6 +104,7 @@ const SlideGen = () => {
         title: ideaTitle.trim(),
         prompt: ideaDescription.trim(),
         content_length: ideaContentLength,
+        output_format: outputFormat,
       });
 
       // Convert idea JSON into manual structure session (L0/L1 blocks) and open StructureEditor.
@@ -179,6 +183,26 @@ const SlideGen = () => {
                   </div>
                 </div>
 
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">Output</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["xml"] as const).map((format) => (
+                      <button
+                        key={format}
+                        type="button"
+                        onClick={() => setOutputFormat(format)}
+                        className={`rounded-lg border p-2.5 text-center text-sm font-medium uppercase transition-all ${
+                          outputFormat === format
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        Presentation
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* Upload button */}
                 <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
                 <Button className="w-full gradient-primary text-primary-foreground" disabled={isUploading} onClick={() => docxRef.current?.click()}>
@@ -204,6 +228,26 @@ const SlideGen = () => {
                   onChange={(e) => setIdeaDescription(e.target.value)}
                   className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
+
+                <div>
+                  <Label className="mb-2 block text-sm font-medium">Output</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {(["xml"] as const).map((format) => (
+                      <button
+                        key={format}
+                        type="button"
+                        onClick={() => setOutputFormat(format)}
+                        className={`rounded-lg border p-2.5 text-center text-sm font-medium uppercase transition-all ${
+                          outputFormat === format
+                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
+                            : "border-border hover:border-primary/50"
+                        }`}
+                      >
+                        Presentation
+                      </button>
+                    ))}
+                  </div>
+                </div>
 
                 {/* Content Length */}
                 <div>

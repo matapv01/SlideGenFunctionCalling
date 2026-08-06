@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#1E1B4B">
+    <image src="https://media.licdn.com/dms/image/v2/D4E12AQFa8YgOeuh0uQ/article-cover_image-shrink_720_1280/article-cover_image-shrink_720_1280/0/1727879363582?e=2147483647&amp;v=beta&amp;t=WiYwrFzDnU3eKLMUdZbqxXl_Oknriblkj__adp6eXU0" x="0" y="0" width="1600" height="900"/>
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#1E1B4B" line_color="none"/>
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#A678FF" line_color="none"/>
+    <textbox x="70.0" y="298.03999999999996" width="400.68533333333335" height="201.92000000000002" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSansBold.ttf" size="40.0" min_font_size="40.0" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2.5.3. GIAI ĐOẠN 3 (2026)</textbox>
+    <textbox x="70.0" y="531.96" width="353.0853333333333" height="70.0" font="Arial" font_path="/usr/share/fonts/truetype/freefont/FreeSans.ttf" size="20.0" min_font_size="20.0" color="#E0E7FF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Tối ưu hóa vận hành và Mở rộng hệ sinh thái</textbox>
+  </slide>
+</presentation>

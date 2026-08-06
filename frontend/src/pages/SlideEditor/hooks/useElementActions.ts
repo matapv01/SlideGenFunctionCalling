@@ -45,15 +45,24 @@ export const useElementActions = ({
     if (item.type === 'text') {
       let fontSize = 28, fontWeight = 'normal', content = 'Click to edit';
       let width = 500, height = 48, color = '#222222';
+      let fontStyle = 'normal', extraStyle = '';
       if (item.subType === 'heading') {
         fontSize = 64; fontWeight = 'bold'; content = 'Heading'; width = 600; height = 80; color = '#111111';
       } else if (item.subType === 'subheading') {
         fontSize = 40; fontWeight = '600'; content = 'Subheading'; width = 500; height = 60; color = '#333333';
       } else if (item.subType === 'label') {
         fontSize = 20; fontWeight = '600'; content = 'Label'; width = 200; height = 32; color = '#555555';
+      } else if (item.subType === 'quote') {
+        fontSize = 42; fontWeight = '500'; fontStyle = 'italic'; content = 'Add a quote'; width = 1000; height = 150; color = '#334155';
+        extraStyle = 'border-left:8px solid #3b82f6;padding:24px 32px;';
+      } else if (item.subType === 'bullets') {
+        fontSize = 30; content = '• First point<br>• Second point<br>• Third point'; width = 760; height = 190; color = '#1f2937';
+        extraStyle = 'line-height:1.6;';
+      } else if (item.subType === 'caption') {
+        fontSize = 18; fontWeight = '500'; content = 'Caption'; width = 360; height = 34; color = '#64748b';
       }
       html = `<div id="${id}" class="element" data-type="text" data-selectable="true" contenteditable="true"
-        style="position:absolute;left:${x}px;top:${y}px;width:${width}px;height:${height}px;font-size:${fontSize}px;font-weight:${fontWeight};color:${color};cursor:move;user-select:none;"
+        style="position:absolute;left:${x}px;top:${y}px;width:${width}px;height:${height}px;font-size:${fontSize}px;font-weight:${fontWeight};font-style:${fontStyle};color:${color};cursor:move;user-select:none;${extraStyle}"
         >${content}</div>`;
 
     } else if (item.type === 'shape') {
@@ -68,10 +77,34 @@ export const useElementActions = ({
         width = 120; height = 120; extra = 'clip-path:polygon(50% 0%,100% 50%,50% 100%,0% 50%);';
       } else if (item.subType === 'line') {
         width = 300; height = 4; bg = '#555555'; extra = 'border-radius:2px;';
+      } else if (item.subType === 'rounded') {
+        width = 260; height = 150; bg = '#dbeafe'; extra = 'border-radius:28px;';
+      } else if (item.subType === 'pill') {
+        width = 320; height = 90; bg = '#bfdbfe'; extra = 'border-radius:999px;';
+      } else if (item.subType === 'arrow') {
+        width = 320; height = 120; bg = '#60a5fa'; extra = 'clip-path:polygon(0 30%,70% 30%,70% 0,100% 50%,70% 100%,70% 70%,0 70%);';
+      } else if (item.subType === 'hexagon') {
+        width = 180; height = 160; bg = '#c4b5fd'; extra = 'clip-path:polygon(25% 0,75% 0,100% 50%,75% 100%,25% 100%,0 50%);';
+      } else if (item.subType === 'heart') {
+        width = 160; height = 150; bg = '#fb7185'; extra = 'clip-path:polygon(50% 92%,12% 55%,5% 35%,10% 15%,28% 4%,50% 20%,72% 4%,90% 15%,95% 35%,88% 55%);';
+      } else if (item.subType === 'cloud') {
+        width = 240; height = 140; bg = '#bae6fd'; extra = 'clip-path:polygon(10% 70%,8% 52%,18% 40%,30% 40%,38% 22%,55% 18%,68% 30%,82% 28%,94% 42%,92% 62%,82% 72%);';
       }
       html = `<div id="${id}" class="element" data-type="shape" data-selectable="true"
         style="position:absolute;left:${x}px;top:${y}px;width:${width}px;height:${height}px;background:${bg};${extra}cursor:move;"
         ></div>`;
+
+    } else if (item.type === 'icon') {
+      const iconPaths: Record<string, string> = {
+        check: '<path d="M5 12l4 4L19 6" />',
+        close: '<path d="M6 6l12 12M18 6L6 18" />',
+        plus: '<path d="M12 5v14M5 12h14" />',
+        arrow: '<path d="M5 12h14M13 6l6 6-6 6" />',
+      };
+      const path = iconPaths[item.subType || 'check'] || iconPaths.check;
+      html = `<div id="${id}" class="element" data-type="icon" data-selectable="true"
+        style="position:absolute;left:${x}px;top:${y}px;width:96px;height:96px;color:#2563eb;cursor:move;display:flex;align-items:center;justify-content:center;"
+        ><svg viewBox="0 0 24 24" width="72" height="72" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="pointer-events:none;">${path}</svg></div>`;
 
     } else if (item.type === 'image') {
       html = `<div id="${id}" class="element" data-type="image" data-selectable="true"

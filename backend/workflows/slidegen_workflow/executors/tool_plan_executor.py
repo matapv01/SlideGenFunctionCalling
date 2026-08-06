@@ -142,9 +142,9 @@ def _set_value_at_path(root: dict, path: list[Any], value: str) -> None:
 
 def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict, list[dict], list[dict]]:
     """
-    Validate plan ordering and return (html_call, search_calls, image_targets).
+    Validate plan ordering and return (slide_call, search_calls, image_targets).
 
-    New order: html_call FIRST (index 0), search_calls AFTER (index 1..N).
+    New order: slide XML call FIRST (index 0), search calls AFTER (index 1..N).
     """
     if not isinstance(tool_calls, list) or not tool_calls:
         raise ToolPlanError("The generator did not return any tool calls.")
@@ -158,16 +158,16 @@ def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict,
             raise ToolPlanError(f"Arguments for tool call {index} must be an object.")
         normalized_calls.append({"name": call["name"], "arguments": arguments})
 
-    # HTML slide tool is FIRST, search calls come AFTER
+    # XML slide tool is FIRST, search calls come AFTER
     html_call = normalized_calls[0]
     search_calls = normalized_calls[1:]
     html_tool_name = html_call["name"]
 
     if html_tool_name == SEARCH_TOOL_NAME:
-        raise ToolPlanError("The first tool call must be a slide HTML tool, not an image search.")
+        raise ToolPlanError("The first tool call must be a slide XML tool, not an image search.")
     if html_tool_name not in tool_lookup:
         raise ToolPlanError(
-            f"HTML tool '{html_tool_name}' is not available. "
+            f"XML tool '{html_tool_name}' is not available. "
             f"Valid slide tools are: {list(tool_lookup.keys())}"
         )
 
@@ -175,7 +175,7 @@ def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict,
         if call["name"] != SEARCH_TOOL_NAME:
             raise ToolPlanError(
                 f"Tool call {index + 1} must be '{SEARCH_TOOL_NAME}'; "
-                "all image search calls must appear after the slide HTML tool."
+                "all image search calls must appear after the slide XML tool."
             )
         query = call["arguments"].get("query")
         if not isinstance(query, str) or not query.strip():
@@ -194,7 +194,7 @@ def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict,
     if len(search_calls) != len(image_targets):
         target_names = [target["path_string"] for target in image_targets]
         raise ToolPlanError(
-            f"HTML tool '{html_tool_name}' requires {len(image_targets)} image "
+            f"XML tool '{html_tool_name}' requires {len(image_targets)} image "
             f"search call(s) for {target_names}, but the generator returned "
             f"{len(search_calls)}."
         )
@@ -269,7 +269,7 @@ def execute_image_search_plan(
     tool_lookup: dict,
 ) -> tuple[dict, list[dict]]:
     """
-    Run all LLM-provided searches, inject URLs by rule, and return the HTML call.
+    Run all LLM-provided searches, inject URLs by rule, and return the XML call.
 
     Searches execute concurrently, while their result positions remain stable so
     Search N always maps to image target N.
