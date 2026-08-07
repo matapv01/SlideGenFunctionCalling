@@ -33,11 +33,15 @@ from rl.rewards import slide_aesthetics_reward, content_preservation_reward, vis
 from rl.rewards.conciseness_reward import conciseness_reward
 from rl.rewards.text_embedding_reward import text_embedding_reward
 from scripts.generate_challenge_dataset import generate_docs
+from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool, execute_tool_plan
+from backend.workflows.slidegen_workflow.executors.tool_plan_executor import ToolPlanError
+from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
 from backend.workflows.slidegen_workflow.utils.helper import (
     format_tool_for_qwen,
     parse_tool_call_json,
+    parse_tool_calls_json,
     QWEN_CHAT_TEMPLATE,
     render_html_to_png,
     sanitize_to_placeholders,
@@ -280,6 +284,7 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
         # Đưa SEARCH_DDGS_TOOL lên đầu danh sách tool
         all_slide_tools = [SEARCH_DDGS_TOOL] + retrieved_tools
         filtered_tools = [format_tool_for_qwen(t) for t in all_slide_tools]
+        available_tool_names = [t.name for t in all_slide_tools]
 
         # Build per-slide-type system prompt matching slide_generator.py
         if action == 'CONTENT_TOOLS':
@@ -323,8 +328,9 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
         inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
         completion = ""
         tool_call = None
+        real_html = None
 
-        for attempt in range(5):
+        for attempt in range(EXECUTOR_MAX_RETRIES):
             with _gen_lock:
                 with torch.no_grad():
                     out = model.generate(**inputs, max_new_tokens=max_completion_length,
@@ -332,36 +338,31 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
                                          pad_token_id=tokenizer.eos_token_id)
             completion = tokenizer.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
 
-            reason = None
-            try:
-                tool_call = parse_tool_call_json(completion)
-            except Exception:
-                tool_call = None
-                reason = "NOT_JSON"
+            tool_plan = parse_tool_calls_json(completion)
+            executor_feedback = ""
 
-            if tool_call and "name" in tool_call:
-                real_html = execute_tool(tool_call)
-                if real_html:
-                    log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 OK → {tool_call['name']}")
-                    break
-                reason = "EXEC_FAIL"
-
-            if reason is None:
-                if not tool_call:
-                    reason = "NOT_JSON"
-                elif "name" not in tool_call:
-                    reason = "NO_NAME"
-                else:
-                    reason = "EXEC_FAIL"
-
-            if reason == "NOT_JSON":
-                log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 NOT_JSON — full output:")
-                print(f"    === FULL OUTPUT (attempt {attempt+1}) ===")
-                print(f"    {completion.strip()}")
-                print(f"    ====================================")
+            if not tool_plan:
+                executor_feedback = "CRITICAL: No tool call was generated. You must output a valid function call using <tool_call> JSON format."
             else:
-                log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 {reason} — {completion[:120].strip()}")
-            prompt += f"\n\n[FAILED: {reason} — {completion[:100]}]"
+                first_tool = tool_plan[0]
+                is_valid, errors = validate_tool_call(first_tool, available_tool_names)
+                if not is_valid:
+                    executor_feedback = f"EXECUTOR VALIDATION FAILED ({len(errors)} errors):\n" + "\n".join(f"- {e}" for e in errors)
+                else:
+                    try:
+                        real_html, tool_call, search_history = execute_tool_plan(tool_plan)
+                        if real_html:
+                            log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/{EXECUTOR_MAX_RETRIES} OK → {tool_call.get('name')}")
+                            break
+                        else:
+                            executor_feedback = "EXECUTOR TOOL PLAN FAILED: HTML output is empty."
+                    except ToolPlanError as tpe:
+                        executor_feedback = str(tpe)
+                    except Exception as e:
+                        executor_feedback = f"EXECUTOR TOOL PLAN FAILED:\n- {e}"
+
+            log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/{EXECUTOR_MAX_RETRIES} FAIL — {executor_feedback[:100].strip()}")
+            prompt += f"\n\n[EXECUTOR VALIDATION FEEDBACK]\n{executor_feedback.strip()}"
             inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
 
         # Append prompt and embedding of the PREVIOUS slide
@@ -370,17 +371,16 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
             "previous_slide_embedding": prev_embedding,
         })
 
-        if tool_call and "name" in tool_call:
-            real_html = execute_tool(tool_call)
-            if real_html:
-                real_path = os.path.join(render_dir, f"slide_{si:03d}_real.png")
-                try:
-                    render_html_to_png(real_html, real_path)
-                    rendered_paths.append(real_path)
-                    log_node(step_num, doc_idx, si, "Render", "OK")
-                except Exception as e:
-                    log_node(step_num, doc_idx, si, "Render", f"FAILED ({e})")
+        if real_html:
+            real_path = os.path.join(render_dir, f"slide_{si:03d}_real.png")
+            try:
+                render_html_to_png(real_html, real_path)
+                rendered_paths.append(real_path)
+                log_node(step_num, doc_idx, si, "Render", "OK")
+            except Exception as e:
+                log_node(step_num, doc_idx, si, "Render", f"FAILED ({e})")
 
+            if tool_call:
                 sanitized = sanitize_to_placeholders(tool_call)
                 sanitized_html = execute_tool(sanitized)
                 if sanitized_html:
