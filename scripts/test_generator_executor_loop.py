@@ -85,15 +85,19 @@ def test_single_sample_loop(sample: dict, config: dict, max_retries: int = 5) ->
     }
     
     slide_idx = sample.get("slide_index", 0)
+    # Use concise slide_content as RAG query to avoid vector noise from design_instruction formatting
+    sample_thought = sample.get("thought") or sample.get("slide_content", "")[:300]
     state = {
         "current_slide_index": slide_idx,
+        "last_processed_slide_index": -1,  # Force reset tool cache for new sample
         "length_slide_chunks": max(5, slide_idx + 1),
         "current_slide_text": sample.get("slide_content", ""),
         "current_slide_plan": {
             "action": category,
-            "thought": "Create an impactful layout matching design instructions."
+            "thought": sample_thought
         },
         "current_slide_context_map": sample.get("style_context", ""),
+        "design_instruction": sample.get("design_instruction", ""),
         "use_cot": True,
         "retry_count": 0,
         "executor_feedback": "",
@@ -230,6 +234,10 @@ def run_benchmark(
         status_icon = "✅" if result["final_status"] == "pass" else "❌"
         print(f"\n  {status_icon} Result: {result['final_status'].upper()} (Attempt {result['attempts']}/{max_retries}, {result['latency_seconds']}s)")
         print(f"     Predicted Tool: {result['predicted_tool']}")
+        
+        # Rate-limiting pause (ensures staying well below 40 RPM limit)
+        if idx < num_samples:
+            time.sleep(1.5)
 
     # 📊 Compute Benchmark Statistics
     total = len(results)
