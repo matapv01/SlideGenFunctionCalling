@@ -33,9 +33,11 @@ from rl.rewards import slide_aesthetics_reward, content_preservation_reward, vis
 from rl.rewards.conciseness_reward import conciseness_reward
 from rl.rewards.text_embedding_reward import text_embedding_reward
 from scripts.generate_challenge_dataset import generate_docs
+from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
 from backend.workflows.slidegen_workflow.utils.helper import (
     format_tool_for_qwen,
+    parse_tool_call_json,
     QWEN_CHAT_TEMPLATE,
     render_html_to_png,
     sanitize_to_placeholders,
@@ -43,12 +45,20 @@ from backend.workflows.slidegen_workflow.utils.helper import (
 )
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
+    QWEN_COT_GENERATOR_SYSTEM_PROMPT,
     QWEN_GENERATOR_HUMAN_TEMPLATE,
     SLIDE_PLANNER_SYSTEM_PROMPT,
     SLIDE_PLANNER_HUMAN_PROMPT,
     SLIDE_PREPARER_SYSTEM_PROMPT,
     SLIDE_PREPARER_HUMAN_TEMPLATE,
+    IMAGE_SEARCH_EXECUTION_PLAN_RULES,
+    CONTENT_PROMPT,
+    TRANSITION_PROMPT,
+    SLIDE_TYPE_PROMPTS,
+    INTRO_PROMPT,
+    MATH_EQUATION_RULES,
 )
+from backend.workflows.slidegen_workflow.nodes.slide_generator import _build_tool_description_text
 from backend.workflows.slidegen_workflow.graph.stage import SlidePlan
 from backend.infrastructure.embedding.dinov2_provider import DINOv2EmbeddingProvider
 from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
@@ -233,81 +243,74 @@ def run_preparer_one(slide: dict, plan: dict, prev_style_context: str, step_num:
     return design
 
 
-def _extract_last_json(text: str) -> dict | None:
-    if not text:
-        return None
-    cleaned = text.strip()
-    if "<tool_call>" in cleaned:
-        for part in reversed(cleaned.split("<tool_call>")):
-            if "</tool_call>" in part:
-                return _extract_last_json(part.split("</tool_call>")[0].strip())
-    for delim in ["```json", "```"]:
-        if delim in cleaned:
-            cleaned = cleaned.split(delim)[1].split("```")[0].strip()
-            break
-    try:
-        obj = json.loads(cleaned)
-        if isinstance(obj, dict) and "name" in obj:
-            return obj
-        if isinstance(obj, list) and obj and isinstance(obj[0], dict) and "name" in obj[0]:
-            return obj[0]
-    except Exception:
-        pass
-    pos = cleaned.rfind("}")
-    while pos >= 0:
-        depth = 0
-        for i in range(pos, -1, -1):
-            if cleaned[i] == "}":
-                depth += 1
-            elif cleaned[i] == "{":
-                depth -= 1
-                if depth == 0:
-                    try:
-                        obj = json.loads(cleaned[i:pos+1])
-                        if isinstance(obj, dict) and "name" in obj:
-                            return obj
-                    except Exception:
-                        pass
-                    pos = i - 1
-                    break
-        else:
-            break
-    return None
+# parse_tool_call_json imported from helper.py replaces _extract_last_json
 
 
-def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> list:
+def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
+    """
+    Mỗi slide đã có đầy đủ các trường pre-computed từ dataset_with_candidate_tools.json:
+      - slide_content       : nội dung slide
+      - style_context       : context phong cách từ slide trước
+      - design_instruction  : hướng dẫn thiết kế
+      - action              : loại slide (CONTENT_TOOLS, INTRO_TOOLS...)
+      - candidate_tools     : danh sách tên tool đã pre-retrieved
+    """
     prompts_data = []
     prev_embedding = [0.0] * 768
-    prev_tool_call = None
     rendered_paths = []
     render_dir = os.path.join(data_dir, f"step_{step_num:04d}", "renders", f"doc_{doc_idx}")
     os.makedirs(render_dir, exist_ok=True)
 
     for si, slide in enumerate(doc_slides):
-        plan = run_planner_one(si, slide, step_num, doc_idx, cache)
-        action = plan["action"]
-        style_context = get_slide_style_context(prev_tool_call) if prev_tool_call else ""
-        design = run_preparer_one(slide, plan, style_context, step_num, doc_idx, si)
+        # Đọc trực tiếp từ các trường đã pre-computed trong dataset
+        action          = slide.get("action") or slide.get("category") or "CONTENT_TOOLS"
+        style_context   = slide.get("style_context", "")
+        design          = slide.get("design_instruction", "")
+        slide_content   = slide.get("slide_content", "")
+        candidate_names = slide.get("candidate_tools", [])
 
-        filtered_tools = []
-        if tool_retriever is not None:
-            retrieved = tool_retriever.get_relevant_tools(
-                category=action, query=plan.get("thought", ""),
-                top_k=TOOL_RETRIEVER_TOP_K, current_slide_index=si)
-            filtered_tools = [format_tool_for_qwen(t) for t in retrieved] if retrieved else []
-        if not filtered_tools:
-            filtered_tools = [format_tool_for_qwen(t) for t in TOOLS_DICT.get(action, []) if t.name in flat_tools]
-        if len(filtered_tools) > 6:
-            random.shuffle(filtered_tools)
-            filtered_tools = filtered_tools[:6]
+        # Lấy tool objects từ danh sách tên đã pre-retrieved và ĐẢM BẢO THÊM SEARCH_DDGS_TOOL ở đầu (giống slide_generator.py)
+        category_tools = {t.name: t for t in TOOLS_DICT.get(action, [])}
+        retrieved_tools = [category_tools[n] for n in candidate_names if n in category_tools]
+        if not retrieved_tools:
+            retrieved_tools = [t for t in TOOLS_DICT.get(action, []) if t.name in flat_tools]
+        if len(retrieved_tools) > 5:
+            retrieved_tools = retrieved_tools[:5]
 
+        # Đưa SEARCH_DDGS_TOOL lên đầu danh sách tool
+        all_slide_tools = [SEARCH_DDGS_TOOL] + retrieved_tools
+        filtered_tools = [format_tool_for_qwen(t) for t in all_slide_tools]
+
+        # Build per-slide-type system prompt matching slide_generator.py
+        if action == 'CONTENT_TOOLS':
+            highlight_instruction = "- This is a content slide - choose ONE color from the list and use it consistently"
+            generator_system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
+        elif action == 'TRANSITION_TOOLS':
+            transition_context = "* Transition slide - establish a strong, consistent style"
+            generator_system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
+        else:
+            generator_system_prompt = SLIDE_TYPE_PROMPTS.get(action, INTRO_PROMPT)
+
+        generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + generator_system_prompt
+
+        # Build full system prompt matching production slide_generator.py format
+        tool_desc_text = _build_tool_description_text(filtered_tools)
+        full_system_prompt = (
+            generator_system_prompt
+            + "\n\n"
+            + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+            + "\n\n"
+            + QWEN_COT_GENERATOR_SYSTEM_PROMPT
+            + "\n\n"
+            + tool_desc_text
+        )
         user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
             style_context=style_context,
             design_instruction=design[:600] if design else "",
-            slide_content=slide["user_prompt"][:1200],
+            slide_content=slide_content[:1200],
         )
         messages = [
-            {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
+            {"role": "system", "content": full_system_prompt},
             {"role": "user", "content": user_prompt},
         ]
         prompt = tokenizer.apply_chat_template(messages, tools=filtered_tools, tokenize=False, add_generation_prompt=True)
@@ -321,7 +324,7 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
         completion = ""
         tool_call = None
 
-        for attempt in range(3):
+        for attempt in range(5):
             with _gen_lock:
                 with torch.no_grad():
                     out = model.generate(**inputs, max_new_tokens=max_completion_length,
@@ -331,7 +334,7 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
 
             reason = None
             try:
-                tool_call = _extract_last_json(completion)
+                tool_call = parse_tool_call_json(completion)
             except Exception:
                 tool_call = None
                 reason = "NOT_JSON"
@@ -361,6 +364,12 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
             prompt += f"\n\n[FAILED: {reason} — {completion[:100]}]"
             inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
 
+        # Append prompt and embedding of the PREVIOUS slide
+        prompts_data.append({
+            "prompt": prompt,
+            "previous_slide_embedding": prev_embedding,
+        })
+
         if tool_call and "name" in tool_call:
             real_html = execute_tool(tool_call)
             if real_html:
@@ -383,12 +392,6 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> l
                         log_node(step_num, doc_idx, si, "Embed", "OK")
                     except Exception as e:
                         log_node(step_num, doc_idx, si, "Embed", f"FAILED ({e})")
-            prev_tool_call = tool_call
-
-        prompts_data.append({
-            "prompt": prompt,
-            "previous_slide_embedding": prev_embedding,
-        })
 
     overview_path = os.path.join(render_dir, "overview.png")
     save_contact_sheet(
@@ -481,47 +484,37 @@ for step in range(1, total_steps + 1):
         print(f"  Step {step} skipped (checkpoint found at {step_ckpt})")
         continue
 
-    doc_path = os.path.join(data_dir, f"step_{step:04d}_docs.json")
-    cache_path = os.path.join(data_dir, f"step_{step:04d}_cache.json")
+    # Đường dẫn đến file dataset đã pre-computed
+    precomputed_dataset_path = os.path.join(os.path.dirname(__file__), "data", "dataset_with_candidate_tools.json")
+    if not os.path.exists(precomputed_dataset_path):
+        print(f"  ❌ Không tìm thấy file dataset: {precomputed_dataset_path}")
+        print(f"  → Hãy chạy: python scripts/pre_retrieve_candidate_tools.py")
+        continue
 
-    if os.path.exists(doc_path):
-        with open(doc_path, "r", encoding="utf-8") as f:
-            all_slides_flat = json.load(f)
-        docs = []
-        by_doc = {}
-        for s in all_slides_flat:
-            by_doc.setdefault(s["doc_id"], []).append(s)
-        # Cached data may contain more documents than the current run requests.
-        # Keep the workload consistent with the freshly generated-data path.
-        for did in sorted(by_doc)[:batch_docs]:
-            docs.append(by_doc[did])
-        selected_slide_count = sum(len(doc) for doc in docs)
-        print(
-            f"  Loaded {selected_slide_count}/{len(all_slides_flat)} slides "
-            f"across {len(docs)} docs from {doc_path}"
-        )
-    else:
-        docs = generate_docs(num_docs=batch_docs)
-        all_slides_flat = [s for doc in docs for s in doc]
-        with open(doc_path, "w", encoding="utf-8") as f:
-            json.dump(all_slides_flat, f, indent=2, ensure_ascii=False)
-        print(f"  Saved {len(all_slides_flat)} slides to {doc_path}")
+    with open(precomputed_dataset_path, "r", encoding="utf-8") as f:
+        all_slides_flat = json.load(f)
 
-    cache = {"plans": {}}
-    if os.path.exists(cache_path):
-        with open(cache_path, "r", encoding="utf-8") as f:
-            cache = json.load(f)
-        print(f"  Loaded {len(cache.get('plans', {}))} cached plans from {cache_path}")
+    # Nhóm các slide theo doc_id
+    by_doc = {}
+    for s in all_slides_flat:
+        by_doc.setdefault(s["doc_id"], []).append(s)
+
+    all_doc_ids = sorted(by_doc.keys())
+    # Chọn batch_docs doc theo vòng tròn dựa vào step
+    step_offset = ((step - 1) * batch_docs) % len(all_doc_ids)
+    selected_ids = [all_doc_ids[(step_offset + i) % len(all_doc_ids)] for i in range(min(batch_docs, len(all_doc_ids)))]
+    docs = [by_doc[did] for did in selected_ids]
+
+    all_slides_flat_selected = [s for doc in docs for s in doc]
+    print(f"  Loaded {len(all_slides_flat_selected)} slides across {len(docs)} docs (doc_ids={selected_ids}) from pre-computed dataset")
+
 
     all_prompts = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=batch_docs) as ex:
-        futures = [ex.submit(process_doc, doc, step, i, cache) for i, doc in enumerate(docs)]
+        futures = [ex.submit(process_doc, doc, step, i) for i, doc in enumerate(docs)]
         for f in concurrent.futures.as_completed(futures):
             all_prompts.extend(f.result())
 
-    with open(cache_path, "w", encoding="utf-8") as f:
-        json.dump({"plans": cache.get("plans", {})}, f, indent=2, ensure_ascii=False)
-    print(f"  Saved {len(cache.get('plans', {}))} plans to {cache_path}")
 
     if not all_prompts:
         print("  No valid prompts generated, skipping step.")
