@@ -149,10 +149,18 @@ def _build_tool_description_text(tool_schemas: list) -> str:
         lines.append(f"  Description: {desc}")
         
         param_desc_list = []
+        image_param_names = []
         for prop_name, prop_spec in properties.items():
             prop_type = prop_spec.get("type", "any")
             is_req = " (REQUIRED)" if prop_name in required else ""
             
+            # Detect image params using same logic as executor
+            is_image = (
+                "image_url" in prop_name.lower()
+                or "image_path" in prop_name.lower()
+                or prop_name.lower() in {"bg_image", "background_image"}
+            )
+
             if prop_type == "array":
                 item_spec = prop_spec.get("items", {})
                 if item_spec.get("type") == "object":
@@ -162,10 +170,21 @@ def _build_tool_description_text(tool_schemas: list) -> str:
                     item_type = item_spec.get("type", "string")
                     param_desc_list.append(f"`{prop_name}`: List[{item_type}]{is_req}")
             else:
-                param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req}")
+                if is_image:
+                    param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req} ⚠️ IMAGE PARAM — requires a search_ddgs_images call")
+                    image_param_names.append(prop_name)
+                else:
+                    param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req}")
                 
         if param_desc_list:
             lines.append(f"  Parameters: {', '.join(param_desc_list)}")
+
+        # Add image search notice if this tool has image params
+        if image_param_names:
+            lines.append(
+                f"  ⚠️ IMAGE SEARCH REQUIRED: This tool has {len(image_param_names)} image param(s): {image_param_names}. "
+                f"Your tool plan MUST output the slide tool FIRST, then {len(image_param_names)} search_ddgs_images call(s) AFTER it."
+            )
             
     return "\n".join(lines)
 
@@ -234,6 +253,12 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     
     # 2. Get dynamic data from state
     idx = state['current_slide_index']
+    
+    # If moving to a new slide index, clear cached candidate_tools and design_instruction from previous slide
+    if state.get("last_processed_slide_index") != idx:
+        state["candidate_tools"] = None
+        state["design_instruction"] = None
+        state["last_processed_slide_index"] = idx
     current_text = state.get("current_slide_text", "")
     current_plan = state.get('current_slide_plan')
     current_context_map = state.get('current_slide_context_map')
@@ -260,9 +285,16 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     print(f"--- Preparing & Generating slide {idx + 1}/{length_slide_chunks} ---")
     print(f"  -> Category: '{tool_category}'")
     
-    # 3. Retrieve relevant tools
+    # 3. Retrieve relevant tools (Reuse candidate_tools if available in state for retries)
     my_tools = []
-    if tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
+    if state.get("candidate_tools"):
+        # Remove search tool if present in candidate_tools cache to get original my_tools
+        cached = [t for t in state["candidate_tools"] if getattr(t, 'name', '') != SEARCH_DDGS_TOOL.name]
+        if cached:
+            my_tools = cached
+            print(f"  -> Reusing {len(my_tools)} cached tools from state (retry attempt)")
+
+    if not my_tools and tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
         prev_transition_tool_name = state['previous_transition_tool_call'].get('name')
         if prev_transition_tool_name:
             all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
@@ -346,39 +378,36 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     # 6. Format Style Context
     style_context_str = json.dumps(_extract_style_params(previous_slide_function_call), indent=2)
     
-    # 7. Invoke Gemini (Planner LLM) to get design instruction for the next slide
-    print("  -> Calling Gemini to prepare design instructions...")
-    design_instruction = creative_thought
-    if planner_llm:
-        try:
-            human_msg = SLIDE_PREPARER_HUMAN_TEMPLATE.format(
-                previous_style_context=style_context_str,
-                slide_plan=json.dumps(current_plan, indent=2),
-                slide_content=current_text
-            )
-            messages = [
-                {"role": "system", "content": SLIDE_PREPARER_SYSTEM_PROMPT},
-                {"role": "user", "content": human_msg}
-            ]
-            response = planner_llm.invoke(messages)
-            if hasattr(response, "content") and response.content:
-                design_instruction = response.content.strip()
-                print("  -> Prepared Instruction:")
-                print("     " + design_instruction.replace("\n", "\n     "))
-        except Exception as e:
-            print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
+    # 7. Invoke Gemini (Planner LLM) to get design instruction for the next slide (Reuse cached instruction if available for retries)
+    design_instruction = state.get("design_instruction")
+    if design_instruction:
+        print("  -> Reusing cached design instructions from state (retry attempt)")
+    else:
+        design_instruction = creative_thought
+        if planner_llm:
+            try:
+                print("  -> Calling Gemini to prepare design instructions...")
+                human_msg = SLIDE_PREPARER_HUMAN_TEMPLATE.format(
+                    previous_style_context=style_context_str,
+                    slide_plan=json.dumps(current_plan, indent=2),
+                    slide_content=current_text
+                )
+                messages = [
+                    {"role": "system", "content": SLIDE_PREPARER_SYSTEM_PROMPT},
+                    {"role": "user", "content": human_msg}
+                ]
+                response = planner_llm.invoke(messages)
+                if hasattr(response, "content") and response.content:
+                    design_instruction = response.content.strip()
+                    print("  -> Prepared Instruction:")
+                    print("     " + design_instruction.replace("\n", "\n     "))
+            except Exception as e:
+                print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
             
     # Assign prepared values. The image-search plan is produced by this same
     # generator invocation; no later LLM call is allowed to create search specs.
     system_prompt = (
         generator_system_prompt
-        + "\n\n"
-        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
-    )
-    qwen_system_prompt = (
-        QWEN_GENERATOR_SYSTEM_PROMPT
-        + "\n\n"
-        + generator_system_prompt
         + "\n\n"
         + IMAGE_SEARCH_EXECUTION_PLAN_RULES
     )
