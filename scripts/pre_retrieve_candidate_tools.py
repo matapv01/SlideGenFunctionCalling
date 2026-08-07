@@ -38,7 +38,7 @@ from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 from backend.config import TOOL_RETRIEVER_TOP_K
 
 
-def pre_retrieve_tools(input_path: str, output_path: str, start: int = 0, end: int = None, top_k: int = TOOL_RETRIEVER_TOP_K) -> None:
+def pre_retrieve_tools(input_path: str, output_path: str, start: int = 0, end: int = None, force: bool = False, top_k: int = TOOL_RETRIEVER_TOP_K) -> None:
     api_key = os.getenv("GEMINI_API_KEY")
     if not api_key:
         print("❌ Lỗi: Chưa cấu hình GEMINI_API_KEY trong file .env!")
@@ -57,9 +57,9 @@ def pre_retrieve_tools(input_path: str, output_path: str, start: int = 0, end: i
         start = 0
 
     sliced_dataset = dataset[start:end]
-    print(f"    → Sẽ xử lý từ chỉ số index {start} đến {end - 1} (Tổng: {len(sliced_dataset)} mẫu)")
+    print(f"    → Phạm vi kiểm tra: index {start} đến {end - 1} (Tổng: {len(sliced_dataset)} mẫu)")
 
-    # Đọc file output hiện tại nếu đã có để cập nhật tiếp
+    # Đọc file output hiện tại nếu đã có để kiểm tra & cập nhật tiếp
     output_dict_by_id = {}
     if os.path.exists(output_path):
         try:
@@ -68,7 +68,7 @@ def pre_retrieve_tools(input_path: str, output_path: str, start: int = 0, end: i
                 for item in existing_data:
                     key = (item.get("doc_id"), item.get("slide_index"))
                     output_dict_by_id[key] = item
-            print(f"    → Đã nạp {len(existing_data)} mẫu hiện có từ: {output_path}")
+            print(f"    → Đã nạp {len(existing_data)} mẫu hiện có từ file output: {output_path}")
         except Exception:
             output_dict_by_id = {}
 
@@ -86,15 +86,26 @@ def pre_retrieve_tools(input_path: str, output_path: str, start: int = 0, end: i
         print(f"❌ Lỗi khởi tạo ToolRetriever: {e}")
         return
 
-    print(f"[3] Bắt đầu Pre-retrieval candidate tools (có rate-limit sleep 1.5s)...")
+    print(f"[3] Bắt đầu Pre-retrieval candidate tools...")
     total_slice = len(sliced_dataset)
+    skipped_count = 0
+    processed_count = 0
 
     for idx, sample in enumerate(sliced_dataset, start=1):
         global_idx = start + idx - 1
+        doc_id = sample.get("doc_id", 0)
+        slide_idx = sample.get("slide_index", 0)
         tool_category = sample.get("action") or sample.get("category") or "CONTENT_TOOLS"
         creative_thought = sample.get("thought", "")
-        slide_idx = sample.get("slide_index", 0)
-        doc_id = sample.get("doc_id", 0)
+
+        key = (doc_id, slide_idx)
+
+        # CHECK THÔNG MINH: Nếu mẫu này đã có candidate_tools và không bật --force -> SKIP!
+        existing_item = output_dict_by_id.get(key)
+        if not force and existing_item and "candidate_tools" in existing_item and len(existing_item["candidate_tools"]) > 0:
+            skipped_count += 1
+            print(f"    → [{idx:3d}/{total_slice:3d}] ⏩ Skip index #{global_idx} (doc_{doc_id}_slide_{slide_idx}) - Đã có candidate_tools", end="\r", flush=True)
+            continue
 
         # Query cho retrieval
         query = creative_thought.strip() if creative_thought.strip() else sample.get("slide_content", "")[:300]
@@ -120,21 +131,22 @@ def pre_retrieve_tools(input_path: str, output_path: str, start: int = 0, end: i
         new_sample["candidate_tools"] = tool_names
         
         # Cập nhật vào dictionary theo (doc_id, slide_index)
-        output_dict_by_id[(doc_id, slide_idx)] = new_sample
+        output_dict_by_id[key] = new_sample
+        processed_count += 1
 
         print(f"    → [{idx:3d}/{total_slice:3d}] Index #{global_idx} (doc_{doc_id}_slide_{slide_idx}): {len(tool_names)} tools {tool_names[:3]}...", end="\r", flush=True)
 
         # Sleep nhẹ 1.5 giây để tránh dính Rate Limit 40 RPM của Gemini Embeddings
         time.sleep(1.5)
 
-    print("\n✅ Hoàn thành batch này!")
+    print(f"\n✅ Hoàn thành! (Đã retrieval mới: {processed_count} mẫu | Bỏ qua đã có: {skipped_count} mẫu)")
 
     # Ghép lại danh sách kết quả (giữ đúng thứ tự dataset gốc)
     final_output_list = []
     for item in dataset:
-        key = (item.get("doc_id"), item.get("slide_index"))
-        if key in output_dict_by_id:
-            final_output_list.append(output_dict_by_id[key])
+        k = (item.get("doc_id"), item.get("slide_index"))
+        if k in output_dict_by_id:
+            final_output_list.append(output_dict_by_id[k])
         else:
             final_output_list.append(item)
     
@@ -155,7 +167,9 @@ if __name__ == "__main__":
     parser.add_argument("--output", default=default_output, help="Path to output JSON with candidate_tools")
     parser.add_argument("--start", type=int, default=0, help="Start index (inclusive)")
     parser.add_argument("--end", type=int, default=None, help="End index (exclusive)")
+    parser.add_argument("--force", action="store_true", help="Force re-retrieval even if candidate_tools exists")
     parser.add_argument("--top_k", type=int, default=TOOL_RETRIEVER_TOP_K, help="Top K tools to retrieve")
 
     args = parser.parse_args()
-    pre_retrieve_tools(args.input, args.output, args.start, args.end, args.top_k)
+    pre_retrieve_tools(args.input, args.output, args.start, args.end, args.force, args.top_k)
+
