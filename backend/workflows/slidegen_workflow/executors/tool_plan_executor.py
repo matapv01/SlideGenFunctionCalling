@@ -193,10 +193,15 @@ def validate_tool_plan(tool_calls: list[dict], tool_lookup: dict) -> tuple[dict,
     )
     if len(search_calls) != len(image_targets):
         target_names = [target["path_string"] for target in image_targets]
+        example_slide_args = "{...all_args_with_real_values...}"
+        example_search_args = '{"query": "<describe the image you need>", "layout": "Wide", "size": "Large"}'
         raise ToolPlanError(
             f"HTML tool '{html_tool_name}' requires {len(image_targets)} image "
             f"search call(s) for {target_names}, but the generator returned "
-            f"{len(search_calls)}."
+            f"{len(search_calls)}.\n"
+            f"You MUST output BOTH the slide tool AND a search_ddgs_images call together, like this:\n"
+            f'<tool_call>{{"name": "{html_tool_name}", "arguments": {example_slide_args}}}</tool_call>\n'
+            f'<tool_call>{{"name": "search_ddgs_images", "arguments": {example_search_args}}}</tool_call>'
         )
 
     return html_call, search_calls, image_targets
