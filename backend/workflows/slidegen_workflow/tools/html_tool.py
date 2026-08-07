@@ -6719,7 +6719,16 @@ def generate_content_slide(
     grid_items_html = ""
     for i in range(num_items):
         item_number = str(i + 1).zfill(2)
-        item_title = items[i]
+        raw_item = items[i]
+        if isinstance(raw_item, dict):
+            item_title = raw_item.get("title", "")
+            desc = raw_item.get("description", "")
+            if desc and not item_title:
+                item_title = desc
+            elif desc:
+                item_title = f"{item_title}: {desc}"
+        else:
+            item_title = str(raw_item)
         
         grid_items_html += f"""
         <div class="content-card">
@@ -12656,8 +12665,8 @@ def generate_split_layout_list_slide(
     for point in points:
         points_html += f"""
         <div class="point-item">
-            <h2 class="point-title">{point['title']}</h2>
-            <p class="point-description">{point['description']}</p>
+            <h2 class="point-title">{point.get('title', '')}</h2>
+            <p class="point-description">{point.get('description', '')}</p>
         </div>
         """
 

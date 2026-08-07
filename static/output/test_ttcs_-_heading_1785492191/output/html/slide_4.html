@@ -1,0 +1,157 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>2.1.1. TỔNG QUAN VỀ INNOTECH SOLUTIONS</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        :root { font-size: 16px; }
+        body, html {
+            margin: 0; padding: 0; height: 100%; width: 100%;
+            overflow: hidden;
+            background-color: #ffffff;
+        }
+        
+        .slide-container {
+            width: 100%; height: 100vh;
+            display: flex; align-items: center; justify-content: center;
+        }
+        
+        .content-wrapper {
+            display: flex;
+            width: 100%; height: 100%;
+            max-width: 80rem; /* 1280px */
+        }
+        
+        .title-section {
+            flex: 0 0 30%;
+            background-color: #002b5c;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            box-sizing: border-box;
+        }
+        
+        .main-title {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            font-size: 6rem;
+            font-weight: 500;
+            font-style: italic;
+            color: #000000;
+            line-height: 1.3;
+            text-align: center;
+        }
+        
+        .steps-layout {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            padding: 3rem 4rem;
+        }
+        
+        .image-strip-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: 1.5rem;
+            height: 100%;
+            max-height: 35rem; /* 560px */
+        }
+        .step-image {
+            width: 10rem; /* 160px */
+            height: 10rem; /* 160px */
+            object-fit: cover;
+            box-shadow: 0 0.5rem 1.5rem rgba(0,0,0,0.07);
+        }
+        
+        .steps-text-section {
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding-left: 3rem;
+            height: 100%;
+            max-height: 35rem; /* 560px */
+        }
+        .step-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        .step-title {
+            font-size: 2.4rem;
+            font-weight: 500;
+            color: #000000;
+            margin: 0 0 0.5rem 0;
+        }
+        .step-description {
+            font-size: 1.5rem;
+            color: #000000;
+            line-height: 1.6;
+            margin: 0;
+            max-width: 25rem; /* 400px */
+        }
+
+        @media (max-width: 64em) { /* 1024px */
+            .steps-layout { padding: 2rem; }
+            .main-title { font-size: 2.5rem; }
+        }
+
+        @media (max-width: 48em) { /* 768px */
+            .content-wrapper { flex-direction: column; }
+            .title-section { flex: 0 0 auto; width: 100%; height: 8rem; }
+            .steps-layout { flex-direction: column; padding: 2rem; align-items: flex-start; overflow-y: auto; }
+            .image-strip-section, .steps-text-section {
+                 flex-direction: row; justify-content: flex-start; gap: 1rem;
+                 width: 100%; max-height: none; height: auto;
+                 padding-left: 0;
+            }
+             .image-strip-section {
+                 align-items: flex-start; /* Fix image alignment */
+                 flex-wrap: wrap; /* Allow wrapping */
+             }
+            .steps-text-section {
+                display: block; /* Change from flex to block */
+            }
+            .step-item { margin-bottom: 2rem; }
+            .step-image { width: 8rem; height: 8rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="content-wrapper">
+            <div class="title-section">
+                <h1 class="main-title">2.1.1. TỔNG QUAN VỀ INNOTECH SOLUTIONS</h1>
+            </div>
+            <div class="steps-layout">
+                <div class="image-strip-section">
+                    <img src='https://picsum.photos/seed/123/400/400' alt='Lĩnh vực hoạt động' class='step-image'><img src='https://picsum.photos/seed/456/400/400' alt='Đội ngũ cốt lõi' class='step-image'><img src='https://picsum.photos/seed/789/400/400' alt='Lợi thế cạnh tranh' class='step-image'>
+                </div>
+                <div class="steps-text-section">
+                    
+        <div class="step-item">
+            <h3 class="step-title">Lĩnh vực hoạt động</h3>
+            <p class="step-description">Phát triển phần mềm theo yêu cầu, tư vấn giải pháp Cloud, và triển khai hệ thống An ninh mạng. Chúng tôi tập trung vào việc tạo ra các sản phẩm đáp ứng chính xác nhu cầu của từng khách hàng.</p>
+        </div>
+        
+        <div class="step-item">
+            <h3 class="step-title">Đội ngũ cốt lõi</h3>
+            <p class="step-description">Đội ngũ của chúng tôi bao gồm các kỹ sư phần mềm giàu kinh nghiệm, các chuyên gia tư vấn giải pháp và các nhà quản lý dự án tận tâm, với hơn 10 năm kinh nghiệm trong ngành.</p>
+        </div>
+        
+        <div class="step-item">
+            <h3 class="step-title">Lợi thế cạnh tranh</h3>
+            <p class="step-description">Sự kết hợp giữa chuyên môn kỹ thuật sâu rộng, quy trình làm việc linh hoạt theo mô hình Agile, và cam kết hỗ trợ khách hàng tận tình là những yếu tố tạo nên sự khác biệt của <span style="color:#002b5c">Innovatech</span>.</p>
+        </div>
+        
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

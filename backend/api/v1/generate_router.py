@@ -215,7 +215,7 @@ async def generate_from_docx_normal(
         output_folder_path = await slidegen_workflow_service.process_docx(
             docx_path=str(temp_path),
             output_folder=str(output_folder),
-            router_flags=False
+            router_flags=True
         )
 
         if not output_folder_path:
@@ -375,7 +375,7 @@ async def stream_docx_generation(
             res = await slidegen_workflow_service.process_docx(
                 docx_path=str(temp_path),
                 output_folder=str(output_folder),
-                router_flags=False,
+                router_flags=True,
                 callback=callback,
                 slide_options=slide_options
             )

@@ -1,0 +1,13 @@
+<?xml version="1.0" ?>
+<presentation>
+    <slide>
+        <polygon points="0,0 1600,0 1600,900 0,900" fill="#FFFFFF" line_color="none"/>
+        <textbox x="100" y="150" width="600" height="100" font="Segoe UI" size="60" color="#162235" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true" line_spacing="1.0" bold="true">CONTENT</textbox>
+        <line x1="100" y1="260" x2="250" y2="260" color="#4285F4" width="6"/>
+        <textbox x="100" y="340" width="620" height="50" font="Segoe UI" size="24" color="#162235" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true" line_spacing="1.0" bold="true">PRIMARY REFERENCE TITLE</textbox>
+        <textbox x="100" y="400" width="620" height="120" font="Segoe UI" size="18" color="#575F6A" align="left" vertical_align="top" single_line="false" max_lines="4" overflow="shrink" reflow_on_resize="true" line_spacing="1.5" bold="false">Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.</textbox>
+        <textbox x="100" y="580" width="620" height="50" font="Segoe UI" size="24" color="#162235" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true" line_spacing="1.0" bold="true">SECONDARY REFERENCE TITLE</textbox>
+        <textbox x="100" y="640" width="620" height="120" font="Segoe UI" size="18" color="#575F6A" align="left" vertical_align="top" single_line="false" max_lines="4" overflow="shrink" reflow_on_resize="true" line_spacing="1.5" bold="false">Presentations are communication tools that can be used as demonstrations, lectures, speeches, reports, and more. They serve various purposes and are effective tools.</textbox>
+        <image src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&amp;w=800&amp;auto=format&amp;fit=crop" x="800" y="0" width="800" height="900" crop="true"/>
+    </slide>
+</presentation>

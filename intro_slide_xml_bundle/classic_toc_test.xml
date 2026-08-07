@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#EBE4D5">
+    <shape type="rectangle" x="40" y="40" width="1520" height="820" fill="none" line_color="#4A3F35" line_width="2"/>
+    <shape type="rectangle" x="60" y="60" width="1480" height="780" fill="none" line_color="#4A3F35" line_width="1"/>
+    <shape type="rectangle" x="35" y="35" width="30" height="30" fill="none" line_color="#4A3F35" line_width="2"/>
+    <shape type="rectangle" x="1535" y="35" width="30" height="30" fill="none" line_color="#4A3F35" line_width="2"/>
+    <shape type="rectangle" x="35" y="835" width="30" height="30" fill="none" line_color="#4A3F35" line_width="2"/>
+    <shape type="rectangle" x="1535" y="835" width="30" height="30" fill="none" line_color="#4A3F35" line_width="2"/>
+    <textbox x="400" y="120" width="800" height="100" font="Georgia" font_path="C:/Windows/Fonts/georgia.ttf" size="72" min_font_size="36" color="#4A3F35" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="false">Table of contents</textbox>
+    <line x1="250" y1="250" x2="350" y2="250" color="#4A3F35" width="2"/>
+    <textbox x="110" y="260" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="40" min_font_size="20" color="#4A3F35" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">01</textbox>
+    <line x1="250" y1="310" x2="350" y2="310" color="#4A3F35" width="2"/>
+    <textbox x="110" y="320" width="380" height="80" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="24" min_font_size="24" color="#4A3F35" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">Introduction</textbox>
+    <textbox x="110" y="410" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgia.ttf" size="16" min_font_size="16" color="#4A3F35" align="center" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2" bold="false">An overview of the presentation topic and objectives.</textbox>
+    <line x1="750" y1="250" x2="850" y2="250" color="#4A3F35" width="2"/>
+    <textbox x="610" y="260" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="40" min_font_size="20" color="#4A3F35" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">02</textbox>
+    <line x1="750" y1="310" x2="850" y2="310" color="#4A3F35" width="2"/>
+    <textbox x="610" y="320" width="380" height="80" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="24" min_font_size="24" color="#4A3F35" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">Reconstruction Era</textbox>
+    <textbox x="610" y="410" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgia.ttf" size="16" min_font_size="16" color="#4A3F35" align="center" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2" bold="false">Brief overview of the era.</textbox>
+    <line x1="1250" y1="250" x2="1350" y2="250" color="#4A3F35" width="2"/>
+    <textbox x="1110" y="260" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="40" min_font_size="20" color="#4A3F35" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">03</textbox>
+    <line x1="1250" y1="310" x2="1350" y2="310" color="#4A3F35" width="2"/>
+    <textbox x="1110" y="320" width="380" height="80" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="24" min_font_size="24" color="#4A3F35" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">The Gilded Age</textbox>
+    <textbox x="1110" y="410" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgia.ttf" size="16" min_font_size="16" color="#4A3F35" align="center" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2" bold="false">Exploring economic growth and challenges.</textbox>
+    <line x1="250" y1="570" x2="350" y2="570" color="#4A3F35" width="2"/>
+    <textbox x="110" y="580" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="40" min_font_size="20" color="#4A3F35" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">04</textbox>
+    <line x1="250" y1="630" x2="350" y2="630" color="#4A3F35" width="2"/>
+    <textbox x="110" y="640" width="380" height="80" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="24" min_font_size="24" color="#4A3F35" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">Comparison</textbox>
+    <textbox x="110" y="730" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgia.ttf" size="16" min_font_size="16" color="#4A3F35" align="center" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2" bold="false">Comparing the two eras.</textbox>
+    <line x1="750" y1="570" x2="850" y2="570" color="#4A3F35" width="2"/>
+    <textbox x="610" y="580" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="40" min_font_size="20" color="#4A3F35" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">05</textbox>
+    <line x1="750" y1="630" x2="850" y2="630" color="#4A3F35" width="2"/>
+    <textbox x="610" y="640" width="380" height="80" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="24" min_font_size="24" color="#4A3F35" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">Conclusion</textbox>
+    <textbox x="610" y="730" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgia.ttf" size="16" min_font_size="16" color="#4A3F35" align="center" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2" bold="false">Final thoughts.</textbox>
+    <line x1="1250" y1="570" x2="1350" y2="570" color="#4A3F35" width="2"/>
+    <textbox x="1110" y="580" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="40" min_font_size="20" color="#4A3F35" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">06</textbox>
+    <line x1="1250" y1="630" x2="1350" y2="630" color="#4A3F35" width="2"/>
+    <textbox x="1110" y="640" width="380" height="80" font="Georgia" font_path="C:/Windows/Fonts/georgiab.ttf" size="24" min_font_size="24" color="#4A3F35" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true">Activities</textbox>
+    <textbox x="1110" y="730" width="380" height="50" font="Georgia" font_path="C:/Windows/Fonts/georgia.ttf" size="16" min_font_size="16" color="#4A3F35" align="center" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2" bold="false">Interactive sessions.</textbox>
+  </slide>
+</presentation>

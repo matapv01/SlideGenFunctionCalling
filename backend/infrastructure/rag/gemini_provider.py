@@ -8,6 +8,7 @@ from langchain_community.vectorstores import FAISS
 from collections import deque
 import numpy as np
 from langchain_google_genai import GoogleGenerativeAIEmbeddings
+from langchain_community.embeddings import HuggingFaceEmbeddings
 from backend.domain.ports.tool_retrieve_provider import ToolRetrieveProvider
 from langchain_core.documents import Document
 from backend import config
@@ -21,11 +22,12 @@ class GeminiToolRetrieveProvider(ToolRetrieveProvider):
             tools_dict (Dict[str, List[Any]]): The dictionary of all tools, categorized.
             index_path (str): Path to the directory where the FAISS index will be saved/loaded.
         """
-        print("Initializing ToolRetriever with Google Gemini Embeddings...")
-
-        # The model name is the standard for Gemini embeddings.
-
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", google_api_key=api_key)
+        if api_key and api_key.startswith("nvapi-"):
+            print("Detected NVIDIA API Key. Initializing ToolRetriever with HuggingFace Embeddings...")
+            self.embeddings = HuggingFaceEmbeddings(model_name=config.EMBEDDING_MODEL_NAME)
+        else:
+            print("Initializing ToolRetriever with Google Gemini Embeddings...")
+            self.embeddings = GoogleGenerativeAIEmbeddings(model="gemini-embedding-001", google_api_key=api_key)
 
         self.retrievers = {}
         self.vector_stores: dict = {}

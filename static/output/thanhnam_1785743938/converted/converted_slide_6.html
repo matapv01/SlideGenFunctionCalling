@@ -1,0 +1,222 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title><style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #0055A4;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 95vw;
+            height: 90vh;
+            max-width: 1400px;
+            max-height: 900px;
+            background: #F5F5F5;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 4rem;
+            position: relative;
+        }
+
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #0055A4, #0055A4);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .main-title {
+            font-size: 5rem !important;
+            font-weight: 700;
+            color: #000000;
+            text-align: center !important;
+            margin-bottom: 3rem;
+            letter-spacing: 0.02em;
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: #0055A4;
+            border-radius: 2px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 2rem;
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .content-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            border: 2px solid #0055A420;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0055A4, #0055A4);
+        }
+        
+        .item-number {
+            font-size: 3rem !important;
+            font-weight: 700;
+            color: #0055A4;
+            margin-bottom: 1rem;
+            line-height: 1;
+            position: relative;
+            text-align: center !important;
+            display: block;
+        }
+
+        .item-number::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: #0055A440;
+            border-radius: 1px;
+        }
+        
+        .item-title {
+            font-size: 2rem !important;
+            font-weight: 500;
+            color: #000000;
+            line-height: 1.4;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 75rem) {
+            .slide-container { padding: 3rem; }
+            .main-title { font-size: 3rem; }
+            .item-number { font-size: 3rem; }
+            .item-title { font-size: 1.1rem; }
+        }
+
+        @media (max-width: 50rem) {
+            .slide-container { 
+                width: 98vw;
+                height: 95vh;
+                padding: 2rem;
+            }
+            .main-title { 
+                font-size: 2.5rem; 
+                margin-bottom: 2rem;
+            }
+            .grid-container { 
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+            .content-card { padding: 1.5rem; }
+            .item-number { font-size: 2.5rem; }
+            .item-title { font-size: 1rem; }
+        }
+
+        @media (max-width: 30rem) {
+            .grid-container { 
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(6, 1fr);
+                gap: 1rem;
+            }
+            .content-card { padding: 1rem; }
+            .item-number { font-size: 2rem; }
+            .item-title { font-size: 0.9rem; }
+        }
+    </style><style>
+*{box-sizing:border-box;}
+html { width: 1920px; height: 1080px; }
+body {
+  margin: 0;
+  padding: 2rem;
+  background: rgb(0, 85, 164);
+  overflow: auto;
+  
+  
+  /* KHÔNG đặt width/height cho body */
+}
+.outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
+.content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:1920px;height:1080px;overflow:visible;background:inherit;box-sizing:border-box;}
+.svg-block > svg{width:100%;height:100%;display:block;}
+</style></head><body><div class="outer-wrapper"><div class="content-wrapper">
+    <div style='position:absolute;z-index:100;left:260px;top:90px;width:1400px;height:900px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(245, 245, 245) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(245, 245, 245); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 16px; font-weight: 400; text-align: start; border-radius: 20px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 40px 0px; transform-origin: 700px 450px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 64px; padding-top: 64px; padding-right: 64px; padding-bottom: 64px; padding-left: 64px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1400px; height: 900px; max-width: 1400px; max-height: 900px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="slide-container"></div>
+    <h1 style='position:absolute;z-index:101;left:324px;top:154px;width:1272px;height:92px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 80px; font-weight: 700; text-align: center; letter-spacing: 1.6px; opacity: 1; transform-origin: 636px 46px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 48px; margin-bottom: 48px; box-sizing: border-box; letter-spacing: 1.6px; text-align: center; vertical-align: baseline; width: 1272px; height: 92px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="main-title">3. Đánh giá VLM:</h1>
+    <div style='position:absolute;z-index:103;left:324px;top:310px;width:1272px;height:893.546875px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 16px; font-weight: 400; text-align: center; border-radius: 16px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.08) 0px 8px 25px 0px; transform-origin: 636px 446.773px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 32px; padding-top: 32px; padding-right: 32px; padding-bottom: 32px; padding-left: 32px; box-sizing: border-box; text-align: center; vertical-align: baseline; width: 1272px; height: 893.547px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 2px solid rgba(0, 85, 164, 0.125); border-right: 2px solid rgba(0, 85, 164, 0.125); border-bottom: 2px solid rgba(0, 85, 164, 0.125); border-left: 2px solid rgba(0, 85, 164, 0.125); ' class="content-card"></div>
+    <div style='position:absolute;z-index:104;left:933.296875px;top:344px;width:53.390625px;height:48px;box-sizing:border-box;color: rgb(0, 85, 164); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 48px; font-weight: 700; line-height: 48px; text-align: center; opacity: 1; transform-origin: 26.6953px 24px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 16px; margin-bottom: 16px; box-sizing: border-box; line-height: 48px; text-align: center; vertical-align: baseline; width: 53.3906px; height: 48px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 85, 164); border-right: 0px none rgb(0, 85, 164); border-bottom: 0px none rgb(0, 85, 164); border-left: 0px none rgb(0, 85, 164); ' class="item-number">01</div>
+    <div style='position:absolute;z-index:105;left:358px;top:408px;width:1204px;height:89.59375px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 602px 44.7969px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; width: 1204px; height: 89.5938px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="item-title">• Môi trường và dữ liệu thực nghiệm<br>• Tiêu chí đánh giá</div>
+    <br style='position:absolute;z-index:106;left:1217.21875px;top:412px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <div style='position:absolute;z-index:107;left:324px;top:1235.546875px;width:1272px;height:893.546875px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 16px; font-weight: 400; text-align: center; border-radius: 16px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.08) 0px 8px 25px 0px; transform-origin: 636px 446.773px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 32px; padding-top: 32px; padding-right: 32px; padding-bottom: 32px; padding-left: 32px; box-sizing: border-box; text-align: center; vertical-align: baseline; width: 1272px; height: 893.547px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 2px solid rgba(0, 85, 164, 0.125); border-right: 2px solid rgba(0, 85, 164, 0.125); border-bottom: 2px solid rgba(0, 85, 164, 0.125); border-left: 2px solid rgba(0, 85, 164, 0.125); ' class="content-card"></div>
+    <div style='position:absolute;z-index:108;left:933.296875px;top:1269.546875px;width:53.390625px;height:48px;box-sizing:border-box;color: rgb(0, 85, 164); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 48px; font-weight: 700; line-height: 48px; text-align: center; opacity: 1; transform-origin: 26.6953px 24px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 16px; margin-bottom: 16px; box-sizing: border-box; line-height: 48px; text-align: center; vertical-align: baseline; width: 53.3906px; height: 48px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 85, 164); border-right: 0px none rgb(0, 85, 164); border-bottom: 0px none rgb(0, 85, 164); border-left: 0px none rgb(0, 85, 164); ' class="item-number">02</div>
+    <div style='position:absolute;z-index:109;left:358px;top:1333.546875px;width:1204px;height:761.546875px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 602px 380.773px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; width: 1204px; height: 761.547px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="item-title">  * Mô hình sử dụng:<br>    + LLM: <span style="color:#0055A4">Gemini Flash 2.5</span><br>    + VLM: <span style="color:#0055A4">Gemini Flash 2.5</span><br>  * Dữ liệu đầu vào:<br>    + Giáo trình môn học, bài luận sinh viên, báo cáo dự án<br>    + Trung bình 5000 từ/tài liệu<br>  * Đánh giá thiết kế:<br>    + Tính thẩm mỹ: hài hòa màu sắc, bố cục cân đối<br>    + Độ rõ ràng và dễ đọc: font chữ, kích thước, tương phản<br>    + Tính nhất quán: phong cách đồng bộ<br>  * Đánh giá chức năng:<br>    + Độ phù hợp của hàm được gọi<br>    + Tính hiệu quả của Function Calling<br>  * Đánh giá hiệu năng:<br>    + Thời gian xử lý<br>    + Tài nguyên sử dụng (CPU, GPU, memory)<br>    + Người tham gia: <span style="color:#0055A4">100 người</span> (20 giảng viên, 50 sinh viên, 30 nhân viên)</div>
+    <br style='position:absolute;z-index:110;left:1096.125px;top:1337.546875px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:112;left:1134.734375px;top:1382.34375px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:114;left:1136.515625px;top:1427.140625px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:115;left:1088.109375px;top:1471.9375px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:116;left:1354.515625px;top:1516.734375px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:117;left:1160.625px;top:1561.53125px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:118;left:1095.1875px;top:1606.328125px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:119;left:1309.671875px;top:1651.125px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:120;left:1368.4375px;top:1695.921875px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:121;left:1235.046875px;top:1740.71875px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:122;left:1119.25px;top:1785.515625px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:123;left:1192.265625px;top:1830.3125px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:124;left:1220.765625px;top:1875.109375px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:125;left:1113.890625px;top:1919.90625px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:126;left:1080.0625px;top:1964.703125px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+    <br style='position:absolute;z-index:127;left:1274.96875px;top:2009.5px;width:0px;height:36px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 0px 0px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; object-fit: fill; object-position: 50% 50%; display: inline; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); '>
+</div><script>
+(function() {
+  function resizeContent() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    var ww = window.innerWidth, wh = window.innerHeight;
+    var cw = wrapper.offsetWidth, ch = wrapper.offsetHeight;
+    var scale = Math.min(ww / cw, wh / ch);
+    wrapper.style.setProperty('--scale', scale);
+  }
+  window.addEventListener('resize', resizeContent);
+  window.addEventListener('DOMContentLoaded', resizeContent);
+})();
+</script></body></html>

@@ -4,7 +4,7 @@ from backend.config import (
     setup_environment,
     CAPTURES_DIR, PROJECT_DIR, STATIC_DIR,
     LLM_MODEL, LLM_BASE_URL, LLM_TEMPERATURE, LLM_MAX_TOKENS, LLM_TOP_P,
-    IDEA_STRUCTURE_LLM_MODEL, IDEA_STRUCTURE_LLM_TEMPERATURE, IDEA_STRUCTURE_LLM_MAX_TOKENS
+    IDEA_STRUCTURE_LLM_MODEL, IDEA_STRUCTURE_LLM_TEMPERATURE, IDEA_STRUCTURE_LLM_MAX_TOKENS, IDEA_STRUCTURE_LLM_BASE_URL
 )
 from fastapi import Depends, HTTPException, status, Query
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
@@ -65,7 +65,7 @@ _conversion_service = ConversionService(converter_infra=_converter_infra)
 _idea_llm = GeminiLLMProvider(
     api_keys=[GEMINI_API_KEY] if GEMINI_API_KEY else [],
     model=IDEA_STRUCTURE_LLM_MODEL,
-    base_url=LLM_BASE_URL,
+    base_url=IDEA_STRUCTURE_LLM_BASE_URL,
     temperature=IDEA_STRUCTURE_LLM_TEMPERATURE,
     max_tokens=IDEA_STRUCTURE_LLM_MAX_TOKENS,
 )

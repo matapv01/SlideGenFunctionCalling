@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#F2E6DF">
+    <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; viewBox=&quot;0 0 1600 900&quot; width=&quot;100%&quot; height=&quot;100%&quot;&gt;
+    &lt;!-- Top Right Pink Blob --&gt;
+    &lt;path d=&quot;M 1200 -50 C 1200 -50 1450 100 1650 50 C 1650 50 1650 400 1500 350 C 1350 300 1350 -50 1200 -50 Z&quot; fill=&quot;#F4BDB3&quot; opacity=&quot;0.8&quot;/&gt;
+    
+    &lt;!-- Bottom Right Taupe Blob --&gt;
+    &lt;path d=&quot;M 1400 1000 C 1400 1000 1450 750 1650 700 C 1650 700 1700 1000 1400 1000 Z&quot; fill=&quot;#C2B7B2&quot; opacity=&quot;0.8&quot;/&gt;
+    
+    &lt;!-- Bottom Left Orange/Peach Blob --&gt;
+    &lt;path d=&quot;M -50 950 C -50 950 100 650 300 850 C 500 1050 800 900 800 1050 C 800 1050 -50 1050 -50 950 Z&quot; fill=&quot;#F5C4A6&quot; opacity=&quot;0.7&quot;/&gt;
+    
+    &lt;!-- Top Left Giant Brown Blob --&gt;
+    &lt;path d=&quot;M -150 -150 C -150 -150 400 -50 550 100 C 700 250 550 500 400 650 C 250 800 -50 900 -200 900 Z&quot; fill=&quot;#755E59&quot; opacity=&quot;0.9&quot;/&gt;
+    
+    &lt;!-- Overlay Bottom Left Dark Brown Blob --&gt;
+    &lt;path d=&quot;M -100 550 C -100 550 200 500 250 800 C 300 1100 -50 1100 -100 550 Z&quot; fill=&quot;#885A48&quot; opacity=&quot;0.9&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="720" y="520.0" width="800" height="200" font="Segoe UI Light" size="40" min_font_size="24" color="#A0716A" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.1" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Choose a topic and audience to generate a tailored introductory presentation</textbox>
+    <textbox x="720" y="400.0" width="800" height="120" font="Segoe UI Light" size="96" min_font_size="64" color="#5C4640" align="right" vertical_align="bottom" single_line="false" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Intro Template</textbox>
+  </slide>
+</presentation>

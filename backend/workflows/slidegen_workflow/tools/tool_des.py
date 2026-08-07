@@ -627,7 +627,7 @@ class GenerateSectionHeaderSlide18Input(BaseModel):
 class GenerateContentSlideInput(BaseModel):
     """Input schema for generate_content_slide."""
     main_title: str = Field(..., description="Main title of the slide. Default: 'CONTENT'.")
-    items: List[str] = Field(..., description="List of item titles for the grid. Default: ['Your Title Here', ...] (6 items).")
+    items: List[Union[str, dict]] = Field(..., description="List of item titles for the grid. Default: ['Your Title Here', ...] (6 items).")
     main_title_color: str = Field(default="#555555", description="CSS color for the main title.")
     number_color: str = Field(default="#a2c4c9", description="CSS color for item numbers.")
     item_title_color: str = Field(default="#555555", description="CSS color for item titles.")

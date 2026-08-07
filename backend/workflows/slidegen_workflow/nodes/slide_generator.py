@@ -198,6 +198,8 @@ def _get_qwen_config(llm):
         os.environ.get("OPENAI_API_KEY") or 
         'not-needed'
     )
+    if hasattr(api_key, 'get_secret_value'):
+        api_key = api_key.get_secret_value()
     return model_name, base_url, api_key
 
 

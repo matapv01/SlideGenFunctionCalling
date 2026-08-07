@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Slide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #CCCCCC;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 95vw;
+            height: 90vh;
+            max-width: 1400px;
+            max-height: 900px;
+            background: #E6F5FF;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 4rem;
+            position: relative;
+        }
+
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #CCCCCC, #0095C4);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .main-title {
+            font-size: 5rem !important;
+            font-weight: 700;
+            color: #0095C4;
+            text-align: center !important;
+            margin-bottom: 3rem;
+            letter-spacing: 0.02em;
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: #0095C4;
+            border-radius: 2px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            grid-template-rows: repeat(3, 1fr);
+            gap: 2rem;
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .content-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            border: 2px solid #CCCCCC20;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0095C4, #CCCCCC);
+        }
+        
+        .item-number {
+            font-size: 3rem !important;
+            font-weight: 700;
+            color: #0095C4;
+            margin-bottom: 1rem;
+            line-height: 1;
+            position: relative;
+            text-align: center !important;
+            display: block;
+        }
+
+        .item-number::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: #0095C440;
+            border-radius: 1px;
+        }
+        
+        .item-title {
+            font-size: 2rem !important;
+            font-weight: 500;
+            color: #333333;
+            line-height: 1.4;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 75rem) {
+            .slide-container { padding: 3rem; }
+            .main-title { font-size: 3rem; }
+            .item-number { font-size: 3rem; }
+            .item-title { font-size: 1.1rem; }
+        }
+
+        @media (max-width: 50rem) {
+            .slide-container { 
+                width: 98vw;
+                height: 95vh;
+                padding: 2rem;
+            }
+            .main-title { 
+                font-size: 2.5rem; 
+                margin-bottom: 2rem;
+            }
+            .grid-container { 
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+            .content-card { padding: 1.5rem; }
+            .item-number { font-size: 2.5rem; }
+            .item-title { font-size: 1rem; }
+        }
+
+        @media (max-width: 30rem) {
+            .grid-container { 
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(6, 1fr);
+                gap: 1rem;
+            }
+            .content-card { padding: 1rem; }
+            .item-number { font-size: 2rem; }
+            .item-title { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <h1 class="main-title">GIỚI THIỆU DỰ ÁN</h1>
+        
+        <div class="grid-container">
+            
+        <div class="content-card">
+            <div class="item-number">01</div>
+            <div class="item-title">2.6. DỰ PHÓNG TÀI CHÍNH CHỦ YẾU<br><br>• <span style="color:#0095C4;">Dự kiến Doanh thu:</span> Năm 1: 10 tỷ VNĐ. Năm 2: 25 tỷ VNĐ. Năm 3: 50 tỷ VNĐ. Các năm tiếp theo tăng trưởng ổn định 20-25%/năm. Nguồn thu chính từ hợp đồng phát triển phần mềm và phí dịch vụ tư vấn.<br>• <span style="color:#0095C4;">Chi phí Hoạt động Dự kiến:</span> Chi phí lớn nhất bao gồm lương nhân sự (60%), chi phí marketing và bán hàng (15%), chi phí R&D (10%), và chi phí vận hành văn phòng (10%).<br>• <span style="color:#0095C4;">Nhu cầu Vốn & Kêu gọi Đầu tư:</span> Chúng tôi đang tìm kiếm khoản đầu tư hạt giống trị giá 5 tỷ VNĐ để phát triển sản phẩm giai đoạn đầu, mở rộng đội ngũ kinh doanh và marketing, cũng như trang trải chi phí hoạt động trong 12 tháng đầu tiên.</div>
+        </div>
+        
+        <div class="content-card">
+            <div class="item-number">02</div>
+            <div class="item-title">Năm 1<br>Doanh thu: <span style="color:#0095C4;">10 tỷ VNĐ</span> | Chi phí: <span style="color:#0095C4;">6 tỷ VNĐ</span></div>
+        </div>
+        
+        <div class="content-card">
+            <div class="item-number">03</div>
+            <div class="item-title">Năm 2<br>Doanh thu: <span style="color:#0095C4;">25 tỷ VNĐ</span> | Chi phí: <span style="color:#0095C4;">15 tỷ VNĐ</span></div>
+        </div>
+        
+        <div class="content-card">
+            <div class="item-number">04</div>
+            <div class="item-title">Năm 3<br>Doanh thu: <span style="color:#0095C4;">50 tỷ VNĐ</span> | Chi phí: <span style="color:#0095C4;">30 tỷ VNĐ</span></div>
+        </div>
+        
+        <div class="content-card">
+            <div class="item-number">05</div>
+            <div class="item-title">Your Title Here</div>
+        </div>
+        
+        <div class="content-card">
+            <div class="item-number">06</div>
+            <div class="item-title">Your Title Here</div>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>

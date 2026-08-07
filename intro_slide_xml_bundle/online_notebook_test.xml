@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <polygon points="0,0 600,0 1600,900 0,900" fill="#B8D3F8" line_color="none"/>
+    <shape type="rectangle" x="0" y="0" width="80" height="900" fill="#77A3EA" line_color="none"/>
+    <polygon points="265,205 271,204 278,202 285,199 290,195 295,190 299,185 302,178 304,171 305,165 1325,165 1325,171 1327,178 1330,185 1334,190 1339,195 1345,199 1351,202 1358,204 1365,205 1365,725 1358,725 1351,727 1345,730 1339,734 1334,739 1330,745 1327,751 1325,758 1325,765 305,765 304,758 302,751 299,745 295,739 290,734 285,730 278,727 271,725 265,725" fill="#9ABAE5" line_color="none"/>
+    <polygon points="250,190 256,189 263,187 270,184 275,180 280,175 284,170 287,163 289,156 290,150 1310,150 1310,156 1312,163 1315,170 1319,175 1324,180 1330,184 1336,187 1343,189 1350,190 1350,710 1343,710 1336,712 1330,715 1324,719 1319,724 1315,730 1312,736 1310,743 1310,750 290,750 289,743 287,736 284,730 280,724 275,719 270,715 263,712 256,710 250,710" fill="#FFFFFF" line_color="#000000" line_width="2"/>
+    <polygon points="239,23 314,51 273,162 198,135" fill="#9ABAE5" line_color="none"/>
+    <polygon points="233,10 308,38 287,93 213,67" fill="#FFAFA3" line_color="#000000" line_width="2"/>
+    <polygon points="213,67 287,93 267,150 192,122" fill="#FFE5D9" line_color="#000000" line_width="2"/>
+    <polygon points="1276,13 1509,63 1443,375 1209,325" fill="#E0E0E0" line_color="none"/>
+    <polygon points="1266,-1 1500,49 1434,361 1200,311" fill="#FFFFFF" line_color="#000000" line_width="2"/>
+    <line x1="1277" y1="47" x2="1471" y2="89" color="#000000" width="1"/>
+    <line x1="1267" y1="91" x2="1462" y2="133" color="#000000" width="1"/>
+    <line x1="1258" y1="135" x2="1453" y2="177" color="#000000" width="1"/>
+    <line x1="1249" y1="179" x2="1443" y2="220" color="#000000" width="1"/>
+    <line x1="1239" y1="222" x2="1434" y2="264" color="#000000" width="1"/>
+    <line x1="1230" y1="266" x2="1424" y2="308" color="#000000" width="1"/>
+    <polygon points="1178,632 1197,614 1450,868 1432,886" fill="#9ABAE5" line_color="none"/>
+    <polygon points="1183,642 1192,633 1173,623" fill="#000000" line_color="#000000" line_width="2"/>
+    <polygon points="1206,675 1225,656 1192,633 1183,642" fill="#D9D9D9" line_color="#000000" line_width="2"/>
+    <polygon points="1206,675 1225,656 1436,868 1418,886" fill="#15466B" line_color="#000000" line_width="2"/>
+    <polygon points="1347,815 1365,797 1436,868 1418,886" fill="#0C304A" line_color="#000000" line_width="2"/>
+    <polygon points="1357,834 1361,829 1403,872 1399,876" fill="#D9D9D9" line_color="#000000" line_width="2"/>
+    <line x1="450" y1="450" x2="1150" y2="450" color="#1E4E8C" width="4"/>
+    <textbox x="350" y="200" width="900" height="240" font="Arial Rounded MT Bold" font_path="C:/Windows/Fonts/ARLRDBD.TTF" size="120" min_font_size="40" color="#1E4E8C" align="center" vertical_align="bottom" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="false">INTERNATIONAL</textbox>
+    <textbox x="350" y="460" width="900" height="200" font="Arial Rounded MT Bold" font_path="C:/Windows/Fonts/ARLRDBD.TTF" size="120" min_font_size="40" color="#1E4E8C" align="center" vertical_align="top" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="false">MACROECONOMICS</textbox>
+    <textbox x="400" y="660" width="800" height="100" font="Segoe UI" font_path="C:/Windows/Fonts/segoeui.ttf" size="36" min_font_size="20" color="#2C3E50" align="center" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2">A comprehensive guide to global markets and policies</textbox>
+  </slide>
+</presentation>

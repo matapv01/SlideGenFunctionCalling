@@ -31,3 +31,14 @@ class ViTAestheticProvider:
             logits = self.model(pixel_values=tensor).logits
             score = torch.sigmoid(logits).item()
         return score
+
+vit_evaluator_instance = None
+def get_vit_evaluator():
+    global vit_evaluator_instance
+    if vit_evaluator_instance is None:
+        project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..", ".."))
+        reward_model_path = os.path.join(project_root, "rl", "model", "best_model_pairwise.pt")
+        if not os.path.exists(reward_model_path):
+            reward_model_path = os.path.join(project_root, "best_model_pairwise.pt")
+        vit_evaluator_instance = ViTAestheticProvider(model_path=reward_model_path, device="cpu")
+    return vit_evaluator_instance

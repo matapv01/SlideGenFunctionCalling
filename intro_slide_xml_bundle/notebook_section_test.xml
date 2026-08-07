@@ -1,0 +1,94 @@
+<?xml version="1.0" ?>
+<presentation>
+    <slide>
+        <polygon points="0,0 1600,0 1600,900 0,900" fill="#FFFFFF" line_color="none"/>
+        <line x1="0" y1="0" x2="0" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="50" y1="0" x2="50" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="100" y1="0" x2="100" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="150" y1="0" x2="150" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="200" y1="0" x2="200" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="250" y1="0" x2="250" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="300" y1="0" x2="300" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="350" y1="0" x2="350" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="400" y1="0" x2="400" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="450" y1="0" x2="450" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="500" y1="0" x2="500" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="550" y1="0" x2="550" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="600" y1="0" x2="600" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="650" y1="0" x2="650" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="700" y1="0" x2="700" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="750" y1="0" x2="750" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="800" y1="0" x2="800" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="850" y1="0" x2="850" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="900" y1="0" x2="900" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="950" y1="0" x2="950" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1000" y1="0" x2="1000" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1050" y1="0" x2="1050" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1100" y1="0" x2="1100" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1150" y1="0" x2="1150" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1200" y1="0" x2="1200" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1250" y1="0" x2="1250" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1300" y1="0" x2="1300" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1350" y1="0" x2="1350" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1400" y1="0" x2="1400" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1450" y1="0" x2="1450" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1500" y1="0" x2="1500" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="1550" y1="0" x2="1550" y2="900" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="0" x2="1600" y2="0" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="50" x2="1600" y2="50" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="100" x2="1600" y2="100" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="150" x2="1600" y2="150" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="200" x2="1600" y2="200" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="250" x2="1600" y2="250" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="300" x2="1600" y2="300" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="350" x2="1600" y2="350" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="400" x2="1600" y2="400" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="450" x2="1600" y2="450" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="500" x2="1600" y2="500" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="550" x2="1600" y2="550" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="600" x2="1600" y2="600" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="650" x2="1600" y2="650" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="700" x2="1600" y2="700" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="750" x2="1600" y2="750" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="800" x2="1600" y2="800" color="#E8F0F4" width="1"/>
+        <line x1="0" y1="850" x2="1600" y2="850" color="#E8F0F4" width="1"/>
+        <shape type="circle" x="20" y="10" width="180" height="220" fill="#F9E2A0" line_color="none"/>
+        <polygon points="100,225 120,225 110,245" fill="#F9E2A0" line_color="none"/>
+        <line x1="110" y1="240" x2="105" y2="340" color="#A0A0A0" width="2"/>
+        <polygon points="1470.0,30.0 1462.6735622473939,76.06868035723608 1436.9620578599324,106.7104580819952 1392.8654868376152,121.92533317427736 1400.1919245902213,75.8566528170413 1425.9034289776828,45.21487509228218" fill="#F47C20" line_color="none"/>
+        <polygon points="1420.0,70.0 1397.9655839562847,97.17507147391642 1369.7748053327075,107.43567577368648 1335.4276641292684,100.7818128993102 1357.4620801729836,73.60674142539378 1385.6528587965608,63.34613712562371" fill="#F9A826" line_color="none"/>
+        <polygon points="1500.0,140.0 1514.603276594914,178.11488308643283 1508.5255903765712,212.5831544418601 1481.7669413449723,243.40481406628186 1467.1636647500584,205.289930979849 1473.241350968401,170.82165962442173" fill="#E34A27" line_color="none"/>
+        <polygon points="1470.0,200.0 1475.544885728647,228.62261766953276 1466.9943821455054,252.11493318918048 1444.3484892505749,270.47694655894315 1438.803603521928,241.8543288894104 1447.3541071050695,218.36201336976268" fill="#F47C20" line_color="none"/>
+        <polygon points="1390.0,30.0 1372.387623071759,45.2906565894851 1352.6914680115149,48.763620142823704 1330.9115348192674,40.41889066001582 1348.5239117475087,25.128234070530716 1368.2200668077528,21.655270517192115" fill="#E34A27" line_color="none"/>
+        <shape type="rounded_rectangle" x="30" y="640" width="220" height="240" fill="#5499C7" line_color="none"/>
+        <polygon points="30,690 250,690 230,760 50,760" fill="#2980B9" line_color="none"/>
+        <shape type="rounded_rectangle" x="50" y="770" width="180" height="110" fill="#5499C7" line_color="none"/>
+        <shape type="circle" x="90" y="790" width="40" height="40" fill="#F4D03F" line_color="none"/>
+        <shape type="circle" x="130" y="810" width="35" height="35" fill="#E74C3C" line_color="none"/>
+        <shape type="circle" x="90" y="610" width="100" height="60" fill="none" line_color="#2980B9" line_width="10"/>
+        <polygon points="1362.6794919243112,660.717967697245 1397.3205080756888,640.717967697245 1477.3205080756888,779.282032302755 1442.6794919243112,799.282032302755" fill="#F4E5D4" line_color="none"/>
+        <polygon points="1392.6794919243112,712.6794919243113 1427.3205080756888,692.6794919243113 1447.3205080756888,727.3205080756887 1412.6794919243112,747.3205080756887" fill="#1E8449" line_color="none"/>
+        <polygon points="1362.6794919243112,660.717967697245 1397.3205080756888,640.717967697245 1365.0,624.7372055837118" fill="#1E8449" line_color="none"/>
+        <polygon points="1312.4264068711927,749.2893218813452 1340.7106781186549,777.5735931288071 1227.5735931288073,890.7106781186548 1199.2893218813451,862.4264068711929" fill="#F4E5D4" line_color="none"/>
+        <polygon points="1270.0,791.7157287525381 1298.2842712474621,820.0 1270.0,848.2842712474619 1241.7157287525379,820.0" fill="#2874A6" line_color="none"/>
+        <polygon points="1312.4264068711927,749.2893218813452 1340.7106781186549,777.5735931288071 1347.7817459305202,742.2182540694798" fill="#2874A6" line_color="none"/>
+        <shape type="circle" x="600" y="50" width="30" height="30" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="630" y="40" width="16" height="16" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="590" y="80" width="20" height="20" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="620" y="90" width="24" height="24" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="1400" y="500" width="40" height="40" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="1440" y="480" width="20" height="20" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="1420" y="530" width="30" height="30" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="350" y="800" width="36" height="36" fill="#A9D9D9" line_color="none"/>
+        <shape type="circle" x="300" y="850" width="24" height="24" fill="#A9D9D9" line_color="none"/>
+        <line x1="305" y1="180" x2="335" y2="180" color="#F39C12" width="3"/>
+        <line x1="320" y1="165" x2="320" y2="195" color="#F39C12" width="3"/>
+        <line x1="1290" y1="250" x2="1310" y2="250" color="#E74C3C" width="3"/>
+        <line x1="1300" y1="240" x2="1300" y2="260" color="#E74C3C" width="3"/>
+        <line x1="1188" y1="750" x2="1212" y2="750" color="#F39C12" width="3"/>
+        <line x1="1200" y1="738" x2="1200" y2="762" color="#F39C12" width="3"/>
+        <textbox x="600" y="230" width="400" height="120" font="Segoe UI" font_path="" size="96" min_font_size="60" color="#D56259" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true" italic="false">01</textbox>
+        <textbox x="200" y="380" width="1200" height="160" font="Arial" font_path="" size="110" min_font_size="50" color="#2E2E2E" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" bold="true" italic="false">Introduction</textbox>
+        <textbox x="300" y="600" width="1000" height="80" font="Segoe UI" font_path="" size="32" min_font_size="20" color="#555555" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true" line_spacing="1.2" bold="false" italic="false">You can enter a subtitle here if you need it</textbox>
+    </slide>
+</presentation>

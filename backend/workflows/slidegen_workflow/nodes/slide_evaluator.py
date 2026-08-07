@@ -88,6 +88,23 @@ def slide_evaluator(state: State, config: RunnableConfig) -> State:
     state['vlm_decision'] = response.decision
     state['vlm_feedback'] = response.feedback
 
+    from backend.infrastructure.aesthetic.vit_aesthetic_provider import get_vit_evaluator
+    print("Evaluating aesthetic score with ViT...")
+    try:
+        vit_evaluator = get_vit_evaluator()
+        vit_score = vit_evaluator.evaluate(current_image_path)
+        print(f"ViT Aesthetic Score: {vit_score:.3f}")
+        
+        # Override VLM decision if aesthetic score is too low
+        if vit_score < 0.5 and state['vlm_decision'] == 'accept':
+            print("ViT score is below 0.5. Overriding VLM decision to DENY.")
+            state['vlm_decision'] = 'deny'
+            state['vlm_feedback'] += f" | However, ViT Aesthetic Score ({vit_score:.3f}) is too low, so the slide was rejected."
+        else:
+            state['vlm_feedback'] += f" | ViT Aesthetic Score: {vit_score:.3f}."
+    except Exception as e:
+        print(f"Error during ViT evaluation: {e}")
+
     # Update retry count if decision is 'deny'
     if state['vlm_decision'] == 'deny':
         state['retry_count'] = retry_count + 1

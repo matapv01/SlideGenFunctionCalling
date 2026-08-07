@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>1.1. Mử đầu: Thiện nhiên ký diễu</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        html { 
+            font-size: 16px; 
+            width: 100%;
+            height: 100%;
+        }
+        
+        body, html {
+            height: 100vh;
+            width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif;
+            overflow: hidden;
+        }
+        
+        .slide-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            background: #8BC34A;
+            position: relative;
+        }
+        
+        /* Content wrapper for scaling */
+        .content-wrapper {
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background: inherit;
+        }
+        
+        .outer-wrapper {
+            padding: 0;
+            box-sizing: border-box;
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+        }
+        
+        /* Top text section */
+        .text-section {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 5% 7%;
+            background: #8BC34A;
+        }
+        
+        .title {
+            font-size: clamp(2rem, 8vw, 7rem);
+            font-weight: 300;
+            color: #2C2C2C;
+            margin-bottom: 2rem;
+            letter-spacing: 0.02em;
+            line-height: 1.1;
+        }
+        
+        .description {
+            font-size: clamp(1rem, 2.5vw, 2.4rem);
+            color: #FFFFFF;
+            line-height: 1.5;
+            max-width: 90%;
+            font-weight: 300;
+        }
+        
+        /* Bottom image section */
+        .image-section {
+            height: 55%;
+            width: 100%;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .image-section img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            display: block;
+        }
+        
+
+    </style>
+</head>
+<body>
+    <div class="outer-wrapper">
+        <div class="content-wrapper">
+            <div class="slide-container">
+                <!-- Top text section -->
+                <div class="text-section">
+                    <h1 class="title">1.1. Mử đầu: Thiện nhiên ký diễu</h1>
+                    <p class="description">* Vị đỉp thiện nhiên: thiện nhiên mang lại sự sống, cản bảng sinh thại và cảm hùng cho con người.
+* Trạch nhiệm bảo vẽ: mới người cần hành động để bảo tồn thiện nhiên cho thế hế tưởng lại.</p>
+                </div>
+                
+                <!-- Bottom image section -->
+                <div class="image-section">
+                    <img src="https://images.unsplash.com/photo-1521737711867-e3b97375f902?q=80&w=1887&auto=format&fit=crop" alt="Training introduction image">
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

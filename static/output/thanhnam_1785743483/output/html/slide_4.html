@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Process Slide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #0066CC;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 98vw;
+            height: 96vh;
+            max-width: 1600px;
+            max-height: 1000px;
+            background: #F5F5F5;
+            border-radius: 20px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+            padding: 5rem;
+            position: relative;
+        }
+        
+        .main-title {
+            font-size: 6rem !important;
+            font-weight: 700;
+            color: #003366;
+            text-align: center !important;
+            margin-bottom: 4rem;
+            line-height: 1.2;
+            display: block;
+            width: 100%;
+        }
+        
+        .boxes-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: relative;
+            flex: 1;
+            gap: 2rem;
+        }
+        
+        .process-box {
+            flex: 1;
+            max-width: 650px;
+            background: var(--box-color);
+            border-radius: 25px;
+            padding: 5rem;
+            color: #333333;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+            z-index: 2;
+        }
+
+        .left-box {
+            --box-color: #FFFFFF;
+        }
+        
+        .right-box {
+            --box-color: #FFFFFF;
+        }
+        
+        .box-title {
+            font-size: 3.5rem !important;
+            font-weight: 600;
+            margin-bottom: 2.5rem;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+        
+        .box-content {
+            font-size: 2rem !important;
+            line-height: 1.8;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+        
+        .arrow-container {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 3;
+        }
+
+        .arrow {
+            width: 100px;
+            height: 100px;
+            background: #FFFFFF;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+
+        .arrow::before {
+            content: '→';
+            font-size: 2.8rem !important;
+            color: #333333;
+            font-weight: bold;
+        }
+
+     
+
+        /* Responsive Design */
+        @media (max-width: 75rem) {
+            .slide-container { padding: 3rem; }
+            .main-title { font-size: 2.25rem; }
+            .box-title { font-size: 1.5rem; }
+            .box-content { font-size: 1rem; }
+        }
+
+        @media (max-width: 50rem) {
+            .slide-container { 
+                padding: 2rem;
+                width: 95vw;
+                height: 90vh;
+            }
+            .main-title { font-size: 2rem; margin-bottom: 2.5rem; }
+            .boxes-container { 
+                flex-direction: column; 
+                gap: 2rem;
+            }
+            .process-box { 
+                max-width: 100%;
+                padding: 2rem;
+            }
+            .arrow-container {
+                position: relative;
+                top: auto;
+                left: auto;
+                transform: none;
+                margin: 1rem 0;
+            }
+            .arrow::before {
+                content: '↓';
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <h1 class="main-title">2. Phương pháp được đề xuất</h1>
+        
+        <div class="boxes-container">
+            <!-- Left Process Box -->
+            <div class="process-box left-box">
+                <h2 class="box-title">Tên hàm</h2>
+                <p class="box-content">HTML Functions Library</p>
+            </div>
+            
+            <!-- Arrow Connection -->
+            <div class="arrow-container">
+                <div class="arrow"></div>
+            </div>
+            
+            <!-- Right Process Box -->
+            <div class="process-box right-box">
+                <h2 class="box-title">Đặc điểm</h2>
+                <p class="box-content"><span style="color:#0066CC">•</span> Gồm nhiều mẫu slide được tạo từ các hàm HTML/CSS. Mỗi hàm có tool tương ứng mô tả chi tiết<br><span style="color:#0066CC">•</span> Đa dạng bố cục và phong cách trình bày<br><br><span style="font-weight:bold">Cấu trúc Tool</span><br><span style="color:#0066CC">•</span> Tên hàm và mô tả chức năng<br><span style="color:#0066CC">•</span> Các tham số và kiểu dữ liệu<br><span style="color:#0066CC">•</span> Chủ đề, bố cục phù hợp<br><span style="color:#0066CC">•</span> Tham số bắt buộc</p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

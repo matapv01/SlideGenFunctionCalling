@@ -3,6 +3,9 @@ from dotenv import load_dotenv
 import logging
 from pathlib import Path
 
+# Load env variables immediately so that module-level os.getenv() works
+load_dotenv(override=True)
+
 logger = logging.getLogger(__name__)
 
 # Base directories
@@ -50,7 +53,7 @@ API_PORT = 12008
 
 # --- LLM Configuration ---
 # Model name sử dụng cho tất cả các LLM calls (slide generation)
-LLM_MODEL = os.getenv("LLM_MODEL", "gemini-3-flash-preview")
+LLM_MODEL = os.getenv("LLM_MODEL", "gemini-1.5-flash")
 # Base URL cho API endpoint
 LLM_BASE_URL = os.getenv("LLM_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
 # Temperature: 0.0 = deterministic, 1.0 = creative (khuyến nghị: 0.5-0.7 cho slides)
@@ -64,7 +67,8 @@ MAX_REMAKE = int(os.getenv("MAX_REMAKE", "3"))
 
 # --- Idea Structure LLM Configuration ---
 # Model cho việc tạo cấu trúc slide từ idea (create with idea feature)
-IDEA_STRUCTURE_LLM_MODEL = os.getenv("IDEA_STRUCTURE_LLM_MODEL", "gemini-2.5-flash")
+IDEA_STRUCTURE_LLM_MODEL = os.getenv("IDEA_STRUCTURE_LLM_MODEL", "gemini-1.5-flash")
+IDEA_STRUCTURE_LLM_BASE_URL = os.getenv("IDEA_STRUCTURE_LLM_BASE_URL", LLM_BASE_URL)
 # Temperature cao hơn để sáng tạo structure (0.7 = khá creative nhưng vẫn có logic)
 IDEA_STRUCTURE_LLM_TEMPERATURE = float(os.getenv("IDEA_STRUCTURE_LLM_TEMPERATURE", "0.7"))
 # Max tokens cho structure generation (cần ít hơn vì chỉ gen JSON structure)

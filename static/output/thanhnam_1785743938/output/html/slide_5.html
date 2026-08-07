@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Content Slide</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #0055A4;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 95vw;
+            height: 90vh;
+            max-width: 1400px;
+            max-height: 900px;
+            background: #F5F5F5;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 4rem;
+            position: relative;
+        }
+
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #0055A4, #0055A4);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .main-title {
+            font-size: 5rem !important;
+            font-weight: 700;
+            color: #000000;
+            text-align: center !important;
+            margin-bottom: 3rem;
+            letter-spacing: 0.02em;
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: #0055A4;
+            border-radius: 2px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 2rem;
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .content-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            border: 2px solid #0055A420;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #0055A4, #0055A4);
+        }
+        
+        .item-number {
+            font-size: 3rem !important;
+            font-weight: 700;
+            color: #0055A4;
+            margin-bottom: 1rem;
+            line-height: 1;
+            position: relative;
+            text-align: center !important;
+            display: block;
+        }
+
+        .item-number::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: #0055A440;
+            border-radius: 1px;
+        }
+        
+        .item-title {
+            font-size: 2rem !important;
+            font-weight: 500;
+            color: #000000;
+            line-height: 1.4;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 75rem) {
+            .slide-container { padding: 3rem; }
+            .main-title { font-size: 3rem; }
+            .item-number { font-size: 3rem; }
+            .item-title { font-size: 1.1rem; }
+        }
+
+        @media (max-width: 50rem) {
+            .slide-container { 
+                width: 98vw;
+                height: 95vh;
+                padding: 2rem;
+            }
+            .main-title { 
+                font-size: 2.5rem; 
+                margin-bottom: 2rem;
+            }
+            .grid-container { 
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+            .content-card { padding: 1.5rem; }
+            .item-number { font-size: 2.5rem; }
+            .item-title { font-size: 1rem; }
+        }
+
+        @media (max-width: 30rem) {
+            .grid-container { 
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(6, 1fr);
+                gap: 1rem;
+            }
+            .content-card { padding: 1rem; }
+            .item-number { font-size: 2rem; }
+            .item-title { font-size: 0.9rem; }
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <h1 class="main-title">3. Đánh giá VLM:</h1>
+        
+        <div class="grid-container">
+            
+        <div class="content-card">
+            <div class="item-number">01</div>
+            <div class="item-title"><span style="color:#0055A4">Phân tích</span> hình ảnh slide hiện tại + slide trước</div>
+        </div>
+        
+        <div class="content-card">
+            <div class="item-number">02</div>
+            <div class="item-title"><span style="color:#0055A4">Đánh giá</span> theo các tiêu chí: rõ ràng, thẩm mỹ, cân đối</div>
+        </div>
+        
+        </div>
+    </div>
+</body>
+</html>

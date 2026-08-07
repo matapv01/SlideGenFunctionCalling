@@ -1,6 +1,12 @@
 # File: backend/main.py
 
 import sys
+import io
+if hasattr(sys.stdout, 'buffer'):
+    sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8')
+if hasattr(sys.stderr, 'buffer'):
+    sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8')
+
 import uvicorn
 from pathlib import Path
 from dotenv import load_dotenv

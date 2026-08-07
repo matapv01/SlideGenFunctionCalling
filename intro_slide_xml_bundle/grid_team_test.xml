@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#F3F6F9">
+    <textbox x="120" y="220" width="650" height="340" font="Arial Black" font_path="C:/Windows/Fonts/ariblk.ttf" size="72" min_font_size="48" color="#1A2530" align="left" vertical_align="bottom" single_line="false" max_lines="3" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" bold="true">Add a Team
+Members
+Page</textbox>
+    <shape type="rectangle" x="120" y="575" width="20" height="6" fill="#8E44AD" line_color="none"/>
+    <shape type="rectangle" x="140" y="575" width="20" height="6" fill="#27AE60" line_color="none"/>
+    <shape type="rectangle" x="160" y="575" width="20" height="6" fill="#E74C3C" line_color="none"/>
+    <shape type="rectangle" x="180" y="575" width="20" height="6" fill="#F1C40F" line_color="none"/>
+    <shape type="rounded_rectangle" x="758" y="212" width="320" height="180" fill="#E1E5EB" line_color="none"/>
+    <shape type="rounded_rectangle" x="750" y="200" width="320" height="180" fill="#FFFFFF" line_color="none"/>
+    <shape type="circle" x="844.0" y="134.0" width="132" height="132" fill="#8E44AD" line_color="none"/>
+    <shape type="circle" x="847.0" y="137.0" width="126" height="126" fill="#FFFFFF" line_color="none"/>
+    <image x="850.0" y="140.0" width="120" height="120" src="https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=300&amp;h=300&amp;fit=crop" shape="circle"/>
+    <textbox x="750" y="280.0" width="320" height="35" font="Segoe UI" font_path="C:/Windows/Fonts/segoeuib.ttf" size="24" min_font_size="18" color="#2C3E50" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" bold="true">Olivia Chen</textbox>
+    <textbox x="750" y="315.0" width="320" height="30" font="Segoe UI" font_path="C:/Windows/Fonts/segoeui.ttf" size="16" min_font_size="12" color="#7F8C8D" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lead Designer</textbox>
+    <shape type="rounded_rectangle" x="1118" y="212" width="320" height="180" fill="#E1E5EB" line_color="none"/>
+    <shape type="rounded_rectangle" x="1110" y="200" width="320" height="180" fill="#FFFFFF" line_color="none"/>
+    <shape type="circle" x="1204.0" y="134.0" width="132" height="132" fill="#27AE60" line_color="none"/>
+    <shape type="circle" x="1207.0" y="137.0" width="126" height="126" fill="#FFFFFF" line_color="none"/>
+    <image x="1210.0" y="140.0" width="120" height="120" src="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=300&amp;h=300&amp;fit=crop" shape="circle"/>
+    <textbox x="1110" y="280.0" width="320" height="35" font="Segoe UI" font_path="C:/Windows/Fonts/segoeuib.ttf" size="24" min_font_size="18" color="#2C3E50" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" bold="true">Ben Carter</textbox>
+    <textbox x="1110" y="315.0" width="320" height="30" font="Segoe UI" font_path="C:/Windows/Fonts/segoeui.ttf" size="16" min_font_size="12" color="#7F8C8D" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Frontend Developer</textbox>
+    <shape type="rounded_rectangle" x="758" y="492" width="320" height="180" fill="#E1E5EB" line_color="none"/>
+    <shape type="rounded_rectangle" x="750" y="480" width="320" height="180" fill="#FFFFFF" line_color="none"/>
+    <shape type="circle" x="844.0" y="414.0" width="132" height="132" fill="#E74C3C" line_color="none"/>
+    <shape type="circle" x="847.0" y="417.0" width="126" height="126" fill="#FFFFFF" line_color="none"/>
+    <image x="850.0" y="420.0" width="120" height="120" src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=300&amp;h=300&amp;fit=crop" shape="circle"/>
+    <textbox x="750" y="560.0" width="320" height="35" font="Segoe UI" font_path="C:/Windows/Fonts/segoeuib.ttf" size="24" min_font_size="18" color="#2C3E50" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" bold="true">Aisha Khan</textbox>
+    <textbox x="750" y="595.0" width="320" height="30" font="Segoe UI" font_path="C:/Windows/Fonts/segoeui.ttf" size="16" min_font_size="12" color="#7F8C8D" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Project Manager</textbox>
+    <shape type="rounded_rectangle" x="1118" y="492" width="320" height="180" fill="#E1E5EB" line_color="none"/>
+    <shape type="rounded_rectangle" x="1110" y="480" width="320" height="180" fill="#FFFFFF" line_color="none"/>
+    <shape type="circle" x="1204.0" y="414.0" width="132" height="132" fill="#F1C40F" line_color="none"/>
+    <shape type="circle" x="1207.0" y="417.0" width="126" height="126" fill="#FFFFFF" line_color="none"/>
+    <image x="1210.0" y="420.0" width="120" height="120" src="https://images.unsplash.com/photo-1519085360753-af0119f7cbe7?w=300&amp;h=300&amp;fit=crop" shape="circle"/>
+    <textbox x="1110" y="560.0" width="320" height="35" font="Segoe UI" font_path="C:/Windows/Fonts/segoeuib.ttf" size="24" min_font_size="18" color="#2C3E50" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" bold="true">Leo Martinez</textbox>
+    <textbox x="1110" y="595.0" width="320" height="30" font="Segoe UI" font_path="C:/Windows/Fonts/segoeui.ttf" size="16" min_font_size="12" color="#7F8C8D" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Marketing Head</textbox>
+  </slide>
+</presentation>

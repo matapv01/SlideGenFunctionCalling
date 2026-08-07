@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split-Layout List Slide</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@100;200;300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body, html {
+            height: 100vh; width: 100vw;
+            font-family: 'Be Vietnam Pro', sans-serif; overflow: hidden;
+        }
+        .slide-container { width: 100%; height: 100%; display: flex; }
+        .left-column {
+            flex: 1; max-width: 35%;
+            background-color: #1F2D3D; color: #FFFFFF;
+            padding: 3rem; display: flex; flex-direction: column;
+            justify-content: center; align-items: center; text-align: center;
+        }
+        .right-column {
+            flex: 2; background-color: #1F2D3D; color: #FFFFFF;
+            padding: 4rem 3rem; overflow-y: auto;
+        }
+        .points-list { display: flex; flex-direction: column; gap: 2rem; }
+        .point-item:not(:last-child) {
+            padding-bottom: 2rem; border-bottom: 1px solid #FFD700;
+        }
+
+        /* Font size styles */
+        .main-title {
+            font-size: clamp(calc(2.5rem * 1.3), calc(6vw * 1.3), calc(4rem * 1.3));
+            font-weight: 900; line-height: 1.2; text-transform: uppercase;
+        }
+        .point-title {
+            font-size: clamp(calc(1.1rem * 1.3), calc((1.5vw + 0.2rem) * 1.3), calc(1.35rem * 1.3));
+            font-weight: 900; text-transform: uppercase; margin-bottom: 0.75rem;
+        }
+        .point-description {
+            font-size: clamp(calc(1rem * 1.3), calc((1vw + 0.1rem) * 1.3), calc(1.1rem * 1.3));
+            line-height: 1.6; font-weight: 400; max-width: 45rem;
+        }
+        
+        @media (max-width: 768px) {
+            .slide-container { flex-direction: column; overflow-y: auto; }
+            .left-column { max-width: 100%; width: 100%; flex: none; height: auto; min-height: 12rem; padding: 2rem; }
+            .right-column { flex: none; width: 100%; padding: 2.5rem 2rem; }
+        }
+        
+        <style>.split-layout-list-slide .main-title{font-size:32pt;color:#FFD700;font-weight:bold;}.split-layout-list-slide .point-title{font-size:28pt;color:#FFD700;font-weight:bold;}.split-layout-list-slide .point-description{font-size:24pt;color:#FFFFFF;}</style>
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="left-column">
+            <h1 class="main-title">1. Giới thiệu</h1>
+        </div>
+        <div class="right-column">
+            <div class="points-list">
+                
+        <div class="point-item">
+            <h2 class="point-title">Giới thiệu</h2>
+            <p class="point-description">Lionel Andrés Messi Cuccittini, sinh ngày 24 tháng 6 năm 1987 tại thành phố Rosario, tỉnh Santa Fe, Argentina, được mệnh danh là một trong những cầu thủ vĩ đại nhất lịch sử bóng đá thế giới. Biệt danh “El Pulga” (Bọ chét) gắn liền với anh không chỉ vì vóc dáng nhỏ bé (1m70) mà còn bởi sự nhanh nhẹn, linh hoạt và khả năng xoay sở phi thường trên sân cỏ.</p>
+        </div>
+        
+        <div class="point-item">
+            <h2 class="point-title">Khó khăn</h2>
+            <p class="point-description">Ngay từ khi còn nhỏ, Messi đã thể hiện năng khiếu thiên bẩm. Tuy nhiên, anh từng phải đối mặt với căn bệnh thiếu hụt hormone tăng trưởng, đe dọa sự nghiệp ngay từ lúc khởi đầu. Nhờ sự hỗ trợ của gia đình và CLB Barcelona, Messi đã vượt qua khó khăn và bước vào con đường trở thành huyền thoại.</p>
+        </div>
+        
+            </div>
+        </div>
+    </div>
+</body>
+</html>

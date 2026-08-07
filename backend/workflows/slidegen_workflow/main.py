@@ -155,8 +155,8 @@ async def main_workflow_from_chunks(
         langchain_llm = llm_provider.llm_client
         planner_llm = planner_llm_provider.llm_client
 
-        # Router flag is False because we don't need to route document conversion
-        workflow = build_workflow(router_flags=False) 
+        # Router flag is True to enable ViT Evaluation node (evaluator)
+        workflow = build_workflow(router_flags=True) 
         app = workflow.compile()
 
         if slide_options is None:

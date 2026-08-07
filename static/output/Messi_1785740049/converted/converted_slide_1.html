@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="UTF-8"><title>Converted HTML</title><style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        html { font-size: 16px; }
+        body {
+            font-family: 'Be Vietnam Pro', sans-serif;
+            background: #FFD700;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .slide-container {
+            width: 95vw;
+            height: 90vh;
+            max-width: 1400px;
+            max-height: 900px;
+            background: #1F2D3D;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.15);
+            display: flex;
+            flex-direction: column;
+            padding: 4rem;
+            position: relative;
+        }
+
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 5px;
+            background: linear-gradient(90deg, #FFD700, #1F2D3D);
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .main-title {
+            font-size: 5rem !important;
+            font-weight: 700;
+            color: #FFFFFF;
+            text-align: center !important;
+            margin-bottom: 3rem;
+            letter-spacing: 0.02em;
+            position: relative;
+            display: block;
+            width: 100%;
+        }
+
+        .main-title::after {
+            content: '';
+            position: absolute;
+            bottom: -1rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: #1F2D3D;
+            border-radius: 2px;
+        }
+        
+        .grid-container {
+            display: grid;
+            grid-template-columns: repeat(1, 1fr);
+            grid-template-rows: repeat(2, 1fr);
+            gap: 2rem;
+            flex: 1;
+            padding: 1rem 0;
+        }
+        
+        .content-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9), rgba(255,255,255,0.7));
+            border: 2px solid #FFD70020;
+            border-radius: 16px;
+            padding: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            text-align: center;
+            position: relative;
+            box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+            overflow: hidden;
+        }
+
+        .content-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, #1F2D3D, #FFD700);
+        }
+        
+        .item-number {
+            font-size: 3rem !important;
+            font-weight: 700;
+            color: #1F2D3D;
+            margin-bottom: 1rem;
+            line-height: 1;
+            position: relative;
+            text-align: center !important;
+            display: block;
+        }
+
+        .item-number::after {
+            content: '';
+            position: absolute;
+            bottom: -0.5rem;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 40px;
+            height: 2px;
+            background: #1F2D3D40;
+            border-radius: 1px;
+        }
+        
+        .item-title {
+            font-size: 2rem !important;
+            font-weight: 500;
+            color: #FFFFFF;
+            line-height: 1.4;
+            text-align: center !important;
+            display: block;
+            width: 100%;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 75rem) {
+            .slide-container { padding: 3rem; }
+            .main-title { font-size: 3rem; }
+            .item-number { font-size: 3rem; }
+            .item-title { font-size: 1.1rem; }
+        }
+
+        @media (max-width: 50rem) {
+            .slide-container { 
+                width: 98vw;
+                height: 95vh;
+                padding: 2rem;
+            }
+            .main-title { 
+                font-size: 2.5rem; 
+                margin-bottom: 2rem;
+            }
+            .grid-container { 
+                grid-template-columns: repeat(2, 1fr);
+                grid-template-rows: repeat(3, 1fr);
+                gap: 1.5rem;
+            }
+            .content-card { padding: 1.5rem; }
+            .item-number { font-size: 2.5rem; }
+            .item-title { font-size: 1rem; }
+        }
+
+        @media (max-width: 30rem) {
+            .grid-container { 
+                grid-template-columns: 1fr;
+                grid-template-rows: repeat(6, 1fr);
+                gap: 1rem;
+            }
+            .content-card { padding: 1rem; }
+            .item-number { font-size: 2rem; }
+            .item-title { font-size: 0.9rem; }
+        }
+    </style><style>
+*{box-sizing:border-box;}
+html { width: 1920px; height: 1080px; }
+body {
+  margin: 0;
+  padding: 2rem;
+  background: rgb(255, 215, 0);
+  overflow: auto;
+  
+  
+  /* KHÔNG đặt width/height cho body */
+}
+.outer-wrapper{padding:0;box-sizing:border-box;width:1920px;height:1080px;overflow:hidden;}
+.content-wrapper{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%) scale(var(--scale,1));transform-origin:center center;width:1920px;height:1080px;overflow:visible;background:inherit;box-sizing:border-box;}
+.svg-block > svg{width:100%;height:100%;display:block;}
+</style></head><body><div class="outer-wrapper"><div class="content-wrapper">
+    <div style='position:absolute;z-index:100;left:260px;top:90px;width:1400px;height:900px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgb(31, 45, 61) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgb(31, 45, 61); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 16px; font-weight: 400; text-align: start; border-radius: 20px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.15) 0px 15px 40px 0px; transform-origin: 700px 450px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 64px; padding-top: 64px; padding-right: 64px; padding-bottom: 64px; padding-left: 64px; box-sizing: border-box; text-align: start; vertical-align: baseline; width: 1400px; height: 900px; max-width: 1400px; max-height: 900px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 0px none rgb(0, 0, 0); border-right: 0px none rgb(0, 0, 0); border-bottom: 0px none rgb(0, 0, 0); border-left: 0px none rgb(0, 0, 0); ' class="slide-container"></div>
+    <h1 style='position:absolute;z-index:101;left:324px;top:154px;width:1272px;height:92px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 80px; font-weight: 700; text-align: center; letter-spacing: 1.6px; opacity: 1; transform-origin: 636px 46px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 48px; margin-bottom: 48px; box-sizing: border-box; letter-spacing: 1.6px; text-align: center; vertical-align: baseline; width: 1272px; height: 92px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="main-title">INTRO</h1>
+    <div style='position:absolute;z-index:103;left:324px;top:310px;width:1272px;height:284px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 16px; font-weight: 400; text-align: center; border-radius: 16px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.08) 0px 8px 25px 0px; transform-origin: 636px 142px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 32px; padding-top: 32px; padding-right: 32px; padding-bottom: 32px; padding-left: 32px; box-sizing: border-box; text-align: center; vertical-align: baseline; width: 1272px; height: 284px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 2px solid rgba(255, 215, 0, 0.125); border-right: 2px solid rgba(255, 215, 0, 0.125); border-bottom: 2px solid rgba(255, 215, 0, 0.125); border-left: 2px solid rgba(255, 215, 0, 0.125); ' class="content-card"></div>
+    <div style='position:absolute;z-index:104;left:933.296875px;top:344px;width:53.390625px;height:48px;box-sizing:border-box;color: rgb(31, 45, 61); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 48px; font-weight: 700; line-height: 48px; text-align: center; opacity: 1; transform-origin: 26.6953px 24px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 16px; margin-bottom: 16px; box-sizing: border-box; line-height: 48px; text-align: center; vertical-align: baseline; width: 53.3906px; height: 48px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(31, 45, 61); border-right: 0px none rgb(31, 45, 61); border-bottom: 0px none rgb(31, 45, 61); border-left: 0px none rgb(31, 45, 61); ' class="item-number">01</div>
+    <div style='position:absolute;z-index:105;left:358px;top:408px;width:1204px;height:44.796875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 602px 22.3984px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; width: 1204px; height: 44.7969px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="item-title">Lionel Messi</div>
+    <div style='position:absolute;z-index:106;left:324px;top:626px;width:1272px;height:284px;box-sizing:border-box;color: rgb(0, 0, 0); background: rgba(0, 0, 0, 0) linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)) repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-image: linear-gradient(135deg, rgba(255, 255, 255, 0.9), rgba(255, 255, 255, 0.7)); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 16px; font-weight: 400; text-align: center; border-radius: 16px; opacity: 1; box-shadow: rgba(0, 0, 0, 0.08) 0px 8px 25px 0px; transform-origin: 636px 142px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; padding: 32px; padding-top: 32px; padding-right: 32px; padding-bottom: 32px; padding-left: 32px; box-sizing: border-box; text-align: center; vertical-align: baseline; width: 1272px; height: 284px; object-fit: fill; object-position: 50% 50%; display: flex; border-top: 2px solid rgba(255, 215, 0, 0.125); border-right: 2px solid rgba(255, 215, 0, 0.125); border-bottom: 2px solid rgba(255, 215, 0, 0.125); border-left: 2px solid rgba(255, 215, 0, 0.125); ' class="content-card"></div>
+    <div style='position:absolute;z-index:107;left:933.296875px;top:660px;width:53.390625px;height:48px;box-sizing:border-box;color: rgb(31, 45, 61); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 48px; font-weight: 700; line-height: 48px; text-align: center; opacity: 1; transform-origin: 26.6953px 24px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; margin: 0px 0px 16px; margin-bottom: 16px; box-sizing: border-box; line-height: 48px; text-align: center; vertical-align: baseline; width: 53.3906px; height: 48px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(31, 45, 61); border-right: 0px none rgb(31, 45, 61); border-bottom: 0px none rgb(31, 45, 61); border-left: 0px none rgb(31, 45, 61); ' class="item-number">02</div>
+    <div style='position:absolute;z-index:108;left:358px;top:724px;width:1204px;height:44.796875px;box-sizing:border-box;color: rgb(255, 255, 255); background: rgba(0, 0, 0, 0) none repeat scroll 0% 0% / auto padding-box border-box; background-color: rgba(0, 0, 0, 0); background-position: 0% 0%; background-repeat: repeat; background-attachment: scroll; background-clip: border-box; font-family: "Be Vietnam Pro", sans-serif; font-size: 32px; font-weight: 500; line-height: 44.8px; text-align: center; opacity: 1; transform-origin: 602px 22.3984px; fill: rgb(0, 0, 0); stroke-width: 1px; stroke-linecap: butt; stroke-linejoin: miter; transition: all; list-style-type: disc; list-style-position: outside; box-sizing: border-box; line-height: 44.8px; text-align: center; vertical-align: baseline; width: 1204px; height: 44.7969px; object-fit: fill; object-position: 50% 50%; display: block; border-top: 0px none rgb(255, 255, 255); border-right: 0px none rgb(255, 255, 255); border-bottom: 0px none rgb(255, 255, 255); border-left: 0px none rgb(255, 255, 255); ' class="item-title">Huyền thoại bóng đá sống mãi cùng thời gian</div>
+</div><script>
+(function() {
+  function resizeContent() {
+    var wrapper = document.querySelector('.content-wrapper');
+    if (!wrapper) return;
+    var ww = window.innerWidth, wh = window.innerHeight;
+    var cw = wrapper.offsetWidth, ch = wrapper.offsetHeight;
+    var scale = Math.min(ww / cw, wh / ch);
+    wrapper.style.setProperty('--scale', scale);
+  }
+  window.addEventListener('resize', resizeContent);
+  window.addEventListener('DOMContentLoaded', resizeContent);
+})();
+</script></body></html>
