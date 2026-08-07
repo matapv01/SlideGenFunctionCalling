@@ -68,6 +68,8 @@ class State(TypedDict, total=False):
     previous_slide_context: slide_context
     highlight_color: str  # Color for highlighting key phrases in content slides
     previous_transition_tool_call: Dict  # Store previous transition tool for consistency
+    candidate_tools: List[Any]  # Cached retrieved tools for retry attempts
+    last_processed_slide_index: int  # Track slide index to reset tool cache on new slide
 
     # Retry and evaluation state
     retry_count: int
