@@ -556,11 +556,14 @@ Analyze the design instruction and slide content carefully. Then:
 4. Self-check: Are there any None/null/empty values for required fields? Fix them.
 5. Self-check: Are color values valid hex codes (e.g., #2563EB)? Are lists actually lists?
 6. Self-check JSON syntax: Are all open brackets properly closed? Are quotes escaped? No trailing commas?
+7. Self-check IMAGE PARAMS: Does the chosen tool have any image parameters (e.g. image_url, bg_image)? If YES → you MUST add a search_ddgs_images call AFTER the slide tool for EACH such image param. Never skip this!
 
-STEP 2 — ACT (output the tool call):
-Output EXACTLY ONE function call inside <tool_call> tags. The JSON must be strictly valid and complete.
+STEP 2 — ACT (output the tool call plan):
+Output an ordered tool call plan inside <tool_call> tags: Output EXACTLY ONE slide HTML tool call FIRST, followed by one `search_ddgs_images` call for EACH image parameter in that slide tool (if any). The JSON must be strictly valid and complete.
 
 CRITICAL RULES:
+- STRICT TOOL SELECTION: You MUST select and output ONLY a tool function name that is EXPLICITLY LISTED in the provided available tools section below. ABSOLUTELY DO NOT invent, guess, or use any tool name outside the provided list!
+- STRICT IMAGE SEARCH PLAN ORDER: The primary Slide HTML tool MUST ALWAYS come FIRST at index 0. `search_ddgs_images` calls MUST ONLY come AFTER the slide HTML tool. NEVER output `search_ddgs_images` alone without the Slide HTML tool!
 - Every required parameter MUST have a real, meaningful value (NOT None, null, "", or placeholder text)
 - Color values MUST be valid hex codes (e.g., "#1E3A5F", NOT "blue" or "dark")
 - List parameters MUST be actual lists (e.g., ["item1", "item2"], NOT a string)
