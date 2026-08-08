@@ -46,19 +46,13 @@ from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 from backend import config as backend_config
 
 
-class DummyLLM:
-    """Mock LLM object carrying model, base_url, and api_key attributes for generate_slide node."""
-    def __init__(self):
-        self.model_name = os.environ.get("OPENAI_MODEL", "Qwen/Qwen3-Next-80B-A3B-Instruct")
-        self.openai_api_base = os.environ.get("OPENAI_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip("/")
-        self.openai_api_key = os.environ.get("NVIDIA_API_KEY") or os.environ.get("OPENAI_API_KEY")
-        self.max_tokens = 4096
-        self.temperature = 0.3
+from backend.infrastructure.llm_providers import (
+    BaseLLMProvider,
+    NvidiaQwenLLMProvider,
+    GeminiAPIProvider,
+)
 
-    def invoke(self, messages):
-        class DummyResponse:
-            content = "Use a clean layout with consistent colors and clear visual hierarchy."
-        return DummyResponse()
+
 
 
 def test_single_sample_loop(sample: dict, config: dict, max_retries: int = 5) -> dict:
@@ -206,11 +200,37 @@ def run_benchmark(
     except Exception as e:
         print(f"⚠️ ToolRetriever info: {e}. (Falling back to category tool list)")
 
-    llm = DummyLLM()
+    # Tự động chọn Provider phù hợp dựa trên biến môi trường USE_GEMINI
+    use_gemini = os.environ.get("USE_GEMINI", "false").lower() == "true"
+    if use_gemini:
+        print("🤖 Using GeminiAPIProvider")
+        llm = GeminiAPIProvider(
+            api_keys=os.environ.get("GEMINI_API_KEY"),
+            base_url=os.environ.get("GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/"),
+            model=os.environ.get("GEMINI_GENERATION_MODEL", "gemini-2.5-flash")
+        )
+    else:
+        print("🤖 Using NvidiaQwenLLMProvider")
+        model_name = os.environ.get("OPENAI_MODEL", "Qwen/Qwen3-Next-80B-A3B-Instruct")
+        base_url = os.environ.get("OPENAI_BASE_URL", "https://integrate.api.nvidia.com/v1").rstrip("/")
+        api_key = os.environ.get("NVIDIA_API_KEY") or os.environ.get("OPENAI_API_KEY")
+        llm = NvidiaQwenLLMProvider(model_name=model_name, base_url=base_url, api_key=api_key)
+
+    # Khởi tạo planner_llm dùng Gemini API cho bước Slide Preparer
+    planner_llm = llm
+    if gemini_key:
+        try:
+            from langchain_openai import ChatOpenAI
+            gemini_base_url = os.getenv("GEMINI_API_BASE_URL", "https://generativelanguage.googleapis.com/v1beta/openai/")
+            gemini_model = os.getenv("GEMINI_GENERATION_MODEL", "gemini-2.5-flash")
+            planner_llm = ChatOpenAI(api_key=gemini_key, base_url=gemini_base_url, model=gemini_model, temperature=0.3)
+        except Exception as e:
+            print(f"⚠️ Gemini planner_llm fallback: {e}")
+
     config = {
         "configurable": {
             "llm": llm,
-            "planner_llm": llm,
+            "planner_llm": planner_llm,
             "tools_dict": TOOLS_DICT,
             "tool_retriever": tool_retriever,
         },

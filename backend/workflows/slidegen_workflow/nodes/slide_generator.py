@@ -32,6 +32,7 @@ from backend.workflows.slidegen_workflow.utils.helper import (
     parse_tool_calls_json,
     QWEN_CHAT_TEMPLATE,
 )
+from backend.infrastructure.llm_providers.base import BaseLLMProvider
 
 _tokenizer_cache = {}
 
@@ -221,7 +222,10 @@ def _get_qwen_config(llm):
 
 
 def _check_is_qwen(llm) -> bool:
-    """Helper to detect if the loaded LLM is a Qwen variant or NVIDIA API Qwen."""
+    """Helper to detect if the loaded LLM is a Qwen variant or NVIDIA API Qwen or a LocalPyTorchLLMProvider."""
+    # BaseLLMProvider with model_type=qwen is always treated as Qwen path
+    if isinstance(llm, BaseLLMProvider):
+        return llm.model_type == "qwen"
     model_name = ""
     for attr in ["model", "model_name", "model_id"]:
         if hasattr(llm, attr):
@@ -471,55 +475,82 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             {"role": "user", "content": qwen_user_prompt},
         ]
         model_name, base_url, api_key = _get_qwen_config(llm)
-        client = OpenAI(base_url=base_url, api_key=api_key)
-        
-        try:
-            # Primary API path: OpenAI-compatible ChatCompletions (works for NVIDIA API, vLLM, OpenAI)
-            max_tokens_val = getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 2000)
-            resp = client.chat.completions.create(
-                model=model_name,
-                messages=messages,
-                max_tokens=max_tokens_val,
-                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
-            )
-            content = (resp.choices[0].message.content or "").strip()
-        except Exception as api_err:
-            print(f"⚠️ ChatCompletions API failed ({api_err}), attempting local raw completions fallback...")
+
+        # A. QWEN EXECUTION PATH (Local PyTorch / NVIDIA API / OpenAI-compatible API)
+        if isinstance(llm, BaseLLMProvider):
             try:
-                tokenizer = _get_qwen_tokenizer(model_name)
-                prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
-                resp = client.completions.create(
+                content = llm.generate_completion(
+                    messages=messages,
+                    tools=tool_schemas,
+                    max_tokens=getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 2000),
+                    temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+                )
+            except Exception as e:
+                print(f"❌ BaseLLMProvider ({llm.provider_name}) generation failed: {e}")
+                content = ""
+        else:
+            # Fallback cho LangChain ChatOpenAI object nguyên bản
+            client = OpenAI(base_url=base_url, api_key=api_key)
+            try:
+                max_tokens_val = getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 2000)
+                resp = client.chat.completions.create(
                     model=model_name,
-                    prompt=prompt,
+                    messages=messages,
                     max_tokens=max_tokens_val,
                     temperature=getattr(llm, 'temperature', 0.5) or 0.5,
-                    stop=["<|im_end|>"],
                 )
-                content = (resp.choices[0].text or "").strip()
-            except Exception as fallback_err:
-                print(f"❌ Qwen generation failed: {fallback_err}")
-                content = ""
+                content = (resp.choices[0].message.content or "").strip()
+            except Exception as api_err:
+                print(f"⚠️ ChatCompletions API failed ({api_err}), attempting local raw completions fallback...")
+                try:
+                    tokenizer = _get_qwen_tokenizer(model_name)
+                    prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
+                    resp = client.completions.create(
+                        model=model_name,
+                        prompt=prompt,
+                        max_tokens=max_tokens_val,
+                        temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+                        stop=["<|im_end|>"],
+                    )
+                    content = (resp.choices[0].text or "").strip()
+                except Exception as fallback_err:
+                    print(f"❌ Qwen generation failed: {fallback_err}")
+                    content = ""
         
-    # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
+    # B. GEMINI/API EXECUTION PATH (LangChain tool binding / GeminiAPIProvider)
     else:
-        gemini_vars = {**human_vars, "design_instruction": design_instruction}
-        llm_with_tools = llm.bind_tools(generator_tools)
-        slidegen_prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", human_template)
-        ])
-        slide_generator_runnable = slidegen_prompt | llm_with_tools
-        response = slide_generator_runnable.invoke(gemini_vars)
+        gemini_user_prompt = HUMAN_PROMPT_TEMPLATE.format(
+            design_instruction=design_instruction,
+            **human_vars
+        )
+        messages = [
+            {"role": "system", "content": generator_system_prompt},
+            {"role": "user", "content": gemini_user_prompt}
+        ]
+        
+        if isinstance(llm, BaseLLMProvider):
+            content = llm.generate_completion(
+                messages=messages,
+                tools=[format_tool_for_qwen(t) for t in generator_tools] if getattr(llm, 'model_type', '') == 'qwen' else generator_tools,
+                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+            )
+            response = None
+        else:
+            # Native LangChain LLM Fallback
+            llm_with_tools = llm.bind_tools(generator_tools)
+            response = llm_with_tools.invoke(messages)
         
     # 3. Parse JSON / Extract tool call
     tool_call_dict = None
     tool_plan = []
 
-    if is_qwen:
-        # Qwen path: raw text from completions endpoint
+    if is_qwen or isinstance(llm, BaseLLMProvider):
+        # Qwen path hoặc BaseLLMProvider: raw text completion / JSON format
         tool_plan = parse_tool_calls_json(content)
+        state["raw_llm_response"] = content
     else:
-        # Gemini path: structured tool calls
+        # Gemini path (LangChain response)
+        state["raw_llm_response"] = getattr(response, "content", "") or str(response)
         if hasattr(response, "tool_calls") and response.tool_calls:
             tool_plan = [
                 {
