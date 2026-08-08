@@ -16,14 +16,14 @@ from dotenv import load_dotenv
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 load_dotenv()
 
-from rl.train import process_doc
+from rl.grpo.rollout_processor import process_doc
 from backend.infrastructure.llm_providers import NvidiaQwenLLMProvider, GeminiAPIProvider
 from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
 from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
 
 def main():
     print("=" * 80)
-    print("🧪 TESTING process_doc FROM rl/train.py WITH FIRST DOC")
+    print("🧪 TESTING process_doc FROM rl/rollout_processor.py")
     print("=" * 80)
 
     # 1. Đọc dataset_with_candidate_tools.json

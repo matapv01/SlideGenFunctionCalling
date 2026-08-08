@@ -34,16 +34,7 @@ from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
 from scripts.generate_challenge_dataset import generate_docs
 from backend.config import EXECUTOR_MAX_RETRIES
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
-from backend.workflows.slidegen_workflow.utils.helper import (
-    format_tool_for_qwen,
-    parse_tool_call_json,
-    parse_tool_calls_json,
-    QWEN_CHAT_TEMPLATE,
-    render_html_to_png,
-    sanitize_to_placeholders,
-    get_slide_style_context,
-)
+from rl.grpo.rollout_processor import process_doc
 from backend.infrastructure.llm_providers.base import LocalPyTorchLLMProvider
 from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
@@ -249,119 +240,6 @@ def run_preparer_one(slide: dict, plan: dict, prev_style_context: str, step_num:
         log_node(step_num, doc_idx, si, "Preparer", f"FAILED ({e})")
         design = plan.get("thought", "")
     return design
-
-
-# parse_tool_call_json imported from helper.py replaces _extract_last_json
-
-
-def process_doc(doc_slides: list, step_num: int, doc_idx: int, grpo_config: dict) -> list:
-    """
-    Mỗi slide đã có đầy đủ các trường pre-computed từ dataset_with_candidate_tools.json.
-    Gọi trực tiếp generate_slide() và tool_call_executor() đúng như production workflow.
-    """
-    prompts_data = []
-    prev_embedding = [0.0] * 768
-    rendered_paths = []
-    render_dir = os.path.join(data_dir, f"step_{step_num:04d}", "renders", f"doc_{doc_idx}")
-    os.makedirs(render_dir, exist_ok=True)
-
-    for si, slide in enumerate(doc_slides):
-        action        = slide.get("action") or slide.get("category") or "CONTENT_TOOLS"
-        slide_content = slide.get("slide_content", "")
-        thought       = slide.get("thought") or slide_content[:300]
-
-        # Xây dựng state giống như test_generator_executor_loop.py
-        state = {
-            "current_slide_index": si,
-            "last_processed_slide_index": -1,
-            "length_slide_chunks": max(5, len(doc_slides)),
-            "current_slide_text": slide_content,
-            "current_slide_plan": {
-                "action": action,
-                "thought": thought,
-            },
-            "current_slide_context_map": slide.get("style_context", ""),
-            "design_instruction": slide.get("design_instruction", ""),
-            "candidate_tools": slide.get("candidate_tools", []),
-            "use_cot": True,
-            "retry_count": 0,
-            "executor_feedback": "",
-            "executor_decision": "fail",
-        }
-
-        # Vòng lặp Generator ↔ Executor (giống hệt trong production LangGraph)
-        prompt = ""  # prompt gửi vào LLM phục vụ tính Loss cho GRPO
-        for attempt in range(1, EXECUTOR_MAX_RETRIES + 1):
-            # 1. Gọi Node: slide_generator
-            state = generate_slide(state, grpo_config)
-            prompt = state.get("raw_llm_prompt", "") or state.get("raw_llm_response", "")
-            tool_call = state.get("current_tool_call", {})
-            log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt}/{EXECUTOR_MAX_RETRIES} → {tool_call.get('name', 'NO_CALL')}")
-
-            # 2. Gọi Node: tool_call_executor
-            state = tool_call_executor(state, grpo_config)
-            decision = state.get("executor_decision")
-
-            if decision == "pass":
-                log_node(step_num, doc_idx, si, "Executor", f"PASS → {tool_call.get('name')}")
-                break
-            else:
-                log_node(step_num, doc_idx, si, "Executor", f"FAIL attempt {attempt} — {state.get('executor_feedback', '')[:80]}")
-
-        # Lấy kết quả cuối cùng từ state
-        real_html = state.get("current_html_content")
-        tool_call = state.get("current_tool_call", {})
-
-        # Append prompt cho GRPO và embedding của slide trước
-        prompts_data.append({
-            "prompt": prompt,
-            "previous_slide_embedding": prev_embedding,
-        })
-
-        if real_html:
-            real_path = os.path.join(render_dir, f"slide_{si:03d}_real.png")
-            try:
-                render_html_to_png(real_html, real_path)
-                rendered_paths.append(real_path)
-                log_node(step_num, doc_idx, si, "Render", "OK")
-            except Exception as e:
-                log_node(step_num, doc_idx, si, "Render", f"FAILED ({e})")
-
-            if tool_call:
-                sanitized = sanitize_to_placeholders(tool_call)
-                sanitized_html = execute_tool(sanitized)
-                if sanitized_html:
-                    sanitized_path = os.path.join(render_dir, f"slide_{si:03d}_sanitized.png")
-                    try:
-                        render_html_to_png(sanitized_html, sanitized_path)
-                        rendered_paths.append(sanitized_path)
-                        prev_embedding = embedding_provider.get_embedding(sanitized_path)
-                        log_node(step_num, doc_idx, si, "Embed", "OK")
-                    except Exception as e:
-                        log_node(step_num, doc_idx, si, "Embed", f"FAILED ({e})")
-
-    overview_path = os.path.join(render_dir, "overview.png")
-    save_contact_sheet(
-        rendered_paths,
-        overview_path,
-        title=f"GRPO Step {step_num:04d} / Doc {doc_idx} Render Overview",
-        subtitle=f"{len(doc_slides)} slides, {len(rendered_paths)} rendered images",
-        columns=4,
-        thumb_size=(420, 236),
-    )
-    write_json(
-        os.path.join(render_dir, "summary.json"),
-        {
-            "step": step_num,
-            "doc_idx": doc_idx,
-            "slide_count": len(doc_slides),
-            "prompt_count": len(prompts_data),
-            "rendered_images": rendered_paths,
-            "overview_path": overview_path,
-        },
-    )
-    log_node(step_num, doc_idx, "-", "Done", f"{len(doc_slides)} slides, {len(rendered_paths)} renders")
-    return prompts_data
 
 
 # ==============================================================================
