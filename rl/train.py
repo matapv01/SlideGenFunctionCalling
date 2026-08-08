@@ -1,3 +1,7 @@
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PREPARER_SYSTEM_PROMPT
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PREPARER_HUMAN_TEMPLATE
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_HUMAN_PROMPT
 import os, sys, json, random, threading, concurrent.futures, glob
 from datetime import datetime
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -25,19 +29,12 @@ os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, PeftConfig, PeftModel, TaskType, get_peft_model
-from trl import GRPOTrainer, GRPOConfig
 from datasets import Dataset
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from rl.rewards import slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward
-from rl.rewards.conciseness_reward import conciseness_reward
-from rl.rewards.text_embedding_reward import text_embedding_reward
 from scripts.generate_challenge_dataset import generate_docs
 from backend.config import EXECUTOR_MAX_RETRIES
-from backend.workflows.slidegen_workflow.tools.ddgs_tool import SEARCH_DDGS_TOOL
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool, execute_tool_plan
-from backend.workflows.slidegen_workflow.executors.tool_plan_executor import ToolPlanError
-from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
 from backend.workflows.slidegen_workflow.utils.helper import (
     format_tool_for_qwen,
     parse_tool_call_json,
@@ -47,22 +44,9 @@ from backend.workflows.slidegen_workflow.utils.helper import (
     sanitize_to_placeholders,
     get_slide_style_context,
 )
-from backend.workflows.slidegen_workflow.utils.prompts import (
-    QWEN_GENERATOR_SYSTEM_PROMPT,
-    QWEN_COT_GENERATOR_SYSTEM_PROMPT,
-    QWEN_GENERATOR_HUMAN_TEMPLATE,
-    SLIDE_PLANNER_SYSTEM_PROMPT,
-    SLIDE_PLANNER_HUMAN_PROMPT,
-    SLIDE_PREPARER_SYSTEM_PROMPT,
-    SLIDE_PREPARER_HUMAN_TEMPLATE,
-    IMAGE_SEARCH_EXECUTION_PLAN_RULES,
-    CONTENT_PROMPT,
-    TRANSITION_PROMPT,
-    SLIDE_TYPE_PROMPTS,
-    INTRO_PROMPT,
-    MATH_EQUATION_RULES,
-)
-from backend.workflows.slidegen_workflow.nodes.slide_generator import _build_tool_description_text
+from backend.infrastructure.llm_providers.base import LocalPyTorchLLMProvider
+from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
+from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
 from backend.workflows.slidegen_workflow.graph.stage import SlidePlan
 from backend.infrastructure.embedding.dinov2_provider import DINOv2EmbeddingProvider
 from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
@@ -173,6 +157,25 @@ setup_tokenizer(tokenizer, QWEN_CHAT_TEMPLATE)
 peft_config_for_trainer = None
 
 # ==============================================================================
+# 1b. LOCAL PYTORCH LLM PROVIDER (dùng cho generate_slide node trong GRPO rollout)
+# ==============================================================================
+local_provider = LocalPyTorchLLMProvider(
+    model=model,
+    tokenizer=tokenizer,
+    model_name=model_id,
+    max_completion_length=max_completion_length,
+    gen_lock=_gen_lock,
+)
+
+# grpo_config truyền vào các node, chứa LLM provider và tool retriever
+grpo_config = {
+    "configurable": {
+        "llm": local_provider,
+        "tool_retriever": None,  # sẽ được cập nhật sau khi embedding_provider init
+    }
+}
+
+# ==============================================================================
 # 2. GEMINI CLIENTS (Planner + Preparer)
 # ==============================================================================
 planner_llm = ChatOpenAI(api_key=api_key, base_url=base_url, model=gemini_model, temperature=0.3)
@@ -195,6 +198,7 @@ faiss_index_path = os.path.join(os.path.dirname(__file__), "faiss_index")
 try:
     tool_retriever = GeminiToolRetrieveProvider(TOOLS_DICT, faiss_index_path, api_key=api_key)
     print(f"  Tool retriever initialized at {faiss_index_path}")
+    grpo_config["configurable"]["tool_retriever"] = tool_retriever
 except Exception as e:
     print(f"  [WARN] Tool retriever init failed: {e}. GRPO will fall back to random tool selection.")
     tool_retriever = None
@@ -250,14 +254,10 @@ def run_preparer_one(slide: dict, plan: dict, prev_style_context: str, step_num:
 # parse_tool_call_json imported from helper.py replaces _extract_last_json
 
 
-def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
+def process_doc(doc_slides: list, step_num: int, doc_idx: int, grpo_config: dict) -> list:
     """
-    Mỗi slide đã có đầy đủ các trường pre-computed từ dataset_with_candidate_tools.json:
-      - slide_content       : nội dung slide
-      - style_context       : context phong cách từ slide trước
-      - design_instruction  : hướng dẫn thiết kế
-      - action              : loại slide (CONTENT_TOOLS, INTRO_TOOLS...)
-      - candidate_tools     : danh sách tên tool đã pre-retrieved
+    Mỗi slide đã có đầy đủ các trường pre-computed từ dataset_with_candidate_tools.json.
+    Gọi trực tiếp generate_slide() và tool_call_executor() đúng như production workflow.
     """
     prompts_data = []
     prev_embedding = [0.0] * 768
@@ -266,106 +266,53 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
     os.makedirs(render_dir, exist_ok=True)
 
     for si, slide in enumerate(doc_slides):
-        # Đọc trực tiếp từ các trường đã pre-computed trong dataset
-        action          = slide.get("action") or slide.get("category") or "CONTENT_TOOLS"
-        style_context   = slide.get("style_context", "")
-        design          = slide.get("design_instruction", "")
-        slide_content   = slide.get("slide_content", "")
-        candidate_names = slide.get("candidate_tools", [])
+        action        = slide.get("action") or slide.get("category") or "CONTENT_TOOLS"
+        slide_content = slide.get("slide_content", "")
+        thought       = slide.get("thought") or slide_content[:300]
 
-        # Lấy tool objects từ danh sách tên đã pre-retrieved và ĐẢM BẢO THÊM SEARCH_DDGS_TOOL ở đầu (giống slide_generator.py)
-        category_tools = {t.name: t for t in TOOLS_DICT.get(action, [])}
-        retrieved_tools = [category_tools[n] for n in candidate_names if n in category_tools]
-        if not retrieved_tools:
-            retrieved_tools = [t for t in TOOLS_DICT.get(action, []) if t.name in flat_tools]
-        if len(retrieved_tools) > 5:
-            retrieved_tools = retrieved_tools[:5]
+        # Xây dựng state giống như test_generator_executor_loop.py
+        state = {
+            "current_slide_index": si,
+            "last_processed_slide_index": -1,
+            "length_slide_chunks": max(5, len(doc_slides)),
+            "current_slide_text": slide_content,
+            "current_slide_plan": {
+                "action": action,
+                "thought": thought,
+            },
+            "current_slide_context_map": slide.get("style_context", ""),
+            "design_instruction": slide.get("design_instruction", ""),
+            "candidate_tools": slide.get("candidate_tools", []),
+            "use_cot": True,
+            "retry_count": 0,
+            "executor_feedback": "",
+            "executor_decision": "fail",
+        }
 
-        # Đưa SEARCH_DDGS_TOOL lên đầu danh sách tool
-        all_slide_tools = [SEARCH_DDGS_TOOL] + retrieved_tools
-        filtered_tools = [format_tool_for_qwen(t) for t in all_slide_tools]
-        available_tool_names = [t.name for t in all_slide_tools]
+        # Vòng lặp Generator ↔ Executor (giống hệt trong production LangGraph)
+        prompt = ""  # prompt gửi vào LLM phục vụ tính Loss cho GRPO
+        for attempt in range(1, EXECUTOR_MAX_RETRIES + 1):
+            # 1. Gọi Node: slide_generator
+            state = generate_slide(state, grpo_config)
+            prompt = state.get("raw_llm_prompt", "") or state.get("raw_llm_response", "")
+            tool_call = state.get("current_tool_call", {})
+            log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt}/{EXECUTOR_MAX_RETRIES} → {tool_call.get('name', 'NO_CALL')}")
 
-        # Build per-slide-type system prompt matching slide_generator.py
-        if action == 'CONTENT_TOOLS':
-            highlight_instruction = "- This is a content slide - choose ONE color from the list and use it consistently"
-            generator_system_prompt = CONTENT_PROMPT.format(highlight_instruction=highlight_instruction)
-        elif action == 'TRANSITION_TOOLS':
-            transition_context = "* Transition slide - establish a strong, consistent style"
-            generator_system_prompt = TRANSITION_PROMPT.format(previous_transition_context=transition_context)
-        else:
-            generator_system_prompt = SLIDE_TYPE_PROMPTS.get(action, INTRO_PROMPT)
+            # 2. Gọi Node: tool_call_executor
+            state = tool_call_executor(state, grpo_config)
+            decision = state.get("executor_decision")
 
-        generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + generator_system_prompt
-
-        # Build full system prompt matching production slide_generator.py format
-        tool_desc_text = _build_tool_description_text(filtered_tools)
-        full_system_prompt = (
-            generator_system_prompt
-            + "\n\n"
-            + IMAGE_SEARCH_EXECUTION_PLAN_RULES
-            + "\n\n"
-            + QWEN_COT_GENERATOR_SYSTEM_PROMPT
-            + "\n\n"
-            + tool_desc_text
-        )
-        user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
-            style_context=style_context,
-            design_instruction=design[:600] if design else "",
-            slide_content=slide_content[:1200],
-        )
-        messages = [
-            {"role": "system", "content": full_system_prompt},
-            {"role": "user", "content": user_prompt},
-        ]
-        prompt = tokenizer.apply_chat_template(messages, tools=filtered_tools, tokenize=False, add_generation_prompt=True)
-
-        if step_num == 1 and doc_idx == 0 and si == 0:
-            print(f"  [DEBUG] === PROMPT PREVIEW (last 500 chars) ===")
-            print(f"  [DEBUG] {prompt[-500:]}")
-            print(f"  [DEBUG] =========================================")
-
-        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
-        completion = ""
-        tool_call = None
-        real_html = None
-
-        for attempt in range(EXECUTOR_MAX_RETRIES):
-            with _gen_lock:
-                with torch.no_grad():
-                    out = model.generate(**inputs, max_new_tokens=max_completion_length,
-                                         temperature=0.0, do_sample=False,
-                                         pad_token_id=tokenizer.eos_token_id)
-            completion = tokenizer.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-
-            tool_plan = parse_tool_calls_json(completion)
-            executor_feedback = ""
-
-            if not tool_plan:
-                executor_feedback = "CRITICAL: No tool call was generated. You must output a valid function call using <tool_call> JSON format."
+            if decision == "pass":
+                log_node(step_num, doc_idx, si, "Executor", f"PASS → {tool_call.get('name')}")
+                break
             else:
-                first_tool = tool_plan[0]
-                is_valid, errors = validate_tool_call(first_tool, available_tool_names)
-                if not is_valid:
-                    executor_feedback = f"EXECUTOR VALIDATION FAILED ({len(errors)} errors):\n" + "\n".join(f"- {e}" for e in errors)
-                else:
-                    try:
-                        real_html, tool_call, search_history = execute_tool_plan(tool_plan)
-                        if real_html:
-                            log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/{EXECUTOR_MAX_RETRIES} OK → {tool_call.get('name')}")
-                            break
-                        else:
-                            executor_feedback = "EXECUTOR TOOL PLAN FAILED: HTML output is empty."
-                    except ToolPlanError as tpe:
-                        executor_feedback = str(tpe)
-                    except Exception as e:
-                        executor_feedback = f"EXECUTOR TOOL PLAN FAILED:\n- {e}"
+                log_node(step_num, doc_idx, si, "Executor", f"FAIL attempt {attempt} — {state.get('executor_feedback', '')[:80]}")
 
-            log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/{EXECUTOR_MAX_RETRIES} FAIL — {executor_feedback[:100].strip()}")
-            prompt += f"\n\n[EXECUTOR VALIDATION FEEDBACK]\n{executor_feedback.strip()}"
-            inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
+        # Lấy kết quả cuối cùng từ state
+        real_html = state.get("current_html_content")
+        tool_call = state.get("current_tool_call", {})
 
-        # Append prompt and embedding of the PREVIOUS slide
+        # Append prompt cho GRPO và embedding của slide trước
         prompts_data.append({
             "prompt": prompt,
             "previous_slide_embedding": prev_embedding,
@@ -420,6 +367,11 @@ def process_doc(doc_slides: list, step_num: int, doc_idx: int) -> list:
 # ==============================================================================
 # 5. TRAINING LOOP
 # ==============================================================================
+from trl import GRPOTrainer, GRPOConfig
+from rl.rewards import slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward
+from rl.rewards.conciseness_reward import conciseness_reward
+from rl.rewards.text_embedding_reward import text_embedding_reward
+
 training_args = GRPOConfig(
     output_dir=output_dir,
     learning_rate=learning_rate,
@@ -511,7 +463,7 @@ for step in range(1, total_steps + 1):
 
     all_prompts = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=batch_docs) as ex:
-        futures = [ex.submit(process_doc, doc, step, i) for i, doc in enumerate(docs)]
+        futures = [ex.submit(process_doc, doc, step, i, grpo_config) for i, doc in enumerate(docs)]
         for f in concurrent.futures.as_completed(futures):
             all_prompts.extend(f.result())
 

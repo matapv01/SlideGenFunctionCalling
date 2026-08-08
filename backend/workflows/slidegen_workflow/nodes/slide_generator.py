@@ -599,6 +599,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     state["current_tool_call"] = tool_call_dict
     state["current_tool_plan"] = tool_plan
     state["raw_llm_response"] = content
+    state["raw_llm_prompt"] = prompt if 'prompt' in locals() else ""
     
     # Save helper state variables for downstream nodes
     state["candidate_tools"] = generator_tools
