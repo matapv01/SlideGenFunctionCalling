@@ -1,6 +1,7 @@
 # File: rl/rollout_processor.py
 
 import os
+import threading
 from backend.config import EXECUTOR_MAX_RETRIES
 from backend.workflows.slidegen_workflow.tools.tool_des import execute_tool
 from backend.workflows.slidegen_workflow.utils.helper import (
@@ -11,6 +12,12 @@ from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_s
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
 from backend.infrastructure.embedding.dinov2_provider import DINOv2EmbeddingProvider
 from rl.run_artifacts import save_contact_sheet, write_json
+
+# process_doc() được gọi song song từ nhiều thread (ThreadPoolExecutor trong train.py).
+# render_html_to_png (thường dùng headless browser) và embedding_provider.get_embedding
+# (forward pass qua cùng 1 model) không rõ có thread-safe hay không, nên khoá lại để
+# tránh race-condition khi nhiều doc render/embedding cùng lúc.
+_io_lock = threading.Lock()
 
 def log_node(step_num: int, doc_idx: int, si: str, node: str, msg: str):
     print(f"  [Step {step_num} Doc {doc_idx} Slide {si}] {node} → {msg}")
@@ -97,7 +104,8 @@ def process_doc(
         if real_html:
             real_path = os.path.join(render_dir, f"slide_{si:03d}_real.png")
             try:
-                render_html_to_png(real_html, real_path)
+                with _io_lock:
+                    render_html_to_png(real_html, real_path)
                 rendered_paths.append(real_path)
                 log_node(step_num, doc_idx, str(si), "Render", "OK")
             except Exception as e:
@@ -109,9 +117,10 @@ def process_doc(
                 if sanitized_html and embedding_provider:
                     sanitized_path = os.path.join(render_dir, f"slide_{si:03d}_sanitized.png")
                     try:
-                        render_html_to_png(sanitized_html, sanitized_path)
+                        with _io_lock:
+                            render_html_to_png(sanitized_html, sanitized_path)
+                            prev_embedding = embedding_provider.get_embedding(sanitized_path)
                         rendered_paths.append(sanitized_path)
-                        prev_embedding = embedding_provider.get_embedding(sanitized_path)
                         log_node(step_num, doc_idx, str(si), "Embed", "OK")
                     except Exception as e:
                         log_node(step_num, doc_idx, str(si), "Embed", f"FAILED ({e})")

@@ -1,3 +1,5 @@
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.utils.helper import QWEN_CHAT_TEMPLATE
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PREPARER_SYSTEM_PROMPT
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PREPARER_HUMAN_TEMPLATE
 from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT
@@ -267,6 +269,37 @@ training_args = GRPOConfig(
     gradient_checkpointing=USE_GRAD_CHECKPOINT if not USE_CPU else False,
 )
 
+# ==============================================================================
+# 5b. OPTIMIZER + SCHEDULER — TẠO MỘT LẦN DUY NHẤT, DÙNG XUYÊN SUỐT MỌI STEP
+# ------------------------------------------------------------------------------
+# Trước đây mỗi step tạo GRPOTrainer mới -> optimizer Adam bị khởi tạo lại
+# (mất hết m/v đã tích luỹ) và LR scheduler cũng reset theo max_steps=1.
+# Ở đây ta tự tạo optimizer + scheduler bên ngoài vòng lặp rồi truyền vào
+# GRPOTrainer qua `optimizers=(...)`. Vì Trainer chỉ tự tạo optimizer/scheduler
+# khi self.optimizer / self.lr_scheduler còn None, việc truyền sẵn khiến nó
+# tái sử dụng đúng object cũ mỗi lần train() được gọi -> momentum và lịch LR
+# được bảo toàn qua các step, dù mỗi lần vẫn dựng GRPOTrainer mới.
+# LƯU Ý: hãy test nhanh với total_steps nhỏ (vd 2) để xác nhận hành vi này
+# đúng với bản TRL/transformers đang cài, vì API nội bộ có thể đổi giữa các version.
+# ==============================================================================
+from transformers import get_linear_schedule_with_warmup
+
+_trainable_params = [p for p in model.parameters() if p.requires_grad]
+optimizer = torch.optim.AdamW(_trainable_params, lr=learning_rate)
+lr_scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=0,
+    num_training_steps=total_steps,  # mỗi vòng lặp ngoài ứng với đúng 1 optimizer step (max_steps=1)
+)
+
+_effective_gen_batch = per_device_train_batch_size  # x số GPU nếu chạy multi-GPU
+if _effective_gen_batch % num_generations != 0:
+    print(
+        f"  [WARN] per_device_train_batch_size ({_effective_gen_batch}) không chia hết cho "
+        f"num_generations ({num_generations}). TRL có thể raise lỗi khi train() — "
+        f"nên chỉnh per_device_train_batch_size hoặc num_generations cho khớp."
+    )
+
 run_manifest = get_runtime_metadata(
     {
         "run_name": "grpo",
@@ -305,6 +338,7 @@ print(f"  Generations (GRPO): {num_generations}")
 print(f"{'='*60}\n")
 
 os.makedirs(data_dir, exist_ok=True)
+step_ckpt = None  # tránh NameError phía dưới nếu total_steps=0 hoặc mọi step đều bị skip
 
 for step in range(1, total_steps + 1):
     print(f"\n--- Step {step}/{total_steps} ---")
@@ -330,6 +364,10 @@ for step in range(1, total_steps + 1):
         by_doc.setdefault(s["doc_id"], []).append(s)
 
     all_doc_ids = sorted(by_doc.keys())
+    if not all_doc_ids:
+        print("  ❌ Dataset rỗng (không có doc nào), skip step.")
+        continue
+
     # Chọn batch_docs doc theo vòng tròn dựa vào step
     step_offset = ((step - 1) * batch_docs) % len(all_doc_ids)
     selected_ids = [all_doc_ids[(step_offset + i) % len(all_doc_ids)] for i in range(min(batch_docs, len(all_doc_ids)))]
@@ -341,7 +379,10 @@ for step in range(1, total_steps + 1):
 
     all_prompts = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=batch_docs) as ex:
-        futures = [ex.submit(process_doc, doc, step, i, grpo_config) for i, doc in enumerate(docs)]
+        futures = [
+            ex.submit(process_doc, doc, step, i, grpo_config, data_dir, embedding_provider)
+            for i, doc in enumerate(docs)
+        ]  # truyền embedding_provider dùng chung, tránh mỗi thread tự load lại DINOv2
         for f in concurrent.futures.as_completed(futures):
             all_prompts.extend(f.result())
 
@@ -361,6 +402,7 @@ for step in range(1, total_steps + 1):
         args=training_args,
         train_dataset=dataset,
         peft_config=peft_config_for_trainer,
+        optimizers=(optimizer, lr_scheduler),  # tái sử dụng optimizer/scheduler xuyên suốt các step
     )
     trainer.train()
 
@@ -447,9 +489,11 @@ import shutil
 final_adapter = os.path.join(output_dir, "final_adapter")
 if os.path.exists(final_adapter):
     shutil.rmtree(final_adapter)
-if os.path.exists(step_ckpt):
+if step_ckpt and os.path.exists(step_ckpt):
     shutil.copytree(step_ckpt, final_adapter)
     print(f"Final adapter: {final_adapter} (from step {step})")
+else:
+    print("[WARN] Không có step nào tạo checkpoint — bỏ qua bước copy final_adapter.")
 
 selected_overviews = []
 if step_summaries:
