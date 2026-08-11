@@ -12,6 +12,12 @@ Cung cấp interface thống nhất cho việc gọi LLM từ nhiều nguồn:
 from abc import ABC, abstractmethod
 from typing import Any, Dict, List, Optional
 import json
+import os
+from dataclasses import dataclass
+import httpx
+import logging
+
+logger = logging.getLogger(__name__)
 
 
 class BaseLLMProvider(ABC):
@@ -194,3 +200,133 @@ class GeminiAPIProvider(BaseLLMProvider):
             return json.dumps({"tool_calls": tool_plan}, ensure_ascii=False)
             
         return getattr(resp, "content", "") or ""
+
+
+"""
+Remote API Client để gọi FastAPI server
+"""
+
+
+@dataclass
+class APIConfig:
+    """Configuration from environment variables."""
+
+    generate_api_url: str = ""
+    api_timeout: int = 600
+
+    def __post_init__(self):
+        env_url = os.getenv("REMOTE_API_URL") or os.getenv("HOST_NAME", "https://discrete-gorgeous-spanking-subscribers.trycloudflare.com")
+        env_url = env_url.rstrip("/")
+        if not env_url.endswith("/generate"):
+            self.generate_api_url = env_url + "/generate"
+        else:
+            self.generate_api_url = env_url
+                
+        if self.api_timeout <= 0:
+            raise ValueError("API_TIMEOUT must be positive")
+
+    @classmethod
+    def from_env(cls):
+        return cls()
+
+
+class APIError(Exception):
+    """Exception for API errors"""
+    pass
+
+
+class RemoteLLMProvider(BaseLLMProvider):
+    """
+    Client để gọi remote FastAPI server hosting:
+    - Embedding model
+    - Cross-encoder Reranker model
+    - LLM Generate model
+    """
+    
+    def __init__(self, config: Optional[APIConfig] = None):
+        """
+        Args:
+            config: APIConfig instance hoặc None để load từ .env
+        """
+        super().__init__(provider_name="remote_fastapi_llm", model_type="qwen")
+        self.config = config or APIConfig.from_env()
+        self.client = httpx.Client(
+            timeout=self.config.api_timeout,
+            verify=False  # Ignore SSL warnings cho ngrok / cloudflare
+        )
+        logger.info(f"RemoteLLMProvider initialized with URL={self.config.generate_api_url}")
+    
+    def _handle_response(self, response: httpx.Response, endpoint: str) -> Dict[str, Any]:
+        """Xử lý response từ API"""
+        try:
+            response.raise_for_status()
+            return response.json()
+        except httpx.HTTPStatusError as e:
+            error_msg = f"API Error ({endpoint}): {e.response.status_code} - {e.response.text}"
+            logger.error(error_msg)
+            raise APIError(error_msg) from e
+        except httpx.RequestError as e:
+            error_msg = f"Connection Error ({endpoint}): {str(e)}"
+            logger.error(error_msg)
+            raise APIError(error_msg) from e
+    
+    def generate_completion(
+        self,
+        messages: Any,
+        tools: Optional[List[Dict[str, Any]]] = None,
+        max_tokens: int = 500,
+        temperature: float = 0.7,
+        **kwargs
+    ) -> str:
+        """
+        Gọi /generate endpoint để generate text.
+        Chấp nhận `messages` dạng List[Dict] hoặc chuỗi string `prompt`.
+        
+        Args:
+            messages: Prompt string hoặc List các message dict
+            tools: Danh sách tools (nếu có)
+            max_tokens: Số token tối đa
+            temperature: Sampling temperature
+        
+        Returns:
+            Generated text string
+        """
+        if isinstance(messages, str):
+            prompt = messages
+        elif isinstance(messages, list):
+            prompt_parts = []
+            for msg in messages:
+                if isinstance(msg, dict):
+                    role = msg.get("role", "user")
+                    content = msg.get("content", "")
+                    prompt_parts.append(f"{role.capitalize()}: {content}")
+                else:
+                    prompt_parts.append(str(msg))
+            prompt = "\n".join(prompt_parts)
+        else:
+            prompt = str(messages)
+
+        if not prompt:
+            raise ValueError("prompt must not be empty")
+        
+        logger.debug(f"Generating with prompt: {prompt[:50]}")
+        
+        try:
+            response = self.client.post(
+                self.config.generate_api_url,
+                json={
+                    "prompt": prompt,
+                    "max_length": max_tokens,
+                    "temperature": temperature
+                },
+                timeout=self.config.api_timeout
+            )
+            data = self._handle_response(response, "generate")
+            
+            answer = data.get("answer", "")
+            logger.debug(f"Generated text length: {len(answer)}")
+            return answer
+        
+        except Exception as e:
+            logger.error(f"Generation failed: {str(e)}")
+            raise

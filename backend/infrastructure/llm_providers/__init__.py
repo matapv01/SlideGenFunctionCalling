@@ -4,5 +4,6 @@ from backend.infrastructure.llm_providers.base import (
     LocalPyTorchLLMProvider,
     NvidiaQwenLLMProvider,
     GeminiAPIProvider,
+    RemoteLLMProvider,
 )
 

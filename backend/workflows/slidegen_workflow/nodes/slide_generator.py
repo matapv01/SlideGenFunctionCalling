@@ -201,6 +201,10 @@ def _get_qwen_tokenizer(model_name: str):
 
 def _get_qwen_config(llm):
     """Extract (model_name, base_url, api_key) from any LLM wrapper or environment."""
+    if hasattr(llm, "provider_name") and llm.provider_name == "remote_fastapi_llm":
+        url = getattr(getattr(llm, "config", None), "generate_api_url", "Remote Server")
+        return "Remote-FastAPI-Model", url, "not-needed"
+        
     model_name = (
         getattr(llm, 'model_name', None) or 
         getattr(llm, 'model', None) or 
