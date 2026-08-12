@@ -200,10 +200,29 @@ def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) 
         expected_type = field_info[arg_name].get("type", "")
         
         # Check list types
-        if expected_type == "array" and not isinstance(arg_value, list):
-            errors.append(
-                f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
-            )
+        if expected_type == "array":
+            if not isinstance(arg_value, list):
+                errors.append(
+                    f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
+                )
+            else:
+                items_spec = field_info[arg_name].get("items", {})
+                expected_item_type = items_spec.get("type", "")
+                
+                # Deep check list items
+                if expected_item_type == "object":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, dict):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be an object/dict, got {type(item).__name__}: '{str(item)[:50]}'. "
+                                f"Provide a list of structured dictionaries."
+                            )
+                elif expected_item_type == "string":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, str):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be a string, got {type(item).__name__}: '{str(item)[:50]}'."
+                            )
         
         # Check string types
         if expected_type == "string" and not isinstance(arg_value, str):

@@ -294,6 +294,25 @@ def parse_tool_calls_json(text: str) -> List[dict]:
 
     cleaned = text.strip()
 
+    # Helper to clean raw unescaped newlines in JSON strings
+    def clean_json_str(s: str) -> str:
+        s = s.strip()
+        # Replace actual newlines inside strings with escaped \n
+        # (Negative lookbehind/lookahead for JSON delimiters to avoid escaping formatting newlines, 
+        # but a simpler robust way is to escape newlines inside quotes)
+        in_string = False
+        chars = []
+        for i, char in enumerate(s):
+            if char == '"' and (i == 0 or s[i-1] != '\\'):
+                in_string = not in_string
+            if char == '\n' and in_string:
+                chars.append('\\n')
+            elif char == '\r' and in_string:
+                continue
+            else:
+                chars.append(char)
+        return "".join(chars)
+
     # 1. Try extracting repeated <tool_call>...</tool_call> blocks first.
     tool_call_blocks = re.findall(
         r"<tool_call>\s*(.*?)\s*</tool_call>",
@@ -303,10 +322,18 @@ def parse_tool_calls_json(text: str) -> List[dict]:
     if tool_call_blocks:
         calls: List[dict] = []
         for block in tool_call_blocks:
+            cleaned_block = clean_json_str(block)
             try:
-                parsed = json.loads(block.strip())
-            except Exception:
-                continue
+                parsed = json.loads(cleaned_block)
+            except Exception as e:
+                # Retry with regex-based trailing comma removal or unescaped quote fixes if needed
+                try:
+                    # Remove trailing commas before closing braces/brackets
+                    cleaned_block_fixed = re.sub(r',\s*([\]}])', r'\1', cleaned_block)
+                    parsed = json.loads(cleaned_block_fixed)
+                except Exception:
+                    logging.warning(f"Failed to parse tool call block: {block}. Error: {e}")
+                    continue
             calls.extend(_normalize_tool_call_collection(parsed))
         return calls
 
@@ -324,18 +351,27 @@ def parse_tool_calls_json(text: str) -> List[dict]:
     elif "```" in cleaned:
         cleaned = cleaned.split("```")[1].split("```")[0].strip()
 
+    cleaned = clean_json_str(cleaned)
+
     # 4. Direct JSON parse
     try:
         parsed = json.loads(cleaned)
         return _normalize_tool_call_collection(parsed)
     except Exception:
-        pass
+        # Retry with trailing comma fix
+        try:
+            cleaned_fixed = re.sub(r',\s*([\]}])', r'\1', cleaned)
+            parsed = json.loads(cleaned_fixed)
+            return _normalize_tool_call_collection(parsed)
+        except Exception:
+            pass
 
     # 5. Fallback: Search for any JSON object containing "name" and "arguments" / "args"
     try:
         json_obj_match = re.search(r'\{[^{}]*"name"\s*:\s*"[^"]+"\s*,\s*"(?:arguments|args)"\s*:\s*\{.*?\}\s*\}', text, re.DOTALL)
         if json_obj_match:
-            parsed = json.loads(json_obj_match.group(0))
+            cleaned_fallback = clean_json_str(json_obj_match.group(0))
+            parsed = json.loads(cleaned_fallback)
             return _normalize_tool_call_collection(parsed)
     except Exception:
         pass

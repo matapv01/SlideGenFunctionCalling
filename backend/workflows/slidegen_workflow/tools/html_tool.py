@@ -15298,12 +15298,14 @@ def generate_colorful_team_grid_slide(
     
     team_members_html = ""
     for member in team_members:
+        member_color = member.get('color') or member.get('theme_color') or '#CCCCCC'
+        member_image = member.get('image_url') or 'https://images.unsplash.com/photo-1535713875002-d1d0cf377fde?q=80&w=200' # default placeholder
         team_members_html += f"""
-        <div class="team-card" style="--member-color: {member['color']};">
-            <img class="member-photo" src="{member['image_url']}" alt="{member['name']}" />
+        <div class="team-card" style="--member-color: {member_color};">
+            <img class="member-photo" src="{member_image}" alt="{member.get('name', 'Team Member')}" />
             <div class="member-info">
-                <h2 class="member-name">{member['name']}</h2>
-                <p class="member-role">{member['role']}</p>
+                <h2 class="member-name">{member.get('name', '')}</h2>
+                <p class="member-role">{member.get('role', '')}</p>
             </div>
         </div>
         """
