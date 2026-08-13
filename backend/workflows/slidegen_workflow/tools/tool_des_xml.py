@@ -1,15 +1,28 @@
+from backend.workflows.slidegen_workflow.tools import xml_tool
 # Auto-generated from tools.py preserving all original parameter schemas
 # This conversion maintains the exact parameter definitions from the source
 
 import json
 
-from typing import List, Dict, Optional, Union
+from typing import List, Dict, Optional, Union, Any
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 
 
 # Import all slide generation functions from xml_tool
 from backend.workflows.slidegen_workflow.tools.xml_tool import (
+    generate_dynamic_intro_slide_xml,
+    generate_elegant_agenda_slide_xml,
+    generate_dusk_transition_slide_xml,
+    generate_vision_mission_slide_xml,
+    generate_geometric_split_content_slide_xml,
+    generate_memphis_grid_slide_xml,
+    generate_elegant_points_slide_xml,
+    generate_timeline_slide_xml,
+    generate_colorful_team_grid_slide_xml,
+    generate_quote_slide_xml,
+    generate_reference_slide_xml,
+    generate_modern_contact_slide_xml,
     generate_intro_slide_xml,
     generate_warm_intro_slide_xml,
     generate_elegant_education_slide_xml,
@@ -22,7 +35,9 @@ from backend.workflows.slidegen_workflow.tools.xml_tool import (
     generate_thank_you_slide_xml,
     generate_thank_you_watching_slide_xml,
     generate_about_me_slide_xml,
-    generate_content_2col_slide_xml
+    generate_content_2col_slide_xml,
+    generate_pie_chart_slide_xml,
+    generate_donut_chart_slide_xml
 )
 
 
@@ -276,6 +291,17 @@ class GenerateGridTeamSlideInput(BaseModel):
         description="Color of the main title text.",
     )
 
+
+class GeneratePieChartSlideInput(BaseModel):
+    title: str = Field(default="Budget Pie Chart")
+    subtitle: str = Field(default="Monthly Budget")
+    items: list[dict] = Field(description="List of dicts: [{'label': 'Savings', 'value': 24.8, 'description': 'desc'}, ...]")
+
+class GenerateDonutChartSlideInput(BaseModel):
+    title: str = Field(default="ELEGANCE CLASSY")
+    subtitle: str = Field(default="Style Agency Infographics")
+    items: list[dict] = Field(description="List of 3 dicts: [{'label': 'JUPITER', 'value': 75, 'description': 'desc'}, ...]")
+
 # ==========================================================
 # CÁC CÔNG CỤ (TOOLS) ĐƯỢC ĐĂNG KÝ VỚI AI
 # ==========================================================
@@ -364,7 +390,281 @@ TEAM_TOOLS = [
     )
 ]
 THANK_YOU_TOOLS = []
-CHART_TOOLS = []
+
+class GenerateAreaSlideInput(BaseModel):
+    """Input for generating a area slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateColumnSlideInput(BaseModel):
+    """Input for generating a column slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateComparisonSlideInput(BaseModel):
+    """Input for generating a comparison slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateDarkBarSlideInput(BaseModel):
+    """Input for generating a dark bar slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateDarkPieSlideInput(BaseModel):
+    """Input for generating a dark pie slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateDashboardSlideInput(BaseModel):
+    """Input for generating a dashboard slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateFinancialProjectionsSlideInput(BaseModel):
+    """Input for generating a financial projections slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateImageBarSlideInput(BaseModel):
+    """Input for generating a image bar slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateLineSlideInput(BaseModel):
+    """Input for generating a line slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateMarketAnalysisSlideInput(BaseModel):
+    """Input for generating a market analysis slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GeneratePeopleCultureSlideInput(BaseModel):
+    """Input for generating a people culture slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateRadarSlideInput(BaseModel):
+    """Input for generating a radar slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateStackedBarSlideInput(BaseModel):
+    """Input for generating a stacked bar slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateWaterfallSlideInput(BaseModel):
+    """Input for generating a waterfall slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+
+class GenerateAiContentSlideInput(BaseModel):
+    """Input for generating a ai content slide slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateKeyAdvantagesSlideInput(BaseModel):
+    """Input for generating a key advantages slide slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+class GenerateSimpleDonutSlideInput(BaseModel):
+    """Input for generating a simple donut slide."""
+    title: str = Field(default="Default Title", description="The title of the slide")
+    subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
+    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+
+
+
+
+
+
+
+
+CHART_TOOLS = [
+    StructuredTool.from_function(
+        func=generate_pie_chart_slide_xml,
+        name="generate_pie_chart_slide_xml",
+        description="Generates a pie chart slide with a legend on the left.",
+        args_schema=GeneratePieChartSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_donut_chart_slide_xml,
+        name="generate_donut_chart_slide_xml",
+        description="Generates a 3-donut chart slide horizontally aligned.",
+        args_schema=GenerateDonutChartSlideInput,
+    )
+,
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_area_slide_xml,
+        name="generate_area_slide_xml",
+        description="Generate a area slide.",
+        args_schema=GenerateAreaSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_column_slide_xml,
+        name="generate_column_slide_xml",
+        description="Generate a column slide.",
+        args_schema=GenerateColumnSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_comparison_slide_xml,
+        name="generate_comparison_slide_xml",
+        description="Generate a comparison slide.",
+        args_schema=GenerateComparisonSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_dark_bar_slide_xml,
+        name="generate_dark_bar_slide_xml",
+        description="Generate a dark bar slide.",
+        args_schema=GenerateDarkBarSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_dark_pie_slide_xml,
+        name="generate_dark_pie_slide_xml",
+        description="Generate a dark pie slide.",
+        args_schema=GenerateDarkPieSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_dashboard_slide_xml,
+        name="generate_dashboard_slide_xml",
+        description="Generate a dashboard slide.",
+        args_schema=GenerateDashboardSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_financial_projections_slide_xml,
+        name="generate_financial_projections_slide_xml",
+        description="Generate a financial projections slide.",
+        args_schema=GenerateFinancialProjectionsSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_image_bar_slide_xml,
+        name="generate_image_bar_slide_xml",
+        description="Generate a image bar slide.",
+        args_schema=GenerateImageBarSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_line_slide_xml,
+        name="generate_line_slide_xml",
+        description="Generate a line slide.",
+        args_schema=GenerateLineSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_market_analysis_slide_xml,
+        name="generate_market_analysis_slide_xml",
+        description="Generate a market analysis slide.",
+        args_schema=GenerateMarketAnalysisSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_people_culture_slide_xml,
+        name="generate_people_culture_slide_xml",
+        description="Generate a people culture slide.",
+        args_schema=GeneratePeopleCultureSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_radar_slide_xml,
+        name="generate_radar_slide_xml",
+        description="Generate a radar slide.",
+        args_schema=GenerateRadarSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_stacked_bar_slide_xml,
+        name="generate_stacked_bar_slide_xml",
+        description="Generate a stacked bar slide.",
+        args_schema=GenerateStackedBarSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_waterfall_slide_xml,
+        name="generate_waterfall_slide_xml",
+        description="Generate a waterfall slide.",
+        args_schema=GenerateWaterfallSlideInput,
+    )
+,
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_ai_content_slide_slide_xml,
+        name="generate_ai_content_slide_slide_xml",
+        description="Generate a ai content slide slide.",
+        args_schema=GenerateAiContentSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_key_advantages_slide_slide_xml,
+        name="generate_key_advantages_slide_slide_xml",
+        description="Generate a key advantages slide slide.",
+        args_schema=GenerateKeyAdvantagesSlideInput,
+    ),
+
+    StructuredTool.from_function(
+        func=xml_tool.generate_simple_donut_slide_xml,
+        name="generate_simple_donut_slide_xml",
+        description="Generate a simple donut slide.",
+        args_schema=GenerateSimpleDonutSlideInput,
+    )
+]
+
+
+class MemphisFeature(BaseModel):
+    title: str
+    desc: str
+
+class TimelineEvent(BaseModel):
+    year: str
+    desc: str
+
+class TeamMember(BaseModel):
+    name: str
+    role: str
 
 ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
 
@@ -452,3 +752,7 @@ def execute_tool_plan(tool_calls: list, tool_lookup: dict = None) -> tuple:
     else:
         print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render HTML.")
     return html_out, final_tool_call, search_history
+
+
+
+TOOLS_DICT = {tool.name: tool for tool in ALL_TOOLS}
