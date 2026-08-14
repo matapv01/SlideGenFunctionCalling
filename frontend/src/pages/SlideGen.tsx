@@ -32,7 +32,7 @@ const SlideGen = () => {
   const [ideaTitle, setIdeaTitle] = useState("");
   const [ideaDescription, setIdeaDescription] = useState("");
   const [ideaContentLength, setIdeaContentLength] = useState("standard");
-  const [outputFormat, setOutputFormat] = useState<OutputFormat>("xml");
+  const [outputFormat] = useState<OutputFormat>("xml");
   const [isUploading, setIsUploading] = useState(false);
   const [processing, setProcessing] = useState(false);
   const [subscriptionTier, setSubscriptionTier] = useState<string>("free");
@@ -183,26 +183,6 @@ const SlideGen = () => {
                   </div>
                 </div>
 
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">Output</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["xml"] as const).map((format) => (
-                      <button
-                        key={format}
-                        type="button"
-                        onClick={() => setOutputFormat(format)}
-                        className={`rounded-lg border p-2.5 text-center text-sm font-medium uppercase transition-all ${
-                          outputFormat === format
-                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        Presentation
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
                 {/* Upload button */}
                 <input ref={docxRef} type="file" accept=".docx" className="hidden" onChange={handleDocxUpload} />
                 <Button className="w-full gradient-primary text-primary-foreground" disabled={isUploading} onClick={() => docxRef.current?.click()}>
@@ -228,26 +208,6 @@ const SlideGen = () => {
                   onChange={(e) => setIdeaDescription(e.target.value)}
                   className="flex min-h-[100px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
                 />
-
-                <div>
-                  <Label className="mb-2 block text-sm font-medium">Output</Label>
-                  <div className="grid grid-cols-2 gap-2">
-                    {(["xml"] as const).map((format) => (
-                      <button
-                        key={format}
-                        type="button"
-                        onClick={() => setOutputFormat(format)}
-                        className={`rounded-lg border p-2.5 text-center text-sm font-medium uppercase transition-all ${
-                          outputFormat === format
-                            ? "border-primary bg-primary/10 ring-2 ring-primary/20"
-                            : "border-border hover:border-primary/50"
-                        }`}
-                      >
-                        Presentation
-                      </button>
-                    ))}
-                  </div>
-                </div>
 
                 {/* Content Length */}
                 <div>

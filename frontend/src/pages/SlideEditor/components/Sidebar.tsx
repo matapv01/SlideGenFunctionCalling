@@ -1,6 +1,8 @@
 import { useState, useRef } from "react";
-import { Plus, Trash2, Copy } from "lucide-react";
+import { Plus, Trash2, Copy, Search } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { cn } from "@/lib/utils";
 import type { Slide, DragItem } from "../types";
@@ -103,7 +105,8 @@ export const EditorSidebar = ({
   onSetDraggedItem,
   onAddElement,
 }: SidebarProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+  const [elementQuery, setElementQuery] = useState("");
 
   const tmplLabel: Record<string, string> = {
     blank: t.editor_tmpl_blank,
@@ -117,6 +120,7 @@ export const EditorSidebar = ({
   const catLabel: Record<string, string> = {
     Text: t.editor_cat_text,
     Shapes: t.editor_cat_shapes,
+    Icons: language === "vi" ? "Biểu tượng" : "Icons",
     Media: t.editor_cat_media,
   };
 
@@ -135,6 +139,18 @@ export const EditorSidebar = ({
     image: t.editor_el_image,
     video: t.editor_el_video,
   };
+
+  const normalizedElementQuery = elementQuery.trim().toLocaleLowerCase(language);
+  const filteredCategories = ELEMENTS_CATEGORIES.map(cat => ({
+    ...cat,
+    items: cat.items.filter(item => {
+      if (!normalizedElementQuery) return true;
+      const label = elLabel[item.id] || item.label;
+      return `${label} ${catLabel[cat.name] || cat.name}`
+        .toLocaleLowerCase(language)
+        .includes(normalizedElementQuery);
+    }),
+  })).filter(cat => cat.items.length > 0);
 
   // Drag-reorder state
   const dragIndexRef = useRef<number | null>(null);
@@ -353,27 +369,56 @@ export const EditorSidebar = ({
 
           {/* Elements Tab */}
           <TabsContent value="elements" className="flex-1 overflow-y-auto mt-0 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: 'none' }}>
-            <div className="p-2.5 space-y-4">
-              {ELEMENTS_CATEGORIES.map(cat => (
-                <div key={cat.name}>
-                  <h3 className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground mb-1.5 px-0.5">{catLabel[cat.name] || cat.name}</h3>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {cat.items.map(item => (
-                      <button
-                        key={item.id}
-                        className="flex flex-col items-center justify-center gap-1 p-2 rounded-lg border border-transparent hover:border-border hover:bg-muted/50 text-muted-foreground hover:text-foreground active:scale-95 transition-all duration-100 cursor-pointer group"
-                        onClick={() => onAddElement(item.type, item.subType)}
-                        draggable
-                        onDragStart={() => onSetDraggedItem({ type: item.type, subType: item.subType })}
-                        title={`${t.editor_add_el_prefix} ${elLabel[item.id] || item.label}`}
-                      >
-                        <item.icon className="h-5 w-5" />
-                        <span className="text-[9px] leading-tight text-center">{elLabel[item.id] || item.label}</span>
-                      </button>
-                    ))}
-                  </div>
+            <div className="sticky top-0 z-10 bg-background px-2.5 pt-2.5 pb-1.5">
+              <div className="relative">
+                <Search className="absolute left-2.5 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  value={elementQuery}
+                  onChange={(event) => setElementQuery(event.target.value)}
+                  placeholder={language === "vi" ? "Tìm phần tử..." : "Search elements..."}
+                  className="h-8 pl-8 text-xs"
+                />
+              </div>
+            </div>
+            <div className="px-2.5 pb-3">
+              {filteredCategories.length > 0 ? (
+                <Accordion
+                  type="multiple"
+                  defaultValue={ELEMENTS_CATEGORIES.map(cat => cat.name)}
+                  className="space-y-1"
+                >
+                  {filteredCategories.map(cat => (
+                    <AccordionItem key={cat.name} value={cat.name} className="rounded-lg border px-2">
+                      <AccordionTrigger className="py-2 hover:no-underline">
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                          {catLabel[cat.name] || cat.name}
+                        </span>
+                      </AccordionTrigger>
+                      <AccordionContent className="pb-2">
+                        <div className="grid grid-cols-3 gap-1.5">
+                          {cat.items.map(item => (
+                            <button
+                              key={item.id}
+                              className="flex min-h-16 flex-col items-center justify-center gap-1 rounded-lg border border-transparent p-2 text-muted-foreground transition-all duration-100 hover:border-border hover:bg-muted/50 hover:text-foreground active:scale-95 cursor-pointer group"
+                              onClick={() => onAddElement(item.type, item.subType)}
+                              draggable
+                              onDragStart={() => onSetDraggedItem({ type: item.type, subType: item.subType })}
+                              title={`${t.editor_add_el_prefix} ${elLabel[item.id] || item.label}`}
+                            >
+                              <item.icon className="h-5 w-5" />
+                              <span className="text-[9px] leading-tight text-center">{elLabel[item.id] || item.label}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  ))}
+                </Accordion>
+              ) : (
+                <div className="py-10 text-center text-xs text-muted-foreground">
+                  {language === "vi" ? "Không tìm thấy phần tử phù hợp" : "No matching elements"}
                 </div>
-              ))}
+              )}
             </div>
           </TabsContent>
         </Tabs>

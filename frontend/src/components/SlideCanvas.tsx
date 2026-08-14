@@ -24,12 +24,18 @@ export interface SlideCanvasHandle {
   getSelectedZIndex: () => number;
   getMaxZIndex: () => number;
   injectElement: (html: string) => void;
-  deleteElement: (id?: string) => void;
-  duplicateElement: (id?: string) => void;
+  deleteElement: (id?: string) => string[];
+  duplicateElement: (id?: string) => string[];
   copySelectedElement: (id?: string) => boolean;
   pasteElement: () => void;
   bringToFront: (id?: string) => void;
   sendToBack: (id?: string) => void;
+  bringForward: (id?: string) => void;
+  sendBackward: (id?: string) => void;
+  groupSelectedElements: () => boolean;
+  ungroupSelectedElements: () => boolean;
+  getSelectionInfo: () => { count: number; selectedIds: string[]; groupId: string | null; isGroup: boolean };
+  deselectAll: () => void;
   isTextEditing: () => boolean;
   activateEquationById: (id: string) => void;
   insertMath: (latex: string) => void;
@@ -118,10 +124,10 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
       logicInstanceRef.current?.injectElement(html);
     },
     deleteElement: (id?: string) => {
-      logicInstanceRef.current?.deleteElement(id ?? null);
+      return logicInstanceRef.current?.deleteElement(id ?? null) ?? [];
     },
     duplicateElement: (id?: string) => {
-      logicInstanceRef.current?.duplicateElement(id ?? null);
+      return logicInstanceRef.current?.duplicateElement(id ?? null) ?? [];
     },
     copySelectedElement: (id?: string) => {
       return logicInstanceRef.current?.copySelectedElement(id ?? null) ?? false;
@@ -134,6 +140,29 @@ export const SlideCanvas = forwardRef<SlideCanvasHandle, SlideCanvasProps>((prop
     },
     sendToBack: (id?: string) => {
       logicInstanceRef.current?.sendToBack(id ?? null);
+    },
+    bringForward: (id?: string) => {
+      logicInstanceRef.current?.bringForward(id ?? null);
+    },
+    sendBackward: (id?: string) => {
+      logicInstanceRef.current?.sendBackward(id ?? null);
+    },
+    groupSelectedElements: () => {
+      return logicInstanceRef.current?.groupSelectedElements() ?? false;
+    },
+    ungroupSelectedElements: () => {
+      return logicInstanceRef.current?.ungroupSelectedElements() ?? false;
+    },
+    getSelectionInfo: () => {
+      return logicInstanceRef.current?.getSelectionInfo() ?? {
+        count: 0,
+        selectedIds: [],
+        groupId: null,
+        isGroup: false,
+      };
+    },
+    deselectAll: () => {
+      logicInstanceRef.current?.deselectAll();
     },
     isTextEditing: () => {
       return !!logicInstanceRef.current?.isEditingText;

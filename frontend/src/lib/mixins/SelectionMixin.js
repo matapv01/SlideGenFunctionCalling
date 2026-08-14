@@ -30,6 +30,17 @@ export const SelectionMixin = {
         return Number.isFinite(n) ? n : null;
     },
 
+    readRotation(transform) {
+        if (!transform || transform === 'none') return 0;
+        try {
+            const matrix = new DOMMatrixReadOnly(transform);
+            return Math.round(Math.atan2(matrix.b, matrix.a) * (180 / Math.PI) * 100) / 100;
+        } catch {
+            const match = String(transform).match(/rotate\(([-\d.]+)deg\)/i);
+            return match ? (parseFloat(match[1]) || 0) : 0;
+        }
+    },
+
     getElementBounds(element) {
         const computed = window.getComputedStyle(element);
 
@@ -78,6 +89,8 @@ export const SelectionMixin = {
         const fontFamilyClean = computedStyle.fontFamily
             ? computedStyle.fontFamily.replace(/['"]/g, '')
             : 'Nunito';
+        const mediaElement = el.matches('img, video') ? el : el.querySelector('img, video');
+        const mediaSrc = mediaElement?.getAttribute('src') || '';
 
         this.onElementSelect({
             id: el.id,
@@ -86,6 +99,11 @@ export const SelectionMixin = {
             innerHTML: el.innerHTML,
             textContent: el.textContent,
             content: el.textContent || el.innerHTML,
+            src: mediaSrc,
+            selectedIds: this.selectedElements.map(node => node.id).filter(Boolean),
+            selectionCount: this.selectedElements.length,
+            groupId: el.dataset.editorGroup || null,
+            isGroup: !!el.dataset.editorGroup && this.selectedElements.length > 1,
             type: el.tagName.toLowerCase(),
             x: bounds.left,
             y: bounds.top,
@@ -107,6 +125,7 @@ export const SelectionMixin = {
                 position: computedStyle.position,
                 zIndex: resolvedZIndex,
                 opacity: parseFloat(computedStyle.opacity) || 1,
+                rotation: this.readRotation(computedStyle.transform || el.style.transform),
             },
         });
     },
@@ -172,16 +191,55 @@ export const SelectionMixin = {
             el = topLevelSelectable;
         }
 
-        this.selectedElements = [el];
-        this.selectedElementId = el.id;
+        const groupId = el.dataset?.editorGroup;
+        const groupMembers = groupId
+            ? Array.from(this.canvas.querySelectorAll('[data-editor-group]'))
+                .filter(node => node.dataset?.editorGroup === groupId)
+            : [];
+        const selection = groupMembers.length > 1
+            ? [el, ...groupMembers.filter(node => node !== el)]
+            : [el];
 
-        this.highlightElement(el);
+        this.selectedElements = selection;
+        this.selectedElementId = el.id;
+        this.refreshSelectionVisuals();
         this.emitSelectedElementData(el);
     },
 
     toggleSelection(el) {
-        // Keep API compatibility but enforce single-select behavior.
-        this.selectElement(el);
+        if (!el) return;
+
+        const groupId = el.dataset?.editorGroup;
+        const candidates = groupId
+            ? Array.from(this.canvas.querySelectorAll('[data-editor-group]'))
+                .filter(node => node.dataset?.editorGroup === groupId)
+            : [el];
+        const allSelected = candidates.every(node => this.selectedElements.includes(node));
+
+        if (allSelected) {
+            this.selectedElements = this.selectedElements.filter(node => !candidates.includes(node));
+        } else {
+            this.selectedElements = [
+                ...candidates,
+                ...this.selectedElements.filter(node => !candidates.includes(node)),
+            ];
+        }
+
+        if (this.selectedElements.length === 0) {
+            this.deselectAll();
+            return;
+        }
+
+        const primary = allSelected
+            ? this.selectedElements[0]
+            : (this.selectedElements.includes(el) ? el : this.selectedElements[0]);
+        this.selectedElements = [
+            primary,
+            ...this.selectedElements.filter(node => node !== primary),
+        ];
+        this.selectedElementId = primary.id;
+        this.refreshSelectionVisuals();
+        this.emitSelectedElementData(primary);
     },
 
     deselectAll() {
@@ -212,7 +270,7 @@ export const SelectionMixin = {
     },
 
     refreshSelectionVisuals() {
-        this.selectedElements = this.selectedElements.filter(el => !!el && el.isConnected);
+        this.selectedElements = this.selectedElements.filter(el => !!el && this.root.contains(el));
 
         this.root.querySelectorAll('.selected').forEach(old => {
             old.classList.remove('selected');

@@ -56,19 +56,19 @@ OUTPUT FORMAT:
 
 Return a JSON array of objects with this structure:
 [
-  {
+  {{
     "level": 1,
     "title": "Main Section Title",
     "content": "Overview text",
     "children": [
-      {
+      {{
         "level": 2,
         "title": "Subsection Title",
         "content": "Detailed content",
         "children": []
-      }
+      }}
     ]
-  }
+  }}
 ]
 
 Return ONLY the JSON array, no additional text or markdown.

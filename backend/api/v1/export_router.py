@@ -14,6 +14,9 @@ from backend.api.schemas.export_schema import (
 from backend.api.dependencies import get_capture_service
 from backend.application.services.capture_service import CaptureService
 from backend.config import CAPTURES_DIR, TEMP_DIR
+from backend.workflows.slidegen_workflow.utils.rich_text import (
+    materialize_math_fields_in_xml,
+)
 from pathlib import Path
 import re
 import tempfile
@@ -54,12 +57,20 @@ async def export_xml_to_powerpoint(request: PowerPointExportRequest):
     Path(TEMP_DIR).mkdir(parents=True, exist_ok=True)
 
     try:
+        # The editor may send a previously saved XML document in which
+        # <math-field> is still text escaped as &lt;math-field&gt;.  Normalize
+        # it before the converter parses the document, so the formula renderer
+        # receives a real XML node in every export path.
+        export_xml = materialize_math_fields_in_xml(request.xml_content)
+        if export_xml != request.xml_content:
+            logger.info("Materialized escaped math-field nodes before PPTX export")
+
         with tempfile.TemporaryDirectory(
             dir=str(TEMP_DIR),
             prefix="slidegen_pptx_",
         ) as work_dir:
             xml_path = Path(work_dir) / "presentation.xml"
-            xml_path.write_text(request.xml_content, encoding="utf-8")
+            xml_path.write_text(export_xml, encoding="utf-8")
             XMLSlideConverter(
                 xml_path=xml_path,
                 output_path=output_path,

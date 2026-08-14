@@ -7,7 +7,8 @@ import {
   PaintBucket, Layers, SquareDashed, Blend, Space,
   BringToFront, SendToBack, Ban,
   Sigma, Divide, Variable, Parentheses, Calculator,
-  Plus, ArrowRight,
+  Plus, ArrowRight, Image as ImageIcon, Video, Upload, Link,
+  Group as GroupIcon, Ungroup,
 } from "lucide-react";
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
@@ -17,7 +18,7 @@ import { Separator } from "@/components/ui/separator";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import type { SlideElement } from "../types";
+import type { SelectionInfo, SlideElement } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
 import { useLanguage } from "@/contexts/LanguageContext";
 
@@ -68,7 +69,6 @@ const FONT_FAMILIES = [
   // ── Serif ──
   { value: "'Playfair Display', serif", label: "Playfair Display" },
   { value: "'Lora', serif", label: "Lora" },
-  { value: "Georgia, serif", label: "Georgia" },
   { value: "'Times New Roman', serif", label: "Times New Roman" },
   // ── System ──
   { value: "Arial, sans-serif", label: "Arial" },
@@ -181,6 +181,7 @@ const IconSlider = ({
 // ─── Props ────────────────────────────────────────────────────────────────────
 interface PropertiesPanelProps {
   selectedElement: SlideElement | undefined;
+  selectionInfo?: SelectionInfo;
   onUpdateElement: (id: string, updates: Partial<SlideElement> & { _filter?: string }) => void;
   slideCanvasRef?: React.RefObject<SlideCanvasHandle>;
   onDeleteElement?: () => void;
@@ -192,6 +193,7 @@ interface PropertiesPanelProps {
 // ─── Component ────────────────────────────────────────────────────────────────
 export const PropertiesPanel = ({
   selectedElement,
+  selectionInfo,
   onUpdateElement,
   slideCanvasRef,
   onDeleteElement,
@@ -199,8 +201,43 @@ export const PropertiesPanel = ({
   onBringForward,
   onSendBackward,
 }: PropertiesPanelProps) => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const el = selectedElement;
+
+  if ((selectionInfo?.count || 0) > 1) {
+    const isGrouped = Boolean(selectionInfo?.groupId);
+    return (
+      <div data-properties-panel="true" className="w-72 border-l bg-background flex flex-col items-center justify-center gap-4 text-muted-foreground px-7">
+        <div className="rounded-2xl bg-primary/10 p-5 text-primary">
+          {isGrouped ? <GroupIcon className="h-7 w-7" /> : <Layers className="h-7 w-7" />}
+        </div>
+        <div className="text-center space-y-1.5">
+          <p className="text-sm font-semibold text-foreground">
+            {selectionInfo?.count} {language === 'vi' ? 'phần tử đã chọn' : 'elements selected'}
+          </p>
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {language === 'vi'
+              ? 'Kéo một phần tử để di chuyển cả vùng chọn cùng nhau.'
+              : 'Drag one element to move the whole selection together.'}
+          </p>
+        </div>
+        <Button
+          variant={isGrouped ? 'outline' : 'default'}
+          size="sm"
+          className="h-9 w-full text-xs"
+          onClick={() => isGrouped
+            ? slideCanvasRef?.current?.ungroupSelectedElements()
+            : slideCanvasRef?.current?.groupSelectedElements()}
+        >
+          {isGrouped ? <Ungroup className="mr-2 h-4 w-4" /> : <GroupIcon className="mr-2 h-4 w-4" />}
+          {isGrouped
+            ? (language === 'vi' ? 'Bỏ nhóm' : 'Ungroup')
+            : (language === 'vi' ? 'Nhóm' : 'Group')}
+          <span className="ml-auto text-[9px] opacity-60">{isGrouped ? 'Ctrl+Shift+G' : 'Ctrl+G'}</span>
+        </Button>
+      </div>
+    );
+  }
 
   if (!el) {
     return (
@@ -232,6 +269,17 @@ export const PropertiesPanel = ({
   const handleFormat = (command: string, value?: string) => (e: React.MouseEvent) => {
     e.preventDefault();
     slideCanvasRef?.current?.execFormat(command, value);
+  };
+
+  const handleMediaUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file || !file.type.startsWith('image/')) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result === 'string') onUpdateElement(el.id, { src: reader.result });
+    };
+    reader.readAsDataURL(file);
+    event.target.value = '';
   };
 
   const typeLabel: Record<string, string> = {
@@ -314,6 +362,38 @@ export const PropertiesPanel = ({
         </div>
 
         <Separator />
+
+        {/* Media source */}
+        {(el.type === 'image' || el.type === 'video') && (
+          <>
+            <div>
+              <SectionLabel
+                icon={el.type === 'image' ? ImageIcon : Video}
+                label={el.type === 'image'
+                  ? (language === 'vi' ? 'Nguồn hình ảnh' : 'Image source')
+                  : (language === 'vi' ? 'Nguồn video' : 'Video source')}
+              />
+              <div className="flex h-8 items-center gap-1.5 rounded-md border border-border/50 bg-muted/30 px-2">
+                <Link className="h-3.5 w-3.5 shrink-0 text-muted-foreground" />
+                <Input
+                  type="url"
+                  value={el.src || ''}
+                  placeholder={el.type === 'image' ? 'https://.../image.jpg' : 'https://.../video.mp4'}
+                  onChange={event => onUpdateElement(el.id, { src: event.target.value })}
+                  className="h-7 min-w-0 flex-1 border-0 bg-transparent px-0 text-xs shadow-none focus-visible:ring-0"
+                />
+              </div>
+              {el.type === 'image' && (
+                <label className="mt-1.5 flex h-8 cursor-pointer items-center justify-center rounded-md border border-dashed border-border text-xs text-muted-foreground transition-colors hover:border-primary/50 hover:bg-primary/5 hover:text-foreground">
+                  <Upload className="mr-1.5 h-3.5 w-3.5" />
+                  {language === 'vi' ? 'Tải ảnh từ thiết bị' : 'Upload from device'}
+                  <input type="file" accept="image/*" className="hidden" onChange={handleMediaUpload} />
+                </label>
+              )}
+            </div>
+            <Separator />
+          </>
+        )}
 
         {/* ── 2. TYPOGRAPHY (text only) ── */}
         {el.type === 'text' && (

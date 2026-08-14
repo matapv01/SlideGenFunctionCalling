@@ -42,7 +42,7 @@ interface ToolbarProps {
   slideCanvasRef: React.RefObject<SlideCanvasHandle>;
   onNavigateBack: () => void;
   onDeselectElement: () => void;
-  onSetDraggedItem: (item: { type: string; subType: string }) => void;
+  onAddText: () => void;
   onDeleteElement?: () => void;
   onPresentFromStart: () => void;
   onPresentFromCurrent: () => void;
@@ -57,7 +57,7 @@ export const Toolbar = ({
   slideCanvasRef,
   onNavigateBack,
   onDeselectElement,
-  onSetDraggedItem,
+  onAddText,
   onDeleteElement,
   onPresentFromStart,
   onPresentFromCurrent,
@@ -94,7 +94,7 @@ export const Toolbar = ({
             variant="ghost"
             size="sm"
             className="h-8 text-xs px-3 rounded-lg"
-            onClick={() => onSetDraggedItem({ type: 'text', subType: 'paragraph' })}
+            onClick={onAddText}
           >
             <Type className="h-3.5 w-3.5 mr-1.5" /> {t.toolbar_add_text_button}
           </Button>

@@ -8,6 +8,13 @@ from typing import List, Dict, Optional, Union
 from pydantic import BaseModel, Field
 from langchain_core.tools import StructuredTool
 
+from backend.workflows.slidegen_workflow.utils.rich_text import (
+    apply_highlights_to_xml,
+    extract_highlight_markers,
+    materialize_markdown_bold_runs,
+    materialize_math_fields_in_xml,
+)
+
 
 # Import all slide generation functions from xml_tool
 from backend.workflows.slidegen_workflow.tools.xml_tool import (
@@ -468,7 +475,7 @@ class GenerateBulletContentSlideInput(BaseModel):
     """Input schema for generate_bullet_content_slide_xml."""
 
     title: str = Field(..., description="Main slide title displayed at the top-left of the dark diagonal panel. example: 'THIS IS A SLIDE TITLE'")
-    bullet_items: List[str] = Field(..., description="List of bullet points displayed below the title. example: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content']")
+    bullet_items: List[str] = Field(..., description="List of plain bullet-point contents displayed below the title. IMPORTANT: send only the text for each item; do not prefix items with •, -, *, 1., 1), or any other numbering because the renderer adds exactly one bullet marker. example: ['Here you have a list of items', 'And some text', 'But remember not to overload your slides with content']")
     closing_text: str = Field(..., description="Supporting text displayed below the bullet list. example: 'Your audience will listen to you or read the content, but won’t do both.'")
     image_url: str = Field(default="https://images.unsplash.com/photo-1499750310107-5fef28a66643?q=85&w=1600&auto=format&fit=crop", description="URL for a full-slide landscape image sized 1600 × 900 px with a 16:9 aspect ratio.")
     background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
@@ -483,7 +490,7 @@ class GenerateClientSnapshotSlideInput(BaseModel):
 
     title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Client snapshot'")
     subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'About Value Financials'")
-    client_details: List[str] = Field(..., description="List of client information and goals displayed as structured bullet points. example: ['Industry: Financial services and banking', 'Team size: 300+ employees', 'Primary goals:', '  Improve cross-team collaboration']")
+    client_details: List[str] = Field(..., description="List of plain client information and goals displayed as structured bullet points. IMPORTANT: each item must contain content only, without •, -, *, 1., 1), or other numbering; the renderer adds one marker. Use 'Label: value' for a main detail. For a nested goal, use two leading spaces but still no bullet or number. example: ['Industry: Financial services and banking', 'Team size: 300+ employees', 'Primary goals:', '  Improve cross-team collaboration']")
     top_image_url: str = Field(default="https://images.unsplash.com/photo-1552664730-d307ca884978?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
@@ -842,13 +849,13 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
     func=generate_bullet_content_slide_xml,
     name="generate_bullet_content_slide_xml",
-    description="Generates a diagonal split-content slide with a full-slide image, a dark panel on the left, a bright accent bar, a title, a bullet list, and supporting closing text. Ideal for key points, summaries, recommendations, feature lists, and instructional content.",
+     description="Generates a diagonal split-content slide with a full-slide image, a dark panel on the left, a bright accent bar, a title, a bullet list, and supporting closing text. For bullet_items, provide plain item text only—never include •, -, *, 1., or 1) because the renderer adds the bullet marker. Ideal for key points, summaries, recommendations, feature lists, and instructional content.",
     args_schema=GenerateBulletContentSlideInput,
     ),  
     StructuredTool.from_function(
     func=generate_client_snapshot_slide_xml,
     name="generate_client_snapshot_slide_xml",
-    description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
+     description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as plain text only—never include •, -, *, 1., or 1); use two leading spaces only for nested goals. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
     args_schema=GenerateClientSnapshotSlideInput,
     ),
     StructuredTool.from_function(
@@ -972,8 +979,8 @@ def _safe_xml_for_failed_tool(tool_name: str) -> str:
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
   <slide background="#F3F3F3">
     <shape type="rect" x="0" y="0" width="1600" height="900" fill="#F3F3F3" line_color="none" />
-    <textbox x="120" y="300" width="1360" height="120" font="FreeSans" size="48" color="#111111" align="center" vertical_align="middle" overflow="shrink">{safe_name}</textbox>
-    <textbox x="120" y="450" width="1360" height="80" font="FreeSans" size="24" color="#555555" align="center" vertical_align="middle" overflow="shrink">Slide content is temporarily unavailable</textbox>
+    <textbox x="120" y="300" width="1360" height="120" font="FreeSans" size="48" color="#111111" align="center" vertical_align="middle" overflow="clip">{safe_name}</textbox>
+    <textbox x="120" y="450" width="1360" height="80" font="FreeSans" size="24" color="#555555" align="center" vertical_align="middle" overflow="clip">Slide content is temporarily unavailable</textbox>
   </slide>
 </presentation>'''
 
@@ -985,16 +992,26 @@ def get_tool_by_name(name: str):
     """Get a specific tool by name."""
     return TOOL_MAP.get(name)
 
-def execute_tool(tool_call: dict):
+def execute_tool(tool_call: dict, source_content: str | None = None):
     """Execute a tool call with the provided arguments."""
     name = tool_call.get("name")
     args = tool_call.get("arguments", {})
     
     if name in TOOL_MAP:
         try:
-            result = TOOL_MAP[name].invoke(args)
+            clean_args, highlights = extract_highlight_markers(
+                args,
+                source_content=source_content,
+            )
+            result = TOOL_MAP[name].invoke(clean_args)
             result_text = str(result) if result is not None else ""
             if result_text.strip() and result_text.strip().lower() != "none":
+                result_text = materialize_math_fields_in_xml(result_text)
+                result_text = apply_highlights_to_xml(
+                    result_text,
+                    highlights,
+                )
+                result_text = materialize_markdown_bold_runs(result_text)
                 return result_text
             raise ValueError("XML tool returned empty content")
         except Exception as e:
@@ -1010,7 +1027,11 @@ def execute_tool(tool_call: dict):
 
 
 
-def execute_tool_plan(tool_calls: list, tool_lookup: dict = None) -> tuple:
+def execute_tool_plan(
+    tool_calls: list,
+    tool_lookup: dict = None,
+    source_content: str | None = None,
+) -> tuple:
     """
     Execute one generator response: XML slide tool FIRST, then Search 1..N.
 
@@ -1075,7 +1096,7 @@ def execute_tool_plan(tool_calls: list, tool_lookup: dict = None) -> tuple:
     )
 
     print(f"  🎨 [RENDER XML] Executing tool '{tool_name}' to generate slide XML...")
-    xml_out = execute_tool(final_tool_call)
+    xml_out = execute_tool(final_tool_call, source_content=source_content)
     if not xml_out:
         print(f"  Warning: Tool '{tool_name}' returned no XML; using safe fallback.")
         xml_out = _safe_xml_for_failed_tool(tool_name)

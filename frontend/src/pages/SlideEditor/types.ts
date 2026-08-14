@@ -62,6 +62,13 @@ export interface DragItem {
   content?: string; // Default content or SRC
 }
 
+export interface SelectionInfo {
+  count: number;
+  selectedIds: string[];
+  groupId: string | null;
+  isGroup: boolean;
+}
+
 export interface ElementCategory {
   name: string;
   items: {

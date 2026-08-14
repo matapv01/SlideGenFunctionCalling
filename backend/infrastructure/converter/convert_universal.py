@@ -1,14 +1,20 @@
 from __future__ import annotations
 
 import argparse
+import base64
+from html import escape as html_escape
+import json
 import os
+import re
+import shutil
 import subprocess
 import tempfile
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
-from PIL import Image, ImageFont
+from PIL import Image, ImageDraw, ImageFont
+from lxml import etree
 from pptx import Presentation
 from pptx.chart.data import ChartData
 from pptx.dml.color import RGBColor
@@ -17,6 +23,20 @@ from pptx.enum.shapes import MSO_CONNECTOR, MSO_SHAPE
 from pptx.enum.text import MSO_ANCHOR, MSO_AUTO_SIZE, PP_ALIGN
 from pptx.oxml.xmlchemy import OxmlElement
 from pptx.util import Inches, Pt
+
+from backend.workflows.slidegen_workflow.utils.rich_text import (
+    materialize_markdown_bold_runs,
+    materialize_math_fields_in_xml,
+)
+from backend.infrastructure.converter.omml import (
+    A_NS,
+    A14_NS,
+    M_NS,
+    latex_to_omml,
+)
+
+
+MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
 
 
 class XMLSlideConverter:
@@ -77,6 +97,823 @@ class XMLSlideConverter:
             candidates.insert(0, Path(configured_browser))
 
         return [candidate for candidate in candidates if candidate.exists()]
+
+    @staticmethod
+    def mathlive_package_dir() -> Path | None:
+        """Locate the local MathLive package used by the web preview."""
+        repo_root = Path(__file__).resolve().parents[3]
+        candidates = [
+            repo_root / "frontend" / "node_modules" / "mathlive",
+        ]
+        configured = os.environ.get("MATHLIVE_PACKAGE_DIR")
+        if configured:
+            candidates.insert(0, Path(configured).expanduser())
+
+        for candidate in candidates:
+            if (candidate / "mathlive-ssr.min.mjs").exists():
+                return candidate
+        return None
+
+    def latex_to_mathlive_markup(self, formulas: list[str]) -> list[str]:
+        """Convert LaTeX strings to MathLive HTML using the local SSR bundle."""
+        if not formulas:
+            return []
+
+        node = shutil.which("node")
+        package_dir = self.mathlive_package_dir()
+        if node is None or package_dir is None:
+            print(
+                "Khong the render LaTeX: can node va frontend/node_modules/mathlive."
+            )
+            return []
+
+        module_uri = (package_dir / "mathlive-ssr.min.mjs").resolve().as_uri()
+        node_script = f"""
+import fs from "node:fs";
+import {{ convertLatexToMarkup }} from {json.dumps(module_uri)};
+
+const formulas = JSON.parse(fs.readFileSync(0, "utf8"));
+const markup = formulas.map((formula) => {{
+  try {{
+    return convertLatexToMarkup(String(formula || ""));
+  }} catch (error) {{
+    return "";
+  }}
+}});
+process.stdout.write(JSON.stringify(markup));
+"""
+
+        try:
+            completed = subprocess.run(
+                [node, "--input-type=module", "-e", node_script],
+                input=json.dumps(formulas, ensure_ascii=False),
+                capture_output=True,
+                text=True,
+                timeout=20,
+                check=True,
+            )
+            result = json.loads(completed.stdout)
+            if isinstance(result, list) and len(result) == len(formulas):
+                return [str(markup) for markup in result]
+        except (OSError, subprocess.SubprocessError, json.JSONDecodeError) as exc:
+            print(f"Khong the convert LaTeX bang MathLive: {exc}")
+
+        return []
+
+    @staticmethod
+    def mathlive_static_css(package_dir: Path) -> str:
+        """Inline MathLive CSS and make its local font URLs browser-safe."""
+        css_path = package_dir / "mathlive-static.css"
+        if not css_path.exists():
+            return ""
+        css = css_path.read_text(encoding="utf-8")
+        font_dir = package_dir / "fonts"
+
+        # Chromium can reject file:// font URLs when the screenshot page is
+        # another local file.  Embed the small KaTeX font files directly so
+        # ordinary glyphs (E, a, mc, Greek letters, ...) are not rendered as
+        # transparent while CSS-only fraction/radical lines still appear.
+        for font_path in font_dir.glob("*"):
+            if font_path.suffix.lower() not in {".woff", ".woff2", ".ttf"}:
+                continue
+            try:
+                encoded = base64.b64encode(font_path.read_bytes()).decode("ascii")
+            except OSError:
+                continue
+            mime_type = {
+                ".woff": "font/woff",
+                ".woff2": "font/woff2",
+                ".ttf": "font/ttf",
+            }[font_path.suffix.lower()]
+            css = css.replace(
+                f"url(fonts/{font_path.name})",
+                f"url(data:{mime_type};base64,{encoded})",
+            )
+
+        # Make the browser wait for these embedded fonts instead of taking a
+        # screenshot during a font-display swap.
+        return css.replace('font-display:"swap"', "font-display:block")
+
+    @staticmethod
+    def latex_to_readable_text(latex: str) -> str:
+        """Convert common LaTeX constructs to a readable math fallback.
+
+        This is only used when the headless browser cannot rasterize text.
+        Keeping the fallback Unicode-based means PowerPoint still receives a
+        visible, editable text representation instead of a blank PNG.
+        """
+        value = (latex or "").replace("\\r\\n", "\n").replace("\\n", "\n")
+        # XML generated by older slide tools encoded line breaks as literal
+        # ``<br>`` text. Treat those markers as breaks in raster fallbacks.
+        value = re.sub(r"<br\s*/?>", "\n", value, flags=re.IGNORECASE)
+
+        greek = {
+            "alpha": "α", "beta": "β", "gamma": "γ", "delta": "δ",
+            "epsilon": "ε", "theta": "θ", "lambda": "λ", "mu": "μ",
+            "pi": "π", "sigma": "σ", "phi": "φ", "omega": "ω",
+            "Gamma": "Γ", "Delta": "Δ", "Theta": "Θ", "Lambda": "Λ",
+            "Pi": "Π", "Sigma": "Σ", "Phi": "Φ", "Omega": "Ω",
+        }
+        symbols = {
+            "pm": "±", "times": "×", "cdot": "·", "le": "≤",
+            "leq": "≤", "ge": "≥", "geq": "≥", "neq": "≠",
+            "approx": "≈", "in": "∈", "notin": "∉", "to": "→",
+            "rightarrow": "→", "infty": "∞", "partial": "∂",
+            "nabla": "∇", "sum": "∑", "prod": "∏", "int": "∫",
+            "log": "log", "ln": "ln", "sin": "sin", "cos": "cos",
+            "tan": "tan", "lim": "lim",
+        }
+        mathcal = {
+            "A": "𝒜", "B": "ℬ", "C": "𝒞", "D": "𝒟", "E": "ℰ",
+            "F": "ℱ", "G": "𝒢", "H": "ℋ", "I": "ℐ", "J": "𝒥",
+            "K": "𝒦", "L": "ℒ", "M": "ℳ", "N": "𝒩", "O": "𝒪",
+            "P": "𝒫", "Q": "𝒬", "R": "ℛ", "S": "𝒮", "T": "𝒯",
+            "U": "𝒰", "V": "𝒱", "W": "𝒲", "X": "𝒳", "Y": "𝒴",
+            "Z": "𝒵",
+        }
+        superscript = str.maketrans(
+            "0123456789+-=()nixy",
+            "⁰¹²³⁴⁵⁶⁷⁸⁹⁺⁻⁼⁽⁾ⁿⁱˣʸ",
+        )
+        subscript = str.maketrans(
+            "0123456789+-=()aehiijklmnoprstuvx",
+            "₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎ₐₑₕᵢᵢⱼₖₗₘₙₒₚᵣₛₜᵤᵥₓ",
+        )
+
+        def group_value(value: str, start: int) -> tuple[str, int] | None:
+            if start >= len(value) or value[start] != "{":
+                return None
+            depth = 0
+            for index in range(start, len(value)):
+                if value[index] == "{":
+                    depth += 1
+                elif value[index] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return value[start + 1:index], index + 1
+            return None
+
+        def group_value(value: str, start: int) -> tuple[str, int] | None:
+            if start >= len(value) or value[start] != "{":
+                return None
+            depth = 0
+            for index in range(start, len(value)):
+                if value[index] == "{":
+                    depth += 1
+                elif value[index] == "}":
+                    depth -= 1
+                    if depth == 0:
+                        return value[start + 1:index], index + 1
+            return None
+
+        def script_value(text: str, table: dict[int, str], fallback: str) -> str:
+            compact = re.sub(r"\s+", "", text)
+            mapped = compact.translate(table)
+            return mapped if mapped != compact else f"{fallback}{compact}{fallback}"
+
+        # Resolve commands with braced arguments before removing braces.
+        for _ in range(4):
+            previous = value
+            value = re.sub(
+                r"\\frac\s*\{([^{}]*)\}\s*\{([^{}]*)\}",
+                lambda match: (
+                    f"{XMLSlideConverter.latex_to_readable_text(match.group(1))}⁄"
+                    f"{XMLSlideConverter.latex_to_readable_text(match.group(2))}"
+                ),
+                value,
+            )
+            value = re.sub(
+                r"\\sqrt\s*\{([^{}]*)\}",
+                lambda match: f"√({XMLSlideConverter.latex_to_readable_text(match.group(1))})",
+                value,
+            )
+            value = re.sub(
+                r"\\(?:text|mathrm|mathbf)\s*\{([^{}]*)\}",
+                lambda match: match.group(1),
+                value,
+            )
+            value = re.sub(
+                r"\\mathcal\s*\{([^{}]*)\}",
+                lambda match: "".join(mathcal.get(char, char) for char in match.group(1)),
+                value,
+            )
+            value = re.sub(
+                r"\\hat\s*\{([^{}]*)\}",
+                lambda match: match.group(1) + "̂",
+                value,
+            )
+            value = re.sub(
+                r"\\vec\s*\{([^{}]*)\}",
+                lambda match: match.group(1) + "⃗",
+                value,
+            )
+            if value == previous:
+                break
+
+        value = re.sub(
+            r"\^\s*\{([^{}]*)\}",
+            lambda match: script_value(match.group(1), superscript, "^"),
+            value,
+        )
+        value = re.sub(
+            r"_\s*\{([^{}]*)\}",
+            lambda match: script_value(match.group(1), subscript, "_"),
+            value,
+        )
+        value = re.sub(
+            r"\^\s*([A-Za-z0-9+\-=()])",
+            lambda match: script_value(match.group(1), superscript, "^"),
+            value,
+        )
+        value = re.sub(
+            r"_\s*([A-Za-z0-9+\-=()])",
+            lambda match: script_value(match.group(1), subscript, "_"),
+            value,
+        )
+        value = re.sub(
+            r"\\([A-Za-z]+)",
+            lambda match: greek.get(match.group(1), symbols.get(match.group(1), match.group(1))),
+            value,
+        )
+        value = value.replace("\\left", "").replace("\\right", "")
+        value = value.replace("\\,", " ").replace("\\!", "")
+        value = value.replace("\\\\", "\n").replace("{", "").replace("}", "")
+        return re.sub(r"[ \t]+", " ", value).strip()
+
+    @staticmethod
+    def _fallback_font_path(element: ET.Element) -> Path | None:
+        candidates = [
+            Path(element.get("font_path", "")),
+            Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
+            Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
+        ]
+        return next((path for path in candidates if str(path) and path.exists()), None)
+
+    def render_latex_fallback_image(
+        self,
+        element: ET.Element,
+        png_path: Path,
+    ) -> bool:
+        """Render a visible Unicode-math fallback with Pillow."""
+        font_path = self._fallback_font_path(element)
+        if font_path is None:
+            return False
+
+        width = max(1, round(float(element.get("width", "300"))))
+        height = max(1, round(float(element.get("height", "100"))))
+        try:
+            image = Image.new("RGBA", (width, height), (0, 0, 0, 0))
+            draw = ImageDraw.Draw(image)
+            raw_color = (element.get("color") or "#000000").lstrip("#")
+            if len(raw_color) == 3:
+                raw_color = "".join(char * 2 for char in raw_color)
+            color = tuple(int(raw_color[index:index + 2], 16) for index in (0, 2, 4))
+            source_parts: list[str] = []
+            if element.text:
+                source_parts.append(element.text)
+            for child in element:
+                if child.tag == "math-field":
+                    source_parts.append(child.get("value") or child.text or "")
+                else:
+                    source_parts.append("".join(child.itertext()))
+                if child.tail:
+                    source_parts.append(child.tail)
+            readable = XMLSlideConverter.latex_to_readable_text("".join(source_parts))
+            if not readable:
+                return False
+
+            base_size = max(8, round(float(element.get("size", "24")) * 96 / 72))
+            margin_left = max(0, round(float(element.get("margin_left", "0"))))
+            margin_top = max(0, round(float(element.get("margin_top", "0"))))
+            selected_font = None
+            selected_lines = [readable]
+            for size in range(base_size, 7, -1):
+                font = ImageFont.truetype(str(font_path), size)
+                lines: list[str] = []
+                for paragraph in readable.splitlines() or [readable]:
+                    current = ""
+                    for char in paragraph:
+                        candidate = current + char
+                        if current and draw.textlength(candidate, font=font) > max(1, width - margin_left - 4):
+                            lines.append(current)
+                            current = char
+                        else:
+                            current = candidate
+                    lines.append(current)
+                bbox = draw.multiline_textbbox(
+                    (margin_left, margin_top),
+                    "\n".join(lines),
+                    font=font,
+                    spacing=max(1, round(size * 0.2)),
+                )
+                if bbox[3] - bbox[1] <= max(1, height - margin_top):
+                    selected_font = font
+                    selected_lines = lines
+                    break
+            if selected_font is None:
+                selected_font = ImageFont.truetype(str(font_path), 7)
+
+            draw.multiline_text(
+                (margin_left, margin_top),
+                "\n".join(selected_lines),
+                font=selected_font,
+                fill=(*color, 255),
+                spacing=max(1, round(selected_font.size * 0.2)),
+            )
+            image.save(png_path)
+            return image.getchannel("A").getbbox() is not None
+        except (OSError, ValueError, TypeError):
+            return False
+
+    def math_textbox_html(
+        self,
+        element: ET.Element,
+        formula_markup: list[str],
+    ) -> str:
+        """Build a fixed-size HTML canvas for a textbox containing formulas."""
+        package_dir = self.mathlive_package_dir()
+        css = self.mathlive_static_css(package_dir) if package_dir else ""
+        formula_index = 0
+        content: list[str] = []
+
+        def html_text(value: str) -> str:
+            # Some LLM calls use the two-character sequence ``\\n`` instead
+            # of an actual newline in the surrounding prose.  Normalize it
+            # here without touching the LaTeX stored inside math-field nodes.
+            value = value.replace("\\r\\n", "\n").replace("\\n", "\n")
+            value = re.sub(r"<br\s*/?>", "\n", value, flags=re.IGNORECASE)
+            return html_escape(value).replace("\n", "<br>")
+
+        if element.text:
+            content.append(html_text(element.text))
+
+        for child in element:
+            if child.tag == "math-field":
+                markup = (
+                    formula_markup[formula_index]
+                    if formula_index < len(formula_markup)
+                    else ""
+                )
+                formula_index += 1
+                if markup:
+                    content.append(
+                        '<span class="math-formula">'
+                        f"{markup}"
+                        "</span>"
+                    )
+                else:
+                    content.append(html_escape(child.text or ""))
+            elif child.tag == "br":
+                content.append("<br>")
+            else:
+                content.append(html_escape("".join(child.itertext())))
+
+            if child.tail:
+                content.append(html_text(child.tail))
+
+        width = max(1, round(float(element.get("width", "300"))))
+        height = max(1, round(float(element.get("height", "100"))))
+        font_size = float(element.get("size", "24"))
+        color = html_escape(element.get("color", "#000000"), quote=True)
+        font = html_escape(element.get("font", "Arial"), quote=True)
+        align = element.get("align", "left").lower()
+        vertical_align = element.get("vertical_align", "top").lower()
+        justify = {
+            "left": "flex-start",
+            "center": "center",
+            "right": "flex-end",
+        }.get(align, "flex-start")
+        align_items = {
+            "top": "flex-start",
+            "middle": "center",
+            "center": "center",
+            "bottom": "flex-end",
+        }.get(vertical_align, "flex-start")
+
+        margin_left = element.get("margin_left", "0")
+        margin_right = element.get("margin_right", "0")
+        margin_top = element.get("margin_top", "0")
+        margin_bottom = element.get("margin_bottom", "0")
+        weight = "700" if self.to_bool(element.get("bold")) else "400"
+        style = (
+            f"width:{width}px;height:{height}px;"
+            "box-sizing:border-box;overflow:hidden;"
+            "background:transparent;display:flex;"
+            f"align-items:{align_items};justify-content:{justify};"
+        )
+        inner_style = (
+            "width:100%;white-space:pre-wrap;word-break:break-word;"
+            f"text-align:{align};font-family:{font};font-size:{font_size}pt;"
+            f"font-weight:{weight};line-height:{element.get('line_spacing', '1.0')};"
+            f"color:{color};padding:{margin_top}pt {margin_right}pt "
+            f"{margin_bottom}pt {margin_left}pt;box-sizing:border-box;"
+        )
+        return (
+            "<!doctype html><html><head><meta charset='utf-8'>"
+            f"<style>{css}"
+            ".math-formula{display:inline-block;vertical-align:middle;}"
+            ".math-formula math-field,.math-formula *{color:inherit !important;}"
+            f"</style></head><body style='margin:0;"
+            "padding:0;background:transparent;overflow:hidden;'>"
+            f"<div style='{style}'><div style='{inner_style}'>"
+            + "".join(content)
+            + "</div></div></body></html>"
+        )
+
+    @staticmethod
+    def _normalized_math_color(value: str | None) -> str:
+        raw = str(value or "#000000").strip().lstrip("#")
+        if len(raw) == 3:
+            raw = "".join(char * 2 for char in raw)
+        if not re.fullmatch(r"[0-9A-Fa-f]{6}", raw):
+            return "#000000"
+        return f"#{raw.upper()}"
+
+    @staticmethod
+    def _xml_tag(namespace: str, name: str) -> str:
+        return f"{{{namespace}}}{name}"
+
+    def _append_native_text_run(
+        self,
+        paragraph,
+        text: str,
+        element: ET.Element,
+        *,
+        color: str | None = None,
+    ) -> None:
+        """Append ordinary DrawingML text beside an OMML math run."""
+        if not text:
+            return
+
+        font_name = element.get("font", "Arial")
+        font_size = element.get("size", "24")
+        bold = self.to_bool(element.get("bold"))
+        italic = self.to_bool(element.get("italic"))
+        text_color = self._normalized_math_color(color or element.get("color"))
+
+        text = re.sub(r"<br\s*/?>", "\n", text, flags=re.IGNORECASE)
+        for index, line in enumerate(text.split("\n")):
+            if index:
+                paragraph._p.append(
+                    etree.Element(self._xml_tag(A_NS, "br"))
+                )
+            if not line:
+                continue
+            run = etree.Element(self._xml_tag(A_NS, "r"))
+            run_properties = etree.SubElement(
+                run,
+                self._xml_tag(A_NS, "rPr"),
+                sz=str(max(1, round(float(font_size) * 100))),
+                b="1" if bold else "0",
+                i="1" if italic else "0",
+            )
+            solid_fill = etree.SubElement(
+                run_properties,
+                self._xml_tag(A_NS, "solidFill"),
+            )
+            etree.SubElement(
+                solid_fill,
+                self._xml_tag(A_NS, "srgbClr"),
+                val=text_color.lstrip("#"),
+            )
+            etree.SubElement(
+                run_properties,
+                self._xml_tag(A_NS, "latin"),
+                typeface=font_name,
+            )
+            text_node = etree.SubElement(run, self._xml_tag(A_NS, "t"))
+            text_node.text = line
+            paragraph._p.append(run)
+
+    def _append_native_math(
+        self,
+        paragraph,
+        formula: str,
+        element: ET.Element,
+        *,
+        paragraph_math: bool = False,
+        color: str | None = None,
+    ) -> bool:
+        wrapper = latex_to_omml(
+            formula,
+            color=self._normalized_math_color(color or element.get("color")),
+            size_pt=float(element.get("size", "24")),
+            paragraph=paragraph_math,
+        )
+        if wrapper is None:
+            return False
+        paragraph._p.append(wrapper)
+        return True
+
+    def _wrap_native_equation_with_fallback(
+        self,
+        slide,
+        native_element,
+        fallback_element,
+    ) -> None:
+        """Use native math in Office 2010+ and keep a visible old-Office fallback."""
+        shape_tree = slide.shapes._spTree
+        native_index = shape_tree.index(native_element)
+        shape_tree.remove(native_element)
+        shape_tree.remove(fallback_element)
+
+        alternate = etree.Element(
+            self._xml_tag(MC_NS, "AlternateContent"),
+            nsmap={
+                "mc": MC_NS,
+                "a14": A14_NS,
+                "m": M_NS,
+            },
+        )
+        choice = etree.SubElement(
+            alternate,
+            self._xml_tag(MC_NS, "Choice"),
+            Requires="a14",
+        )
+        choice.append(native_element)
+        fallback = etree.SubElement(
+            alternate,
+            self._xml_tag(MC_NS, "Fallback"),
+        )
+        fallback.append(fallback_element)
+        shape_tree.insert(native_index, alternate)
+
+    def _fallback_math_picture(self, slide, element: ET.Element) -> bool:
+        """Add a visible picture only when native OMML cannot be built."""
+        png_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        png_file.close()
+        png_path = Path(png_file.name)
+        try:
+            if not self.render_latex_fallback_image(element, png_path):
+                return False
+            slide.shapes.add_picture(
+                str(png_path),
+                self.x(element.get("x")),
+                self.y(element.get("y")),
+                self.x(element.get("width")),
+                self.y(element.get("height")),
+            )
+            return True
+        finally:
+            png_path.unlink(missing_ok=True)
+
+    def render_native_math_textbox(self, slide, element: ET.Element) -> bool:
+        """Render a textbox containing LaTeX as an editable PowerPoint equation."""
+        formula_nodes = [
+            node for node in element.iter() if node.tag == "math-field"
+        ]
+        formulas = [
+            node.get("value") or node.text or "" for node in formula_nodes
+        ]
+        if not formulas or any(not formula.strip() for formula in formulas):
+            return False
+
+        # Validate every formula before creating a shape. This lets the caller
+        # use the raster fallback for an unsupported LaTeX construct without
+        # leaving a half-built textbox behind.
+        math_wrappers = []
+        for formula in formulas:
+            wrapper = latex_to_omml(
+                formula,
+                color=self._normalized_math_color(element.get("color")),
+                size_pt=float(element.get("size", "24")),
+                # PowerPoint's PresentationML math schema expects every
+                # ``a14:m`` content block to contain ``m:oMathPara``.  This
+                # remains valid when the equation is mixed with ordinary text
+                # and avoids the repair dialog caused by an inline
+                # ``m:oMath`` wrapper in some PowerPoint versions.
+                paragraph=True,
+            )
+            if wrapper is None:
+                return False
+            math_wrappers.append(wrapper)
+
+        x = float(element.get("x", "0"))
+        y = float(element.get("y", "0"))
+        width = float(element.get("width", "300"))
+        height = float(element.get("height", "100"))
+        box = slide.shapes.add_textbox(
+            self.x(str(x)),
+            self.y(str(y)),
+            self.x(str(width)),
+            self.y(str(height)),
+        )
+        box.name = "Editable Equation"
+
+        text_frame = box.text_frame
+        text_frame.clear()
+        text_frame.word_wrap = not self.to_bool(
+            element.get("single_line"),
+            False,
+        )
+        text_frame.auto_size = MSO_AUTO_SIZE.NONE
+        text_frame.margin_left = Pt(float(element.get("margin_left", "0")))
+        text_frame.margin_right = Pt(float(element.get("margin_right", "0")))
+        text_frame.margin_top = Pt(float(element.get("margin_top", "0")))
+        text_frame.margin_bottom = Pt(float(element.get("margin_bottom", "0")))
+        text_frame.vertical_anchor = {
+            "top": MSO_ANCHOR.TOP,
+            "middle": MSO_ANCHOR.MIDDLE,
+            "center": MSO_ANCHOR.MIDDLE,
+            "bottom": MSO_ANCHOR.BOTTOM,
+        }.get(element.get("vertical_align", "top").lower(), MSO_ANCHOR.TOP)
+
+        paragraph = text_frame.paragraphs[0]
+        paragraph.alignment = {
+            "left": PP_ALIGN.LEFT,
+            "center": PP_ALIGN.CENTER,
+            "right": PP_ALIGN.RIGHT,
+            "justify": PP_ALIGN.JUSTIFY,
+        }.get(element.get("align", "left").lower(), PP_ALIGN.LEFT)
+        paragraph.space_before = Pt(0)
+        paragraph.space_after = Pt(0)
+        paragraph.line_spacing = float(element.get("line_spacing", "1.0"))
+
+        # python-pptx creates an empty a:p. Keep its paragraph properties but
+        # replace all ordinary runs with the mixed DrawingML/OMML content.
+        paragraph_element = paragraph._p
+        for child in list(paragraph_element):
+            if child.tag != self._xml_tag(A_NS, "pPr"):
+                paragraph_element.remove(child)
+
+        formula_index = 0
+
+        def append_content(text: str, source: ET.Element, color: str | None = None):
+            self._append_native_text_run(
+                paragraph,
+                text,
+                source,
+                color=color,
+            )
+
+        if element.text:
+            append_content(element.text, element)
+
+        for child in element:
+            if child.tag == "math-field":
+                paragraph._p.append(math_wrappers[formula_index])
+                formula_index += 1
+            elif child.tag == "br":
+                paragraph._p.append(etree.Element(self._xml_tag(A_NS, "br")))
+            elif child.tag == "run":
+                append_content(
+                    child.text or "",
+                    child,
+                    color=child.get("color") or element.get("color"),
+                )
+            else:
+                append_content("".join(child.itertext()), child)
+            if child.tail:
+                append_content(child.tail, element)
+
+        # ``a:endParaRPr`` is optional in the DrawingML grammar, but it is
+        # emitted by PowerPoint for every text paragraph.  Keeping it here
+        # makes the generated AlternateContent branch compatible with older
+        # PowerPoint validators as well.
+        paragraph._p.append(
+            etree.Element(
+                self._xml_tag(A_NS, "endParaRPr"),
+                lang="en-US",
+                dirty="0",
+            )
+        )
+
+        # Add a visible fallback image to the same AlternateContent block.
+        # The native shape remains the branch PowerPoint chooses and therefore
+        # stays editable through Insert Equation / Equation Tools.
+        fallback_file = tempfile.NamedTemporaryFile(delete=False, suffix=".png")
+        fallback_file.close()
+        fallback_path = Path(fallback_file.name)
+        try:
+            fallback_available = self.render_latex_fallback_image(
+                element,
+                fallback_path,
+            )
+            if fallback_available:
+                fallback_picture = slide.shapes.add_picture(
+                    str(fallback_path),
+                    self.x(str(x)),
+                    self.y(str(y)),
+                    self.x(str(width)),
+                    self.y(str(height)),
+                )
+                self._wrap_native_equation_with_fallback(
+                    slide,
+                    box._element,
+                    fallback_picture._element,
+                )
+        finally:
+            fallback_path.unlink(missing_ok=True)
+
+        print(
+            f"  Native equation: {formulas[0][:45]}"
+            f"{'...' if len(formulas[0]) > 45 else ''}"
+        )
+        return True
+
+    def render_math_textbox(self, slide, element: ET.Element) -> None:
+        """Prefer a native editable equation, then use a visible picture fallback."""
+        if self.render_native_math_textbox(slide, element):
+            return
+        if not self._fallback_math_picture(slide, element):
+            self.render_textbox(slide, element)
+
+    def render_math_picture(self, slide, element: ET.Element) -> None:
+        """Legacy browser rasterizer retained for unsupported expressions."""
+        formula_nodes = [
+            node
+            for node in element.iter()
+            if node.tag == "math-field"
+        ]
+        formulas = [
+            node.get("value") or node.text or ""
+            for node in formula_nodes
+        ]
+        markup = self.latex_to_mathlive_markup(formulas)
+        if len(markup) != len(formulas) or not all(markup):
+            # Keep conversion recoverable if Node/MathLive is unavailable.
+            self.render_textbox(slide, element)
+            return
+
+        browser_candidates = self.svg_renderer_candidates()
+        if not browser_candidates:
+            print("Khong tim thay trinh duyet de render cong thuc LaTeX.")
+            self.render_textbox(slide, element)
+            return
+
+        pixel_width = max(1, round(float(element.get("width", "300"))))
+        pixel_height = max(1, round(float(element.get("height", "100"))))
+        html_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".html",
+        )
+        html_file.close()
+        html_path = Path(html_file.name)
+        png_file = tempfile.NamedTemporaryFile(
+            delete=False,
+            suffix=".png",
+        )
+        png_file.close()
+        png_path = Path(png_file.name)
+
+        try:
+            html_path.write_text(
+                self.math_textbox_html(element, markup),
+                encoding="utf-8",
+            )
+            rendered = False
+            # MathLive uses local KaTeX fonts.  A headless Chromium screenshot
+            # can otherwise be taken during the font-swap window, producing a
+            # valid but completely transparent PNG.  Retry with increasing
+            # virtual time and verify the alpha channel before embedding it.
+            for virtual_time_ms in (500, 1500, 3000):
+                subprocess.run(
+                    [
+                        str(browser_candidates[0]),
+                        "--headless",
+                        "--disable-gpu",
+                        "--no-sandbox",
+                        "--disable-dev-shm-usage",
+                        "--default-background-color=00000000",
+                        "--hide-scrollbars",
+                        "--run-all-compositor-stages-before-draw",
+                        f"--virtual-time-budget={virtual_time_ms}",
+                        f"--window-size={pixel_width},{pixel_height}",
+                        f"--screenshot={png_path}",
+                        html_path.resolve().as_uri(),
+                    ],
+                    check=True,
+                    capture_output=True,
+                    text=True,
+                    timeout=30,
+                )
+                try:
+                    with Image.open(png_path) as rendered_image:
+                        alpha = rendered_image.convert("RGBA").getchannel("A")
+                        rendered = alpha.getbbox() is not None
+                except (OSError, ValueError):
+                    rendered = False
+                if rendered:
+                    break
+
+            if not rendered:
+                raise RuntimeError(
+                    "MathLive screenshot is transparent after waiting for fonts"
+                )
+
+            slide.shapes.add_picture(
+                str(png_path),
+                self.x(element.get("x")),
+                self.y(element.get("y")),
+                self.x(element.get("width")),
+                self.y(element.get("height")),
+            )
+        except (OSError, RuntimeError, subprocess.SubprocessError) as exc:
+            print(f"Khong the render cong thuc LaTeX: {exc}")
+            self.render_textbox(slide, element)
+        finally:
+            html_path.unlink(missing_ok=True)
+            png_path.unlink(missing_ok=True)
 
     def close_open_output_presentation(self) -> None:
         if os.name != "nt":
@@ -249,7 +1086,6 @@ if ($closed) {
             "Segoe UI Symbol": "seguisym",
             "Segoe UI": "segoeui",
             "Arial": "arial",
-            "Georgia": "georgia",
             "Times New Roman": "times",
             "Calibri": "calibri",
             "Aptos": "aptos",
@@ -654,8 +1490,98 @@ if ($closed) {
         gradient_fill.append(linear_gradient)
         character_properties.append(gradient_fill)
 
+    @staticmethod
+    def read_rich_text_runs(e: ET.Element) -> list[dict[str, str]]:
+        """Return flat XML ``<run>`` content, preserving per-run attributes."""
+        run_nodes = e.findall("./run")
+        if not run_nodes:
+            return []
+
+        runs = [
+            {"text": run_node.text or "", **run_node.attrib}
+            for run_node in run_nodes
+        ]
+        # Plain text rendering historically strips the textbox as a whole.
+        # Apply the same behavior without removing meaningful spaces between runs.
+        while runs and not runs[0]["text"]:
+            runs.pop(0)
+        while runs and not runs[-1]["text"]:
+            runs.pop()
+        if runs:
+            runs[0]["text"] = runs[0]["text"].lstrip()
+            runs[-1]["text"] = runs[-1]["text"].rstrip()
+        return [run for run in runs if run["text"]]
+
+    @staticmethod
+    def rich_segments_for_lines(
+        rich_runs: list[dict[str, str]],
+        rendered_lines: list[str],
+    ) -> list[list[tuple[str, dict[str, str]]]]:
+        """Map wrapped lines back to their rich-run styles by character offset."""
+        normalized_characters: list[str] = []
+        normalized_styles: list[dict[str, str]] = []
+        pending_space_style: dict[str, str] | None = None
+
+        for rich_run in rich_runs:
+            style = {
+                key: value
+                for key, value in rich_run.items()
+                if key != "text"
+            }
+            for character in rich_run.get("text", ""):
+                if character.isspace():
+                    if pending_space_style is None:
+                        pending_space_style = style
+                    continue
+                if pending_space_style is not None and normalized_characters:
+                    normalized_characters.append(" ")
+                    normalized_styles.append(pending_space_style)
+                pending_space_style = None
+                normalized_characters.append(character)
+                normalized_styles.append(style)
+
+        normalized_text = "".join(normalized_characters)
+        cursor = 0
+        result: list[list[tuple[str, dict[str, str]]]] = []
+
+        for rendered_line in rendered_lines:
+            line = " ".join(rendered_line.split())
+            if not line:
+                result.append([])
+                continue
+
+            start = normalized_text.find(line, cursor)
+            if start < 0:
+                # Keep the text visible if a future wrapping implementation
+                # transforms characters in a way that cannot be mapped exactly.
+                result.append([(rendered_line, {})])
+                continue
+
+            line_styles = normalized_styles[start : start + len(line)]
+            segments: list[tuple[str, dict[str, str]]] = []
+            segment_start = 0
+            for index in range(1, len(line) + 1):
+                if index < len(line) and line_styles[index] == line_styles[segment_start]:
+                    continue
+                segments.append(
+                    (
+                        line[segment_start:index],
+                        line_styles[segment_start],
+                    )
+                )
+                segment_start = index
+            result.append(segments)
+            cursor = start + len(line)
+
+        return result
+
     def render_textbox(self, slide, e: ET.Element) -> None:
-        text = "".join(e.itertext()).strip()
+        rich_runs = self.read_rich_text_runs(e)
+        text = (
+            "".join(run["text"] for run in rich_runs)
+            if rich_runs
+            else "".join(e.itertext()).strip()
+        )
 
         x = float(e.get("x", "0"))
         y = float(e.get("y", "0"))
@@ -798,6 +1724,12 @@ if ($closed) {
                 for paragraph in text.splitlines()
             ] or [""]
 
+        rich_lines = (
+            self.rich_segments_for_lines(rich_runs, rendered_lines)
+            if rich_runs
+            else []
+        )
+
         for index, line in enumerate(rendered_lines):
             paragraph = (
                 tf.paragraphs[0]
@@ -805,7 +1737,6 @@ if ($closed) {
                 else tf.add_paragraph()
             )
 
-            paragraph.text = line
             paragraph.alignment = alignment
             paragraph.space_before = Pt(0)
             paragraph.space_after = Pt(0)
@@ -820,9 +1751,35 @@ if ($closed) {
                 "#000000",
             )
 
+            if rich_runs:
+                segments = rich_lines[index]
+                if not segments:
+                    paragraph.text = ""
+                for segment_text, segment_style in segments:
+                    run = paragraph.add_run()
+                    run.text = segment_text
+                    run.font.name = segment_style.get("font", font_name)
+                    run.font.size = Pt(
+                        float(segment_style.get("size", final_font_size))
+                    )
+                    run.font.bold = self.to_bool(
+                        segment_style.get("bold"),
+                        bold,
+                    )
+                    run.font.italic = self.to_bool(
+                        segment_style.get("italic"),
+                        italic,
+                    )
+                    run.font.color.rgb = self.rgb(
+                        segment_style.get("color"),
+                        e.get("color", "#000000"),
+                    )
+            else:
+                paragraph.text = line
+
             gradient_start = e.get("gradient_start")
             gradient_end = e.get("gradient_end")
-            if gradient_start and gradient_end:
+            if gradient_start and gradient_end and not rich_runs:
                 self.apply_text_gradient(
                     paragraph,
                     gradient_start,
@@ -977,6 +1934,50 @@ if ($closed) {
     # Images
     # =========================================================
 
+    @staticmethod
+    def _prepare_pptx_image(image_path: Path) -> tuple[Path, Path | None]:
+        """Return an image path that python-pptx can embed.
+
+        Pillow can decode formats such as WEBP, but ``python-pptx`` only
+        accepts a smaller set of image formats.  Convert unsupported images
+        to a temporary PNG while leaving already-supported images untouched.
+        The second return value is the temporary path so callers can remove
+        it after the shape has been created.
+        """
+        supported_formats = {"BMP", "GIF", "JPEG", "PNG", "TIFF", "WMF"}
+
+        with Image.open(image_path) as source_image:
+            image_format = (source_image.format or "").upper()
+            if image_format in supported_formats:
+                return image_path, None
+
+            temporary = tempfile.NamedTemporaryFile(
+                delete=False,
+                suffix=".png",
+            )
+            temporary.close()
+            converted_path = Path(temporary.name)
+
+            # Preserve alpha when the source has it; RGB keeps the output
+            # compact for ordinary images and avoids unsupported palette or
+            # grayscale modes in downstream encoders.
+            has_alpha = (
+                "A" in source_image.getbands()
+                or "transparency" in source_image.info
+            )
+            converted_image = source_image.convert(
+                "RGBA" if has_alpha else "RGB"
+            )
+            try:
+                converted_image.save(converted_path, format="PNG")
+            except Exception:
+                converted_path.unlink(missing_ok=True)
+                raise
+            finally:
+                converted_image.close()
+
+        return converted_path, converted_path
+
     def download_image(self, url: str) -> Path:
         suffix = Path(url.split("?", maxsplit=1)[0]).suffix or ".jpg"
 
@@ -1025,6 +2026,7 @@ if ($closed) {
             raise ValueError("Image thiếu src")
 
         temp_path: Path | None = None
+        converted_path: Path | None = None
 
         if src.startswith(("http://", "https://")):
             try:
@@ -1054,8 +2056,12 @@ if ($closed) {
             with Image.open(image_path) as source_image:
                 source_width, source_height = source_image.size
 
+            pptx_image_path, converted_path = self._prepare_pptx_image(
+                image_path
+            )
+
             picture = slide.shapes.add_picture(
-                str(image_path),
+                str(pptx_image_path),
                 target_x,
                 target_y,
                 target_width,
@@ -1077,6 +2083,8 @@ if ($closed) {
                     picture.crop_top = vertical_crop
                     picture.crop_bottom = vertical_crop
         finally:
+            if converted_path is not None:
+                converted_path.unlink(missing_ok=True)
             if temp_path is not None:
                 temp_path.unlink(missing_ok=True)
 
@@ -1262,7 +2270,12 @@ if ($closed) {
                 f"Không tìm thấy XML: {self.xml_path}"
             )
 
-        root = ET.parse(self.xml_path).getroot()
+        # Keep the converter safe when it is called directly from the CLI or
+        # a worker, bypassing the API normalization step.
+        xml_content = self.xml_path.read_text(encoding="utf-8")
+        normalized_xml = materialize_math_fields_in_xml(xml_content)
+        normalized_xml = materialize_markdown_bold_runs(normalized_xml)
+        root = ET.fromstring(normalized_xml)
 
         if root.tag != "presentation":
             raise ValueError("Thẻ gốc phải là <presentation>")
@@ -1305,7 +2318,13 @@ if ($closed) {
                     raise ValueError(
                         f"Chưa hỗ trợ thẻ <{element.tag}>"
                     )
-                renderer(slide, element)
+                if (
+                    element.tag.lower() in {"textbox", "text"}
+                    and any(node.tag == "math-field" for node in element.iter())
+                ):
+                    self.render_math_textbox(slide, element)
+                else:
+                    renderer(slide, element)
 
         self.close_open_output_presentation()
         self.prs.save(self.output_path)

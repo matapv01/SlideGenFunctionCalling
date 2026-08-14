@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useParams } from "react-router-dom";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useSlideEditor } from "./hooks";
-import { Toolbar, EditorSidebar, PropertiesPanel, CanvasArea, ExportModal } from "./components";
+import { Toolbar, EditorSidebar, PropertiesPanel, CanvasArea, ExportModal, ContextualEditBar } from "./components";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 const MIN_ZOOM = 0.1;
@@ -31,6 +31,7 @@ const SlideEditor = () => {
     currentSlideIndex,
     selectedElementId,
     selectedElement,
+    selectionInfo,
     zoom,
     isSidebarOpen,
     projectName,
@@ -42,7 +43,6 @@ const SlideEditor = () => {
     
     // Setters
     setCurrentSlideIndex,
-    setSelectedElementId,
     setZoom,
     setDraggedItem,
     setIsSidebarOpen,
@@ -97,8 +97,8 @@ const SlideEditor = () => {
         selectedElementId={selectedElementId}
         slideCanvasRef={slideCanvasRef}
         onNavigateBack={() => navigate(-1)}
-        onDeselectElement={() => setSelectedElementId(null)}
-        onSetDraggedItem={setDraggedItem}
+        onDeselectElement={() => slideCanvasRef.current?.deselectAll()}
+        onAddText={() => addElement({ type: "text", subType: "paragraph" }, 760, 440)}
         onDeleteElement={selectedElementId ? () => deleteElement(selectedElementId) : undefined}
         onPresentFromStart={() => {
           const historyState = slideCanvasRef.current?.getHistoryState?.();
@@ -115,6 +115,18 @@ const SlideEditor = () => {
           navigate(`/present/${projectId}?slide=${currentSlideIndex}`);
         }}
         onExport={() => setIsExportModalOpen(true)}
+      />
+
+      <ContextualEditBar
+        selectedElement={selectedElement}
+        selectionInfo={selectionInfo}
+        slideCanvasRef={slideCanvasRef}
+        onAddElement={(type, subType) => addElement({ type, subType }, 760, 440)}
+        onUpdateElement={updateElement}
+        onDeleteElement={() => selectedElementId && deleteElement(selectedElementId)}
+        onDuplicateElement={() => selectedElementId && duplicateElement(selectedElementId)}
+        onBringForward={() => selectedElementId && bringForward(selectedElementId)}
+        onSendBackward={() => selectedElementId && sendBackward(selectedElementId)}
       />
 
 
@@ -198,6 +210,7 @@ const SlideEditor = () => {
           <div className={`transition-[width] duration-300 ease-in-out overflow-hidden ${isPropsPanelOpen ? 'w-72' : 'w-0'}`}>
             <PropertiesPanel
               selectedElement={selectedElement}
+              selectionInfo={selectionInfo}
               onUpdateElement={updateElement}
               slideCanvasRef={slideCanvasRef}
               onDeleteElement={selectedElementId ? () => deleteElement(selectedElementId) : undefined}

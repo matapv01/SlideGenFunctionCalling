@@ -1,6 +1,6 @@
 import { useState, useRef, useCallback, useEffect } from "react";
 import { useParams, useNavigate, useSearchParams } from "react-router-dom";
-import type { DragItem } from "../types";
+import type { DragItem, SelectionInfo } from "../types";
 import type { SlideCanvasHandle } from "@/components/SlideCanvas";
 import { useSlideData } from "./useSlideData";
 import { useSlideActions } from "./useSlideActions";
@@ -29,6 +29,12 @@ export const useSlideEditor = () => {
   // ── UI state ────────────────────────────────────────────────────────
   const [currentSlideIndex, setCurrentSlideIndex] = useState(0);
   const [selectedElementId, setSelectedElementId] = useState<string | null>(null);
+  const [selectionInfo, setSelectionInfo] = useState<SelectionInfo>({
+    count: 0,
+    selectedIds: [],
+    groupId: null,
+    isGroup: false,
+  });
   const [zoom, setZoom] = useState(0.48);
   const [draggedItem, setDraggedItem] = useState<DragItem | null>(null);
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
@@ -122,6 +128,7 @@ export const useSlideEditor = () => {
     currentSlideIndex,
     setSlides,
     setSelectedElementId,
+    setSelectionInfo,
     draggedItem,
     setDraggedItem,
     zoom,
@@ -142,7 +149,7 @@ export const useSlideEditor = () => {
 
   return {
     // State
-    slides, currentSlide, currentSlideIndex, selectedElementId, selectedElement,
+    slides, currentSlide, currentSlideIndex, selectedElementId, selectedElement, selectionInfo,
     zoom, draggedItem, isSidebarOpen, projectName, loading,
 
     // Refs

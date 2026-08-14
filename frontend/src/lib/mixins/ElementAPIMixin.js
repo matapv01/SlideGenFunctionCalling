@@ -36,88 +36,219 @@ export const ElementAPIMixin = {
         el.style.cursor = 'move';
     },
 
-    deleteElement(targetId = null) {
-        const el = this.resolveTargetElement(targetId);
-        if (!el) return;
+    getOperationElements(targetId = null) {
+        let target = null;
+        const resolvedId = targetId || this.selectedElementId;
 
-        el.remove();
+        if (resolvedId) {
+            target = this.selectedElements.find(node => node.id === resolvedId) || null;
+            if (!target) {
+                try {
+                    target = this.root.querySelector(`#${CSS.escape(resolvedId)}`);
+                } catch {
+                    target = this.root.querySelector(`[id="${resolvedId}"]`);
+                }
+            }
+        }
+        target ||= this.selectedElements[0] || null;
+        if (!target) return [];
+
+        if (this.selectedElements.length > 1 && this.selectedElements.includes(target)) {
+            return this.selectedElements.filter(node => node && this.canvas.contains(node));
+        }
+
+        const groupId = target.dataset?.editorGroup;
+        if (!groupId) return [target];
+        return Array.from(this.canvas.querySelectorAll('[data-editor-group]'))
+            .filter(node => node.dataset?.editorGroup === groupId);
+    },
+
+    getSelectionInfo() {
+        const primary = this.getPrimarySelectedElement?.() || this.selectedElements[0] || null;
+        return {
+            count: this.selectedElements.length,
+            selectedIds: this.selectedElements.map(node => node.id).filter(Boolean),
+            groupId: primary?.dataset?.editorGroup || null,
+            isGroup: !!primary?.dataset?.editorGroup && this.selectedElements.length > 1,
+        };
+    },
+
+    groupSelectedElements() {
+        const elements = this.selectedElements.filter(node => node && this.canvas.contains(node));
+        if (elements.length < 2) return false;
+
+        const groupId = `group_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`;
+        elements.forEach(node => {
+            node.dataset.editorGroup = groupId;
+        });
+
+        const primary = this.getPrimarySelectedElement?.() || elements[0];
+        this.selectedElements = [primary, ...elements.filter(node => node !== primary)];
+        this.selectedElementId = primary.id;
+        this.refreshSelectionVisuals?.();
+        this.emitSelectedElementData?.(primary);
+        this.saveHistory();
+        return true;
+    },
+
+    ungroupSelectedElements() {
+        const groupIds = new Set(
+            this.selectedElements
+                .map(node => node?.dataset?.editorGroup)
+                .filter(Boolean)
+        );
+        if (groupIds.size === 0) return false;
+
+        const affected = Array.from(this.canvas.querySelectorAll('[data-editor-group]'))
+            .filter(node => groupIds.has(node.dataset?.editorGroup));
+        affected.forEach(node => delete node.dataset.editorGroup);
+
+        const primary = this.getPrimarySelectedElement?.() || affected[0] || null;
+        this.selectedElements = primary
+            ? [primary, ...affected.filter(node => node !== primary)]
+            : [];
+        this.selectedElementId = primary?.id || null;
+        this.refreshSelectionVisuals?.();
+        if (primary) this.emitSelectedElementData?.(primary);
+        this.saveHistory();
+        return true;
+    },
+
+    deleteElement(targetId = null) {
+        const elements = this.getOperationElements(targetId);
+        if (elements.length === 0) return [];
+
+        const deletedIds = elements.map(node => node.id).filter(Boolean);
+        elements.forEach(node => node.remove());
         this.deselectAll();
         this.saveHistory();
+        return deletedIds;
     },
 
     duplicateElement(targetId = null, offsetX = 24, offsetY = 24) {
-        const source = this.resolveTargetElement(targetId);
-        if (!source) return null;
+        const sources = this.getOperationElements(targetId);
+        if (sources.length === 0) return [];
 
-        const clone = source.cloneNode(true);
-        this.normalizeElementForCanvas(clone);
-        clone.id = `el_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+        const originalGroupIds = new Set(sources.map(node => node.dataset?.editorGroup).filter(Boolean));
+        const newGroupId = originalGroupIds.size === 1 && sources.length > 1
+            ? `group_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`
+            : null;
+        const baseZ = this.getMaxZIndex() + 1;
+        const clones = sources.map((source, index) => {
+            const clone = source.cloneNode(true);
+            this.normalizeElementForCanvas(clone);
+            clone.id = `el_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 7)}`;
+            if (newGroupId) clone.dataset.editorGroup = newGroupId;
+            else delete clone.dataset.editorGroup;
 
-        const left = this.getStyleNumber(source, 'left', source.offsetLeft || 0);
-        const top = this.getStyleNumber(source, 'top', source.offsetTop || 0);
+            const left = this.getStyleNumber(source, 'left', source.offsetLeft || 0);
+            const top = this.getStyleNumber(source, 'top', source.offsetTop || 0);
+            if (!clone.style.position) clone.style.position = source.style.position || 'absolute';
+            clone.style.left = `${left + offsetX}px`;
+            clone.style.top = `${top + offsetY}px`;
+            clone.style.zIndex = String(baseZ + index);
+            this.canvas.appendChild(clone);
+            return clone;
+        });
 
-        if (!clone.style.position) clone.style.position = source.style.position || 'absolute';
-        clone.style.left = `${left + offsetX}px`;
-        clone.style.top = `${top + offsetY}px`;
-        clone.style.zIndex = String(this.getMaxZIndex() + 1);
-
-        this.canvas.appendChild(clone);
-        this.selectElement(clone);
+        this.selectedElements = clones;
+        this.selectedElementId = clones[0].id;
+        this.refreshSelectionVisuals?.();
+        this.emitSelectedElementData?.(clones[0]);
         this.saveHistory();
-        return clone.id;
+        return clones.map(node => node.id);
     },
 
     copySelectedElement(targetId = null) {
-        const source = this.resolveTargetElement(targetId);
-        if (!source) return false;
+        const sources = this.getOperationElements(targetId);
+        if (sources.length === 0) return false;
 
-        const clone = source.cloneNode(true);
-        this.normalizeElementForCanvas(clone);
-        clone.removeAttribute('id');
-
-        this.clipboardElementHTML = clone.outerHTML;
+        this.clipboardElementsHTML = sources.map((source) => {
+            const clone = source.cloneNode(true);
+            this.normalizeElementForCanvas(clone);
+            clone.removeAttribute('id');
+            return clone.outerHTML;
+        });
         return true;
     },
 
     pasteElement(offsetX = 24, offsetY = 24) {
-        if (!this.clipboardElementHTML) return null;
+        const htmlItems = this.clipboardElementsHTML || [];
+        if (htmlItems.length === 0) return [];
 
-        const temp = document.createElement('div');
-        temp.innerHTML = this.clipboardElementHTML.trim();
-        const el = temp.firstElementChild;
-        if (!el || !(el instanceof HTMLElement)) return null;
+        const groupIdMap = new Map();
+        const baseZ = this.getMaxZIndex() + 1;
+        const pasted = htmlItems.map((html, index) => {
+            const temp = document.createElement('div');
+            temp.innerHTML = html.trim();
+            const el = temp.firstElementChild;
+            if (!el || !(el instanceof HTMLElement)) return null;
 
-        this.normalizeElementForCanvas(el);
-        el.id = `el_${Date.now()}_${Math.random().toString(36).substr(2, 6)}`;
+            this.normalizeElementForCanvas(el);
+            el.id = `el_${Date.now()}_${index}_${Math.random().toString(36).slice(2, 7)}`;
+            const oldGroupId = el.dataset.editorGroup;
+            if (oldGroupId) {
+                if (!groupIdMap.has(oldGroupId)) {
+                    groupIdMap.set(oldGroupId, `group_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`);
+                }
+                el.dataset.editorGroup = groupIdMap.get(oldGroupId);
+            }
 
-        const left = this.getStyleNumber(el, 'left', 0);
-        const top = this.getStyleNumber(el, 'top', 0);
-        if (!el.style.position) el.style.position = 'absolute';
-        el.style.left = `${left + offsetX}px`;
-        el.style.top = `${top + offsetY}px`;
-        el.style.zIndex = String(this.getMaxZIndex() + 1);
+            const left = this.getStyleNumber(el, 'left', 0);
+            const top = this.getStyleNumber(el, 'top', 0);
+            if (!el.style.position) el.style.position = 'absolute';
+            el.style.left = `${left + offsetX}px`;
+            el.style.top = `${top + offsetY}px`;
+            el.style.zIndex = String(baseZ + index);
+            this.canvas.appendChild(el);
+            return el;
+        }).filter(Boolean);
+        if (pasted.length === 0) return [];
 
-        this.canvas.appendChild(el);
-        this.selectElement(el);
+        this.selectedElements = pasted;
+        this.selectedElementId = pasted[0].id;
+        this.refreshSelectionVisuals?.();
+        this.emitSelectedElementData?.(pasted[0]);
         this.saveHistory();
-        return el.id;
+        return pasted.map(node => node.id);
     },
 
     bringToFront(targetId = null) {
-        const el = this.resolveTargetElement(targetId);
-        if (!el) return;
-        el.style.zIndex = String(this.getMaxZIndex() + 1);
+        const elements = this.getOperationElements(targetId);
+        if (elements.length === 0) return;
+        const baseZ = this.getMaxZIndex() + 1;
+        elements.forEach((node, index) => { node.style.zIndex = String(baseZ + index); });
         this.updateSelectionUI();
-        this.emitSelectedElementData(el);
+        this.emitSelectedElementData(elements[0]);
         this.saveHistory();
     },
 
     sendToBack(targetId = null) {
-        const el = this.resolveTargetElement(targetId);
-        if (!el) return;
-        el.style.zIndex = '0';
+        const elements = this.getOperationElements(targetId);
+        if (elements.length === 0) return;
+        elements.forEach((node, index) => { node.style.zIndex = String(index); });
         this.updateSelectionUI();
-        this.emitSelectedElementData(el);
+        this.emitSelectedElementData(elements[0]);
+        this.saveHistory();
+    },
+
+    bringForward(targetId = null) {
+        const elements = this.getOperationElements(targetId);
+        if (elements.length === 0) return;
+        elements.forEach(node => {
+            node.style.zIndex = String((parseInt(node.style.zIndex, 10) || 0) + 1);
+        });
+        this.emitSelectedElementData(elements[0]);
+        this.saveHistory();
+    },
+
+    sendBackward(targetId = null) {
+        const elements = this.getOperationElements(targetId);
+        if (elements.length === 0) return;
+        elements.forEach(node => {
+            node.style.zIndex = String(Math.max(0, (parseInt(node.style.zIndex, 10) || 0) - 1));
+        });
+        this.emitSelectedElementData(elements[0]);
         this.saveHistory();
     },
 
@@ -198,6 +329,9 @@ export const ElementAPIMixin = {
         Object.entries(newStyles).forEach(([key, value]) => {
             if (key === 'innerHTML' || key === 'textContent' || key === 'content') {
                 el.innerHTML = value;
+            } else if (key === 'mediaSrc') {
+                const media = el.matches('img, video') ? el : el.querySelector('img, video');
+                if (media) media.setAttribute('src', String(value || ''));
             } else {
                 el.style[key] = value;
             }

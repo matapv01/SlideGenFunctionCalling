@@ -318,6 +318,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                     for tools in active_tools_dict.values()
                     for tool in tools
                 },
+                source_content=state.get("current_slide_text", ""),
             )
             if not slide_content:
                 raise ValueError("Slide XML tool returned empty content.")
@@ -332,7 +333,10 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
             )
             state['retry_count'] = retry_count + 1
             if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-                fallback_content = active_execute_tool(tool_call)
+                fallback_content = active_execute_tool(
+                    tool_call,
+                    source_content=state.get("current_slide_text", ""),
+                )
                 if not fallback_content:
                     fallback_content = (
                         _fallback_xml_for_failed_tool(tool_call, str(e))
@@ -364,7 +368,10 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
         )
         state['retry_count'] = retry_count + 1
         if state['retry_count'] >= EXECUTOR_MAX_RETRIES:
-            fallback_content = active_execute_tool(tool_call)
+            fallback_content = active_execute_tool(
+                tool_call,
+                source_content=state.get("current_slide_text", ""),
+            )
             if not fallback_content:
                 fallback_content = (
                     _fallback_xml_for_failed_tool(tool_call, "; ".join(errors))

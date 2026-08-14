@@ -4,6 +4,7 @@ import zipfile
 import os
 import time
 import logging
+from collections import Counter
 from typing import Optional, Callable, Dict, Any, Tuple
 from backend.workflows.slidegen_workflow.graph.builder import build_workflow
 from backend.workflows.manual_workflow.main import run_manual_workflow
@@ -37,6 +38,49 @@ def _emit_event(callback, event_type: str, data: Dict[Any, Any]):
             callback(event_type, data)
         except Exception as e:
             logger.error(f"Error in callback: {e}")
+
+
+def _log_slide_tool_summary(final_state: Dict[str, Any], workflow_label: str) -> None:
+    """Print the XML generator used for every completed slide."""
+    final_slides = (final_state or {}).get("final_slides", [])
+
+    print(f"\n========== {workflow_label}: SLIDE -> XML TOOL SUMMARY ==========")
+    if not final_slides:
+        print("No completed slides to summarize.")
+        print("===============================================================\n")
+        return
+
+    rows = []
+    tool_counts = Counter()
+    for position, slide in enumerate(final_slides):
+        tool_call = slide.get("tool_call") or {}
+        tool_name = (
+            tool_call.get("name")
+            if isinstance(tool_call, dict)
+            else None
+        ) or "UNKNOWN_TOOL"
+        slide_index = slide.get("index", position)
+        try:
+            display_index = int(slide_index) + 1
+        except (TypeError, ValueError):
+            display_index = position + 1
+
+        rows.append((display_index, tool_name))
+        tool_counts[tool_name] += 1
+
+    for display_index, tool_name in sorted(rows, key=lambda row: row[0]):
+        print(f"Slide {display_index:>3} -> {tool_name}")
+
+    print("\nTool usage totals:")
+    for tool_name, count in tool_counts.most_common():
+        print(f"  {tool_name}: {count} slide(s)")
+    print("===============================================================\n")
+
+    logger.info(
+        "%s slide-tool summary: %s",
+        workflow_label,
+        dict(tool_counts),
+    )
 
 # ==============================================================================
 # MAIN WORKFLOWS
@@ -122,6 +166,7 @@ async def main_workflow(
         # Run planning and generation workflow
         print("\n🚀 Running Workflow with Singleton Infrastructure...")
         final_state = await app.ainvoke(initial_input, config=graph_config)
+        _log_slide_tool_summary(final_state, "XML WORKFLOW")
         print("\n🚀 Workflow completed.")
         return output_folder
 
@@ -225,6 +270,7 @@ async def main_workflow_from_chunks(
         })
 
         final_state = await app.ainvoke(initial_input, config=graph_config)
+        _log_slide_tool_summary(final_state, "IDEA MODE XML WORKFLOW")
 
         print(f"✅ Workflow completed in {time.time() - start_time:.2f}s")
 

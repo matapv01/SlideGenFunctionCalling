@@ -1,6 +1,13 @@
-import { useRef, useState } from "react";
+import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
 import type { XmlSlideElement, XmlSlidePage } from "@/lib/xmlSlide";
+import { XML_GROUP_ATTR } from "@/lib/xmlGrouping";
+import {
+  replaceXmlTextContent,
+  type XmlTextFormat,
+  type XmlTextSelection,
+} from "@/lib/xmlTextFormatting";
+import "mathlive";
 
 interface XmlSlideCanvasProps {
   slide: XmlSlidePage;
@@ -9,13 +16,116 @@ interface XmlSlideCanvasProps {
   slideWidthInches?: number;
   slideHeightInches?: number;
   selectedId: string | null;
+  selectedIds?: string[];
   zoom?: number;
   readOnly?: boolean;
   viewport?: "standalone" | "bare";
-  onSelect: (id: string | null) => void;
-  onChange: (id: string, update: Partial<Pick<XmlSlideElement, "text" | "attrs">>) => void;
+  onSelect: (id: string | null, additive?: boolean) => void;
+  onChange: (id: string, update: Partial<Pick<XmlSlideElement, "text" | "attrs" | "children">>) => void;
+  onFormatText?: (id: string, selection: XmlTextSelection, format: XmlTextFormat) => void;
+  onTextSelectionChange?: (id: string | null, selection: XmlTextSelection | null) => void;
   onCommit?: () => void;
 }
+
+interface MathFieldPreviewProps {
+  latex: string;
+  fontSize: number;
+  color: string;
+}
+
+function remoteImageProxyUrl(source: string): string | null {
+  if (!/^https?:\/\//i.test(source)) return null;
+  return `/api/v1/image-serve/remote-proxy?url=${encodeURIComponent(source)}`;
+}
+
+const MathFieldPreview = ({ latex, fontSize, color }: MathFieldPreviewProps) => {
+  const hostRef = useRef<HTMLSpanElement>(null);
+
+  useLayoutEffect(() => {
+    if (!hostRef.current || !customElements.get("math-span")) return;
+
+    // `math-field` is an editable control. XML formulas are static slide
+    // content, so use MathLive's read-only custom element instead. Loading
+    // MathLive statically and using a layout effect prevents the preview/PDF
+    // capture from running before the formula has been materialized.
+    const mathSpan = document.createElement("math-span");
+    mathSpan.setAttribute("aria-label", latex);
+    mathSpan.style.display = "inline-flex";
+    mathSpan.style.verticalAlign = "middle";
+    mathSpan.style.color = color;
+    mathSpan.style.fontSize = `${fontSize}px`;
+    mathSpan.textContent = latex;
+    hostRef.current.replaceChildren(mathSpan);
+  }, [color, fontSize, latex]);
+
+  return (
+    <span
+      ref={hostRef}
+      style={{
+        display: "inline-block",
+        verticalAlign: "middle",
+        color,
+        fontSize,
+      }}
+    >
+      {latex}
+    </span>
+  );
+};
+
+interface MathFieldEditorProps extends MathFieldPreviewProps {
+  onChange: (latex: string) => void;
+}
+
+const MathFieldEditor = ({ latex, fontSize, color, onChange }: MathFieldEditorProps) => {
+  const hostRef = useRef<HTMLSpanElement>(null);
+  const onChangeRef = useRef(onChange);
+
+  useEffect(() => {
+    onChangeRef.current = onChange;
+  }, [onChange]);
+
+  useLayoutEffect(() => {
+    if (!hostRef.current || !customElements.get("math-field")) return;
+
+    const mathField = document.createElement("math-field") as HTMLElement & {
+      value?: string;
+    };
+    mathField.setAttribute("aria-label", "LaTeX formula");
+    mathField.style.display = "inline-block";
+    mathField.style.verticalAlign = "middle";
+    mathField.style.color = color;
+    mathField.style.fontSize = `${fontSize}px`;
+    mathField.style.minWidth = "120px";
+    mathField.style.background = "transparent";
+    mathField.style.border = "1px solid rgba(148, 163, 184, 0.65)";
+    mathField.style.borderRadius = "4px";
+    mathField.style.padding = "4px 8px";
+
+    const handleInput = () => {
+      onChangeRef.current(String(mathField.value ?? mathField.textContent ?? ""));
+    };
+    mathField.addEventListener("input", handleInput);
+    hostRef.current.replaceChildren(mathField);
+    mathField.value = latex;
+
+    return () => mathField.removeEventListener("input", handleInput);
+  }, []);
+
+  useEffect(() => {
+    const mathField = hostRef.current?.querySelector("math-field") as (HTMLElement & { value?: string }) | null;
+    if (mathField && mathField.value !== latex) mathField.value = latex;
+  }, [latex]);
+
+  useEffect(() => {
+    const mathField = hostRef.current?.querySelector("math-field") as HTMLElement | null;
+    if (!mathField) return;
+    mathField.style.color = color;
+    mathField.style.fontSize = `${fontSize}px`;
+  }, [color, fontSize]);
+
+  return <span ref={hostRef} style={{ display: "inline-block", verticalAlign: "middle" }} />;
+};
 
 interface DragState {
   id: string;
@@ -28,11 +138,24 @@ interface DragState {
   startWidth: number;
   startHeight: number;
   startPoints?: string;
+  members?: Array<{
+    id: string;
+    startX: number;
+    startY: number;
+    startPoints?: string;
+    startAttrs: Record<string, string>;
+  }>;
 }
 
 interface AlignmentGuide {
   type: "vertical" | "horizontal";
   position: number;
+}
+
+interface TextSelectionState extends XmlTextSelection {
+  elementId: string;
+  left: number;
+  top: number;
 }
 
 const numberAttr = (element: XmlSlideElement, name: string, fallback = 0) => {
@@ -83,6 +206,39 @@ const textFont = (element: XmlSlideElement, fontSizePt: number, metrics: CanvasM
   const italic = toBool(element.attrs.italic) ? "italic " : "";
   const font = textFontFamily(element.attrs.font || element.attrs.font_family);
   return `${italic}${weight}${ptToCanvasY(fontSizePt, metrics)}px ${font}`;
+};
+
+const normalizedMixedText = (value: string) => value
+  .replace(/\r\n/g, "\n")
+  .replace(/\n[ \t]+/g, "\n");
+
+const richRunStyle = (
+  run: XmlSlideElement,
+  textbox: XmlSlideElement,
+  metrics: CanvasMetrics,
+): CSSProperties => {
+  return {
+    color: run.attrs.color || textbox.attrs.color || "#111827",
+    fontFamily: textFontFamily(
+      run.attrs.font || textbox.attrs.font || textbox.attrs.font_family,
+    ),
+    fontSize: `${ptToCanvasY(
+      numberAttr(run, "size", numberAttr(textbox, "size", 24)),
+      metrics,
+    )}px`,
+    fontWeight: toBool(run.attrs.bold, toBool(textbox.attrs.bold))
+      ? 700
+      : run.attrs.font_weight || textbox.attrs.font_weight || "normal",
+    fontStyle: toBool(run.attrs.italic, toBool(textbox.attrs.italic))
+      ? "italic"
+      : "normal",
+    textDecoration: toBool(run.attrs.underline)
+      ? "underline"
+      : toBool(run.attrs.strike)
+        ? "line-through"
+        : "none",
+    backgroundColor: run.attrs.highlight || run.attrs.background || "transparent",
+  };
 };
 
 let measureContext: CanvasRenderingContext2D | null = null;
@@ -317,7 +473,9 @@ const elementStyle = (element: XmlSlideElement, selected: boolean, baseZIndex: n
     top: frame.y,
     width: frame.width,
     height: frame.height,
-    zIndex: selected ? 1000 : baseZIndex,
+    // Selection must not change the visual layer order. A selected object can
+    // stay behind overlapping objects while it is moved, matching Canva.
+    zIndex: baseZIndex,
     boxSizing: "border-box",
     outline: selected ? "2px solid #2563eb" : "none",
     cursor: "move",
@@ -408,26 +566,121 @@ export const XmlSlideCanvas = ({
   slideWidthInches,
   slideHeightInches,
   selectedId,
+  selectedIds = [],
   zoom = 0.7,
   readOnly = false,
   viewport = "standalone",
   onSelect,
   onChange,
+  onFormatText,
+  onTextSelectionChange,
   onCommit,
 }: XmlSlideCanvasProps) => {
   const [editingId, setEditingId] = useState<string | null>(null);
+  const [textSelection, setTextSelection] = useState<TextSelectionState | null>(null);
   const [alignmentGuides, setAlignmentGuides] = useState<AlignmentGuide[]>([]);
+  const canvasRef = useRef<HTMLDivElement>(null);
   const dragRef = useRef<DragState | null>(null);
   const dragFrameRef = useRef<number | null>(null);
   const pendingPointerRef = useRef<{ clientX: number; clientY: number } | null>(null);
   const metrics = createMetrics(canvasWidth, canvasHeight, slideWidthInches, slideHeightInches);
 
+  const textOffsetAt = (root: Node, container: Node, offset: number) => {
+    try {
+      const range = document.createRange();
+      range.selectNodeContents(root);
+      range.setEnd(container, offset);
+      return range.toString().length;
+    } catch {
+      return 0;
+    }
+  };
+
+  const handleTextSelection = (root: HTMLElement, elementId: string) => {
+    if (readOnly || editingId !== elementId || !onFormatText) return;
+    const selection = window.getSelection();
+    if (!selection || selection.rangeCount === 0 || selection.isCollapsed) {
+      setTextSelection(null);
+      onTextSelectionChange?.(null, null);
+      return;
+    }
+    const range = selection.getRangeAt(0);
+    if (!root.contains(range.startContainer) || !root.contains(range.endContainer)) return;
+    const start = textOffsetAt(root, range.startContainer, range.startOffset);
+    const end = textOffsetAt(root, range.endContainer, range.endOffset);
+    if (start === end) {
+      setTextSelection(null);
+      onTextSelectionChange?.(null, null);
+      return;
+    }
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const canvasRect = canvas.getBoundingClientRect();
+    const scaleX = canvasRect.width / canvasWidth || 1;
+    const scaleY = canvasRect.height / canvasHeight || 1;
+    const selectionRect = range.getBoundingClientRect();
+    const left = (selectionRect.left + selectionRect.width / 2 - canvasRect.left) / scaleX;
+    const rawTop = (selectionRect.top - canvasRect.top) / scaleY;
+    const top = rawTop > 54
+      ? rawTop - 50
+      : (selectionRect.bottom - canvasRect.top) / scaleY + 10;
+    const nextSelection = {
+      elementId,
+      start: Math.min(start, end),
+      end: Math.max(start, end),
+      text: root.innerText,
+      left: Math.max(12, Math.min(canvasWidth - 12, left)),
+      top: Math.max(8, Math.min(canvasHeight - 46, top)),
+    };
+    setTextSelection(nextSelection);
+    onTextSelectionChange?.(elementId, {
+      start: nextSelection.start,
+      end: nextSelection.end,
+      text: nextSelection.text,
+    });
+  };
+
+  const clearTextSelection = () => {
+    setTextSelection(null);
+    onTextSelectionChange?.(null, null);
+  };
+
   const handlePointerDown = (event: ReactPointerEvent<HTMLDivElement>, element: XmlSlideElement) => {
     if (readOnly) return;
-    if (event.button !== 0 || editingId === element.id) return;
+    if (event.button !== 0) return;
+    if (editingId === element.id) {
+      event.stopPropagation();
+      return;
+    }
     event.stopPropagation();
+    setEditingId(null);
+    clearTextSelection();
     setAlignmentGuides([]);
+    const additive = event.shiftKey || event.ctrlKey || event.metaKey;
+    if (additive) {
+      onSelect(element.id, true);
+      return;
+    }
     const frame = elementFrame(element, metrics);
+    const groupId = element.attrs[XML_GROUP_ATTR];
+    const groupedIds = groupId
+      ? slide.elements.filter((item) => item.attrs[XML_GROUP_ATTR] === groupId).map((item) => item.id)
+      : [element.id];
+    const dragIds = selectedIds.includes(element.id) && selectedIds.length > 1
+      ? selectedIds
+      : groupedIds;
+    const members = dragIds.flatMap((id) => {
+      const member = slide.elements.find((item) => item.id === id);
+      if (!member) return [];
+      const memberFrame = elementFrame(member, metrics);
+      return [{
+        id,
+        startX: memberFrame.x,
+        startY: memberFrame.y,
+        startPoints: member.attrs.points,
+        startAttrs: { ...member.attrs },
+      }];
+    });
     dragRef.current = {
       id: element.id,
       mode: "move",
@@ -438,8 +691,9 @@ export const XmlSlideCanvas = ({
       startWidth: frame.width,
       startHeight: frame.height,
       startPoints: element.attrs.points,
+      members,
     };
-    onSelect(element.id);
+    onSelect(element.id, false);
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
@@ -451,6 +705,7 @@ export const XmlSlideCanvas = ({
     if (readOnly) return;
     event.preventDefault();
     event.stopPropagation();
+    setEditingId(null);
     setAlignmentGuides([]);
     const frame = elementFrame(element, metrics);
     dragRef.current = {
@@ -469,7 +724,7 @@ export const XmlSlideCanvas = ({
     event.currentTarget.setPointerCapture(event.pointerId);
   };
 
-  const snapFrame = (element: XmlSlideElement, x: number, y: number) => {
+  const snapFrame = (element: XmlSlideElement, x: number, y: number, ignoredIds: string[] = []) => {
     const frame = elementFrame(element, metrics);
     const threshold = Math.max(6, 8 / Math.max(zoom, 0.1));
     const draggedX = [x, x + frame.width / 2, x + frame.width];
@@ -505,7 +760,7 @@ export const XmlSlideCanvas = ({
     // Slide edges and center are alignment targets just like in PowerPoint.
     addTarget(0, 0, canvasWidth, canvasHeight, 1);
     slide.elements.forEach((other) => {
-      if (other.id === element.id) return;
+      if (other.id === element.id || ignoredIds.includes(other.id)) return;
       const otherFrame = elementFrame(other, metrics);
       if (otherFrame.width > 0 && otherFrame.height > 0) {
         // Prefer object-to-object alignment when two candidates are equally close.
@@ -582,28 +837,53 @@ export const XmlSlideCanvas = ({
       return;
     }
 
-    const snapped = snapFrame(element, drag.startX + dx, drag.startY + dy);
+    const members = drag.members?.length
+      ? drag.members
+      : [{
+        id: drag.id,
+        startX: drag.startX,
+        startY: drag.startY,
+        startPoints: drag.startPoints,
+        startAttrs: { ...element.attrs },
+      }];
+    const snapped = snapFrame(element, drag.startX + dx, drag.startY + dy, members.map((member) => member.id));
     setAlignmentGuides(snapped.guides);
-    if (element.tag.toLowerCase() === "polygon" && drag.startPoints) {
-      onChange(drag.id, {
-        attrs: {
-          points: movePoints(drag.startPoints, snapped.x - drag.startX, snapped.y - drag.startY),
-        },
-      });
-    } else if (element.tag.toLowerCase() === "textbox" || element.tag.toLowerCase() === "text") {
-      const sourceWidth = numberAttr(element, "width", 300);
-      const sourceHeight = numberAttr(element, "height", 100);
-      onChange(drag.id, {
-        attrs: {
-          x: String(Math.round(snapped.x + sourceWidth * (TEXTBOX_WIDTH_GROWTH / 2))),
-          y: String(Math.round(snapped.y + sourceHeight * 0.04)),
-        },
-      });
-    } else {
-      onChange(drag.id, {
-        attrs: { x: String(Math.round(snapped.x)), y: String(Math.round(snapped.y)) },
-      });
-    }
+    const finalDx = snapped.x - drag.startX;
+    const finalDy = snapped.y - drag.startY;
+    members.forEach((member) => {
+      const memberElement = slide.elements.find((item) => item.id === member.id);
+      if (!memberElement) return;
+      const nextX = member.startX + finalDx;
+      const nextY = member.startY + finalDy;
+      const tag = memberElement.tag.toLowerCase();
+      if (tag === "polygon" && member.startPoints) {
+        onChange(member.id, {
+          attrs: { points: movePoints(member.startPoints, finalDx, finalDy) },
+        });
+      } else if (tag === "line") {
+        onChange(member.id, {
+          attrs: {
+            x1: String(Math.round(Number(member.startAttrs.x1 || 0) + finalDx)),
+            y1: String(Math.round(Number(member.startAttrs.y1 || 0) + finalDy)),
+            x2: String(Math.round(Number(member.startAttrs.x2 || 0) + finalDx)),
+            y2: String(Math.round(Number(member.startAttrs.y2 || 0) + finalDy)),
+          },
+        });
+      } else if (tag === "textbox" || tag === "text") {
+        const sourceWidth = numberAttr(memberElement, "width", 300);
+        const sourceHeight = numberAttr(memberElement, "height", 100);
+        onChange(member.id, {
+          attrs: {
+            x: String(Math.round(nextX + sourceWidth * (TEXTBOX_WIDTH_GROWTH / 2))),
+            y: String(Math.round(nextY + sourceHeight * 0.04)),
+          },
+        });
+      } else {
+        onChange(member.id, {
+          attrs: { x: String(Math.round(nextX)), y: String(Math.round(nextY)) },
+        });
+      }
+    });
   };
 
   const handlePointerMove = (event: ReactPointerEvent<HTMLDivElement>) => {
@@ -636,7 +916,13 @@ export const XmlSlideCanvas = ({
 
   const renderElement = (element: XmlSlideElement, elementIndex: number) => {
     const tag = element.tag.toLowerCase();
-    const selected = selectedId === element.id;
+    const selected = selectedIds.length > 0
+      ? selectedIds.includes(element.id)
+      : selectedId === element.id;
+    const primarySelected = selectedId === element.id;
+    const hasMathFields = element.children.some(
+      (child) => child.tag.toLowerCase() === "math-field",
+    );
     const style = elementStyle(element, selected, elementIndex + 1, metrics);
     const common = {
       key: element.id,
@@ -645,7 +931,7 @@ export const XmlSlideCanvas = ({
       onDoubleClick: () => !readOnly && tag === "textbox" && setEditingId(element.id),
     };
 
-    const resizeHandles = selected && !editingId && !readOnly ? (["tl", "tr", "bl", "br"] as const).map((handle) => (
+    const resizeHandles = primarySelected && !readOnly ? (["tl", "tr", "bl", "br"] as const).map((handle) => (
       <span
         key={handle}
         className="absolute z-[1001] h-2.5 w-2.5 rounded-sm border border-blue-700 bg-white shadow"
@@ -661,14 +947,31 @@ export const XmlSlideCanvas = ({
     )) : null;
 
     if (tag === "image") {
+      const source = element.attrs.src || "";
+      const proxySource = remoteImageProxyUrl(source);
       return (
         <div {...common} className="overflow-hidden bg-slate-200">
           <img
-            src={element.attrs.src}
+            key={source}
+            src={source}
             alt={element.attrs.alt || "Slide element"}
             className="h-full w-full"
             style={{ display: "block", objectFit: (element.attrs.fit || "cover") as CSSProperties["objectFit"] }}
             draggable={false}
+            onLoad={(event) => {
+              event.currentTarget.style.visibility = "visible";
+            }}
+            onError={(event) => {
+              const image = event.currentTarget;
+              if (proxySource && image.dataset.proxyAttempted !== "true") {
+                image.dataset.proxyAttempted = "true";
+                image.src = proxySource;
+                return;
+              }
+              // Keep the slide layout intact when both the original and proxy
+              // source are unavailable instead of showing a broken-image icon.
+              image.style.visibility = "hidden";
+            }}
           />
           {resizeHandles}
         </div>
@@ -697,6 +1000,13 @@ export const XmlSlideCanvas = ({
     if (tag === "textbox" || tag === "text") {
       const layout = textLayout(element, metrics);
       const isEditing = !readOnly && editingId === element.id;
+      const richRuns = element.children.filter(
+        (child) => child.tag.toLowerCase() === "run",
+      );
+      const mathFields = element.children.filter(
+        (child) => child.tag.toLowerCase() === "math-field",
+      );
+      const hasRichRuns = richRuns.length > 0;
       const textContentHeight = layout.lineHeight * layout.lines.length;
       const verticalOffset = layout.verticalAlign === "bottom"
         ? Math.max(0, layout.availableHeight - textContentHeight)
@@ -706,12 +1016,25 @@ export const XmlSlideCanvas = ({
       return (
         <div
           {...common}
-          contentEditable={isEditing}
+          contentEditable={isEditing && !hasMathFields}
           suppressContentEditableWarning
+          onMouseUp={(event) => handleTextSelection(event.currentTarget, element.id)}
+          onKeyUp={(event) => handleTextSelection(event.currentTarget, element.id)}
           onBlur={(event) => {
-            onChange(element.id, { text: event.currentTarget.innerText });
-            setEditingId(null);
-            onCommit?.();
+            if (!hasMathFields) {
+              const relatedTarget = event.relatedTarget as HTMLElement | null;
+              if (relatedTarget?.closest("[data-text-format-toolbar],[data-text-format-panel]")) return;
+              const nextText = event.currentTarget.innerText;
+              const next = hasRichRuns
+                ? replaceXmlTextContent({ ...element, text: nextText }, nextText)
+                : [];
+              onChange(element.id, hasRichRuns
+                ? { text: nextText, children: next }
+                : { text: nextText });
+              setEditingId(null);
+              clearTextSelection();
+              onCommit?.();
+            }
           }}
           className="rounded-sm"
         >
@@ -721,17 +1044,68 @@ export const XmlSlideCanvas = ({
               left: layout.marginLeft,
               top: layout.marginTop + verticalOffset,
               width: Math.max(1, layout.width - layout.marginLeft - layout.marginRight),
-              minHeight: textContentHeight,
-              lineHeight: `${layout.lineHeight}px`,
-              textAlign: (element.attrs.align || "left") as CSSProperties["textAlign"],
-              whiteSpace: layout.singleLine ? "nowrap" : layout.reflowOnResize ? "pre-line" : "nowrap",
-              overflowWrap: layout.singleLine ? "normal" : "break-word",
-            }}
-          >
-            {isEditing
-              ? element.text
-              : layout.reflowOnResize && !layout.singleLine
-                ? element.text
+               minHeight: textContentHeight,
+               lineHeight: `${layout.lineHeight}px`,
+               textAlign: (element.attrs.align || "left") as CSSProperties["textAlign"],
+               whiteSpace: layout.singleLine
+                 ? "nowrap"
+                 : hasRichRuns
+                   ? "pre-wrap"
+                   : layout.reflowOnResize
+                     ? "pre-line"
+                     : "nowrap",
+               overflowWrap: layout.singleLine ? "normal" : "break-word",
+             }}
+           >
+             {isEditing && hasMathFields
+               ? mathFields.map((field, index) => (
+                 <MathFieldEditor
+                   key={`${element.id}-math-editor-${index}`}
+                   latex={field.attrs.value || field.text}
+                   fontSize={ptToCanvasY(layout.fontSize, metrics)}
+                   color={element.attrs.color || "#111827"}
+                   onChange={(latex) => {
+                     const children = element.children.map((child, childIndex) => {
+                       if (childIndex !== element.children.indexOf(field)) return child;
+                       const attrs = { ...child.attrs };
+                       delete attrs.value;
+                       return { ...child, attrs, text: latex };
+                     });
+                     onChange(element.id, { children });
+                   }}
+                 />
+               ))
+               : isEditing && !hasRichRuns
+                 ? element.text
+               : mathFields.length > 0
+                 ? (
+                   <span style={{ display: "inline", whiteSpace: "pre-wrap" }}>
+                     {normalizedMixedText(element.leadingText ?? element.text)}
+                     {element.children.map((child, childIndex) => (
+                       <Fragment key={`${element.id}-math-segment-${childIndex}`}>
+                         {child.tag.toLowerCase() === "math-field" && (
+                           <MathFieldPreview
+                             latex={child.attrs.value || child.text}
+                             fontSize={ptToCanvasY(layout.fontSize, metrics)}
+                             color={element.attrs.color || "#111827"}
+                           />
+                         )}
+                         {child.tail && <span>{normalizedMixedText(child.tail)}</span>}
+                       </Fragment>
+                     ))}
+                   </span>
+                 )
+               : hasRichRuns
+                 ? richRuns.map((run, index) => (
+                   <span
+                     key={`${element.id}-run-${index}`}
+                     style={richRunStyle(run, element, metrics)}
+                   >
+                     {run.text}
+                   </span>
+                 ))
+               : layout.reflowOnResize && !layout.singleLine
+                 ? element.text
                   .split(/\r?\n/)
                   .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
                   .join("\n")
@@ -780,14 +1154,100 @@ export const XmlSlideCanvas = ({
     return <div {...common} aria-label={element.tag}>{resizeHandles}</div>;
   };
 
+  const applySelectedTextFormat = (format: XmlTextFormat) => {
+    if (!textSelection || !onFormatText) return;
+    onFormatText(textSelection.elementId, {
+      start: textSelection.start,
+      end: textSelection.end,
+      text: textSelection.text,
+    }, format);
+  };
+
+  const textFormatToolbar = textSelection && editingId === textSelection.elementId && !readOnly && onFormatText ? (
+    <div
+      data-text-format-toolbar
+      className="absolute z-[3000] flex items-center gap-1 rounded-2xl border border-slate-700/80 bg-slate-950/95 p-2 text-white shadow-2xl backdrop-blur-xl"
+      style={{
+        left: textSelection.left,
+        top: textSelection.top,
+        transform: "translateX(-50%)",
+      }}
+      onPointerDown={(event) => event.stopPropagation()}
+    >
+      <button
+        type="button"
+        title="Bold"
+        aria-label="Bold selected text"
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-white/75 transition-colors hover:bg-white/15 hover:text-white"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => applySelectedTextFormat({ bold: "toggle" })}
+      >
+        <span className="text-base font-black leading-none">B</span>
+      </button>
+      <button
+        type="button"
+        title="Italic"
+        aria-label="Italic selected text"
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-white/75 transition-colors hover:bg-white/15 hover:text-white"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => applySelectedTextFormat({ italic: "toggle" })}
+      >
+        <span className="text-base font-serif italic leading-none">I</span>
+      </button>
+      <button
+        type="button"
+        title="Underline"
+        aria-label="Underline selected text"
+        className="flex h-10 w-10 items-center justify-center rounded-xl text-white/75 transition-colors hover:bg-white/15 hover:text-white"
+        onMouseDown={(event) => event.preventDefault()}
+        onClick={() => applySelectedTextFormat({ underline: "toggle" })}
+      >
+        <span className="text-base font-serif underline leading-none">U</span>
+      </button>
+      <span className="mx-1 h-7 w-px bg-white/15" />
+      <label title="Text color" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-white/75 transition-colors hover:bg-white/15 hover:text-white">
+        <span className="relative flex h-7 w-7 items-center justify-center">
+          <span className="absolute bottom-0.5 h-1 w-6 rounded-full bg-red-400" />
+          <span className="text-sm font-bold">A</span>
+          <input
+            type="color"
+            aria-label="Text color"
+            defaultValue="#ef4444"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            onChange={(event) => applySelectedTextFormat({ color: event.target.value })}
+          />
+        </span>
+      </label>
+      <label title="Highlight color" className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-xl text-white/75 transition-colors hover:bg-white/15 hover:text-white">
+        <span className="relative flex h-7 w-7 items-center justify-center">
+          <span className="rounded-sm bg-yellow-200 px-1 text-xs font-bold leading-5 text-slate-900">H</span>
+          <input
+            type="color"
+            aria-label="Highlight color"
+            defaultValue="#fef08a"
+            className="absolute inset-0 cursor-pointer opacity-0"
+            onChange={(event) => applySelectedTextFormat({ highlight: event.target.value })}
+          />
+        </span>
+      </label>
+    </div>
+  ) : null;
+
   const slideCanvas = (
     <div
+      ref={canvasRef}
       className="relative overflow-hidden bg-white"
       style={{ width: canvasWidth, height: canvasHeight }}
       onPointerMove={handlePointerMove}
       onPointerUp={stopDragging}
       onPointerCancel={stopDragging}
-      onPointerDown={() => !readOnly && onSelect(null)}
+      onPointerDown={() => {
+        if (!readOnly) {
+          setEditingId(null);
+          clearTextSelection();
+          onSelect(null, false);
+        }
+      }}
       onClick={(event) => {
         // A read-only canvas is also used inside a clickable slide thumbnail.
         // Let that thumbnail receive the click; the editor canvas still keeps
@@ -814,6 +1274,7 @@ export const XmlSlideCanvas = ({
           />
         ))}
       </div>
+      {textFormatToolbar}
     </div>
   );
 

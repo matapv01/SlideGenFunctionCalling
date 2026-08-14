@@ -133,7 +133,7 @@ Return one ordered tool-call plan. The slide XML tool comes FIRST; image searche
 """
 
 # Critical rule for math/equations - include in all slide prompts
-# NOTE: Use {{ and }} to escape braces for LangChain template
+# This prompt is passed as a fixed system message; keep LaTeX braces literal.
 MATH_EQUATION_RULES = """
 🔢 **CRITICAL - MATH/EQUATIONS FORMAT:**
 ⚠️ ALL mathematical expressions MUST be written in LaTeX and wrapped strictly inside `<math-field>` tags.
@@ -148,166 +148,51 @@ MATH_EQUATION_RULES = """
 
 ✅ **CORRECT EXAMPLES:**
    - Quadratic: `<math-field>ax^2 + bx + c = 0</math-field>`
-   - Fraction: `<math-field>\\frac{{-b \\pm \\sqrt{{b^2-4ac}}}}{{2a}}</math-field>`
+   - Fraction: `<math-field>\\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}</math-field>`
+   - Put the formula in its own visible text value when possible. Do not put highlight markers inside `<math-field>`.
+   - The content between the tags is raw LaTeX: do not add `$...$`, `\\(...\\)`, or Markdown code fences.
 """
 
-INTRO_PROMPT = """
-🎯 INTRO SLIDE - Title slide, first impression!
-
-**CRITICAL: TEXT COLOR MUST BE EASY TO READ!**
-⚠️ Dark background (#000, #1a1a1a, #2c3e50) → Use #FFFFFF or very light text
-⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → Use #000000 or very dark text
-❌ NEVER: Gray on gray, #555 on #333, #ddd on #fff, colored text on colored bg
-
-**RULES:**
-1. CONTENT: Short title + brief subtitle. No fluff!
-2. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
-   ✅ CORRECT: "Smart Contract Security<br>Detecting Vulnerabilities<br>A Community Project"
-   ❌ WRONG: "Smart Contract Security Detecting Vulnerabilities A Community Project"
-   Every sentence, bullet point, or idea = separate line with <br>!
-3. TEXT: Keep line breaks concise inside XML text values
-   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-4. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
-5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
-   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
-   ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
-6. MATCH previous slide's visual style
-
-Generate clean, HIGHLY READABLE function call.
-"""
-
-TRANSITION_PROMPT = """
-🎯 TRANSITION SLIDE - Section divider!
-
-**CRITICAL: TEXT COLOR MUST BE INSTANTLY READABLE!**
-⚠️ Dark background → #FFFFFF (white) text preferred
-⚠️ Light background → #000000 (black) text preferred
-❌ NEVER: Medium colors, gray tones, similar shades
-
-**RULES:**
-1. CONTENT: 3-6 words ONLY
-2. TEXT: Keep line breaks concise inside XML text values
-   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes
-3. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
-4. MATH/EQUATIONS: If you need formulas, use: `<math-field>formula</math-field>`
-   ❌ FORBIDDEN: Unicode superscripts/subscripts like ², ³, ₂, ₃ — use LaTeX instead!
-5. CONSISTENCY: {previous_transition_context}
-
-Generate BOLD, ULTRA-VISIBLE function call.
-"""
-
-CONTENT_PROMPT = """
-🎯 CONTENT SLIDE - Main information!
-
-**CRITICAL: TEXT COLOR MUST BE EASY TO READ VS BACKGROUND!**
-⚠️ Dark background (#000, #1a1a1a, #2c3e50) → #FFFFFF or very light text
-⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → #000000 or very dark text
-❌ FORBIDDEN: Gray on gray, #555 on #333, #ccc on #fff, colored text on colored bg
-
-**RULES:**
-1. LINE BREAKS ARE MANDATORY: You MUST use <br> to separate each distinct piece of information!
-   ✅ CORRECT: "Lost $3.35B in 2025<br>630 security incidents<br>37% increase vs 2024"
-   ❌ WRONG: "Lost $3.35B in 2025 630 security incidents 37% increase vs 2024"
-   Every bullet point, fact, or sentence = separate line with <br>!
-2. TEXT: Keep line breaks concise inside XML text values
-   ❌ NO lists (<ul>, <ol>, <li>), NO <b>, <i>, <em>, <strong>, <u>!
-   ❌ NO style attributes!
-3. CONTENT: Concise, no filler words
-4. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
-5. MATH/EQUATIONS: If you need to output math formulas, use LaTeX wrapped with proper tags:
-   ✅ CORRECT: `<math-field>E = mc^2</math-field>`
-   ❌ WRONG: `$E = mc^2$` or `\(E=mc^2\)`
-
-Generate READABLE, professional function call.
-"""
-
-# XML slides use plain editable text.
+# XML slides use editable text plus one controlled marker for text-color emphasis.
 XML_CONTENT_PROMPT = """
 🎯 XML CONTENT SLIDE - Main information!
 
 **CRITICAL: TEXT COLOR MUST BE EASY TO READ VS BACKGROUND!**
 ⚠️ Dark background (#000, #1a1a1a, #2c3e50) → #FFFFFF or very light text
 ⚠️ Light background (#FFF, #f8f9fa, #ecf0f1) → #000000 or very dark text
-❌ FORBIDDEN: Gray on gray, #555 on #333, #ccc on #fff, colored text on colored bg
+❌ FORBIDDEN: Low-contrast combinations such as gray on gray, #555 on #333, or #ccc on #fff. Accent-colored text is allowed only when it remains clearly readable.
 
 **RULES:**
 1. TEXT: Keep text values concise and editable. Preserve the meaning and language of the source content.
-2. LINE BREAKS: Keep each bullet point, fact, or sentence concise.
-3. CONTENT: Concise, no filler words.
-4. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
-5. MATH/EQUATIONS: If you need formulas, use LaTeX wrapped with proper <math-field> tags.
-6. OUTPUT: Return only the selected XML tool call arguments; do not add prose.
+2. LIST INPUTS: For any list/bullet argument, provide plain item text only. Never add `•`, `-`, `*`, `1.`, `1)`, or other numbering; the selected XML tool owns the marker. Use only the documented indentation when a tool supports nested items.
+3. CONTENT STRUCTURE DECISION (IMPORTANT): Do not turn every sentence into a list.
+   - SHORT PARAGRAPH: If the source has one main idea, one or two sentences, and roughly 35 words or fewer, keep it as one normal paragraph/string. Do not use a bullet-list tool and do not add bullet markers or artificial <br> tags.
+   - LONG OR MULTI-POINT CONTENT: If the source is longer than roughly 45 words, or contains three or more independent facts, actions, benefits, or steps, split it into 3-6 concise list items. Three short related sentences are still a paragraph. Prefer a tool field named `bullet_items`, `items`, `steps`, `topics`, or `cards` when the selected layout provides one.
+   - MEDIUM CONTENT: Keep two related sentences together as a paragraph unless the source clearly contains separate facts or steps.
+   - A list item should express one complete idea and normally stay under 18-22 words. Preserve the original meaning; do not invent details just to create more items.
+   - Never choose a list layout merely because it is available. Use a paragraph layout for a short explanation, quote, definition, or single takeaway.
+   - If no suitable list field exists, keep the content as a paragraph or use separate text fields; do not simulate bullets by typing `•`, `-`, `*`, or numbers manually.
+4. LINE BREAKS: Use explicit `<br>` only for intentional visual separation between distinct lines. Do not add `<br>` after every clause or sentence in a short paragraph. Never use bullet characters (`•`, `-`, `*`) or numbering inside a list field; the selected XML tool owns the marker.
+5. CONTENT: Keep wording concise and remove filler words without changing the core meaning.
+6. IMAGES: Follow the ordered image-search execution-plan rules. Do not place URLs in the slide tool.
+7. MATH/EQUATIONS: If you need formulas, use LaTeX wrapped in proper <math-field> tags.
+8. TEXT-COLOR EMPHASIS:
+   - When the slide contains a key metric, date, result, or keyword, emphasize 1 to 3 short phrases. Otherwise, do not add emphasis.
+   - Insert this exact control marker only inside a visible text string argument:
+   [[hl color="#RRGGBB"]]important phrase[[/hl]]
+   - Replace #RRGGBB with a valid six-digit hex text color selected from the slide palette, normally its accent color or a closely related shade.
+   - The selected color must differ visibly from the surrounding text and remain easy to read against the slide background.
+   - On light slides, prefer a dark or saturated accent. On dark slides, prefer a bright or light accent.
+   - The marker changes text color only. It must never add a background, fill, box, or text background.
+   - Each marked phrase must be copied verbatim from the [CONTENT] section: preserve its words, numbers, symbols, and meaning. Never paraphrase, translate, summarize, or invent the highlighted phrase.
+   - Each marked phrase must be short and occur only once in [CONTENT] and once in the generated slide text so it can be matched exactly.
+   - Do not highlight a full sentence, nest or repeat markers, or place markers in URLs, image-search queries, font/color parameters, or <math-field> content.
+   - Do not emit markup tags such as <span> or <highlight>; only the exact marker syntax above is supported.
+   - This marker is temporary control syntax and is removed before the final XML is returned.
+8. OUTPUT: Return only the selected XML tool call arguments; do not add prose.
 
 Generate a readable, professional XML function call.
 """
-
-THANK_YOU_PROMPT = """
-🎯 THANK YOU SLIDE - Final closing!
-
-**CRITICAL: TEXT MUST BE CRYSTAL CLEAR!**
-⚠️ Dark background → #FFFFFF (white) text
-⚠️ Light background → #000000 (black) text
-❌ NO colored text, NO gray tones, NO low contrast
-
-**RULES:**
-1. CONTENT: "Thank You" ONLY
-2. IMAGES: Follow the ordered image-search execution-plan rules.
-3. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
-
-Generate simple, HIGHLY VISIBLE function call.
-"""
-
-TEAM_PROMPT = """
-🎯 TEAM SLIDE - Team intro!
-
-**CRITICAL: NAMES MUST BE EASY TO READ!**
-⚠️ Dark background → #FFFFFF (white) text for names
-⚠️ Light background → #000000 (black) text for names
-❌ NEVER: Gray tones, colored text, low contrast
-
-**RULES:**
-1. CONTENT: Name + role only
-2. TEXT: Keep line breaks concise inside XML text values
-   ❌ NO lists, NO <b>, <i>, <em>, <strong>, NO style attributes!
-3. IMAGES: Follow the ordered image-search execution-plan rules. Nested member image fields must remain empty placeholders.
-4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
-
-Generate professional, READABLE function call.
-"""
-
-CHART_PROMPT = """
-🎯 CHART SLIDE - Data visualization!
-
-**CRITICAL: CHART MUST BE CLEAR AND READABLE!**
-⚠️ Text labels must contrast with background
-⚠️ Axis labels and values must be legible
-⚠️ Avoid cluttered data points or overlapping labels
-
-**RULES:**
-1. DATA: Extract series names, values, time points, and metrics from content
-   - Identify multi-series trends if available
-   - Use appropriate axis labels (x: time/category, y: metric)
-2. INSIGHT: Translate the main analytical message into clear language
-   - What trend or pattern should the viewer see?
-   - What makes this data meaningful?
-3. VISUAL: Generate high-quality line/bar/area charts
-   - Use contrasting colors for multiple series
-   - Include grid lines for readability
-   - Ensure proper spacing and sizing
-4. MATH/EQUATIONS: If needed, use: `<math-field>formula</math-field>`
-
-Generate professional, DATA-DRIVEN function call.
-"""
-
-# Map slide types to their specific prompts
-SLIDE_TYPE_PROMPTS = {
-    'INTRO_TOOLS': INTRO_PROMPT,
-    'TRANSITION_TOOLS': TRANSITION_PROMPT,
-    'CONTENT_TOOLS': CONTENT_PROMPT,
-    'THANK_YOU_TOOLS': THANK_YOU_PROMPT,
-    'TEAM_TOOLS': TEAM_PROMPT,
-    'CHART_TOOLS': CHART_PROMPT,
-}
 
 HUMAN_PROMPT_TEMPLATE = """
 CONTEXT: {slide_context_map}
@@ -541,26 +426,28 @@ Please analyze this document and create a hierarchical structure with appropriat
 
 # ================================= QWEN GENERATOR PROMPTS =================================
 
-QWEN_GENERATOR_SYSTEM_PROMPT = """You are a slide layout generator. Output ONLY a function call inside <tool_call> tags. Do NOT use thinking mode. Do NOT output <think> tags.
+QWEN_GENERATOR_SYSTEM_PROMPT = """You are an XML slide layout generator. Output ONLY one XML tool function call inside <tool_call> tags. Do NOT use thinking mode. Do NOT output <think> tags.
 
 CRITICAL JSON FORMATTING RULES:
 1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\"`. NEVER put raw literal newlines in JSON strings.
+2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\\\"`. NEVER put raw literal newlines in JSON strings.
 3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
 4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
 5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
 6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
+7. HIGHLIGHT MARKERS IN JSON: Escape the marker's color quotes inside a JSON string, for example `[[hl color=\\\"#2563EB\\\"]]important phrase[[/hl]]`.
+8. LATEX BACKSLASHES IN JSON: Escape every LaTeX backslash twice in the raw JSON string. Write `<math-field>\\\\frac{a}{b}</math-field>` in JSON; after JSON decoding the XML value must contain `<math-field>\\frac{a}{b}</math-field>`.
 
 Example:
 <tool_call>
 {"name": "search_ddgs_images", "arguments": {"query": "business meeting", "layout": "Wide", "size": "Large"}}
 </tool_call>
 <tool_call>
-{"name": "generate_title_slide", "arguments": {"main_title": "BUSINESS PLAN", "subtitle": "2024-2028"}}
+{"name": "generate_modern_cover_slide_xml", "arguments": {"title": "BUSINESS PLAN", "image_url": ""}}
 </tool_call>"""
 
 # --- CoT (Chain-of-Thought) variant: enables Qwen3 thinking mode ---
-QWEN_COT_GENERATOR_SYSTEM_PROMPT = """You are an expert slide layout generator with deep reasoning ability.
+QWEN_COT_GENERATOR_SYSTEM_PROMPT = """You are an expert XML slide layout generator with deep reasoning ability.
 
 You MUST follow this two-step process:
 
@@ -585,23 +472,25 @@ CRITICAL RULES:
 
 CRITICAL JSON FORMATTING & SYNTAX RULES:
 1. STRICT BRACKET MATCHING: Count brackets precisely. Every opening `{` and `[` MUST have matching closing `}` and `]`. Ensure outer tool call dict is closed (e.g. nested arrays end with `]]}}`). Never output `]]]}`, `]}` or `}}}`.
-2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\"`. NEVER put raw literal newlines in JSON strings.
+2. STRING ESCAPING & NO LITERAL NEWLINES: Escape all inner double quotes inside XML text values as `\\\"`. NEVER put raw literal newlines in JSON strings.
 3. NO TRAILING COMMAS: Never put trailing commas before `]` or `}` (e.g. NO `[1, 2,]` or `{"a": 1,}`).
 4. STRICT DOUBLE QUOTES: All JSON keys and strings MUST use double quotes `"`. Never use single quotes `'`.
 5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
 6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
+7. HIGHLIGHT MARKERS IN JSON: Escape the marker's color quotes inside a JSON string, for example `[[hl color=\\\"#2563EB\\\"]]important phrase[[/hl]]`.
+8. LATEX BACKSLASHES IN JSON: Escape every LaTeX backslash twice in the raw JSON string. Write `<math-field>\\\\frac{a}{b}</math-field>` in JSON; after JSON decoding the XML value must contain `<math-field>\\frac{a}{b}</math-field>`.
 
 Example:
 <think>
 The content is about FPT Corporation's journey. The design instruction suggests a split layout with key points.
-Available tools: generate_split_layout_list_slide, generate_content_slide, generate_icon_list_slide...
-Best match: generate_split_layout_list_slide — it supports a main title + list of points with titles and descriptions.
-Required params: main_title (str), points (List[dict]), left_bg_color, right_bg_color...
+Available tools: generate_split_content_slide_xml, generate_bullet_content_slide_xml...
+Best match: generate_split_content_slide_xml — it supports a title plus structured content columns.
+Required params: title (str), column_titles (List[str]), column_descriptions (List[str]), image_url (str)...
 Let me fill them with actual content from the slide text.
 Self-check: All required fields filled ✓, colors are hex ✓, points is a list ✓, JSON brackets matched ✓
 </think>
 <tool_call>
-{"name": "generate_split_layout_list_slide", "arguments": {"main_title": "Hành trình FPT", "points": [{"title": "Nền tảng", "description": "Đội ngũ kỹ sư hùng hậu"}], "left_bg_color": "#FFFFFF", "right_bg_color": "#F8FAFC"}}
+{"name": "generate_split_content_slide_xml", "arguments": {"title": "Hành trình FPT", "column_titles": ["Nền tảng"], "column_descriptions": ["Đội ngũ kỹ sư hùng hậu"], "image_url": "", "background_color": "#F8FAFC", "dark_panel_color": "#23242B", "accent_color": "#98F033", "title_color": "#98F033", "heading_color": "#FFFFFF", "body_color": "#FFFFFF"}}
 </tool_call>"""
 
 QWEN_GENERATOR_HUMAN_TEMPLATE = """{style_context}

@@ -1,11 +1,17 @@
 from __future__ import annotations
 
 import os
+import re
 import xml.etree.ElementTree as ET
 from pathlib import Path
 from xml.dom import minidom
 
 from PIL import ImageFont
+
+
+# Keep the requested font size even when the text exceeds its textbox.
+# Overflow is handled by the renderer instead of silently shrinking text.
+AUTO_SHRINK_TEXT = True
 
 
 def _resolve_font_fallback_path(
@@ -427,7 +433,7 @@ def generate_modern_cover_slide_xml(
         bold=False,
     )
 
-    title_font_size = 64.0
+    title_font_size = 58.0
     title_min_font_size = 34.0
     title_line_spacing = 0.96
 
@@ -467,7 +473,7 @@ def generate_modern_cover_slide_xml(
 
     title_layout = layout_title_at_size(title_font_size)
 
-    for _ in range(140):
+    for _ in range(140 if AUTO_SHRINK_TEXT else 0):
         if (
             title_layout["height"] <= title_max_height
             and len(title_layout["lines"]) <= 5
@@ -914,10 +920,10 @@ def generate_it_sales_proposal_cover_inline_vector_xml_closer(
         bold=False,
     )
 
-    title_font_size = 70.0
+    title_font_size = 60.0
     title_min_font_size = 42.0
 
-    subtitle_font_size = 26.0
+    subtitle_font_size = 20.0
     subtitle_min_font_size = 17.0
 
     title_line_spacing = 0.95
@@ -1002,14 +1008,14 @@ def generate_it_sales_proposal_cover_inline_vector_xml_closer(
             )
             changed = True
 
-        elif subtitle_font_size > subtitle_min_font_size:
+        elif AUTO_SHRINK_TEXT and subtitle_font_size > subtitle_min_font_size:
             subtitle_font_size = max(
                 subtitle_min_font_size,
                 subtitle_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -1180,7 +1186,7 @@ def generate_it_sales_proposal_cover_inline_vector_xml_closer(
         vertical_align="middle",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         safety_ratio=1.0,
@@ -1266,7 +1272,7 @@ def generate_it_sales_proposal_cover_inline_vector_xml_closer(
         vertical_align="middle",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         safety_ratio=1.0,
@@ -1291,7 +1297,7 @@ def generate_it_sales_proposal_cover_inline_vector_xml_closer(
         vertical_align="middle",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         safety_ratio=1.0,
@@ -1395,7 +1401,7 @@ def generate_elegant_professional_cover_slide_xml(
             "Calibri": ["calibri"],
             "Aptos": ["aptos"],
             "Helvetica": ["helvetica", "arial"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Times New Roman": ["timesnewroman", "times"],
             "Garamond": ["garamond"],
         }
@@ -1499,7 +1505,7 @@ def generate_elegant_professional_cover_slide_xml(
             explicit_fallbacks = [
                 windows_fonts / "arialbi.ttf",
                 windows_fonts / "calibriz.ttf",
-                windows_fonts / "georgiaz.ttf",
+                windows_fonts / "arialbi.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
             ]
         elif bold:
@@ -1507,7 +1513,7 @@ def generate_elegant_professional_cover_slide_xml(
                 windows_fonts / "arialbd.ttf",
                 windows_fonts / "calibrib.ttf",
                 windows_fonts / "aptos-bold.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
             ]
         elif italic:
@@ -1515,7 +1521,7 @@ def generate_elegant_professional_cover_slide_xml(
                 windows_fonts / "ariali.ttf",
                 windows_fonts / "calibrii.ttf",
                 windows_fonts / "aptos-italic.ttf",
-                windows_fonts / "georgiai.ttf",
+                windows_fonts / "ariali.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
             ]
         else:
@@ -1523,7 +1529,7 @@ def generate_elegant_professional_cover_slide_xml(
                 windows_fonts / "arial.ttf",
                 windows_fonts / "calibri.ttf",
                 windows_fonts / "aptos.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
                 Path("/usr/share/fonts/dejavu/DejaVuSans.ttf"),
                 Path("/Library/Fonts/Arial.ttf"),
@@ -1702,7 +1708,7 @@ def generate_elegant_professional_cover_slide_xml(
         return best
 
     title_font_path = resolve_font_path("Arial", bold=False)
-    subtitle_font_path = resolve_font_path("Georgia", italic=True)
+    subtitle_font_path = resolve_font_path("Arial", italic=False)
     meta_font_path = resolve_font_path("Arial", bold=False)
     meta_bold_font_path = resolve_font_path("Arial", bold=True)
 
@@ -1719,7 +1725,7 @@ def generate_elegant_professional_cover_slide_xml(
     title_layout = fit_text(
         display_title,
         font_path=title_font_path,
-        preferred_font_size=64.0,
+        preferred_font_size=58.0,
         min_font_size=18.0,
         width_candidates=[
             panel_inner_width - 110.0,
@@ -1736,7 +1742,7 @@ def generate_elegant_professional_cover_slide_xml(
     subtitle_layout = fit_text(
         subtitle,
         font_path=subtitle_font_path,
-        preferred_font_size=25.0,
+        preferred_font_size=20.0,
         min_font_size=12.0,
         width_candidates=[
             270.0,
@@ -1911,7 +1917,7 @@ def generate_elegant_professional_cover_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.04,
         safety_ratio=1.0,
@@ -1927,7 +1933,7 @@ def generate_elegant_professional_cover_slide_xml(
         y=subtitle_y,
         width=subtitle_width,
         height=subtitle_layout["height"],
-        font="Georgia",
+        font="Arial",
         font_path=str(subtitle_font_path),
         size=subtitle_layout["font_size"],
         min_font_size=max(9.0, subtitle_layout["font_size"] - 2.0),
@@ -1937,7 +1943,7 @@ def generate_elegant_professional_cover_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(subtitle_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         safety_ratio=1.0,
@@ -1962,7 +1968,7 @@ def generate_elegant_professional_cover_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(label_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         safety_ratio=1.0,
@@ -1988,7 +1994,7 @@ def generate_elegant_professional_cover_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(name_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         safety_ratio=1.0,
@@ -2066,7 +2072,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
             "Arial": ["arial"],
             "Helvetica": ["helvetica", "arial"],
             "Times New Roman": ["timesnewroman", "times"],
-            "Georgia": ["georgia", "timesnewroman", "times"],
+            "Arial": ["arial", "timesnewroman", "times"],
             "Garamond": ["garamond", "timesnewroman", "times"],
             "Didot": ["didot", "timesnewroman", "times"],
             "Bodoni": ["bodoni", "timesnewroman", "times"],
@@ -2114,7 +2120,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
         wf = windir / "Fonts"
         fallback_paths = [
             wf / "times.ttf",
-            wf / "georgia.ttf",
+            wf / "arial.ttf",
             wf / "arial.ttf",
             Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
             Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -2202,8 +2208,8 @@ def generate_elegant_fancy_font_cover_slide_xml(
             size = round(size - 0.5, 2)
         return best
 
-    title_font_name = "Georgia"
-    subtitle_font_name = "Georgia"
+    title_font_name = "Arial"
+    subtitle_font_name = "Arial"
     title_font_path = resolve_font_path(title_font_name, bold=True)
     subtitle_font_path = resolve_font_path(subtitle_font_name, italic=True)
 
@@ -2269,7 +2275,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.86,
         safety_ratio=1.0,
@@ -2295,7 +2301,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(subtitle_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         safety_ratio=1.0,
@@ -2380,7 +2386,7 @@ def generate_intro_welcome_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri"],
             "Aptos": ["aptos"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Times New Roman": ["timesnewroman", "times"],
         }
 
@@ -2683,7 +2689,7 @@ def generate_intro_welcome_slide_xml(
         title_layout = fit_text(
                 title.strip(),
                 font_path=font_path_bold,
-                preferred_font_size=max(22.0, 60.0 * scale),
+                preferred_font_size=max(20.0, 54.0 * scale),
                 min_font_size=22.0,
                 max_width=title_box_width,
                 max_height=150.0,
@@ -2693,7 +2699,7 @@ def generate_intro_welcome_slide_xml(
         subtitle_layout = fit_text(
                 subtitle.strip(),
                 font_path=font_path_regular,
-                preferred_font_size=max(10.0, 24.0 * scale),
+                preferred_font_size=max(10.0, 20.0 * scale),
                 min_font_size=10.0,
                 max_width=subtitle_box_width,
                 max_height=170.0,
@@ -2867,7 +2873,7 @@ def generate_intro_welcome_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         safety_ratio=1.0,
@@ -2893,7 +2899,7 @@ def generate_intro_welcome_slide_xml(
         vertical_align="top",
         single_line="false",
         max_lines=5,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.08,
         safety_ratio=1.0,
@@ -2983,13 +2989,13 @@ def generate_memorial_cover_slide_xml(
             "Times New Roman": [
                 "timesnewroman",
                 "times",
-                "georgia",
+                "arial",
                 "freeserif",
                 "liberationserif",
                 "dejavuserif",
             ],
-            "Georgia": [
-                "georgia",
+            "Arial": [
+                "arial",
                 "timesnewroman",
                 "times",
                 "freeserif",
@@ -3061,7 +3067,7 @@ def generate_memorial_cover_slide_xml(
         if bold and italic:
             fallbacks = [
                 windows_fonts / "timesbi.ttf",
-                windows_fonts / "georgiaz.ttf",
+                windows_fonts / "arialbi.ttf",
                 windows_fonts / "arialbi.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
                 Path("/usr/share/fonts/truetype/freefont/FreeSerifBoldItalic.ttf"),
@@ -3070,7 +3076,7 @@ def generate_memorial_cover_slide_xml(
         elif italic:
             fallbacks = [
                 windows_fonts / "timesi.ttf",
-                windows_fonts / "georgiai.ttf",
+                windows_fonts / "ariali.ttf",
                 windows_fonts / "ariali.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
                 Path("/usr/share/fonts/truetype/freefont/FreeSerifItalic.ttf"),
@@ -3079,7 +3085,7 @@ def generate_memorial_cover_slide_xml(
         elif bold:
             fallbacks = [
                 windows_fonts / "timesbd.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
                 Path("/usr/share/fonts/truetype/freefont/FreeSerifBold.ttf"),
@@ -3088,7 +3094,7 @@ def generate_memorial_cover_slide_xml(
         else:
             fallbacks = [
                 windows_fonts / "times.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 windows_fonts / "arial.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
                 Path("/usr/share/fonts/truetype/freefont/FreeSerif.ttf"),
@@ -3232,7 +3238,7 @@ def generate_memorial_cover_slide_xml(
     title_layout = fit_text(
         title.strip(),
         font_path=title_font_path,
-        preferred_font_size=64.0,
+        preferred_font_size=58.0,
         min_font_size=18.0,
         max_width=1400.0,
         max_height=260.0,
@@ -3249,8 +3255,8 @@ def generate_memorial_cover_slide_xml(
             or [0.0]
         )
 
-    # Expand the background bands around the text first. Font shrinking is
-    # reserved for content that still cannot fit inside the slide boundaries.
+    # Expand the background bands around the text first. Text keeps its
+    # requested size; overflow is handled by the textbox renderer.
     subtitle_content_width = measured_layout_width(subtitle_layout, subtitle_font_path)
     subtitle_band_width = min(
         900.0,
@@ -3402,7 +3408,7 @@ def generate_memorial_cover_slide_xml(
         bold="false",
         italic="false",
         single_line="false",
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         max_lines=4,
         line_spacing=1.0,
@@ -3429,7 +3435,7 @@ def generate_memorial_cover_slide_xml(
         bold="false",
         italic="true",
         single_line="false",
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         max_lines=4,
         line_spacing=0.95,
@@ -3505,8 +3511,8 @@ def generate_social_topic_idea_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri", "aptos", "arial"],
             "Aptos": ["aptos", "calibri", "arial"],
-            "Georgia": ["georgia", "times"],
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
+            "Arial": ["arial", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
         }
 
         normalized_names = [
@@ -3724,12 +3730,12 @@ def generate_social_topic_idea_slide_xml(
 
         return best_layout
 
-    title_font_name = "Georgia"
+    title_font_name = "Arial"
     title_font_path = resolve_font_path(title_font_name, bold=True, italic=False)
     title_layout = fit_text(
         title,
         font_path=title_font_path,
-        preferred_font_size=54.0,
+        preferred_font_size=48.0,
         min_font_size=22.0,
         max_width=740.0,
         max_height=310.0,
@@ -3822,7 +3828,7 @@ def generate_social_topic_idea_slide_xml(
         italic="false",
         single_line="false",
         max_lines=4,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.98,
         margin_left=0,
@@ -3860,7 +3866,7 @@ def generate_social_topic_idea_slide_xml(
         italic="false",
         single_line="false",
         max_lines=len(subtitle_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.1,
         margin_left=0,
@@ -3940,9 +3946,9 @@ def generate_roman_empire_history_cover_slide_xml(
         italic: bool = False,
     ) -> Path:
         aliases = {
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
-            "Georgia": ["georgia", "timesnewroman", "times"],
-            "Garamond": ["garamond", "georgia", "timesnewroman", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
+            "Arial": ["arial", "timesnewroman", "times"],
+            "Garamond": ["garamond", "arial", "timesnewroman", "times"],
             "Arial": ["arial", "calibri", "aptos"],
             "Calibri": ["calibri", "arial", "aptos"],
         }
@@ -4010,7 +4016,7 @@ def generate_roman_empire_history_cover_slide_xml(
         if bold and italic:
             fallback_paths = [
                 windows_fonts / "timesbi.ttf",
-                windows_fonts / "georgiaz.ttf",
+                windows_fonts / "arialbi.ttf",
                 windows_fonts / "arialbi.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
@@ -4018,7 +4024,7 @@ def generate_roman_empire_history_cover_slide_xml(
         elif italic:
             fallback_paths = [
                 windows_fonts / "timesi.ttf",
-                windows_fonts / "georgiai.ttf",
+                windows_fonts / "ariali.ttf",
                 windows_fonts / "ariali.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
@@ -4026,7 +4032,7 @@ def generate_roman_empire_history_cover_slide_xml(
         elif bold:
             fallback_paths = [
                 windows_fonts / "timesbd.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
@@ -4034,7 +4040,7 @@ def generate_roman_empire_history_cover_slide_xml(
         else:
             fallback_paths = [
                 windows_fonts / "times.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 windows_fonts / "arial.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -4223,8 +4229,8 @@ def generate_roman_empire_history_cover_slide_xml(
     text_group_bottom = 866.0
     subtitle_title_gap = 18.0
 
-    subtitle_size = 35.0
-    title_size = 72.0
+    subtitle_size = 20.0
+    title_size = 62.0
     subtitle_min_size = 14.0
     title_min_size = 24.0
 
@@ -4268,9 +4274,9 @@ def generate_roman_empire_history_cover_slide_xml(
 
         # Give the title the first chance to use a smaller size because it is
         # the larger block; only then reduce the subtitle.
-        if title_size > title_min_size:
+        if AUTO_SHRINK_TEXT and title_size > title_min_size:
             title_size = round(max(title_min_size, title_size - 0.5), 2)
-        elif subtitle_size > subtitle_min_size:
+        elif AUTO_SHRINK_TEXT and subtitle_size > subtitle_min_size:
             subtitle_size = round(max(subtitle_min_size, subtitle_size - 0.5), 2)
         else:
             break
@@ -4558,7 +4564,7 @@ def generate_roman_empire_history_cover_slide_xml(
         italic="true",
         single_line="false",
         max_lines=len(subtitle_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         margin_left=0,
@@ -4585,7 +4591,7 @@ def generate_roman_empire_history_cover_slide_xml(
         italic="false",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.92,
         margin_left=0,
@@ -4986,7 +4992,7 @@ def generate_transition_headline_slide_xml(
         bold=False,
     )
 
-    subtitle_font_size = 20.0
+    subtitle_font_size = 18.0
     subtitle_min_font_size = 14.0
     title_min_font_size = 34.0
     title_ratio = 2
@@ -5191,7 +5197,7 @@ def generate_transition_headline_slide_xml(
             )
             changed = True
 
-        elif subtitle_font_size > subtitle_min_font_size:
+        elif AUTO_SHRINK_TEXT and subtitle_font_size > subtitle_min_font_size:
             subtitle_font_size = max(
                 subtitle_min_font_size,
                 subtitle_font_size - 0.5,
@@ -5392,7 +5398,7 @@ def generate_about_us_transition_slide_xml(
     ) -> Path:
         aliases = {
             "Times New Roman": ["timesnewroman", "times"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Garamond": ["garamond"],
             "Arial": ["arial"],
             "Calibri": ["calibri"],
@@ -5467,7 +5473,7 @@ def generate_about_us_transition_slide_xml(
         explicit_fallbacks = [
             windows_fonts / "times.ttf",
             windows_fonts / "timesnewroman.ttf",
-            windows_fonts / "georgia.ttf",
+            windows_fonts / "arial.ttf",
             windows_fonts / "garamond.ttf",
             windows_fonts / "arial.ttf",
             Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
@@ -5616,7 +5622,7 @@ def generate_about_us_transition_slide_xml(
     # separating every character and forcing one word onto each line.
     display_title = " ".join(title.strip().split())
 
-    title_font_size = 74.0
+    title_font_size = 58.0
     title_min_font_size = 28.0
     title_line_spacing = 1.0
 
@@ -5628,7 +5634,7 @@ def generate_about_us_transition_slide_xml(
         line_spacing=title_line_spacing,
     )
 
-    for _ in range(140):
+    for _ in range(140 if AUTO_SHRINK_TEXT else 0):
         if (
             title_layout["height"] <= title_max_height
             and len(title_layout["lines"]) <= 2
@@ -5738,7 +5744,7 @@ def generate_about_us_transition_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=title_line_spacing,
         safety_ratio=1.0,
@@ -5840,7 +5846,7 @@ def generate_gallery_transition_slide_xml(
     ) -> Path:
         aliases = {
             "Times New Roman": ["timesnewroman", "times"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Garamond": ["garamond"],
             "Arial": ["arial"],
             "Calibri": ["calibri"],
@@ -5914,7 +5920,7 @@ def generate_gallery_transition_slide_xml(
 
         fallback_paths = [
             windows_fonts / "times.ttf",
-            windows_fonts / "georgia.ttf",
+            windows_fonts / "arial.ttf",
             windows_fonts / "arial.ttf",
             Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
             Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -6097,13 +6103,13 @@ def generate_gallery_transition_slide_xml(
 
         return best
 
-    title_font_name = "Georgia"
+    title_font_name = "Arial"
     title_font_path = resolve_font_path(title_font_name, bold=True)
 
     title_layout = fit_text(
         title.strip().upper(),
         font_path=title_font_path,
-        preferred_font_size=66.0,
+        preferred_font_size=58.0,
         min_font_size=40.0,
         max_width=1500.0,
         max_height=130.0,
@@ -6226,7 +6232,7 @@ def generate_gallery_transition_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         safety_ratio=1.0,
@@ -6348,8 +6354,8 @@ def generate_slide_transition_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri", "aptos", "arial"],
             "Aptos": ["aptos", "calibri", "arial"],
-            "Georgia": ["georgia", "times"],
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
+            "Arial": ["arial", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
         }
 
         normalized_names = [
@@ -6591,10 +6597,10 @@ def generate_slide_transition_slide_xml(
     font_name = "Arial"
 
     # Measure the complete title as one editable textbox. The string remains
-    # a single value; the textbox may wrap naturally before shrinking it.
+    # a single value; the textbox may wrap naturally at the requested size.
     title_max_width = 620.0
     title_area_height = 310.0
-    preferred_title_size = 64.0
+    preferred_title_size = 58.0
     min_title_size = 24.0
     title_font_path = resolve_font_path(font_name, bold=False, italic=False)
     title_layout = fit_text(
@@ -6745,7 +6751,7 @@ def generate_slide_transition_slide_xml(
         italic="false",
         single_line="false",
         max_lines=4,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.96,
         margin_left=0,
@@ -6817,8 +6823,8 @@ def generate_green_social_media_transition_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri", "aptos", "arial"],
             "Aptos": ["aptos", "calibri", "arial"],
-            "Georgia": ["georgia", "times"],
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
+            "Arial": ["arial", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
         }
 
         normalized_names = [normalize_font_name(name) for name in aliases.get(font_name, [font_name])]
@@ -7013,7 +7019,7 @@ def generate_green_social_media_transition_slide_xml(
     font_name = "Arial"
     max_title_width = 760.0
     max_title_height = 330.0
-    preferred_title_size = 47.0
+    preferred_title_size = 43.0
     min_title_size = 22.0
     title_line_gap = 12.0
 
@@ -7136,7 +7142,7 @@ def generate_green_social_media_transition_slide_xml(
         italic="false",
         single_line="false",
         max_lines=4,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.96,
         margin_left=0,
@@ -7456,7 +7462,7 @@ def generate_section_header_image_slide_xml(
     title_layout = fit_text(
         clean_header,
         font_path=title_font_path,
-        preferred_size=48.0,
+        preferred_size=44.0,
         min_size=18.0,
         max_width=1000.0,
         max_height=230.0,
@@ -7538,7 +7544,7 @@ def generate_section_header_image_slide_xml(
         italic="false",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         margin_left=0,
@@ -7665,13 +7671,13 @@ def generate_content_creation_slide_xml(
         y=24,
         width=220,
         height=170,
-        font="Georgia",
-        size=48,
+        font="Arial",
+        size=42,
         min_font_size=38,
         color=title_color,
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         line_spacing=0.95,
         safety_ratio=0.97,
     )
@@ -7715,7 +7721,7 @@ def generate_content_creation_slide_xml(
         color=text_color,
         single_line="true",
         min_font_size=13,
-        overflow="shrink",
+        overflow="clip",
     )
 
     add_textbox(
@@ -7730,7 +7736,7 @@ def generate_content_creation_slide_xml(
         color=text_color,
         single_line="false",
         max_lines=5,
-        overflow="shrink",
+        overflow="clip",
         line_spacing=1.18,
         safety_ratio=0.96,
     )
@@ -7748,7 +7754,7 @@ def generate_content_creation_slide_xml(
         color=text_color,
         single_line="true",
         min_font_size=13,
-        overflow="shrink",
+        overflow="clip",
     )
 
     add_textbox(
@@ -7763,7 +7769,7 @@ def generate_content_creation_slide_xml(
         color=text_color,
         single_line="false",
         max_lines=5,
-        overflow="shrink",
+        overflow="clip",
         line_spacing=1.18,
         safety_ratio=0.96,
     )
@@ -7876,7 +7882,7 @@ def generate_ai_content_slide_xml(
     ) -> Path:
         aliases = {
             "Arial": "arial",
-            "Georgia": "georgia",
+            "Arial": "arial",
             "Calibri": "calibri",
             "Aptos": "aptos",
             "Times New Roman": "times",
@@ -8185,7 +8191,7 @@ def generate_ai_content_slide_xml(
         bold=False,
     )
 
-    title_font_size = 62.0
+    title_font_size = 56.0
     title_min_font_size = 36.0
 
     body_font_size = 28.0
@@ -8301,14 +8307,14 @@ def generate_ai_content_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -8881,7 +8887,7 @@ def generate_two_ideas_slide_xml(
         bold=False,
     )
 
-    title_font_size = 54.0
+    title_font_size = 48.0
     title_min_font_size = 38.0
 
     heading_font_size = 36.0
@@ -9001,21 +9007,21 @@ def generate_two_ideas_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif heading_font_size > heading_min_font_size:
+        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
             heading_font_size = max(
                 heading_min_font_size,
                 heading_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -9573,7 +9579,7 @@ def generate_three_ideas_slide_xml(
         bold=False,
     )
 
-    title_font_size = 58.0
+    title_font_size = 52.0
     title_min_font_size = 40.0
 
     heading_font_size = 38.0
@@ -9693,21 +9699,21 @@ def generate_three_ideas_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif heading_font_size > heading_min_font_size:
+        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
             heading_font_size = max(
                 heading_min_font_size,
                 heading_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -10264,7 +10270,7 @@ def generate_our_history_slide_xml(
         bold=True,
     )
 
-    title_font_size = 56.0
+    title_font_size = 50.0
     title_min_font_size = 38.0
 
     heading_font_size = 34.0
@@ -10406,28 +10412,28 @@ def generate_our_history_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif heading_font_size > heading_min_font_size:
+        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
             heading_font_size = max(
                 heading_min_font_size,
                 heading_font_size - 0.5,
             )
             changed = True
 
-        elif year_font_size > year_min_font_size:
+        elif AUTO_SHRINK_TEXT and year_font_size > year_min_font_size:
             year_font_size = max(
                 year_min_font_size,
                 year_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -11052,7 +11058,7 @@ def generate_instructions_slide_xml(
         bold=False,
     )
 
-    title_font_size = 50.0
+    title_font_size = 46.0
     title_min_font_size = 34.0
 
     heading_font_size = 21.0
@@ -11137,7 +11143,7 @@ def generate_instructions_slide_xml(
         padding=4,
     )
 
-    for _ in range(100):
+    for _ in range(100 if AUTO_SHRINK_TEXT else 0):
         if title_layout["height"] <= 78:
             break
 
@@ -11205,14 +11211,14 @@ def generate_instructions_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif heading_font_size > heading_min_font_size:
+        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
             heading_font_size = max(
                 heading_min_font_size,
                 heading_font_size - 0.5,
@@ -11249,7 +11255,7 @@ def generate_instructions_slide_xml(
         padding=4,
     )
 
-    for _ in range(80):
+    for _ in range(80 if AUTO_SHRINK_TEXT else 0):
         if footer_layout["height"] <= footer_max_height:
             break
 
@@ -11870,7 +11876,7 @@ def generate_split_content_slide_xml(
         bold=False,
     )
 
-    title_font_size = 50.0
+    title_font_size = 46.0
     title_min_font_size = 34.0
 
     heading_font_size = 25.0
@@ -11942,7 +11948,7 @@ def generate_split_content_slide_xml(
         title_font_size
     )
 
-    for _ in range(100):
+    for _ in range(100 if AUTO_SHRINK_TEXT else 0):
         pushed_columns_top = (
             title_y
             + title_layout["height"]
@@ -12046,14 +12052,14 @@ def generate_split_content_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif heading_font_size > heading_min_font_size:
+        elif AUTO_SHRINK_TEXT and heading_font_size > heading_min_font_size:
             heading_font_size = max(
                 heading_min_font_size,
                 heading_font_size - 0.5,
@@ -12589,7 +12595,7 @@ def generate_picture_quote_slide_xml(
         bold=False,
     )
 
-    title_font_size = 42.0
+    title_font_size = 38.0
     title_min_font_size = 28.0
 
     body_font_size = 31.0
@@ -12652,14 +12658,14 @@ def generate_picture_quote_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -13251,7 +13257,7 @@ def generate_bullet_content_slide_xml(
         bold=False,
     )
 
-    title_font_size = 42.0
+    title_font_size = 38.0
     title_min_font_size = 30.0
 
     body_font_size = 28.0
@@ -13468,14 +13474,14 @@ def generate_bullet_content_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -13740,7 +13746,9 @@ def generate_client_snapshot_slide_xml(
     subtitle_x = 22.0
     subtitle_width = 700.0
 
-    content_x = 68.0
+    # The marker is a separate textbox (x=45, width=30). Leave a visible gap
+    # before the label instead of starting it inside the marker box.
+    content_x = 84.0
     marker_x = 45.0
     content_right = 795.0
 
@@ -14045,10 +14053,10 @@ def generate_client_snapshot_slide_xml(
         bold=True,
     )
 
-    title_font_size = 71.0
+    title_font_size = 60.0
     title_min_font_size = 46.0
 
-    subtitle_font_size = 31.0
+    subtitle_font_size = 20.0
     subtitle_min_font_size = 22.0
 
     body_font_size = 27.0
@@ -14102,12 +14110,19 @@ def generate_client_snapshot_slide_xml(
         for detail in client_details:
             raw_detail = detail.rstrip()
             stripped_detail = raw_detail.lstrip()
+            had_indentation = len(raw_detail) != len(stripped_detail)
 
             is_subitem = (
-                len(raw_detail) != len(stripped_detail)
-                or stripped_detail.startswith(
-                    ("- ", "• ", "◦ ")
-                )
+                had_indentation
+                or stripped_detail.startswith(("- ", "• ", "◦ "))
+            )
+
+            # This renderer owns the list marker, so remove numbering supplied
+            # by the document/model from the label (e.g. "1. Formula:").
+            stripped_detail = re.sub(
+                r"^\d+(?:\.\d+)*[.)]\s+",
+                "",
+                stripped_detail,
             )
 
             if is_subitem:
@@ -14117,6 +14132,12 @@ def generate_client_snapshot_slide_xml(
                             len(prefix):
                         ].strip()
                         break
+                # Also handle inputs such as "• 1. Formula".
+                stripped_detail = re.sub(
+                    r"^\d+(?:\.\d+)*[.)]\s+",
+                    "",
+                    stripped_detail,
+                )
 
                 sub_marker_layout = layout_text(
                     "◦",
@@ -14321,21 +14342,21 @@ def generate_client_snapshot_slide_xml(
             )
             changed = True
 
-        elif body_font_size > body_min_font_size:
+        elif AUTO_SHRINK_TEXT and body_font_size > body_min_font_size:
             body_font_size = max(
                 body_min_font_size,
                 body_font_size - 0.5,
             )
             changed = True
 
-        elif subtitle_font_size > subtitle_min_font_size:
+        elif AUTO_SHRINK_TEXT and subtitle_font_size > subtitle_min_font_size:
             subtitle_font_size = max(
                 subtitle_min_font_size,
                 subtitle_font_size - 0.5,
             )
             changed = True
 
-        elif title_font_size > title_min_font_size:
+        elif AUTO_SHRINK_TEXT and title_font_size > title_min_font_size:
             title_font_size = max(
                 title_min_font_size,
                 title_font_size - 0.5,
@@ -14539,7 +14560,7 @@ def generate_client_snapshot_slide_xml(
                 vertical_align="top",
                 single_line="true",
                 max_lines=1,
-                overflow="shrink",
+                overflow="clip",
                 reflow_on_resize="true",
                 line_spacing=body_line_spacing,
                 safety_ratio=1.0,
@@ -15077,10 +15098,10 @@ def generate_how_forge_works_slide_xml(
         bold=True,
     )
 
-    title_font_size = 48.0
+    title_font_size = 44.0
     title_min_font_size = title_font_size
 
-    subtitle_font_size = 21.0
+    subtitle_font_size = 18.0
     subtitle_min_font_size = subtitle_font_size
 
     step_label_font_size = 29.0
@@ -15292,14 +15313,14 @@ def generate_how_forge_works_slide_xml(
             )
             changed = True
 
-        elif step_body_font_size > step_body_min_font_size:
+        elif AUTO_SHRINK_TEXT and step_body_font_size > step_body_min_font_size:
             step_body_font_size = max(
                 step_body_min_font_size,
                 step_body_font_size - 0.5,
             )
             changed = True
 
-        elif step_label_font_size > step_label_min_font_size:
+        elif AUTO_SHRINK_TEXT and step_label_font_size > step_label_min_font_size:
             step_label_font_size = max(
                 step_label_min_font_size,
                 step_label_font_size - 0.5,
@@ -15964,10 +15985,10 @@ def generate_implementation_timeline_slide_xml(
         bold=True,
     )
 
-    title_font_size = 52.0
+    title_font_size = 46.0
     title_min_font_size = 36.0
 
-    subtitle_font_size = 21.0
+    subtitle_font_size = 18.0
     subtitle_min_font_size = 15.0
 
     label_font_size = 23.0
@@ -15990,7 +16011,7 @@ def generate_implementation_timeline_slide_xml(
         padding=3,
     )
 
-    for _ in range(80):
+    for _ in range(80 if AUTO_SHRINK_TEXT else 0):
         if title_layout["height"] <= 74.0:
             break
 
@@ -16026,7 +16047,7 @@ def generate_implementation_timeline_slide_xml(
         padding=3,
     )
 
-    for _ in range(80):
+    for _ in range(80 if AUTO_SHRINK_TEXT else 0):
         if subtitle_layout["height"] <= 52.0:
             break
 
@@ -16159,14 +16180,14 @@ def generate_implementation_timeline_slide_xml(
 
         changed = False
 
-        if content_font_size > content_min_font_size:
+        if AUTO_SHRINK_TEXT and content_font_size > content_min_font_size:
             content_font_size = max(
                 content_min_font_size,
                 content_font_size - 0.5,
             )
             changed = True
 
-        elif label_font_size > label_min_font_size:
+        elif AUTO_SHRINK_TEXT and label_font_size > label_min_font_size:
             label_font_size = max(
                 label_min_font_size,
                 label_font_size - 0.5,
@@ -16472,7 +16493,7 @@ def generate_problem_slide_xml(
             "Calibri": "calibri",
             "Aptos": "aptos",
             "Helvetica": "helvetica",
-            "Georgia": "georgia",
+            "Arial": "arial",
             "Times New Roman": "times",
         }
 
@@ -16706,7 +16727,7 @@ def generate_problem_slide_xml(
     # =====================================================
 
     title_font_name = "Arial"
-    description_font_name = "Georgia"
+    description_font_name = "Arial"
     card_font_name = "Arial"
 
     title_font_path = resolve_font_path(title_font_name, bold=True)
@@ -16719,7 +16740,7 @@ def generate_problem_slide_xml(
     title_color = title_color
     description_color = description_color
 
-    title_font_size = 50.0
+    title_font_size = 46.0
     description_font_size = 22.0
 
     title_line_spacing = 0.95
@@ -16997,7 +17018,7 @@ def generate_problem_slide_xml(
             vertical_align="middle",
             single_line="false",
             max_lines=len(card_data["layout"]["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=card_line_spacing,
             safety_ratio=1.0,
@@ -17023,7 +17044,7 @@ def generate_problem_slide_xml(
         vertical_align="top",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=title_line_spacing,
         safety_ratio=1.0,
@@ -17048,7 +17069,7 @@ def generate_problem_slide_xml(
         vertical_align="top",
         single_line="false",
         max_lines=len(description_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=description_line_spacing,
         safety_ratio=1.0,
@@ -17162,7 +17183,7 @@ def generate_topics_overview_slide_xml(
     ) -> Path:
         aliases = {
             "Times New Roman": ["timesnewroman", "times"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Garamond": ["garamond"],
             "Arial": ["arial"],
             "Calibri": ["calibri"],
@@ -17254,28 +17275,28 @@ def generate_topics_overview_slide_xml(
         if bold and italic:
             fallback_paths = [
                 windows_fonts / "timesbi.ttf",
-                windows_fonts / "georgiaz.ttf",
+                windows_fonts / "arialbi.ttf",
                 windows_fonts / "arialbi.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
             ]
         elif bold:
             fallback_paths = [
                 windows_fonts / "timesbd.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
             ]
         elif italic:
             fallback_paths = [
                 windows_fonts / "timesi.ttf",
-                windows_fonts / "georgiai.ttf",
+                windows_fonts / "ariali.ttf",
                 windows_fonts / "ariali.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
             ]
         else:
             fallback_paths = [
                 windows_fonts / "times.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 windows_fonts / "garamond.ttf",
                 windows_fonts / "arial.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
@@ -17472,8 +17493,8 @@ def generate_topics_overview_slide_xml(
     # Dynamic layout
     # =====================================================
 
-    title_font_name = "Georgia"
-    heading_font_name = "Georgia"
+    title_font_name = "Arial"
+    heading_font_name = "Arial"
     body_font_name = "Arial"
 
     title_font_path = resolve_font_path(title_font_name, bold=True)
@@ -17490,7 +17511,7 @@ def generate_topics_overview_slide_xml(
     title_layout = fit_text(
         title.upper(),
         font_path=title_font_path,
-        preferred_font_size=70.0,
+        preferred_font_size=60.0,
         min_font_size=40.0,
         max_width=title_width,
         max_height=title_max_height,
@@ -17651,7 +17672,7 @@ def generate_topics_overview_slide_xml(
         vertical_align="top",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         safety_ratio=1.0,
@@ -17711,7 +17732,7 @@ def generate_topics_overview_slide_xml(
             vertical_align="middle",
             single_line="false",
             max_lines=len(heading_layout["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.0,
             safety_ratio=1.0,
@@ -17736,7 +17757,7 @@ def generate_topics_overview_slide_xml(
             vertical_align="middle",
             single_line="false",
             max_lines=len(desc_layout["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.18,
             safety_ratio=1.0,
@@ -17879,7 +17900,7 @@ def generate_timeline_gallery_slide_xml(
     ) -> Path:
         aliases = {
             "Times New Roman": ["timesnewroman", "times"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Garamond": ["garamond"],
             "Arial": ["arial"],
             "Calibri": ["calibri"],
@@ -17955,7 +17976,7 @@ def generate_timeline_gallery_slide_xml(
         if bold:
             fallback_paths = [
                 windows_fonts / "timesbd.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
@@ -17963,7 +17984,7 @@ def generate_timeline_gallery_slide_xml(
         else:
             fallback_paths = [
                 windows_fonts / "times.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 windows_fonts / "garamond.ttf",
                 windows_fonts / "arial.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
@@ -18156,8 +18177,8 @@ def generate_timeline_gallery_slide_xml(
 
     count = len(timeline_items)
 
-    title_font_name = "Georgia"
-    heading_font_name = "Georgia"
+    title_font_name = "Arial"
+    heading_font_name = "Arial"
     body_font_name = "Arial"
 
     title_font_path = resolve_font_path(title_font_name, bold=True)
@@ -18167,7 +18188,7 @@ def generate_timeline_gallery_slide_xml(
     title_layout = fit_text(
         title.strip().upper(),
         font_path=title_font_path,
-        preferred_font_size=61.0,
+        preferred_font_size=54.0,
         min_font_size=30.0,
         max_width=1500.0,
         max_height=130.0,
@@ -18309,7 +18330,8 @@ def generate_timeline_gallery_slide_xml(
         if image_on_top:
             image_y = top_image_y
 
-            # Use the free space below for longer content before shrinking.
+            # Use the free space below for longer content while preserving
+            # the requested font sizes.
             extra_height = max(0.0, content_height - 120.0)
             heading_y = min(
                 bottom_text_y + extra_height * 0.65,
@@ -18434,7 +18456,7 @@ def generate_timeline_gallery_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         safety_ratio=1.0,
@@ -18493,7 +18515,7 @@ def generate_timeline_gallery_slide_xml(
             vertical_align="middle",
             single_line="false",
             max_lines=len(item["heading"]["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=0.95,
             safety_ratio=1.0,
@@ -18518,7 +18540,7 @@ def generate_timeline_gallery_slide_xml(
             vertical_align="middle",
             single_line="false",
             max_lines=len(item["description"]["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.15,
             safety_ratio=1.0,
@@ -18605,8 +18627,8 @@ def generate_memorial_introduction_slide_xml(
         italic: bool = False,
     ) -> Path:
         aliases = {
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
-            "Georgia": ["georgia", "timesnewroman", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
+            "Arial": ["arial", "timesnewroman", "times"],
             "Arial": ["arial", "calibri", "aptos"],
             "Calibri": ["calibri", "arial", "aptos"],
         }
@@ -18675,7 +18697,7 @@ def generate_memorial_introduction_slide_xml(
         if bold and italic:
             fallback_paths = [
                 windows_fonts / "timesbi.ttf",
-                windows_fonts / "georgiaz.ttf",
+                windows_fonts / "arialbi.ttf",
                 windows_fonts / "arialbi.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
@@ -18683,7 +18705,7 @@ def generate_memorial_introduction_slide_xml(
         elif italic:
             fallback_paths = [
                 windows_fonts / "timesi.ttf",
-                windows_fonts / "georgiai.ttf",
+                windows_fonts / "ariali.ttf",
                 windows_fonts / "ariali.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
@@ -18691,7 +18713,7 @@ def generate_memorial_introduction_slide_xml(
         elif bold:
             fallback_paths = [
                 windows_fonts / "timesbd.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
@@ -18699,7 +18721,7 @@ def generate_memorial_introduction_slide_xml(
         else:
             fallback_paths = [
                 windows_fonts / "times.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 windows_fonts / "arial.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -18900,7 +18922,7 @@ def generate_memorial_introduction_slide_xml(
         section_layout = fit_text(
             section_title.strip(),
             font_path=section_font_path,
-            preferred_font_size=max(14.0, 25.0 * scale),
+            preferred_font_size=max(12.0, 22.0 * scale),
             min_font_size=12.0,
             max_width=text_box_width,
             max_height=72.0,
@@ -18910,7 +18932,7 @@ def generate_memorial_introduction_slide_xml(
         title_layout = fit_text(
             main_title.strip(),
             font_path=title_font_path,
-            preferred_font_size=max(22.0, 52.0 * scale),
+            preferred_font_size=max(20.0, 46.0 * scale),
             min_font_size=22.0,
             max_width=text_box_width,
             max_height=230.0,
@@ -19069,7 +19091,7 @@ def generate_memorial_introduction_slide_xml(
         italic="false",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         margin_left=0,
@@ -19096,7 +19118,7 @@ def generate_memorial_introduction_slide_xml(
         italic="true",
         single_line="false",
         max_lines=4,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.92,
         margin_left=0,
@@ -19123,7 +19145,7 @@ def generate_memorial_introduction_slide_xml(
         italic="false",
         single_line="false",
         max_lines=10,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.42,
         margin_left=0,
@@ -19208,8 +19230,8 @@ def generate_legacy_of_love_slide_xml(
 
     def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
         aliases = {
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
-            "Georgia": ["georgia", "timesnewroman", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
+            "Arial": ["arial", "timesnewroman", "times"],
             "Arial": ["arial", "calibri", "aptos"],
             "Calibri": ["calibri", "arial", "aptos"],
         }
@@ -19255,13 +19277,13 @@ def generate_legacy_of_love_slide_xml(
 
         windows_fonts = Path(os.environ.get("WINDIR", "C:/Windows")) / "Fonts"
         if bold and italic:
-            fallback_paths = [windows_fonts / "timesbi.ttf", windows_fonts / "georgiaz.ttf", windows_fonts / "arialbi.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf")]
+            fallback_paths = [windows_fonts / "timesbi.ttf", windows_fonts / "arialbi.ttf", windows_fonts / "arialbi.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf")]
         elif italic:
-            fallback_paths = [windows_fonts / "timesi.ttf", windows_fonts / "georgiai.ttf", windows_fonts / "ariali.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf")]
+            fallback_paths = [windows_fonts / "timesi.ttf", windows_fonts / "ariali.ttf", windows_fonts / "ariali.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf")]
         elif bold:
-            fallback_paths = [windows_fonts / "timesbd.ttf", windows_fonts / "georgiab.ttf", windows_fonts / "arialbd.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")]
+            fallback_paths = [windows_fonts / "timesbd.ttf", windows_fonts / "arialbd.ttf", windows_fonts / "arialbd.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf")]
         else:
-            fallback_paths = [windows_fonts / "times.ttf", windows_fonts / "georgia.ttf", windows_fonts / "arial.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")]
+            fallback_paths = [windows_fonts / "times.ttf", windows_fonts / "arial.ttf", windows_fonts / "arial.ttf", Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"), Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf")]
         for path in fallback_paths:
             if path.exists():
                 try:
@@ -19358,7 +19380,7 @@ def generate_legacy_of_love_slide_xml(
     title_font_path = resolve_font_path(title_font_name, bold=False, italic=True)
     body_font_path = resolve_font_path(body_font_name, bold=False, italic=False)
 
-    title_layout = fit_text(title.strip(), font_path=title_font_path, preferred_font_size=56.0, min_font_size=20.0, max_width=1260.0, max_height=200.0, line_spacing=0.95, max_lines=2)
+    title_layout = fit_text(title.strip(), font_path=title_font_path, preferred_font_size=50.0, min_font_size=20.0, max_width=1260.0, max_height=200.0, line_spacing=0.95, max_lines=2)
     left_layout = fit_text(left_text.strip(), font_path=body_font_path, preferred_font_size=18.5, min_font_size=10.0, max_width=560.0, max_height=380.0, line_spacing=1.42, max_lines=12)
     right_layout = fit_text(right_text.strip(), font_path=body_font_path, preferred_font_size=18.5, min_font_size=10.0, max_width=560.0, max_height=380.0, line_spacing=1.42, max_lines=12)
 
@@ -19409,9 +19431,9 @@ def generate_legacy_of_love_slide_xml(
     add("shape", type="rect", x=lower_panel_x, y=lower_panel_y - 32.0, width=lower_panel_w, height=lower_panel_h + 64.0, fill=border_color, line_color="none", opacity=0.98)
     add("shape", type="rect", x=lower_panel_x, y=lower_panel_y, width=lower_panel_w, height=lower_panel_h, fill=panel_color, line_color="none", opacity=0.96)
 
-    textbox(title_layout["source_text"], x=170, y=top_panel_y + 24.0, width=1260, height=title_layout["height"], font=title_font_name, font_path=str(title_font_path), size=title_layout["font_size"], min_font_size=20.0, color=title_color, align="center", vertical_align="middle", bold="false", italic="true", single_line="false", max_lines=2, overflow="shrink", reflow_on_resize="true", line_spacing=0.95, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
-    textbox(left_layout["source_text"], x=160, y=body_y, width=560, height=left_layout["height"], font=body_font_name, font_path=str(body_font_path), size=left_layout["font_size"], min_font_size=10.0, color=body_color, align="center", vertical_align="top", bold="false", italic="false", single_line="false", max_lines=12, overflow="shrink", reflow_on_resize="true", line_spacing=1.42, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
-    textbox(right_layout["source_text"], x=880, y=body_y, width=560, height=right_layout["height"], font=body_font_name, font_path=str(body_font_path), size=right_layout["font_size"], min_font_size=10.0, color=body_color, align="center", vertical_align="top", bold="false", italic="false", single_line="false", max_lines=12, overflow="shrink", reflow_on_resize="true", line_spacing=1.42, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
+    textbox(title_layout["source_text"], x=170, y=top_panel_y + 24.0, width=1260, height=title_layout["height"], font=title_font_name, font_path=str(title_font_path), size=title_layout["font_size"], min_font_size=20.0, color=title_color, align="center", vertical_align="middle", bold="false", italic="true", single_line="false", max_lines=2, overflow="clip", reflow_on_resize="true", line_spacing=0.95, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
+    textbox(left_layout["source_text"], x=160, y=body_y, width=560, height=left_layout["height"], font=body_font_name, font_path=str(body_font_path), size=left_layout["font_size"], min_font_size=10.0, color=body_color, align="center", vertical_align="top", bold="false", italic="false", single_line="false", max_lines=12, overflow="clip", reflow_on_resize="true", line_spacing=1.42, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
+    textbox(right_layout["source_text"], x=880, y=body_y, width=560, height=right_layout["height"], font=body_font_name, font_path=str(body_font_path), size=right_layout["font_size"], min_font_size=10.0, color=body_color, align="center", vertical_align="top", bold="false", italic="false", single_line="false", max_lines=12, overflow="clip", reflow_on_resize="true", line_spacing=1.42, margin_left=0, margin_right=0, margin_top=0, margin_bottom=0, safety_ratio=1.0)
 
     raw_xml = ET.tostring(presentation, encoding="utf-8")
     xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
@@ -19500,8 +19522,8 @@ def generate_social_media_points_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri", "aptos", "arial"],
             "Aptos": ["aptos", "calibri", "arial"],
-            "Georgia": ["georgia", "times"],
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
+            "Arial": ["arial", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
         }
 
         normalized_names = [normalize_font_name(name) for name in aliases.get(font_name, [font_name])]
@@ -19704,7 +19726,7 @@ def generate_social_media_points_slide_xml(
     title_layout = fit_text(
         title,
         font_path=title_font_path,
-        preferred_size=48.0,
+        preferred_size=44.0,
         min_size=22.0,
         max_width=1400.0,
         max_height=120.0,
@@ -19741,7 +19763,7 @@ def generate_social_media_points_slide_xml(
         card_title_layout = fit_text(
             card["title"],
             font_path=card_title_font_path,
-            preferred_size=20.0,
+        preferred_size=18.0,
             min_size=18,
             max_width=card_w - 70,
             max_height=max(30.0, card_h * 0.18),
@@ -19752,7 +19774,7 @@ def generate_social_media_points_slide_xml(
         body_layout = fit_text(
             card["description"],
             font_path=card_body_font_path,
-            preferred_size=18,
+        preferred_size=16,
             min_size=15,
             max_width=card_w - 70,
             max_height=max(54.0, card_h - header_h - 120.0),
@@ -19839,7 +19861,7 @@ def generate_social_media_points_slide_xml(
         italic="false",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         margin_left=0,
@@ -19920,7 +19942,7 @@ def generate_social_media_points_slide_xml(
             italic="false",
             single_line="false",
             max_lines=len(title_layout["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.05,
             margin_left=0,
@@ -19947,7 +19969,7 @@ def generate_social_media_points_slide_xml(
             italic="false",
             single_line="false",
             max_lines=len(body_layout["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.22,
             margin_left=0,
@@ -20067,8 +20089,8 @@ def generate_numbered_social_media_points_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri", "aptos", "arial"],
             "Aptos": ["aptos", "calibri", "arial"],
-            "Georgia": ["georgia", "times"],
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
+            "Arial": ["arial", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
         }
 
         normalized_names = [
@@ -20334,7 +20356,7 @@ def generate_numbered_social_media_points_slide_xml(
     title_layout = fit_text(
         clean_title,
         font_path=title_font_path,
-        preferred_size=40.0,
+        preferred_size=36.0,
         min_size=18.0,
         max_width=1400.0,
         max_height=128.0,
@@ -20405,7 +20427,7 @@ def generate_numbered_social_media_points_slide_xml(
         title_item_layout = fit_text(
             item["title"],
             font_path=item_title_font_path,
-            preferred_size=16.0,
+        preferred_size=15.0,
             min_size=8.0,
             max_width=text_w,
             max_height=maximum_card_title_height,
@@ -20416,7 +20438,7 @@ def generate_numbered_social_media_points_slide_xml(
         body_item_layout = fit_text(
             item["description"],
             font_path=item_body_font_path,
-            preferred_size=14.0,
+        preferred_size=13.0,
             min_size=7.5,
             max_width=text_w,
             max_height=max(
@@ -20514,7 +20536,7 @@ def generate_numbered_social_media_points_slide_xml(
         italic="false",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.04,
         margin_left=0,
@@ -20556,7 +20578,7 @@ def generate_numbered_social_media_points_slide_xml(
             italic="false",
             single_line="true",
             max_lines=1,
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.0,
             margin_left=0,
@@ -20588,7 +20610,7 @@ def generate_numbered_social_media_points_slide_xml(
             italic="false",
             single_line="false",
             max_lines=len(title_item["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.05,
             margin_left=0,
@@ -20615,7 +20637,7 @@ def generate_numbered_social_media_points_slide_xml(
             italic="false",
             single_line="false",
             max_lines=len(body_item["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.28,
             margin_left=0,
@@ -20688,7 +20710,7 @@ def generate_platform_instructions_slide_xml(
     The layout uses evenly spaced instruction columns with a short colored
     accent line, a bold platform title, an organic color blob with a simple
     icon, and centered instructional text. The layout adapts to the number
-    of platform items and shrinks text instead of raising layout errors.
+    of platform items while preserving the requested text sizes.
     """
 
 
@@ -20776,8 +20798,8 @@ def generate_platform_instructions_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri", "aptos", "arial"],
             "Aptos": ["aptos", "calibri", "arial"],
-            "Georgia": ["georgia", "times"],
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
+            "Arial": ["arial", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
         }
 
         normalized_names = [
@@ -21235,7 +21257,7 @@ def generate_platform_instructions_slide_xml(
             italic="false",
             single_line="false",
             max_lines=len(title_layout["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=0.95,
             margin_left=0,
@@ -21284,7 +21306,7 @@ def generate_platform_instructions_slide_xml(
             italic="false",
             single_line="false",
             max_lines=len(body_layout["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.22,
             margin_left=0,
@@ -21390,7 +21412,7 @@ def generate_hanging_thank_you_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri"],
             "Aptos": ["aptos"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
         }
 
         normalized_names = [
@@ -21756,7 +21778,7 @@ def generate_hanging_thank_you_slide_xml(
     subtitle_layout = fit_text(
         subtitle.strip(),
         font_path=subtitle_font_path,
-        preferred_font_size=25.0,
+        preferred_font_size=20.0,
         min_font_size=20,
         max_width=1000.0,
         max_height=82.0,
@@ -21928,7 +21950,7 @@ def generate_hanging_thank_you_slide_xml(
             vertical_align="middle",
             single_line="true",
             max_lines=1,
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=0.95,
             safety_ratio=1.0,
@@ -21954,7 +21976,7 @@ def generate_hanging_thank_you_slide_xml(
             vertical_align="middle",
             single_line="false",
             max_lines=len(subtitle_layout["lines"]),
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.15,
             safety_ratio=1.0,
@@ -22054,7 +22076,7 @@ def generate_business_thank_you_slide_xml(
     ) -> Path:
         aliases = {
             "Times New Roman": ["timesnewroman", "times"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Garamond": ["garamond"],
             "Arial": ["arial"],
             "Calibri": ["calibri"],
@@ -22160,7 +22182,7 @@ def generate_business_thank_you_slide_xml(
         if bold and italic:
             fallback_paths = [
                 windows_fonts / "timesbi.ttf",
-                windows_fonts / "georgiaz.ttf",
+                windows_fonts / "arialbi.ttf",
                 windows_fonts / "arialbi.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
@@ -22168,7 +22190,7 @@ def generate_business_thank_you_slide_xml(
         elif bold:
             fallback_paths = [
                 windows_fonts / "timesbd.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
@@ -22176,7 +22198,7 @@ def generate_business_thank_you_slide_xml(
         elif italic:
             fallback_paths = [
                 windows_fonts / "timesi.ttf",
-                windows_fonts / "georgiai.ttf",
+                windows_fonts / "ariali.ttf",
                 windows_fonts / "ariali.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
@@ -22184,7 +22206,7 @@ def generate_business_thank_you_slide_xml(
         else:
             fallback_paths = [
                 windows_fonts / "times.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 windows_fonts / "arial.ttf",
                 windows_fonts / "calibri.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
@@ -22397,8 +22419,8 @@ def generate_business_thank_you_slide_xml(
 
         return best
 
-    title_font_name = "Georgia"
-    description_font_name = "Georgia"
+    title_font_name = "Arial"
+    description_font_name = "Arial"
 
     title_font_path = resolve_font_path(
         title_font_name,
@@ -22418,7 +22440,7 @@ def generate_business_thank_you_slide_xml(
     title_layout = fit_text(
         title.strip(),
         font_path=title_font_path,
-        preferred_font_size=58.0,
+        preferred_font_size=52.0,
         min_font_size=28.0,
         max_width=title_box_width,
         max_height=110.0,
@@ -22429,7 +22451,7 @@ def generate_business_thank_you_slide_xml(
     description_layout = fit_text(
         description.strip(),
         font_path=description_font_path,
-        preferred_font_size=28.0,
+        preferred_font_size=22.0,
         min_font_size=20,
         max_width=1320.0,
         max_height=180,
@@ -22543,7 +22565,7 @@ def generate_business_thank_you_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         safety_ratio=1.0,
@@ -22579,7 +22601,7 @@ def generate_business_thank_you_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(description_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.18,
         safety_ratio=1.0,
@@ -22676,8 +22698,8 @@ def generate_dark_gold_thank_you_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri", "aptos", "arial"],
             "Aptos": ["aptos", "calibri", "arial"],
-            "Georgia": ["georgia", "times"],
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
+            "Arial": ["arial", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
         }
         normalized_names = [normalize_font_name(name) for name in aliases.get(font_name, [font_name])]
         candidates: list[tuple[int, Path]] = []
@@ -22857,7 +22879,7 @@ def generate_dark_gold_thank_you_slide_xml(
             current = round(current - 0.5, 2)
         return best
 
-    title_font_name = "Georgia"
+    title_font_name = "Arial"
     subtitle_font_name = "Arial"
     contact_font_name = "Arial"
 
@@ -22881,12 +22903,11 @@ def generate_dark_gold_thank_you_slide_xml(
     upper_content_height = upper_content_bottom - upper_content_top
     title_subtitle_gap = 30.0
 
-    # If the requested sizes make the group too tall, reduce the subtitle
-    # first and then the title as a final fallback.  The resulting group is
-    # always placed inside the upper slot with explicit collision gaps.
-    title_preferred = 50.0
-    subtitle_preferred = 28.0
-    for _ in range(40):
+    # Keep the requested sizes.  If the group is too tall, the renderer clips
+    # the text instead of silently reducing its font size.
+    title_preferred = 46.0
+    subtitle_preferred = 20.0
+    for _ in range(40 if AUTO_SHRINK_TEXT else 1):
         title_layout = fit_text(
             title.strip().upper(),
             font_path=title_font_path,
@@ -22910,9 +22931,9 @@ def generate_dark_gold_thank_you_slide_xml(
         group_height = title_layout["height"] + title_subtitle_gap + subtitle_layout["height"]
         if group_height <= upper_content_height:
             break
-        if subtitle_preferred > 12.0:
+        if AUTO_SHRINK_TEXT and subtitle_preferred > 12.0:
             subtitle_preferred = max(12.0, subtitle_preferred - 1.0)
-        elif title_preferred > 24.0:
+        elif AUTO_SHRINK_TEXT and title_preferred > 24.0:
             title_preferred = max(24.0, title_preferred - 1.0)
 
     group_height = title_layout["height"] + title_subtitle_gap + subtitle_layout["height"]
@@ -23095,7 +23116,7 @@ def generate_dark_gold_thank_you_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         safety_ratio=1.0,
@@ -23120,7 +23141,7 @@ def generate_dark_gold_thank_you_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(subtitle_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.15,
         safety_ratio=1.0,
@@ -23170,7 +23191,7 @@ def generate_dark_gold_thank_you_slide_xml(
             vertical_align="middle",
             single_line="false",
             max_lines=1,
-            overflow="shrink",
+            overflow="clip",
             reflow_on_resize="true",
             line_spacing=1.0,
             safety_ratio=1.0,
@@ -23254,7 +23275,7 @@ def generate_paper_flight_thank_you_slide_xml(
             "Helvetica": ["helvetica", "arial"],
             "Calibri": ["calibri"],
             "Aptos": ["aptos"],
-            "Georgia": ["georgia"],
+            "Arial": ["arial"],
             "Times New Roman": ["timesnewroman", "times"],
         }
 
@@ -23501,7 +23522,7 @@ def generate_paper_flight_thank_you_slide_xml(
     title_layout = fit_text(
         title.strip().upper(),
         font_path=title_font_path,
-        preferred_font_size=92.0,
+        preferred_font_size=64.0,
         min_font_size=30.0,
         max_width=title_box_width,
         max_height=130.0,
@@ -23968,7 +23989,7 @@ def generate_paper_flight_thank_you_slide_xml(
         vertical_align="middle",
         single_line="false",
         max_lines=len(title_layout["lines"]),
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.95,
         safety_ratio=1.0,
@@ -24051,8 +24072,8 @@ def generate_closing_thank_you_memorial_slide_xml(
 
     def resolve_font_path(font_name: str, bold: bool = False, italic: bool = False) -> Path:
         aliases = {
-            "Times New Roman": ["timesnewroman", "times", "georgia"],
-            "Georgia": ["georgia", "timesnewroman", "times"],
+            "Times New Roman": ["timesnewroman", "times", "arial"],
+            "Arial": ["arial", "timesnewroman", "times"],
             "Arial": ["arial", "calibri", "aptos"],
             "Calibri": ["calibri", "arial", "aptos"],
         }
@@ -24105,7 +24126,7 @@ def generate_closing_thank_you_memorial_slide_xml(
         if bold and italic:
             fallback_paths = [
                 windows_fonts / "timesbi.ttf",
-                windows_fonts / "georgiaz.ttf",
+                windows_fonts / "arialbi.ttf",
                 windows_fonts / "arialbi.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-BoldItalic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-BoldOblique.ttf"),
@@ -24113,7 +24134,7 @@ def generate_closing_thank_you_memorial_slide_xml(
         elif italic:
             fallback_paths = [
                 windows_fonts / "timesi.ttf",
-                windows_fonts / "georgiai.ttf",
+                windows_fonts / "ariali.ttf",
                 windows_fonts / "ariali.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Oblique.ttf"),
@@ -24121,7 +24142,7 @@ def generate_closing_thank_you_memorial_slide_xml(
         elif bold:
             fallback_paths = [
                 windows_fonts / "timesbd.ttf",
-                windows_fonts / "georgiab.ttf",
+                windows_fonts / "arialbd.ttf",
                 windows_fonts / "arialbd.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf"),
@@ -24129,7 +24150,7 @@ def generate_closing_thank_you_memorial_slide_xml(
         else:
             fallback_paths = [
                 windows_fonts / "times.ttf",
-                windows_fonts / "georgia.ttf",
+                windows_fonts / "arial.ttf",
                 windows_fonts / "arial.ttf",
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf"),
                 Path("/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf"),
@@ -24279,7 +24300,7 @@ def generate_closing_thank_you_memorial_slide_xml(
     title_layout = fit_text(
         title.strip(),
         font_path=title_font_path,
-        preferred_font_size=75.0,
+        preferred_font_size=58.0,
         min_font_size=24.0,
         max_width=1240.0,
         max_height=240.0,
@@ -24290,7 +24311,7 @@ def generate_closing_thank_you_memorial_slide_xml(
     subtitle_layout = fit_text(
         subtitle.strip(),
         font_path=subtitle_font_path,
-        preferred_font_size=16.0,
+        preferred_font_size=14.0,
         min_font_size=8.0,
         max_width=1180.0,
         max_height=72.0,
@@ -24452,7 +24473,7 @@ def generate_closing_thank_you_memorial_slide_xml(
         italic="false",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         margin_left=0,
@@ -24479,7 +24500,7 @@ def generate_closing_thank_you_memorial_slide_xml(
         italic="true",
         single_line="false",
         max_lines=3,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=0.9,
         margin_left=0,
@@ -24506,7 +24527,7 @@ def generate_closing_thank_you_memorial_slide_xml(
         italic="false",
         single_line="false",
         max_lines=2,
-        overflow="shrink",
+        overflow="clip",
         reflow_on_resize="true",
         line_spacing=1.0,
         margin_left=0,

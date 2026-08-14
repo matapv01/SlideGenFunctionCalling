@@ -27,16 +27,14 @@ import requests
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 load_dotenv()
 
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.tools.tool_des_xml import TOOLS_DICT
 from backend.workflows.slidegen_workflow.utils.helper import format_tool_for_qwen, parse_tool_call_json
 from backend.workflows.slidegen_workflow.utils.prompts import (
     QWEN_GENERATOR_SYSTEM_PROMPT,
     QWEN_COT_GENERATOR_SYSTEM_PROMPT,
     QWEN_GENERATOR_HUMAN_TEMPLATE,
     MATH_EQUATION_RULES,
-    SLIDE_TYPE_PROMPTS,
-    CONTENT_PROMPT,
-    INTRO_PROMPT,
+    XML_CONTENT_PROMPT,
 )
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import validate_tool_call
 from backend.config import EXECUTOR_MAX_RETRIES
@@ -185,9 +183,7 @@ def run_single_test(
     tool_desc_text = build_tool_description_text(tool_schemas)
     
     # Select system prompt
-    slide_type_prompt = SLIDE_TYPE_PROMPTS.get(category, INTRO_PROMPT)
-    if category == 'CONTENT_TOOLS':
-        slide_type_prompt = CONTENT_PROMPT.format(highlight_instruction="- Highlight key phrases with <span style='font-weight: bold;'>")
+    slide_type_prompt = XML_CONTENT_PROMPT
     generator_system_prompt = MATH_EQUATION_RULES + "\n\n" + slide_type_prompt
     
     system_prompt = generator_system_prompt + "\n\n" + (QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT)

@@ -582,7 +582,6 @@ export const EventHandlersMixin = {
         const isDragHandle  = target.classList && target.classList.contains('drag-handle');
         const isResizeHandle = target.classList && target.classList.contains('resize-handle');
         const isMultiSelectIntent = e.shiftKey || e.ctrlKey || e.metaKey;
-        void isMultiSelectIntent;
 
         // Click on canvas background → deselect
         const isCanvasBackground = !isResizeHandle && !isDragHandle && (
@@ -724,6 +723,18 @@ export const EventHandlersMixin = {
             return;
         }
 
+        // Shift/Ctrl/Cmd + click adds or removes an element (or an existing
+        // group) from the current selection.
+        if (isMultiSelectIntent && !isResizeHandle && !isDragHandle) {
+            this.toggleSelection(targetElement);
+            this.pendingSelectElement = null;
+            this.isPreparedForDrag = false;
+            this.dragStart = null;
+            e.preventDefault();
+            e.stopPropagation();
+            return;
+        }
+
         // RESIZE: grab handle info and prepare
         if (isResizeHandle && this.selectedElements.length > 0) {
             const el = this.selectedElements[0];
@@ -766,8 +777,7 @@ export const EventHandlersMixin = {
             return;
         }
 
-        // Always collapse to exactly one element for drag.
-        if (this.selectedElements.length > 1 || !isAlreadySelected) {
+        if (!isAlreadySelected) {
             this.selectElement(targetElement);
         }
 
@@ -782,15 +792,16 @@ export const EventHandlersMixin = {
         this.dragStart = { x: e.clientX, y: e.clientY };
 
         this.elementsStartPos.clear();
-        const bounds = this.getElementBounds
-            ? this.getElementBounds(targetElement)
-            : { left: targetElement.offsetLeft, top: targetElement.offsetTop, width: targetElement.offsetWidth, height: targetElement.offsetHeight };
-
-        this.elementsStartPos.set(targetElement, {
-            x: bounds.left,
-            y: bounds.top,
-            width: bounds.width,
-            height: bounds.height,
+        this.selectedElements.forEach((element) => {
+            const bounds = this.getElementBounds
+                ? this.getElementBounds(element)
+                : { left: element.offsetLeft, top: element.offsetTop, width: element.offsetWidth, height: element.offsetHeight };
+            this.elementsStartPos.set(element, {
+                x: bounds.left,
+                y: bounds.top,
+                width: bounds.width,
+                height: bounds.height,
+            });
         });
     },
 
@@ -896,8 +907,8 @@ export const EventHandlersMixin = {
 
             this.drawSmartGuides(snapped.guides);
 
-            if (this.selectedElements.length === 1 && this.emitSelectedElementData) {
-                this.emitSelectedElementData(this.selectedElements[0]);
+            if (this.emitSelectedElementData) {
+                this.emitSelectedElementData(this.getPrimarySelectedElement?.() || this.selectedElements[0]);
             }
         }
     },
@@ -952,8 +963,8 @@ export const EventHandlersMixin = {
                 }, 100);
 
                 this.saveHistory();
-                if (this.emitSelectedElementData && this.selectedElements.length === 1) {
-                    this.emitSelectedElementData(this.selectedElements[0]);
+                if (this.emitSelectedElementData) {
+                    this.emitSelectedElementData(this.getPrimarySelectedElement?.() || this.selectedElements[0]);
                 }
             }
 

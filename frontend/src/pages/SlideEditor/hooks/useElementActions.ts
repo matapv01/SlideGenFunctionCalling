@@ -114,8 +114,8 @@ export const useElementActions = ({
 
     } else if (item.type === 'video') {
       html = `<div id="${id}" class="element" data-type="video" data-selectable="true"
-        style="position:absolute;left:${x}px;top:${y}px;width:480px;height:270px;background:#000;cursor:move;display:flex;align-items:center;justify-content:center;color:#fff;font-size:14px;"
-        >Video</div>`;
+        style="position:absolute;left:${x}px;top:${y}px;width:480px;height:270px;background:#000;cursor:move;overflow:hidden;"
+        ><video controls style="width:100%;height:100%;object-fit:cover;"></video></div>`;
 
     } else if (item.type === 'equation') {
       const defaultLatex = 'x = \\frac{-b \\pm \\sqrt{b^2-4ac}}{2a}';
@@ -197,6 +197,7 @@ export const useElementActions = ({
 
       // Content / Filter
       if (updates.content !== undefined) s.innerHTML = updates.content;
+      if (updates.src !== undefined) s.mediaSrc = updates.src;
       if (updates._filter !== undefined) s.filter = updates._filter;
 
       console.log('[SlideEditor][Properties] pushing style patch to canvas', {
@@ -209,14 +210,16 @@ export const useElementActions = ({
 
   const deleteElement = useCallback((id: string) => {
     // Sync Shadow DOM canvas first
+    let deletedIds = [id];
     if (slideCanvasRef.current) {
-      slideCanvasRef.current.deleteElement(id);
+      deletedIds = slideCanvasRef.current.deleteElement(id);
+      if (deletedIds.length === 0) deletedIds = [id];
     }
     
     // Sync React state
     setSlides(prev => prev.map((slide, i) => {
       if (i !== currentSlideIndex) return slide;
-      return { ...slide, elements: slide.elements.filter(el => el.id !== id) };
+      return { ...slide, elements: slide.elements.filter(el => !deletedIds.includes(el.id)) };
     }));
     setSelectedElementId(null);
   }, [currentSlideIndex, setSlides, setSelectedElementId, slideCanvasRef]);
@@ -246,10 +249,7 @@ export const useElementActions = ({
         ),
       };
     }));
-    if (slideCanvasRef.current) {
-      const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 0;
-      slideCanvasRef.current.updateElement({ zIndex: `${current + 1}` }, id);
-    }
+    slideCanvasRef.current?.bringForward(id);
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
   const sendBackward = useCallback((id: string) => {
@@ -262,10 +262,7 @@ export const useElementActions = ({
         ),
       };
     }));
-    if (slideCanvasRef.current) {
-      const current = slideCanvasRef.current.getSelectedZIndex?.() ?? 1;
-      slideCanvasRef.current.updateElement({ zIndex: `${Math.max(0, current - 1)}` }, id);
-    }
+    slideCanvasRef.current?.sendBackward(id);
   }, [currentSlideIndex, setSlides, slideCanvasRef]);
 
   return { addElement, updateElement, deleteElement, duplicateElement, bringForward, sendBackward };

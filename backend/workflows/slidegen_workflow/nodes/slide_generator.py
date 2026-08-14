@@ -3,6 +3,7 @@ import os
 import json
 import time
 from openai import OpenAI
+from langchain_core.messages import SystemMessage
 from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
 from transformers import AutoTokenizer
@@ -336,11 +337,12 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     image_search_rules = IMAGE_SEARCH_EXECUTION_PLAN_RULES
     output_format_rules = """
 
-OUTPUT FORMAT: XML
+OUTPUT FORMAT: XML ONLY
 - Use only the selected XML slide tool from the available list.
 - The tool must return the complete XML presentation/slide content.
-- Do not generate HTML, CSS, markdown, or a prose explanation.
+- Do not generate CSS, markdown, or a prose explanation.
 - Keep text values as plain editable text accepted by the XML tool schema.
+- The only allowed inline control syntax is [[hl color="#RRGGBB"]]phrase[[/hl]] for text-color emphasis; it is removed before final XML generation.
 """
 
     system_prompt = (
@@ -452,7 +454,10 @@ OUTPUT FORMAT: XML
         gemini_vars = {**human_vars, "design_instruction": design_instruction}
         llm_with_tools = llm.bind_tools(generator_tools)
         slidegen_prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
+            # Keep the assembled system prompt as a fixed message. It contains
+            # LaTeX/JSON braces and may also include a previous tool call;
+            # parsing it as a LangChain template causes "unexpected '{'" errors.
+            SystemMessage(content=system_prompt),
             ("human", human_template)
         ])
         slide_generator_runnable = slidegen_prompt | llm_with_tools

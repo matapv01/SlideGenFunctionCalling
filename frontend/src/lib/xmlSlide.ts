@@ -4,6 +4,10 @@ export interface XmlSlideElement {
   attrs: Record<string, string>;
   text: string;
   children: XmlSlideElement[];
+  /** Text before the first child; used to preserve mixed text/math XML. */
+  leadingText?: string;
+  /** Text after this child and before the next sibling. */
+  tail?: string;
 }
 
 export interface XmlSlidePage {
@@ -39,20 +43,38 @@ const directElementChildren = (element: Element) =>
 
 const parseElement = (element: Element, index: number): XmlSlideElement => {
   const attrs = attributesOf(element);
-  const text = Array.from(element.childNodes)
-    .filter((node) => node.nodeType === Node.TEXT_NODE || node.nodeType === Node.CDATA_SECTION_NODE)
-    .map((node) => node.nodeValue ?? "")
-    .join("")
-    .trim();
+  const children: XmlSlideElement[] = [];
+  let leadingText = "";
+  for (const node of Array.from(element.childNodes)) {
+    if (node.nodeType === Node.ELEMENT_NODE) {
+      children.push(parseElement(node as Element, children.length));
+      continue;
+    }
+    if (node.nodeType !== Node.TEXT_NODE && node.nodeType !== Node.CDATA_SECTION_NODE) continue;
+    const value = node.nodeValue ?? "";
+    if (!children.length) leadingText += value;
+    else children[children.length - 1].tail = `${children[children.length - 1].tail || ""}${value}`;
+  }
+  const directTextValue = leadingText;
+  const directText = element.tagName.toLowerCase() === "run"
+    ? directTextValue
+    : directTextValue.trim();
+  const isRichTextbox = ["textbox", "text"].includes(element.tagName.toLowerCase())
+    && children.some((child) => child.tag.toLowerCase() === "run");
+  const text = isRichTextbox
+    ? children
+      .filter((child) => child.tag.toLowerCase() === "run")
+      .map((child) => child.text)
+      .join("")
+    : directText;
 
   return {
     id: attrs.id || `xml-element-${index + 1}`,
     tag: element.tagName,
     attrs,
     text,
-    children: directElementChildren(element).map((child, childIndex) =>
-      parseElement(child, childIndex),
-    ),
+    children,
+    leadingText,
   };
 };
 
@@ -106,6 +128,8 @@ const serializeElement = (element: XmlSlideElement, depth: number) => {
   const indent = "  ".repeat(depth);
   const attrs = serializeAttrs(element.attrs);
   const children = element.children;
+  const hasRichRuns = ["textbox", "text"].includes(element.tag.toLowerCase())
+    && children.some((child) => child.tag.toLowerCase() === "run");
 
   if (!children.length && !element.text) {
     return `${indent}<${element.tag}${attrs} />`;
@@ -115,8 +139,14 @@ const serializeElement = (element: XmlSlideElement, depth: number) => {
     return `${indent}<${element.tag}${attrs}>${escapeXml(element.text)}</${element.tag}>`;
   }
 
-  const childXml = children.map((child) => serializeElement(child, depth + 1)).join("\n");
-  const text = element.text ? escapeXml(element.text) : "";
+  const childXml = children
+    .map((child) => `${serializeElement(child, depth + 1)}${child.tail ? escapeXml(child.tail) : ""}`)
+    .join("\n");
+  // ``element.text`` mirrors the concatenated run text for editor/layout use.
+  // Rich text must be serialized only through its children to avoid duplication.
+  const text = !hasRichRuns
+    ? escapeXml(element.leadingText ?? element.text)
+    : "";
   return `${indent}<${element.tag}${attrs}>${text}\n${childXml}\n${indent}</${element.tag}>`;
 };
 
@@ -147,7 +177,7 @@ export const serializeXmlSlide = (document: XmlSlideDocument) => {
 export const updateXmlElement = (
   document: XmlSlideDocument,
   id: string,
-  update: Partial<Pick<XmlSlideElement, "text" | "attrs">>,
+  update: Partial<Pick<XmlSlideElement, "text" | "attrs" | "children">>,
   slideIndex = 0,
 ): XmlSlideDocument => ({
   ...document,
@@ -155,9 +185,13 @@ export const updateXmlElement = (
     ...slide,
     elements: slide.elements.map((element) =>
       element.id === id
-        ? {
+          ? {
             ...element,
             ...(update.text !== undefined ? { text: update.text } : {}),
+            ...(update.children !== undefined ? { children: update.children } : {}),
+            ...(update.text !== undefined && update.children === undefined && element.children.some(
+              (child) => child.tag.toLowerCase() === "run",
+            ) ? { children: [] } : {}),
             ...(update.attrs ? { attrs: { ...element.attrs, ...update.attrs } } : {}),
           }
         : element,

@@ -86,6 +86,19 @@ export const useKeyboardShortcuts = ({
         return;
       }
 
+      // Ctrl/Cmd + G - group selection; Ctrl/Cmd + Shift + G - ungroup
+      if (lowerKey === 'g') {
+        if (!isTypingContext) {
+          e.preventDefault();
+          if (e.shiftKey) {
+            slideCanvasRef.current?.ungroupSelectedElements();
+          } else {
+            slideCanvasRef.current?.groupSelectedElements();
+          }
+        }
+        return;
+      }
+
       // Ctrl/Cmd + ] (or + Shift + ]) - layer up / bring to front
       if (e.key === ']') {
         if (selectedElementId && !isTypingContext) {

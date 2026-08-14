@@ -1,9 +1,0 @@
-<?xml version="1.0" encoding="UTF-8"?>
-<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#F8FAFC">
-    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#F8FAFC" line_color="none" />
-    <textbox x="180" y="260" width="1240" height="100" font="Arial" size="52" bold="true" color="#0F172A" align="center" vertical_align="middle">generate_split_content_slide_xml</textbox>
-    <textbox x="180" y="390" width="1240" height="80" font="Arial" size="28" color="#475569" align="center" vertical_align="middle">Fallback XML slide</textbox>
-    <textbox x="180" y="500" width="1240" height="120" font="Arial" size="20" color="#64748B" align="center" vertical_align="middle">Slide XML tool returned empty content.</textbox>
-  </slide>
-</presentation>

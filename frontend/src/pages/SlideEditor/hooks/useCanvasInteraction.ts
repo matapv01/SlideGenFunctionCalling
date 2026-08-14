@@ -1,11 +1,12 @@
 import { useCallback } from "react";
-import type { Slide, SlideElement, DragItem } from "../types";
+import type { Slide, SlideElement, DragItem, SelectionInfo } from "../types";
 
 interface UseCanvasInteractionParams {
   currentSlide: Slide | undefined;
   currentSlideIndex: number;
   setSlides: React.Dispatch<React.SetStateAction<Slide[]>>;
   setSelectedElementId: React.Dispatch<React.SetStateAction<string | null>>;
+  setSelectionInfo: React.Dispatch<React.SetStateAction<SelectionInfo>>;
   draggedItem: DragItem | null;
   setDraggedItem: React.Dispatch<React.SetStateAction<DragItem | null>>;
   zoom: number;
@@ -26,6 +27,7 @@ export const useCanvasInteraction = ({
   currentSlideIndex,
   setSlides,
   setSelectedElementId,
+  setSelectionInfo,
   draggedItem,
   setDraggedItem,
   zoom,
@@ -45,8 +47,16 @@ export const useCanvasInteraction = ({
   const handleElementSelectFromCanvas = useCallback((elementData: any) => {
     if (!elementData) {
       setSelectedElementId(null);
+      setSelectionInfo({ count: 0, selectedIds: [], groupId: null, isGroup: false });
       return;
     }
+
+    setSelectionInfo({
+      count: Math.max(1, Number(elementData.selectionCount) || 1),
+      selectedIds: Array.isArray(elementData.selectedIds) ? elementData.selectedIds : [elementData.id],
+      groupId: typeof elementData.groupId === 'string' ? elementData.groupId : null,
+      isGroup: Boolean(elementData.isGroup),
+    });
     
     let matchingElement = currentSlide?.elements.find(el => el.id === elementData.id);
 
@@ -57,6 +67,7 @@ export const useCanvasInteraction = ({
         y: toNumber(elementData.style.top, matchingElement.y),
         width: toNumber(elementData.style.width, matchingElement.width),
         height: toNumber(elementData.style.height, matchingElement.height),
+        rotation: toNumber(elementData.style.rotation, matchingElement.rotation),
         zIndex: toNumber(elementData.style.zIndex, matchingElement.zIndex ?? 1),
         opacity: toNumber(elementData.style.opacity, matchingElement.opacity ?? 1),
         fontSize: toNumber(elementData.style.fontSize, matchingElement.fontSize),
@@ -67,6 +78,7 @@ export const useCanvasInteraction = ({
         textAlign: (elementData.style.textAlign as "left" | "center" | "right") || matchingElement.textAlign,
         color: elementData.style.color || matchingElement.color,
         fillColor: elementData.style.backgroundColor || matchingElement.fillColor,
+        src: elementData.src || matchingElement.src,
         content: elementData.content || elementData.innerHTML || matchingElement.content
       };
 
@@ -97,6 +109,7 @@ export const useCanvasInteraction = ({
         rotation: 0,
         zIndex: toNumber(elementData.style.zIndex, 1),
         opacity: toNumber(elementData.style.opacity, 1),
+        src: elementData.src || undefined,
         fontSize: elType === 'equation' ? 32 : toNumber(elementData.style.fontSize, 16),
         fontFamily: elementData.style.fontFamily || 'Inter',
         fontWeight: elementData.style.fontWeight || 'normal',
@@ -117,7 +130,7 @@ export const useCanvasInteraction = ({
     if (matchingElement) {
       setSelectedElementId(matchingElement.id);
     }
-  }, [currentSlide, currentSlideIndex, setSlides, setSelectedElementId]);
+  }, [currentSlide, currentSlideIndex, setSlides, setSelectedElementId, setSelectionInfo]);
 
   const handleDrop = useCallback((e: React.DragEvent) => {
     e.preventDefault();
