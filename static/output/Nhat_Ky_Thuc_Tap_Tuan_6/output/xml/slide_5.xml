@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://educationalliancefinland.com/sites/default/files/news/quality_standard_certification_for_education_products_0.png" x="0" y="0" width="1600" height="900" />
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#F8F9FA" line_color="none" />
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#008080" line_color="none" />
+    <textbox x="70.0" y="145.0" width="136.42133333333334" height="921.24" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="34.0" min_font_size="34.0" bold="true" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="14" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">4.1. Bảng tổng hợp năng lực đạt được và đối chiếu chuẩn đầu ra</textbox>
+    <textbox x="70.0" y="1078.24" width="1.0" height="870.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="14.0" min_font_size="14.0" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="31" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Dưới đây là chi tiết các chuẩn đầu ra học phần (CLO) đạt được trong quá trình thực tập, đối chiếu với các tiêu chuẩn quốc tế </run><run emphasis="highlight" color="#008080">ABET, ASIIN và QAA</run><run>.</run></textbox>
+  </slide>
+</presentation>

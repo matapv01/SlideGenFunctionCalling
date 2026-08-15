@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://digitalleadership.com/wp-content/uploads/2023/02/Strategic-Goals-Importance-Importance-of-Strategic-Goals.webp" x="860" y="30" width="700" height="820" />
+    <textbox x="120" y="76.0" width="690" height="208.56" font="Arial" size="56.0" min_font_size="56.0" bold="true" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. MỤC TIÊU
+TUẦN</textbox>
+    <textbox x="120" y="298.56" width="690" height="125.69999999999999" font="Arial" size="19.5" min_font_size="19.5" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#008080">Mục tiêu chính</run><run> của tuần làm việc này tập
+trung vào việc rà soát hệ thống và chuẩn
+bị tài liệu báo cáo:</run></textbox>
+    <textbox x="120" y="438.26" width="690" height="293.28000000000003" font="Arial" size="19.5" min_font_size="19.5" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="7" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>• Kiểm thử toàn bộ quy trình nghiệp vụ
+của </run><run emphasis="highlight" color="#008080">AI KPI Copilot</run><run> từ giao nhiệm vụ đến
+tổng hợp báo cáo
+• Đánh giá tính hợp lý của kết quả AI và
+hoàn thiện nội dung trình bày sản phẩm
+• Chuẩn bị minh chứng phục vụ báo cáo
+tiến độ tuần 6</run></textbox>
+    <textbox x="120" y="745.54" width="690" height="85.8" font="Arial" size="19.5" min_font_size="19.5" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Đảm bảo tính chính xác của dữ liệu và
+chất lượng tài liệu trình bày.</textbox>
+  </slide>
+</presentation>

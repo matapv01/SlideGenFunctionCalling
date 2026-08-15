@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#2E4053">
+    <image src="https://static.vinwonders.com/2022/11/Bat-Trang-Pottery-Village-7.jpg" x="0" y="0" width="1600" height="900" />
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#1B263B" line_color="none" />
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#D4AF37" line_color="none" />
+    <textbox x="70.0" y="206.72" width="412.2026666666667" height="268.56" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="35.0" min_font_size="35.0" bold="true" color="#F5F5F0" align="left" vertical_align="top" single_line="false" max_lines="4" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">3. Nét Độc đáo trong Ẩm thực và Làng nghề</textbox>
+    <textbox x="70.0" y="487.28" width="310.46933333333334" height="206.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="17.5" min_font_size="17.5" color="#F5F5F0" align="left" vertical_align="top" single_line="false" max_lines="6" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Ẩm thực tinh tế với </run><run emphasis="highlight" color="#D4AF37">Phở, bún chả</run><run> và các làng nghề truyền thống Gốm Bát Tràng, lụa Vạn Phúc mang đậm bản sắc văn hóa.</run></textbox>
+  </slide>
+</presentation>

@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://www.zentiya.com/analytics-dashboard-with-sales-charts-and-reports.jpg" x="0" y="0" width="520" height="900" />
+    <textbox x="680" y="92.0" width="810" height="165.6" font="Arial" size="43.5" min_font_size="43.5" bold="true" color="#008080" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">6.2. Danh mục các
+minh chứng kết quả</textbox>
+    <textbox x="680" y="293.6" width="810" height="103.96" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#008080">MC04:</run><run> Ảnh giải thích KPI &amp;
+Copilot</run></textbox>
+    <textbox x="680" y="409.56" width="810" height="120.64000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Chèn ảnh thể hiện khả năng giải thích điểm, trả lời
+câu hỏi nghiệp vụ hoặc xuất báo cáo phục vụ giao
+ban.&lt;br&gt;</run><run emphasis="highlight" color="#008080">Trạng thái: Cần chèn ảnh thực tế</run></textbox>
+    <textbox x="680" y="588.4" width="810" height="103.96" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#008080">MC05:</run><run> Phản hồi của người hướng
+dẫn</run></textbox>
+    <textbox x="680" y="704.36" width="810" height="120.64000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Chèn ảnh tin nhắn, nhận xét hoặc xác nhận tiến độ;
+che thông tin cá nhân không cần thiết trước khi
+nộp.&lt;br&gt;Trạng thái: Cần bổ sung nếu có</textbox>
+  </slide>
+</presentation>

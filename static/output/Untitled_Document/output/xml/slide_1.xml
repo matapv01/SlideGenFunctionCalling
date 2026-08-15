@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#F3F3F3">
+    <image src="https://c8.alamy.com/comp/2H81KRF/turtle-tower-at-hoan-kiem-lake-in-hanoi-2H81KRF.jpg" x="0" y="0" width="1600" height="900" fit="cover" crop_x="0.5" crop_y="0.48"/>
+    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#1B263B" opacity="0.15" line_color="none"/>
+    <shape type="rect" x="362.0" y="156.0" width="876.0" height="96.0" fill="#1B263B" opacity="0.96" line_color="none"/>
+    <shape type="rect" x="0" y="369.85" width="1600" height="144.3" fill="#1B263B" opacity="0.96" line_color="none"/>
+    <shape type="rect" x="12.0" y="176.0" width="32" height="56" fill="#2E4053" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="62.0" y="176.0" width="32" height="56" fill="#ABB2B9" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="112.0" y="176.0" width="32" height="56" fill="#5D6D7E" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="162.0" y="176.0" width="32" height="56" fill="#ABB2B9" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="212.0" y="176.0" width="32" height="56" fill="#2E4053" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="262.0" y="176.0" width="32" height="56" fill="#ABB2B9" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="312.0" y="176.0" width="32" height="56" fill="#5D6D7E" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1256.0" y="176.0" width="32" height="56" fill="#2E4053" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1306.0" y="176.0" width="32" height="56" fill="#ABB2B9" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1356.0" y="176.0" width="32" height="56" fill="#5D6D7E" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1406.0" y="176.0" width="32" height="56" fill="#ABB2B9" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1456.0" y="176.0" width="32" height="56" fill="#2E4053" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1506.0" y="176.0" width="32" height="56" fill="#ABB2B9" opacity="0.98" line_color="none"/>
+    <shape type="rect" x="1556.0" y="176.0" width="32" height="56" fill="#5D6D7E" opacity="0.98" line_color="none"/>
+    <textbox x="390.0" y="164.0" width="820.0" height="80.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="18.0" min_font_size="10.0" color="#F5F5F0" align="center" vertical_align="middle" bold="false" italic="false" single_line="false" overflow="clip" reflow_on_resize="true" max_lines="4" line_spacing="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Thủ đô ngàn năm văn hiến và những nét quyến rũ vượt thời gian</textbox>
+    <textbox x="185.0" y="387.85" width="1230.0" height="108.3" font="Times New Roman" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerifCondensed-Italic.ttf" size="58.0" min_font_size="18.0" color="#F5F5F0" align="center" vertical_align="middle" bold="false" italic="true" single_line="false" overflow="clip" reflow_on_resize="true" max_lines="4" line_spacing="0.95" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Viết về Hà Nội</textbox>
+  </slide>
+</presentation>

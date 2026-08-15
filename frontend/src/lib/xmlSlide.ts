@@ -28,6 +28,12 @@ const numberOr = (value: string | undefined, fallback: number) => {
   return Number.isFinite(parsed) ? parsed : fallback;
 };
 
+// XML slide generators historically used escaped HTML break markers inside
+// textbox text (for example ``A&lt;br&gt;B``). They are data, not DOM elements,
+// so normalize them at the parser boundary before layout/rendering.
+export const normalizeXmlTextBreaks = (value: string) =>
+  value.replace(/<br\s*\/?>/gi, "\n");
+
 const attributesOf = (element: Element) => {
   const attrs: Record<string, string> = {};
   for (const attr of Array.from(element.attributes)) {
@@ -51,11 +57,11 @@ const parseElement = (element: Element, index: number): XmlSlideElement => {
       continue;
     }
     if (node.nodeType !== Node.TEXT_NODE && node.nodeType !== Node.CDATA_SECTION_NODE) continue;
-    const value = node.nodeValue ?? "";
+    const value = normalizeXmlTextBreaks(node.nodeValue ?? "");
     if (!children.length) leadingText += value;
     else children[children.length - 1].tail = `${children[children.length - 1].tail || ""}${value}`;
   }
-  const directTextValue = leadingText;
+  const directTextValue = normalizeXmlTextBreaks(leadingText);
   const directText = element.tagName.toLowerCase() === "run"
     ? directTextValue
     : directTextValue.trim();

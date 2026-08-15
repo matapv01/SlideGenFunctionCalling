@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useLayoutEffect, useRef, useState } from "react";
 import type { CSSProperties, PointerEvent as ReactPointerEvent } from "react";
-import type { XmlSlideElement, XmlSlidePage } from "@/lib/xmlSlide";
+import { normalizeXmlTextBreaks, type XmlSlideElement, type XmlSlidePage } from "@/lib/xmlSlide";
 import { XML_GROUP_ATTR } from "@/lib/xmlGrouping";
 import {
   replaceXmlTextContent,
@@ -208,7 +208,7 @@ const textFont = (element: XmlSlideElement, fontSizePt: number, metrics: CanvasM
   return `${italic}${weight}${ptToCanvasY(fontSizePt, metrics)}px ${font}`;
 };
 
-const normalizedMixedText = (value: string) => value
+const normalizedMixedText = (value: string) => normalizeXmlTextBreaks(value)
   .replace(/\r\n/g, "\n")
   .replace(/\n[ \t]+/g, "\n");
 
@@ -336,6 +336,7 @@ const textLayout = (element: XmlSlideElement, metrics: CanvasMetrics) => {
   const reflowOnResize = toBool(element.attrs.reflow_on_resize);
   const overflow = (element.attrs.overflow || "shrink").toLowerCase();
   const maxLines = element.attrs.max_lines ? Number(element.attrs.max_lines) : (singleLine ? 1 : undefined);
+  const normalizedText = normalizeXmlTextBreaks(element.text);
   const marginLeft = ptToCanvasX(numberAttr(element, "margin_left"), metrics);
   const marginRight = ptToCanvasX(numberAttr(element, "margin_right"), metrics);
   const marginTop = ptToCanvasY(numberAttr(element, "margin_top"), metrics);
@@ -351,8 +352,8 @@ const textLayout = (element: XmlSlideElement, metrics: CanvasMetrics) => {
   while (finalSize >= minSize) {
     const font = textFont(element, finalSize, metrics);
     lines = singleLine
-      ? [element.text.replace(/\s+/g, " ").trim()]
-      : element.text.split(/\r?\n/).flatMap((paragraph) => wrapParagraph(paragraph.trim(), font, targetWidth));
+      ? [normalizedText.replace(/\s+/g, " ").trim()]
+      : normalizedText.split(/\r?\n/).flatMap((paragraph) => wrapParagraph(paragraph.trim(), font, targetWidth));
     const heightForLines = lineHeight(font, spacing, ptToCanvasY(finalSize, metrics)) * lines.length;
     const widthOk = lines.every((line) => measureText(line, font) <= targetWidth);
     const heightOk = heightForLines <= targetHeight;
@@ -1076,7 +1077,7 @@ export const XmlSlideCanvas = ({
                  />
                ))
                : isEditing && !hasRichRuns
-                 ? element.text
+                 ? normalizeXmlTextBreaks(element.text)
                : mathFields.length > 0
                  ? (
                    <span style={{ display: "inline", whiteSpace: "pre-wrap" }}>
@@ -1101,11 +1102,11 @@ export const XmlSlideCanvas = ({
                      key={`${element.id}-run-${index}`}
                      style={richRunStyle(run, element, metrics)}
                    >
-                     {run.text}
+                     {normalizeXmlTextBreaks(run.text)}
                    </span>
                  ))
                : layout.reflowOnResize && !layout.singleLine
-                 ? element.text
+                 ? normalizeXmlTextBreaks(element.text)
                   .split(/\r?\n/)
                   .map((paragraph) => paragraph.replace(/\s+/g, " ").trim())
                   .join("\n")

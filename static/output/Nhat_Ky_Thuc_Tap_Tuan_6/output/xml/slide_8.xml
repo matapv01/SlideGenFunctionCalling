@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://cdn.outrank.so/a822e64d-d423-4d21-8e75-a59c1d336bf3/08a44d43-6489-471f-9d52-56c19a1b2363/what-is-self-directed-learning-learning-process.jpg" x="860" y="30" width="700" height="820" />
+    <textbox x="120" y="76.0" width="690" height="269.28000000000003" font="Arial" size="36.0" min_font_size="36.0" bold="true" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="4" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">4.1. Bảng tổng hợp
+năng lực đạt được
+và đối chiếu chuẩn
+đầu ra</textbox>
+    <textbox x="120" y="359.28000000000003" width="690" height="81.60000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Chi tiết đối chiếu năng lực thực tập với các
+tiêu chuẩn quốc tế ABET, ASIIN và QAA.</textbox>
+    <textbox x="120" y="454.88000000000005" width="690" height="394.8" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="10" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>• </run><run emphasis="highlight" color="#008080">4.1.5. CLO5: Năng lực tự học và hoàn thiện
+tài liệu chuyên môn</run><run>
+• </run><run bold="true">Nội dung năng lực đạt được:</run><run> Tự nghiên
+cứu, ghi chép kiểm thử, hoàn thiện tài liệu và
+phản biện kết quả do AI đề xuất.
+• </run><run bold="true">ABET SO:</run><run> SO3, SO7
+• </run><run bold="true">Nhóm năng lực ASIIN:</run><run> Personal &amp;
+Lifelong Learning
+• </run><run bold="true">Chuẩn đối sánh QAA:</run><run> Employability &amp;
+Reflection</run></textbox>
+    <textbox x="120" y="863.6800000000001" width="690" height="43.800000000000004" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Báo cáo thực tập chuyên môn - Tuần 6</textbox>
+  </slide>
+</presentation>

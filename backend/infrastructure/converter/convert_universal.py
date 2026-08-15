@@ -37,6 +37,7 @@ from backend.infrastructure.converter.omml import (
 
 
 MC_NS = "http://schemas.openxmlformats.org/markup-compatibility/2006"
+P_NS = "http://schemas.openxmlformats.org/presentationml/2006/main"
 
 
 class XMLSlideConverter:
@@ -979,6 +980,91 @@ if ($closed) {
                 "Khong the dong file PPTX dang mo: "
                 f"{completed.stderr.strip()}"
             )
+
+    @staticmethod
+    def _transition_speed(duration_ms: int) -> str:
+        """Map the editor's millisecond duration to PresentationML speed."""
+        if duration_ms <= 450:
+            return "fast"
+        if duration_ms <= 1100:
+            return "med"
+        return "slow"
+
+    def apply_slide_transition(self, slide, slide_node: ET.Element) -> None:
+        """Write a slide transition into the PresentationML slide part.
+
+        python-pptx does not expose transitions as a public API, so this uses
+        the same small OOXML extension point that PowerPoint writes itself:
+        ``p:clrMapOvr`` followed by ``p:transition``.  The transition belongs
+        to the destination slide, matching PowerPoint's semantics.
+        """
+        attrs = slide_node.attrib
+        transition_type = (attrs.get("transition") or "none").strip().lower()
+        slide_element = slide._element
+        transition_tag = self._xml_tag(P_NS, "transition")
+        for existing in list(slide_element):
+            if existing.tag == transition_tag:
+                slide_element.remove(existing)
+
+        if transition_type in {"", "none"}:
+            return
+
+        tag_map = {
+            "fade": "fade",
+            "push": "push",
+            "wipe": "wipe",
+            "split": "split",
+            "cover": "cover",
+            "uncover": "pull",
+            "zoom": "zoom",
+            "cut": "cut",
+            "random": "random",
+            "wheel": "wheel",
+            "strips": "strips",
+            "circle": "circle",
+            "diamond": "diamond",
+            "plus": "plus",
+        }
+        child_name = tag_map.get(transition_type)
+        if child_name is None:
+            print(f"  Bỏ qua transition không hỗ trợ: {transition_type}")
+            return
+
+        transition = OxmlElement("p:transition")
+        try:
+            duration_ms = int(float(attrs.get("transition_duration", "700")))
+        except (TypeError, ValueError):
+            duration_ms = 700
+        duration_ms = max(120, min(3000, duration_ms))
+        transition.set("spd", self._transition_speed(duration_ms))
+
+        advance = (attrs.get("transition_advance") or "click").strip().lower()
+        if advance in {"after", "both"}:
+            try:
+                delay_ms = int(float(attrs.get("transition_delay", "3000")))
+            except (TypeError, ValueError):
+                delay_ms = 3000
+            delay_ms = max(500, min(60000, delay_ms))
+            transition.set("advTm", str(delay_ms))
+        transition.set("advClick", "0" if advance == "after" else "1")
+
+        child = OxmlElement(f"p:{child_name}")
+        direction = (attrs.get("transition_direction") or "l").strip().lower()
+        side_direction = direction if direction in {"l", "r", "u", "d"} else "l"
+        if child_name in {"push", "wipe", "cover", "pull", "strips"}:
+            child.set("dir", side_direction)
+        elif child_name == "split":
+            child.set("orient", "vert" if side_direction in {"u", "d"} else "horz")
+            child.set("dir", "in" if direction in {"in", "l", "u"} else "out")
+        elif child_name == "zoom":
+            child.set("dir", "out" if direction in {"out", "r", "d"} else "in")
+        elif child_name == "wheel":
+            child.set("spokes", "4")
+
+        transition.append(child)
+        color_map = slide_element.find(self._xml_tag(P_NS, "clrMapOvr"))
+        insert_at = list(slide_element).index(color_map) + 1 if color_map is not None else 1
+        slide_element.insert(insert_at, transition)
 
     # =========================================================
     # Helpers
@@ -2325,6 +2411,8 @@ if ($closed) {
                     self.render_math_textbox(slide, element)
                 else:
                     renderer(slide, element)
+
+            self.apply_slide_transition(slide, slide_node)
 
         self.close_open_output_presentation()
         self.prs.save(self.output_path)

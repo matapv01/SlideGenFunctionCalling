@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://dtascommunityownership.org.uk/wp-content/uploads/2015/03/business-plan-evidence.jpg" x="1065" y="0" width="535" height="900" />
+    <textbox x="58" y="42.0" width="930" height="156.1" font="Arial" size="40.0" min_font_size="40.0" bold="true" color="#1A1A1A" align="right" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">6.2. Danh mục các minh
+chứng kết quả</textbox>
+    <textbox x="58" y="230.1" width="930" height="52.98" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#008080" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#008080">MC01:</run><run> Tài liệu giới thiệu AI KPI</run></textbox>
+    <textbox x="58" y="293.08" width="930" height="119.64000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Tài liệu giới thiệu AI KPI Copilot for Government. Thể hiện bài
+toán, giải pháp và quy trình nghiệp vụ.&lt;br&gt;</run><run emphasis="highlight" color="#008080">Trạng thái: Đã
+hoàn thiện nội dung</run></textbox>
+    <textbox x="58" y="436.24" width="930" height="52.98" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#008080" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#008080">MC02:</run><run> Ảnh kiểm thử hệ thống</run></textbox>
+    <textbox x="58" y="499.22" width="930" height="119.64000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Ảnh kiểm thử phân quyền, dashboard và quản lý nhiệm vụ.
+Thể hiện quyền truy cập theo ít nhất hai vai trò.&lt;br&gt;Trạng
+thái: Cần chèn ảnh thực tế</textbox>
+    <textbox x="58" y="642.38" width="930" height="52.98" font="Arial" size="26.0" min_font_size="26.0" bold="true" color="#008080" align="right" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">MC03: Ảnh kết quả AI phân tích</textbox>
+    <textbox x="58" y="705.36" width="930" height="119.64000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#1A1A1A" align="right" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Ảnh kết quả AI phân tích minh chứng. Bao gồm điểm phù
+hợp, checklist yêu cầu và giải thích kết quả.&lt;br&gt;Trạng thái:
+Cần chèn ảnh thực tế</textbox>
+  </slide>
+</presentation>

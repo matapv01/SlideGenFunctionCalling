@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#2E4053">
+    <image src="https://img.freepik.com/premium-photo/aerial-view-hanoi-city-night-vietnam-aerial-skyline-view-hanoi-hanoi-cityscape-twilight-ai-generated_585735-4789.jpg?w=1380" x="0" y="0" width="1600" height="900" fit="cover" crop_x="0.5" crop_y="0.36"/>
+    <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;900&quot; viewBox=&quot;0 0 1600 900&quot;&gt;
+  &lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1600&quot; height=&quot;900&quot; fill=&quot;#000000&quot; opacity=&quot;0.60&quot;/&gt;
+  &lt;radialGradient id=&quot;vignette&quot; cx=&quot;50%&quot; cy=&quot;35%&quot; r=&quot;80%&quot;&gt;
+    &lt;stop offset=&quot;0%&quot; stop-color=&quot;#000000&quot; stop-opacity=&quot;0.08&quot;/&gt;
+    &lt;stop offset=&quot;100%&quot; stop-color=&quot;#000000&quot; stop-opacity=&quot;0.48&quot;/&gt;
+  &lt;/radialGradient&gt;
+  &lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1600&quot; height=&quot;900&quot; fill=&quot;url(#vignette)&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;900&quot; viewBox=&quot;0 0 1600 900&quot;&gt;
+  &lt;path d=&quot;M0 670 C80 676 131 721 160 774 C184 817 223 866 280 900 L0 900 Z&quot;
+        fill=&quot;#D4AF37&quot; opacity=&quot;0.82&quot;/&gt;
+  &lt;path d=&quot;M1513 0 C1513 58 1548 90 1600 99 L1600 0 Z&quot;
+        fill=&quot;#D4AF37&quot; opacity=&quot;0.82&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <shape type="rectangle" x="102.0" y="67.0" width="1396.0" height="618.0" fill="#1B2631" line_color="none"/>
+    <textbox x="260.0" y="267.85" width="1080.0" height="86.45" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="46.0" min_font_size="24.0" bold="true" color="#D4AF37" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">THANK YOU</textbox>
+    <textbox x="420.0" y="384.3" width="760.0" height="44.849999999999994" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="20.0" min_font_size="12.0" color="#F5F5F0" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.15" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lời cảm ơn chân thành</textbox>
+    <line x1="238.0" y1="509.0" x2="1362.0" y2="509.0" color="#D4AF37" width="1.1"/>
+    <svg x="289.5" y="545.0" width="44.0" height="44.0" pixel_width="120" pixel_height="120">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;120&quot; viewBox=&quot;0 0 120 120&quot;&gt;
+  &lt;circle cx=&quot;60&quot; cy=&quot;60&quot; r=&quot;43&quot; fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;3&quot;/&gt;
+  &lt;path d=&quot;M39 50 C49 66 62 78 78 87 C83 90 87 89 91 85 L97 76 C100 72 99 67 95 64 L81 55 C77 52 73 52 69 56 L65 60 C56 53 47 44 40 34 L44 30 C48 27 49 22 46 18 L37 5 C34 1 29 0 25 4 L15 13 C11 17 10 22 12 26 C17 34 25 43 39 50 Z&quot;
+      fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;5&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="353.5" y="558.0" width="185.0" height="18.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="9.0" min_font_size="7.0" color="#F5F5F0" align="left" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">+84 24 3825 2256</textbox>
+    <svg x="610.5" y="545.0" width="44.0" height="44.0" pixel_width="120" pixel_height="120">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;120&quot; viewBox=&quot;0 0 120 120&quot;&gt;
+  &lt;circle cx=&quot;60&quot; cy=&quot;60&quot; r=&quot;43&quot; fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;3&quot;/&gt;
+  &lt;rect x=&quot;18&quot; y=&quot;27&quot; width=&quot;84&quot; height=&quot;58&quot; rx=&quot;7&quot; fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;path d=&quot;M22 33 L60 61 L98 33&quot; fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;5&quot; stroke-linecap=&quot;round&quot; stroke-linejoin=&quot;round&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="674.5" y="558.0" width="290.0" height="18.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="9.0" min_font_size="7.0" color="#F5F5F0" align="left" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">info@hanoi.gov.vn</textbox>
+    <svg x="1036.5" y="545.0" width="44.0" height="44.0" pixel_width="120" pixel_height="120">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;120&quot; height=&quot;120&quot; viewBox=&quot;0 0 120 120&quot;&gt;
+  &lt;circle cx=&quot;60&quot; cy=&quot;60&quot; r=&quot;43&quot; fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;3&quot;/&gt;
+  &lt;circle cx=&quot;60&quot; cy=&quot;60&quot; r=&quot;42&quot; fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;5&quot;/&gt;
+&lt;path d=&quot;M18 60 H102&quot; fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;5&quot; stroke-linecap=&quot;round&quot;/&gt;
+&lt;path d=&quot;M60 19 C47 35 42 48 42 60 C42 72 47 86 60 101 C73 86 78 72 78 60 C78 48 73 35 60 19 Z&quot;
+      fill=&quot;none&quot; stroke=&quot;#F5F5F0&quot; stroke-width=&quot;5&quot; stroke-linejoin=&quot;round&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="1100.5" y="558.0" width="210.0" height="18.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="9.0" min_font_size="7.0" color="#F5F5F0" align="left" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">hanoi.gov.vn</textbox>
+  </slide>
+</presentation>

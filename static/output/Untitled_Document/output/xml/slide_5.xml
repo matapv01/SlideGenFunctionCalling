@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#2E4053">
+    <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"&gt;
+  &lt;defs&gt;
+    &lt;radialGradient id="topLeft" cx="2%" cy="2%" r="42%"&gt;
+      &lt;stop offset="0%" stop-color="#D4AF37" stop-opacity="0.88"/&gt;
+      &lt;stop offset="55%" stop-color="#D4AF37" stop-opacity="0.32"/&gt;
+      &lt;stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/&gt;
+    &lt;/radialGradient&gt;
+    &lt;radialGradient id="bottomRight" cx="98%" cy="98%" r="42%"&gt;
+      &lt;stop offset="0%" stop-color="#D4AF37" stop-opacity="0.88"/&gt;
+      &lt;stop offset="55%" stop-color="#D4AF37" stop-opacity="0.32"/&gt;
+      &lt;stop offset="100%" stop-color="#D4AF37" stop-opacity="0"/&gt;
+    &lt;/radialGradient&gt;
+  &lt;/defs&gt;
+  &lt;rect x="0" y="0" width="1600" height="900" fill="#2E4053"/&gt;
+  &lt;rect x="0" y="0" width="1600" height="900" fill="url(#topLeft)"/&gt;
+  &lt;rect x="0" y="0" width="1600" height="900" fill="url(#bottomRight)"/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="88.0" y="94.0" width="700.0" height="227.14999999999998" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" size="40.0" min_font_size="38.0" bold="true" color="#F5F5F0" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">NHỊP SỐNG HIỆN ĐẠI VÀ CON NGƯỜI HÀ NỘI</textbox>
+    <image src="https://image.vietnamnews.vn/uploadvnnews/Article/2018/11/9/streetlifehanoi255112429AM.jpg" x="50.0" y="322.0" width="480.0" height="254.04" />
+    <textbox x="54.80000000000001" y="610.04" width="470.4" height="50.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" size="24.5" min_font_size="22.5" bold="true" color="#D4AF37" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">NHỊP SỐNG ĐÔ THỊ</textbox>
+    <textbox x="93.20000000000002" y="676.04" width="393.59999999999997" height="89.5" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf" size="12.5" min_font_size="10.5" color="#F5F5F0" align="center" vertical_align="middle" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.18" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Sự giao thoa tinh tế giữa </run><run emphasis="highlight" color="#D4AF37">truyền thống và hiện đại</run><run> tạo nên một nhịp sống đô thị sôi động và đầy bản sắc.</run></textbox>
+    <image src="https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEgg1EFHc8ltnybHTU5thJC5jo2ifVMbsLm4fZoa2J3lagkKLmJnwe__taKlD8JvXF4HpqZ_4Y_lzCkFj_e4LFoPGtygpYledHB4dzFDn0_besol4JPZ8QXVF_cVrsarc5u4bcQ6U2pDlDQ/w1200-h630-p-k-no-nu/hanoi's-+4-seasons-11.jpg" x="560.0" y="322.0" width="480.0" height="254.04" />
+    <textbox x="564.8" y="610.04" width="470.4" height="50.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" size="24.5" min_font_size="22.5" bold="true" color="#D4AF37" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">KHÍ HẬU BỐN MÙA</textbox>
+    <textbox x="603.2" y="676.04" width="393.59999999999997" height="89.5" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf" size="12.5" min_font_size="10.5" color="#F5F5F0" align="center" vertical_align="middle" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.18" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Vẻ đẹp đa dạng của thủ đô được khắc họa rõ nét qua </run><run emphasis="highlight" color="#D4AF37">bốn mùa rõ rệt</run><run>, mỗi mùa mang một phong vị riêng.</run></textbox>
+    <image src="https://adventurebackpack.com/_next/image?url=/images/hanoi-culture.webp&amp;w=2048&amp;q=75&amp;dpl=dpl_DqhwGdhpyFFp1zNtNYCxvMyZBXny" x="1070.0" y="322.0" width="480.0" height="254.04" />
+    <textbox x="1074.8" y="610.04" width="470.4" height="49.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif-Bold.ttf" size="24.0" min_font_size="22.0" bold="true" color="#D4AF37" align="center" vertical_align="middle" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">CON NGƯỜI HÀ NỘI</textbox>
+    <textbox x="1113.2" y="675.04" width="393.59999999999997" height="89.5" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf" size="12.5" min_font_size="10.5" color="#F5F5F0" align="center" vertical_align="middle" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.18" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Nổi bật với phong thái </run><run emphasis="highlight" color="#D4AF37">thanh lịch, mộc mạc</run><run> và lòng tự tôn dân tộc sâu sắc, gìn giữ hồn cốt nghìn năm.</run></textbox>
+  </slide>
+</presentation>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#2E4053">
+    <image src="https://static.vecteezy.com/system/resources/previews/035/150/442/non_2x/ai-generated-aerial-view-of-hanoi-city-at-night-vietnam-aerial-skyline-view-of-hanoi-hanoi-cityscape-at-twilight-ai-generated-free-photo.jpg" x="0" y="0" width="1600" height="900"/>
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#1B263B" line_color="none"/>
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#D4AF37" line_color="none"/>
+    <textbox x="70.0" y="237.63" width="424.7606666666667" height="210.74" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="36.0" min_font_size="36.0" bold="true" color="#F5F5F0" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">4. Hà Nội Hiện Đại và Con Người</textbox>
+    <textbox x="70.0" y="480.37" width="324.894" height="182.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="18.0" min_font_size="18.0" color="#F5F5F0" align="left" vertical_align="top" single_line="false" max_lines="5" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Tiếp theo: Khám phá sự phát triển vượt bậc và nét đẹp văn minh, thanh lịch của người Hà Nội.</textbox>
+  </slide>
+</presentation>

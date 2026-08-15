@@ -1,0 +1,55 @@
+{
+  "session_id": "f6bdb7d3-60be-42c6-8be1-84fa04bec0ae",
+  "document_title": "Untitled Document",
+  "document_structure": [
+    {
+      "node_id": "node_1786717691961_x0kk5j",
+      "level": 1,
+      "title": "Viết về Hà Nội",
+      "content": "Thủ đô ngàn năm văn hiến và những nét quyến rũ vượt thời gian",
+      "children": [],
+      "is_transition": false
+    },
+    {
+      "node_id": "node_1786717691961_u5spmp",
+      "level": 1,
+      "title": "Dấu ấn Lịch sử và Văn hóa",
+      "content": "- Thủ đô ngàn năm văn hiến với bề dày lịch sử.\n- Quần thể di tích lịch sử nổi bật: Lăng Bác, Hồ Gươm, Khuê Văn Các.\n- Biểu tượng \"Thành phố vì hòa bình\" với vẻ đẹp cổ kính.",
+      "children": [],
+      "is_transition": false
+    },
+    {
+      "node_id": "node_1786717691961_lpoody",
+      "level": 1,
+      "title": "Nét Độc đáo trong Ẩm thực và Làng nghề",
+      "content": "- Ẩm thực phong phú, tinh tế: Phở, bún chả, cà phê trứng.\n- Các làng nghề truyền thống nổi tiếng: Gốm Bát Tràng, lụa Vạn Phúc.\n- Phố cổ với 36 phố phường mang đậm bản sắc văn hóa.",
+      "children": [],
+      "is_transition": false
+    },
+    {
+      "node_id": "node_1786717691961_h5571y",
+      "level": 1,
+      "title": "TRANSITION",
+      "content": "Tiếp theo: Hà Nội Hiện Đại và Con Người",
+      "children": [],
+      "is_transition": false
+    },
+    {
+      "node_id": "node_1786717691961_8l2qmu",
+      "level": 1,
+      "title": "Nhịp sống Hiện đại và Con người Hà Nội",
+      "content": "- Nhịp sống đô thị sôi động, giao thoa giữa truyền thống và hiện đại.\n- Khí hậu bốn mùa rõ rệt, mang đến vẻ đẹp đa dạng.\n- Con người Hà Nội: Thanh lịch, mộc mạc và giàu lòng tự tôn dân tộc.",
+      "children": [],
+      "is_transition": false
+    },
+    {
+      "node_id": "node_1786717691961_h5ljw9",
+      "level": 1,
+      "title": "THANK_YOU",
+      "content": "Lời cảm ơn chân thành",
+      "children": [],
+      "is_transition": false
+    }
+  ],
+  "output_format": "xml"
+}

@@ -1,4 +1,4 @@
-import { memo, useEffect, useMemo, useRef, useState } from "react";
+import { memo, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import {
   ArrowLeft,
@@ -27,7 +27,9 @@ import {
   RotateCw,
   SendToBack,
   Shapes,
+  Sparkles,
   Square,
+  Timer,
   Triangle,
   Quote,
   List,
@@ -82,6 +84,14 @@ import {
   type XmlSlideDocument,
   type XmlSlideElement,
 } from "@/lib/xmlSlide";
+import {
+  XML_TRANSITION_DIRECTIONS,
+  XML_TRANSITION_OPTIONS,
+  readXmlTransition,
+  transitionAnimationName,
+  transitionNeedsDirection,
+  transitionOutgoingAnimationName,
+} from "@/lib/xmlTransitions";
 
 const MIN_ZOOM = 0.1;
 const MAX_ZOOM = 2;
@@ -477,6 +487,11 @@ const XmlSlideEditor = () => {
   const [isPresenting, setIsPresenting] = useState(false);
   const [isPresentFullscreen, setIsPresentFullscreen] = useState(false);
   const [isPresentControlsVisible, setIsPresentControlsVisible] = useState(true);
+  const [presentTransition, setPresentTransition] = useState<{
+    from: number;
+    to: number;
+    nonce: number;
+  } | null>(null);
   const [presentViewport, setPresentViewport] = useState(() => ({
     width: typeof window === "undefined" ? 1440 : window.innerWidth,
     height: typeof window === "undefined" ? 900 : window.innerHeight,
@@ -495,6 +510,8 @@ const XmlSlideEditor = () => {
   const canvasShellRef = useRef<HTMLDivElement>(null);
   const presentShellRef = useRef<HTMLDivElement>(null);
   const presentHideTimerRef = useRef<number | null>(null);
+  const presentTransitionTimerRef = useRef<number | null>(null);
+  const presentAdvanceTimerRef = useRef<number | null>(null);
   const dragSlideIndexRef = useRef<number | null>(null);
 
   const selected = useMemo(
@@ -626,6 +643,17 @@ const XmlSlideEditor = () => {
   const updateSlideBackground = (value: string) => {
     const currentSlide = documentRef.current.slides[activeSlideIndex];
     applyDocument(updateSlideAt(documentRef.current, activeSlideIndex, { attrs: { ...currentSlide.attrs, background: value } }), true);
+  };
+
+  const updateSlideTransition = (update: Record<string, string>) => {
+    const currentSlide = documentRef.current.slides[activeSlideIndex];
+    if (!currentSlide) return;
+    applyDocument(
+      updateSlideAt(documentRef.current, activeSlideIndex, {
+        attrs: { ...currentSlide.attrs, ...update },
+      }),
+      true,
+    );
   };
 
   const undo = () => {
@@ -807,12 +835,54 @@ const XmlSlideEditor = () => {
     if (Number.isFinite(fit)) setZoom(clampZoom(Math.floor(fit * 100) / 100));
   };
 
-  const presentNext = () => {
-    setActiveSlideIndex((index) => Math.min(documentRef.current.slides.length - 1, index + 1));
-  };
+  const navigatePresent = useCallback((toIndex: number) => {
+    const fromIndex = activeSlideIndex;
+    const slides = documentRef.current.slides;
+    if (toIndex < 0 || toIndex >= slides.length || toIndex === fromIndex || presentTransition) return;
 
-  const presentPrevious = () => {
-    setActiveSlideIndex((index) => Math.max(0, index - 1));
+    if (presentAdvanceTimerRef.current !== null) {
+      window.clearTimeout(presentAdvanceTimerRef.current);
+      presentAdvanceTimerRef.current = null;
+    }
+    if (presentTransitionTimerRef.current !== null) {
+      window.clearTimeout(presentTransitionTimerRef.current);
+      presentTransitionTimerRef.current = null;
+    }
+
+    const config = readXmlTransition(slides[toIndex]?.attrs || {});
+    setActiveSlideIndex(toIndex);
+    if (config.type === "none" || config.type === "cut") {
+      setPresentTransition(null);
+      return;
+    }
+
+    const nonce = Date.now();
+    setPresentTransition({ from: fromIndex, to: toIndex, nonce });
+    presentTransitionTimerRef.current = window.setTimeout(() => {
+      setPresentTransition(null);
+      presentTransitionTimerRef.current = null;
+    }, config.duration + 80);
+  }, [activeSlideIndex, presentTransition]);
+
+  const presentNext = useCallback(() => {
+    navigatePresent(Math.min(documentRef.current.slides.length - 1, activeSlideIndex + 1));
+  }, [activeSlideIndex, navigatePresent]);
+
+  const presentPrevious = useCallback(() => {
+    navigatePresent(Math.max(0, activeSlideIndex - 1));
+  }, [activeSlideIndex, navigatePresent]);
+
+  const startPresent = async () => {
+    setIsPresentControlsVisible(true);
+    setIsPresenting(true);
+    try {
+      if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
+        await document.documentElement.requestFullscreen();
+        setIsPresentFullscreen(Boolean(document.fullscreenElement));
+      }
+    } catch {
+      // Fullscreen can be denied by the browser; the full-window overlay still works.
+    }
   };
 
   const closePresent = () => {
@@ -822,6 +892,15 @@ const XmlSlideEditor = () => {
       window.clearTimeout(presentHideTimerRef.current);
       presentHideTimerRef.current = null;
     }
+    if (presentTransitionTimerRef.current !== null) {
+      window.clearTimeout(presentTransitionTimerRef.current);
+      presentTransitionTimerRef.current = null;
+    }
+    if (presentAdvanceTimerRef.current !== null) {
+      window.clearTimeout(presentAdvanceTimerRef.current);
+      presentAdvanceTimerRef.current = null;
+    }
+    setPresentTransition(null);
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => undefined);
     }
@@ -832,7 +911,7 @@ const XmlSlideEditor = () => {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
       } else {
-        await presentShellRef.current?.requestFullscreen();
+        await (presentShellRef.current || document.documentElement).requestFullscreen?.();
       }
     } catch {
       // Fullscreen can be denied by the browser; the in-app presentation still works.
@@ -851,7 +930,10 @@ const XmlSlideEditor = () => {
   useEffect(() => {
     if (!isPresenting) return;
     const updateViewport = () => setPresentViewport({ width: window.innerWidth, height: window.innerHeight });
-    const handleFullscreenChange = () => setIsPresentFullscreen(Boolean(document.fullscreenElement));
+    const handleFullscreenChange = () => {
+      setIsPresentFullscreen(Boolean(document.fullscreenElement));
+      updateViewport();
+    };
     updateViewport();
     revealPresentControls();
     window.addEventListener("resize", updateViewport);
@@ -863,8 +945,41 @@ const XmlSlideEditor = () => {
         window.clearTimeout(presentHideTimerRef.current);
         presentHideTimerRef.current = null;
       }
+      if (presentTransitionTimerRef.current !== null) {
+        window.clearTimeout(presentTransitionTimerRef.current);
+        presentTransitionTimerRef.current = null;
+      }
+      if (presentAdvanceTimerRef.current !== null) {
+        window.clearTimeout(presentAdvanceTimerRef.current);
+        presentAdvanceTimerRef.current = null;
+      }
+      setPresentTransition(null);
     };
   }, [isPresenting]);
+
+  useEffect(() => {
+    if (!isPresenting) return;
+    if (presentAdvanceTimerRef.current !== null) {
+      window.clearTimeout(presentAdvanceTimerRef.current);
+      presentAdvanceTimerRef.current = null;
+    }
+    const currentSlide = documentRef.current.slides[activeSlideIndex];
+    const config = readXmlTransition(currentSlide?.attrs || {});
+    if (!currentSlide || (config.advance !== "after" && config.advance !== "both") || activeSlideIndex >= documentRef.current.slides.length - 1) {
+      return;
+    }
+    const waitMs = config.delay + (presentTransition ? config.duration : 0);
+    presentAdvanceTimerRef.current = window.setTimeout(() => {
+      presentAdvanceTimerRef.current = null;
+      presentNext();
+    }, waitMs);
+    return () => {
+      if (presentAdvanceTimerRef.current !== null) {
+        window.clearTimeout(presentAdvanceTimerRef.current);
+        presentAdvanceTimerRef.current = null;
+      }
+    };
+  }, [isPresenting, activeSlideIndex, presentNext, presentTransition, xmlDocument.slides]);
 
   useEffect(() => {
     const timer = window.setTimeout(fitZoom, 320);
@@ -887,10 +1002,10 @@ const XmlSlideEditor = () => {
           presentPrevious();
         } else if (event.key === "Home") {
           event.preventDefault();
-          setActiveSlideIndex(0);
+          navigatePresent(0);
         } else if (event.key === "End") {
           event.preventDefault();
-          setActiveSlideIndex(documentRef.current.slides.length - 1);
+          navigatePresent(documentRef.current.slides.length - 1);
         }
         return;
       }
@@ -944,6 +1059,7 @@ const XmlSlideEditor = () => {
   });
 
   const activeSlide = xmlDocument.slides[activeSlideIndex];
+  const activeTransition = readXmlTransition(activeSlide?.attrs || {});
   const canvasFootprint: CSSProperties = {
     width: xmlDocument.width * zoom,
     height: xmlDocument.height * zoom,
@@ -964,6 +1080,33 @@ const XmlSlideEditor = () => {
           background-color: hsl(var(--popover));
         }
         .dark .xml-editor-shell select { color-scheme: dark; }
+        @keyframes xml-present-fade { from { opacity: 0; } to { opacity: 1; } }
+        @keyframes xml-present-push-l { from { transform: translateX(-100%); } to { transform: translateX(0); } }
+        @keyframes xml-present-push-r { from { transform: translateX(100%); } to { transform: translateX(0); } }
+        @keyframes xml-present-push-u { from { transform: translateY(-100%); } to { transform: translateY(0); } }
+        @keyframes xml-present-push-d { from { transform: translateY(100%); } to { transform: translateY(0); } }
+        @keyframes xml-present-out-push-l { from { transform: translateX(0); } to { transform: translateX(100%); } }
+        @keyframes xml-present-out-push-r { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+        @keyframes xml-present-out-push-u { from { transform: translateY(0); } to { transform: translateY(100%); } }
+        @keyframes xml-present-out-push-d { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+        @keyframes xml-present-out-uncover-l { from { transform: translateX(0); } to { transform: translateX(-100%); } }
+        @keyframes xml-present-out-uncover-r { from { transform: translateX(0); } to { transform: translateX(100%); } }
+        @keyframes xml-present-out-uncover-u { from { transform: translateY(0); } to { transform: translateY(-100%); } }
+        @keyframes xml-present-out-uncover-d { from { transform: translateY(0); } to { transform: translateY(100%); } }
+        @keyframes xml-present-wipe-l { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
+        @keyframes xml-present-wipe-r { from { clip-path: inset(0 0 0 100%); } to { clip-path: inset(0); } }
+        @keyframes xml-present-wipe-u { from { clip-path: inset(100% 0 0 0); } to { clip-path: inset(0); } }
+        @keyframes xml-present-wipe-d { from { clip-path: inset(0 0 100% 0); } to { clip-path: inset(0); } }
+        @keyframes xml-present-split-horizontal { from { clip-path: inset(0 50% 0 50%); } to { clip-path: inset(0); } }
+        @keyframes xml-present-split-vertical { from { clip-path: inset(50% 0 50% 0); } to { clip-path: inset(0); } }
+        @keyframes xml-present-zoom-in { from { opacity: 0; transform: scale(0.65); } to { opacity: 1; transform: scale(1); } }
+        @keyframes xml-present-zoom-out { from { opacity: 0; transform: scale(1.35); } to { opacity: 1; transform: scale(1); } }
+        @keyframes xml-present-circle { from { clip-path: circle(0% at 50% 50%); } to { clip-path: circle(75% at 50% 50%); } }
+        @keyframes xml-present-diamond { from { clip-path: polygon(50% 50%, 50% 50%, 50% 50%, 50% 50%); } to { clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); } }
+        @keyframes xml-present-plus { from { clip-path: polygon(45% 45%, 55% 45%, 55% 45%, 55% 55%, 55% 55%, 45% 55%, 45% 55%, 45% 45%); } to { clip-path: polygon(0% 0%, 100% 0%, 100% 100%, 0% 100%); } }
+        @media (prefers-reduced-motion: reduce) {
+          .xml-present-transition { animation-duration: 1ms !important; }
+        }
         @media print {
           @page { size: 13.333in 7.5in; margin: 0; }
           html, body {
@@ -1045,10 +1188,7 @@ const XmlSlideEditor = () => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-            <Button size="sm" className="ml-0.5 h-8 rounded-lg px-3 text-xs" onClick={() => {
-              setIsPresentControlsVisible(true);
-              setIsPresenting(true);
-            }}>
+            <Button size="sm" className="ml-0.5 h-8 rounded-lg px-3 text-xs" onClick={startPresent}>
               <Play className="mr-1.5 h-3.5 w-3.5" /> Present
             </Button>
           </div>
@@ -1402,13 +1542,91 @@ const XmlSlideEditor = () => {
                     </div>
                   </div>
                 ) : !selected ? (
-                  <div className="flex h-full flex-col items-center justify-center gap-4 px-8 text-muted-foreground">
-                    <div className="flex items-center justify-center rounded-2xl bg-muted/60 p-5">
-                      <MousePointer className="h-7 w-7 opacity-30" />
+                  <div className="flex h-full flex-col overflow-y-auto p-3 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                    <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
+                      <PanelLabel icon={Sparkles} label="Slide transition" />
+                      <p className="mb-2 text-[10px] leading-relaxed text-muted-foreground">
+                        Applied when this slide appears in Present mode and in PowerPoint export.
+                      </p>
+                      <label className="mb-1.5 flex h-9 items-center gap-2 rounded-md border border-border/50 bg-background/70 px-2">
+                        <span className="w-16 shrink-0 text-[10px] font-bold text-muted-foreground">Effect</span>
+                        <select
+                          value={activeTransition.type}
+                          onChange={(event) => updateSlideTransition({
+                            transition: event.target.value,
+                            ...(event.target.value === "zoom"
+                              ? { transition_direction: "in" }
+                              : (["in", "out"].includes(activeTransition.direction) ? { transition_direction: "l" } : {})),
+                          })}
+                          className="min-w-0 flex-1 bg-transparent text-xs outline-none"
+                        >
+                          {XML_TRANSITION_OPTIONS.map((option) => (
+                            <option key={option.value} value={option.value}>{option.label}</option>
+                          ))}
+                        </select>
+                      </label>
+                      {transitionNeedsDirection(activeTransition.type) && (
+                        <label className="mb-1.5 flex h-9 items-center gap-2 rounded-md border border-border/50 bg-background/70 px-2">
+                          <span className="w-16 shrink-0 text-[10px] font-bold text-muted-foreground">Direction</span>
+                          <select
+                            value={activeTransition.direction}
+                            onChange={(event) => updateSlideTransition({ transition_direction: event.target.value })}
+                            className="min-w-0 flex-1 bg-transparent text-xs outline-none"
+                          >
+                            {XML_TRANSITION_DIRECTIONS.filter((direction) => (activeTransition.type === "zoom"
+                              ? ["in", "out"].includes(direction.value)
+                              : ["l", "r", "u", "d"].includes(direction.value))).map((direction) => (
+                              <option key={direction.value} value={direction.value}>{direction.label}</option>
+                            ))}
+                          </select>
+                        </label>
+                      )}
+                      <div className="mb-2 rounded-md border border-border/50 bg-background/50 px-2 py-2">
+                        <div className="mb-1 flex items-center justify-between text-[10px] text-muted-foreground">
+                          <span className="flex items-center gap-1.5 font-bold"><Timer className="h-3 w-3" /> Duration</span>
+                          <span className="tabular-nums">{activeTransition.duration} ms</span>
+                        </div>
+                        <Slider
+                          min={120}
+                          max={3000}
+                          step={20}
+                          value={[activeTransition.duration]}
+                          onValueChange={(value) => updateSlideTransition({ transition_duration: String(value[0]) })}
+                        />
+                      </div>
+                      <label className="mb-1.5 flex h-9 items-center gap-2 rounded-md border border-border/50 bg-background/70 px-2">
+                        <span className="w-16 shrink-0 text-[10px] font-bold text-muted-foreground">Advance</span>
+                        <select
+                          value={activeTransition.advance}
+                          onChange={(event) => updateSlideTransition({ transition_advance: event.target.value })}
+                          className="min-w-0 flex-1 bg-transparent text-xs outline-none"
+                        >
+                          <option value="click">On click</option>
+                          <option value="after">After delay</option>
+                          <option value="both">Click or delay</option>
+                        </select>
+                      </label>
+                      {(activeTransition.advance === "after" || activeTransition.advance === "both") && (
+                        <IconField
+                          label="Wait"
+                          type="number"
+                          min={500}
+                          max={60000}
+                          step={100}
+                          value={String(activeTransition.delay)}
+                          onChange={(value) => updateSlideTransition({ transition_delay: value })}
+                        />
+                      )}
                     </div>
-                    <div className="space-y-1.5 text-center">
-                      <p className="text-sm font-medium text-foreground/70">No element selected</p>
-                      <p className="text-xs leading-relaxed text-muted-foreground/70">Select an element to edit its position, content, appearance, and layer order.</p>
+                    <div className="mt-3 rounded-xl border bg-muted/20 p-3">
+                      <PanelLabel icon={PaintBucket} label="Slide background" />
+                      <Input type="color" value={activeSlide.attrs.background || "#ffffff"} onChange={(event) => updateSlideBackground(event.target.value)} className="h-9 w-full p-1" />
+                    </div>
+                    <div className="mt-auto flex flex-col items-center justify-center gap-3 px-3 py-8 text-muted-foreground">
+                      <div className="flex items-center justify-center rounded-2xl bg-muted/60 p-4">
+                        <MousePointer className="h-6 w-6 opacity-30" />
+                      </div>
+                      <p className="text-center text-xs leading-relaxed text-muted-foreground/70">Select an element to edit its position, content, appearance, and layer order.</p>
                     </div>
                   </div>
                 ) : (
@@ -1752,19 +1970,84 @@ const XmlSlideEditor = () => {
           const presentScale = Math.max(
             0.1,
             Math.min(
-              (presentViewport.width - 96) / xmlDocument.width,
-              (presentViewport.height - 156) / xmlDocument.height,
+              presentViewport.width / xmlDocument.width,
+              presentViewport.height / xmlDocument.height,
             ),
           );
           const presentSlideWidth = xmlDocument.width * presentScale;
           const presentSlideHeight = xmlDocument.height * presentScale;
           const slideCount = xmlDocument.slides.length;
           const progress = slideCount > 1 ? (activeSlideIndex / (slideCount - 1)) * 100 : 100;
+          const outgoingSlide = presentTransition ? xmlDocument.slides[presentTransition.from] : null;
+          const incomingTransition = presentTransition
+            ? readXmlTransition(xmlDocument.slides[presentTransition.to]?.attrs || {})
+            : null;
+          const incomingAnimationName = incomingTransition
+            ? transitionAnimationName(incomingTransition.type, incomingTransition.direction)
+            : "none";
+          const outgoingAnimationName = incomingTransition
+            ? transitionOutgoingAnimationName(incomingTransition.type, incomingTransition.direction)
+            : "none";
+          const incomingAnimationStyle: CSSProperties = incomingTransition && incomingAnimationName !== "none"
+            ? {
+              animationName: incomingAnimationName,
+              animationDuration: `${incomingTransition.duration}ms`,
+              animationTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+              animationFillMode: "both",
+              willChange: "transform, opacity, clip-path",
+            }
+            : {};
+          const outgoingAnimationStyle: CSSProperties = incomingTransition && outgoingAnimationName !== "none"
+            ? {
+              animationName: outgoingAnimationName,
+              animationDuration: `${incomingTransition.duration}ms`,
+              animationTimingFunction: "cubic-bezier(0.22, 1, 0.36, 1)",
+              animationFillMode: "both",
+              willChange: "transform, opacity, clip-path",
+            }
+            : {};
+          const outgoingZIndex = incomingTransition?.type === "uncover" ? 2 : 1;
+          const incomingZIndex = incomingTransition?.type === "uncover" ? 1 : 2;
+
+          const renderPresentSlide = (slide: XmlSlideDocument["slides"][number], key: string, style: CSSProperties = {}, animated = false) => (
+            <div
+              key={key}
+              className="absolute left-0 top-0"
+              style={{
+                width: xmlDocument.width,
+                height: xmlDocument.height,
+                transform: `scale(${presentScale})`,
+                transformOrigin: "top left",
+                zIndex: style.zIndex,
+              }}
+            >
+              <div
+                className={cn("h-full w-full", animated && "xml-present-transition")}
+                style={{ ...style, zIndex: undefined }}
+              >
+                <XmlSlideCanvas
+                  slide={slide}
+                  canvasWidth={xmlDocument.width}
+                  canvasHeight={xmlDocument.height}
+                  slideWidthInches={Number(xmlDocument.presentationAttrs.slideWidthInches || 13.333)}
+                  slideHeightInches={Number(xmlDocument.presentationAttrs.slideHeightInches || 7.5)}
+                  selectedId={null}
+                  readOnly
+                  viewport="bare"
+                  onSelect={() => undefined}
+                  onChange={() => undefined}
+                />
+              </div>
+            </div>
+          );
 
           return (
             <div
               ref={presentShellRef}
-              className="fixed inset-0 z-[100] overflow-hidden bg-[#080b12] text-white"
+              className={cn(
+                "fixed inset-0 z-[100] overflow-hidden bg-[#080b12] text-white",
+                isPresentControlsVisible ? "cursor-default" : "cursor-none",
+              )}
               onMouseMove={revealPresentControls}
               onMouseLeave={() => setIsPresentControlsVisible(false)}
               role="dialog"
@@ -1774,19 +2057,16 @@ const XmlSlideEditor = () => {
               <div className="pointer-events-none absolute inset-x-0 bottom-0 h-48 bg-gradient-to-t from-black/60 to-transparent" />
 
               <div className={cn(
-                "absolute inset-x-0 top-0 z-30 flex items-center justify-between border-b border-white/10 bg-[#080b12]/80 px-5 py-3 backdrop-blur-xl transition-all duration-300",
+                "pointer-events-none absolute inset-x-0 top-0 z-30 flex items-center justify-between bg-gradient-to-b from-black/75 via-black/25 to-transparent px-6 py-5 transition-all duration-300",
                 isPresentControlsVisible ? "translate-y-0 opacity-100" : "-translate-y-full opacity-0",
               )}>
                 <div className="flex items-center gap-3">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/15">
-                    <Play className="h-4 w-4 fill-white text-white" />
-                  </div>
                   <div>
-                    <p className="text-sm font-semibold tracking-wide">Presentation</p>
-                    <p className="text-[11px] text-white/50">Slide {activeSlideIndex + 1} of {slideCount}</p>
+                    <p className="text-sm font-semibold tracking-wide drop-shadow">Presentation</p>
+                    <p className="text-[11px] text-white/60">Slide {activeSlideIndex + 1} of {slideCount}</p>
                   </div>
                 </div>
-                <div className="flex items-center gap-1.5">
+                <div className="pointer-events-auto flex items-center gap-1.5">
                   <button
                     type="button"
                     onClick={togglePresentFullscreen}
@@ -1807,43 +2087,36 @@ const XmlSlideEditor = () => {
                 </div>
               </div>
 
-              <main className="relative z-10 flex h-full w-full items-center justify-center px-6 pb-20 pt-16">
+              <main className="absolute inset-0 z-10 flex h-full w-full items-center justify-center">
                 <button
                   type="button"
                   aria-label="Previous slide"
                   disabled={activeSlideIndex === 0}
                   onClick={presentPrevious}
-                  className="group absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/60 shadow-lg backdrop-blur-md transition-all hover:scale-105 hover:bg-black/45 hover:text-white disabled:pointer-events-none disabled:opacity-0"
+                  className={cn(
+                    "group pointer-events-auto absolute left-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/60 shadow-lg backdrop-blur-md transition-all hover:scale-105 hover:bg-black/45 hover:text-white disabled:pointer-events-none disabled:opacity-0",
+                    isPresentControlsVisible ? "opacity-100" : "pointer-events-none opacity-0",
+                  )}
                 >
                   <ChevronLeft className="h-6 w-6 transition-transform group-hover:-translate-x-0.5" />
                 </button>
 
                 <div
-                  className="relative overflow-hidden rounded-[3px] bg-white shadow-[0_25px_80px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.12)]"
+                  className="relative isolate overflow-hidden rounded-[3px] bg-white shadow-[0_25px_80px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.12)]"
                   style={{ width: presentSlideWidth, height: presentSlideHeight }}
                 >
-                  <div
-                    className="absolute left-0 top-0"
-                    style={{
-                      width: xmlDocument.width,
-                      height: xmlDocument.height,
-                      transform: `scale(${presentScale})`,
-                      transformOrigin: "top left",
-                    }}
-                  >
-                    <XmlSlideCanvas
-                      slide={activeSlide}
-                      canvasWidth={xmlDocument.width}
-                      canvasHeight={xmlDocument.height}
-                      slideWidthInches={Number(xmlDocument.presentationAttrs.slideWidthInches || 13.333)}
-                      slideHeightInches={Number(xmlDocument.presentationAttrs.slideHeightInches || 7.5)}
-                      selectedId={null}
-                      readOnly
-                      viewport="bare"
-                      onSelect={() => undefined}
-                      onChange={() => undefined}
-                    />
-                  </div>
+                  {outgoingSlide && presentTransition && renderPresentSlide(
+                    outgoingSlide,
+                    `present-out-${presentTransition.from}-${presentTransition.nonce}`,
+                    { zIndex: outgoingZIndex, ...outgoingAnimationStyle },
+                    outgoingAnimationName !== "none",
+                  )}
+                  {renderPresentSlide(
+                    activeSlide,
+                    `present-in-${activeSlideIndex}-${presentTransition?.nonce || "steady"}`,
+                    { zIndex: incomingZIndex, ...incomingAnimationStyle },
+                    Boolean(incomingTransition && incomingAnimationName !== "none"),
+                  )}
                 </div>
 
                 <button
@@ -1851,17 +2124,20 @@ const XmlSlideEditor = () => {
                   aria-label="Next slide"
                   disabled={activeSlideIndex >= slideCount - 1}
                   onClick={presentNext}
-                  className="group absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/60 shadow-lg backdrop-blur-md transition-all hover:scale-105 hover:bg-black/45 hover:text-white disabled:pointer-events-none disabled:opacity-0"
+                  className={cn(
+                    "group pointer-events-auto absolute right-5 top-1/2 z-20 flex h-12 w-12 -translate-y-1/2 items-center justify-center rounded-full border border-white/10 bg-black/20 text-white/60 shadow-lg backdrop-blur-md transition-all hover:scale-105 hover:bg-black/45 hover:text-white disabled:pointer-events-none disabled:opacity-0",
+                    isPresentControlsVisible ? "opacity-100" : "pointer-events-none opacity-0",
+                  )}
                 >
                   <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-0.5" />
                 </button>
               </main>
 
               <div className={cn(
-                "absolute inset-x-0 bottom-0 z-30 flex justify-center px-5 pb-5 transition-all duration-300",
+                "pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center bg-gradient-to-t from-black/75 via-black/20 to-transparent px-5 pb-5 pt-16 transition-all duration-300",
                 isPresentControlsVisible ? "translate-y-0 opacity-100" : "translate-y-5 opacity-0",
               )}>
-                <div className="flex w-full max-w-xl items-center gap-3 rounded-2xl border border-white/10 bg-[#111722]/85 px-3 py-2.5 shadow-2xl backdrop-blur-xl">
+                <div className="pointer-events-auto flex w-full max-w-xl items-center gap-3 rounded-2xl border border-white/10 bg-[#111722]/85 px-3 py-2.5 shadow-2xl backdrop-blur-xl">
                   <button
                     type="button"
                     aria-label="Previous slide"

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  normalizeXmlTextBreaks,
   parseXmlSlide,
   serializeXmlSlide,
   updateXmlElement,
@@ -19,6 +20,21 @@ const richXml = `<?xml version="1.0" encoding="UTF-8"?>
 
 
 describe("XML slide rich text", () => {
+  it("turns escaped br markers into real line breaks", () => {
+    const document = parseXmlSlide(`
+      <presentation width="1600" height="900">
+        <slide>
+          <textbox id="body" x="0" y="0" width="500" height="200">A&lt;br&gt;B&lt;br/&gt;C</textbox>
+        </slide>
+      </presentation>
+    `);
+    const textbox = document.slides[0].elements[0];
+
+    expect(normalizeXmlTextBreaks("A<br>B")).toBe("A\nB");
+    expect(textbox.text).toBe("A\nB\nC");
+    expect(serializeXmlSlide(document)).not.toContain("&lt;br&gt;");
+  });
+
   it("parses run text for layout while preserving run styles", () => {
     const document = parseXmlSlide(richXml);
     const textbox = document.slides[0].elements[0];
