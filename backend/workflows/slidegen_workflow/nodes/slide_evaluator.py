@@ -1,109 +1,65 @@
 # File: backend/workflows/slidegen_workflow/nodes/slide_evaluator.py
 
+import os
+import shutil
 import json
-from langchain_core.messages import HumanMessage
-from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnableConfig
-from backend.workflows.slidegen_workflow.utils.helper import image_to_base64
-from backend.workflows.slidegen_workflow.graph.stage import State, Evaluation
-from backend.workflows.slidegen_workflow.utils.prompts import EVALUATION_PROMPT
+from backend.workflows.slidegen_workflow.graph.stage import State
+from backend.infrastructure.aesthetic.vit_aesthetic_provider import get_vit_evaluator
 
 
 def slide_evaluator(state: State, config: RunnableConfig) -> State:
     """
-    Sử dụng VLM và with_structured_output
-    đảm bảo phản hồi có cấu trúc.
+    Sử dụng ViT Multi-label model để đánh giá slide.
     """
     retry_count = state.get('retry_count', 0)
     idx = state['current_slide_index']
-    print(f"\n---------------- Node Slide Evaluator (Slide thứ {idx + 1}, Retry attempt {retry_count}) using structured_output ----------------")
+    print(f"\n---------------- Node Slide Evaluator (Slide thứ {idx + 1}, Retry attempt {retry_count}) using ViT Model ----------------")
 
-    # Get current tool call and image path
-    recent_function_call = state.get('current_tool_call', None)
-    previous_accepted_tool_call = state.get('previous_accepted_tool_call', None)
+    # Get current image path
     current_image_path = state.get('current_image_path', None)
-    previous_image_path = state.get('previous_image_path', None)
 
     # Initialize default values
     state['vlm_feedback'] = "No feedback provided."
     state['vlm_decision'] = "deny"
 
     # Validate required inputs
-    if not recent_function_call or not current_image_path:
-        print("Insufficient function call or image for evaluation. Denying.")
-        state['vlm_feedback'] = "Cannot evaluate due to missing HTML code or slide image."
+    if not current_image_path:
+        print("Insufficient image for evaluation. Denying.")
+        state['vlm_feedback'] = "Cannot evaluate due to missing slide image."
         state['retry_count'] = retry_count + 1
         return state
 
-    # Build multimodal message (text + image)
-    evaluation_prompt = ChatPromptTemplate.from_template(EVALUATION_PROMPT)
-    formatted_prompt = evaluation_prompt.format(
-        tool_call_output=json.dumps(recent_function_call, indent=2),
-        previous_accepted_tool_call=json.dumps(previous_accepted_tool_call, indent=2)
-    )
+    print(f"Sending request to ViT Evaluator for image: {current_image_path}")
+    
+    vit_evaluator = get_vit_evaluator()
+    is_accept, errors, detailed_scores = vit_evaluator.evaluate(current_image_path)
 
-    message_content = [
-        {"type": "text", "text": formatted_prompt}
-    ]
-
-    # Add image if available
-    current_base64_image = image_to_base64(current_image_path)
-    if current_base64_image:
-        message_content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/png;base64,{current_base64_image}"},
-            "description": "current slide image"
-        })
+    print(f"ViT Scores: {json.dumps(detailed_scores, indent=2, ensure_ascii=False)}")
+    
+    if is_accept:
+        decision = "accept"
+        feedback = "The slide is beautiful and has no errors. Great job!"
     else:
-        print("Warning: Could not encode current slide image to base64")
-
-    previous_base64_image = image_to_base64(previous_image_path)
-    if previous_base64_image:
-        message_content.append({
-            "type": "image_url",
-            "image_url": {"url": f"data:image/png;base64,{previous_base64_image}"},
-            "description": "previous slide image"
-        })
-    else:
-        print("Warning: Could not encode previous slide image to base64")
-
-    vlm_message = HumanMessage(content=message_content)
-
-    # Use structured output with the LLM
-    configurable = config.get("configurable", {}) if config else {}
-    llm = configurable.get('llm') or state.get('llm')
-    if not llm:
-        raise ValueError("LLM instance not found for slide evaluator.")
-
-    structured_llm = llm.with_structured_output(Evaluation)
-
-    print("Sending request to VLM with structured_output...")
-    response: Evaluation = structured_llm.invoke([vlm_message])
-
-    print(f"Response: {response}")
-
-    print(f"VLM Decision: {response.decision}")
-    print(f"VLM Feedback: {response.feedback}")
-
-    state['vlm_decision'] = response.decision
-    state['vlm_feedback'] = response.feedback
-
-    from backend.infrastructure.aesthetic.vit_aesthetic_provider import get_vit_evaluator
-    print("Evaluating aesthetic score with ViT...")
-    try:
-        vit_evaluator = get_vit_evaluator()
-        vit_score = vit_evaluator.evaluate(current_image_path)
-        print(f"ViT Aesthetic Score: {vit_score:.3f}")
+        decision = "deny"
+        feedback = f"Slide has aesthetic errors: {', '.join(errors)}. Please adjust the layout, font size, or color contrast."
         
-        # Override VLM decision if aesthetic score is too low
-        if vit_score < 0.5 and state['vlm_decision'] == 'accept':
-            print("ViT score is below 0.5. Overriding VLM decision to DENY.")
-            state['vlm_decision'] = 'deny'
-            state['vlm_feedback'] += f" | However, ViT Aesthetic Score ({vit_score:.3f}) is too low, so the slide was rejected."
-        else:
-            state['vlm_feedback'] += f" | ViT Aesthetic Score: {vit_score:.3f}."
-    except Exception as e:
-        print(f"Error during ViT evaluation: {e}")
+        # Save a copy of the rejected slide for comparison
+        try:
+            dir_name = os.path.dirname(current_image_path)
+            base_name = os.path.basename(current_image_path)
+            name, ext = os.path.splitext(base_name)
+            rejected_path = os.path.join(dir_name, f"{name}_rejected_retry_{retry_count}{ext}")
+            shutil.copy2(current_image_path, rejected_path)
+            print(f"Lưu lại slide bị lỗi để so sánh tại: {rejected_path}")
+        except Exception as e:
+            print(f"Không thể lưu slide lỗi: {e}")
+
+    print(f"ViT Decision: {decision}")
+    print(f"ViT Feedback: {feedback}")
+
+    state['vlm_decision'] = decision
+    state['vlm_feedback'] = feedback
 
     # Update retry count if decision is 'deny'
     if state['vlm_decision'] == 'deny':

@@ -32,6 +32,7 @@ from backend.workflows.slidegen_workflow.utils.helper import (
     parse_tool_calls_json,
     QWEN_CHAT_TEMPLATE,
 )
+from backend.infrastructure.llm_providers.base import BaseLLMProvider
 
 _tokenizer_cache = {}
 
@@ -149,10 +150,18 @@ def _build_tool_description_text(tool_schemas: list) -> str:
         lines.append(f"  Description: {desc}")
         
         param_desc_list = []
+        image_param_names = []
         for prop_name, prop_spec in properties.items():
             prop_type = prop_spec.get("type", "any")
             is_req = " (REQUIRED)" if prop_name in required else ""
             
+            # Detect image params using same logic as executor
+            is_image = (
+                "image_url" in prop_name.lower()
+                or "image_path" in prop_name.lower()
+                or prop_name.lower() in {"bg_image", "background_image"}
+            )
+
             if prop_type == "array":
                 item_spec = prop_spec.get("items", {})
                 if item_spec.get("type") == "object":
@@ -162,10 +171,21 @@ def _build_tool_description_text(tool_schemas: list) -> str:
                     item_type = item_spec.get("type", "string")
                     param_desc_list.append(f"`{prop_name}`: List[{item_type}]{is_req}")
             else:
-                param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req}")
+                if is_image:
+                    param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req} ⚠️ IMAGE PARAM — requires a search_ddgs_images call")
+                    image_param_names.append(prop_name)
+                else:
+                    param_desc_list.append(f"`{prop_name}`: {prop_type}{is_req}")
                 
         if param_desc_list:
             lines.append(f"  Parameters: {', '.join(param_desc_list)}")
+
+        # Add image search notice if this tool has image params
+        if image_param_names:
+            lines.append(
+                f"  ⚠️ IMAGE SEARCH REQUIRED: This tool has {len(image_param_names)} image param(s): {image_param_names}. "
+                f"Your tool plan MUST output the slide tool FIRST, then {len(image_param_names)} search_ddgs_images call(s) AFTER it."
+            )
             
     return "\n".join(lines)
 
@@ -181,6 +201,10 @@ def _get_qwen_tokenizer(model_name: str):
 
 def _get_qwen_config(llm):
     """Extract (model_name, base_url, api_key) from any LLM wrapper or environment."""
+    if hasattr(llm, "provider_name") and llm.provider_name == "remote_fastapi_llm":
+        url = getattr(getattr(llm, "config", None), "generate_api_url", "Remote Server")
+        return "Remote-FastAPI-Model", url, "not-needed"
+        
     model_name = (
         getattr(llm, 'model_name', None) or 
         getattr(llm, 'model', None) or 
@@ -198,13 +222,14 @@ def _get_qwen_config(llm):
         os.environ.get("OPENAI_API_KEY") or 
         'not-needed'
     )
-    if hasattr(api_key, 'get_secret_value'):
-        api_key = api_key.get_secret_value()
     return model_name, base_url, api_key
 
 
 def _check_is_qwen(llm) -> bool:
-    """Helper to detect if the loaded LLM is a Qwen variant or NVIDIA API Qwen."""
+    """Helper to detect if the loaded LLM is a Qwen variant or NVIDIA API Qwen or a LocalPyTorchLLMProvider."""
+    # BaseLLMProvider with model_type=qwen is always treated as Qwen path
+    if isinstance(llm, BaseLLMProvider):
+        return llm.model_type == "qwen"
     model_name = ""
     for attr in ["model", "model_name", "model_id"]:
         if hasattr(llm, attr):
@@ -236,6 +261,12 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     
     # 2. Get dynamic data from state
     idx = state['current_slide_index']
+    
+    # If moving to a new slide index, clear cached candidate_tools and design_instruction from previous slide
+    if state.get("last_processed_slide_index") != idx:
+        state["candidate_tools"] = None
+        state["design_instruction"] = None
+        state["last_processed_slide_index"] = idx
     current_text = state.get("current_slide_text", "")
     current_plan = state.get('current_slide_plan')
     current_context_map = state.get('current_slide_context_map')
@@ -262,9 +293,16 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     print(f"--- Preparing & Generating slide {idx + 1}/{length_slide_chunks} ---")
     print(f"  -> Category: '{tool_category}'")
     
-    # 3. Retrieve relevant tools
+    # 3. Retrieve relevant tools (Reuse candidate_tools if available in state for retries)
     my_tools = []
-    if tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
+    if state.get("candidate_tools"):
+        # Remove search tool if present in candidate_tools cache to get original my_tools
+        cached = [t for t in state["candidate_tools"] if getattr(t, 'name', '') != SEARCH_DDGS_TOOL.name]
+        if cached:
+            my_tools = cached
+            print(f"  -> Reusing {len(my_tools)} cached tools from state (retry attempt)")
+
+    if not my_tools and tool_category == 'TRANSITION_TOOLS' and 'previous_transition_tool_call' in state:
         prev_transition_tool_name = state['previous_transition_tool_call'].get('name')
         if prev_transition_tool_name:
             all_transition_tools = all_tools_dict.get('TRANSITION_TOOLS', [])
@@ -285,12 +323,12 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 my_tools = retrieved_tools if retrieved_tools else all_tools_dict.get(tool_category, [])
             except Exception as e:
                 print(f"⚠️ tool_retriever error ({e}), falling back to category tools for '{tool_category}'")
-                my_tools = all_tools_dict.get(tool_category, [])
+                my_tools = all_tools_dict.get(tool_category, [])[:5]
         else:
-            my_tools = all_tools_dict.get(tool_category, [])
+            my_tools = all_tools_dict.get(tool_category, [])[:5]
         
     if not my_tools:
-        my_tools = all_tools_dict.get('CONTENT_TOOLS', [])
+        my_tools = all_tools_dict.get('CONTENT_TOOLS', [])[:5]
         
     print(f"  -> Prepared {len(my_tools)} tools: {[t.name for t in my_tools]}")
     
@@ -348,39 +386,36 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     # 6. Format Style Context
     style_context_str = json.dumps(_extract_style_params(previous_slide_function_call), indent=2)
     
-    # 7. Invoke Gemini (Planner LLM) to get design instruction for the next slide
-    print("  -> Calling Gemini to prepare design instructions...")
-    design_instruction = creative_thought
-    if planner_llm:
-        try:
-            human_msg = SLIDE_PREPARER_HUMAN_TEMPLATE.format(
-                previous_style_context=style_context_str,
-                slide_plan=json.dumps(current_plan, indent=2),
-                slide_content=current_text
-            )
-            messages = [
-                {"role": "system", "content": SLIDE_PREPARER_SYSTEM_PROMPT},
-                {"role": "user", "content": human_msg}
-            ]
-            response = planner_llm.invoke(messages)
-            if hasattr(response, "content") and response.content:
-                design_instruction = response.content.strip()
-                print("  -> Prepared Instruction:")
-                print("     " + design_instruction.replace("\n", "\n     "))
-        except Exception as e:
-            print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
+    # 7. Invoke Gemini (Planner LLM) to get design instruction for the next slide (Reuse cached instruction if available for retries)
+    design_instruction = state.get("design_instruction")
+    if design_instruction:
+        print("  -> Reusing cached design instructions from state (retry attempt)")
+    else:
+        design_instruction = creative_thought
+        if planner_llm:
+            try:
+                print("  -> Calling Gemini to prepare design instructions...")
+                human_msg = SLIDE_PREPARER_HUMAN_TEMPLATE.format(
+                    previous_style_context=style_context_str,
+                    slide_plan=json.dumps(current_plan, indent=2),
+                    slide_content=current_text
+                )
+                messages = [
+                    {"role": "system", "content": SLIDE_PREPARER_SYSTEM_PROMPT},
+                    {"role": "user", "content": human_msg}
+                ]
+                response = planner_llm.invoke(messages)
+                if hasattr(response, "content") and response.content:
+                    design_instruction = response.content.strip()
+                    print("  -> Prepared Instruction:")
+                    print("     " + design_instruction.replace("\n", "\n     "))
+            except Exception as e:
+                print(f"⚠️ Gemini preparer failed, falling back to planner plan: {e}")
             
     # Assign prepared values. The image-search plan is produced by this same
     # generator invocation; no later LLM call is allowed to create search specs.
     system_prompt = (
         generator_system_prompt
-        + "\n\n"
-        + IMAGE_SEARCH_EXECUTION_PLAN_RULES
-    )
-    qwen_system_prompt = (
-        QWEN_GENERATOR_SYSTEM_PROMPT
-        + "\n\n"
-        + generator_system_prompt
         + "\n\n"
         + IMAGE_SEARCH_EXECUTION_PLAN_RULES
     )
@@ -444,55 +479,82 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             {"role": "user", "content": qwen_user_prompt},
         ]
         model_name, base_url, api_key = _get_qwen_config(llm)
-        client = OpenAI(base_url=base_url, api_key=api_key)
-        
-        try:
-            # Primary API path: OpenAI-compatible ChatCompletions (works for NVIDIA API, vLLM, OpenAI)
-            max_tokens_val = getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 2000)
-            resp = client.chat.completions.create(
-                model=model_name,
-                messages=messages,
-                max_tokens=max_tokens_val,
-                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
-            )
-            content = (resp.choices[0].message.content or "").strip()
-        except Exception as api_err:
-            print(f"⚠️ ChatCompletions API failed ({api_err}), attempting local raw completions fallback...")
+
+        # A. QWEN EXECUTION PATH (Local PyTorch / NVIDIA API / OpenAI-compatible API)
+        if isinstance(llm, BaseLLMProvider):
             try:
-                tokenizer = _get_qwen_tokenizer(model_name)
-                prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
-                resp = client.completions.create(
+                content = llm.generate_completion(
+                    messages=messages,
+                    tools=tool_schemas,
+                    max_tokens=int(os.getenv('MAX_COMPLETION_LENGTH', '400')),
+                    temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+                )
+            except Exception as e:
+                print(f"❌ BaseLLMProvider ({llm.provider_name}) generation failed: {e}")
+                content = ""
+        else:
+            # Fallback cho LangChain ChatOpenAI object nguyên bản
+            client = OpenAI(base_url=base_url, api_key=api_key)
+            try:
+                max_tokens_val = int(os.getenv('MAX_COMPLETION_LENGTH', '400'))
+                resp = client.chat.completions.create(
                     model=model_name,
-                    prompt=prompt,
+                    messages=messages,
                     max_tokens=max_tokens_val,
                     temperature=getattr(llm, 'temperature', 0.5) or 0.5,
-                    stop=["<|im_end|>"],
                 )
-                content = (resp.choices[0].text or "").strip()
-            except Exception as fallback_err:
-                print(f"❌ Qwen generation failed: {fallback_err}")
-                content = ""
+                content = (resp.choices[0].message.content or "").strip()
+            except Exception as api_err:
+                print(f"⚠️ ChatCompletions API failed ({api_err}), attempting local raw completions fallback...")
+                try:
+                    tokenizer = _get_qwen_tokenizer(model_name)
+                    prompt = tokenizer.apply_chat_template(messages, tools=tool_schemas, tokenize=False, add_generation_prompt=True)
+                    resp = client.completions.create(
+                        model=model_name,
+                        prompt=prompt,
+                        max_tokens=max_tokens_val,
+                        temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+                        stop=["<|im_end|>"],
+                    )
+                    content = (resp.choices[0].text or "").strip()
+                except Exception as fallback_err:
+                    print(f"❌ Qwen generation failed: {fallback_err}")
+                    content = ""
         
-    # B. GEMINI/API EXECUTION PATH (LangChain tool binding)
+    # B. GEMINI/API EXECUTION PATH (LangChain tool binding / GeminiAPIProvider)
     else:
-        gemini_vars = {**human_vars, "design_instruction": design_instruction}
-        llm_with_tools = llm.bind_tools(generator_tools)
-        slidegen_prompt = ChatPromptTemplate.from_messages([
-            ("system", system_prompt),
-            ("human", human_template)
-        ])
-        slide_generator_runnable = slidegen_prompt | llm_with_tools
-        response = slide_generator_runnable.invoke(gemini_vars)
+        gemini_user_prompt = HUMAN_PROMPT_TEMPLATE.format(
+            design_instruction=design_instruction,
+            **human_vars
+        )
+        messages = [
+            {"role": "system", "content": generator_system_prompt},
+            {"role": "user", "content": gemini_user_prompt}
+        ]
+        
+        if isinstance(llm, BaseLLMProvider):
+            content = llm.generate_completion(
+                messages=messages,
+                tools=[format_tool_for_qwen(t) for t in generator_tools] if getattr(llm, 'model_type', '') == 'qwen' else generator_tools,
+                temperature=getattr(llm, 'temperature', 0.5) or 0.5,
+            )
+            response = None
+        else:
+            # Native LangChain LLM Fallback
+            llm_with_tools = llm.bind_tools(generator_tools)
+            response = llm_with_tools.invoke(messages)
         
     # 3. Parse JSON / Extract tool call
     tool_call_dict = None
     tool_plan = []
 
-    if is_qwen:
-        # Qwen path: raw text from completions endpoint
+    if is_qwen or isinstance(llm, BaseLLMProvider):
+        # Qwen path hoặc BaseLLMProvider: raw text completion / JSON format
         tool_plan = parse_tool_calls_json(content)
+        state["raw_llm_response"] = content
     else:
-        # Gemini path: structured tool calls
+        # Gemini path (LangChain response)
+        state["raw_llm_response"] = getattr(response, "content", "") or str(response)
         if hasattr(response, "tool_calls") and response.tool_calls:
             tool_plan = [
                 {
@@ -541,6 +603,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
     state["current_tool_call"] = tool_call_dict
     state["current_tool_plan"] = tool_plan
     state["raw_llm_response"] = content
+    state["raw_llm_prompt"] = prompt if 'prompt' in locals() else ""
     
     # Save helper state variables for downstream nodes
     state["candidate_tools"] = generator_tools

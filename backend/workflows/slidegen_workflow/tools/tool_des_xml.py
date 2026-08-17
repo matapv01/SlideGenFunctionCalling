@@ -10,19 +10,10 @@ from langchain_core.tools import StructuredTool
 
 
 # Import all slide generation functions from xml_tool
+
 from backend.workflows.slidegen_workflow.tools.xml_tool import (
-    generate_dynamic_intro_slide_xml,
-    generate_elegant_agenda_slide_xml,
-    generate_dusk_transition_slide_xml,
-    generate_vision_mission_slide_xml,
-    generate_geometric_split_content_slide_xml,
-    generate_memphis_grid_slide_xml,
-    generate_elegant_points_slide_xml,
-    generate_timeline_slide_xml,
-    generate_colorful_team_grid_slide_xml,
-    generate_quote_slide_xml,
-    generate_reference_slide_xml,
-    generate_modern_contact_slide_xml,
+    generate_business_proposal_cover_slide_xml,
+
     generate_intro_slide_xml,
     generate_warm_intro_slide_xml,
     generate_elegant_education_slide_xml,
@@ -305,8 +296,68 @@ class GenerateDonutChartSlideInput(BaseModel):
 # ==========================================================
 # CÁC CÔNG CỤ (TOOLS) ĐƯỢC ĐĂNG KÝ VỚI AI
 # ==========================================================
+class GenerateTechPitchDeckThankYouInput(BaseModel):
+    company_name: str = Field(default="Arowwai\nIndustries", description="Company name shown on top left.")
+    title: str = Field(default="THANK YOU!", description="Main title.")
+    name: str = Field(default="Aaron Loeb", description="Name of the contact person.")
+    role: str = Field(default="CEO & Founder", description="Role of the contact person.")
+    phone: str = Field(default="+123-456-7890", description="Phone number.")
+    website: str = Field(default="www.reallygreatsite.com", description="Website URL.")
+    address: str = Field(default="123 Anywhere St., Any City, State,\nCountry 12345", description="Address.")
+    profile_image_url: str = Field(default="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=500&fit=crop", description="URL for the profile image.")
+
+class GenerateThynkUnlimitedThankYouInput(BaseModel):
+    company_name: str = Field(default="Thynk Unlimited", description="Company name shown on top left.")
+    title: str = Field(default="THANK YOU", description="Main title.")
+    subtitle: str = Field(default="FOR YOUR ATTENTION", description="Subtitle.")
+    date: str = Field(default="December 2023", description="Date pill text.")
+    email: str = Field(default="hello@reallygreatsite.com", description="Contact email.")
+    website: str = Field(default="www.reallygreatsite.com", description="Website URL.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop", description="URL for the right side image.")
+
+
+class GenerateBusinessProposalCoverInput(BaseModel):
+    brand_name: str = Field(default="Larana, Inc.", description="Brand name.")
+    title: str = Field(default="BUSINESS PROPOSAL", description="Main title.")
+    website: str = Field(default="www.reallygreatsite.com", description="Website URL.")
+    email: str = Field(default="hello@reallygreatsite.com", description="Email address.")
+    image1_url: str = Field(default="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab", description="Image 1 URL.")
+    image2_url: str = Field(default="https://images.unsplash.com/photo-1577017040065-650ee4d43339", description="Image 2 URL.")
+    image3_url: str = Field(default="https://images.unsplash.com/photo-1460472178825-e5240623afd5", description="Image 3 URL.")
+
+class GenerateImageAndNumberedListSlideInput(BaseModel):
+    title: str = Field(default="The Polar Climate and\nIts Extremes", description="Main title.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&auto=format&fit=crop", description="URL for the image.")
+    item1_number: str = Field(default="01", description="Number for item 1.")
+    item1_title: str = Field(default="Endless Cold", description="Title for item 1.")
+    item1_desc: str = Field(default="Temperatures drop far below zero for months, testing both human and wildlife adaptation to freezing conditions", description="Description for item 1.")
+    item2_number: str = Field(default="02", description="Number for item 2.")
+    item2_title: str = Field(default="Midnight Sun &amp; Polar Night", description="Title for item 2.")
+    item2_desc: str = Field(default="The Arctic experiences months of sunlight and darkness, shaping unique biological and cultural rhythms", description="Description for item 2.")
+    item3_number: str = Field(default="03", description="Number for item 3.")
+    item3_title: str = Field(default="Adapting to Extremes", description="Title for item 3.")
+    item3_desc: str = Field(default="Animals like polar bears and arctic foxes have evolved to thrive in this challenging, ever-changing climate", description="Description for item 3.")
+
+class GenerateTechPitchDeckCoverSlideInput(BaseModel):
+    company_name: str = Field(default="Arowwai\nIndustries", description="Company name.")
+    title: str = Field(default="Technology\nPitch Deck", description="Main title.")
+    subtitle: str = Field(default="By: Alexander Aronowitz", description="Subtitle.")
+    image_url: str = Field(default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop", description="URL for the cover image.")
+
 INTRO_TOOLS = [
+     StructuredTool.from_function(
+        func=xml_tool.generate_image_and_numbered_list_slide_xml,
+        name="generate_image_and_numbered_list_slide_xml",
+        description="Generate an image and numbered list slide with an image on the left and 3 numbered points on the right.",
+        args_schema=GenerateImageAndNumberedListSlideInput,
+    ),
     StructuredTool.from_function(
+        func=xml_tool.generate_tech_pitch_deck_cover_slide_xml,
+        name="generate_tech_pitch_deck_cover_slide_xml",
+        description="Generates a tech pitch deck cover slide with a large image and partial circle decor.",
+        args_schema=GenerateTechPitchDeckCoverSlideInput,
+    ),
+   StructuredTool.from_function(
         func=generate_intro_slide_xml,
         name="generate_intro_slide_xml",
         description="Generates an introductory cover slide with an abstract SVG blob background, a large centered main title, and a subtitle below it. Ideal for the opening slide of a presentation, title covers, and introductions.",
@@ -342,18 +393,8 @@ INTRO_TOOLS = [
         description="Generate a 2-column science/biology style slide with pale green background, hexagon patterns, and a molecule graphic. Good for comparisons or side-by-side content.",
         args_schema=GenerateScience2ColSlideInput,
     ),
-    StructuredTool.from_function(
-        func=generate_thank_you_slide_xml,
-        name="generate_thank_you_slide_xml",
-        description="Generate a handwritten watercolor style 'Thank You' slide with a large cursive title, floating hearts, and a bouquet of daisies.",
-        args_schema=GenerateThankYouSlideInput,
-    ),
-    StructuredTool.from_function(
-        func=generate_thank_you_watching_slide_xml,
-        name="generate_thank_you_watching_slide_xml",
-        description="Generate a boho/abstract 'Thank You for watching' slide with torn paper shapes, line-art branches, and 3D bold marker text.",
-        args_schema=GenerateThankYouWatchingSlideInput,
-    ),
+
+
     StructuredTool.from_function(
         func=generate_about_me_slide_xml,
         name="generate_about_me_slide_xml",
@@ -365,7 +406,16 @@ INTRO_TOOLS = [
         name="generate_content_2col_slide_xml",
         description="Generate a clean 2-column content slide with a large title, accent line, two text sections on the left, and a full-height image on the right.",
         args_schema=GenerateContent2ColSlideInput,
-    )
+    ),
+
+
+
+    StructuredTool.from_function(
+        func=generate_business_proposal_cover_slide_xml,
+        name="generate_business_proposal_cover_slide_xml",
+        description="Generates a business proposal cover slide with 3 diamond images.",
+        args_schema=GenerateBusinessProposalCoverInput,
+    ),
 ]
 TRANSITION_TOOLS = [
     StructuredTool.from_function(
@@ -389,97 +439,233 @@ TEAM_TOOLS = [
         args_schema=GenerateGridTeamSlideInput,
     )
 ]
-THANK_YOU_TOOLS = []
+
+
+
+
+THANK_YOU_TOOLS = [
+    StructuredTool.from_function(
+        func=xml_tool.generate_tech_pitch_deck_thank_you_slide_xml,
+        name="generate_tech_pitch_deck_thank_you_slide_xml",
+        description="Generates a tech pitch deck thank you slide with contact information and a right-side image.",
+        args_schema=GenerateTechPitchDeckThankYouInput,
+    ),
+    StructuredTool.from_function(
+        func=xml_tool.generate_thynk_unlimited_thank_you_slide_xml,
+        name="generate_thynk_unlimited_thank_you_slide_xml",
+        description="Generates a thank you slide for Thynk Unlimited theme.",
+        args_schema=GenerateThynkUnlimitedThankYouInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_slide_xml,
+        name="generate_thank_you_slide_xml",
+        description="Generate a handwritten watercolor style 'Thank You' slide with a large cursive title, floating hearts, and a bouquet of daisies.",
+        args_schema=GenerateThankYouSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_thank_you_watching_slide_xml,
+        name="generate_thank_you_watching_slide_xml",
+        description="Generate a boho/abstract 'Thank You for watching' slide with torn paper shapes, line-art branches, and 3D bold marker text.",
+        args_schema=GenerateThankYouWatchingSlideInput,
+    ),
+]
 
 class GenerateAreaSlideInput(BaseModel):
-    """Input for generating a area slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    data1_label: str = Field(default="Data 1", description="Text label for data1_label")
+    data2_label: str = Field(default="Data 2", description="Text label for data2_label")
+    data3_label: str = Field(default="Data 3", description="Text label for data3_label")
+    data4_label: str = Field(default="Data 4", description="Text label for data4_label")
+    data5_label: str = Field(default="Data 5", description="Text label for data5_label")
+    data6_label: str = Field(default="Data 6", description="Text label for data6_label")
 
 
 class GenerateColumnSlideInput(BaseModel):
-    """Input for generating a column slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    item1_label: str = Field(default="Thailand", description="Text label for item1_label")
+    item2_label: str = Field(default="Philippines", description="Text label for item2_label")
+    item3_label: str = Field(default="Ethiopia", description="Text label for item3_label")
+    item4_label: str = Field(default="Columbia", description="Text label for item4_label")
+    item5_label: str = Field(default="Australia", description="Text label for item5_label")
+    item6_label: str = Field(default="Vietnam", description="Text label for item6_label")
+    item7_label: str = Field(default="Brazil", description="Text label for item7_label")
 
 
 class GenerateComparisonSlideInput(BaseModel):
-    """Input for generating a comparison slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    metric1_label: str = Field(default="Email Marketing", description="Text label for metric1_label")
+    metric2_label: str = Field(default="SEO", description="Text label for metric2_label")
+    metric1_value: str = Field(default="28%", description="Text label for metric1_value")
+    metric2_value: str = Field(default="72%", description="Text label for metric2_value")
 
 
 class GenerateDarkBarSlideInput(BaseModel):
-    """Input for generating a dark bar slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    market1_label: str = Field(default="Market 1", description="Text label for market1_label")
+    market2_label: str = Field(default="Market 2", description="Text label for market2_label")
+    trend1_label: str = Field(default="Trend 1", description="Text label for trend1_label")
+    trend2_label: str = Field(default="Trend 2", description="Text label for trend2_label")
+    trend3_label: str = Field(default="Trend 3", description="Text label for trend3_label")
 
 
 class GenerateDarkPieSlideInput(BaseModel):
-    """Input for generating a dark pie slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    slice1_label: str = Field(default="Growth 1", description="Text label for slice1_label")
+    slice1_value: str = Field(default="12.5%", description="Text label for slice1_value")
+    slice2_label: str = Field(default="Growth 2", description="Text label for slice2_label")
+    slice2_value: str = Field(default="25%", description="Text label for slice2_value")
+    slice3_label: str = Field(default="Growth 3", description="Text label for slice3_label")
+    slice3_value: str = Field(default="62.5%", description="Text label for slice3_value")
 
 
 class GenerateDashboardSlideInput(BaseModel):
-    """Input for generating a dashboard slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    metric1_label: str = Field(default="Annual Revenue Target", description="Text label for metric1_label")
+    metric1_value: str = Field(default="", description="Text label for metric1_value")
+    metric2_label: str = Field(default="Current YTD (Q3)", description="Text label for metric2_label")
+    metric2_value: str = Field(default=".7M", description="Text label for metric2_value")
+    metric3_label: str = Field(default="Forecast Q4", description="Text label for metric3_label")
+    metric3_value: str = Field(default="+5-7%", description="Text label for metric3_value")
+    highlight_text: str = Field(default="Projected to exceed target", description="Text label for highlight_text")
 
 
 class GenerateFinancialProjectionsSlideInput(BaseModel):
-    """Input for generating a financial projections slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    title_word1: str = Field(default="Financial", description="Text label for title_word1")
+    title_word2: str = Field(default="Projections", description="Text label for title_word2")
+    item1_label: str = Field(default="Item 1", description="Text label for item1_label")
+    item1_value: str = Field(default="62.5%", description="Text label for item1_value")
+    item2_label: str = Field(default="Item 2", description="Text label for item2_label")
+    item2_value: str = Field(default="25%", description="Text label for item2_value")
+    item3_label: str = Field(default="Item 3", description="Text label for item3_label")
+    item3_value: str = Field(default="12.5%", description="Text label for item3_value")
 
 
 class GenerateImageBarSlideInput(BaseModel):
-    """Input for generating a image bar slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    image1_url: str = Field(default="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format", description="Image URL")
 
 
 class GenerateLineSlideInput(BaseModel):
-    """Input for generating a line slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    series1_label: str = Field(default="Production", description="Text label for series1_label")
+    series2_label: str = Field(default="Sale", description="Text label for series2_label")
+    series3_label: str = Field(default="Marketing", description="Text label for series3_label")
+    month1_label: str = Field(default="January", description="Text label for month1_label")
+    month2_label: str = Field(default="February", description="Text label for month2_label")
+    month3_label: str = Field(default="March", description="Text label for month3_label")
+    month4_label: str = Field(default="April", description="Text label for month4_label")
+    month5_label: str = Field(default="May", description="Text label for month5_label")
+    month6_label: str = Field(default="June", description="Text label for month6_label")
 
 
 class GenerateMarketAnalysisSlideInput(BaseModel):
-    """Input for generating a market analysis slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    title_word1: str = Field(default="Market", description="Text label for title_word1")
+    title_word2: str = Field(default="Analysis", description="Text label for title_word2")
+    cat1_label: str = Field(default="Item 1", description="Text label for cat1_label")
+    cat2_label: str = Field(default="Item 2", description="Text label for cat2_label")
+    cat3_label: str = Field(default="Item 3", description="Text label for cat3_label")
+    cat4_label: str = Field(default="Item 4", description="Text label for cat4_label")
+    cat5_label: str = Field(default="Item 5", description="Text label for cat5_label")
+    series1_label: str = Field(default="Series 1", description="Text label for series1_label")
+    series2_label: str = Field(default="Series 2", description="Text label for series2_label")
+    series3_label: str = Field(default="Series 3", description="Text label for series3_label")
 
 
 class GeneratePeopleCultureSlideInput(BaseModel):
-    """Input for generating a people culture slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    metric1_label: str = Field(default="Employee Engagement", description="Text label for metric1_label")
+    metric1_value: str = Field(default="89%", description="Text label for metric1_value")
+    metric2_label: str = Field(default="Average Training Hours", description="Text label for metric2_label")
+    metric2_value: str = Field(default="37 hrs", description="Text label for metric2_value")
+    metric3_label_part1: str = Field(default="Women in", description="Text label for metric3_label_part1")
+    metric3_label_part2: str = Field(default="Leadership", description="Text label for metric3_label_part2")
+    metric3_value: str = Field(default="50%", description="Text label for metric3_value")
+    m1: str = Field(default="Jan", description="Text label for m1")
+    m2: str = Field(default="Feb", description="Text label for m2")
+    m3: str = Field(default="Mar", description="Text label for m3")
+    m4: str = Field(default="Apr", description="Text label for m4")
+    m5: str = Field(default="May", description="Text label for m5")
+    m6: str = Field(default="Jun", description="Text label for m6")
+    m7: str = Field(default="Jul", description="Text label for m7")
+    m8: str = Field(default="Aug", description="Text label for m8")
+    m9: str = Field(default="Sep", description="Text label for m9")
+    m10: str = Field(default="Oct", description="Text label for m10")
 
 
 class GenerateRadarSlideInput(BaseModel):
-    """Input for generating a radar slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    radar_label2: str = Field(default="S?c m?nh", description="Text label for radar_label2")
+    radar_label5: str = Field(default="IQ", description="Text label for radar_label5")
 
 
 class GenerateStackedBarSlideInput(BaseModel):
-    """Input for generating a stacked bar slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    series1_label: str = Field(default="Seri 1", description="Text label for series1_label")
+    series2_label: str = Field(default="Seri 2", description="Text label for series2_label")
+    series3_label: str = Field(default="Seri 3", description="Text label for series3_label")
+    y_axis_20: str = Field(default="20%", description="Text label for y_axis_20")
+    y_axis_40: str = Field(default="40%", description="Text label for y_axis_40")
+    y_axis_60: str = Field(default="60%", description="Text label for y_axis_60")
+    y_axis_80: str = Field(default="80%", description="Text label for y_axis_80")
+    y_axis_100: str = Field(default="100%", description="Text label for y_axis_100")
+    item1_label: str = Field(default="Item 1", description="Text label for item1_label")
+    item2_label: str = Field(default="Item 2", description="Text label for item2_label")
+    item3_label: str = Field(default="Item 3", description="Text label for item3_label")
+    item4_label: str = Field(default="Item 4", description="Text label for item4_label")
 
 
 class GenerateWaterfallSlideInput(BaseModel):
@@ -505,10 +691,16 @@ class GenerateKeyAdvantagesSlideInput(BaseModel):
 
 
 class GenerateSimpleDonutSlideInput(BaseModel):
-    """Input for generating a simple donut slide."""
     title: str = Field(default="Default Title", description="The title of the slide")
     subtitle: str = Field(default="Default Subtitle", description="The subtitle of the slide")
-    items: List[Dict[str, Any]] = Field(default=[], description="List of data items for the chart")
+    background_color: str = Field(default="#FFFFFF", description="Background color of the slide.")
+    title_color: str = Field(default="#333333", description="Color of the main title text.")
+    subtitle_color: str = Field(default="#666666", description="Color of the subtitle text.")
+    slice1_value: str = Field(default="11%", description="Text label for slice1_value")
+    slice2_value: str = Field(default="28%", description="Text label for slice2_value")
+    slice3_value: str = Field(default="22%", description="Text label for slice3_value")
+    slice4_value: str = Field(default="23%", description="Text label for slice4_value")
+    slice5_value: str = Field(default="16%", description="Text label for slice5_value")
 
 
 
@@ -723,36 +915,6 @@ def execute_tool_plan(tool_calls: list, tool_lookup: dict = None) -> tuple:
         "\n🚀 [EXECUTE TOOL PLAN] Raw ordered calls:\n"
         f"{json.dumps(tool_calls, indent=2, ensure_ascii=False)}"
     )
-    final_tool_call, search_history = execute_image_search_plan(
-        tool_calls=tool_calls,
-        tool_lookup=tool_lookup,
-    )
-    tool_name = final_tool_call.get("name", "unknown_tool")
-    original_html_call = tool_calls[0]   # bản gốc từ LLM (image_url = "") — HTML tool FIRST
-    search_calls = tool_calls[1:]        # search_ddgs_images calls từ LLM — AFTER
 
-    # Build execution matrix theo cấu trúc training: tool_call trước, image_tool_call_N sau
-    execution_matrix: dict = {"tool_call": original_html_call}
-    for i, call in enumerate(search_calls, start=1):
-        result_url = search_history[i - 1].get("result_url", "") if i - 1 < len(search_history) else ""
-        execution_matrix[f"image_tool_call_{i}"] = {
-            **call,
-            "result_url": result_url,   # URL thực đã tìm được (chỉ để log, không lưu dataset)
-        }
+    image_url: str = Field(default="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop", description="URL for the large image on the right.")
 
-    print(
-        "  📦 [PIPELINE TOOL CALL EXECUTION MATRIX]:\n"
-        f"{json.dumps(execution_matrix, indent=2, ensure_ascii=False)}"
-    )
-
-    print(f"  🎨 [RENDER HTML] Executing tool '{tool_name}' to generate slide HTML...")
-    html_out = execute_tool(final_tool_call)
-    if html_out:
-        print(f"  ✅ [SUCCESS] Tool '{tool_name}' rendered HTML successfully ({len(html_out)} bytes).")
-    else:
-        print(f"  ❌ [ERROR] Tool '{tool_name}' failed to render HTML.")
-    return html_out, final_tool_call, search_history
-
-
-
-TOOLS_DICT = {tool.name: tool for tool in ALL_TOOLS}

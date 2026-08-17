@@ -2428,7 +2428,7 @@ def generate_donut_chart_slide_xml(title: str, subtitle: str, items: list) -> st
 '''
     return xml
 
-def generate_area_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_area_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for area.
     """
@@ -2438,13 +2438,13 @@ def generate_area_slide_xml(title: str = "Default Title", subtitle: str = "Defau
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FFFFFF">
+  <slide background="{background_color}">
     <polygon points="50,40 70,40 70,55 50,55" fill="#3A5EC5"/>
     <polygon points="75,40 95,40 95,55 75,55" fill="#4A9EBD"/>
     <polygon points="50,60 70,60 70,75 50,75" fill="#4A9EBD"/>
     <polygon points="75,60 95,60 95,75 75,75" fill="#3A5EC5"/>
-    <textbox x="110" y="40" width="300" height="40" font="Segoe UI" size="20" color="#111111" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{title}</textbox>
-    <textbox x="950" y="40" width="100" height="40" font="Segoe UI" size="18" color="#555555" align="center" vertical_align="middle" single_line="true">{subtitle}</textbox>
+    <textbox x="110" y="40" width="300" height="40" font="Segoe UI" size="20" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{title}</textbox>
+    <textbox x="950" y="40" width="100" height="40" font="Segoe UI" size="18" color="{subtitle_color}" align="center" vertical_align="middle" single_line="true">{subtitle}</textbox>
     <textbox x="1060" y="40" width="100" height="40" font="Segoe UI" size="18" color="#555555" align="center" vertical_align="middle" single_line="true">Service</textbox>
     <textbox x="1170" y="40" width="100" height="40" font="Segoe UI" size="18" color="#555555" align="center" vertical_align="middle" single_line="true">About Us</textbox>
     <textbox x="1280" y="40" width="100" height="40" font="Segoe UI" size="18" color="#555555" align="center" vertical_align="middle" single_line="true">Contact</textbox>
@@ -2456,15 +2456,15 @@ Data</textbox>
     <textbox x="150" y="450" width="350" height="200" font="Segoe UI" size="16" color="#666666" align="left" vertical_align="top" single_line="false" max_lines="8" reflow_on_resize="true" line_spacing="1.2">Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.</textbox>
     <svg x="150" y="660" width="200" height="60" pixel_width="200" pixel_height="60">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;200&quot; height=&quot;60&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;180&quot; height=&quot;55&quot; rx=&quot;27.5&quot; fill=&quot;#3A5EC5&quot;/&gt;&lt;/svg&gt;</svg>
     <textbox x="150" y="660" width="180" height="55" font="Segoe UI" size="14" color="#FFFFFF" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1">Learn More</textbox>
-    <svg x="550" y="180" width="950" height="550" pixel_width="950" pixel_height="550">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;950&quot; height=&quot;550&quot; viewBox=&quot;0 0 950 550&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;900&quot; height=&quot;520&quot; rx=&quot;30&quot; fill=&quot;#F8F9FA&quot;/&gt;&lt;line x1=&quot;100&quot; y1=&quot;430.0&quot; x2=&quot;800&quot; y2=&quot;430.0&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;435.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;377.14285714285717&quot; x2=&quot;800&quot; y2=&quot;377.14285714285717&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;382.14285714285717&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;20&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;324.2857142857143&quot; x2=&quot;800&quot; y2=&quot;324.2857142857143&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;329.2857142857143&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;40&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;271.42857142857144&quot; x2=&quot;800&quot; y2=&quot;271.42857142857144&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;276.42857142857144&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;60&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;218.57142857142858&quot; x2=&quot;800&quot; y2=&quot;218.57142857142858&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;223.57142857142858&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;80&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;165.71428571428572&quot; x2=&quot;800&quot; y2=&quot;165.71428571428572&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;170.71428571428572&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;100&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;112.85714285714289&quot; x2=&quot;800&quot; y2=&quot;112.85714285714289&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;117.85714285714289&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;120&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;60.0&quot; x2=&quot;800&quot; y2=&quot;60.0&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;65.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;140&lt;/text&gt;&lt;text x=&quot;100.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;Data 1&lt;/text&gt;&lt;text x=&quot;240.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;Data 2&lt;/text&gt;&lt;text x=&quot;380.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;Data 3&lt;/text&gt;&lt;text x=&quot;520.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;Data 4&lt;/text&gt;&lt;text x=&quot;660.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;Data 5&lt;/text&gt;&lt;text x=&quot;800.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;Data 6&lt;/text&gt;&lt;path d=&quot;M100.0,430 L100.0,350.7142857142857 L240.0,311.07142857142856 L380.0,213.28571428571428 L520.0,205.35714285714286 L660.0,102.28571428571428 L800.0,126.07142857142856 L800.0,430 Z&quot; fill=&quot;#4A9EBD&quot; opacity=&quot;0.75&quot;/&gt;&lt;path d=&quot;M100.0,350.7142857142857 L240.0,311.07142857142856 L380.0,213.28571428571428 L520.0,205.35714285714286 L660.0,102.28571428571428 L800.0,126.07142857142856&quot; fill=&quot;none&quot; stroke=&quot;#4A9EBD&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M100.0,430 L100.0,400.92857142857144 L240.0,387.7142857142857 L380.0,276.71428571428567 L520.0,311.07142857142856 L660.0,213.28571428571428 L800.0,126.07142857142856 L800.0,430 Z&quot; fill=&quot;#5681D5&quot; opacity=&quot;0.75&quot;/&gt;&lt;path d=&quot;M100.0,400.92857142857144 L240.0,387.7142857142857 L380.0,276.71428571428567 L520.0,311.07142857142856 L660.0,213.28571428571428 L800.0,126.07142857142856&quot; fill=&quot;none&quot; stroke=&quot;#5681D5&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M100.0,430 L100.0,430.0 L240.0,400.92857142857144 L380.0,329.57142857142856 L520.0,350.7142857142857 L660.0,345.42857142857144 L800.0,258.2142857142857 L800.0,430 Z&quot; fill=&quot;#3A5EC5&quot; opacity=&quot;0.75&quot;/&gt;&lt;path d=&quot;M100.0,430.0 L240.0,400.92857142857144 L380.0,329.57142857142856 L520.0,350.7142857142857 L660.0,345.42857142857144 L800.0,258.2142857142857&quot; fill=&quot;none&quot; stroke=&quot;#3A5EC5&quot; stroke-width=&quot;2&quot;/&gt;&lt;/svg&gt;</svg>
+    <svg x="550" y="180" width="950" height="550" pixel_width="950" pixel_height="550">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;950&quot; height=&quot;550&quot; viewBox=&quot;0 0 950 550&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;900&quot; height=&quot;520&quot; rx=&quot;30&quot; fill=&quot;#F8F9FA&quot;/&gt;&lt;line x1=&quot;100&quot; y1=&quot;430.0&quot; x2=&quot;800&quot; y2=&quot;430.0&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;435.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;377.14285714285717&quot; x2=&quot;800&quot; y2=&quot;377.14285714285717&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;382.14285714285717&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;20&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;324.2857142857143&quot; x2=&quot;800&quot; y2=&quot;324.2857142857143&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;329.2857142857143&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;40&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;271.42857142857144&quot; x2=&quot;800&quot; y2=&quot;271.42857142857144&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;276.42857142857144&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;60&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;218.57142857142858&quot; x2=&quot;800&quot; y2=&quot;218.57142857142858&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;223.57142857142858&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;80&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;165.71428571428572&quot; x2=&quot;800&quot; y2=&quot;165.71428571428572&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;170.71428571428572&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;100&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;112.85714285714289&quot; x2=&quot;800&quot; y2=&quot;112.85714285714289&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;117.85714285714289&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;120&lt;/text&gt;&lt;line x1=&quot;100&quot; y1=&quot;60.0&quot; x2=&quot;800&quot; y2=&quot;60.0&quot; stroke=&quot;#E5E5E5&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;80&quot; y=&quot;65.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;140&lt;/text&gt;&lt;text x=&quot;100.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;{data1_label}&lt;/text&gt;&lt;text x=&quot;240.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;{data2_label}&lt;/text&gt;&lt;text x=&quot;380.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;{data3_label}&lt;/text&gt;&lt;text x=&quot;520.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;{data4_label}&lt;/text&gt;&lt;text x=&quot;660.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;{data5_label}&lt;/text&gt;&lt;text x=&quot;800.0&quot; y=&quot;455&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot;&gt;{data6_label}&lt;/text&gt;&lt;path d=&quot;M100.0,430 L100.0,350.7142857142857 L240.0,311.07142857142856 L380.0,213.28571428571428 L520.0,205.35714285714286 L660.0,102.28571428571428 L800.0,126.07142857142856 L800.0,430 Z&quot; fill=&quot;#4A9EBD&quot; opacity=&quot;0.75&quot;/&gt;&lt;path d=&quot;M100.0,350.7142857142857 L240.0,311.07142857142856 L380.0,213.28571428571428 L520.0,205.35714285714286 L660.0,102.28571428571428 L800.0,126.07142857142856&quot; fill=&quot;none&quot; stroke=&quot;#4A9EBD&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M100.0,430 L100.0,400.92857142857144 L240.0,387.7142857142857 L380.0,276.71428571428567 L520.0,311.07142857142856 L660.0,213.28571428571428 L800.0,126.07142857142856 L800.0,430 Z&quot; fill=&quot;#5681D5&quot; opacity=&quot;0.75&quot;/&gt;&lt;path d=&quot;M100.0,400.92857142857144 L240.0,387.7142857142857 L380.0,276.71428571428567 L520.0,311.07142857142856 L660.0,213.28571428571428 L800.0,126.07142857142856&quot; fill=&quot;none&quot; stroke=&quot;#5681D5&quot; stroke-width=&quot;2&quot;/&gt;&lt;path d=&quot;M100.0,430 L100.0,430.0 L240.0,400.92857142857144 L380.0,329.57142857142856 L520.0,350.7142857142857 L660.0,345.42857142857144 L800.0,258.2142857142857 L800.0,430 Z&quot; fill=&quot;#3A5EC5&quot; opacity=&quot;0.75&quot;/&gt;&lt;path d=&quot;M100.0,430.0 L240.0,400.92857142857144 L380.0,329.57142857142856 L520.0,350.7142857142857 L660.0,345.42857142857144 L800.0,258.2142857142857&quot; fill=&quot;none&quot; stroke=&quot;#3A5EC5&quot; stroke-width=&quot;2&quot;/&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, data1_label=kwargs.get("data1_label", "Data 1", background_color=kwargs.get("background_color", "#FFFFFF", title_color=kwargs.get("title_color", "#111111"), subtitle_color=kwargs.get("subtitle_color", "#555555"))), data2_label=kwargs.get("data2_label", "Data 2"), data3_label=kwargs.get("data3_label", "Data 3"), data4_label=kwargs.get("data4_label", "Data 4"), data5_label=kwargs.get("data5_label", "Data 5"), data6_label=kwargs.get("data6_label", "Data 6"))
 
 
-def generate_column_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_column_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for column.
     """
@@ -2474,20 +2474,20 @@ def generate_column_slide_xml(title: str = "Default Title", subtitle: str = "Def
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FFFFFF">
+  <slide background="{background_color}">
     <polygon points="0,0 350,0 350,900 0,900" fill="#E9F9F8"/>
     <textbox x="50" y="80" width="250" height="200" font="Segoe UI" size="55" color="#111111" bold="true" align="left" vertical_align="top" single_line="false" max_lines="4" reflow_on_resize="true">Coffee
 Culture</textbox>
-    <textbox x="50" y="600" width="250" height="250" font="Segoe UI" size="28" color="#222222" align="left" vertical_align="top" single_line="false" max_lines="8" reflow_on_resize="true" line_spacing="1.4">{title}</textbox>
-    <svg x="350" y="0" width="1250" height="900" pixel_width="1250" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1250&quot; height=&quot;900&quot; viewBox=&quot;0 0 1250 900&quot;&gt;&lt;line x1=&quot;120&quot; y1=&quot;770.0&quot; x2=&quot;1120&quot; y2=&quot;770.0&quot; stroke=&quot;#333333&quot; stroke-width=&quot;3&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;777.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;661.6666666666666&quot; x2=&quot;1120&quot; y2=&quot;661.6666666666666&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;668.6666666666666&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;10&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;553.3333333333334&quot; x2=&quot;1120&quot; y2=&quot;553.3333333333334&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;560.3333333333334&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;20&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;445.0&quot; x2=&quot;1120&quot; y2=&quot;445.0&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;452.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;30&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;336.6666666666667&quot; x2=&quot;1120&quot; y2=&quot;336.6666666666667&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;343.6666666666667&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;40&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;228.33333333333337&quot; x2=&quot;1120&quot; y2=&quot;228.33333333333337&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;235.33333333333337&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;50&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;120.0&quot; x2=&quot;1120&quot; y2=&quot;120.0&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;127.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;60&lt;/text&gt;&lt;rect x=&quot;161.42857142857144&quot; y=&quot;390.8333333333333&quot; width=&quot;60.0&quot; height=&quot;379.1666666666667&quot; fill=&quot;#7FE5DC&quot;/&gt;&lt;text x=&quot;191.42857142857144&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;Thailand&lt;/text&gt;&lt;rect x=&quot;304.28571428571433&quot; y=&quot;195.83333333333337&quot; width=&quot;60.0&quot; height=&quot;574.1666666666666&quot; fill=&quot;#35D5CD&quot;/&gt;&lt;text x=&quot;334.28571428571433&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;Philippines&lt;/text&gt;&lt;rect x=&quot;447.14285714285717&quot; y=&quot;277.08333333333337&quot; width=&quot;60.0&quot; height=&quot;492.91666666666663&quot; fill=&quot;#3ABEEB&quot;/&gt;&lt;text x=&quot;477.14285714285717&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;Ethiopia&lt;/text&gt;&lt;rect x=&quot;590.0&quot; y=&quot;488.3333333333333&quot; width=&quot;60.0&quot; height=&quot;281.6666666666667&quot; fill=&quot;#2B88D8&quot;/&gt;&lt;text x=&quot;620.0&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;Columbia&lt;/text&gt;&lt;rect x=&quot;732.8571428571429&quot; y=&quot;607.5&quot; width=&quot;60.0&quot; height=&quot;162.5&quot; fill=&quot;#7FE5DC&quot;/&gt;&lt;text x=&quot;762.8571428571429&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;Australia&lt;/text&gt;&lt;rect x=&quot;875.7142857142858&quot; y=&quot;293.33333333333337&quot; width=&quot;60.0&quot; height=&quot;476.66666666666663&quot; fill=&quot;#35D5CD&quot;/&gt;&lt;text x=&quot;905.7142857142858&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;Vietnam&lt;/text&gt;&lt;rect x=&quot;1018.5714285714286&quot; y=&quot;553.3333333333334&quot; width=&quot;60.0&quot; height=&quot;216.66666666666666&quot; fill=&quot;#3ABEEB&quot;/&gt;&lt;text x=&quot;1048.5714285714284&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;Brazil&lt;/text&gt;&lt;/svg&gt;</svg>
+    <textbox x="50" y="600" width="250" height="250" font="Segoe UI" size="28" color="{title_color}" align="left" vertical_align="top" single_line="false" max_lines="8" reflow_on_resize="true" line_spacing="1.4">{title}</textbox>
+    <svg x="350" y="0" width="1250" height="900" pixel_width="1250" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1250&quot; height=&quot;900&quot; viewBox=&quot;0 0 1250 900&quot;&gt;&lt;line x1=&quot;120&quot; y1=&quot;770.0&quot; x2=&quot;1120&quot; y2=&quot;770.0&quot; stroke=&quot;#333333&quot; stroke-width=&quot;3&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;777.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;661.6666666666666&quot; x2=&quot;1120&quot; y2=&quot;661.6666666666666&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;668.6666666666666&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;10&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;553.3333333333334&quot; x2=&quot;1120&quot; y2=&quot;553.3333333333334&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;560.3333333333334&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;20&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;445.0&quot; x2=&quot;1120&quot; y2=&quot;445.0&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;452.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;30&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;336.6666666666667&quot; x2=&quot;1120&quot; y2=&quot;336.6666666666667&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;343.6666666666667&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;40&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;228.33333333333337&quot; x2=&quot;1120&quot; y2=&quot;228.33333333333337&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;235.33333333333337&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;50&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;120.0&quot; x2=&quot;1120&quot; y2=&quot;120.0&quot; stroke=&quot;#E0E0E0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;90&quot; y=&quot;127.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#333333&quot; text-anchor=&quot;end&quot;&gt;60&lt;/text&gt;&lt;rect x=&quot;161.42857142857144&quot; y=&quot;390.8333333333333&quot; width=&quot;60.0&quot; height=&quot;379.1666666666667&quot; fill=&quot;#7FE5DC&quot;/&gt;&lt;text x=&quot;191.42857142857144&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{item1_label}&lt;/text&gt;&lt;rect x=&quot;304.28571428571433&quot; y=&quot;195.83333333333337&quot; width=&quot;60.0&quot; height=&quot;574.1666666666666&quot; fill=&quot;#35D5CD&quot;/&gt;&lt;text x=&quot;334.28571428571433&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{item2_label}&lt;/text&gt;&lt;rect x=&quot;447.14285714285717&quot; y=&quot;277.08333333333337&quot; width=&quot;60.0&quot; height=&quot;492.91666666666663&quot; fill=&quot;#3ABEEB&quot;/&gt;&lt;text x=&quot;477.14285714285717&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{item3_label}&lt;/text&gt;&lt;rect x=&quot;590.0&quot; y=&quot;488.3333333333333&quot; width=&quot;60.0&quot; height=&quot;281.6666666666667&quot; fill=&quot;#2B88D8&quot;/&gt;&lt;text x=&quot;620.0&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{item4_label}&lt;/text&gt;&lt;rect x=&quot;732.8571428571429&quot; y=&quot;607.5&quot; width=&quot;60.0&quot; height=&quot;162.5&quot; fill=&quot;#7FE5DC&quot;/&gt;&lt;text x=&quot;762.8571428571429&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{item5_label}&lt;/text&gt;&lt;rect x=&quot;875.7142857142858&quot; y=&quot;293.33333333333337&quot; width=&quot;60.0&quot; height=&quot;476.66666666666663&quot; fill=&quot;#35D5CD&quot;/&gt;&lt;text x=&quot;905.7142857142858&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{item6_label}&lt;/text&gt;&lt;rect x=&quot;1018.5714285714286&quot; y=&quot;553.3333333333334&quot; width=&quot;60.0&quot; height=&quot;216.66666666666666&quot; fill=&quot;#3ABEEB&quot;/&gt;&lt;text x=&quot;1048.5714285714284&quot; y=&quot;805&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{item7_label}&lt;/text&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, item1_label=kwargs.get("item1_label", "Thailand", background_color=kwargs.get("background_color", "#FFFFFF", title_color=kwargs.get("title_color", "#222222"))), item2_label=kwargs.get("item2_label", "Philippines"), item3_label=kwargs.get("item3_label", "Ethiopia"), item4_label=kwargs.get("item4_label", "Columbia"), item5_label=kwargs.get("item5_label", "Australia"), item6_label=kwargs.get("item6_label", "Vietnam"), item7_label=kwargs.get("item7_label", "Brazil"))
 
 
-def generate_comparison_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_comparison_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for comparison.
     """
@@ -2497,26 +2497,26 @@ def generate_comparison_slide_xml(title: str = "Default Title", subtitle: str = 
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FFFFFF">
+  <slide background="{background_color}">
     <polygon points="10,10 1590,10 1590,890 10,890" fill="#FFFFFF"/>
     <svg x="10" y="10" width="1580" height="880" pixel_width="1580" pixel_height="880">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1580&quot; height=&quot;880&quot; viewBox=&quot;0 0 1580 880&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1580&quot; height=&quot;880&quot; rx=&quot;15&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#EAEAEA&quot; stroke-width=&quot;2&quot;/&gt;&lt;/svg&gt;</svg>
     <textbox x="250" y="80" width="1100" height="150" font="Segoe UI" size="35" color="#182E87" bold="true" align="center" vertical_align="top" single_line="false" max_lines="4" reflow_on_resize="true">The Marketing Campaign Results Analysis highlights the
 campaign's performance against its goals, showcasing key
 achievements and areas for improvement.</textbox>
-    <textbox x="80" y="800" width="500" height="40" font="Segoe UI" size="20" color="#005BD4" bold="true" align="left" vertical_align="middle" single_line="true">{title}</textbox>
-    <textbox x="100" y="380" width="400" height="150" font="Segoe UI" size="120" color="#182E87" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <textbox x="80" y="800" width="500" height="40" font="Segoe UI" size="20" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true">{title}</textbox>
+    <textbox x="100" y="380" width="400" height="150" font="Segoe UI" size="120" color="{subtitle_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
     <textbox x="110" y="540" width="350" height="200" font="Segoe UI" size="22" color="#182E87" align="left" vertical_align="top" single_line="false" max_lines="6" reflow_on_resize="true" line_spacing="1.2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi et quam vehicula, ornare nunc sed, ultricies purus.</textbox>
-    <textbox x="1150" y="380" width="400" height="150" font="Segoe UI" size="120" color="#182E87" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">28%</textbox>
+    <textbox x="1150" y="380" width="400" height="150" font="Segoe UI" size="120" color="#182E87" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{metric1_value}</textbox>
     <textbox x="1160" y="540" width="350" height="200" font="Segoe UI" size="22" color="#182E87" align="left" vertical_align="top" single_line="false" max_lines="6" reflow_on_resize="true" line_spacing="1.2">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Morbi et quam vehicula, ornare nunc sed, ultricies purus.</textbox>
-    <svg x="500" y="300" width="600" height="500" pixel_width="600" pixel_height="500">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;600&quot; height=&quot;500&quot; viewBox=&quot;0 0 600 500&quot;&gt;&lt;circle cx=&quot;180&quot; cy=&quot;30&quot; r=&quot;12&quot; fill=&quot;#005BD4&quot;/&gt;&lt;text x=&quot;200&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot;&gt;Email Marketing&lt;/text&gt;&lt;circle cx=&quot;380&quot; cy=&quot;30&quot; r=&quot;12&quot; fill=&quot;#182E87&quot;/&gt;&lt;text x=&quot;400&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot;&gt;SEO&lt;/text&gt;&lt;circle cx=&quot;300&quot; cy=&quot;260&quot; r=&quot;100.0&quot; fill=&quot;transparent&quot; stroke=&quot;#005BD4&quot; stroke-width=&quot;200&quot; stroke-dasharray=&quot;175.92918860102844 628.3185307179587&quot; transform=&quot;rotate(-90 300 260)&quot; /&gt;&lt;circle cx=&quot;300&quot; cy=&quot;260&quot; r=&quot;100.0&quot; fill=&quot;transparent&quot; stroke=&quot;#182E87&quot; stroke-width=&quot;200&quot; stroke-dasharray=&quot;452.3893421169302 628.3185307179587&quot; transform=&quot;rotate(10.800000000000011 300 260)&quot; /&gt;&lt;text x=&quot;392.4615891330947&quot; y=&quot;183.50912123015723&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;28&quot; font-weight=&quot;bold&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;middle&quot;&gt;28%&lt;/text&gt;&lt;text x=&quot;207.53841086690528&quot; y=&quot;336.49087876984277&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;28&quot; font-weight=&quot;bold&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;middle&quot;&gt;72%&lt;/text&gt;&lt;/svg&gt;</svg>
+    <svg x="500" y="300" width="600" height="500" pixel_width="600" pixel_height="500">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;600&quot; height=&quot;500&quot; viewBox=&quot;0 0 600 500&quot;&gt;&lt;circle cx=&quot;180&quot; cy=&quot;30&quot; r=&quot;12&quot; fill=&quot;#005BD4&quot;/&gt;&lt;text x=&quot;200&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot;&gt;{metric1_label}&lt;/text&gt;&lt;circle cx=&quot;380&quot; cy=&quot;30&quot; r=&quot;12&quot; fill=&quot;#182E87&quot;/&gt;&lt;text x=&quot;400&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot;&gt;{metric2_label}&lt;/text&gt;&lt;circle cx=&quot;300&quot; cy=&quot;260&quot; r=&quot;100.0&quot; fill=&quot;transparent&quot; stroke=&quot;#005BD4&quot; stroke-width=&quot;200&quot; stroke-dasharray=&quot;175.92918860102844 628.3185307179587&quot; transform=&quot;rotate(-90 300 260)&quot; /&gt;&lt;circle cx=&quot;300&quot; cy=&quot;260&quot; r=&quot;100.0&quot; fill=&quot;transparent&quot; stroke=&quot;#182E87&quot; stroke-width=&quot;200&quot; stroke-dasharray=&quot;452.3893421169302 628.3185307179587&quot; transform=&quot;rotate(10.800000000000011 300 260)&quot; /&gt;&lt;text x=&quot;392.4615891330947&quot; y=&quot;183.50912123015723&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;28&quot; font-weight=&quot;bold&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;middle&quot;&gt;{metric1_value}&lt;/text&gt;&lt;text x=&quot;207.53841086690528&quot; y=&quot;336.49087876984277&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;28&quot; font-weight=&quot;bold&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;middle&quot;&gt;{metric2_value}&lt;/text&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, metric1_label=kwargs.get("metric1_label", "Email Marketing", background_color=kwargs.get("background_color", "#FFFFFF", title_color=kwargs.get("title_color", "#005BD4"), subtitle_color=kwargs.get("subtitle_color", "#182E87"))), metric2_label=kwargs.get("metric2_label", "SEO"), metric1_value=kwargs.get("metric1_value", "28%"), metric2_value=kwargs.get("metric2_value", "72%"))
 
 
-def generate_dark_bar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_dark_bar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for dark bar.
     """
@@ -2526,23 +2526,23 @@ def generate_dark_bar_slide_xml(title: str = "Default Title", subtitle: str = "D
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#050505">
+  <slide background="{background_color}">
     <polygon points="5,5 1595,5 1595,895 5,895" fill="#050505"/>
-    <textbox x="100" y="100" width="600" height="120" font="Segoe UI" size="100" color="#FFFFFF" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
-    <textbox x="100" y="230" width="600" height="140" font="Segoe UI" size="120" color="#DFFF00" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <textbox x="100" y="100" width="600" height="120" font="Segoe UI" size="100" color="{title_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="100" y="230" width="600" height="140" font="Segoe UI" size="120" color="{subtitle_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
     <svg x="100" y="450" width="400" height="350" pixel_width="400" pixel_height="350">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;400&quot; height=&quot;350&quot; viewBox=&quot;0 0 400 350&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;400&quot; height=&quot;350&quot; rx=&quot;50&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;line x1=&quot;335.0&quot; y1=&quot;70.0&quot; x2=&quot;350.0&quot; y2=&quot;70.0&quot; stroke=&quot;#050505&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;332.5&quot; y1=&quot;74.3301270189222&quot; x2=&quot;340.0&quot; y2=&quot;87.32050807568876&quot; stroke=&quot;#050505&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;327.5&quot; y1=&quot;74.3301270189222&quot; x2=&quot;320.0&quot; y2=&quot;87.32050807568878&quot; stroke=&quot;#050505&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;325.0&quot; y1=&quot;70.0&quot; x2=&quot;310.0&quot; y2=&quot;70.0&quot; stroke=&quot;#050505&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;327.5&quot; y1=&quot;65.6698729810778&quot; x2=&quot;320.0&quot; y2=&quot;52.67949192431123&quot; stroke=&quot;#050505&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;332.5&quot; y1=&quot;65.6698729810778&quot; x2=&quot;340.0&quot; y2=&quot;52.67949192431123&quot; stroke=&quot;#050505&quot; stroke-width=&quot;8&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;circle cx=&quot;330&quot; cy=&quot;70&quot; r=&quot;8&quot; fill=&quot;#050505&quot;/&gt;&lt;/svg&gt;</svg>
     <textbox x="150" y="530" width="300" height="120" font="Segoe UI" size="100" color="#050505" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">27%</textbox>
     <textbox x="150" y="670" width="300" height="100" font="Segoe UI" size="24" color="#050505" align="left" vertical_align="top" single_line="false" max_lines="3" reflow_on_resize="true" line_spacing="1.3">Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.</textbox>
-    <svg x="500" y="50" width="1000" height="800" pixel_width="1000" pixel_height="800">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1000&quot; height=&quot;800&quot; viewBox=&quot;0 0 1000 800&quot;&gt;&lt;circle cx=&quot;400&quot; cy=&quot;30&quot; r=&quot;10&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;text x=&quot;420&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot;&gt;Market 1&lt;/text&gt;&lt;circle cx=&quot;550&quot; cy=&quot;30&quot; r=&quot;10&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;text x=&quot;570&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot;&gt;Market 2&lt;/text&gt;&lt;line x1=&quot;250.0&quot; y1=&quot;100&quot; x2=&quot;250.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;250.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;400.0&quot; y1=&quot;100&quot; x2=&quot;400.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;400.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;5&lt;/text&gt;&lt;line x1=&quot;550.0&quot; y1=&quot;100&quot; x2=&quot;550.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;550.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;10&lt;/text&gt;&lt;line x1=&quot;700.0&quot; y1=&quot;100&quot; x2=&quot;700.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;700.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;15&lt;/text&gt;&lt;line x1=&quot;850.0&quot; y1=&quot;100&quot; x2=&quot;850.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;850.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;20&lt;/text&gt;&lt;text x=&quot;230&quot; y=&quot;206.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;end&quot;&gt;Trend 1&lt;/text&gt;&lt;rect x=&quot;250&quot; y=&quot;130.0&quot; width=&quot;90.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;rect x=&quot;250&quot; y=&quot;200.0&quot; width=&quot;180.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;text x=&quot;230&quot; y=&quot;406.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;end&quot;&gt;Trend 2&lt;/text&gt;&lt;rect x=&quot;250&quot; y=&quot;330.0&quot; width=&quot;240.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;rect x=&quot;250&quot; y=&quot;400.0&quot; width=&quot;420.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;text x=&quot;230&quot; y=&quot;606.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;end&quot;&gt;Trend 3&lt;/text&gt;&lt;rect x=&quot;250&quot; y=&quot;530.0&quot; width=&quot;480.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;rect x=&quot;250&quot; y=&quot;600.0&quot; width=&quot;540.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;/svg&gt;</svg>
+    <svg x="500" y="50" width="1000" height="800" pixel_width="1000" pixel_height="800">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1000&quot; height=&quot;800&quot; viewBox=&quot;0 0 1000 800&quot;&gt;&lt;circle cx=&quot;400&quot; cy=&quot;30&quot; r=&quot;10&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;text x=&quot;420&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot;&gt;{market1_label}&lt;/text&gt;&lt;circle cx=&quot;550&quot; cy=&quot;30&quot; r=&quot;10&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;text x=&quot;570&quot; y=&quot;36&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot;&gt;{market2_label}&lt;/text&gt;&lt;line x1=&quot;250.0&quot; y1=&quot;100&quot; x2=&quot;250.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;250.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;400.0&quot; y1=&quot;100&quot; x2=&quot;400.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;400.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;5&lt;/text&gt;&lt;line x1=&quot;550.0&quot; y1=&quot;100&quot; x2=&quot;550.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;550.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;10&lt;/text&gt;&lt;line x1=&quot;700.0&quot; y1=&quot;100&quot; x2=&quot;700.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;700.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;15&lt;/text&gt;&lt;line x1=&quot;850.0&quot; y1=&quot;100&quot; x2=&quot;850.0&quot; y2=&quot;710&quot; stroke=&quot;#222222&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;850.0&quot; y=&quot;735&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;18&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;middle&quot;&gt;20&lt;/text&gt;&lt;text x=&quot;230&quot; y=&quot;206.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;end&quot;&gt;{trend1_label}&lt;/text&gt;&lt;rect x=&quot;250&quot; y=&quot;130.0&quot; width=&quot;90.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;rect x=&quot;250&quot; y=&quot;200.0&quot; width=&quot;180.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;text x=&quot;230&quot; y=&quot;406.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;end&quot;&gt;{trend2_label}&lt;/text&gt;&lt;rect x=&quot;250&quot; y=&quot;330.0&quot; width=&quot;240.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;rect x=&quot;250&quot; y=&quot;400.0&quot; width=&quot;420.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;text x=&quot;230&quot; y=&quot;606.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#F0F0F0&quot; text-anchor=&quot;end&quot;&gt;{trend3_label}&lt;/text&gt;&lt;rect x=&quot;250&quot; y=&quot;530.0&quot; width=&quot;480.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;rect x=&quot;250&quot; y=&quot;600.0&quot; width=&quot;540.0&quot; height=&quot;70.0&quot; rx=&quot;5&quot; fill=&quot;#7B8C00&quot;/&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, market1_label=kwargs.get("market1_label", "Market 1", background_color=kwargs.get("background_color", "#050505", title_color=kwargs.get("title_color", "#FFFFFF"), subtitle_color=kwargs.get("subtitle_color", "#DFFF00"))), market2_label=kwargs.get("market2_label", "Market 2"), trend1_label=kwargs.get("trend1_label", "Trend 1"), trend2_label=kwargs.get("trend2_label", "Trend 2"), trend3_label=kwargs.get("trend3_label", "Trend 3"))
 
 
-def generate_dark_pie_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_dark_pie_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for dark pie.
     """
@@ -2552,23 +2552,23 @@ def generate_dark_pie_slide_xml(title: str = "Default Title", subtitle: str = "D
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#050505">
+  <slide background="{background_color}">
     <polygon points="5,5 1595,5 1595,895 5,895" fill="#050505"/>
-    <textbox x="100" y="120" width="600" height="120" font="Segoe UI" size="100" color="#FFFFFF" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
-    <textbox x="100" y="240" width="600" height="140" font="Segoe UI" size="120" color="#DFFF00" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <textbox x="100" y="120" width="600" height="120" font="Segoe UI" size="100" color="{title_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="100" y="240" width="600" height="140" font="Segoe UI" size="120" color="{subtitle_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
     <textbox x="100" y="420" width="400" height="150" font="Segoe UI" size="24" color="#F0F0F0" align="left" vertical_align="top" single_line="false" max_lines="4" reflow_on_resize="true" line_spacing="1.2">Lorem ipsum dolor sit amet,
 consectetur adipiscing elit.
 Morbi et quam vehicula.</textbox>
     <svg x="100" y="750" width="80" height="80" pixel_width="80" pixel_height="80">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;80&quot; height=&quot;80&quot; viewBox=&quot;0 0 80 80&quot;&gt;&lt;line x1=&quot;48.0&quot; y1=&quot;40.0&quot; x2=&quot;65.0&quot; y2=&quot;40.0&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;46.92820323027551&quot; y1=&quot;44.0&quot; x2=&quot;61.65063509461097&quot; y2=&quot;52.5&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;44.0&quot; y1=&quot;46.92820323027551&quot; x2=&quot;52.5&quot; y2=&quot;61.65063509461096&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;40.0&quot; y1=&quot;48.0&quot; x2=&quot;40.0&quot; y2=&quot;65.0&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;36.0&quot; y1=&quot;46.92820323027551&quot; x2=&quot;27.500000000000007&quot; y2=&quot;61.65063509461097&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;33.07179676972449&quot; y1=&quot;44.0&quot; x2=&quot;18.34936490538903&quot; y2=&quot;52.5&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;32.0&quot; y1=&quot;40.0&quot; x2=&quot;15.0&quot; y2=&quot;40.0&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;33.07179676972449&quot; y1=&quot;36.0&quot; x2=&quot;18.349364905389034&quot; y2=&quot;27.499999999999996&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;36.0&quot; y1=&quot;33.07179676972449&quot; x2=&quot;27.49999999999999&quot; y2=&quot;18.349364905389038&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;40.0&quot; y1=&quot;32.0&quot; x2=&quot;39.99999999999999&quot; y2=&quot;15.0&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;44.0&quot; y1=&quot;33.07179676972449&quot; x2=&quot;52.5&quot; y2=&quot;18.349364905389034&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;line x1=&quot;46.92820323027551&quot; y1=&quot;36.0&quot; x2=&quot;61.65063509461096&quot; y2=&quot;27.49999999999999&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;3&quot; stroke-linecap=&quot;round&quot;/&gt;&lt;circle cx=&quot;40&quot; cy=&quot;40&quot; r=&quot;12&quot; fill=&quot;#DFFF00&quot;/&gt;&lt;/svg&gt;</svg>
-    <svg x="600" y="80" width="900" height="740" pixel_width="900" pixel_height="740">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;900&quot; height=&quot;740&quot; viewBox=&quot;0 0 900 740&quot;&gt;&lt;circle cx=&quot;500&quot; cy=&quot;370&quot; r=&quot;150.0&quot; fill=&quot;transparent&quot; stroke=&quot;#7B8C00&quot; stroke-width=&quot;300&quot; stroke-dasharray=&quot;117.80972450961724 942.4777960769379&quot; transform=&quot;rotate(-90 500 370)&quot; /&gt;&lt;text x=&quot;633.9392013277815&quot; y=&quot;36.64216362104963&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;Growth 1&lt;/text&gt;&lt;text x=&quot;633.9392013277815&quot; y=&quot;61.64216362104963&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;12.5%&lt;/text&gt;&lt;circle cx=&quot;500&quot; cy=&quot;370&quot; r=&quot;150.0&quot; fill=&quot;transparent&quot; stroke=&quot;#A8C000&quot; stroke-width=&quot;300&quot; stroke-dasharray=&quot;235.61944901923448 942.4777960769379&quot; transform=&quot;rotate(-45.0 500 370)&quot; /&gt;&lt;text x=&quot;850.0&quot; y=&quot;360.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;Growth 2&lt;/text&gt;&lt;text x=&quot;850.0&quot; y=&quot;385.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;25%&lt;/text&gt;&lt;circle cx=&quot;500&quot; cy=&quot;370&quot; r=&quot;150.0&quot; fill=&quot;transparent&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;300&quot; stroke-dasharray=&quot;589.0486225480862 942.4777960769379&quot; transform=&quot;rotate(45.0 500 370)&quot; /&gt;&lt;text x=&quot;176.64216362104963&quot; y=&quot;493.93920132778146&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;end&quot;&gt;Growth 3&lt;/text&gt;&lt;text x=&quot;176.64216362104963&quot; y=&quot;518.9392013277815&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;end&quot;&gt;62.5%&lt;/text&gt;&lt;/svg&gt;</svg>
+    <svg x="600" y="80" width="900" height="740" pixel_width="900" pixel_height="740">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;900&quot; height=&quot;740&quot; viewBox=&quot;0 0 900 740&quot;&gt;&lt;circle cx=&quot;500&quot; cy=&quot;370&quot; r=&quot;150.0&quot; fill=&quot;transparent&quot; stroke=&quot;#7B8C00&quot; stroke-width=&quot;300&quot; stroke-dasharray=&quot;117.80972450961724 942.4777960769379&quot; transform=&quot;rotate(-90 500 370)&quot; /&gt;&lt;text x=&quot;633.9392013277815&quot; y=&quot;36.64216362104963&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;{slice1_label}&lt;/text&gt;&lt;text x=&quot;633.9392013277815&quot; y=&quot;61.64216362104963&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;{slice1_value}&lt;/text&gt;&lt;circle cx=&quot;500&quot; cy=&quot;370&quot; r=&quot;150.0&quot; fill=&quot;transparent&quot; stroke=&quot;#A8C000&quot; stroke-width=&quot;300&quot; stroke-dasharray=&quot;235.61944901923448 942.4777960769379&quot; transform=&quot;rotate(-45.0 500 370)&quot; /&gt;&lt;text x=&quot;850.0&quot; y=&quot;360.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;{slice2_label}&lt;/text&gt;&lt;text x=&quot;850.0&quot; y=&quot;385.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;start&quot;&gt;{slice2_value}&lt;/text&gt;&lt;circle cx=&quot;500&quot; cy=&quot;370&quot; r=&quot;150.0&quot; fill=&quot;transparent&quot; stroke=&quot;#DFFF00&quot; stroke-width=&quot;300&quot; stroke-dasharray=&quot;589.0486225480862 942.4777960769379&quot; transform=&quot;rotate(45.0 500 370)&quot; /&gt;&lt;text x=&quot;176.64216362104963&quot; y=&quot;493.93920132778146&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;end&quot;&gt;{slice3_label}&lt;/text&gt;&lt;text x=&quot;176.64216362104963&quot; y=&quot;518.9392013277815&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#FFFFFF&quot; text-anchor=&quot;end&quot;&gt;{slice3_value}&lt;/text&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, slice1_label=kwargs.get("slice1_label", "Growth 1", background_color=kwargs.get("background_color", "#050505", title_color=kwargs.get("title_color", "#FFFFFF"), subtitle_color=kwargs.get("subtitle_color", "#DFFF00"))), slice1_value=kwargs.get("slice1_value", "12.5%"), slice2_label=kwargs.get("slice2_label", "Growth 2"), slice2_value=kwargs.get("slice2_value", "25%"), slice3_label=kwargs.get("slice3_label", "Growth 3"), slice3_value=kwargs.get("slice3_value", "62.5%"))
 
 
-def generate_dashboard_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_dashboard_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for dashboard.
     """
@@ -2578,7 +2578,7 @@ def generate_dashboard_slide_xml(title: str = "Default Title", subtitle: str = "
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#EDF2F7">
+  <slide background="{background_color}">
     <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"&gt;
         &lt;!-- Title --&gt;
         &lt;text x="100" y="100" font-family="Segoe UI" font-size="54" fill="#333333"&gt;Annual &lt;tspan font-weight="bold" fill="#222222"&gt;Revenue Target&lt;/tspan&gt;&lt;/text&gt;
@@ -2588,7 +2588,7 @@ def generate_dashboard_slide_xml(title: str = "Default Title", subtitle: str = "
         &lt;rect x="100" y="180" width="380" height="180" rx="24" fill="#5068DD" /&gt;
         &lt;circle cx="140" cy="225" r="14" fill="none" stroke="#FFFFFF" stroke-width="2"/&gt;
         &lt;path d="M140 218 L140 232 M133 225 L147 225" stroke="#FFFFFF" stroke-width="2"/&gt;
-        &lt;text x="170" y="232" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.9"&gt;Annual Revenue Target&lt;/text&gt;
+        &lt;text x="170" y="232" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.9"&gt;{metric1_label}&lt;/text&gt;
         &lt;text x="125" y="295" font-family="Segoe UI" font-size="48" font-weight="bold" fill="#FFFFFF"&gt;$12M&lt;/text&gt;
         &lt;text x="125" y="325" font-family="Segoe UI" font-size="18" fill="#FFFFFF" opacity="0.8"&gt;on target&lt;/text&gt;
 
@@ -2596,7 +2596,7 @@ def generate_dashboard_slide_xml(title: str = "Default Title", subtitle: str = "
         &lt;rect x="100" y="390" width="380" height="180" rx="24" fill="#F2B71A" /&gt;
         &lt;circle cx="140" cy="435" r="14" fill="none" stroke="#FFFFFF" stroke-width="2"/&gt;
         &lt;polyline points="133 430 140 437 150 425" fill="none" stroke="#FFFFFF" stroke-width="2"/&gt;
-        &lt;text x="170" y="442" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.9"&gt;Current YTD (Q3)&lt;/text&gt;
+        &lt;text x="170" y="442" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.9"&gt;{metric2_label}&lt;/text&gt;
         &lt;text x="125" y="505" font-family="Segoe UI" font-size="48" font-weight="bold" fill="#FFFFFF"&gt;$8.7M&lt;/text&gt;
         &lt;text x="125" y="535" font-family="Segoe UI" font-size="18" fill="#FFFFFF" opacity="0.8"&gt;72% to target&lt;/text&gt;
 
@@ -2604,8 +2604,8 @@ def generate_dashboard_slide_xml(title: str = "Default Title", subtitle: str = "
         &lt;rect x="100" y="600" width="380" height="180" rx="24" fill="#F13A5C" /&gt;
         &lt;circle cx="140" cy="645" r="14" fill="none" stroke="#FFFFFF" stroke-width="2"/&gt;
         &lt;path d="M140 635 Q145 640 145 645 A 5 5 0 0 1 135 645 Q135 640 140 635" fill="none" stroke="#FFFFFF" stroke-width="2"/&gt;
-        &lt;text x="170" y="652" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.9"&gt;Forecast Q4&lt;/text&gt;
-        &lt;text x="125" y="715" font-family="Segoe UI" font-size="48" font-weight="bold" fill="#FFFFFF"&gt;+5-7%&lt;/text&gt;
+        &lt;text x="170" y="652" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.9"&gt;{metric3_label}&lt;/text&gt;
+        &lt;text x="125" y="715" font-family="Segoe UI" font-size="48" font-weight="bold" fill="#FFFFFF"&gt;{metric3_value}&lt;/text&gt;
         &lt;text x="125" y="745" font-family="Segoe UI" font-size="18" fill="#FFFFFF" opacity="0.8"&gt;Expected Growth&lt;/text&gt;
 
         &lt;!-- Right Panel (White Area) --&gt;
@@ -2656,17 +2656,17 @@ def generate_dashboard_slide_xml(title: str = "Default Title", subtitle: str = "
         &lt;rect x="1180" y="240" width="280" height="50" rx="8" fill="#F4F4F4" stroke="#EAEAEA" stroke-width="1" /&gt;
         &lt;polygon points="1310,290 1320,300 1330,290" fill="#F4F4F4" stroke="#EAEAEA" stroke-width="1" /&gt;
         &lt;polygon points="1311,290 1320,298 1329,290" fill="#F4F4F4" /&gt; 
-        &lt;text x="1320" y="271" font-family="Segoe UI" font-size="20" fill="#444444" font-weight="bold" text-anchor="middle"&gt;Projected to exceed target&lt;/text&gt;
+        &lt;text x="1320" y="271" font-family="Segoe UI" font-size="20" fill="#444444" font-weight="bold" text-anchor="middle"&gt;{highlight_text}&lt;/text&gt;
 
 &lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, metric1_label=kwargs.get("metric1_label", "Annual Revenue Target", background_color=kwargs.get("background_color", "#EDF2F7")), metric2_label=kwargs.get("metric2_label", "Current YTD (Q3)"), metric2_value=kwargs.get("metric2_value", ".7M"), metric3_label=kwargs.get("metric3_label", "Forecast Q4"), metric3_value=kwargs.get("metric3_value", "+5-7%"), highlight_text=kwargs.get("highlight_text", "Projected to exceed target"))
 
 
-def generate_financial_projections_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_financial_projections_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for financial projections.
     """
@@ -2676,7 +2676,7 @@ def generate_financial_projections_slide_xml(title: str = "Default Title", subti
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#F4F4F4">
+  <slide background="{background_color}">
     <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"&gt;
     &lt;!-- Faint background elements --&gt;
     &lt;circle cx="1400" cy="-50" r="250" fill="#EAEAEA" /&gt;
@@ -2704,8 +2704,8 @@ def generate_financial_projections_slide_xml(title: str = "Default Title", subti
     &lt;text x="90" y="810" font-family="Segoe UI" font-size="24" fill="#1A1B4B" font-weight="600"&gt;www.reallygreatsite.com&lt;/text&gt;
 
     &lt;!-- Right Side Content --&gt;
-    &lt;text x="830" y="340" font-family="Segoe UI" font-size="85" fill="#090C5C" font-weight="400"&gt;Financial&lt;/text&gt;
-    &lt;text x="830" y="440" font-family="Segoe UI" font-size="85" fill="#090C5C" font-weight="400"&gt;Projections&lt;/text&gt;
+    &lt;text x="830" y="340" font-family="Segoe UI" font-size="85" fill="#090C5C" font-weight="400"&gt;{title_word1}&lt;/text&gt;
+    &lt;text x="830" y="440" font-family="Segoe UI" font-size="85" fill="#090C5C" font-weight="400"&gt;{title_word2}&lt;/text&gt;
 
     &lt;!-- Right Side Paragraph --&gt;
     &lt;text x="830" y="600" font-family="Segoe UI" font-size="20" fill="#222222" font-weight="400"&gt;
@@ -2723,24 +2723,24 @@ def generate_financial_projections_slide_xml(title: str = "Default Title", subti
     &lt;/g&gt;
 
     &lt;!-- Chart Labels --&gt;
-    &lt;text x="790" y="585" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;Item 1&lt;/text&gt;
-    &lt;text x="790" y="605" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;62.5%&lt;/text&gt;
+    &lt;text x="790" y="585" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;{item1_label}&lt;/text&gt;
+    &lt;text x="790" y="605" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;{item1_value}&lt;/text&gt;
 
-    &lt;text x="200" y="475" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;Item 2&lt;/text&gt;
-    &lt;text x="200" y="495" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;25%&lt;/text&gt;
+    &lt;text x="200" y="475" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;{item2_label}&lt;/text&gt;
+    &lt;text x="200" y="495" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;{item2_value}&lt;/text&gt;
 
-    &lt;text x="375" y="225" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;Item 3&lt;/text&gt;
-    &lt;text x="375" y="245" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;12.5%&lt;/text&gt;
+    &lt;text x="375" y="225" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;{item3_label}&lt;/text&gt;
+    &lt;text x="375" y="245" font-family="Segoe UI" font-size="16" fill="#333333" font-weight="600" text-anchor="middle"&gt;{item3_value}&lt;/text&gt;
 
 &lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, title_word1=kwargs.get("title_word1", "Financial", background_color=kwargs.get("background_color", "#F4F4F4")), title_word2=kwargs.get("title_word2", "Projections"), item1_label=kwargs.get("item1_label", "Item 1"), item1_value=kwargs.get("item1_value", "62.5%"), item2_label=kwargs.get("item2_label", "Item 2"), item2_value=kwargs.get("item2_value", "25%"), item3_label=kwargs.get("item3_label", "Item 3"), item3_value=kwargs.get("item3_value", "12.5%"))
 
 
-def generate_image_bar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_image_bar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for image bar.
     """
@@ -2750,24 +2750,24 @@ def generate_image_bar_slide_xml(title: str = "Default Title", subtitle: str = "
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FFFFFF">
+  <slide background="{background_color}">
     <svg x="10" y="10" width="1580" height="880" pixel_width="1580" pixel_height="880">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1580&quot; height=&quot;880&quot; viewBox=&quot;0 0 1580 880&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1580&quot; height=&quot;880&quot; rx=&quot;20&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#EAEAEA&quot; stroke-width=&quot;2&quot;/&gt;&lt;/svg&gt;</svg>
-    <textbox x="100" y="100" width="500" height="80" font="Segoe UI" size="70" color="#182E87" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
-    <textbox x="100" y="190" width="500" height="80" font="Segoe UI" size="70" color="#005BD4" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <textbox x="100" y="100" width="500" height="80" font="Segoe UI" size="70" color="{title_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <textbox x="100" y="190" width="500" height="80" font="Segoe UI" size="70" color="{subtitle_color}" bold="true" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
     <textbox x="100" y="310" width="500" height="150" font="Segoe UI" size="24" color="#182E87" align="left" vertical_align="top" single_line="false" max_lines="4" reflow_on_resize="true" line_spacing="1.3">Lorem ipsum dolor sit amet, consectetur
 adipiscing elit. Morbi et quam vehicula, ornare
 nunc sed, ultricies purus.</textbox>
     <textbox x="100" y="800" width="500" height="40" font="Segoe UI" size="18" color="#005BD4" bold="true" align="left" vertical_align="middle" single_line="true">Marketing Campaign Results Analysis</textbox>
     <svg x="100" y="520" width="550" height="250" pixel_width="550" pixel_height="250">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;550&quot; height=&quot;250&quot; viewBox=&quot;0 0 550 250&quot;&gt;&lt;line x1=&quot;0&quot; y1=&quot;197.5&quot; x2=&quot;500&quot; y2=&quot;197.5&quot; stroke=&quot;#F0F0F0&quot; stroke-width=&quot;1&quot;/&gt;&lt;line x1=&quot;0&quot; y1=&quot;145.0&quot; x2=&quot;500&quot; y2=&quot;145.0&quot; stroke=&quot;#F0F0F0&quot; stroke-width=&quot;1&quot;/&gt;&lt;line x1=&quot;0&quot; y1=&quot;92.5&quot; x2=&quot;500&quot; y2=&quot;92.5&quot; stroke=&quot;#F0F0F0&quot; stroke-width=&quot;1&quot;/&gt;&lt;line x1=&quot;0&quot; y1=&quot;40.0&quot; x2=&quot;500&quot; y2=&quot;40.0&quot; stroke=&quot;#F0F0F0&quot; stroke-width=&quot;1&quot;/&gt;&lt;rect x=&quot;22.5&quot; y=&quot;119.80000000000001&quot; width=&quot;80.0&quot; height=&quot;130.2&quot; fill=&quot;#005BD4&quot;/&gt;&lt;text x=&quot;62.5&quot; y=&quot;109.80000000000001&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot; text-anchor=&quot;middle&quot;&gt;62&lt;/text&gt;&lt;rect x=&quot;147.5&quot; y=&quot;82.0&quot; width=&quot;80.0&quot; height=&quot;168.0&quot; fill=&quot;#005BD4&quot;/&gt;&lt;text x=&quot;187.5&quot; y=&quot;72.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot; text-anchor=&quot;middle&quot;&gt;80&lt;/text&gt;&lt;rect x=&quot;272.5&quot; y=&quot;50.5&quot; width=&quot;80.0&quot; height=&quot;199.5&quot; fill=&quot;#005BD4&quot;/&gt;&lt;text x=&quot;312.5&quot; y=&quot;40.5&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot; text-anchor=&quot;middle&quot;&gt;95&lt;/text&gt;&lt;rect x=&quot;397.5&quot; y=&quot;113.5&quot; width=&quot;80.0&quot; height=&quot;136.5&quot; fill=&quot;#005BD4&quot;/&gt;&lt;text x=&quot;437.5&quot; y=&quot;103.5&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#182E87&quot; text-anchor=&quot;middle&quot;&gt;65&lt;/text&gt;&lt;/svg&gt;</svg>
-    <image src="https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format&amp;fit=crop&amp;q=80&amp;w=750&amp;h=700" x="750" y="100" width="750" height="700" shape="roundrect" rx="20" ry="20"/>
+    <image src="{image1_url}&amp;fit=crop&amp;q=80&amp;w=750&amp;h=700" x="750" y="100" width="750" height="700" shape="roundrect" rx="20" ry="20"/>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, image1_url=kwargs.get("image1_url", "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?auto=format", background_color=kwargs.get("background_color", "#FFFFFF", title_color=kwargs.get("title_color", "#182E87"), subtitle_color=kwargs.get("subtitle_color", "#005BD4"))))
 
 
-def generate_line_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_line_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for line.
     """
@@ -2777,18 +2777,18 @@ def generate_line_slide_xml(title: str = "Default Title", subtitle: str = "Defau
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FAFAFA">
-    <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;900&quot; viewBox=&quot;0 0 1600 900&quot;&gt;&lt;rect x=&quot;250&quot; y=&quot;60&quot; width=&quot;1100&quot; height=&quot;90&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#8A2BE2&quot; stroke-width=&quot;6&quot;/&gt;&lt;rect x=&quot;380.0&quot; y=&quot;800&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;8&quot; fill=&quot;#0080FF&quot;/&gt;&lt;text x=&quot;430.0&quot; y=&quot;822&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;24&quot; font-weight=&quot;bold&quot; fill=&quot;#0A0A1A&quot;&gt;Production&lt;/text&gt;&lt;rect x=&quot;660.0&quot; y=&quot;800&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;8&quot; fill=&quot;#A060FF&quot;/&gt;&lt;text x=&quot;710.0&quot; y=&quot;822&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;24&quot; font-weight=&quot;bold&quot; fill=&quot;#0A0A1A&quot;&gt;Sale&lt;/text&gt;&lt;rect x=&quot;940.0&quot; y=&quot;800&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;8&quot; fill=&quot;#00C0FF&quot;/&gt;&lt;text x=&quot;990.0&quot; y=&quot;822&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;24&quot; font-weight=&quot;bold&quot; fill=&quot;#0A0A1A&quot;&gt;Marketing&lt;/text&gt;&lt;/svg&gt;</svg>
-    <textbox x="250" y="60" width="1100" height="90" font="Segoe UI" size="65" color="#111111" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
-    <svg x="100" y="200" width="1400" height="550" pixel_width="1400" pixel_height="550">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1400&quot; height=&quot;550&quot; viewBox=&quot;0 0 1400 550&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;1380&quot; height=&quot;500&quot; rx=&quot;15&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#E6E6E6&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;120&quot; y1=&quot;410.0&quot; x2=&quot;1320&quot; y2=&quot;410.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;416.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;340.0&quot; x2=&quot;1320&quot; y2=&quot;340.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;346.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;12&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;270.0&quot; x2=&quot;1320&quot; y2=&quot;270.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;276.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;24&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;200.0&quot; x2=&quot;1320&quot; y2=&quot;200.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;206.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;36&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;130.0&quot; x2=&quot;1320&quot; y2=&quot;130.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;136.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;48&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;60.0&quot; x2=&quot;1320&quot; y2=&quot;60.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;66.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;60&lt;/text&gt;&lt;text x=&quot;120.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;January&lt;/text&gt;&lt;text x=&quot;360.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;February&lt;/text&gt;&lt;text x=&quot;600.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;March&lt;/text&gt;&lt;text x=&quot;840.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;April&lt;/text&gt;&lt;text x=&quot;1080.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;May&lt;/text&gt;&lt;text x=&quot;1320.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;June&lt;/text&gt;&lt;path d=&quot;M120.0,340.0 C240.0,340.0 240.0,386.6666666666667 360.0,386.6666666666667 C480.0,386.6666666666667 480.0,293.33333333333337 600.0,293.33333333333337 C720.0,293.33333333333337 720.0,322.5 840.0,322.5 C960.0,322.5 960.0,118.33333333333331 1080.0,118.33333333333331 C1200.0,118.33333333333331 1200.0,235.0 1320.0,235.0&quot; fill=&quot;none&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;4&quot;/&gt;&lt;circle cx=&quot;120.0&quot; cy=&quot;340.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;360.0&quot; cy=&quot;386.6666666666667&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;600.0&quot; cy=&quot;293.33333333333337&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;840.0&quot; cy=&quot;322.5&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1080.0&quot; cy=&quot;118.33333333333331&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1320.0&quot; cy=&quot;235.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M120.0,410.0 C240.0,410.0 240.0,340.0 360.0,340.0 C480.0,340.0 480.0,188.33333333333334 600.0,188.33333333333334 C720.0,188.33333333333334 720.0,235.0 840.0,235.0 C960.0,235.0 960.0,223.33333333333334 1080.0,223.33333333333334 C1200.0,223.33333333333334 1200.0,264.16666666666663 1320.0,264.16666666666663&quot; fill=&quot;none&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;4&quot;/&gt;&lt;circle cx=&quot;120.0&quot; cy=&quot;410.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;360.0&quot; cy=&quot;340.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;600.0&quot; cy=&quot;188.33333333333334&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;840.0&quot; cy=&quot;235.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1080.0&quot; cy=&quot;223.33333333333334&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1320.0&quot; cy=&quot;264.16666666666663&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M120.0,305.0 C240.0,305.0 240.0,235.0 360.0,235.0 C480.0,235.0 480.0,264.16666666666663 600.0,264.16666666666663 C720.0,264.16666666666663 720.0,176.66666666666669 840.0,176.66666666666669 C960.0,176.66666666666669 960.0,165.00000000000003 1080.0,165.00000000000003 C1200.0,165.00000000000003 1200.0,135.83333333333331 1320.0,135.83333333333331&quot; fill=&quot;none&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;4&quot;/&gt;&lt;circle cx=&quot;120.0&quot; cy=&quot;305.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;360.0&quot; cy=&quot;235.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;600.0&quot; cy=&quot;264.16666666666663&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;840.0&quot; cy=&quot;176.66666666666669&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1080.0&quot; cy=&quot;165.00000000000003&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1320.0&quot; cy=&quot;135.83333333333331&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;/svg&gt;</svg>
+  <slide background="{background_color}">
+    <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;900&quot; viewBox=&quot;0 0 1600 900&quot;&gt;&lt;rect x=&quot;250&quot; y=&quot;60&quot; width=&quot;1100&quot; height=&quot;90&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#8A2BE2&quot; stroke-width=&quot;6&quot;/&gt;&lt;rect x=&quot;380.0&quot; y=&quot;800&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;8&quot; fill=&quot;#0080FF&quot;/&gt;&lt;text x=&quot;430.0&quot; y=&quot;822&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;24&quot; font-weight=&quot;bold&quot; fill=&quot;#0A0A1A&quot;&gt;{series1_label}&lt;/text&gt;&lt;rect x=&quot;660.0&quot; y=&quot;800&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;8&quot; fill=&quot;#A060FF&quot;/&gt;&lt;text x=&quot;710.0&quot; y=&quot;822&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;24&quot; font-weight=&quot;bold&quot; fill=&quot;#0A0A1A&quot;&gt;{series2_label}&lt;/text&gt;&lt;rect x=&quot;940.0&quot; y=&quot;800&quot; width=&quot;30&quot; height=&quot;30&quot; rx=&quot;8&quot; fill=&quot;#00C0FF&quot;/&gt;&lt;text x=&quot;990.0&quot; y=&quot;822&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;24&quot; font-weight=&quot;bold&quot; fill=&quot;#0A0A1A&quot;&gt;{series3_label}&lt;/text&gt;&lt;/svg&gt;</svg>
+    <textbox x="250" y="60" width="1100" height="90" font="Segoe UI" size="65" color="{title_color}" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">{title}</textbox>
+    <svg x="100" y="200" width="1400" height="550" pixel_width="1400" pixel_height="550">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1400&quot; height=&quot;550&quot; viewBox=&quot;0 0 1400 550&quot;&gt;&lt;rect x=&quot;10&quot; y=&quot;10&quot; width=&quot;1380&quot; height=&quot;500&quot; rx=&quot;15&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#E6E6E6&quot; stroke-width=&quot;2&quot;/&gt;&lt;line x1=&quot;120&quot; y1=&quot;410.0&quot; x2=&quot;1320&quot; y2=&quot;410.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;416.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;0&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;340.0&quot; x2=&quot;1320&quot; y2=&quot;340.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;346.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;12&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;270.0&quot; x2=&quot;1320&quot; y2=&quot;270.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;276.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;24&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;200.0&quot; x2=&quot;1320&quot; y2=&quot;200.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;206.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;36&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;130.0&quot; x2=&quot;1320&quot; y2=&quot;130.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;136.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;48&lt;/text&gt;&lt;line x1=&quot;120&quot; y1=&quot;60.0&quot; x2=&quot;1320&quot; y2=&quot;60.0&quot; stroke=&quot;#F2F2F2&quot; stroke-width=&quot;2&quot;/&gt;&lt;text x=&quot;100&quot; y=&quot;66.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#444444&quot; text-anchor=&quot;end&quot;&gt;60&lt;/text&gt;&lt;text x=&quot;120.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{month1_label}&lt;/text&gt;&lt;text x=&quot;360.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{month2_label}&lt;/text&gt;&lt;text x=&quot;600.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{month3_label}&lt;/text&gt;&lt;text x=&quot;840.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{month4_label}&lt;/text&gt;&lt;text x=&quot;1080.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{month5_label}&lt;/text&gt;&lt;text x=&quot;1320.0&quot; y=&quot;445&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; font-weight=&quot;bold&quot; fill=&quot;#222222&quot; text-anchor=&quot;middle&quot;&gt;{month6_label}&lt;/text&gt;&lt;path d=&quot;M120.0,340.0 C240.0,340.0 240.0,386.6666666666667 360.0,386.6666666666667 C480.0,386.6666666666667 480.0,293.33333333333337 600.0,293.33333333333337 C720.0,293.33333333333337 720.0,322.5 840.0,322.5 C960.0,322.5 960.0,118.33333333333331 1080.0,118.33333333333331 C1200.0,118.33333333333331 1200.0,235.0 1320.0,235.0&quot; fill=&quot;none&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;4&quot;/&gt;&lt;circle cx=&quot;120.0&quot; cy=&quot;340.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;360.0&quot; cy=&quot;386.6666666666667&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;600.0&quot; cy=&quot;293.33333333333337&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;840.0&quot; cy=&quot;322.5&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1080.0&quot; cy=&quot;118.33333333333331&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1320.0&quot; cy=&quot;235.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#0080FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M120.0,410.0 C240.0,410.0 240.0,340.0 360.0,340.0 C480.0,340.0 480.0,188.33333333333334 600.0,188.33333333333334 C720.0,188.33333333333334 720.0,235.0 840.0,235.0 C960.0,235.0 960.0,223.33333333333334 1080.0,223.33333333333334 C1200.0,223.33333333333334 1200.0,264.16666666666663 1320.0,264.16666666666663&quot; fill=&quot;none&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;4&quot;/&gt;&lt;circle cx=&quot;120.0&quot; cy=&quot;410.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;360.0&quot; cy=&quot;340.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;600.0&quot; cy=&quot;188.33333333333334&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;840.0&quot; cy=&quot;235.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1080.0&quot; cy=&quot;223.33333333333334&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1320.0&quot; cy=&quot;264.16666666666663&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#A060FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;path d=&quot;M120.0,305.0 C240.0,305.0 240.0,235.0 360.0,235.0 C480.0,235.0 480.0,264.16666666666663 600.0,264.16666666666663 C720.0,264.16666666666663 720.0,176.66666666666669 840.0,176.66666666666669 C960.0,176.66666666666669 960.0,165.00000000000003 1080.0,165.00000000000003 C1200.0,165.00000000000003 1200.0,135.83333333333331 1320.0,135.83333333333331&quot; fill=&quot;none&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;4&quot;/&gt;&lt;circle cx=&quot;120.0&quot; cy=&quot;305.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;360.0&quot; cy=&quot;235.0&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;600.0&quot; cy=&quot;264.16666666666663&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;840.0&quot; cy=&quot;176.66666666666669&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1080.0&quot; cy=&quot;165.00000000000003&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;circle cx=&quot;1320.0&quot; cy=&quot;135.83333333333331&quot; r=&quot;5&quot; fill=&quot;#FFFFFF&quot; stroke=&quot;#00C0FF&quot; stroke-width=&quot;3&quot;/&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, series1_label=kwargs.get("series1_label", "Production", background_color=kwargs.get("background_color", "#FAFAFA", title_color=kwargs.get("title_color", "#111111"))), series2_label=kwargs.get("series2_label", "Sale"), series3_label=kwargs.get("series3_label", "Marketing"), month1_label=kwargs.get("month1_label", "January"), month2_label=kwargs.get("month2_label", "February"), month3_label=kwargs.get("month3_label", "March"), month4_label=kwargs.get("month4_label", "April"), month5_label=kwargs.get("month5_label", "May"), month6_label=kwargs.get("month6_label", "June"))
 
 
-def generate_market_analysis_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_market_analysis_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for market analysis.
     """
@@ -2798,7 +2798,7 @@ def generate_market_analysis_slide_xml(title: str = "Default Title", subtitle: s
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#0B1151">
+  <slide background="{background_color}">
     <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"&gt;
     &lt;!-- Dark subtle background accents --&gt;
     &lt;circle cx="200" cy="0" r="300" fill="#060833" opacity="0.6"/&gt;
@@ -2826,8 +2826,8 @@ def generate_market_analysis_slide_xml(title: str = "Default Title", subtitle: s
     &lt;text x="1100" y="810" font-family="Segoe UI" font-size="24" fill="#FFFFFF" font-weight="600"&gt;www.reallygreatsite.com&lt;/text&gt;
 
     &lt;!-- Right Side Content --&gt;
-    &lt;text x="850" y="320" font-family="Segoe UI" font-size="85" fill="#FFFFFF" font-weight="400"&gt;Market&lt;/text&gt;
-    &lt;text x="850" y="420" font-family="Segoe UI" font-size="85" fill="#FFFFFF" font-weight="400"&gt;Analysis&lt;/text&gt;
+    &lt;text x="850" y="320" font-family="Segoe UI" font-size="85" fill="#FFFFFF" font-weight="400"&gt;{title_word1}&lt;/text&gt;
+    &lt;text x="850" y="420" font-family="Segoe UI" font-size="85" fill="#FFFFFF" font-weight="400"&gt;{title_word2}&lt;/text&gt;
 
     &lt;!-- Right Side Paragraph --&gt;
     &lt;text x="850" y="520" font-family="Segoe UI" font-size="20" fill="#E0E0E0" font-weight="400"&gt;
@@ -2863,21 +2863,21 @@ def generate_market_analysis_slide_xml(title: str = "Default Title", subtitle: s
     &lt;text x="130" y="706" font-family="Segoe UI" font-size="16" fill="#A0A0A0" text-anchor="end"&gt;0&lt;/text&gt;
 
     &lt;!-- X-Axis Labels --&gt;
-    &lt;text x="150" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;Item 1&lt;/text&gt;
-    &lt;text x="287.5" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;Item 2&lt;/text&gt;
-    &lt;text x="425" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;Item 3&lt;/text&gt;
-    &lt;text x="562.5" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;Item 4&lt;/text&gt;
-    &lt;text x="700" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;Item 5&lt;/text&gt;
+    &lt;text x="150" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;{cat1_label}&lt;/text&gt;
+    &lt;text x="287.5" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;{cat2_label}&lt;/text&gt;
+    &lt;text x="425" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;{cat3_label}&lt;/text&gt;
+    &lt;text x="562.5" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;{cat4_label}&lt;/text&gt;
+    &lt;text x="700" y="730" font-family="Segoe UI" font-size="16" fill="#E0E0E0" text-anchor="middle"&gt;{cat5_label}&lt;/text&gt;
 
     &lt;!-- Legend --&gt;
     &lt;circle cx="250" cy="160" r="8" fill="#5747D7"/&gt;
-    &lt;text x="270" y="166" font-family="Segoe UI" font-size="16" fill="#E0E0E0"&gt;Series 1&lt;/text&gt;
+    &lt;text x="270" y="166" font-family="Segoe UI" font-size="16" fill="#E0E0E0"&gt;{series1_label}&lt;/text&gt;
 
     &lt;circle cx="360" cy="160" r="8" fill="#F2C85B"/&gt;
-    &lt;text x="380" y="166" font-family="Segoe UI" font-size="16" fill="#E0E0E0"&gt;Series 2&lt;/text&gt;
+    &lt;text x="380" y="166" font-family="Segoe UI" font-size="16" fill="#E0E0E0"&gt;{series2_label}&lt;/text&gt;
 
     &lt;circle cx="470" cy="160" r="8" fill="#FFFFFF"/&gt;
-    &lt;text x="490" y="166" font-family="Segoe UI" font-size="16" fill="#E0E0E0"&gt;Series 3&lt;/text&gt;
+    &lt;text x="490" y="166" font-family="Segoe UI" font-size="16" fill="#E0E0E0"&gt;{series3_label}&lt;/text&gt;
 
     &lt;!-- Lines --&gt;
     &lt;!-- Series 1 (Purple: #5747D7) --&gt;
@@ -2909,10 +2909,10 @@ def generate_market_analysis_slide_xml(title: str = "Default Title", subtitle: s
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, title_word1=kwargs.get("title_word1", "Market", background_color=kwargs.get("background_color", "#0B1151")), title_word2=kwargs.get("title_word2", "Analysis"), cat1_label=kwargs.get("cat1_label", "Item 1"), cat2_label=kwargs.get("cat2_label", "Item 2"), cat3_label=kwargs.get("cat3_label", "Item 3"), cat4_label=kwargs.get("cat4_label", "Item 4"), cat5_label=kwargs.get("cat5_label", "Item 5"), series1_label=kwargs.get("series1_label", "Series 1"), series2_label=kwargs.get("series2_label", "Series 2"), series3_label=kwargs.get("series3_label", "Series 3"))
 
 
-def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for people culture.
     """
@@ -2922,7 +2922,7 @@ def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: st
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#F4F5F7">
+  <slide background="{background_color}">
     <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"&gt;
         &lt;!-- Title --&gt;
         &lt;text x="100" y="120" font-family="Segoe UI" font-size="54" font-weight="600" fill="#1A2F33"&gt;People &amp;amp; Culture&lt;/text&gt;
@@ -2935,8 +2935,8 @@ def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: st
         &lt;path d="M160 250 A 6 6 0 1 1 160 238 A 6 6 0 1 1 160 250 M150 262 Q160 252 170 262 L170 265 L150 265 Z" fill="none" stroke="#068D9D" stroke-width="3"/&gt;
         &lt;path d="M180 250 A 6 6 0 1 1 180 238 A 6 6 0 1 1 180 250 M170 262 Q180 252 190 262 L190 265 L170 265 Z" fill="none" stroke="#068D9D" stroke-width="3"/&gt;
 
-        &lt;text x="140" y="330" font-family="Segoe UI" font-size="24" fill="#FFFFFF" opacity="0.9"&gt;Employee Engagement&lt;/text&gt;
-        &lt;text x="140" y="400" font-family="Segoe UI" font-size="64" font-weight="bold" fill="#FFFFFF"&gt;89%&lt;/text&gt;
+        &lt;text x="140" y="330" font-family="Segoe UI" font-size="24" fill="#FFFFFF" opacity="0.9"&gt;{metric1_label}&lt;/text&gt;
+        &lt;text x="140" y="400" font-family="Segoe UI" font-size="64" font-weight="bold" fill="#FFFFFF"&gt;{metric1_value}&lt;/text&gt;
         &lt;text x="270" y="390" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.8"&gt;satisfaction&lt;/text&gt;
         &lt;text x="140" y="440" font-family="Segoe UI" font-size="20" fill="#B0E5E5"&gt;(+5%)&lt;/text&gt;
 
@@ -2948,8 +2948,8 @@ def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: st
         &lt;circle cx="170" cy="590" r="14" fill="none" stroke="#068D9D" stroke-width="3"/&gt;
         &lt;polyline points="170 583 170 590 176 594" fill="none" stroke="#068D9D" stroke-width="3" stroke-linecap="round"/&gt;
 
-        &lt;text x="140" y="670" font-family="Segoe UI" font-size="24" fill="#FFFFFF" opacity="0.9"&gt;Average Training Hours&lt;/text&gt;
-        &lt;text x="140" y="740" font-family="Segoe UI" font-size="64" font-weight="bold" fill="#FFFFFF"&gt;37 hrs&lt;/text&gt;
+        &lt;text x="140" y="670" font-family="Segoe UI" font-size="24" fill="#FFFFFF" opacity="0.9"&gt;{metric2_label}&lt;/text&gt;
+        &lt;text x="140" y="740" font-family="Segoe UI" font-size="64" font-weight="bold" fill="#FFFFFF"&gt;{metric2_value}&lt;/text&gt;
         &lt;text x="330" y="730" font-family="Segoe UI" font-size="20" fill="#FFFFFF" opacity="0.8"&gt;per employee&lt;/text&gt;
         &lt;text x="140" y="780" font-family="Segoe UI" font-size="20" fill="#B0E5E5"&gt;(+12%)&lt;/text&gt;
 
@@ -2981,16 +2981,16 @@ def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: st
         &lt;text x="540" y="536" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="end"&gt;0%&lt;/text&gt;
 
         &lt;!-- X-Axis Labels --&gt;
-        &lt;text x="580" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Jan&lt;/text&gt;
-        &lt;text x="675" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Feb&lt;/text&gt;
-        &lt;text x="771" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Mar&lt;/text&gt;
-        &lt;text x="866" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Apr&lt;/text&gt;
-        &lt;text x="962" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;May&lt;/text&gt;
-        &lt;text x="1057" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Jun&lt;/text&gt;
-        &lt;text x="1153" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Jul&lt;/text&gt;
-        &lt;text x="1248" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Aug&lt;/text&gt;
-        &lt;text x="1344" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Sep&lt;/text&gt;
-        &lt;text x="1440" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;Oct&lt;/text&gt;
+        &lt;text x="580" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m1}&lt;/text&gt;
+        &lt;text x="675" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m2}&lt;/text&gt;
+        &lt;text x="771" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m3}&lt;/text&gt;
+        &lt;text x="866" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m4}&lt;/text&gt;
+        &lt;text x="962" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m5}&lt;/text&gt;
+        &lt;text x="1057" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m6}&lt;/text&gt;
+        &lt;text x="1153" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m7}&lt;/text&gt;
+        &lt;text x="1248" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m8}&lt;/text&gt;
+        &lt;text x="1344" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m9}&lt;/text&gt;
+        &lt;text x="1440" y="560" font-family="Segoe UI" font-size="16" fill="#888888" text-anchor="middle"&gt;{m10}&lt;/text&gt;
 
         &lt;!-- Stacked Area Paths --&gt;
         &lt;!-- Area 1 (Top / Dark Blue) --&gt;
@@ -3015,8 +3015,8 @@ def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: st
         &lt;ellipse cx="570" cy="730" rx="6" ry="14" fill="none" stroke="#FFFFFF" stroke-width="2"/&gt;
         &lt;line x1="556" y1="730" x2="584" y2="730" stroke="#FFFFFF" stroke-width="2"/&gt;
 
-        &lt;text x="620" y="725" font-family="Segoe UI" font-size="24" fill="#333333"&gt;Women in&lt;/text&gt;
-        &lt;text x="620" y="755" font-family="Segoe UI" font-size="24" fill="#333333"&gt;Leadership&lt;/text&gt;
+        &lt;text x="620" y="725" font-family="Segoe UI" font-size="24" fill="#333333"&gt;{metric3_label_part1}&lt;/text&gt;
+        &lt;text x="620" y="755" font-family="Segoe UI" font-size="24" fill="#333333"&gt;{metric3_label_part2}&lt;/text&gt;
 
         &lt;!-- 10 Women Icons --&gt;
         &lt;g transform="translate(730, 700) scale(1.6)"&gt;
@@ -3034,17 +3034,17 @@ def generate_people_culture_slide_xml(title: str = "Default Title", subtitle: st
             &lt;path d="M 12 10 C 12 10 7 12 5 18 L 8 18 L 8 28 L 11 28 L 11 20 L 13 20 L 13 28 L 16 28 L 16 18 L 19 18 C 17 12 12 10 12 10 Z M 12 8 A 4 4 0 1 0 12 0 A 4 4 0 1 0 12 8 Z" fill="#FFFFFF" transform="translate(216, 0)"/&gt;
         &lt;/g&gt;
 
-        &lt;text x="1270" y="750" font-family="Segoe UI" font-size="64" font-weight="bold" fill="#068D9D"&gt;50%&lt;/text&gt;
+        &lt;text x="1270" y="750" font-family="Segoe UI" font-size="64" font-weight="bold" fill="#068D9D"&gt;{metric3_value}&lt;/text&gt;
         &lt;text x="1395" y="745" font-family="Segoe UI" font-size="20" fill="#6B7853"&gt;(+5%)&lt;/text&gt;
 &lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, metric1_label=kwargs.get("metric1_label", "Employee Engagement", background_color=kwargs.get("background_color", "#F4F5F7")), metric1_value=kwargs.get("metric1_value", "89%"), metric2_label=kwargs.get("metric2_label", "Average Training Hours"), metric2_value=kwargs.get("metric2_value", "37 hrs"), metric3_label_part1=kwargs.get("metric3_label_part1", "Women in"), metric3_label_part2=kwargs.get("metric3_label_part2", "Leadership"), metric3_value=kwargs.get("metric3_value", "50%"), m1=kwargs.get("m1", "Jan"), m2=kwargs.get("m2", "Feb"), m3=kwargs.get("m3", "Mar"), m4=kwargs.get("m4", "Apr"), m5=kwargs.get("m5", "May"), m6=kwargs.get("m6", "Jun"), m7=kwargs.get("m7", "Jul"), m8=kwargs.get("m8", "Aug"), m9=kwargs.get("m9", "Sep"), m10=kwargs.get("m10", "Oct"))
 
 
-def generate_radar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_radar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for radar.
     """
@@ -3054,20 +3054,20 @@ def generate_radar_slide_xml(title: str = "Default Title", subtitle: str = "Defa
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FFFFFF">
+  <slide background="{background_color}">
     <polygon points="0,0 450,0 450,900 0,900" fill="#F4F4F4"/>
-    <textbox x="50" y="60" width="350" height="150" font="Segoe UI" size="46" color="#111111" bold="true" align="left" vertical_align="top" single_line="false" max_lines="3" reflow_on_resize="true">{title}</textbox>
-    <textbox x="50" y="220" width="350" height="150" font="Segoe UI" size="24" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="5" reflow_on_resize="true" line_spacing="1.3">{subtitle}</textbox>
+    <textbox x="50" y="60" width="350" height="150" font="Segoe UI" size="46" color="{title_color}" bold="true" align="left" vertical_align="top" single_line="false" max_lines="3" reflow_on_resize="true">{title}</textbox>
+    <textbox x="50" y="220" width="350" height="150" font="Segoe UI" size="24" color="{subtitle_color}" align="left" vertical_align="top" single_line="false" max_lines="5" reflow_on_resize="true" line_spacing="1.3">{subtitle}</textbox>
     <textbox x="50" y="650" width="350" height="200" font="Segoe UI" size="18" color="#444444" align="left" vertical_align="top" single_line="false" max_lines="8" reflow_on_resize="true" line_spacing="1.3">Đoạn văn giải thích nguồn dữ liệu, nêu bật những gì biểu đồ minh họa và cung cấp hướng dẫn.</textbox>
     <svg x="450" y="0" width="1150" height="900" pixel_width="1150" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1150&quot; height=&quot;900&quot; viewBox=&quot;0 0 1150 900&quot;&gt;&lt;circle cx=&quot;305.0&quot; cy=&quot;120&quot; r=&quot;12&quot; fill=&quot;#4A4A4A&quot;/&gt;&lt;text x=&quot;330.0&quot; y=&quot;127&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;22&quot; fill=&quot;#222222&quot;&gt;Người mới&lt;/text&gt;&lt;circle cx=&quot;485.0&quot; cy=&quot;120&quot; r=&quot;12&quot; fill=&quot;#9B9B9B&quot;/&gt;&lt;text x=&quot;510.0&quot; y=&quot;127&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;22&quot; fill=&quot;#222222&quot;&gt;Bậc trung&lt;/text&gt;&lt;circle cx=&quot;665.0&quot; cy=&quot;120&quot; r=&quot;12&quot; fill=&quot;#D8D8D8&quot;/&gt;&lt;text x=&quot;690.0&quot; y=&quot;127&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;22&quot; fill=&quot;#222222&quot;&gt;Quản lý&lt;/text&gt;&lt;polygon points=&quot;575.0,444.0 628.2591649125286,482.69504831500296 607.9159741283785,545.304951684997 542.0840258716215,545.304951684997 521.7408350874714,482.69504831500296&quot; fill=&quot;none&quot; stroke=&quot;#B0B0B0&quot; stroke-dasharray=&quot;4 4&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;575&quot; y=&quot;436.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#555555&quot; text-anchor=&quot;middle&quot;&gt;2&lt;/text&gt;&lt;polygon points=&quot;575.0,388.0 681.5183298250572,465.39009663000587 640.831948256757,590.6099033699941 509.16805174324304,590.6099033699941 468.4816701749428,465.3900966300059&quot; fill=&quot;none&quot; stroke=&quot;#B0B0B0&quot; stroke-dasharray=&quot;4 4&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;575&quot; y=&quot;380.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#555555&quot; text-anchor=&quot;middle&quot;&gt;4&lt;/text&gt;&lt;polygon points=&quot;575.0,332.0 734.7774947375858,448.08514494500884 673.7479223851354,635.9148550549912 476.25207761486456,635.9148550549912 415.2225052624142,448.08514494500884&quot; fill=&quot;none&quot; stroke=&quot;#B0B0B0&quot; stroke-dasharray=&quot;4 4&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;575&quot; y=&quot;324.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#555555&quot; text-anchor=&quot;middle&quot;&gt;6&lt;/text&gt;&lt;polygon points=&quot;575.0,276.0 788.0366596501144,430.7801932600118 706.6638965135139,681.2198067399883 443.3361034864861,681.2198067399883 361.9633403498856,430.7801932600118&quot; fill=&quot;none&quot; stroke=&quot;#B0B0B0&quot; stroke-dasharray=&quot;4 4&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;575&quot; y=&quot;268.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#555555&quot; text-anchor=&quot;middle&quot;&gt;8&lt;/text&gt;&lt;line x1=&quot;575&quot; y1=&quot;500&quot; x2=&quot;575.0&quot; y2=&quot;220.0&quot; stroke=&quot;#D0D0D0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;575.0&quot; y=&quot;175.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#111111&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;middle&quot;&gt;Xây dựng thương hiệu&lt;/text&gt;&lt;line x1=&quot;575&quot; y1=&quot;500&quot; x2=&quot;841.295824562643&quot; y2=&quot;413.4752415750147&quot; stroke=&quot;#D0D0D0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;884.0933677959249&quot; y=&quot;399.5694768281421&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#111111&quot; text-anchor=&quot;start&quot; dominant-baseline=&quot;middle&quot;&gt;Khai phá dữ liệu&lt;/text&gt;&lt;line x1=&quot;575&quot; y1=&quot;500&quot; x2=&quot;739.5798706418925&quot; y2=&quot;726.5247584249853&quot; stroke=&quot;#D0D0D0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;766.0302069950537&quot; y=&quot;762.9305231718579&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#111111&quot; text-anchor=&quot;start&quot; dominant-baseline=&quot;middle&quot;&gt;Chuẩn đối sánh&lt;/text&gt;&lt;line x1=&quot;575&quot; y1=&quot;500&quot; x2=&quot;410.42012935810754&quot; y2=&quot;726.5247584249853&quot; stroke=&quot;#D0D0D0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;383.96979300494627&quot; y=&quot;762.9305231718579&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#111111&quot; text-anchor=&quot;end&quot; dominant-baseline=&quot;middle&quot;&gt;Sơ đồ hóa lộ trình&lt;/text&gt;&lt;line x1=&quot;575&quot; y1=&quot;500&quot; x2=&quot;308.704175437357&quot; y2=&quot;413.47524157501476&quot; stroke=&quot;#D0D0D0&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;265.9066322040751&quot; y=&quot;399.5694768281421&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; fill=&quot;#111111&quot; text-anchor=&quot;end&quot; dominant-baseline=&quot;middle&quot;&gt;Copywriting&lt;/text&gt;&lt;polygon points=&quot;575.0,220.0 841.295824562643,413.4752415750147 739.5798706418925,726.5247584249853 410.42012935810754,726.5247584249853 308.704175437357,413.47524157501476&quot; fill=&quot;none&quot; stroke=&quot;#B0B0B0&quot; stroke-dasharray=&quot;4 4&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;575&quot; y=&quot;212.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#555555&quot; text-anchor=&quot;middle&quot;&gt;10&lt;/text&gt;&lt;text x=&quot;{{cx}}&quot; y=&quot;{{cy - 8}}&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;16&quot; fill=&quot;#555555&quot; text-anchor=&quot;middle&quot;&gt;0&lt;/text&gt;&lt;polygon points=&quot;575.0,360.0 681.5183298250572,465.39009663000587 624.3739611925678,567.9574275274956 509.16805174324304,590.6099033699941 495.1112526312071,474.04257247250445&quot; fill=&quot;#4A4A4A&quot; opacity=&quot;0.6&quot; stroke=&quot;#4A4A4A&quot; stroke-width=&quot;2&quot;/&gt;&lt;polygon points=&quot;575.0,304.0 788.0366596501144,430.7801932600118 673.7479223851354,635.9148550549912 426.8781164222968,703.8722825824867 441.8520877186785,456.73762078750735&quot; fill=&quot;#9B9B9B&quot; opacity=&quot;0.6&quot; stroke=&quot;#9B9B9B&quot; stroke-width=&quot;2&quot;/&gt;&lt;polygon points=&quot;575.0,248.0 841.295824562643,413.4752415750147 706.6638965135139,681.2198067399883 410.42012935810754,726.5247584249853 361.9633403498856,430.7801932600118&quot; fill=&quot;#D8D8D8&quot; opacity=&quot;0.6&quot; stroke=&quot;#D8D8D8&quot; stroke-width=&quot;2&quot;/&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, radar_label2=kwargs.get("radar_label2", "S?c m?nh", background_color=kwargs.get("background_color", "#FFFFFF", title_color=kwargs.get("title_color", "#111111"), subtitle_color=kwargs.get("subtitle_color", "#333333"))), radar_label5=kwargs.get("radar_label5", "IQ"))
 
 
-def generate_stacked_bar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_stacked_bar_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for stacked bar.
     """
@@ -3077,16 +3077,16 @@ def generate_stacked_bar_slide_xml(title: str = "Default Title", subtitle: str =
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FAF7F0">
+  <slide background="{background_color}">
     <svg x="0" y="0" width="1600" height="900" pixel_width="1600" pixel_height="900">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1600&quot; height=&quot;900&quot; viewBox=&quot;0 0 1600 900&quot;&gt;&lt;path d=&quot;M0,0 L350,0 C350,150 200,250 0,250 Z&quot; fill=&quot;#A47754&quot; opacity=&quot;0.8&quot;/&gt;&lt;path d=&quot;M0,0 L200,0 C200,100 120,150 0,150 Z&quot; fill=&quot;#4D3B2E&quot; opacity=&quot;0.9&quot;/&gt;&lt;circle cx=&quot;230&quot; cy=&quot;50&quot; r=&quot;15&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;circle cx=&quot;280&quot; cy=&quot;110&quot; r=&quot;22&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;path d=&quot;M1250,0 L1600,0 L1600,250 C1450,200 1350,100 1250,0 Z&quot; fill=&quot;#4D3B2E&quot; opacity=&quot;0.9&quot;/&gt;&lt;path d=&quot;M1500,280 C1450,270 1420,300 1450,330 C1480,360 1550,370 1600,350 L1600,280 Z&quot; fill=&quot;#A47754&quot; opacity=&quot;0.8&quot;/&gt;&lt;path d=&quot;M0,900 L250,900 C250,820 180,750 0,720 Z&quot; fill=&quot;#4D3B2E&quot; opacity=&quot;0.9&quot;/&gt;&lt;path d=&quot;M0,650 C80,650 120,700 80,750 C40,800 100,850 150,900 L0,900 Z&quot; fill=&quot;#A47754&quot; opacity=&quot;0.8&quot;/&gt;&lt;path d=&quot;M1600,900 L1150,900 C1250,800 1400,700 1600,600 Z&quot; fill=&quot;#A47754&quot; opacity=&quot;0.8&quot;/&gt;&lt;circle cx=&quot;1080&quot; cy=&quot;850&quot; r=&quot;18&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;circle cx=&quot;1180&quot; cy=&quot;780&quot; r=&quot;12&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;circle cx=&quot;1250&quot; cy=&quot;880&quot; r=&quot;25&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;/svg&gt;</svg>
-    <textbox x="100" y="80" width="1400" height="160" font="Segoe UI" size="76" color="#4D3B2E" bold="true" align="center" vertical_align="middle" single_line="false" max_lines="2" reflow_on_resize="true">{title}</textbox>
-    <textbox x="780" y="320" width="700" height="500" font="Segoe UI" size="26" color="#4D3B2E" align="justify" vertical_align="top" single_line="false" max_lines="20" reflow_on_resize="true" line_spacing="1.4">{subtitle}</textbox>
-    <svg x="200" y="350" width="600" height="550" pixel_width="600" pixel_height="550">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;600&quot; height=&quot;550&quot; viewBox=&quot;0 0 600 550&quot;&gt;&lt;circle cx=&quot;50&quot; cy=&quot;20&quot; r=&quot;8&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;text x=&quot;65&quot; y=&quot;25&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot;&gt;Seri 1&lt;/text&gt;&lt;circle cx=&quot;170&quot; cy=&quot;20&quot; r=&quot;8&quot; fill=&quot;#A47754&quot;/&gt;&lt;text x=&quot;185&quot; y=&quot;25&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot;&gt;Seri 2&lt;/text&gt;&lt;circle cx=&quot;290&quot; cy=&quot;20&quot; r=&quot;8&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;305&quot; y=&quot;25&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot;&gt;Seri 3&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;420.0&quot; x2=&quot;520&quot; y2=&quot;420.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;425.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;0%&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;350.0&quot; x2=&quot;520&quot; y2=&quot;350.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;355.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;20%&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;280.0&quot; x2=&quot;520&quot; y2=&quot;280.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;285.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;40%&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;210.0&quot; x2=&quot;520&quot; y2=&quot;210.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;215.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;60%&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;140.0&quot; x2=&quot;520&quot; y2=&quot;140.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;145.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;80%&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;70.0&quot; x2=&quot;520&quot; y2=&quot;70.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;75.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;100%&lt;/text&gt;&lt;rect x=&quot;92.5&quot; y=&quot;280.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;92.5&quot; y=&quot;140.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;92.5&quot; y=&quot;70.0&quot; width=&quot;67.5&quot; height=&quot;70.0&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;126.25&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;Item 1&lt;/text&gt;&lt;rect x=&quot;205.0&quot; y=&quot;280.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;205.0&quot; y=&quot;164.5&quot; width=&quot;67.5&quot; height=&quot;115.5&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;205.0&quot; y=&quot;70.0&quot; width=&quot;67.5&quot; height=&quot;94.5&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;238.75&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;Item 2&lt;/text&gt;&lt;rect x=&quot;317.5&quot; y=&quot;262.5&quot; width=&quot;67.5&quot; height=&quot;157.5&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;317.5&quot; y=&quot;168.0&quot; width=&quot;67.5&quot; height=&quot;94.5&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;317.5&quot; y=&quot;69.99999999999999&quot; width=&quot;67.5&quot; height=&quot;98.00000000000001&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;351.25&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;Item 3&lt;/text&gt;&lt;rect x=&quot;430.0&quot; y=&quot;280.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;430.0&quot; y=&quot;112.0&quot; width=&quot;67.5&quot; height=&quot;168.0&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;430.0&quot; y=&quot;70.0&quot; width=&quot;67.5&quot; height=&quot;42.0&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;463.75&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;Item 4&lt;/text&gt;&lt;/svg&gt;</svg>
+    <textbox x="100" y="80" width="1400" height="160" font="Segoe UI" size="76" color="{title_color}" bold="true" align="center" vertical_align="middle" single_line="false" max_lines="2" reflow_on_resize="true">{title}</textbox>
+    <textbox x="780" y="320" width="700" height="500" font="Segoe UI" size="26" color="{subtitle_color}" align="justify" vertical_align="top" single_line="false" max_lines="20" reflow_on_resize="true" line_spacing="1.4">{subtitle}</textbox>
+    <svg x="200" y="350" width="600" height="550" pixel_width="600" pixel_height="550">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;600&quot; height=&quot;550&quot; viewBox=&quot;0 0 600 550&quot;&gt;&lt;circle cx=&quot;50&quot; cy=&quot;20&quot; r=&quot;8&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;text x=&quot;65&quot; y=&quot;25&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot;&gt;{series1_label}&lt;/text&gt;&lt;circle cx=&quot;170&quot; cy=&quot;20&quot; r=&quot;8&quot; fill=&quot;#A47754&quot;/&gt;&lt;text x=&quot;185&quot; y=&quot;25&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot;&gt;{series2_label}&lt;/text&gt;&lt;circle cx=&quot;290&quot; cy=&quot;20&quot; r=&quot;8&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;305&quot; y=&quot;25&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot;&gt;{series3_label}&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;420.0&quot; x2=&quot;520&quot; y2=&quot;420.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;425.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;0%&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;350.0&quot; x2=&quot;520&quot; y2=&quot;350.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;355.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;{y_axis_20}&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;280.0&quot; x2=&quot;520&quot; y2=&quot;280.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;285.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;{y_axis_40}&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;210.0&quot; x2=&quot;520&quot; y2=&quot;210.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;215.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;{y_axis_60}&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;140.0&quot; x2=&quot;520&quot; y2=&quot;140.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;145.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;{y_axis_80}&lt;/text&gt;&lt;line x1=&quot;70&quot; y1=&quot;70.0&quot; x2=&quot;520&quot; y2=&quot;70.0&quot; stroke=&quot;#E0DCD3&quot; stroke-width=&quot;1&quot;/&gt;&lt;text x=&quot;60&quot; y=&quot;75.0&quot; font-family=&quot;Arial&quot; font-size=&quot;14&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;end&quot;&gt;{y_axis_100}&lt;/text&gt;&lt;rect x=&quot;92.5&quot; y=&quot;280.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;92.5&quot; y=&quot;140.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;92.5&quot; y=&quot;70.0&quot; width=&quot;67.5&quot; height=&quot;70.0&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;126.25&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;{item1_label}&lt;/text&gt;&lt;rect x=&quot;205.0&quot; y=&quot;280.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;205.0&quot; y=&quot;164.5&quot; width=&quot;67.5&quot; height=&quot;115.5&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;205.0&quot; y=&quot;70.0&quot; width=&quot;67.5&quot; height=&quot;94.5&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;238.75&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;{item2_label}&lt;/text&gt;&lt;rect x=&quot;317.5&quot; y=&quot;262.5&quot; width=&quot;67.5&quot; height=&quot;157.5&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;317.5&quot; y=&quot;168.0&quot; width=&quot;67.5&quot; height=&quot;94.5&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;317.5&quot; y=&quot;69.99999999999999&quot; width=&quot;67.5&quot; height=&quot;98.00000000000001&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;351.25&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;{item3_label}&lt;/text&gt;&lt;rect x=&quot;430.0&quot; y=&quot;280.0&quot; width=&quot;67.5&quot; height=&quot;140.0&quot; fill=&quot;#4D3B2E&quot;/&gt;&lt;rect x=&quot;430.0&quot; y=&quot;112.0&quot; width=&quot;67.5&quot; height=&quot;168.0&quot; fill=&quot;#A47754&quot;/&gt;&lt;rect x=&quot;430.0&quot; y=&quot;70.0&quot; width=&quot;67.5&quot; height=&quot;42.0&quot; fill=&quot;#EBE2D0&quot;/&gt;&lt;text x=&quot;463.75&quot; y=&quot;445&quot; font-family=&quot;Arial&quot; font-size=&quot;16&quot; fill=&quot;#4D3B2E&quot; text-anchor=&quot;middle&quot;&gt;{item4_label}&lt;/text&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, series1_label=kwargs.get("series1_label", "Seri 1", background_color=kwargs.get("background_color", "#FAF7F0", title_color=kwargs.get("title_color", "#4D3B2E"), subtitle_color=kwargs.get("subtitle_color", "#4D3B2E"))), series2_label=kwargs.get("series2_label", "Seri 2"), series3_label=kwargs.get("series3_label", "Seri 3"), y_axis_20=kwargs.get("y_axis_20", "20%"), y_axis_40=kwargs.get("y_axis_40", "40%"), y_axis_60=kwargs.get("y_axis_60", "60%"), y_axis_80=kwargs.get("y_axis_80", "80%"), y_axis_100=kwargs.get("y_axis_100", "100%"), item1_label=kwargs.get("item1_label", "Item 1"), item2_label=kwargs.get("item2_label", "Item 2"), item3_label=kwargs.get("item3_label", "Item 3"), item4_label=kwargs.get("item4_label", "Item 4"))
 
 
 def generate_waterfall_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
@@ -3319,7 +3319,7 @@ def generate_key_advantages_slide_slide_xml(title: str = "Default Title", subtit
     return xml_template.format(title=title, subtitle=subtitle)
 
 
-def generate_simple_donut_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None) -> str:
+def generate_simple_donut_slide_xml(title: str = "Default Title", subtitle: str = "Default Subtitle", items: list = None, **kwargs) -> str:
     """
     Generate an XML slide for simple donut.
     """
@@ -3329,11 +3329,11 @@ def generate_simple_donut_slide_xml(title: str = "Default Title", subtitle: str 
     # Template
     xml_template = r"""<?xml version="1.0" encoding="UTF-8"?>
 <presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#FFFFFF">
+  <slide background="{background_color}">
     <polygon points="10,10 1590,10 1590,890 10,890" fill="#FFFFFF"/>
     <svg x="10" y="10" width="1580" height="880" pixel_width="1580" pixel_height="880">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;1580&quot; height=&quot;880&quot; viewBox=&quot;0 0 1580 880&quot;&gt;&lt;rect x=&quot;0&quot; y=&quot;0&quot; width=&quot;1580&quot; height=&quot;880&quot; rx=&quot;15&quot; fill=&quot;#FAFAFA&quot; stroke=&quot;#EAEAEA&quot; stroke-width=&quot;2&quot;/&gt;&lt;/svg&gt;</svg>
-    <textbox x="100" y="120" width="500" height="80" font="Segoe UI" size="50" color="#2A82BD" bold="true" align="left" vertical_align="top" single_line="false" max_lines="2" reflow_on_resize="true">{title}</textbox>
-    <textbox x="100" y="200" width="500" height="50" font="Segoe UI" size="30" color="#333333" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
+    <textbox x="100" y="120" width="500" height="80" font="Segoe UI" size="50" color="{title_color}" bold="true" align="left" vertical_align="top" single_line="false" max_lines="2" reflow_on_resize="true">{title}</textbox>
+    <textbox x="100" y="200" width="500" height="50" font="Segoe UI" size="30" color="{subtitle_color}" align="left" vertical_align="top" single_line="true" max_lines="1" reflow_on_resize="true">{subtitle}</textbox>
     <polygon points="100,400 125,400 125,425 100,425" fill="#6A73A9"/>
     <textbox x="145" y="392" width="400" height="40" font="Segoe UI" size="24" color="#1F4D70" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">ORGANIC</textbox>
     <polygon points="100,480 125,480 125,505 100,505" fill="#6C93CD"/>
@@ -3344,14 +3344,319 @@ def generate_simple_donut_slide_xml(title: str = "Default Title", subtitle: str 
     <textbox x="145" y="632" width="400" height="40" font="Segoe UI" size="24" color="#1F4D70" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">SOCIAL MEDIA</textbox>
     <polygon points="100,720 125,720 125,745 100,745" fill="#95E6E6"/>
     <textbox x="145" y="712" width="400" height="40" font="Segoe UI" size="24" color="#1F4D70" align="left" vertical_align="middle" single_line="true" max_lines="1" reflow_on_resize="true">REFERRAL LINK</textbox>
-    <svg x="600" y="100" width="900" height="700" pixel_width="900" pixel_height="700">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;900&quot; height=&quot;700&quot; viewBox=&quot;0 0 900 700&quot;&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6A73A9&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;165.87609210954108 1507.9644737231006&quot; transform=&quot;rotate(-90 450 350)&quot; /&gt;&lt;text x=&quot;550.7745312729742&quot; y=&quot;70.08797123611788&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;start&quot; dominant-baseline=&quot;middle&quot;&gt;11%&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6C93CD&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;422.2300526424682 1507.9644737231006&quot; transform=&quot;rotate(-50.4 450 350)&quot; /&gt;&lt;text x=&quot;747.5&quot; y=&quot;350.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;start&quot; dominant-baseline=&quot;middle&quot;&gt;28%&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6EB1DF&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;331.75218421908215 1507.9644737231006&quot; transform=&quot;rotate(50.400000000000006 450 350)&quot; /&gt;&lt;text x=&quot;450.0&quot; y=&quot;647.5&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;middle&quot;&gt;22%&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6CD5DF&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;346.83182895631313 1507.9644737231006&quot; transform=&quot;rotate(129.6 450 350)&quot; /&gt;&lt;text x=&quot;156.16271867294654&quot; y=&quot;396.5392533494687&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;end&quot; dominant-baseline=&quot;middle&quot;&gt;23%&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#95E6E6&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;241.2743157956961 1507.9644737231006&quot; transform=&quot;rotate(212.39999999999998 450 350)&quot; /&gt;&lt;text x=&quot;306.6782819547397&quot; y=&quot;89.29876268695057&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;end&quot; dominant-baseline=&quot;middle&quot;&gt;16%&lt;/text&gt;&lt;/svg&gt;</svg>
+    <svg x="600" y="100" width="900" height="700" pixel_width="900" pixel_height="700">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;900&quot; height=&quot;700&quot; viewBox=&quot;0 0 900 700&quot;&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6A73A9&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;165.87609210954108 1507.9644737231006&quot; transform=&quot;rotate(-90 450 350)&quot; /&gt;&lt;text x=&quot;550.7745312729742&quot; y=&quot;70.08797123611788&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;start&quot; dominant-baseline=&quot;middle&quot;&gt;{slice1_value}&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6C93CD&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;422.2300526424682 1507.9644737231006&quot; transform=&quot;rotate(-50.4 450 350)&quot; /&gt;&lt;text x=&quot;747.5&quot; y=&quot;350.0&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;start&quot; dominant-baseline=&quot;middle&quot;&gt;{slice2_value}&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6EB1DF&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;331.75218421908215 1507.9644737231006&quot; transform=&quot;rotate(50.400000000000006 450 350)&quot; /&gt;&lt;text x=&quot;450.0&quot; y=&quot;647.5&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;middle&quot; dominant-baseline=&quot;middle&quot;&gt;{slice3_value}&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#6CD5DF&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;346.83182895631313 1507.9644737231006&quot; transform=&quot;rotate(129.6 450 350)&quot; /&gt;&lt;text x=&quot;156.16271867294654&quot; y=&quot;396.5392533494687&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;end&quot; dominant-baseline=&quot;middle&quot;&gt;{slice4_value}&lt;/text&gt;&lt;circle cx=&quot;450&quot; cy=&quot;350&quot; r=&quot;240&quot; fill=&quot;transparent&quot; stroke=&quot;#95E6E6&quot; stroke-width=&quot;45&quot; stroke-dasharray=&quot;241.2743157956961 1507.9644737231006&quot; transform=&quot;rotate(212.39999999999998 450 350)&quot; /&gt;&lt;text x=&quot;306.6782819547397&quot; y=&quot;89.29876268695057&quot; font-family=&quot;Segoe UI&quot; font-size=&quot;20&quot; font-weight=&quot;bold&quot; fill=&quot;#2A4866&quot; text-anchor=&quot;end&quot; dominant-baseline=&quot;middle&quot;&gt;{slice5_value}&lt;/text&gt;&lt;/svg&gt;</svg>
   </slide>
 </presentation>
 """
     
-    return xml_template.format(title=title, subtitle=subtitle)
+    return xml_template.format(title=title, subtitle=subtitle, slice1_value=kwargs.get("slice1_value", "11%", background_color=kwargs.get("background_color", "#FFFFFF", title_color=kwargs.get("title_color", "#2A82BD"), subtitle_color=kwargs.get("subtitle_color", "#333333"))), slice2_value=kwargs.get("slice2_value", "28%"), slice3_value=kwargs.get("slice3_value", "22%"), slice4_value=kwargs.get("slice4_value", "23%"), slice5_value=kwargs.get("slice5_value", "16%"))
 
 
 
 
 
+
+def generate_thynk_unlimited_thank_you_slide_xml(
+    company_name: str = "Thynk Unlimited",
+    title: str = "THANK YOU",
+    subtitle: str = "FOR YOUR ATTENTION",
+    date: str = "December 2023",
+    email: str = "hello@reallygreatsite.com",
+    website: str = "www.reallygreatsite.com",
+    image_url: str = "https://images.unsplash.com/photo-1542744173-8e7e53415bb0?q=80&w=800&auto=format&fit=crop",
+) -> str:
+    """
+    Generate a Thank You slide for the Thynk Unlimited theme.
+    """
+    color_primary = "#064AD0"
+    color_light_blue = "#B8C8F1"
+    color_bg_grey = "#F4F5F7"
+    
+    xml_template = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    
+    <!-- Left Blue Bar -->
+    <shape type="rounded_rectangle" x="-50" y="0" width="150" height="900" fill="{color_primary}" />
+
+    <!-- Bottom Left Grey Area -->
+    <shape type="rectangle" x="100" y="620" width="950" height="280" fill="{color_bg_grey}" />
+
+    <!-- Right Side Image -->
+    <image src="{image_url.replace('&', '&amp;')}" x="1050" y="0" width="550" height="900" crop="true" />
+    
+    <!-- Right Blue Bars -->
+    <shape type="rectangle" x="1520" y="600" width="80" height="300" fill="{color_primary}" />
+    <shape type="rectangle" x="1520" y="0" width="80" height="100" fill="{color_primary}" />
+    
+    <!-- Light Blue Shapes -->
+    <!-- Top rounded box -->
+    <shape type="rounded_rectangle" x="950" y="70" width="140" height="140" fill="{color_light_blue}" />
+    
+    <!-- Bottom donut -->
+    <!-- Outer light blue circle -->
+    <shape type="circle" x="730" y="780" width="220" height="220" fill="{color_light_blue}" />
+    <!-- Inner grey circle (matches background grey) -->
+    <shape type="circle" x="770" y="820" width="140" height="140" fill="{color_bg_grey}" />
+
+    <!-- Thynk Unlimited Logo -->
+    <polygon points="140,70 160,50 180,70 170,80 160,70 150,80" fill="{color_primary}" />
+    <polygon points="140,90 160,70 180,90 170,100 160,90 150,100" fill="{color_primary}" />
+    <textbox x="190" y="45" width="400" height="60" font="Segoe UI" size="28" color="#000000" bold="true" align="left" vertical_align="middle">{company_name.replace('&', '&amp;')}</textbox>
+
+    <!-- Main Title -->
+    <textbox x="135" y="280" width="800" height="150" font="Segoe UI" size="110" color="#000000" bold="true" align="left" vertical_align="middle" single_line="true">{title.replace('&', '&amp;')}</textbox>
+    <textbox x="140" y="420" width="800" height="50" font="Segoe UI" size="32" color="#333333" align="left" vertical_align="middle" single_line="true">{subtitle.replace('&', '&amp;')}</textbox>
+
+    <!-- Date Pill -->
+    <shape type="rounded_rectangle" x="140" y="500" width="350" height="50" fill="{color_primary}" />
+    <textbox x="140" y="500" width="350" height="50" font="Segoe UI" size="22" color="#FFFFFF" align="center" vertical_align="middle">{date.replace('&', '&amp;')}</textbox>
+
+    <!-- Contact Info -->
+    <!-- Email -->
+    <shape type="circle" x="140" y="690" width="45" height="45" fill="{color_primary}" />
+    <textbox x="140" y="690" width="45" height="45" font="Segoe UI" size="22" color="#FFFFFF" bold="true" align="center" vertical_align="middle" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">?</textbox>
+    <textbox x="200" y="690" width="500" height="45" font="Segoe UI" size="24" color="#333333" align="left" vertical_align="middle">{email.replace('&', '&amp;')}</textbox>
+
+    <!-- Website -->
+    <shape type="circle" x="140" y="755" width="45" height="45" fill="{color_primary}" />
+    <textbox x="140" y="755" width="45" height="45" font="Segoe UI" size="22" color="#FFFFFF" bold="true" align="center" vertical_align="middle" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">??</textbox>
+    <textbox x="200" y="755" width="500" height="45" font="Segoe UI" size="24" color="#333333" align="left" vertical_align="middle">{website.replace('&', '&amp;')}</textbox>
+
+  </slide>
+</presentation>
+"""
+    return xml_template
+
+def generate_tech_pitch_deck_thank_you_slide_xml(
+    company_name="Arowwai\nIndustries",
+    title="THANK YOU!",
+    name="Aaron Loeb",
+    role="CEO & Founder",
+    phone="+123-456-7890",
+    website="www.reallygreatsite.com",
+    address="123 Anywhere St., Any City, State,\nCountry 12345",
+    profile_image_url="https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=500&h=500&fit=crop",
+    image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop"
+) -> str:
+    color_blue = "#185b9d"
+    color_dark_text = "#0a2540"
+    color_light_blue = "#5380a5"
+    color_light_decor = "#d8e2eb"
+    
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <!-- Right side Image -->
+    <image src="{image_url.replace('&', '&amp;')}" x="1080" y="80" width="520" height="740" />
+    <!-- Blue bars top and bottom right -->
+    <shape type="rectangle" x="1080" y="0" width="520" height="80" fill="{color_light_blue}" />
+    <shape type="rectangle" x="1080" y="820" width="520" height="80" fill="{color_light_blue}" />
+    
+    <!-- Left background decorations -->
+    <shape type="circle" x="-200" y="600" width="480" height="480" fill="{color_light_decor}" />
+    <shape type="circle" x="-80" y="650" width="400" height="400" fill="#ffffff" />
+    <shape type="circle" x="-250" y="650" width="400" height="400" fill="{color_light_decor}" />
+    
+    <!-- Logo -->
+    <polygon points="300,150 330,80 360,150" fill="{color_blue}" />
+    <polygon points="340,150 360,110 380,150" fill="{color_light_blue}" />
+    <textbox x="220" y="170" width="240" height="80" font="Arial" size="24" color="{color_blue}" bold="true" align="center" vertical_align="middle" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true">{company_name.replace('&', '&amp;')}</textbox>
+    
+    <!-- Title -->
+    <textbox x="140" y="260" width="800" height="140" font="Arial" size="110" color="{color_dark_text}" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{title.replace('&', '&amp;')}</textbox>
+    
+    <!-- Profile section -->
+    <shape type="circle" x="245" y="415" width="230" height="230" fill="#ffffff" stroke="{color_blue}" stroke_width="6" />
+    <image src="{profile_image_url.replace('&', '&amp;')}" x="250" y="420" width="220" height="220" shape="circle" />
+    
+    <!-- Contact Info -->
+    <!-- Name and Role -->
+    <textbox x="500" y="420" width="450" height="40" font="Arial" size="36" color="{color_blue}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{name.replace('&', '&amp;')}</textbox>
+    <textbox x="500" y="465" width="450" height="30" font="Arial" size="24" color="{color_light_blue}" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{role.replace('&', '&amp;')}</textbox>
+    
+    <!-- Phone -->
+    <shape type="circle" x="500" y="505" width="36" height="36" fill="{color_blue}" />
+    <textbox x="500" y="505" width="36" height="36" font="Arial" size="22" color="#ffffff" bold="true" align="center" vertical_align="middle">??</textbox>
+    <textbox x="550" y="505" width="400" height="36" font="Arial" size="22" color="{color_light_blue}" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{phone.replace('&', '&amp;')}</textbox>
+
+    <!-- Website -->
+    <shape type="circle" x="500" y="555" width="36" height="36" fill="{color_blue}" />
+    <textbox x="500" y="555" width="36" height="36" font="Arial" size="22" color="#ffffff" bold="true" align="center" vertical_align="middle">??</textbox>
+    <textbox x="550" y="555" width="400" height="36" font="Arial" size="22" color="{color_light_blue}" align="left" vertical_align="middle" single_line="true" max_lines="1" overflow="shrink" reflow_on_resize="true">{website.replace('&', '&amp;')}</textbox>
+
+    <!-- Address -->
+    <shape type="circle" x="500" y="605" width="36" height="36" fill="{color_blue}" />
+    <textbox x="500" y="605" width="36" height="36" font="Arial" size="22" color="#ffffff" bold="true" align="center" vertical_align="middle">??</textbox>
+    <textbox x="550" y="605" width="400" height="70" font="Arial" size="22" color="{color_light_blue}" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="shrink" reflow_on_resize="true">{address.replace('&', '&amp;')}</textbox>
+
+  </slide>
+</presentation>
+"""
+    return xml
+
+
+def generate_business_proposal_cover_slide_xml(
+    brand_name: str = "Larana, Inc.",
+    title: str = "BUSINESS PROPOSAL",
+    website: str = "www.reallygreatsite.com",
+    email: str = "hello@reallygreatsite.com",
+    background_color: str = "#FFFFFF",
+    title_color: str = "#0B2B5E",
+    accent_color: str = "#0B2B5E",
+    image1_url: str = "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=800&auto=format&fit=crop",
+    image2_url: str = "https://images.unsplash.com/photo-1577017040065-650ee4d43339?q=80&w=800&auto=format&fit=crop",
+    image3_url: str = "https://images.unsplash.com/photo-1460472178825-e5240623afd5?q=80&w=800&auto=format&fit=crop",
+) -> str:
+    """
+    Generate XML for a Business Proposal Cover slide with 3 diamond image placeholders.
+    """
+    xml_template = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="{background_color}">
+    <!-- Background -->
+    <polygon points="0,0 1600,0 1600,900 0,900" fill="{background_color}"/>
+    
+    <!-- Left Gradient or shape -->
+    <polygon points="0,250 120,250 120,650 0,650" fill="{accent_color}" opacity="0.8"/>
+    
+    <!-- Right side background block (Dark blue) -->
+    <polygon points="1200,900 1600,500 1600,900" fill="{accent_color}"/>
+    
+    <!-- Top Right Corner Shape -->
+    <polygon points="1600,0 1600,300 1300,0" fill="{accent_color}"/>
+    
+    <!-- Text Elements -->
+    <textbox x="160" y="120" width="400" height="50" font="Arial" size="24" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{{brand_name}}</textbox>
+    
+    <textbox x="160" y="300" width="800" height="200" font="Arial" size="85" color="{title_color}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="2" line_spacing="1.1">{{title}}</textbox>
+    
+    <!-- Footer text -->
+    <textbox x="210" y="630" width="400" height="40" font="Arial" size="24" color="{title_color}" align="left" vertical_align="middle" single_line="true" max_lines="1">{{website}}</textbox>
+    <textbox x="210" y="690" width="400" height="40" font="Arial" size="24" color="{title_color}" align="left" vertical_align="middle" single_line="true" max_lines="1">{{email}}</textbox>
+    
+    <!-- Icons for Footer (Simple circles as placeholders) -->
+    <circle cx="180" cy="650" r="18" fill="{accent_color}"/>
+    <circle cx="180" cy="710" r="18" fill="{accent_color}"/>
+    
+    <!-- Diamond Images using <image> -->
+    <image url="{{image1_url}}" x="850" y="350" width="300" height="300" />
+    <image url="{{image2_url}}" x="1200" y="150" width="250" height="250" />
+    <image url="{{image3_url}}" x="1200" y="550" width="250" height="250" />
+    
+    <!-- Decorations (Arrows) -->
+    <polygon points="820,160 860,190 820,220" fill="{accent_color}"/>
+    <polygon points="880,160 920,190 880,220" fill="none" line_color="{accent_color}" line_width="3"/>
+    <polygon points="940,160 980,190 940,220" fill="{accent_color}"/>
+    
+  </slide>
+</presentation>
+"""
+    return xml_template.format(
+        brand_name=brand_name,
+        title=title,
+        website=website,
+        email=email,
+        image1_url=image1_url,
+        image2_url=image2_url,
+        image3_url=image3_url
+    )
+
+
+def generate_image_and_numbered_list_slide_xml(
+    title="The Polar Climate and\nIts Extremes",
+    image_url="https://images.unsplash.com/photo-1518780664697-55e3ad937233?w=800&auto=format&fit=crop",
+    item1_number="01",
+    item1_title="Endless Cold",
+    item1_desc="Temperatures drop far below zero for months, testing both human and wildlife adaptation to freezing conditions",
+    item2_number="02",
+    item2_title="Midnight Sun &amp; Polar Night",
+    item2_desc="The Arctic experiences months of sunlight and darkness, shaping unique biological and cultural rhythms",
+    item3_number="03",
+    item3_title="Adapting to Extremes",
+    item3_desc="Animals like polar bears and arctic foxes have evolved to thrive in this challenging, ever-changing climate"
+) -> str:
+    color_slate = "#728AA1"
+    color_grey = "#9CA3AF"
+    
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <!-- Image on the left -->
+    <image src="{image_url.replace('&', '&amp;')}" shape="circle" x="100" y="100" width="700" height="700" />
+    
+    <!-- Main Title -->
+    <textbox x="870" y="120" width="650" height="150" font="Arial" size="65" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="3" line_spacing="1.2">{title}</textbox>
+    
+    <!-- Item 1 -->
+    <shape type="circle" x="875" y="365" width="70" height="70" fill="{color_slate}" />
+    <textbox x="875" y="365" width="70" height="70" font="Arial" size="28" color="#FFFFFF" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1">{item1_number}</textbox>
+    
+    <textbox x="970" y="355" width="550" height="40" font="Arial" size="28" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{item1_title}</textbox>
+    <textbox x="970" y="400" width="550" height="70" font="Arial" size="20" color="{color_grey}" bold="false" align="left" vertical_align="top" single_line="false" max_lines="3" line_spacing="1.2">{item1_desc}</textbox>
+    
+    <!-- Item 2 -->
+    <shape type="circle" x="875" y="515" width="70" height="70" fill="{color_slate}" />
+    <textbox x="875" y="515" width="70" height="70" font="Arial" size="28" color="#FFFFFF" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1">{item2_number}</textbox>
+    
+    <textbox x="970" y="505" width="550" height="40" font="Arial" size="28" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{item2_title}</textbox>
+    <textbox x="970" y="550" width="550" height="70" font="Arial" size="20" color="{color_grey}" bold="false" align="left" vertical_align="top" single_line="false" max_lines="3" line_spacing="1.2">{item2_desc}</textbox>
+    
+    <!-- Item 3 -->
+    <shape type="circle" x="875" y="665" width="70" height="70" fill="{color_slate}" />
+    <textbox x="875" y="665" width="70" height="70" font="Arial" size="28" color="#FFFFFF" bold="true" align="center" vertical_align="middle" single_line="true" max_lines="1">{item3_number}</textbox>
+    
+    <textbox x="970" y="655" width="550" height="40" font="Arial" size="28" color="{color_slate}" bold="true" align="left" vertical_align="middle" single_line="true" max_lines="1">{item3_title}</textbox>
+    <textbox x="970" y="700" width="550" height="70" font="Arial" size="20" color="{color_grey}" bold="false" align="left" vertical_align="top" single_line="false" max_lines="3" line_spacing="1.2">{item3_desc}</textbox>
+    
+  </slide>
+</presentation>
+"""
+    return xml
+
+
+def generate_tech_pitch_deck_cover_slide_xml(
+    company_name="Arowwai\nIndustries",
+    title="Technology\nPitch Deck",
+    subtitle="By: Alexander Aronowitz",
+    image_url="https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop"
+) -> str:
+    color_blue = "#185b9d"
+    color_dark_text = "#0a2540"
+    color_light_blue = "#5380a5"
+    
+    xml = f"""<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <!-- Background Decor -->
+    <!-- Top left partial circle -->
+    <shape type="circle" x="20" y="-80" width="160" height="160" fill="{color_blue}" />
+    <!-- Top right partial circle -->
+    <shape type="circle" x="1400" y="-150" width="300" height="300" fill="{color_blue}" />
+    <!-- Bottom left partial circle -->
+    <shape type="circle" x="-100" y="750" width="250" height="250" fill="{color_blue}" />
+    <!-- Big bottom curve (giant circle) -->
+    <shape type="circle" x="500" y="450" width="1600" height="1600" fill="{color_blue}" />
+    
+    <!-- Logo -->
+    <polygon points="120,220 150,150 180,220" fill="{color_light_blue}" />
+    <polygon points="160,220 180,180 200,220" fill="{color_blue}" />
+    <textbox x="220" y="140" width="300" height="80" font="Arial" size="28" color="{color_light_blue}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="2">{company_name}</textbox>
+    
+    <!-- Texts -->
+    <textbox x="120" y="320" width="700" height="220" font="Arial" size="90" color="{color_dark_text}" bold="true" align="left" vertical_align="middle" single_line="false" max_lines="2" line_spacing="1.2">{title}</textbox>
+    <textbox x="120" y="580" width="600" height="50" font="Arial" size="32" color="{color_dark_text}" bold="false" align="left" vertical_align="middle" single_line="true" max_lines="1">{subtitle}</textbox>
+    
+    <!-- Laptop Graphic -->
+    <!-- Screen Bezel -->
+    <shape type="rounded_rectangle" x="830" y="280" width="640" height="430" fill="#222222" />
+    <!-- Screen Content (Image) -->
+    <image src="{image_url.replace('&', '&amp;')}" x="850" y="310" width="600" height="380" />
+    <!-- Laptop Base Top -->
+    <shape type="rounded_rectangle" x="750" y="710" width="800" height="15" fill="#e0e0e0" />
+    <!-- Laptop Base Bottom -->
+    <shape type="rounded_rectangle" x="780" y="725" width="740" height="10" fill="#a0a0a0" />
+  </slide>
+</presentation>
+"""
+    return xml
