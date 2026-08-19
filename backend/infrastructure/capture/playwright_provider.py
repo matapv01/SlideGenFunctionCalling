@@ -22,7 +22,28 @@ class PlaywrightCaptureProvider(CaptureProvider):
             )
             page = await browser.new_page(viewport=self.viewport)
             
-            await page.set_content(html_content)
+            await page.set_content(html_content, wait_until="load")
+            await page.evaluate(
+                """
+                async () => {
+                    if (document.fonts?.ready) await document.fonts.ready;
+                    await Promise.all(Array.from(document.images).map((image) => {
+                        if (image.complete) return Promise.resolve();
+                        return new Promise((resolve) => {
+                            let finished = false;
+                            const finish = () => {
+                                if (finished) return;
+                                finished = true;
+                                resolve();
+                            };
+                            image.addEventListener("load", finish, { once: true });
+                            image.addEventListener("error", finish, { once: true });
+                            window.setTimeout(finish, 3000);
+                        });
+                    }));
+                }
+                """
+            )
             
             # Đảm bảo thư mục tồn tại
             os.makedirs(os.path.dirname(output_path), exist_ok=True)

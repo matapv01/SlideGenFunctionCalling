@@ -2,13 +2,16 @@ from __future__ import annotations
 
 import argparse
 import base64
+import binascii
 from html import escape as html_escape
 import json
+import mimetypes
 import os
 import re
 import shutil
 import subprocess
 import tempfile
+from urllib.parse import unquote, unquote_to_bytes, urlparse
 import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -2064,6 +2067,76 @@ if ($closed) {
 
         return converted_path, converted_path
 
+    @staticmethod
+    def _decode_data_image(source: str) -> Path:
+        """Materialize a browser data URL so python-pptx can embed it.
+
+        The XML editor stores files selected from a device as data URLs.  A
+        data URL is valid in the browser but is not a filesystem path, so it
+        must be decoded before Pillow/python-pptx can read it.
+        """
+        header, payload = source.split(",", 1)
+        metadata = header[5:].split(";")
+        mime_type = (metadata[0] or "application/octet-stream").lower()
+        if not mime_type.startswith("image/"):
+            raise ValueError(f"Data URL khong phai la anh: {mime_type}")
+
+        try:
+            if "base64" in metadata[1:]:
+                raw = base64.b64decode(payload, validate=True)
+            else:
+                raw = unquote_to_bytes(payload)
+        except (binascii.Error, ValueError) as exc:
+            raise ValueError("Data URL anh khong hop le") from exc
+
+        suffix = {
+            "image/jpeg": ".jpg",
+            "image/jpg": ".jpg",
+            "image/png": ".png",
+            "image/gif": ".gif",
+            "image/bmp": ".bmp",
+            "image/tiff": ".tif",
+            "image/webp": ".webp",
+            "image/svg+xml": ".svg",
+        }.get(mime_type) or mimetypes.guess_extension(mime_type) or ".img"
+        temporary = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
+        temporary.close()
+        target = Path(temporary.name)
+        try:
+            target.write_bytes(raw)
+        except Exception:
+            target.unlink(missing_ok=True)
+            raise
+        return target
+
+    def resolve_image_source(self, source: str) -> tuple[Path, Path | None]:
+        """Resolve remote, local, file://, and data URL image sources."""
+        value = source.strip()
+        if value.lower().startswith("data:image/"):
+            temporary = self._decode_data_image(value)
+            return temporary, temporary
+
+        if value.lower().startswith(("http://", "https://")):
+            temporary = self.download_image(value)
+            return temporary, temporary
+
+        if value.lower().startswith("file://"):
+            parsed = urlparse(value)
+            path_text = unquote(parsed.path)
+            # file:///C:/... is parsed with an empty hostname on Windows;
+            # UNC paths retain their hostname and are reconstructed here.
+            if parsed.netloc and parsed.netloc.lower() != "localhost":
+                path_text = f"//{parsed.netloc}{path_text}"
+            elif os.name == "nt" and path_text.startswith("/") and len(path_text) > 2 and path_text[2] == ":":
+                path_text = path_text[1:]
+            image_path = Path(path_text)
+        else:
+            image_path = Path(unquote(value))
+
+        if not image_path.is_absolute():
+            image_path = self.base_dir / image_path
+        return image_path, None
+
     def download_image(self, url: str) -> Path:
         suffix = Path(url.split("?", maxsplit=1)[0]).suffix or ".jpg"
 
@@ -2114,18 +2187,12 @@ if ($closed) {
         temp_path: Path | None = None
         converted_path: Path | None = None
 
-        if src.startswith(("http://", "https://")):
-            try:
-                temp_path = self.download_image(src)
-            except Exception as exc:
-                print(f"  Bỏ qua ảnh tải lỗi: {src}")
-                print(f"  Lý do: {exc}")
-                return
-            image_path = temp_path
-        else:
-            image_path = Path(src)
-            if not image_path.is_absolute():
-                image_path = self.base_dir / image_path
+        try:
+            image_path, temp_path = self.resolve_image_source(src)
+        except Exception as exc:
+            print(f"  Bỏ qua ảnh tải lỗi: {src[:160]}")
+            print(f"  Lý do: {exc}")
+            return
 
         try:
             if not image_path.exists():
@@ -2136,6 +2203,15 @@ if ($closed) {
             target_y = self.y(e.get("y"))
             target_width = self.x(e.get("width"))
             target_height = self.y(e.get("height"))
+
+            # SVG is a supported browser image format but Pillow/python-pptx
+            # cannot embed it directly. Reuse the existing headless-browser
+            # SVG renderer so imported SVG files/data URLs also export.
+            if image_path.suffix.lower() == ".svg":
+                svg_element = ET.Element("svg", dict(e.attrib))
+                svg_element.text = image_path.read_text(encoding="utf-8")
+                self.render_svg(slide, svg_element)
+                return
 
             # Fill the requested box without stretching the source image.
             # The excess area is cropped symmetrically from the center.

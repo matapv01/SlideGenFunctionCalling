@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#F8F8F8">
+    <image src="https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1600" x="860" y="30" width="700" height="820" />
+    <textbox x="120" y="76.0" width="690" height="208.56" font="Arial" size="56.0" min_font_size="56.0" bold="true" color="#1A1A1A" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. Mục tiêu
+tuần</textbox>
+    <textbox x="120" y="298.56" width="690" height="83.7" font="Arial" size="18.5" min_font_size="18.5" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#004A8F">Mục tiêu chính</run><run> của tuần làm việc thứ 6 tập
+trung vào việc hoàn thiện hệ thống:</run></textbox>
+    <textbox x="120" y="396.26" width="690" height="325.68" font="Arial" size="18.5" min_font_size="18.5" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="8" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">• Kiểm thử toàn bộ quy trình nghiệp vụ của
+AI KPI Copilot từ giao nhiệm vụ đến báo cáo.
+• Đánh giá tính hợp lý và độ chính xác của
+các kết quả phân tích từ AI.
+• Hoàn thiện nội dung trình bày sản phẩm
+và chuẩn bị kịch bản demo chi tiết.
+• Tổng hợp và chuẩn bị đầy đủ minh chứng
+phục vụ báo cáo tiến độ thực tập.</textbox>
+    <textbox x="120" y="735.94" width="690" height="83.7" font="Arial" size="18.5" min_font_size="18.5" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Trọng tâm: Đảm bảo tính ổn định và chính
+xác của quy trình AI.</textbox>
+  </slide>
+</presentation>

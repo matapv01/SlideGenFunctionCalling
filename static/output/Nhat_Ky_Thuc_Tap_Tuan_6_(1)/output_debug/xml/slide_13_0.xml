@@ -1,0 +1,32 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#FFFFFF" line_color="none"/>
+    <line x1="800" y1="0" x2="800" y2="94" color="#004A8F" width="1.1"/>
+    <textbox x="100.0" y="165.0" width="1400.0" height="74.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="38.0" min_font_size="22.0" color="#004A8F" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">5. Khó khăn, cách khắc phục và bài học</textbox>
+    <shape type="rect" x="26.0" y="336.0" width="457.3333333333333" height="485.0" fill="#F8F9FA" line_color="none"/>
+    <shape type="rect" x="26.0" y="336.0" width="457.3333333333333" height="98.0" fill="#004A8F" line_color="none"/>
+    <svg name="card_star" x="226.66666666666666" y="357.0" width="56" height="56" pixel_width="216" pixel_height="216">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;72&quot; height=&quot;72&quot; viewBox=&quot;0 0 72 72&quot;&gt;
+  &lt;path d=&quot;M36 5 L44.3 26.2 L67 26.2 L48.8 40.1 L55.8 66 L36 50.3 L16.2 66 L23.2 40.1 L5 26.2 L27.7 26.2 Z&quot;
+        fill=&quot;#FFFFFF&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="61.0" y="494.0" width="387.3333333333333" height="75.60000000000001" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="18.0" min_font_size="16.0" color="#004A8F" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="1.05" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">KHÓ KHĂN KHI ĐÁNH GIÁ ĐẦU RA AI</textbox>
+    <textbox x="61.0" y="603.6" width="387.3333333333333" height="241.56" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="16" min_font_size="14.0" color="#333333" align="center" vertical_align="top" bold="false" italic="false" single_line="false" max_lines="6" overflow="clip" reflow_on_resize="true" line_spacing="1.22" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">cách khắc phục: Kiểm tra nhiều trường hợp, đối chiếu giải thích với dữ liệu đầu vào. &lt;br&gt;Bài học: Không coi điểm AI là kết luận cuối cùng.</textbox>
+    <shape type="rect" x="571.3333333333333" y="336.0" width="457.3333333333333" height="485.0" fill="#F8F9FA" line_color="none"/>
+    <shape type="rect" x="571.3333333333333" y="336.0" width="457.3333333333333" height="98.0" fill="#004A8F" line_color="none"/>
+    <svg name="card_star" x="771.9999999999999" y="357.0" width="56" height="56" pixel_width="216" pixel_height="216">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;72&quot; height=&quot;72&quot; viewBox=&quot;0 0 72 72&quot;&gt;
+  &lt;path d=&quot;M36 5 L44.3 26.2 L67 26.2 L48.8 40.1 L55.8 66 L36 50.3 L16.2 66 L23.2 40.1 L5 26.2 L27.7 26.2 Z&quot;
+        fill=&quot;#FFFFFF&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="606.3333333333333" y="494.0" width="387.3333333333333" height="87.3" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="18.0" min_font_size="16.0" color="#004A8F" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.05" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">KHÓ KHĂN VỀ TÍNH NHẤT QUÁN NGHIỆP VỤ</textbox>
+    <textbox x="606.3333333333333" y="615.3" width="387.3333333333333" height="219.60000000000002" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="15.0" min_font_size="13.0" color="#333333" align="center" vertical_align="top" bold="false" italic="false" single_line="false" max_lines="6" overflow="clip" reflow_on_resize="true" line_spacing="1.22" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Cách khắc phục: Xây dựng kịch bản kiểm thử theo từng vai trò và theo dõi dữ liệu qua từng bước. &lt;br&gt;bài học: Đảm bảo tính nhất quán của quyền và trạng thái hệ thống.</textbox>
+    <shape type="rect" x="1116.6666666666665" y="336.0" width="457.3333333333333" height="485.0" fill="#F8F9FA" line_color="none"/>
+    <shape type="rect" x="1116.6666666666665" y="336.0" width="457.3333333333333" height="98.0" fill="#004A8F" line_color="none"/>
+    <svg name="card_star" x="1317.3333333333333" y="357.0" width="56" height="56" pixel_width="216" pixel_height="216">&lt;svg xmlns=&quot;http://www.w3.org/2000/svg&quot; width=&quot;72&quot; height=&quot;72&quot; viewBox=&quot;0 0 72 72&quot;&gt;
+  &lt;path d=&quot;M36 5 L44.3 26.2 L67 26.2 L48.8 40.1 L55.8 66 L36 50.3 L16.2 66 L23.2 40.1 L5 26.2 L27.7 26.2 Z&quot;
+        fill=&quot;#FFFFFF&quot;/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="1151.6666666666665" y="494.0" width="387.3333333333333" height="75.60000000000001" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="18.0" min_font_size="16.0" color="#004A8F" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="1.05" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">KHÓ KHĂN KHI TRÌNH BÀY SẢN PHẨM</textbox>
+    <textbox x="1151.6666666666665" y="603.6" width="387.3333333333333" height="241.56" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="16" min_font_size="14.0" color="#333333" align="center" vertical_align="top" bold="false" italic="false" single_line="false" max_lines="6" overflow="clip" reflow_on_resize="true" line_spacing="1.22" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Cách khắc phục: Gom nhóm chức năng thành bốn trụ cột chính. &lt;br&gt;Bài học: Trình bày theo luồng nghiệp vụ xuyên suốt giúp người nghe dễ theo dõi.</textbox>
+  </slide>
+</presentation>

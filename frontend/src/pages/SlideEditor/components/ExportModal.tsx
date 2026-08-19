@@ -4,6 +4,7 @@ import type { SlideCanvasHandle } from "@/components/SlideCanvas";
 import { useSlideExport } from "../hooks/useSlideExport";
 import { api } from "@/lib/api";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { Loader2 } from "lucide-react";
 
 interface ExportModalProps {
   isOpen: boolean;
@@ -99,8 +100,19 @@ export const ExportModal = ({
 
         ) : isExporting ? (
           /* ── Trạng thái: Đang xử lý ── */
-          <div style={{ textAlign: 'center', padding: '20px 0' }}>
-            <div style={{ fontSize: 52, marginBottom: 16 }}>⏳</div>
+          <div
+            role="status"
+            aria-live="polite"
+            style={{ textAlign: 'center', padding: '20px 0' }}
+          >
+            <Loader2
+              aria-hidden="true"
+              className="animate-spin"
+              size={52}
+              strokeWidth={1.8}
+              color="#667eea"
+              style={{ display: 'inline-block', marginBottom: 16 }}
+            />
             <h2 style={{ color: '#2d3748', marginBottom: 8 }}>{t.export_processing_title}</h2>
             <p style={{ color: '#718096', fontSize: 14 }}>
               {t.export_processing_sub} {slides.length} slide{slides.length > 1 ? 's' : ''}

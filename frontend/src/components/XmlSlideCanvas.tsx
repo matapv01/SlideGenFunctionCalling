@@ -926,7 +926,6 @@ export const XmlSlideCanvas = ({
     );
     const style = elementStyle(element, selected, elementIndex + 1, metrics);
     const common = {
-      key: element.id,
       style,
       onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => handlePointerDown(event, element),
       onDoubleClick: () => !readOnly && tag === "textbox" && setEditingId(element.id),
@@ -951,7 +950,7 @@ export const XmlSlideCanvas = ({
       const source = element.attrs.src || "";
       const proxySource = remoteImageProxyUrl(source);
       return (
-        <div {...common} className="overflow-hidden bg-slate-200">
+        <div key={element.id} {...common} className="overflow-hidden bg-slate-200">
           <img
             key={source}
             src={source}
@@ -989,7 +988,7 @@ export const XmlSlideCanvas = ({
       const strokeWidth = stroke === "none" ? 0 : ptToCanvasY(numberAttr(element, "line_width", 1), metrics);
 
       return (
-        <div {...common}>
+        <div key={element.id} {...common}>
           <svg width="100%" height="100%" viewBox={`0 0 ${bounds.width} ${bounds.height}`} preserveAspectRatio="none">
             <polygon points={points} fill={fill} stroke={stroke} strokeWidth={strokeWidth} vectorEffect="non-scaling-stroke" />
           </svg>
@@ -1016,6 +1015,7 @@ export const XmlSlideCanvas = ({
           : 0;
       return (
         <div
+          key={element.id}
           {...common}
           contentEditable={isEditing && !hasMathFields}
           suppressContentEditableWarning
@@ -1131,6 +1131,7 @@ export const XmlSlideCanvas = ({
       const svgMarkup = normalizeInlineSvg(element.text);
       return (
         <div
+          key={element.id}
           {...common}
           style={{ ...style, overflow: "hidden" }}
         >
@@ -1145,14 +1146,14 @@ export const XmlSlideCanvas = ({
 
     if (["piechart", "barchart", "linechart"].includes(tag)) {
       return (
-        <div {...common} className="flex flex-col justify-center gap-2 rounded text-center">
+        <div key={element.id} {...common} className="flex flex-col justify-center gap-2 rounded text-center">
           <strong>{element.attrs.title || element.tag}</strong>
           <span className="text-xs text-slate-500">Chart preview · {element.children.length} series</span>
         </div>
       );
     }
 
-    return <div {...common} aria-label={element.tag}>{resizeHandles}</div>;
+    return <div key={element.id} {...common} aria-label={element.tag}>{resizeHandles}</div>;
   };
 
   const applySelectedTextFormat = (format: XmlTextFormat) => {
@@ -1237,6 +1238,7 @@ export const XmlSlideCanvas = ({
   const slideCanvas = (
     <div
       ref={canvasRef}
+      data-xml-slide-canvas="true"
       className="relative overflow-hidden bg-white"
       style={{ width: canvasWidth, height: canvasHeight }}
       onPointerMove={handlePointerMove}

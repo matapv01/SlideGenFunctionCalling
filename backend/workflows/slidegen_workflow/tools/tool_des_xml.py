@@ -490,7 +490,7 @@ class GenerateClientSnapshotSlideInput(BaseModel):
 
     title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Client snapshot'")
     subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'About Value Financials'")
-    client_details: List[str] = Field(..., description="List of plain client information and goals displayed as structured bullet points. IMPORTANT: each item must contain content only, without •, -, *, 1., 1), or other numbering; the renderer adds one marker. Use 'Label: value' for a main detail. For a nested goal, use two leading spaces but still no bullet or number. example: ['Industry: Financial services and banking', 'Team size: 300+ employees', 'Primary goals:', '  Improve cross-team collaboration']")
+    client_details: str = Field(..., description="One plain-text block of client information and goals displayed as structured bullet points. Separate each detail with a newline. IMPORTANT: do not include bullet markers or numbering such as -, *, 1., or 1); the renderer adds the markers. Use 'Label: value' for a main detail. For a nested goal, use two leading spaces but still no bullet or number. example: 'Industry: Financial services and banking\\nTeam size: 300+ employees\\nPrimary goals:\\n  Improve cross-team collaboration'")
     top_image_url: str = Field(default="https://images.unsplash.com/photo-1552664730-d307ca884978?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
@@ -855,7 +855,7 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
     func=generate_client_snapshot_slide_xml,
     name="generate_client_snapshot_slide_xml",
-     description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as plain text only—never include •, -, *, 1., or 1); use two leading spaces only for nested goals. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
+     description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as one newline-separated plain-text block, never as an array. Do not include bullet markers or numbering such as -, *, 1., or 1); use two leading spaces only for nested goals because the renderer adds the markers. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
     args_schema=GenerateClientSnapshotSlideInput,
     ),
     StructuredTool.from_function(

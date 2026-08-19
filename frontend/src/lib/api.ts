@@ -154,7 +154,7 @@ export const api = {
 
   getProject: (id: string | number) => request<any>(`/projects/${id}`),
 
-  updateProject: (id: string | number, data: { title?: string; description?: string; status?: string }) =>
+  updateProject: (id: string | number, data: { title?: string; description?: string; status?: string; slide_count?: number }) =>
     request<{ message: string }>(`/projects/${id}`, {
       method: "PUT",
       body: JSON.stringify(data),
@@ -270,7 +270,7 @@ export const api = {
     html_content?: string;
     design_settings?: any;
   }) =>
-    request<{ id: number; message: string }>(`/projects/${projectId}/slides`, {
+    request<{ id?: number; project_id?: number; message: string }>(`/projects/${projectId}/slides`, {
       method: "POST",
       body: JSON.stringify(data),
     }),
@@ -318,7 +318,7 @@ export const api = {
     }),
 
   exportSlidesPdf: (slides: Array<{ html_content: string; slide_name?: string }>) =>
-    request<{ success: boolean; download_url?: string; message: string }>("/export/slides-pdf", {
+    request<{ success: boolean; download_url?: string; filename?: string; message: string; error?: string }>("/export/slides-pdf", {
       method: "POST",
       body: JSON.stringify({ slides }),
     }),

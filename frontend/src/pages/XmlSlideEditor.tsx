@@ -16,18 +16,23 @@ import {
   Hexagon,
   Group as GroupIcon,
   Image,
+  LayoutDashboard,
   Layers,
+  Loader2,
   Maximize2,
   Minimize2,
   MousePointer,
   PaintBucket,
+  Pause,
   Play,
   Plus,
   Redo2,
+  RotateCcw,
   RotateCw,
   SendToBack,
   Shapes,
   Sparkles,
+  StickyNote,
   Square,
   Timer,
   Triangle,
@@ -35,6 +40,7 @@ import {
   List,
   Trash2,
   Type,
+  Upload,
   Undo2,
   Ungroup,
   X,
@@ -59,6 +65,7 @@ import { Input } from "@/components/ui/input";
 import { Separator } from "@/components/ui/separator";
 import { Slider } from "@/components/ui/slider";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { api } from "@/lib/api";
@@ -116,6 +123,7 @@ const TEXT_FONT_OPTIONS = [
 ];
 
 type SidebarLayout = "both-open" | "left-open" | "right-open" | "both-closed";
+type XmlSaveStatus = "idle" | "saving" | "saved" | "error";
 type AddElementKind =
   | "textbox" | "quote" | "bullets"
   | "shape" | "rounded" | "ellipse" | "triangle" | "diamond" | "hexagon" | "arrow" | "chevron"
@@ -123,7 +131,168 @@ type AddElementKind =
 
 const initialDocument = parseXmlSlide(defaultXmlSlide);
 
+const PLAYWRIGHT_CAPTURE_WIDTH = 1920;
+const PLAYWRIGHT_CAPTURE_HEIGHT = 1080;
+const CAPTURE_STYLE_PROPERTIES = [
+  "box-sizing",
+  "position",
+  "top",
+  "right",
+  "bottom",
+  "left",
+  "width",
+  "height",
+  "min-width",
+  "min-height",
+  "max-width",
+  "max-height",
+  "display",
+  "flex",
+  "flex-direction",
+  "flex-grow",
+  "flex-shrink",
+  "justify-content",
+  "align-items",
+  "gap",
+  "overflow",
+  "overflow-x",
+  "overflow-y",
+  "background",
+  "background-color",
+  "background-image",
+  "background-size",
+  "background-position",
+  "color",
+  "font-family",
+  "font-size",
+  "font-weight",
+  "font-style",
+  "line-height",
+  "letter-spacing",
+  "text-align",
+  "text-decoration",
+  "white-space",
+  "word-break",
+  "overflow-wrap",
+  "padding",
+  "border",
+  "border-radius",
+  "box-shadow",
+  "object-fit",
+  "object-position",
+  "opacity",
+  "transform",
+  "transform-origin",
+  "z-index",
+  "clip-path",
+  "visibility",
+  "vertical-align",
+  "user-select",
+];
+
+const inlineCaptureStyles = (source: Element, target: Element) => {
+  const computed = window.getComputedStyle(source);
+  const computedStyles = CAPTURE_STYLE_PROPERTIES
+    .map((property) => {
+      const value = computed.getPropertyValue(property);
+      return value ? `${property}:${value};` : "";
+    })
+    .join("");
+  const existingStyles = target.getAttribute("style") || "";
+  target.setAttribute("style", `${existingStyles}${computedStyles}`);
+
+  Array.from(source.children).forEach((sourceChild, index) => {
+    const targetChild = target.children[index];
+    if (targetChild) inlineCaptureStyles(sourceChild, targetChild);
+  });
+};
+
+const waitForCaptureImages = async (root: Element) => {
+  const images = Array.from(root.querySelectorAll<HTMLImageElement>("img"));
+  await Promise.all(images.map((image) => {
+    if (image.complete) return Promise.resolve();
+    return new Promise<void>((resolve) => {
+      const finish = () => resolve();
+      image.addEventListener("load", finish, { once: true });
+      image.addEventListener("error", finish, { once: true });
+      window.setTimeout(finish, 3000);
+    });
+  }));
+};
+
+const createPlaywrightSlideHtml = (canvas: HTMLElement, width: number, height: number) => {
+  const clone = canvas.cloneNode(true) as HTMLElement;
+  inlineCaptureStyles(canvas, clone);
+
+  clone.querySelectorAll(".resize-handle, .drag-handle, .connector-control-point, .smart-guide, .distance-indicator")
+    .forEach((element) => element.remove());
+  clone.querySelectorAll("[contenteditable]").forEach((element) => element.removeAttribute("contenteditable"));
+
+  // MathLive renders formulas inside a shadow root. Replace the custom element
+  // with its readable LaTeX text so the server-side Playwright page can render
+  // the formula even though it does not load the editor bundle.
+  clone.querySelectorAll<HTMLElement>("math-span").forEach((mathElement) => {
+    const replacement = document.createElement("span");
+    replacement.setAttribute("style", mathElement.getAttribute("style") || "");
+    replacement.textContent = mathElement.getAttribute("aria-label") || mathElement.textContent || "";
+    mathElement.replaceWith(replacement);
+  });
+
+  // The editor uses a relative API URL for the image proxy. The Playwright
+  // page has no frontend origin, so resolve relative image URLs to the API host.
+  const apiOrigin = new URL(api.downloadCaptureUrl("capture"), window.location.origin).origin;
+  clone.querySelectorAll<HTMLImageElement>("img").forEach((image) => {
+    const source = image.getAttribute("src");
+    if (source?.startsWith("/")) image.setAttribute("src", `${apiOrigin}${source}`);
+  });
+
+  const scaleX = PLAYWRIGHT_CAPTURE_WIDTH / Math.max(1, width);
+  const scaleY = PLAYWRIGHT_CAPTURE_HEIGHT / Math.max(1, height);
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    * { box-sizing: border-box; }
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: ${PLAYWRIGHT_CAPTURE_WIDTH}px;
+      height: ${PLAYWRIGHT_CAPTURE_HEIGHT}px;
+      overflow: hidden;
+      background: #fff;
+    }
+    .playwright-capture-viewport {
+      position: relative;
+      width: ${PLAYWRIGHT_CAPTURE_WIDTH}px;
+      height: ${PLAYWRIGHT_CAPTURE_HEIGHT}px;
+      overflow: hidden;
+    }
+    .playwright-capture-slide {
+      width: ${width}px;
+      height: ${height}px;
+      transform: scale(${scaleX}, ${scaleY});
+      transform-origin: top left;
+    }
+  </style>
+</head>
+<body>
+  <div class="playwright-capture-viewport">
+    <div class="playwright-capture-slide">
+      ${clone.outerHTML}
+    </div>
+  </div>
+</body>
+</html>`;
+};
+
 const clampZoom = (value: number) => Math.round(Math.min(MAX_ZOOM, Math.max(MIN_ZOOM, value)) * 100) / 100;
+const formatPresentTime = (totalSeconds: number) => {
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = totalSeconds % 60;
+  return `${String(minutes).padStart(2, "0")}:${String(seconds).padStart(2, "0")}`;
+};
 const toNumber = (value: string | undefined, fallback = 0) => {
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : fallback;
@@ -487,6 +656,10 @@ const XmlSlideEditor = () => {
   const [isPresenting, setIsPresenting] = useState(false);
   const [isPresentFullscreen, setIsPresentFullscreen] = useState(false);
   const [isPresentControlsVisible, setIsPresentControlsVisible] = useState(true);
+  const [isPresentNotesVisible, setIsPresentNotesVisible] = useState(false);
+  const [isPresenterView, setIsPresenterView] = useState(false);
+  const [isPresentTimerRunning, setIsPresentTimerRunning] = useState(false);
+  const [presentElapsedSeconds, setPresentElapsedSeconds] = useState(0);
   const [presentTransition, setPresentTransition] = useState<{
     from: number;
     to: number;
@@ -497,7 +670,8 @@ const XmlSlideEditor = () => {
     height: typeof window === "undefined" ? 900 : window.innerHeight,
   }));
   const [isExportingPptx, setIsExportingPptx] = useState(false);
-  const [isPrintingPdf, setIsPrintingPdf] = useState(false);
+  const [isExportingPdf, setIsExportingPdf] = useState(false);
+  const [saveStatus, setSaveStatus] = useState<XmlSaveStatus>("idle");
   const [historyVersion, setHistoryVersion] = useState(0);
   const [activeTextSelection, setActiveTextSelection] = useState<{
     elementId: string;
@@ -513,6 +687,13 @@ const XmlSlideEditor = () => {
   const presentTransitionTimerRef = useRef<number | null>(null);
   const presentAdvanceTimerRef = useRef<number | null>(null);
   const dragSlideIndexRef = useRef<number | null>(null);
+  const imageInputRef = useRef<HTMLInputElement>(null);
+  const pendingImageElementRef = useRef<string | null>(null);
+  const databaseSlideIdsRef = useRef<Map<string, string>>(new Map());
+  const documentLoadedRef = useRef(false);
+  const lastSavedXmlRef = useRef("");
+  const saveTimerRef = useRef<number | null>(null);
+  const saveInFlightRef = useRef<Promise<void> | null>(null);
 
   const selected = useMemo(
     () => xmlDocument.slides[activeSlideIndex]?.elements.find((element) => element.id === selectedId) || null,
@@ -567,8 +748,86 @@ const XmlSlideEditor = () => {
     setSelectedId(null);
   };
 
+  const saveXmlDocument = useCallback(async (documentToSave: XmlSlideDocument) => {
+    if (!projectId || documentToSave.slides.length === 0) return;
+
+    const serializedDocument = serializeXmlSlide(documentToSave);
+    if (serializedDocument === lastSavedXmlRef.current) {
+      if (saveInFlightRef.current) await saveInFlightRef.current;
+      return;
+    }
+
+    const previousSave = saveInFlightRef.current;
+    const saveTask = (previousSave ? previousSave.catch(() => undefined) : Promise.resolve()).then(async () => {
+      // A queued save may contain the same document as the save before it.
+      if (serializedDocument === lastSavedXmlRef.current) return;
+
+      setSaveStatus("saving");
+      const previousSlideIds = new Map(databaseSlideIdsRef.current);
+      const persistedSlideIds = new Map<string, string>();
+
+      try {
+        await Promise.all(documentToSave.slides.map(async (slide, index) => {
+          const singleSlideXml = serializeXmlSlide({
+            ...documentToSave,
+            slides: [slide],
+          });
+          const slideData = {
+            slide_index: index,
+            html_content: singleSlideXml,
+            design_settings: { format: "xml" },
+          };
+          const existingId = previousSlideIds.get(slide.id);
+
+          if (existingId) {
+            await api.updateSlide(existingId, slideData);
+            persistedSlideIds.set(slide.id, existingId);
+            return;
+          }
+
+          const created = await api.createSlide(projectId, {
+            ...slideData,
+            slide_type: index === 0 ? "intro" : "content",
+            title: `Slide ${index + 1}`,
+          });
+          const createdId = created.id ?? created.project_id;
+          if (createdId === undefined || createdId === null) {
+            throw new Error("The server did not return the new slide id");
+          }
+          persistedSlideIds.set(slide.id, String(createdId));
+        }));
+
+        const idsToKeep = new Set(persistedSlideIds.values());
+        const staleIds = [...new Set(previousSlideIds.values())].filter((id) => !idsToKeep.has(id));
+        await Promise.all(staleIds.map((slideId) => api.deleteSlide(slideId)));
+
+        databaseSlideIdsRef.current = persistedSlideIds;
+        await api.updateProject(projectId, { slide_count: documentToSave.slides.length });
+        lastSavedXmlRef.current = serializedDocument;
+        setSaveStatus("saved");
+      } catch (error) {
+        setSaveStatus("error");
+        console.error("Failed to save XML presentation", error);
+        throw error;
+      }
+    });
+
+    saveInFlightRef.current = saveTask;
+    try {
+      await saveTask;
+    } finally {
+      if (saveInFlightRef.current === saveTask) saveInFlightRef.current = null;
+    }
+  }, [projectId]);
+
   useEffect(() => {
     if (!projectId) return;
+
+    documentLoadedRef.current = false;
+    if (saveTimerRef.current !== null) {
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
 
     let cancelled = false;
     api.getSlides(projectId)
@@ -578,16 +837,35 @@ const XmlSlideEditor = () => {
         // editor payload can be mistaken for an XML slide and render as a
         // large image/HTML snapshot.
         const xmlSources = (response.slides as Array<Record<string, unknown>> || [])
-          .map((slide) => [slide.xmlContent, slide.xml_content, slide.html_content, slide.content]
-            .find(isXmlPresentationSource) || "")
-          .filter(isXmlPresentationSource);
+          .flatMap((slide) => {
+            const source = [slide.xmlContent, slide.xml_content, slide.html_content, slide.content]
+              .find(isXmlPresentationSource);
+            if (!isXmlPresentationSource(source) || slide.id === undefined || slide.id === null) return [];
+            return [{ id: String(slide.id), source }];
+          });
 
         if (!xmlSources.length) {
           throw new Error("Project has no slides");
         }
 
-        const next = buildDocumentFromXmlSources(xmlSources);
+        const next = buildDocumentFromXmlSources(xmlSources.map(({ source }) => source));
         if (cancelled) return;
+        const databaseSlideIds = new Map<string, string>();
+        let flattenedSlideIndex = 0;
+        xmlSources.forEach(({ id, source }) => {
+          const sourceDocument = parseXmlSlide(source);
+          sourceDocument.slides.forEach(() => {
+            const loadedSlide = next.slides[flattenedSlideIndex];
+            if (loadedSlide && !databaseSlideIds.has(loadedSlide.id)) {
+              databaseSlideIds.set(loadedSlide.id, id);
+            }
+            flattenedSlideIndex += 1;
+          });
+        });
+        databaseSlideIdsRef.current = databaseSlideIds;
+        lastSavedXmlRef.current = serializeXmlSlide(next);
+        documentLoadedRef.current = true;
+        setSaveStatus("saved");
         resetDocument(next);
         const requestedSlide = Number(slideParam);
         if (Number.isInteger(requestedSlide) && requestedSlide >= 0 && requestedSlide < next.slides.length) {
@@ -605,6 +883,44 @@ const XmlSlideEditor = () => {
       cancelled = true;
     };
   }, [projectId, slideParam]);
+
+  useEffect(() => {
+    if (!projectId || !documentLoadedRef.current || xmlDocument.slides.length === 0) return;
+
+    const serializedDocument = serializeXmlSlide(xmlDocument);
+    if (serializedDocument === lastSavedXmlRef.current) return;
+
+    if (saveTimerRef.current !== null) window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = window.setTimeout(() => {
+      saveTimerRef.current = null;
+      void saveXmlDocument(xmlDocument).catch(() => undefined);
+    }, 2000);
+
+    return () => {
+      if (saveTimerRef.current !== null) {
+        window.clearTimeout(saveTimerRef.current);
+        saveTimerRef.current = null;
+      }
+    };
+  }, [projectId, saveXmlDocument, xmlDocument]);
+
+  const flushXmlSave = useCallback(async () => {
+    if (saveTimerRef.current !== null) {
+      window.clearTimeout(saveTimerRef.current);
+      saveTimerRef.current = null;
+    }
+    if (documentLoadedRef.current) await saveXmlDocument(documentRef.current);
+    if (saveInFlightRef.current) await saveInFlightRef.current;
+  }, [saveXmlDocument]);
+
+  const handleExitEditor = async () => {
+    try {
+      await flushXmlSave();
+      window.history.back();
+    } catch {
+      window.alert("Could not save the latest changes. Please try again.");
+    }
+  };
 
   const updateElement = (id: string, update: Parameters<typeof updateXmlElement>[2], recordHistory = false) => {
     applyDocument(updateXmlElement(documentRef.current, id, update, activeSlideIndex), recordHistory);
@@ -643,6 +959,15 @@ const XmlSlideEditor = () => {
   const updateSlideBackground = (value: string) => {
     const currentSlide = documentRef.current.slides[activeSlideIndex];
     applyDocument(updateSlideAt(documentRef.current, activeSlideIndex, { attrs: { ...currentSlide.attrs, background: value } }), true);
+  };
+
+  const updateSlideNotes = (value: string) => {
+    const currentSlide = documentRef.current.slides[activeSlideIndex];
+    if (!currentSlide) return;
+    const attrs = { ...currentSlide.attrs };
+    if (value) attrs.speaker_notes = value;
+    else delete attrs.speaker_notes;
+    applyDocument(updateSlideAt(documentRef.current, activeSlideIndex, { attrs }), true);
   };
 
   const updateSlideTransition = (update: Record<string, string>) => {
@@ -686,6 +1011,40 @@ const XmlSlideEditor = () => {
     const element = makeElement(kind);
     updateSlideElements([...documentRef.current.slides[activeSlideIndex].elements, element]);
     setSelectedId(element.id);
+    if (kind === "image") {
+      pendingImageElementRef.current = element.id;
+      // Let React commit the new selection before opening the native picker.
+      window.setTimeout(() => imageInputRef.current?.click(), 0);
+    }
+  };
+
+  const openImagePicker = (elementId: string) => {
+    pendingImageElementRef.current = elementId;
+    imageInputRef.current?.click();
+  };
+
+  const handleImageFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+
+    const elementId = pendingImageElementRef.current;
+    pendingImageElementRef.current = null;
+    if (!file || !elementId || !file.type.startsWith("image/")) return;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      if (typeof reader.result !== "string" || !reader.result.startsWith("data:image/")) return;
+      updateElement(elementId, {
+        attrs: {
+          src: reader.result,
+          alt: file.name,
+        },
+      }, true);
+    };
+    reader.onerror = () => {
+      setImportMessage("Could not read the selected image.");
+    };
+    reader.readAsDataURL(file);
   };
 
   const addSlide = (template: "blank" | "title" | "content" = "blank") => {
@@ -811,20 +1170,60 @@ const XmlSlideEditor = () => {
     }
   };
 
-  const exportPdf = () => setIsPrintingPdf(true);
+  const exportPdf = () => {
+    if (isExportingPptx || isExportingPdf) return;
+    setIsExportingPdf(true);
+  };
+
+  const isExporting = isExportingPptx || isExportingPdf;
 
   useEffect(() => {
-    if (!isPrintingPdf) return;
+    if (!isExportingPdf) return;
 
-    const finishPrint = () => setIsPrintingPdf(false);
-    window.addEventListener("afterprint", finishPrint);
-    const timer = window.setTimeout(() => window.print(), 180);
+    let cancelled = false;
+    const timer = window.setTimeout(async () => {
+      try {
+        const pages = Array.from(
+          document.querySelectorAll<HTMLElement>("[data-xml-export-page]"),
+        );
+        if (pages.length !== xmlDocument.slides.length) {
+          throw new Error("Could not prepare all slides for PDF export");
+        }
+
+        await Promise.all(pages.map((page) => waitForCaptureImages(page)));
+        const slides = pages.map((page, index) => {
+          const canvas = page.querySelector<HTMLElement>("[data-xml-slide-canvas]");
+          if (!canvas) throw new Error(`Could not render slide ${index + 1} for PDF export`);
+          return {
+            html_content: createPlaywrightSlideHtml(canvas, xmlDocument.width, xmlDocument.height),
+            slide_name: `slide_${index + 1}`,
+          };
+        });
+
+        const result = await api.exportSlidesPdf(slides);
+        const filename = result.filename || result.download_url?.split("/").pop();
+        if (!result.success || !filename) {
+          throw new Error(result.error || result.message || "PDF export failed");
+        }
+
+        const anchor = window.document.createElement("a");
+        anchor.href = api.downloadCaptureUrl(filename);
+        anchor.download = filename;
+        anchor.click();
+      } catch (error) {
+        if (!cancelled) {
+          window.alert(error instanceof Error ? error.message : "PDF export failed");
+        }
+      } finally {
+        if (!cancelled) setIsExportingPdf(false);
+      }
+    }, 100);
 
     return () => {
+      cancelled = true;
       window.clearTimeout(timer);
-      window.removeEventListener("afterprint", finishPrint);
     };
-  }, [isPrintingPdf]);
+  }, [isExportingPdf, xmlDocument.height, xmlDocument.slides.length, xmlDocument.width]);
 
   const fitZoom = () => {
     const el = canvasShellRef.current;
@@ -874,6 +1273,10 @@ const XmlSlideEditor = () => {
 
   const startPresent = async () => {
     setIsPresentControlsVisible(true);
+    setIsPresentNotesVisible(false);
+    setIsPresenterView(false);
+    setPresentElapsedSeconds(0);
+    setIsPresentTimerRunning(true);
     setIsPresenting(true);
     try {
       if (!document.fullscreenElement && document.documentElement.requestFullscreen) {
@@ -888,6 +1291,9 @@ const XmlSlideEditor = () => {
   const closePresent = () => {
     setIsPresenting(false);
     setIsPresentFullscreen(false);
+    setIsPresentNotesVisible(false);
+    setIsPresenterView(false);
+    setIsPresentTimerRunning(false);
     if (presentHideTimerRef.current !== null) {
       window.clearTimeout(presentHideTimerRef.current);
       presentHideTimerRef.current = null;
@@ -958,6 +1364,14 @@ const XmlSlideEditor = () => {
   }, [isPresenting]);
 
   useEffect(() => {
+    if (!isPresenting || !isPresentTimerRunning) return;
+    const timer = window.setInterval(() => {
+      setPresentElapsedSeconds((seconds) => seconds + 1);
+    }, 1000);
+    return () => window.clearInterval(timer);
+  }, [isPresenting, isPresentTimerRunning]);
+
+  useEffect(() => {
     if (!isPresenting) return;
     if (presentAdvanceTimerRef.current !== null) {
       window.clearTimeout(presentAdvanceTimerRef.current);
@@ -994,6 +1408,19 @@ const XmlSlideEditor = () => {
         if (event.key === "Escape") {
           event.preventDefault();
           closePresent();
+        } else if (event.key.toLowerCase() === "p") {
+          event.preventDefault();
+          setIsPresenterView((visible) => !visible);
+          setIsPresentNotesVisible(false);
+          revealPresentControls();
+        } else if (event.key.toLowerCase() === "n" && !isPresenterView) {
+          event.preventDefault();
+          setIsPresentNotesVisible((visible) => !visible);
+          revealPresentControls();
+        } else if (event.key.toLowerCase() === "t") {
+          event.preventDefault();
+          setIsPresentTimerRunning((running) => !running);
+          revealPresentControls();
         } else if (event.key === "ArrowRight" || event.key === "PageDown" || event.key === " " || event.key === "Enter") {
           event.preventDefault();
           presentNext();
@@ -1059,7 +1486,19 @@ const XmlSlideEditor = () => {
   });
 
   const activeSlide = xmlDocument.slides[activeSlideIndex];
-  const activeTransition = readXmlTransition(activeSlide?.attrs || {});
+  const resolvedActiveSlide = activeSlide || xmlDocument.slides[0];
+  const activeTransition = readXmlTransition(resolvedActiveSlide?.attrs || {});
+  const activeSlideNotes = resolvedActiveSlide?.attrs.speaker_notes || "";
+  useEffect(() => {
+    if (xmlDocument.slides.length === 0) {
+      if (activeSlideIndex !== 0) setActiveSlideIndex(0);
+      return;
+    }
+    if (activeSlideIndex >= xmlDocument.slides.length) {
+      setActiveSlideIndex(xmlDocument.slides.length - 1);
+    }
+  }, [activeSlideIndex, xmlDocument.slides.length]);
+
   const canvasFootprint: CSSProperties = {
     width: xmlDocument.width * zoom,
     height: xmlDocument.height * zoom,
@@ -1067,10 +1506,39 @@ const XmlSlideEditor = () => {
     transition: "width 140ms cubic-bezier(0.22, 1, 0.36, 1), height 140ms cubic-bezier(0.22, 1, 0.36, 1)",
   };
 
+  if (!resolvedActiveSlide) {
+    return (
+      <TooltipProvider>
+        <div className="flex h-screen w-screen items-center justify-center bg-background p-6 text-center text-muted-foreground">
+          <div>
+            <p className="text-sm font-semibold">No slides available</p>
+            <p className="mt-1 text-xs">The presentation does not contain a valid slide.</p>
+          </div>
+        </div>
+      </TooltipProvider>
+    );
+  }
+
   return (
     <TooltipProvider>
+      <input
+        ref={imageInputRef}
+        type="file"
+        accept="image/*"
+        className="hidden"
+        onChange={handleImageFileChange}
+        aria-label="Import image"
+      />
       <style>{`
-        .xml-pdf-print-deck { display: none; }
+        .xml-pdf-print-deck {
+          position: fixed;
+          top: 0;
+          left: -100000px;
+          display: block;
+          opacity: 0;
+          pointer-events: none;
+          width: ${PLAYWRIGHT_CAPTURE_WIDTH}px;
+        }
         .xml-editor-shell select {
           color: hsl(var(--foreground));
           background-color: transparent;
@@ -1116,7 +1584,14 @@ const XmlSlideEditor = () => {
             print-color-adjust: exact;
           }
           .xml-editor-shell { display: none !important; }
-          .xml-pdf-print-deck { display: block !important; width: 100%; }
+          .xml-export-loading { display: none !important; }
+          .xml-pdf-print-deck {
+            position: static;
+            left: auto;
+            opacity: 1;
+            display: block !important;
+            width: 100%;
+          }
           .xml-pdf-print-page {
             position: relative;
             width: 13.333in;
@@ -1131,11 +1606,23 @@ const XmlSlideEditor = () => {
         <div className="sticky top-0 z-50 flex h-14 items-center justify-between border-b bg-background/95 px-3 shadow-sm backdrop-blur-sm">
           <div className="flex items-center gap-1.5">
             <Tip label="Back">
-              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => window.history.back()}>
+              <Button variant="ghost" size="icon" className="h-8 w-8 text-muted-foreground hover:text-foreground" onClick={() => void handleExitEditor()}>
                 <ArrowLeft className="h-4 w-4" />
               </Button>
             </Tip>
-          <span className="max-w-[180px] truncate text-sm font-semibold text-foreground">Slide Editor</span>
+          <div className="flex min-w-0 items-center gap-2">
+            <span className="max-w-[180px] truncate text-sm font-semibold text-foreground">Slide Editor</span>
+            {saveStatus !== "idle" && (
+              <span className={cn(
+                "hidden text-[10px] sm:inline",
+                saveStatus === "saving" && "text-muted-foreground",
+                saveStatus === "saved" && "text-emerald-600",
+                saveStatus === "error" && "text-destructive",
+              )}>
+                {saveStatus === "saving" ? "Saving…" : saveStatus === "saved" ? "Saved" : "Save failed"}
+              </span>
+            )}
+          </div>
           </div>
 
           <div className="absolute left-1/2 flex -translate-x-1/2 items-center gap-0.5 rounded-xl border border-border/40 bg-muted/60 p-1">
@@ -1172,9 +1659,20 @@ const XmlSlideEditor = () => {
             <Separator orientation="vertical" className="mx-0.5 h-5 opacity-30" />
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="secondary" size="sm" className="h-8 rounded-lg px-3 text-xs">
-                  <Download className="mr-1.5 h-3.5 w-3.5" /> Export
-                  <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-70" />
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  className="h-8 rounded-lg px-3 text-xs"
+                  disabled={isExporting}
+                  aria-busy={isExporting}
+                >
+                  {isExporting ? (
+                    <Loader2 aria-hidden="true" className="mr-1.5 h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Download className="mr-1.5 h-3.5 w-3.5" />
+                  )}
+                  {isExportingPptx ? "Exporting…" : isExportingPdf ? "Preparing PDF…" : "Export"}
+                  {!isExporting && <ChevronDown className="ml-1 h-3.5 w-3.5 opacity-70" />}
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="center" className="w-52">
@@ -1417,7 +1915,7 @@ const XmlSlideEditor = () => {
                   >
                     <div className="overflow-hidden rounded shadow-2xl ring-1 ring-black/10 dark:ring-white/5" style={{ width: xmlDocument.width, height: xmlDocument.height }}>
                       <XmlSlideCanvas
-                        slide={activeSlide}
+                        slide={resolvedActiveSlide}
                         canvasWidth={xmlDocument.width}
                         canvasHeight={xmlDocument.height}
                         slideWidthInches={Number(xmlDocument.presentationAttrs.slideWidthInches || 13.333)}
@@ -1543,6 +2041,23 @@ const XmlSlideEditor = () => {
                   </div>
                 ) : !selected ? (
                   <div className="flex h-full flex-col overflow-y-auto p-3 [&::-webkit-scrollbar]:hidden" style={{ scrollbarWidth: "none" }}>
+                    <div className="mb-3 rounded-xl border border-amber-500/25 bg-amber-500/5 p-3">
+                      <PanelLabel icon={StickyNote} label="Speaker notes" />
+                      <p className="mb-2 text-[10px] leading-relaxed text-muted-foreground">
+                        Notes are only visible to you in Present mode and are not placed on the slide.
+                      </p>
+                      <Textarea
+                        value={activeSlideNotes}
+                        onChange={(event) => updateSlideNotes(event.target.value)}
+                        placeholder="Add talking points for this slide…"
+                        aria-label={`Speaker notes for slide ${activeSlideIndex + 1}`}
+                        className="min-h-[128px] resize-y bg-background/70 text-xs leading-relaxed"
+                      />
+                      <div className="mt-1.5 flex items-center justify-between text-[10px] text-muted-foreground/70">
+                        <span>Saved with this slide</span>
+                        <span className="tabular-nums">{activeSlideNotes.length} characters</span>
+                      </div>
+                    </div>
                     <div className="rounded-xl border border-primary/20 bg-primary/5 p-3">
                       <PanelLabel icon={Sparkles} label="Slide transition" />
                       <p className="mb-2 text-[10px] leading-relaxed text-muted-foreground">
@@ -1620,7 +2135,7 @@ const XmlSlideEditor = () => {
                     </div>
                     <div className="mt-3 rounded-xl border bg-muted/20 p-3">
                       <PanelLabel icon={PaintBucket} label="Slide background" />
-                      <Input type="color" value={activeSlide.attrs.background || "#ffffff"} onChange={(event) => updateSlideBackground(event.target.value)} className="h-9 w-full p-1" />
+                      <Input type="color" value={resolvedActiveSlide.attrs.background || "#ffffff"} onChange={(event) => updateSlideBackground(event.target.value)} className="h-9 w-full p-1" />
                     </div>
                     <div className="mt-auto flex flex-col items-center justify-center gap-3 px-3 py-8 text-muted-foreground">
                       <div className="flex items-center justify-center rounded-2xl bg-muted/60 p-4">
@@ -1848,6 +2363,15 @@ const XmlSlideEditor = () => {
                           <div>
                             <PanelLabel icon={Image} label="Media" />
                             <Input value={selected.attrs.src || ""} onChange={(event) => updateAttr("src", event.target.value)} className="h-8 text-xs" />
+                            <Button
+                              type="button"
+                              variant="outline"
+                              className="mt-1.5 h-8 w-full text-xs"
+                              onClick={() => openImagePicker(selected.id)}
+                            >
+                              <Upload className="mr-1.5 h-3.5 w-3.5" />
+                              Import image from device
+                            </Button>
                             <div className="mt-1.5 grid grid-cols-2 gap-1.5">
                               <IconField label="Alt" value={selected.attrs.alt || ""} onChange={(value) => updateAttr("alt", value)} />
                               <label className="flex h-8 items-center gap-1.5 rounded-md border border-border/50 bg-muted/30 px-2">
@@ -1938,7 +2462,7 @@ const XmlSlideEditor = () => {
                         </div>
                         <div className="mt-2">
                           <label className="mb-1 block text-[10px] text-muted-foreground">Slide background</label>
-                          <Input type="color" value={activeSlide.attrs.background || "#ffffff"} onChange={(event) => updateSlideBackground(event.target.value)} className="h-8 p-1" />
+                          <Input type="color" value={resolvedActiveSlide.attrs.background || "#ffffff"} onChange={(event) => updateSlideBackground(event.target.value)} className="h-8 p-1" />
                         </div>
                       </div>
 
@@ -1951,7 +2475,7 @@ const XmlSlideEditor = () => {
                             <ChevronDown className="h-4 w-4" />
                           </Button>
                           <div className="flex-1 rounded-md border bg-muted/30 px-2 py-1.5 text-center text-xs text-muted-foreground">
-                            {activeSlide.elements.findIndex((element) => element.id === selected.id) + 1} / {activeSlide.elements.length}
+                            {resolvedActiveSlide.elements.findIndex((element) => element.id === selected.id) + 1} / {resolvedActiveSlide.elements.length}
                           </div>
                           <Button variant="outline" size="icon" className="h-8 w-8" onClick={() => moveLayer("up")}>
                             <ChevronUp className="h-4 w-4" />
@@ -2040,6 +2564,40 @@ const XmlSlideEditor = () => {
               </div>
             </div>
           );
+          const presenterScale = Math.max(
+            0.1,
+            Math.min(
+              (presentViewport.width * 0.62) / xmlDocument.width,
+              (presentViewport.height * 0.7) / xmlDocument.height,
+            ),
+          );
+          const presenterSlideWidth = xmlDocument.width * presenterScale;
+          const presenterSlideHeight = xmlDocument.height * presenterScale;
+          const presenterPreviewScale = Math.min(250 / xmlDocument.width, 160 / xmlDocument.height);
+          const nextSlide = xmlDocument.slides[activeSlideIndex + 1];
+          const renderPresenterCanvas = (slide: XmlSlideDocument["slides"][number], scale: number) => (
+            <div
+              style={{
+                width: xmlDocument.width,
+                height: xmlDocument.height,
+                transform: `scale(${scale})`,
+                transformOrigin: "top left",
+              }}
+            >
+              <XmlSlideCanvas
+                slide={slide}
+                canvasWidth={xmlDocument.width}
+                canvasHeight={xmlDocument.height}
+                slideWidthInches={Number(xmlDocument.presentationAttrs.slideWidthInches || 13.333)}
+                slideHeightInches={Number(xmlDocument.presentationAttrs.slideHeightInches || 7.5)}
+                selectedId={null}
+                readOnly
+                viewport="bare"
+                onSelect={() => undefined}
+                onChange={() => undefined}
+              />
+            </div>
+          );
 
           return (
             <div
@@ -2062,11 +2620,64 @@ const XmlSlideEditor = () => {
               )}>
                 <div className="flex items-center gap-3">
                   <div>
-                    <p className="text-sm font-semibold tracking-wide drop-shadow">Presentation</p>
+                    <p className="text-sm font-semibold tracking-wide drop-shadow">{isPresenterView ? "Presenter View" : "Presentation"}</p>
                     <p className="text-[11px] text-white/60">Slide {activeSlideIndex + 1} of {slideCount}</p>
                   </div>
                 </div>
                 <div className="pointer-events-auto flex items-center gap-1.5">
+                  <div className="flex h-9 items-center gap-1.5 rounded-lg bg-white/10 px-2.5 text-xs text-white/80" title="Presentation timer">
+                    <Timer className="h-3.5 w-3.5 text-white/60" />
+                    <span className="min-w-[42px] font-mono tabular-nums">{formatPresentTime(presentElapsedSeconds)}</span>
+                    <button
+                      type="button"
+                      onClick={() => setIsPresentTimerRunning((running) => !running)}
+                      className="rounded p-0.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                      aria-label={isPresentTimerRunning ? "Pause timer" : "Resume timer"}
+                      title={isPresentTimerRunning ? "Pause timer" : "Resume timer"}
+                    >
+                      {isPresentTimerRunning ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setPresentElapsedSeconds(0)}
+                      className="rounded p-0.5 text-white/60 transition-colors hover:bg-white/10 hover:text-white"
+                      aria-label="Reset timer"
+                      title="Reset timer"
+                    >
+                      <RotateCcw className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsPresenterView((visible) => !visible);
+                      setIsPresentNotesVisible(false);
+                    }}
+                    className={cn(
+                      "flex h-9 items-center gap-2 rounded-lg px-3 text-xs transition-colors",
+                      isPresenterView ? "bg-primary/25 text-white" : "text-white/70 hover:bg-white/10 hover:text-white",
+                    )}
+                    aria-pressed={isPresenterView}
+                    title="Toggle Presenter View"
+                  >
+                    <LayoutDashboard className="h-4 w-4" />
+                    <span className="hidden sm:inline">Presenter</span>
+                  </button>
+                  {!isPresenterView && (
+                    <button
+                      type="button"
+                      onClick={() => setIsPresentNotesVisible((visible) => !visible)}
+                      className={cn(
+                        "flex h-9 items-center gap-2 rounded-lg px-3 text-xs transition-colors",
+                        isPresentNotesVisible ? "bg-amber-400/20 text-amber-100" : "text-white/70 hover:bg-white/10 hover:text-white",
+                      )}
+                      aria-pressed={isPresentNotesVisible}
+                      title="Show speaker notes"
+                    >
+                      <StickyNote className="h-4 w-4" />
+                      <span className="hidden sm:inline">Notes</span>
+                    </button>
+                  )}
                   <button
                     type="button"
                     onClick={togglePresentFullscreen}
@@ -2087,7 +2698,112 @@ const XmlSlideEditor = () => {
                 </div>
               </div>
 
-              <main className="absolute inset-0 z-10 flex h-full w-full items-center justify-center">
+              {isPresentNotesVisible && !isPresenterView && (
+                <aside
+                  className="pointer-events-auto absolute right-5 top-20 z-40 flex w-[min(360px,calc(100vw-2.5rem))] flex-col overflow-hidden rounded-2xl border border-amber-200/20 bg-[#111722]/95 text-white shadow-2xl backdrop-blur-xl"
+                  role="region"
+                  aria-label={`Speaker notes for slide ${activeSlideIndex + 1}`}
+                >
+                  <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <StickyNote className="h-4 w-4 text-amber-200" />
+                      <div>
+                        <p className="text-xs font-semibold">Speaker notes</p>
+                        <p className="text-[10px] text-white/45">Slide {activeSlideIndex + 1} of {slideCount}</p>
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => setIsPresentNotesVisible(false)}
+                      className="rounded-md p-1 text-white/45 transition-colors hover:bg-white/10 hover:text-white"
+                      aria-label="Hide speaker notes"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                  <div className="max-h-[min(70vh,520px)] overflow-y-auto whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-white/85">
+                    {activeSlideNotes || <span className="italic text-white/40">No notes for this slide.</span>}
+                  </div>
+                </aside>
+              )}
+
+              {isPresenterView ? (
+                <main className="absolute inset-x-5 bottom-20 top-20 z-10 flex min-h-0 items-stretch justify-center">
+                  <div className="grid h-full w-full min-h-0 grid-cols-1 gap-4 lg:grid-cols-[minmax(0,1fr)_minmax(280px,360px)]">
+                    <section className="flex min-h-0 min-w-0 flex-col overflow-hidden rounded-2xl border border-white/10 bg-[#111722]/85 shadow-2xl backdrop-blur-xl">
+                      <div className="flex items-center justify-between border-b border-white/10 px-4 py-3">
+                        <div>
+                          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-white/80">Current slide</p>
+                          <p className="mt-0.5 text-[10px] text-white/45">Slide {activeSlideIndex + 1} of {slideCount}</p>
+                        </div>
+                        <span className="rounded-md bg-white/10 px-2 py-1 font-mono text-xs tabular-nums text-white/70">
+                          {formatPresentTime(presentElapsedSeconds)}
+                        </span>
+                      </div>
+                      <div className="flex min-h-0 flex-1 items-center justify-center overflow-hidden p-4 sm:p-6">
+                        <div
+                          className="overflow-hidden rounded-[3px] bg-white shadow-[0_25px_80px_rgba(0,0,0,0.55),0_0_0_1px_rgba(255,255,255,0.12)]"
+                          style={{ width: presenterSlideWidth, height: presenterSlideHeight }}
+                        >
+                          {renderPresenterCanvas(resolvedActiveSlide, presenterScale)}
+                        </div>
+                      </div>
+                    </section>
+
+                    <aside className="flex min-h-0 min-w-0 flex-col gap-4 overflow-y-auto pr-1">
+                      <section className="flex min-h-[220px] flex-1 flex-col overflow-hidden rounded-2xl border border-amber-200/20 bg-[#111722]/95 shadow-2xl backdrop-blur-xl">
+                        <div className="flex items-center gap-2 border-b border-white/10 px-4 py-3">
+                          <StickyNote className="h-4 w-4 text-amber-200" />
+                          <div>
+                            <p className="text-xs font-semibold">Speaker notes</p>
+                            <p className="text-[10px] text-white/45">Only visible in Presenter View</p>
+                          </div>
+                        </div>
+                        <div className="flex-1 overflow-y-auto whitespace-pre-wrap px-4 py-4 text-sm leading-relaxed text-white/85">
+                          {activeSlideNotes || <span className="italic text-white/40">No notes for this slide.</span>}
+                        </div>
+                      </section>
+
+                      <section className="shrink-0 rounded-2xl border border-white/10 bg-[#111722]/85 p-3 shadow-2xl backdrop-blur-xl">
+                        <div className="mb-2 flex items-center justify-between">
+                          <div>
+                            <p className="text-xs font-semibold text-white/80">Next slide</p>
+                            <p className="text-[10px] text-white/45">
+                              {nextSlide ? `Slide ${activeSlideIndex + 2}` : "End of presentation"}
+                            </p>
+                          </div>
+                          {nextSlide && <ChevronRight className="h-4 w-4 text-white/35" />}
+                        </div>
+                        {nextSlide ? (
+                          <button
+                            type="button"
+                            onClick={presentNext}
+                            className="block w-full overflow-hidden rounded-lg bg-white text-left shadow-lg transition-transform hover:scale-[1.01]"
+                            aria-label={`Go to slide ${activeSlideIndex + 2}`}
+                          >
+                            <div
+                              className="relative overflow-hidden"
+                              style={{
+                                width: xmlDocument.width * presenterPreviewScale,
+                                height: xmlDocument.height * presenterPreviewScale,
+                                maxWidth: "100%",
+                                aspectRatio: `${xmlDocument.width} / ${xmlDocument.height}`,
+                              }}
+                            >
+                              {renderPresenterCanvas(nextSlide, presenterPreviewScale)}
+                            </div>
+                          </button>
+                        ) : (
+                          <div className="flex aspect-video items-center justify-center rounded-lg border border-dashed border-white/10 text-xs text-white/35">
+                            You are on the last slide
+                          </div>
+                        )}
+                      </section>
+                    </aside>
+                  </div>
+                </main>
+              ) : (
+                <main className="absolute inset-0 z-10 flex h-full w-full items-center justify-center">
                 <button
                   type="button"
                   aria-label="Previous slide"
@@ -2112,7 +2828,7 @@ const XmlSlideEditor = () => {
                     outgoingAnimationName !== "none",
                   )}
                   {renderPresentSlide(
-                    activeSlide,
+                    resolvedActiveSlide,
                     `present-in-${activeSlideIndex}-${presentTransition?.nonce || "steady"}`,
                     { zIndex: incomingZIndex, ...incomingAnimationStyle },
                     Boolean(incomingTransition && incomingAnimationName !== "none"),
@@ -2131,7 +2847,8 @@ const XmlSlideEditor = () => {
                 >
                   <ChevronRight className="h-6 w-6 transition-transform group-hover:translate-x-0.5" />
                 </button>
-              </main>
+                </main>
+              )}
 
               <div className={cn(
                 "pointer-events-none absolute inset-x-0 bottom-0 z-30 flex justify-center bg-gradient-to-t from-black/75 via-black/20 to-transparent px-5 pb-5 pt-16 transition-all duration-300",
@@ -2166,14 +2883,30 @@ const XmlSlideEditor = () => {
                     <ChevronRight className="h-4 w-4" />
                   </button>
                   <div className="hidden h-5 w-px bg-white/10 sm:block" />
-                  <span className="hidden whitespace-nowrap text-[10px] text-white/40 sm:block">Esc to exit · ← → to navigate</span>
+                  <span className="hidden whitespace-nowrap text-[10px] text-white/40 sm:block">Esc exit · ← → navigate · P presenter · N notes · T timer</span>
                 </div>
               </div>
             </div>
           );
         })()}
       </div>
-      {isPrintingPdf && (
+      {isExporting && (
+        <div
+          className="xml-export-loading fixed inset-0 z-[10000] flex items-center justify-center bg-slate-950/55 px-4 backdrop-blur-[2px]"
+          role="status"
+          aria-live="polite"
+          aria-busy="true"
+        >
+          <div className="flex min-w-[250px] flex-col items-center rounded-2xl border border-white/15 bg-slate-900/95 px-8 py-7 text-center text-white shadow-2xl">
+            <Loader2 aria-hidden="true" className="mb-4 h-12 w-12 animate-spin text-primary" />
+            <p className="text-base font-semibold">
+              {isExportingPptx ? "Exporting presentation…" : "Preparing PDF…"}
+            </p>
+            <p className="mt-1 text-sm text-white/60">Please wait</p>
+          </div>
+        </div>
+      )}
+      {isExportingPdf && (
         <div className="xml-pdf-print-deck">
           {xmlDocument.slides.map((slide, index) => {
             const scale = Math.min(
@@ -2181,7 +2914,11 @@ const XmlSlideEditor = () => {
               (7.5 * 96) / xmlDocument.height,
             );
             return (
-              <div className="xml-pdf-print-page" key={`print-${slide.id}-${index}`}>
+              <div
+                className="xml-pdf-print-page"
+                data-xml-export-page="true"
+                key={`print-${slide.id}-${index}`}
+              >
                 <div
                   style={{
                     width: xmlDocument.width,

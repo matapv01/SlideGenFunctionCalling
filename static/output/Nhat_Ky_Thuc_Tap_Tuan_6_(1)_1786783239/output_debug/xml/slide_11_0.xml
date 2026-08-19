@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://www.kyubit.com/Images/KPI-Dashboard/kpi-dashboard.png" x="0" y="0" width="1010" height="900"/>
+    <polygon points="965.00,0 1600,0 1600,900 610.00,900" fill="#FFFFFF" line_color="none"/>
+    <polygon points="815.72,310.00 869.72,310.00 751.39,610.00 697.39,610.00" fill="#007BFF" line_color="none"/>
+    <textbox x="980.0" y="270.08" width="530.0" height="149.04" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="38.0" min_font_size="38.0" color="#007BFF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">6. MINH CHỨNG KẾT QUẢ</textbox>
+    <textbox x="980.0" y="437.12" width="530.0" height="272.8" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="24.0" min_font_size="24.0" color="#333333" align="left" vertical_align="top" single_line="false" max_lines="5" overflow="clip" reflow_on_resize="true" line_spacing="1.12" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Hình ảnh minh chứng cho tiến độ thực hiện dự án, bao gồm kết quả kiểm thử chức năng và giao diện hệ thống AI KPI Copilot.</textbox>
+  </slide>
+</presentation>
