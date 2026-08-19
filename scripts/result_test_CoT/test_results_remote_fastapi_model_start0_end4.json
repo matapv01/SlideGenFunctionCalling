@@ -1,0 +1,125 @@
+{
+  "summary": {
+    "model": "Remote-FastAPI-Model",
+    "total": 5,
+    "passed": 3,
+    "pass_rate_pct": 60.0,
+    "first_try_pass_pct": 0.0,
+    "tool_match_pct": 0.0,
+    "avg_attempts": 4.0,
+    "avg_latency_s": 519.43,
+    "attempts_breakdown": {
+      "attempt_1": 0,
+      "attempt_2": 0,
+      "attempt_3": 2,
+      "attempt_4": 1,
+      "attempt_5": 0,
+      "failed": 2
+    }
+  },
+  "results": [
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 0,
+      "ground_truth_tool": "generate_introduction_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_title_slide_2",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "Image search 1 has invalid layout 'square'."
+      ],
+      "thinking_text": "",
+      "latency_seconds": 572.45
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 1,
+      "doc_id": 0,
+      "ground_truth_tool": "generate_split_layout_list_slide",
+      "use_cot": true,
+      "attempts": 4,
+      "final_status": "pass",
+      "predicted_tool": "generate_text_with_image_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "HTML tool 'generate_text_with_image_slide' requires 1 image search call(s) for ['image_url'], but the generator returned 0."
+      ],
+      "thinking_text": "",
+      "latency_seconds": 572.45
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 2,
+      "doc_id": 0,
+      "ground_truth_tool": "generate_main_points_slide",
+      "use_cot": true,
+      "attempts": 3,
+      "final_status": "pass",
+      "predicted_tool": "generate_process_slide",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 538.78
+    },
+    {
+      "category": "CHART_TOOLS",
+      "slide_index": 3,
+      "doc_id": 0,
+      "ground_truth_tool": "generate_bar_chart_slide_2",
+      "use_cot": true,
+      "attempts": 5,
+      "final_status": "fail",
+      "predicted_tool": "default_fallback",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "MISSING_REQUIRED_PARAM",
+        "ITEM_TYPE_MISMATCH",
+        "ITEM_TYPE_MISMATCH",
+        "ITEM_TYPE_MISMATCH",
+        "ITEM_TYPE_MISMATCH",
+        "ITEM_TYPE_MISMATCH",
+        "UNKNOWN_TOOL",
+        "UNKNOWN_TOOL"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 538.78
+    },
+    {
+      "category": "CONTENT_TOOLS",
+      "slide_index": 4,
+      "doc_id": 0,
+      "ground_truth_tool": "generate_body_slide10",
+      "use_cot": true,
+      "attempts": 5,
+      "final_status": "fail",
+      "predicted_tool": "default_fallback",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL",
+        "UNKNOWN_TOOL",
+        "UNKNOWN_TOOL",
+        "MISSING_REQUIRED_PARAM",
+        "UNKNOWN_TOOL"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 374.7
+    }
+  ]
+}
