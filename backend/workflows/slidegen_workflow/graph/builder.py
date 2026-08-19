@@ -10,6 +10,7 @@ from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_s
 from backend.workflows.slidegen_workflow.nodes.slide_planner import planning_slide
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
 from backend.workflows.slidegen_workflow.nodes.xml_renderer import render_xml
+from backend.workflows.slidegen_workflow.nodes.slide_evaluator import slide_evaluator
 
 
 def route_to_task(state: State) -> str:
@@ -28,6 +29,14 @@ def evaluate_executor_decision(state: State) -> str:
         return "render_xml"
     return "generate_slide"
 
+def evaluate_vlm_decision(state: State) -> str:
+    """Router check kết quả đánh giá của ViT (hoặc VLM)"""
+    decision = state.get("vlm_decision", "accept")
+    retry_count = state.get("retry_count", 0)
+    if decision == "accept" or retry_count >= EXECUTOR_MAX_RETRIES:
+        return "finalizer"
+    return "generate_slide"
+
 
 def build_workflow(router_flags: bool = False) -> StateGraph:
     """Build the XML generation graph. ``router_flags`` is kept for API compatibility."""
@@ -37,6 +46,7 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
     workflow.add_node("generate_slide", generate_slide)
     workflow.add_node("executor", tool_call_executor)
     workflow.add_node("render_xml", render_xml)
+    workflow.add_node("evaluator", slide_evaluator)
     workflow.add_node("finalizer", finalize_slide)
 
     workflow.set_entry_point("planning_slide")
@@ -52,6 +62,11 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
         evaluate_executor_decision,
         {"render_xml": "render_xml", "generate_slide": "generate_slide"},
     )
-    workflow.add_edge("render_xml", "finalizer")
+    workflow.add_edge("render_xml", "evaluator")
+    workflow.add_conditional_edges(
+        "evaluator",
+        evaluate_vlm_decision,
+        {"finalizer": "finalizer", "generate_slide": "generate_slide"},
+    )
     workflow.add_edge("finalizer", "provide_next_slide")
     return workflow
