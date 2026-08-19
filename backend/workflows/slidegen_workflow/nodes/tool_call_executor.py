@@ -194,7 +194,10 @@ def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) 
             continue
         
         if arg_name not in field_info:
-            # Extra argument not in schema — warn but don't fail
+            errors.append(
+                f"EXTRA_ARGUMENT: '{arg_name}' is not a valid parameter for tool '{tool_name}'. "
+                f"Do NOT invent extra parameters! Valid parameters for '{tool_name}' are: {list(field_info.keys())}."
+            )
             continue
         
         expected_type = field_info[arg_name].get("type", "")
