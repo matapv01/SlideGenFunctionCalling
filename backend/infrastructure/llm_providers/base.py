@@ -16,6 +16,7 @@ import os
 from dataclasses import dataclass
 import httpx
 import logging
+import asyncio
 
 logger = logging.getLogger(__name__)
 
@@ -210,44 +211,38 @@ Remote API Client để gọi FastAPI server
 @dataclass
 class APIConfig:
     """Configuration from environment variables."""
-
+ 
     generate_api_url: str = ""
     api_timeout: int = 600
-
+ 
     def __post_init__(self):
-        env_url = os.getenv("REMOTE_API_URL") or os.getenv("HOST_NAME", "https://discrete-gorgeous-spanking-subscribers.trycloudflare.com")
+        env_url = os.getenv("REMOTE_API_URL") or os.getenv("HOST_NAME", "https://mood-forestry-attending-organizations.trycloudflare.com")
         env_url = env_url.rstrip("/")
         if not env_url.endswith("/generate"):
             self.generate_api_url = env_url + "/generate"
         else:
             self.generate_api_url = env_url
-                
+ 
         if self.api_timeout <= 0:
             raise ValueError("API_TIMEOUT must be positive")
-
+ 
     @classmethod
     def from_env(cls):
         return cls()
-
-
+ 
+ 
 class APIError(Exception):
     """Exception for API errors"""
     pass
-
-
+ 
+ 
 class RemoteLLMProvider(BaseLLMProvider):
     """
     Client để gọi remote FastAPI server hosting:
-    - Embedding model
-    - Cross-encoder Reranker model
-    - LLM Generate model
+    - LLM Generate model (streaming NDJSON)
     """
-    
+ 
     def __init__(self, config: Optional[APIConfig] = None):
-        """
-        Args:
-            config: APIConfig instance hoặc None để load từ .env
-        """
         super().__init__(provider_name="remote_fastapi_llm", model_type="qwen")
         self.config = config or APIConfig.from_env()
         self.client = httpx.Client(
@@ -255,12 +250,54 @@ class RemoteLLMProvider(BaseLLMProvider):
             verify=False  # Ignore SSL warnings cho ngrok / cloudflare
         )
         logger.info(f"RemoteLLMProvider initialized with URL={self.config.generate_api_url}")
-    
-    def _handle_response(self, response: httpx.Response, endpoint: str) -> Dict[str, Any]:
-        """Xử lý response từ API"""
+ 
+    def _stream_generate(self, payload: Dict[str, Any], endpoint: str) -> str:
+        """
+        Gửi request tới endpoint streaming NDJSON, đọc từng dòng,
+        ghép các 'delta' lại thành câu trả lời hoàn chỉnh.
+ 
+        Mỗi dòng trả về là 1 JSON object độc lập, dạng:
+          {"delta": "..."}                      -> mảnh text mới sinh ra
+          {"done": true, "answer": "..."}        -> dòng cuối, full text
+          {"error": "..."}                       -> server báo lỗi giữa chừng
+        """
+        full_answer = ""
         try:
-            response.raise_for_status()
-            return response.json()
+            with self.client.stream(
+                "POST",
+                self.config.generate_api_url,
+                json=payload,
+                timeout=self.config.api_timeout,
+            ) as response:
+                response.raise_for_status()
+ 
+                for line in response.iter_lines():
+                    if not line:
+                        continue
+                    try:
+                        data = json.loads(line)
+                    except json.JSONDecodeError:
+                        logger.warning(f"Bỏ qua dòng NDJSON không parse được: {line[:200]}")
+                        continue
+ 
+                    if "error" in data:
+                        error_msg = f"API Error ({endpoint}): server báo lỗi khi generate - {data['error']}"
+                        logger.error(error_msg)
+                        raise APIError(error_msg)
+ 
+                    # Tích lũy text từ các key phổ biến: delta, text, content
+                    delta_text = data.get("delta") or data.get("text") or data.get("content") or ""
+                    if delta_text:
+                        full_answer += delta_text
+
+                    if data.get("done"):
+                        # Chỉ lấy data["answer"] nếu nó thực sự có nội dung (không rỗng)
+                        final_ans = data.get("answer")
+                        if final_ans and isinstance(final_ans, str) and final_ans.strip():
+                            full_answer = final_ans
+ 
+            return full_answer
+ 
         except httpx.HTTPStatusError as e:
             error_msg = f"API Error ({endpoint}): {e.response.status_code} - {e.response.text}"
             logger.error(error_msg)
@@ -269,7 +306,7 @@ class RemoteLLMProvider(BaseLLMProvider):
             error_msg = f"Connection Error ({endpoint}): {str(e)}"
             logger.error(error_msg)
             raise APIError(error_msg) from e
-    
+ 
     def generate_completion(
         self,
         messages: Any,
@@ -279,17 +316,17 @@ class RemoteLLMProvider(BaseLLMProvider):
         **kwargs
     ) -> str:
         """
-        Gọi /generate endpoint để generate text.
+        Gọi /generate endpoint (streaming NDJSON) để generate text.
         Chấp nhận `messages` dạng List[Dict] hoặc chuỗi string `prompt`.
-        
+ 
         Args:
             messages: Prompt string hoặc List các message dict
             tools: Danh sách tools (nếu có)
             max_tokens: Số token tối đa
             temperature: Sampling temperature
-        
+ 
         Returns:
-            Generated text string
+            Generated text string (đã ghép đầy đủ từ stream)
         """
         if isinstance(messages, str):
             prompt = messages
@@ -305,28 +342,112 @@ class RemoteLLMProvider(BaseLLMProvider):
             prompt = "\n".join(prompt_parts)
         else:
             prompt = str(messages)
-
+ 
         if not prompt:
             raise ValueError("prompt must not be empty")
-        
+ 
         logger.debug(f"Generating with prompt: {prompt[:50]}")
-        
+ 
         try:
-            response = self.client.post(
-                self.config.generate_api_url,
-                json={
-                    "prompt": prompt,
-                    "max_length": max_tokens,
-                    "temperature": temperature
-                },
-                timeout=self.config.api_timeout
-            )
-            data = self._handle_response(response, "generate")
-            
-            answer = data.get("answer", "")
+            payload = {
+                "prompt": prompt,
+                "max_length": max_tokens,
+                "temperature": temperature,
+            }
+            answer = self._stream_generate(payload, "generate")
             logger.debug(f"Generated text length: {len(answer)}")
             return answer
-        
+ 
+        except APIError:
+            raise
         except Exception as e:
             logger.error(f"Generation failed: {str(e)}")
             raise
+    async def _stream_generate_async(
+        self,
+        async_client: httpx.AsyncClient,
+        payload: Dict[str, Any],
+        endpoint: str,
+    ) -> str:
+        full_answer = ""
+        try:
+            async with async_client.stream(
+                "POST",
+                self.config.generate_api_url,
+                json=payload,
+                timeout=self.config.api_timeout,
+            ) as response:
+                response.raise_for_status()
+ 
+                async for line in response.aiter_lines():
+                    if not line:
+                        continue
+                    try:
+                        data = json.loads(line)
+                    except json.JSONDecodeError:
+                        continue
+ 
+                    if "error" in data:
+                        raise APIError(f"API Error ({endpoint}): {data['error']}")
+ 
+                    if "delta" in data:
+                        full_answer += data["delta"]
+ 
+                    if data.get("done"):
+                        full_answer = data.get("answer", full_answer)
+ 
+            return full_answer
+ 
+        except httpx.HTTPStatusError as e:
+            raise APIError(f"API Error ({endpoint}): {e.response.status_code} - {e.response.text}") from e
+        except httpx.RequestError as e:
+            raise APIError(f"Connection Error ({endpoint}): {str(e)}") from e
+ 
+    async def _generate_batch_async(
+        self,
+        prompts: List[str],
+        max_tokens: int = 500,
+        temperature: float = 0.7,
+        max_concurrency: int = 8,
+    ) -> List[str]:
+        semaphore = asyncio.Semaphore(max_concurrency)
+ 
+        async with httpx.AsyncClient(timeout=self.config.api_timeout, verify=False) as async_client:
+ 
+            async def run_one(prompt: str) -> str:
+                async with semaphore:  # giới hạn số request bắn cùng lúc, tránh vượt KV cache
+                    payload = {
+                        "prompt": prompt,
+                        "max_length": max_tokens,
+                        "temperature": temperature,
+                    }
+                    return await self._stream_generate_async(async_client, payload, "generate_batch")
+ 
+            tasks = [run_one(p) for p in prompts]
+            return await asyncio.gather(*tasks)
+ 
+    def generate_batch(
+        self,
+        prompts: List[str],
+        max_tokens: int = 500,
+        temperature: float = 0.7,
+        max_concurrency: int = 15,
+    ) -> List[str]:
+        """
+        Sinh text cho NHIỀU prompt cùng lúc (đồng thời), để vLLM continuous-batch
+        chúng trên GPU thay vì xử lý tuần tự từng cái một.
+ 
+        Dùng khi cần sinh nội dung cho nhiều slide/nhiều mục cùng lúc.
+ 
+        Args:
+            prompts: danh sách các prompt cần sinh
+            max_tokens, temperature: giống generate_completion
+            max_concurrency: số request tối đa bắn đồng thời (nên đặt <= giá trị
+                "Maximum concurrency" mà vLLM log lúc khởi động, để tránh OOM KV cache)
+ 
+        Returns:
+            List[str] kết quả, ĐÚNG THỨ TỰ với prompts đầu vào
+        """
+        return asyncio.run(
+            self._generate_batch_async(prompts, max_tokens, temperature, max_concurrency)
+        )

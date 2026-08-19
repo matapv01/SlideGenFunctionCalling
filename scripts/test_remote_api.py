@@ -1,14 +1,15 @@
 import sys
 import os
+from dotenv import load_dotenv
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
+load_dotenv()
 
 from backend.infrastructure.llm_providers import RemoteLLMProvider
 from backend.infrastructure.llm_providers.base import APIConfig
 
 # Cấu hình URL Cloudflare Tunnel từ server Colab/Kaggle của bạn
-config = APIConfig(
-    generate_api_url="https://discrete-gorgeous-spanking-subscribers.trycloudflare.com/generate"
-)
+config = APIConfig()
 
 remote_llm_provider = RemoteLLMProvider(config=config)
 
