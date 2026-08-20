@@ -1,0 +1,12 @@
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#1A1B26">
+    <shape type="rect" x="0" y="0" width="1600" height="900" fill="#1A1B26" line_color="none" />
+    <image src="https://images.pexels.com/photos/1103970/pexels-photo-1103970.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=1600" x="72.0" y="82.0" width="620.0" height="736.0" fit="cover" crop_x="0.5" crop_y="0.42" />
+    <shape type="rect" x="748.0" y="82.0" width="724.0" height="736.0" fill="#23242B" line_color="none" />
+    <shape type="rect" x="778.0" y="122.0" width="26.0" height="656.0" fill="#98F033" line_color="none" />
+    <shape type="rect" x="1416.0" y="122.0" width="26.0" height="656.0" fill="#98F033" line_color="none" />
+    <textbox x="860.0" y="158.42999999999995" width="500.0" height="41.0" font="Times New Roman" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf" size="20.68" min_font_size="12.0" color="#98F033" align="center" vertical_align="middle" bold="false" italic="false" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">PHẦN 1</textbox>
+    <textbox x="860.0" y="233.42999999999995" width="500.0" height="231.84" font="Times New Roman" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif-Italic.ttf" size="43.239999999999995" min_font_size="22.0" color="#FFFFFF" align="center" vertical_align="middle" bold="false" italic="true" single_line="false" max_lines="4" overflow="clip" reflow_on_resize="true" line_spacing="0.92" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0">Nên sống thế nào trong kỷ nguyên AI</textbox>
+    <textbox x="860.0" y="507.27" width="500.0" height="234.3" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSerif.ttf" size="16.45" min_font_size="9.0" color="#E0E0E0" align="center" vertical_align="top" bold="false" italic="false" single_line="false" max_lines="10" overflow="clip" reflow_on_resize="true" line_spacing="1.42" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0"><run>AI không phải là mối đe dọa mà là một dòng chảy mới. Kỷ nguyên này đòi hỏi con người phải </run><run emphasis="highlight" color="#98F033">linh hoạt, tỉnh táo và chủ động</run><run> để thích nghi thay vì cố gắng trở nên siêu phàm.</run></textbox>
+  </slide>
+</presentation>

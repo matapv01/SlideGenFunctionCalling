@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#121212">
+    <image src="https://media-cdn-v2.laodong.vn/Storage/NewsPortal/2021/7/21/932742/Untitled-Capture2205.jpg" x="860" y="30" width="700" height="820" />
+    <textbox x="120" y="76.0" width="690" height="264.68" font="Arial" size="47.5" min_font_size="47.5" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Giới thiệu
+chung về Độ
+Mixi (tiếp theo)</textbox>
+    <textbox x="120" y="354.68" width="690" height="81.60000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#E0E0E0" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Những dấu ấn đặc biệt làm nên tên tuổi của
+người đứng đầu cộng đồng MixiGaming.</textbox>
+    <textbox x="120" y="450.28000000000003" width="690" height="278.16" font="Arial" size="18.0" min_font_size="18.0" color="#E0E0E0" align="left" vertical_align="top" single_line="false" max_lines="7" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>• Nổi tiếng với biệt danh </run><run emphasis="highlight" color="#00E5FF">"Tộc Trưởng"</run><run>.
+• Là một trong "tứ hoàng streamer" hàng đầu
+Việt Nam.
+• Phong cách livestream chân thật, hài hước
+và vô cùng gần gũi.
+• Xây dựng cộng đồng Bộ Tộc MixiGaming
+lớn mạnh và đoàn kết.</run></textbox>
+    <textbox x="120" y="742.44" width="690" height="81.60000000000001" font="Arial" size="18.0" min_font_size="18.0" color="#E0E0E0" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Sự chân thật và gần gũi là chìa khóa tạo nên
+sức hút của Độ Mixi.</textbox>
+  </slide>
+</presentation>

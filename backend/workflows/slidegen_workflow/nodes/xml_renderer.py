@@ -41,6 +41,10 @@ async def render_xml(state: State, config: RunnableConfig) -> State:
         file.write(xml_content)
 
     state["current_xml_path"] = xml_path
+    # XML is the workflow artifact. PNG capture is intentionally disabled:
+    # the web preview remains available on demand, while generation no longer
+    # spends time opening Chromium and writing image files.
+    state["current_image_path"] = ""
 
     if temp_debug_dir:
         debug_xml_dir = os.path.join(temp_debug_dir, "xml")
@@ -60,5 +64,6 @@ async def render_xml(state: State, config: RunnableConfig) -> State:
         state["all_debug_info"] = debug_info
 
     print(f"Saved XML slide {idx + 1} at: {xml_path}")
-    print(f"XML rendering took {time.time() - start_time:.2f}s.")
+    print(f"PNG capture skipped for XML slide {idx + 1}.")
+    print(f"XML persistence took {time.time() - start_time:.2f}s.")
     return state

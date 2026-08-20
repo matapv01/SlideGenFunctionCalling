@@ -38,6 +38,10 @@ class SlideService:
         if not png_dir.exists():
             png_dir = root_folder / "png"
 
+        evaluation_dir = root_folder / "output" / "evaluation"
+        if not evaluation_dir.exists():
+            evaluation_dir = root_folder / "evaluation"
+
         def slide_index(path: Path):
             match = re.search(r"slide_(\d+)", path.stem)
             return int(match.group(1)) if match else float("inf")
@@ -71,6 +75,15 @@ class SlideService:
                 except ValueError:
                     preview_url = None
 
+            evaluation_url = None
+            evaluation_file = evaluation_dir / f"{xml_file.stem}.json"
+            if evaluation_file.exists():
+                try:
+                    relative_path = evaluation_file.relative_to(self.static_dir)
+                    evaluation_url = f"/static/{relative_path.as_posix()}"
+                except ValueError:
+                    evaluation_url = None
+
             slides.append(
                 {
                     "content": xml_content,
@@ -82,6 +95,10 @@ class SlideService:
                     "title": metadata["title"],
                     "backgroundColor": metadata["backgroundColor"],
                     "elements": metadata["elements"],
+                    "vlmEvaluation": {
+                        "url": evaluation_url,
+                        "sourceFile": evaluation_file.name,
+                    } if evaluation_url else None,
                     "metadata": metadata,
                 }
             )

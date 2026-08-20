@@ -19,6 +19,10 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
         "content_path": xml_path,
         "format": "xml",
         "png_path": "",
+        "vlm_evaluation_path": state.get("vlm_evaluation_path", ""),
+        "vlm_evaluation_url": state.get("vlm_evaluation_url", ""),
+        "overflow_report": state.get("overflow_report", {}),
+        "overflow_rewrite_count": state.get("overflow_rewrite_count", 0),
         "original_text": state.get("current_slide_text", ""),
     }
     state.setdefault("final_slides", []).append(final_slide_data)
@@ -43,6 +47,9 @@ def finalize_slide(state: State, config: RunnableConfig) -> State:
                 "content_path": xml_path,
                 "format": "xml",
                 "png_path": "",
+                "vlm_evaluation_url": state.get("vlm_evaluation_url", ""),
+                "overflow_report": state.get("overflow_report", {}),
+                "overflow_rewrite_count": state.get("overflow_rewrite_count", 0),
                 "current": current,
                 "total": total_slides,
             },

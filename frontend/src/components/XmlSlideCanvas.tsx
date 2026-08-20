@@ -329,13 +329,11 @@ const textLayout = (element: XmlSlideElement, metrics: CanvasMetrics) => {
   const width = Math.min(metrics.canvasWidth - x, sourceWidth + widthGrowth);
   const height = Math.min(metrics.canvasHeight - y, sourceHeight + heightGrowth);
   const initialSize = numberAttr(element, "size", 24);
-  const minSize = numberAttr(element, "min_font_size", 10);
   const spacing = numberAttr(element, "line_spacing", 1);
   const safetyRatio = numberAttr(element, "safety_ratio", 0.97);
   const singleLine = toBool(element.attrs.single_line);
   const reflowOnResize = toBool(element.attrs.reflow_on_resize);
-  const overflow = (element.attrs.overflow || "shrink").toLowerCase();
-  const maxLines = element.attrs.max_lines ? Number(element.attrs.max_lines) : (singleLine ? 1 : undefined);
+  const overflow = (element.attrs.overflow || "clip").toLowerCase();
   const normalizedText = normalizeXmlTextBreaks(element.text);
   const marginLeft = ptToCanvasX(numberAttr(element, "margin_left"), metrics);
   const marginRight = ptToCanvasX(numberAttr(element, "margin_right"), metrics);
@@ -344,24 +342,13 @@ const textLayout = (element: XmlSlideElement, metrics: CanvasMetrics) => {
   const availableWidth = Math.max(1, width - marginLeft - marginRight);
   const availableHeight = Math.max(1, height - marginTop - marginBottom);
   const targetWidth = Math.max(1, availableWidth * safetyRatio);
-  const targetHeight = Math.max(1, availableHeight * safetyRatio);
 
-  let finalSize = initialSize;
-  let lines: string[] = [];
-  let requiredHeight = 0;
-  while (finalSize >= minSize) {
-    const font = textFont(element, finalSize, metrics);
-    lines = singleLine
-      ? [normalizedText.replace(/\s+/g, " ").trim()]
-      : normalizedText.split(/\r?\n/).flatMap((paragraph) => wrapParagraph(paragraph.trim(), font, targetWidth));
-    const heightForLines = lineHeight(font, spacing, ptToCanvasY(finalSize, metrics)) * lines.length;
-    const widthOk = lines.every((line) => measureText(line, font) <= targetWidth);
-    const heightOk = heightForLines <= targetHeight;
-    const linesOk = maxLines === undefined || lines.length <= maxLines;
-    requiredHeight = heightForLines;
-    if ((widthOk && heightOk && linesOk) || overflow !== "shrink") break;
-    finalSize = Math.round((finalSize - 0.5) * 100) / 100;
-  }
+  const finalSize = initialSize;
+  const font = textFont(element, finalSize, metrics);
+  const lines = singleLine
+    ? [normalizedText.replace(/\s+/g, " ").trim()]
+    : normalizedText.split(/\r?\n/).flatMap((paragraph) => wrapParagraph(paragraph.trim(), font, targetWidth));
+  const requiredHeight = lineHeight(font, spacing, ptToCanvasY(finalSize, metrics)) * lines.length;
 
   const finalHeight = overflow === "resize"
     ? Math.max(height, requiredHeight + marginTop + marginBottom)
@@ -926,6 +913,14 @@ export const XmlSlideCanvas = ({
     );
     const style = elementStyle(element, selected, elementIndex + 1, metrics);
     const common = {
+      "data-xml-element-id": element.id,
+      "data-xml-element-tag": tag,
+      ...(tag === "textbox" || tag === "text"
+        ? {
+          "data-xml-textbox": "true",
+          "data-xml-max-lines": element.attrs.max_lines || "",
+        }
+        : {}),
       style,
       onPointerDown: (event: ReactPointerEvent<HTMLDivElement>) => handlePointerDown(event, element),
       onDoubleClick: () => !readOnly && tag === "textbox" && setEditingId(element.id),
@@ -1040,6 +1035,7 @@ export const XmlSlideCanvas = ({
           className="rounded-sm"
         >
           <div
+            data-xml-text-content="true"
             style={{
               position: "absolute",
               left: layout.marginLeft,

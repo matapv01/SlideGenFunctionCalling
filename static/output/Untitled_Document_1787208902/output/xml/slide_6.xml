@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#121212">
+    <svg x="1240.0" y="0.0" width="360.0" height="405.0" pixel_width="252" pixel_height="284">&lt;svg xmlns="http://www.w3.org/2000/svg" width="252" height="284" viewBox="0 0 252 284" preserveAspectRatio="xMidYMid meet"&gt;
+  &lt;defs&gt;
+    &lt;linearGradient id="panelGrad" x1="0" y1="0" x2="1" y2="1"&gt;
+      &lt;stop offset="0%" stop-color="#9A78DB"/&gt;
+      &lt;stop offset="52%" stop-color="#8D69CE"/&gt;
+      &lt;stop offset="100%" stop-color="#614B94"/&gt;
+    &lt;/linearGradient&gt;
+    &lt;linearGradient id="mainDiscGrad" x1="0.36" y1="0" x2="0.7" y2="1"&gt;
+      &lt;stop offset="0%" stop-color="#D7C6FF" stop-opacity="0.94"/&gt;
+      &lt;stop offset="44%" stop-color="#B493F2" stop-opacity="0.9"/&gt;
+      &lt;stop offset="100%" stop-color="#8A5FDC" stop-opacity="0.76"/&gt;
+    &lt;/linearGradient&gt;
+    &lt;linearGradient id="innerDiscGrad" x1="0" y1="0" x2="0.35" y2="1"&gt;
+      &lt;stop offset="0%" stop-color="#B79AFF"/&gt;
+      &lt;stop offset="100%" stop-color="#7E58C9"/&gt;
+    &lt;/linearGradient&gt;
+    &lt;linearGradient id="backArcGrad" x1="0" y1="0" x2="0.75" y2="1"&gt;
+      &lt;stop offset="0%" stop-color="#4A3A68" stop-opacity="0.78"/&gt;
+      &lt;stop offset="100%" stop-color="#251844" stop-opacity="0.96"/&gt;
+    &lt;/linearGradient&gt;
+    &lt;filter id="softEdge" x="-16%" y="-16%" width="132%" height="132%"&gt;
+      &lt;feGaussianBlur stdDeviation="2.2"/&gt;
+    &lt;/filter&gt;
+  &lt;/defs&gt;
+
+  &lt;!-- soft dark arc behind the composition --&gt;
+  &lt;circle cx="136" cy="0" r="119" fill="url(#backArcGrad)" filter="url(#softEdge)"/&gt;
+
+  &lt;!-- rounded panel visible beneath the sweeping disc --&gt;
+  &lt;rect x="16" y="82" width="154" height="155" rx="17" ry="17"
+        fill="url(#panelGrad)"/&gt;
+
+  &lt;!-- large translucent disc creates the curved sweep over the panel --&gt;
+  &lt;circle cx="252" cy="0" r="236" fill="url(#mainDiscGrad)"/&gt;
+
+  &lt;!-- dark outer ring cropped by the top and right edges --&gt;
+  &lt;circle cx="252" cy="0" r="115" fill="#190B39"/&gt;
+
+  &lt;!-- illuminated inner disc leaves the soft purple crescent --&gt;
+  &lt;circle cx="252" cy="0" r="75" fill="url(#innerDiscGrad)"/&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="24.0" y="70.0" width="1040.0" height="137.9" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="36.0" min_font_size="36.0" bold="true" color="#00E5FF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">2. Ảnh hưởng và thành tựu (tiếp theo)</textbox>
+    <textbox x="24.0" y="227.9" width="1110.0" height="36.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="17.0" min_font_size="17.0" bold="true" color="#E0E0E0" align="left" vertical_align="top" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Khẳng định vị thế qua các hoạt động kinh doanh và xã hội tiêu biểu.</textbox>
+    <line x1="218.0" y1="610.0" x2="1382.0" y2="610.0" color="#00E5FF" width="1.0" />
+    <shape type="circle" x="203.0" y="595.0" width="30.0" height="30.0" fill="#00E5FF" line_color="none" />
+    <textbox x="48.0" y="517.0" width="340.0" height="47.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="23.0" min_font_size="23.0" bold="true" color="#00E5FF" align="center" vertical_align="top" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Tài chính</textbox>
+    <textbox x="48.0" y="652.0" width="340.0" height="92.72" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="13.5" min_font_size="13.5" bold="true" color="#FFFFFF" align="center" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.12" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Nguồn </run><run emphasis="highlight" color="#00E5FF">thu nhập đáng kể</run><run> từ quảng cáo và ủng hộ của người hâm mộ.</run></textbox>
+    <shape type="circle" x="591.0" y="595.0" width="30.0" height="30.0" fill="#00E5FF" line_color="none" />
+    <textbox x="436.0" y="517.0" width="340.0" height="47.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="23.0" min_font_size="23.0" bold="true" color="#00E5FF" align="center" vertical_align="top" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Kinh doanh</textbox>
+    <textbox x="436.0" y="652.0" width="340.0" height="92.72" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="13.5" min_font_size="13.5" bold="true" color="#FFFFFF" align="center" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.12" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#00E5FF">Mở công ty riêng</run><run>, phát triển thương hiệu cá nhân chuyên nghiệp.</run></textbox>
+    <shape type="circle" x="979.0" y="595.0" width="30.0" height="30.0" fill="#00E5FF" line_color="none" />
+    <textbox x="824.0" y="517.0" width="340.0" height="47.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="23.0" min_font_size="23.0" bold="true" color="#00E5FF" align="center" vertical_align="top" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Sự kiện</textbox>
+    <textbox x="824.0" y="652.0" width="340.0" height="92.72" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="13.5" min_font_size="13.5" bold="true" color="#FFFFFF" align="center" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.12" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Tham gia nhiều sự kiện giải trí, trở thành </run><run emphasis="highlight" color="#00E5FF">gương mặt đại diện</run><run>.</run></textbox>
+    <shape type="circle" x="1367.0" y="595.0" width="30.0" height="30.0" fill="#00E5FF" line_color="none" />
+    <textbox x="1212.0" y="517.0" width="340.0" height="47.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="23.0" min_font_size="23.0" bold="true" color="#00E5FF" align="center" vertical_align="top" single_line="false" max_lines="1" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Vị thế</textbox>
+    <textbox x="1212.0" y="652.0" width="340.0" height="92.72" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="13.5" min_font_size="13.5" bold="true" color="#FFFFFF" align="center" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.12" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Được công nhận là nhân vật có tầm ảnh hưởng lớn trên mạng xã hội.</textbox>
+  </slide>
+</presentation>

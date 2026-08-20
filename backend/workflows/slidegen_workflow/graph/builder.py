@@ -8,9 +8,9 @@ from backend.workflows.slidegen_workflow.nodes.finalize_slide import finalize_sl
 from backend.workflows.slidegen_workflow.nodes.next_slide_provider import provide_next_slide
 from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
 from backend.workflows.slidegen_workflow.nodes.slide_planner import planning_slide
+from backend.workflows.slidegen_workflow.nodes.text_overflow_resolver import resolve_text_overflow
 from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
 from backend.workflows.slidegen_workflow.nodes.xml_renderer import render_xml
-from backend.workflows.slidegen_workflow.nodes.slide_evaluator import slide_evaluator
 
 
 def route_to_task(state: State) -> str:
@@ -22,20 +22,25 @@ def route_to_task(state: State) -> str:
 
 
 def evaluate_executor_decision(state: State) -> str:
-    """Route every generated slide to XML rendering or retry generation."""
+    """Route every generated slide to overflow rules or retry generation."""
     decision = state.get("executor_decision", "fail")
     retry_count = state.get("retry_count", 0)
     if decision == "pass" or retry_count >= EXECUTOR_MAX_RETRIES:
-        return "render_xml"
+        return "text_overflow_resolver"
     return "generate_slide"
+
+def evaluate_overflow_decision(state: State) -> str:
+    """Render only after the browser-based overflow check passes."""
+    if state.get("overflow_failed") or (
+        (state.get("overflow_report") or {}).get("status") == "overflow_remaining"
+    ):
+        return "generate_slide"
+    return "render_xml"
 
 def evaluate_vlm_decision(state: State) -> str:
     """Router check kết quả đánh giá của ViT (hoặc VLM)"""
-    decision = state.get("vlm_decision", "accept")
-    retry_count = state.get("retry_count", 0)
-    if decision == "accept" or retry_count >= EXECUTOR_MAX_RETRIES:
-        return "finalizer"
-    return "generate_slide"
+    # ViT is observation-only: keep its result in state/logs, but never retry.
+    return "finalizer"
 
 
 def build_workflow(router_flags: bool = False) -> StateGraph:
@@ -45,8 +50,8 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
     workflow.add_node("provide_next_slide", provide_next_slide)
     workflow.add_node("generate_slide", generate_slide)
     workflow.add_node("executor", tool_call_executor)
+    workflow.add_node("text_overflow_resolver", resolve_text_overflow)
     workflow.add_node("render_xml", render_xml)
-    workflow.add_node("evaluator", slide_evaluator)
     workflow.add_node("finalizer", finalize_slide)
 
     workflow.set_entry_point("planning_slide")
@@ -60,13 +65,21 @@ def build_workflow(router_flags: bool = False) -> StateGraph:
     workflow.add_conditional_edges(
         "executor",
         evaluate_executor_decision,
-        {"render_xml": "render_xml", "generate_slide": "generate_slide"},
+        {
+            "text_overflow_resolver": "text_overflow_resolver",
+            "generate_slide": "generate_slide",
+        },
     )
-    workflow.add_edge("render_xml", "evaluator")
     workflow.add_conditional_edges(
-        "evaluator",
-        evaluate_vlm_decision,
-        {"finalizer": "finalizer", "generate_slide": "generate_slide"},
+        "text_overflow_resolver",
+        evaluate_overflow_decision,
+        {
+            "generate_slide": "generate_slide",
+            "render_xml": "render_xml",
+        },
     )
+    # ViT remains available as legacy code, but is intentionally not wired
+    # into this XML-only workflow because PNG capture is disabled.
+    workflow.add_edge("render_xml", "finalizer")
     workflow.add_edge("finalizer", "provide_next_slide")
     return workflow

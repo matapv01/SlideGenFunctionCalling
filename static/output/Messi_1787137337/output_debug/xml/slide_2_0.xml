@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#0A1C30">
+    <image src="https://i.pinimg.com/originals/5a/e4/32/5ae43225a1693e583e8a725f308f7c69.jpg" x="860" y="30" width="700" height="820" />
+    <textbox x="120" y="76.0" width="690" height="108.28" font="Arial" size="56.0" min_font_size="56.0" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="1" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. Giới thiệu</textbox>
+    <textbox x="120" y="198.28" width="690" height="83.7" font="Arial" size="18.5" min_font_size="18.5" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Lionel Messi - Biểu tượng của nghị lực và tài
+năng thiên bẩm trong làng túc cầu thế giới.</textbox>
+    <textbox x="120" y="295.98" width="690" height="405.6" font="Arial" size="18.5" min_font_size="18.5" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="10" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>• Sinh năm 1987 tại Rosario, Argentina,
+Messi được công nhận là một trong những
+</run><run emphasis="highlight" color="#007BFF">cầu thủ vĩ đại nhất</run><run> mọi thời đại.
+• Biệt danh “El Pulga” (Bọ chét) thể hiện sự
+nhanh nhẹn, linh hoạt và khả năng xoay sở
+phi thường trên sân cỏ.
+• Vượt qua căn bệnh thiếu hụt hormone
+tăng trưởng nhờ sự đồng hành của CLB
+Barcelona để viết nên câu chuyện huyền
+thoại.</run></textbox>
+    <textbox x="120" y="715.58" width="690" height="83.7" font="Arial" size="18.5" min_font_size="18.5" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Hành trình từ một cậu bé nhỏ con đến đỉnh
+cao vinh quang thế giới.</textbox>
+  </slide>
+</presentation>

@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <shape type="rect" x="0" y="0" width="1600" height="438.0" fill="#FFFFFF" line_color="none" />
+    <line x1="800.0" y1="0" x2="800.0" y2="108" color="#0066CC" width="1.0" opacity="0.82" />
+    <textbox x="300.0" y="128.0" width="1000.0" height="230.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="44.0" min_font_size="42.0" color="#2D2A2B" align="center" vertical_align="middle" bold="true" italic="false" single_line="false" max_lines="7" overflow="clip" reflow_on_resize="true" line_spacing="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0" safety_ratio="1.0"><run>1.2. Mô hình cộng tác giữa Người và AI&lt;br&gt;Thay vì để AI làm thay hoàn toàn, hãy kết hợp sức mạnh của cả hai để tạo ra </run><run emphasis="highlight" color="#0066CC">“siêu năng lực”</run><run>.</run></textbox>
+    <image src="https://c8.alamy.com/comp/2S1KN2P/human-ai-cooperation-technology-concept-person-interacting-with-ai-interface-futuristic-design-dark-background-website-banner-2S1KN2P.jpg" x="0" y="438.0" width="1600" height="462.0" fit="cover" crop_x="0.5" crop_y="0.46" />
+  </slide>
+</presentation>

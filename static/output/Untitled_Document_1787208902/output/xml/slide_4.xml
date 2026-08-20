@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#121212">
+    <image src="https://www.amazinghomedecorco.com/wp-content/uploads/2024/06/Sleek-black-gaming-setup.jpg" x="0" y="0" width="1600" height="900" />
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#1A1A1A" line_color="none" />
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#00E5FF" line_color="none" />
+    <textbox x="70.0" y="308.42" width="424.1959999999999" height="141.16" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="36.0" min_font_size="36.0" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">4. TRANSITION</textbox>
+    <textbox x="70.0" y="481.58000000000004" width="357.9293333333333" height="110.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="18.0" min_font_size="18.0" color="#E0E0E0" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Tiếp theo: </run><run emphasis="highlight" color="#00E5FF">Ảnh hưởng và thành tựu</run><run> của Độ Mixi</run></textbox>
+  </slide>
+</presentation>

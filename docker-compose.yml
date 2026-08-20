@@ -31,6 +31,7 @@ services:
       EMBEDDING_DEVICE: cpu
     volumes:
       - ./.env:/app/.env:ro
+      - ./models:/app/models:ro
       - slidegen_db:/app/backend/infrastructure/database
       - slidegen_static:/app/static
       - slidegen_faiss:/app/backend/infrastructure/faiss_tool_retriever_index

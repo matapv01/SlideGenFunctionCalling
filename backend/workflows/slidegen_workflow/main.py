@@ -28,6 +28,7 @@ def _setup_output_dirs(output_folder: str) -> Tuple[str, str]:
     
     for base in [output_dir, output_debug_dir]:
         os.makedirs(os.path.join(base, "xml"), exist_ok=True)
+    os.makedirs(os.path.join(output_dir, "evaluation"), exist_ok=True)
         
     return output_dir, output_debug_dir
 

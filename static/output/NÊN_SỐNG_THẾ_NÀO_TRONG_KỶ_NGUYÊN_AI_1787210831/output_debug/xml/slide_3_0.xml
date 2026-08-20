@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://img.freepik.com/premium-photo/abstract-neural-network-glowing-blue-particles-lines-dark-backdrop-digital-background-with-grid-surface-generative-ai_155390-634.jpg?w=2000" x="860" y="30" width="700" height="820" />
+    <textbox x="120" y="76.0" width="690" height="409.12" font="Arial" size="56.0" min_font_size="56.0" bold="true" color="#0066CC" align="left" vertical_align="top" single_line="false" max_lines="4" overflow="clip" line_spacing="0.92" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">NÊN SỐNG
+THẾ NÀO
+TRONG KỶ
+NGUYÊN AI</textbox>
+    <textbox x="120" y="499.12" width="690" height="476.40000000000003" font="Arial" size="28.0" min_font_size="28.0" color="#2D2A2B" align="left" vertical_align="top" single_line="false" max_lines="8" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run emphasis="highlight" color="#0066CC">1.1. Thấu hiểu bản chất của
+AI</run><run>&lt;br&gt;&lt;br&gt;AI là một công
+cụ cực mạnh tạo ra lợi thế
+vượt trội cho người biết sử
+dụng. Nguy hiểm thực sự
+không nằm ở AI mà ở việc
+con người thiếu hiểu biết và
+bị nó dẫn dắt.</run></textbox>
+    <textbox x="120" y="989.52" width="690" height="368.88" font="Arial" size="28.0" min_font_size="28.0" color="#2D2A2B" align="left" vertical_align="top" single_line="false" max_lines="6" overflow="clip" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">• Nhận thức AI là công cụ hỗ
+trợ đắc lực
+• Làm chủ kiến thức để
+không bị dẫn dắt
+• Tận dụng lợi thế công nghệ
+để bứt phá</textbox>
+    <textbox x="120" y="1372.4" width="690" height="123.60000000000001" font="Arial" size="28.0" min_font_size="28.0" color="#2D2A2B" align="left" vertical_align="top" single_line="false" max_lines="2" overflow="clip" line_spacing="1.05" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Hiểu bản chất - Làm chủ
+tương lai.</textbox>
+  </slide>
+</presentation>

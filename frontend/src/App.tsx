@@ -19,6 +19,7 @@ import Guide from "./pages/Guide";
 import Settings from "./pages/Settings";
 import Subscription from "./pages/Subscription";
 import XmlSlideEditor from "./pages/XmlSlideEditor";
+import XmlRenderPreview from "./pages/XmlRenderPreview";
 import NotFound from "./pages/NotFound";
 
 // Context Providers Wrapper
@@ -63,6 +64,7 @@ const router = createBrowserRouter([
       { path: "settings", element: <ProtectedRoute><Settings /></ProtectedRoute> },
       { path: "subscription", element: <ProtectedRoute><Subscription /></ProtectedRoute> },
       { path: "editor", element: <XmlSlideEditor /> },
+      { path: "render/xml-preview", element: <XmlRenderPreview /> },
       { path: "*", element: <NotFound /> },
     ]
   }

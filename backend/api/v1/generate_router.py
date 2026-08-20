@@ -5,6 +5,7 @@ import json
 import logging
 import asyncio
 import re
+import uuid
 from typing import AsyncGenerator, Optional
 from pathlib import Path
 from datetime import datetime
@@ -47,14 +48,30 @@ router = APIRouter(prefix="/generate", tags=["GENERATE"])
 logger = logging.getLogger("SlideGen-Generation")
 
 
+def _new_temp_docx_path(filename: str) -> Path:
+    """Create a collision-resistant path for an uploaded DOCX."""
+    safe_filename = Path(filename or "upload.docx").name
+    return TEMP_DIR / f"{uuid.uuid4().hex}_{safe_filename}"
+
+
+def _safe_unlink(path: Path) -> None:
+    """Remove a temporary file without failing the request if it is locked."""
+    try:
+        if path.exists():
+            path.unlink()
+    except PermissionError as exc:
+        logger.warning("Could not remove locked temporary file %s: %s", path, exc)
+    except OSError as exc:
+        logger.warning("Could not remove temporary file %s: %s", path, exc)
+
+
 def _cleanup_temp_dir():
     """Helper to clean temp files"""
     try:
         if not TEMP_DIR.exists(): return
         for old_file in TEMP_DIR.glob("*"):
             if old_file.is_file():
-                try: old_file.unlink()
-                except: pass
+                _safe_unlink(old_file)
     except: pass
 
 
@@ -176,10 +193,11 @@ async def generate_from_docx_normal(
     subscription_service.check_feature_access(user, "docx_upload")
 
     # 1. Setup paths
-    project_name = os.path.splitext(file.filename)[0]
+    original_filename = Path(file.filename).name
+    project_name = os.path.splitext(original_filename)[0]
     output_folder = prepare_output_folder(project_name)
 
-    temp_path = TEMP_DIR / file.filename
+    temp_path = _new_temp_docx_path(original_filename)
     with open(temp_path, "wb") as f:
         content = await file.read()
         f.write(content)
@@ -216,7 +234,7 @@ async def generate_from_docx_normal(
             user_id=current_user.id,
             project_name=project_name,
             source_type='docx',
-            source_data={'filename': file.filename},
+            source_data={'filename': original_filename},
             slide_options=slide_options,
             output_folder=output_folder
         )
@@ -229,7 +247,7 @@ async def generate_from_docx_normal(
         logger.error(f"DOCX Upload failed: {e}")
         raise HTTPException(500, str(e))
     finally:
-        if temp_path.exists(): temp_path.unlink()
+        _safe_unlink(temp_path)
 
 
 @router.post("/docx/prepare-stream", response_model=DocxPrepareResponse)
@@ -260,7 +278,8 @@ async def prepare_docx_stream(
 
     _cleanup_temp_dir()
 
-    temp_path = TEMP_DIR / file.filename
+    original_filename = Path(file.filename).name
+    temp_path = _new_temp_docx_path(original_filename)
     content = await file.read()
     with open(temp_path, "wb") as f:
         f.write(content)
@@ -277,11 +296,13 @@ async def prepare_docx_stream(
         "enable_transition_slides": enable_transition_slides.lower() in ('true', '1', 'yes', 'on'),
         "enable_thank_you_slide": enable_thank_you_slide.lower() in ('true', '1', 'yes', 'on'),
         "output_format": normalized_output_format,
+        "original_filename": original_filename,
     }
-    with open(TEMP_DIR / f"{file.filename}.options.json", "w") as f:
+    stored_filename = temp_path.name
+    with open(TEMP_DIR / f"{stored_filename}.options.json", "w") as f:
         json.dump(options, f)
 
-    return {"filename": file.filename}
+    return {"filename": stored_filename}
 
 
 # ==========================================
@@ -345,7 +366,8 @@ async def stream_docx_generation(
     """
     [Step 2 Stream] SSE Generation for DOCX
     """
-    temp_path = TEMP_DIR / os.path.basename(filename)
+    filename = os.path.basename(filename)
+    temp_path = TEMP_DIR / filename
     if not temp_path.exists(): raise HTTPException(400, "Tệp không tồn tại hoặc đã hết hạn")
 
     # Increment usage counter (actual processing starts here)
@@ -357,7 +379,8 @@ async def stream_docx_generation(
     if options_path.exists():
         with open(options_path, "r") as f: slide_options = json.load(f)
 
-    project_name = os.path.splitext(filename)[0]
+    original_filename = Path(slide_options.get("original_filename", filename)).name
+    project_name = os.path.splitext(original_filename)[0]
     output_folder = prepare_output_folder(project_name)
 
     async def event_generator():
@@ -384,7 +407,7 @@ async def stream_docx_generation(
                 user_id=current_user.id,
                 project_name=project_name,
                 source_type='docx',
-                source_data={'filename': filename},
+                source_data={'filename': original_filename},
                 slide_options=slide_options,
                 output_folder=output_folder
             )
@@ -415,8 +438,9 @@ async def stream_docx_generation(
             except asyncio.TimeoutError:
                 yield ": keepalive\n\n"
         
-        # Cleanup input file after stream
-        if temp_path.exists(): temp_path.unlink()
+        # Cleanup input files after stream. Locked files are logged and ignored.
+        _safe_unlink(temp_path)
+        _safe_unlink(options_path)
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
@@ -445,7 +469,8 @@ async def create_manual_session_from_docx(
     # Check subscription limits for docx upload
     subscription_service.check_feature_access(user, "docx_upload")
 
-    temp_path = TEMP_DIR / file.filename
+    original_filename = Path(file.filename).name
+    temp_path = _new_temp_docx_path(original_filename)
     content = await file.read()
     with open(temp_path, "wb") as f:
         f.write(content)
@@ -476,7 +501,7 @@ async def create_manual_session_from_docx(
                 })
 
         session_id = structure_service.create_session(
-            filename=file.filename,
+            filename=original_filename,
             full_text=full_text,
             paragraphs=paragraphs_data,
             docx_path=str(temp_path),

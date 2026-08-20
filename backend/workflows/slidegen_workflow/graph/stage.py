@@ -64,6 +64,7 @@ class State(TypedDict, total=False):
     current_tool_call: Dict
     current_xml_content: str
     current_xml_path: str
+    current_image_path: str
     previous_image_path: str
     previous_accepted_tool_call: Dict
     previous_slide_context: slide_context
@@ -75,6 +76,11 @@ class State(TypedDict, total=False):
     llm : Any
     vlm_decision: str
     vlm_feedback: str
+    vlm_evaluation_path: str
+    vlm_evaluation_url: str
+    overflow_report: Dict[str, Any]
+    overflow_rewrite_count: int
+    overflow_failed: bool
     executor_decision: str  # "pass" or "fail" from tool_call_executor
     executor_feedback: str  # Detailed error description from executor
 

@@ -245,7 +245,7 @@ class GenerateGreenSocialMediaTransitionSlideInput(BaseModel):
 class GenerateSectionHeaderImageSlideInput(BaseModel):
     """Input schema for generate_section_header_image_slide_xml."""
 
-    section_header: str = Field(..., description="Section heading displayed as a bold, centered, editable text block inside the upper green panel. The text automatically wraps and reduces in size to fit a 1000 × 230 px text area. example: 'Social Media Marketing Strategy'")
+    section_header: str = Field(..., description="Section heading displayed as a bold, centered, editable text block inside the upper green panel. The text wraps inside a 1000 × 230 px text area without reducing the requested font size. example: 'Social Media Marketing Strategy'")
     image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1600&auto=format&fit=crop", description="URL for a wide landscape image displayed at 1600 × 462 px in PowerPoint with an approximately 3.46:1 aspect ratio.")
     background_color: str = Field(default="#FFFFFF", description="Fallback background color of the slide.")
     header_color: str = Field(default="#6F8369", description="Background color of the upper section-header panel.")
@@ -490,7 +490,7 @@ class GenerateClientSnapshotSlideInput(BaseModel):
 
     title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Client snapshot'")
     subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'About Value Financials'")
-    client_details: str = Field(..., description="One plain-text block of client information and goals displayed as structured bullet points. Separate each detail with a newline. IMPORTANT: do not include bullet markers or numbering such as -, *, 1., or 1); the renderer adds the markers. Use 'Label: value' for a main detail. For a nested goal, use two leading spaces but still no bullet or number. example: 'Industry: Financial services and banking\\nTeam size: 300+ employees\\nPrimary goals:\\n  Improve cross-team collaboration'")
+    client_details: List[str] = Field(..., description="List of plain client information and goals displayed as structured bullet points. IMPORTANT: each item must contain content only, without •, -, *, 1., 1), or other numbering; the renderer adds one marker. Use 'Label: value' for a main detail. For a nested goal, use two leading spaces but still no bullet or number. example: ['Industry: Financial services and banking', 'Team size: 300+ employees', 'Primary goals:', '  Improve cross-team collaboration']")
     top_image_url: str = Field(default="https://images.unsplash.com/photo-1552664730-d307ca884978?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
@@ -607,7 +607,7 @@ class GenerateSocialMediaPointsSlideInput(BaseModel):
 class GenerateNumberedSocialMediaPointsSlideInput(BaseModel):
     """Input schema for generate_numbered_social_media_points_slide_xml."""
 
-    title: str = Field(..., description="Main slide title displayed as one centered editable text block above the content panel. The text automatically wraps and reduces in size to fit a 1400 × 128 px text area. example: 'Key Social Media Strategies'")
+    title: str = Field(..., description="Main slide title displayed as one centered editable text block above the content panel. The text wraps inside a 1400 × 128 px text area without reducing the requested font size. example: 'Key Social Media Strategies'")
     items: list[dict[str, str]] = Field(..., description="List of one or more numbered content items arranged in a responsive grid with up to 3 columns and additional rows when needed. Each item must contain two fields: 'title' is the bold main point displayed beside its automatically generated two-digit number and supports up to 3 wrapped lines; 'description' is the supporting explanation displayed below the item title and automatically wraps to fit the remaining cell height. Item numbers such as '01', '02', and '03' are generated from the list order and must not be included in the input. example: [{'title': 'BUILD A CONSISTENT BRAND', 'description': 'Use consistent visuals and messaging across every social media platform.'}]")
     background_color: str = Field(default="#FFFFFF", description="Background color of the upper title area.")
     content_background_color: str = Field(default="#F0F3F0", description="Background color of the lower numbered-content panel.")
@@ -855,7 +855,7 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
     func=generate_client_snapshot_slide_xml,
     name="generate_client_snapshot_slide_xml",
-     description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as one newline-separated plain-text block, never as an array. Do not include bullet markers or numbering such as -, *, 1., or 1); use two leading spaces only for nested goals because the renderer adds the markers. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
+     description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as plain text only—never include •, -, *, 1., or 1); use two leading spaces only for nested goals. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
     args_schema=GenerateClientSnapshotSlideInput,
     ),
     StructuredTool.from_function(

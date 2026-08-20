@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "evaluator": "ViT",
+  "slide_index": 2,
+  "retry_count": 0,
+  "decision": "deny",
+  "accepted": false,
+  "errors": [
+    "Size chữ",
+    "Tràn nội dung"
+  ],
+  "scores": {
+    "Màu nền": 0.9992213249206543,
+    "Màu chữ": 0.99709153175354,
+    "Size chữ": 0.6539145708084106,
+    "Bố cục": 0.9736177921295166,
+    "Tràn nội dung": 0.6216661334037781
+  },
+  "image": {
+    "relative_path": "output/NÊN_SỐNG_THẾ_NÀO_TRONG_KỶ_NGUYÊN_AI_1787213741/output/png/slide_2.png",
+    "url": "/static/output/NÊN_SỐNG_THẾ_NÀO_TRONG_KỶ_NGUYÊN_AI_1787213741/output/png/slide_2.png"
+  }
+}

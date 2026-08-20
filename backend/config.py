@@ -131,6 +131,20 @@ FAISS_FORCE_REBUILD = False  # Changed to False - only rebuild when tools change
 
 # --- VLM Evaluation (Visual Language Model) ---
 VLM_MAX_RETRIES = 3
+# Keep the ViT evaluator available in code, but disable the graph call by
+# default until its score calibration is verified. Set this to true to enable.
+ENABLE_VIT_EVALUATION = os.getenv("ENABLE_VIT_EVALUATION", "false").lower() in (
+    "1",
+    "true",
+    "yes",
+    "on",
+)
+# Rule-based XML overflow handling. The LLM is called only for textboxes that
+# fail the geometry check, and each textbox is re-measured after rewriting.
+TEXT_OVERFLOW_MAX_ROUNDS = int(os.getenv("TEXT_OVERFLOW_MAX_ROUNDS", "3"))
+TEXT_OVERFLOW_MAX_BOXES_PER_ROUND = int(
+    os.getenv("TEXT_OVERFLOW_MAX_BOXES_PER_ROUND", "12")
+)
 
 # --- Executor Validator Configuration ---
 # Max retries when executor detects logic errors (None, missing params, type mismatch)
@@ -143,7 +157,13 @@ COT_MAX_TOKENS = int(os.getenv("COT_MAX_TOKENS", "4096"))
 # --- Playwright Browser Configuration ---
 BROWSER_VIEWPORT_WIDTH = 1920
 BROWSER_VIEWPORT_HEIGHT = 1080
-BROWSER_DEVICE_SCALE_FACTOR = 1
+BROWSER_DEVICE_SCALE_FACTOR = float(os.getenv("BROWSER_DEVICE_SCALE_FACTOR", "2"))
+# URL of the frontend route used by Playwright for XML slide previews.
+# Development overrides this to the Vite server in docker-compose.dev.yml.
+BROWSER_PREVIEW_URL = os.getenv(
+    "BROWSER_PREVIEW_URL",
+    "http://127.0.0.1:12008/render/xml-preview",
+)
 
 # ============================================================================
 # END OF HYPERPARAMETERS

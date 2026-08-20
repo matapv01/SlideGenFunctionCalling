@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#000000">
+    <image src="https://elements-resized.envatousercontent.com/elements-content-platform-public-assets/17e0575e-778e-4c69-932b-f7eb27923520/6655899f-607d-4a79-b492-3664d01a67d7/downloaded-file20251020-7-bwept.png?w=1200&amp;h=630&amp;cf_fit=crop&amp;q=85&amp;format=jpeg&amp;s=38bd7f00e8d92a596a716ed14c4fc15e6fed0e41035570cfc78a1a98672f0a6e" x="0" y="0" width="1600" height="900" />
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#121212" line_color="none" />
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#007BFF" line_color="none" />
+    <textbox x="70.0" y="145.0" width="305.6346666666667" height="558.64" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="36.0" min_font_size="36.0" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="8" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1.2. Chiến lược cộng tác: Làm việc cùng AI</textbox>
+    <textbox x="70.0" y="715.64" width="1.0" height="1190.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="18.0" min_font_size="18.0" color="#D1D1D1" align="left" vertical_align="top" single_line="false" max_lines="33" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Thay vì để AI làm hộ hoàn toàn, hãy coi AI là 'đồng đội tăng lực' để kết hợp sức mạnh công nghệ với bản sắc cá nhân, tạo ra </run><run emphasis="highlight" color="#007BFF">siêu năng lực</run><run>.</run></textbox>
+  </slide>
+</presentation>

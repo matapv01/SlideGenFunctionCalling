@@ -24,10 +24,12 @@ services:
     environment:
       LOG_LEVEL: DEBUG
       EMBEDDING_DEVICE: cpu
+      BROWSER_PREVIEW_URL: http://127.0.0.1:5173/render/xml-preview
     volumes:
       # ── Source code (live edits) ────────────────────────────────────────────
       - ./backend:/app/backend
       - ./frontend:/app/frontend
+      - ./models:/app/models:ro
       - ./migrate_db.py:/app/migrate_db.py
       - ./.env:/app/.env:ro
 

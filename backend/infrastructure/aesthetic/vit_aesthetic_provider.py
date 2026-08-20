@@ -1,10 +1,34 @@
 import os
 import torch
 import numpy as np
+from pathlib import Path
 from typing import Tuple, List, Dict
 from PIL import Image
 from torchvision import transforms
 from transformers import ViTForImageClassification
+
+
+PROJECT_ROOT = Path(__file__).resolve().parents[3]
+DEFAULT_VIT_MODEL_DIR = PROJECT_ROOT / "models" / "vit"
+DEFAULT_VIT_MODEL_FILENAME = "best_model_multilabel_DX_10_0.77.pt"
+
+
+def _resolve_vit_model_path() -> Path:
+    """Resolve the ViT checkpoint from the project model directory."""
+    configured_dir = os.getenv("VIT_MODEL_DIR")
+    model_dir = Path(configured_dir).expanduser() if configured_dir else DEFAULT_VIT_MODEL_DIR
+    if not model_dir.is_absolute():
+        model_dir = (PROJECT_ROOT / model_dir).resolve()
+
+    model_filename = os.getenv("VIT_MODEL_FILENAME", DEFAULT_VIT_MODEL_FILENAME)
+    model_path = model_dir / model_filename
+    if not model_path.is_file():
+        raise FileNotFoundError(
+            f"ViT checkpoint not found at '{model_path}'. "
+            "Place the checkpoint in 'models/vit' or configure "
+            "VIT_MODEL_DIR and VIT_MODEL_FILENAME."
+        )
+    return model_path
 
 
 class ViTAestheticProvider:
@@ -56,7 +80,7 @@ class ViTAestheticProvider:
         ])
         
         self.label_names = ['Màu nền', 'Màu chữ', 'Size chữ', 'Bố cục', 'Tràn nội dung']
-        self.thresholds = np.array([0.5] * 5)
+        self.thresholds = np.array([0.9] * 5)
 
     def evaluate(self, image_path: str) -> Tuple[bool, List[str], Dict[str, float]]:
         """
@@ -89,7 +113,6 @@ _vit_evaluator_instance = None
 def get_vit_evaluator() -> ViTAestheticProvider:
     global _vit_evaluator_instance
     if _vit_evaluator_instance is None:
-        # Đường dẫn mặc định trỏ tới file của Trung
-        model_path = r"C:\Users\hp\Downloads\best_model_multilabel_DX_10_0.77.pt"
-        _vit_evaluator_instance = ViTAestheticProvider(model_path=model_path)
+        model_path = _resolve_vit_model_path()
+        _vit_evaluator_instance = ViTAestheticProvider(model_path=str(model_path))
     return _vit_evaluator_instance

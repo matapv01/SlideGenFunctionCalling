@@ -1,0 +1,68 @@
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://img.freepik.com/premium-photo/dark-abstract-technology-wallpaper-with-artificial-intelligence-data-connectivity-technology_987764-23058.jpg?w=2000" x="0" y="0" width="1600" height="900" fit="cover" crop_x="0.55" crop_y="0.5" />
+    <svg name="orange_arrow_panel" x="0" y="0" width="1600" height="900" pixel_width="3200" pixel_height="1800">&lt;svg xmlns="http://www.w3.org/2000/svg" width="1600" height="900" viewBox="0 0 1600 900"&gt;
+  &lt;defs&gt;
+    &lt;filter id="softWhite" x="-5%" y="-10%" width="115%" height="120%"&gt;
+      &lt;feDropShadow dx="0" dy="4" stdDeviation="7" flood-color="#ffffff" flood-opacity="0.35"/&gt;
+    &lt;/filter&gt;
+  &lt;/defs&gt;
+
+  &lt;rect x="0" y="0" width="1600" height="900" fill="#1A1B26" opacity="0.8"/&gt;
+
+  &lt;path
+    d="
+      M 0 220
+      L 1100 220
+      C 1180 220 1236 252 1288 326
+      L 1364 435
+      L 1288 544
+      C 1236 618 1180 650 1100 650
+      L 0 650
+      Z
+    "
+    fill="#23242B"
+    opacity="0.85"
+    filter="url(#softWhite)"
+  /&gt;
+
+  &lt;path
+    d="
+      M -60 188
+      L 1112 188
+      C 1215 188 1276 232 1345 334
+      L 1420 444
+      L 1345 554
+      C 1276 656 1215 698 1112 698
+      L -60 698
+    "
+    fill="none"
+    stroke="#98F033"
+    stroke-width="70"
+    stroke-linecap="square"
+    stroke-linejoin="round"
+    opacity="0.9"
+  /&gt;
+
+  &lt;path
+    d="
+      M -60 188
+      L 1112 188
+      C 1215 188 1276 232 1345 334
+      L 1420 444
+      L 1345 554
+      C 1276 656 1215 698 1112 698
+      L -60 698
+    "
+    fill="none"
+    stroke="#98F033"
+    stroke-width="30"
+    stroke-linecap="square"
+    stroke-linejoin="round"
+    opacity="0.32"
+  /&gt;
+&lt;/svg&gt;</svg>
+    <textbox x="78.0" y="286.11" width="1100.0" height="172.9" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="46.43999999999999" min_font_size="22.0" bold="true" color="#FFFFFF" align="left" vertical_align="middle" single_line="false" max_lines="2" overflow="clip" reflow_on_resize="true" line_spacing="0.95" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">NÊN SỐNG THẾ NÀO TRONG KỶ NGUYÊN AI</textbox>
+    <textbox x="78.0" y="489.01" width="1180.0" height="146.88" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="17.199999999999996" min_font_size="10.0" bold="false" color="#E0E0E0" align="left" vertical_align="top" single_line="false" max_lines="5" overflow="clip" reflow_on_resize="true" line_spacing="1.08" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">AI không phải cơn bão mà là dòng chảy mới. Hãy trở nên linh hoạt, tỉnh táo và chủ động. Hiểu AI để không sợ hãi, hãy làm cùng nó như một đồng đội tăng lực. Kết hợp giá trị con người với sức mạnh công nghệ sẽ tạo nên "siêu năng lực" thực sự.</textbox>
+  </slide>
+</presentation>

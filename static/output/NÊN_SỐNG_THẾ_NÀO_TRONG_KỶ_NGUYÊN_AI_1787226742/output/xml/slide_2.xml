@@ -1,0 +1,9 @@
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#FFFFFF">
+    <image src="https://img.freepik.com/premium-photo/abstract-white-background-with-moving-lines-dots-network-connection-worldwide-internet-connection-illustration-big-data-3d-rendering_710001-111.jpg?w=2000" x="0" y="0" width="1600" height="900" />
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#F8F9FA" line_color="none" />
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#003B5C" line_color="none" />
+    <textbox x="70.0" y="145.0" width="338.10533333333336" height="489.06" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="36.0" min_font_size="36.0" bold="true" color="#003B5C" align="left" vertical_align="top" single_line="false" max_lines="7" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. NÊN SỐNG THẾ NÀO&lt;br&gt;TRONG KỶ NGUYÊN AI</textbox>
+    <textbox x="70.0" y="646.06" width="281.172" height="110.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="18.0" min_font_size="18.0" color="#2D2A2B" align="left" vertical_align="top" single_line="false" max_lines="3" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">Thích nghi và chủ động trong kỷ nguyên AI.</textbox>
+  </slide>
+</presentation>

@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
+  <slide background="#F8F8F8">
+    <image src="https://static.vecteezy.com/system/resources/previews/014/409/275/original/abstract-technology-digital-futuristic-concept-glow-neon-colors-lines-with-lighting-effect-perspective-on-dark-blue-background-vector.jpg" x="0" y="0" width="1600" height="900" />
+    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#FFFFFF" line_color="none" />
+    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#00A896" line_color="none" />
+    <textbox x="70.0" y="172.85000000000002" width="399.1966666666667" height="330.29999999999995" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="34.0" min_font_size="34.0" bold="true" color="#007BFF" align="left" vertical_align="top" single_line="false" max_lines="5" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. Nên sống thế nào trong kỷ nguyên AI</textbox>
+    <textbox x="70.0" y="515.15" width="294.6633333333333" height="212.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="15.0" min_font_size="15.0" color="#2D2A2B" align="left" vertical_align="top" single_line="false" max_lines="7" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>AI không phải là mối đe dọa mà là một dòng chảy mới. Kỷ nguyên này đòi hỏi con người phải </run><run emphasis="highlight" color="#00A896">linh hoạt, tỉnh táo và chủ động</run><run> hơn để thích nghi và tiến xa.</run></textbox>
+  </slide>
+</presentation>
