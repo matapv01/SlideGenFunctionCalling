@@ -28,8 +28,25 @@ from backend.workflows.slidegen_workflow.tools.tool_des_xml import (
     execute_tool_plan as execute_xml_tool_plan,
 )
 from backend.config import EXECUTOR_MAX_RETRIES
+from backend.workflows.slidegen_workflow.utils.xml_transitions import (
+    apply_random_slide_transitions,
+)
 
 logger = logging.getLogger(__name__)
+
+
+def _store_xml_with_random_transitions(state: State, xml_content: str) -> None:
+    """Attach one random PowerPoint transition to each generated XML slide."""
+    transitioned_xml, transitions = apply_random_slide_transitions(xml_content)
+    state["current_xml_content"] = transitioned_xml
+    state["current_transitions"] = transitions
+
+    if transitions:
+        details = ", ".join(
+            f"{item['type']}" + (f"/{item['direction']}" if item.get("direction") else "")
+            for item in transitions
+        )
+        print(f"  Transition ngẫu nhiên: {details}")
 
 
 def _fallback_xml_for_failed_tool(tool_call: dict, reason: str) -> str:
@@ -343,7 +360,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                     )
                 state['current_tool_plan'] = [tool_call]
                 state['current_search_history'] = []
-                state['current_xml_content'] = fallback_content
+                _store_xml_with_random_transitions(state, fallback_content)
             return state
 
         for key in list(state.keys()):
@@ -354,7 +371,7 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
 
         state['current_tool_call'] = final_tool_call
         state['current_search_history'] = search_history
-        state['current_xml_content'] = slide_content
+        _store_xml_with_random_transitions(state, slide_content)
     else:
         error_report = "\n".join(f"  • {e}" for e in errors)
         print(f"  ❌ FAIL — {len(errors)} error(s) found:")
@@ -378,6 +395,6 @@ def tool_call_executor(state: State, config: RunnableConfig) -> State:
                 )
             state['current_tool_plan'] = [tool_call]
             state['current_search_history'] = []
-            state['current_xml_content'] = fallback_content
+            _store_xml_with_random_transitions(state, fallback_content)
     
     return state

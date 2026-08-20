@@ -65,6 +65,7 @@ class State(TypedDict, total=False):
     current_xml_content: str
     current_xml_path: str
     current_image_path: str
+    current_transitions: List[Dict[str, str]]
     previous_image_path: str
     previous_accepted_tool_call: Dict
     previous_slide_context: slide_context
