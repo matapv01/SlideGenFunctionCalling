@@ -1,9 +1,0 @@
-<presentation schemaVersion="1.0" width="1600" height="900" slideWidthInches="13.333" slideHeightInches="7.5">
-  <slide background="#1A1A2E">
-    <image src="https://img.freepik.com/premium-photo/abstract-neural-network-glowing-blue-particles-lines-dark-backdrop-digital-background-with-grid-surface-form-waves-generative-ai_155390-647.jpg?w=2000" x="0" y="0" width="1600" height="900" />
-    <polygon points="0,0 760.00,0 340.00,900 0,900" fill="#1A1A2E" line_color="none" />
-    <polygon points="599.67,275.00 663.67,275.00 456.00,720.00 392.00,720.00" fill="#00CED1" line_color="none" />
-    <textbox x="70.0" y="145.0" width="338.10533333333336" height="489.06" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans-Bold.ttf" size="36.0" min_font_size="36.0" bold="true" color="#FFFFFF" align="left" vertical_align="top" single_line="false" max_lines="7" overflow="clip" reflow_on_resize="true" line_spacing="0.98" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0">1. Nên sống thế nào trong kỷ nguyên AI</textbox>
-    <textbox x="70.0" y="646.06" width="1.0" height="1334.0" font="Arial" font_path="/usr/share/fonts/truetype/dejavu/DejaVuSans.ttf" size="18.0" min_font_size="18.0" color="#F0F0F0" align="left" vertical_align="top" single_line="false" max_lines="37" overflow="clip" reflow_on_resize="true" line_spacing="1.0" safety_ratio="1.0" margin_left="0" margin_right="0" margin_top="0" margin_bottom="0"><run>Kỷ nguyên AI không yêu cầu con người trở nên siêu phàm mà cần sự </run><run emphasis="highlight" color="#00CED1">linh hoạt, tỉnh táo và chủ động</run><run>. AI là dòng chảy mới mang lại cơ hội cho những người biết thích nghi.</run></textbox>
-  </slide>
-</presentation>

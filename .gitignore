@@ -32,6 +32,7 @@ web/
 **/context
 unsloth_compiled_cache/
 faiss_tool_retriever_index/
+static/
 
 # Local ML model checkpoints
 models/vit/*.pt
