@@ -132,12 +132,16 @@ def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) 
     if not tool_call or not isinstance(tool_call, dict):
         return False, ["Tool call is empty or not a dict."]
     
+    # Check if tool extraction had an explicit parse error
+    if tool_call.get("_parse_error"):
+        return False, [tool_call["_parse_error"]]
+
     tool_name = tool_call.get("name")
     arguments = tool_call.get("arguments", {})
     
     # ── 1. Tool name checks ──────────────────────────────────────────
-    if not tool_name:
-        errors.append("MISSING_TOOL_NAME: 'name' field is empty or missing.")
+    if not tool_name or tool_name in ("PARSE_ERROR", "default_fallback"):
+        errors.append("MISSING_TOOL_CALL: No valid tool was generated. Pick a valid tool from available tools.")
         return False, errors
     
     if not isinstance(tool_name, str):

@@ -592,8 +592,22 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
             break
 
     if not tool_call_dict:
-        print("❌ You did NOT generate any function call. Setting default fallback.")
-        tool_call_dict = {"name": "default_fallback", "arguments": {}}
+        raw_text = (content or "").strip()
+        if not raw_text:
+            failure_reason = "NO_OUTPUT_GENERATED: The model returned an empty response. You MUST generate a slide tool call."
+        elif "<tool_call>" in raw_text or "</tool_call>" in raw_text:
+            failure_reason = "INVALID_TOOL_CALL_SYNTAX: Tool call tags were detected, but JSON inside <tool_call> could not be parsed. Check JSON brackets, quotes, and commas."
+        elif "<think>" in raw_text:
+            failure_reason = "MISSING_TOOL_CALL_TAGS: You analyzed the slide inside <think> tags, but FORGOT to output the final tool call inside <tool_call>{\"name\": \"...\", \"arguments\": {...}}</tool_call> tags."
+        else:
+            failure_reason = "MISSING_TOOL_CALL: No <tool_call> tags found in response. You MUST wrap your final tool call inside <tool_call>...</tool_call> tags."
+
+        print(f"❌ Tool extraction failed: {failure_reason}")
+        tool_call_dict = {
+            "name": "PARSE_ERROR",
+            "_parse_error": failure_reason,
+            "arguments": {}
+        }
         tool_plan = [tool_call_dict]
     else:
         # Save valid parsed tool call for retry memory
