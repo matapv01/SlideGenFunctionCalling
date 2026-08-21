@@ -464,16 +464,28 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
         # Format with apply_chat_template using QWEN_CHAT_TEMPLATE (matches training format)
         use_cot = state.get("use_cot", True)
         qwen_base_sys = QWEN_COT_GENERATOR_SYSTEM_PROMPT if use_cot else QWEN_GENERATOR_SYSTEM_PROMPT
-        tool_desc_text = _build_tool_description_text(tool_schemas)
-        full_qwen_system_prompt = (
-            generator_system_prompt
-            + "\n\n"
-            + IMAGE_SEARCH_EXECUTION_PLAN_RULES
-            + "\n\n"
-            + qwen_base_sys
-            + "\n\n"
-            + tool_desc_text
-        )
+        
+        # When passing tools natively to RemoteLLMProvider or vLLM, we keep system prompt clean without redundant text rendering
+        is_remote_or_native = isinstance(llm, BaseLLMProvider) and getattr(llm, "provider_name", "") == "remote_fastapi_llm"
+        if is_remote_or_native:
+            full_qwen_system_prompt = (
+                generator_system_prompt
+                + "\n\n"
+                + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+                + "\n\n"
+                + qwen_base_sys
+            )
+        else:
+            tool_desc_text = _build_tool_description_text(tool_schemas)
+            full_qwen_system_prompt = (
+                generator_system_prompt
+                + "\n\n"
+                + IMAGE_SEARCH_EXECUTION_PLAN_RULES
+                + "\n\n"
+                + qwen_base_sys
+                + "\n\n"
+                + tool_desc_text
+            )
         messages = [
             {"role": "system", "content": full_qwen_system_prompt},
             {"role": "user", "content": qwen_user_prompt},
@@ -486,7 +498,7 @@ def generate_slide(state: State, config: RunnableConfig) -> State:
                 content = llm.generate_completion(
                     messages=messages,
                     tools=tool_schemas,
-                    max_tokens=getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 2000),
+                    max_tokens=getattr(llm, 'max_tokens', None) or (COT_MAX_TOKENS if use_cot else 10000),
                     temperature=getattr(llm, 'temperature', 0.5) or 0.5,
                 )
             except Exception as e:

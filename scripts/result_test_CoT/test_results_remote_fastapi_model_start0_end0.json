@@ -1,0 +1,43 @@
+{
+  "summary": {
+    "model": "Remote-FastAPI-Model",
+    "total": 1,
+    "passed": 1,
+    "pass_rate_pct": 100.0,
+    "first_try_pass_pct": 0.0,
+    "tool_match_pct": 0.0,
+    "avg_attempts": 2.0,
+    "avg_latency_s": 139.04,
+    "attempts_breakdown": {
+      "attempt_1": 0,
+      "attempt_2": 1,
+      "attempt_3": 0,
+      "attempt_4": 0,
+      "attempt_5": 0,
+      "attempt_6": 0,
+      "attempt_7": 0,
+      "attempt_8": 0,
+      "attempt_9": 0,
+      "attempt_10": 0,
+      "failed": 0
+    }
+  },
+  "results": [
+    {
+      "category": "INTRO_TOOLS",
+      "slide_index": 0,
+      "doc_id": 0,
+      "ground_truth_tool": "generate_introduction_slide",
+      "use_cot": true,
+      "attempts": 2,
+      "final_status": "pass",
+      "predicted_tool": "generate_title_slide_2",
+      "tool_name_match": false,
+      "executor_errors": [
+        "UNKNOWN_TOOL"
+      ],
+      "thinking_text": "",
+      "latency_seconds": 139.04
+    }
+  ]
+}

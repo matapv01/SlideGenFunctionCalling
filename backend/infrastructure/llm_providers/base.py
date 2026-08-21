@@ -346,14 +346,22 @@ class RemoteLLMProvider(BaseLLMProvider):
         if not prompt:
             raise ValueError("prompt must not be empty")
  
-        logger.debug(f"Generating with prompt: {prompt[:50]}")
+        logger.debug(f"Generating with RemoteLLMProvider (has_tools={bool(tools)})")
  
         try:
             payload = {
-                "prompt": prompt,
                 "max_length": max_tokens,
                 "temperature": temperature,
             }
+            if isinstance(messages, list):
+                payload["messages"] = messages
+                if tools:
+                    payload["tools"] = tools
+            else:
+                payload["prompt"] = str(messages)
+                if tools:
+                    payload["tools"] = tools
+
             answer = self._stream_generate(payload, "generate")
             logger.debug(f"Generated text length: {len(answer)}")
             return answer
