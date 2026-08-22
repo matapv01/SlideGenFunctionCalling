@@ -583,7 +583,7 @@ CRITICAL JSON FORMATTING & SYNTAX RULES:
 5. JSON BOOLEANS/NULL: Use lowercase `true`, `false`, `null` (NOT Python `True`, `False`, `None`).
 6. SEPARATOR COMMAS: Separate all object key-value pairs and list items with commas.
 
-Example:
+Example (FORMAT ILLUSTRATION ONLY — DO NOT COPY THIS TOOL NAME. Select strictly from your provided tools):
 <think>
 The content is about FPT Corporation's journey. The design instruction suggests a split layout with key points.
 Available tools: generate_split_layout_list_slide, generate_content_slide, generate_icon_list_slide...
