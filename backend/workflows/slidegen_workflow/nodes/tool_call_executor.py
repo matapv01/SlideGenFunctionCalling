@@ -132,12 +132,16 @@ def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) 
     if not tool_call or not isinstance(tool_call, dict):
         return False, ["Tool call is empty or not a dict."]
     
+    # Check if tool extraction had an explicit parse error
+    if tool_call.get("_parse_error"):
+        return False, [tool_call["_parse_error"]]
+
     tool_name = tool_call.get("name")
     arguments = tool_call.get("arguments", {})
     
     # ── 1. Tool name checks ──────────────────────────────────────────
-    if not tool_name:
-        errors.append("MISSING_TOOL_NAME: 'name' field is empty or missing.")
+    if not tool_name or tool_name in ("PARSE_ERROR", "default_fallback"):
+        errors.append("MISSING_TOOL_CALL: No valid tool was generated. Pick a valid tool from available tools.")
         return False, errors
     
     if not isinstance(tool_name, str):
@@ -194,16 +198,38 @@ def validate_tool_call(tool_call: dict, available_tool_names: List[str] = None) 
             continue
         
         if arg_name not in field_info:
-            # Extra argument not in schema — warn but don't fail
+            errors.append(
+                f"EXTRA_ARGUMENT: '{arg_name}' is not a valid parameter for tool '{tool_name}'. "
+                f"Do NOT invent extra parameters! Valid parameters for '{tool_name}' are: {list(field_info.keys())}."
+            )
             continue
         
         expected_type = field_info[arg_name].get("type", "")
         
         # Check list types
-        if expected_type == "array" and not isinstance(arg_value, list):
-            errors.append(
-                f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
-            )
+        if expected_type == "array":
+            if not isinstance(arg_value, list):
+                errors.append(
+                    f"TYPE_MISMATCH: '{arg_name}' should be a list/array, got {type(arg_value).__name__}: {str(arg_value)[:100]}"
+                )
+            else:
+                items_spec = field_info[arg_name].get("items", {})
+                expected_item_type = items_spec.get("type", "")
+                
+                # Deep check list items
+                if expected_item_type == "object":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, dict):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be an object/dict, got {type(item).__name__}: '{str(item)[:50]}'. "
+                                f"Provide a list of structured dictionaries."
+                            )
+                elif expected_item_type == "string":
+                    for i, item in enumerate(arg_value):
+                        if not isinstance(item, str):
+                            errors.append(
+                                f"ITEM_TYPE_MISMATCH: '{arg_name}[{i}]' should be a string, got {type(item).__name__}: '{str(item)[:50]}'."
+                            )
         
         # Check string types
         if expected_type == "string" and not isinstance(arg_value, str):

@@ -137,7 +137,7 @@ VLM_MAX_RETRIES = 3
 
 # --- Executor Validator Configuration ---
 # Max retries when executor detects logic errors (None, missing params, type mismatch)
-EXECUTOR_MAX_RETRIES = int(os.getenv("EXECUTOR_MAX_RETRIES", "5"))
+EXECUTOR_MAX_RETRIES = int(os.getenv("EXECUTOR_MAX_RETRIES", "10"))
 # Enable CoT (Chain-of-Thought) thinking mode for Qwen generator
 ENABLE_COT_THINKING = os.getenv("ENABLE_COT_THINKING", "true").lower() in ("1", "true", "yes")
 # Max tokens for CoT generation (should be higher than non-CoT to account for thinking block)

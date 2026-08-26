@@ -349,7 +349,7 @@ class GenerateTitleSlide5Input(BaseModel):
     year: str = Field(default="20XX", description="Year displayed in the top-right corner of the slide.")
     main_title: str = Field(default="Your Title Here", description="The main title text for the notebook cover design.")
     bottom_text: str = Field(default="Here is where your presentation begins", description="Text displayed at the bottom-right of the slide.")
-    image_path: str = Field(default="Image/generate_title_slide_5/Default_1.jpg", description="Path to the image displayed in the polaroid frame. Recommended image size: 444x457px (square-like portrait).")
+    image_url: str = Field(default="Image/generate_title_slide_5/Default_1.jpg", description="Path to the image displayed in the polaroid frame. Recommended image size: 444x457px (square-like portrait).")
     bg_color: str = Field(default="#b8c8d4", description="Background color of the slide in hex format.")
     text_color: str = Field(default="#2c3e50", description="Color of all text elements in hex format.")
     show_clover: bool = Field(default=True, description="Whether to display the four-leaf clover decoration.")

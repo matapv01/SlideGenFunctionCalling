@@ -1,3 +1,9 @@
+from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT
+from backend.workflows.slidegen_workflow.utils.helper import QWEN_CHAT_TEMPLATE
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PREPARER_SYSTEM_PROMPT
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PREPARER_HUMAN_TEMPLATE
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_SYSTEM_PROMPT
+from backend.workflows.slidegen_workflow.utils.prompts import SLIDE_PLANNER_HUMAN_PROMPT
 import os, sys, json, random, threading, concurrent.futures, glob
 from datetime import datetime
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
@@ -25,30 +31,15 @@ os.environ.setdefault("PYTORCH_ALLOC_CONF", "expandable_segments:True")
 import torch
 from transformers import AutoModelForCausalLM, AutoTokenizer
 from peft import LoraConfig, PeftConfig, PeftModel, TaskType, get_peft_model
-from trl import GRPOTrainer, GRPOConfig
 from datasets import Dataset
 from langchain_openai import ChatOpenAI
 from langchain_core.prompts import ChatPromptTemplate
-from rl.rewards import slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward
-from rl.rewards.conciseness_reward import conciseness_reward
-from rl.rewards.text_embedding_reward import text_embedding_reward
 from scripts.generate_challenge_dataset import generate_docs
-from backend.workflows.slidegen_workflow.tools.tool_des import TOOLS_DICT, execute_tool
-from backend.workflows.slidegen_workflow.utils.helper import (
-    format_tool_for_qwen,
-    QWEN_CHAT_TEMPLATE,
-    render_html_to_png,
-    sanitize_to_placeholders,
-    get_slide_style_context,
-)
-from backend.workflows.slidegen_workflow.utils.prompts import (
-    QWEN_GENERATOR_SYSTEM_PROMPT,
-    QWEN_GENERATOR_HUMAN_TEMPLATE,
-    SLIDE_PLANNER_SYSTEM_PROMPT,
-    SLIDE_PLANNER_HUMAN_PROMPT,
-    SLIDE_PREPARER_SYSTEM_PROMPT,
-    SLIDE_PREPARER_HUMAN_TEMPLATE,
-)
+from backend.config import EXECUTOR_MAX_RETRIES
+from rl.grpo.rollout_processor import process_doc
+from backend.infrastructure.llm_providers.base import LocalPyTorchLLMProvider
+from backend.workflows.slidegen_workflow.nodes.slide_generator import generate_slide
+from backend.workflows.slidegen_workflow.nodes.tool_call_executor import tool_call_executor
 from backend.workflows.slidegen_workflow.graph.stage import SlidePlan
 from backend.infrastructure.embedding.dinov2_provider import DINOv2EmbeddingProvider
 from backend.infrastructure.rag.gemini_provider import GeminiToolRetrieveProvider
@@ -159,6 +150,25 @@ setup_tokenizer(tokenizer, QWEN_CHAT_TEMPLATE)
 peft_config_for_trainer = None
 
 # ==============================================================================
+# 1b. LOCAL PYTORCH LLM PROVIDER (dùng cho generate_slide node trong GRPO rollout)
+# ==============================================================================
+local_provider = LocalPyTorchLLMProvider(
+    model=model,
+    tokenizer=tokenizer,
+    model_name=model_id,
+    max_completion_length=max_completion_length,
+    gen_lock=_gen_lock,
+)
+
+# grpo_config truyền vào các node, chứa LLM provider và tool retriever
+grpo_config = {
+    "configurable": {
+        "llm": local_provider,
+        "tool_retriever": None,  # sẽ được cập nhật sau khi embedding_provider init
+    }
+}
+
+# ==============================================================================
 # 2. GEMINI CLIENTS (Planner + Preparer)
 # ==============================================================================
 planner_llm = ChatOpenAI(api_key=api_key, base_url=base_url, model=gemini_model, temperature=0.3)
@@ -181,6 +191,7 @@ faiss_index_path = os.path.join(os.path.dirname(__file__), "faiss_index")
 try:
     tool_retriever = GeminiToolRetrieveProvider(TOOLS_DICT, faiss_index_path, api_key=api_key)
     print(f"  Tool retriever initialized at {faiss_index_path}")
+    grpo_config["configurable"]["tool_retriever"] = tool_retriever
 except Exception as e:
     print(f"  [WARN] Tool retriever init failed: {e}. GRPO will fall back to random tool selection.")
     tool_retriever = None
@@ -233,190 +244,14 @@ def run_preparer_one(slide: dict, plan: dict, prev_style_context: str, step_num:
     return design
 
 
-def _extract_last_json(text: str) -> dict | None:
-    if not text:
-        return None
-    cleaned = text.strip()
-    if "<tool_call>" in cleaned:
-        for part in reversed(cleaned.split("<tool_call>")):
-            if "</tool_call>" in part:
-                return _extract_last_json(part.split("</tool_call>")[0].strip())
-    for delim in ["```json", "```"]:
-        if delim in cleaned:
-            cleaned = cleaned.split(delim)[1].split("```")[0].strip()
-            break
-    try:
-        obj = json.loads(cleaned)
-        if isinstance(obj, dict) and "name" in obj:
-            return obj
-        if isinstance(obj, list) and obj and isinstance(obj[0], dict) and "name" in obj[0]:
-            return obj[0]
-    except Exception:
-        pass
-    pos = cleaned.rfind("}")
-    while pos >= 0:
-        depth = 0
-        for i in range(pos, -1, -1):
-            if cleaned[i] == "}":
-                depth += 1
-            elif cleaned[i] == "{":
-                depth -= 1
-                if depth == 0:
-                    try:
-                        obj = json.loads(cleaned[i:pos+1])
-                        if isinstance(obj, dict) and "name" in obj:
-                            return obj
-                    except Exception:
-                        pass
-                    pos = i - 1
-                    break
-        else:
-            break
-    return None
-
-
-def process_doc(doc_slides: list, step_num: int, doc_idx: int, cache: dict) -> list:
-    prompts_data = []
-    prev_embedding = [0.0] * 768
-    prev_tool_call = None
-    rendered_paths = []
-    render_dir = os.path.join(data_dir, f"step_{step_num:04d}", "renders", f"doc_{doc_idx}")
-    os.makedirs(render_dir, exist_ok=True)
-
-    for si, slide in enumerate(doc_slides):
-        plan = run_planner_one(si, slide, step_num, doc_idx, cache)
-        action = plan["action"]
-        style_context = get_slide_style_context(prev_tool_call) if prev_tool_call else ""
-        design = run_preparer_one(slide, plan, style_context, step_num, doc_idx, si)
-
-        filtered_tools = []
-        if tool_retriever is not None:
-            retrieved = tool_retriever.get_relevant_tools(
-                category=action, query=plan.get("thought", ""),
-                top_k=TOOL_RETRIEVER_TOP_K, current_slide_index=si)
-            filtered_tools = [format_tool_for_qwen(t) for t in retrieved] if retrieved else []
-        if not filtered_tools:
-            filtered_tools = [format_tool_for_qwen(t) for t in TOOLS_DICT.get(action, []) if t.name in flat_tools]
-        if len(filtered_tools) > 6:
-            random.shuffle(filtered_tools)
-            filtered_tools = filtered_tools[:6]
-
-        user_prompt = QWEN_GENERATOR_HUMAN_TEMPLATE.format(
-            style_context=style_context,
-            design_instruction=design[:600] if design else "",
-            slide_content=slide["user_prompt"][:1200],
-        )
-        messages = [
-            {"role": "system", "content": QWEN_GENERATOR_SYSTEM_PROMPT},
-            {"role": "user", "content": user_prompt},
-        ]
-        prompt = tokenizer.apply_chat_template(messages, tools=filtered_tools, tokenize=False, add_generation_prompt=True)
-
-        if step_num == 1 and doc_idx == 0 and si == 0:
-            print(f"  [DEBUG] === PROMPT PREVIEW (last 500 chars) ===")
-            print(f"  [DEBUG] {prompt[-500:]}")
-            print(f"  [DEBUG] =========================================")
-
-        inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
-        completion = ""
-        tool_call = None
-
-        for attempt in range(3):
-            with _gen_lock:
-                with torch.no_grad():
-                    out = model.generate(**inputs, max_new_tokens=max_completion_length,
-                                         temperature=0.0, do_sample=False,
-                                         pad_token_id=tokenizer.eos_token_id)
-            completion = tokenizer.decode(out[0][inputs.input_ids.shape[1]:], skip_special_tokens=True)
-
-            reason = None
-            try:
-                tool_call = _extract_last_json(completion)
-            except Exception:
-                tool_call = None
-                reason = "NOT_JSON"
-
-            if tool_call and "name" in tool_call:
-                real_html = execute_tool(tool_call)
-                if real_html:
-                    log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 OK → {tool_call['name']}")
-                    break
-                reason = "EXEC_FAIL"
-
-            if reason is None:
-                if not tool_call:
-                    reason = "NOT_JSON"
-                elif "name" not in tool_call:
-                    reason = "NO_NAME"
-                else:
-                    reason = "EXEC_FAIL"
-
-            if reason == "NOT_JSON":
-                log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 NOT_JSON — full output:")
-                print(f"    === FULL OUTPUT (attempt {attempt+1}) ===")
-                print(f"    {completion.strip()}")
-                print(f"    ====================================")
-            else:
-                log_node(step_num, doc_idx, si, "Qwen", f"attempt {attempt+1}/3 {reason} — {completion[:120].strip()}")
-            prompt += f"\n\n[FAILED: {reason} — {completion[:100]}]"
-            inputs = tokenizer(prompt, return_tensors="pt", truncation=True, max_length=8192).to(model.device)
-
-        if tool_call and "name" in tool_call:
-            real_html = execute_tool(tool_call)
-            if real_html:
-                real_path = os.path.join(render_dir, f"slide_{si:03d}_real.png")
-                try:
-                    render_html_to_png(real_html, real_path)
-                    rendered_paths.append(real_path)
-                    log_node(step_num, doc_idx, si, "Render", "OK")
-                except Exception as e:
-                    log_node(step_num, doc_idx, si, "Render", f"FAILED ({e})")
-
-                sanitized = sanitize_to_placeholders(tool_call)
-                sanitized_html = execute_tool(sanitized)
-                if sanitized_html:
-                    sanitized_path = os.path.join(render_dir, f"slide_{si:03d}_sanitized.png")
-                    try:
-                        render_html_to_png(sanitized_html, sanitized_path)
-                        rendered_paths.append(sanitized_path)
-                        prev_embedding = embedding_provider.get_embedding(sanitized_path)
-                        log_node(step_num, doc_idx, si, "Embed", "OK")
-                    except Exception as e:
-                        log_node(step_num, doc_idx, si, "Embed", f"FAILED ({e})")
-            prev_tool_call = tool_call
-
-        prompts_data.append({
-            "prompt": prompt,
-            "previous_slide_embedding": prev_embedding,
-        })
-
-    overview_path = os.path.join(render_dir, "overview.png")
-    save_contact_sheet(
-        rendered_paths,
-        overview_path,
-        title=f"GRPO Step {step_num:04d} / Doc {doc_idx} Render Overview",
-        subtitle=f"{len(doc_slides)} slides, {len(rendered_paths)} rendered images",
-        columns=4,
-        thumb_size=(420, 236),
-    )
-    write_json(
-        os.path.join(render_dir, "summary.json"),
-        {
-            "step": step_num,
-            "doc_idx": doc_idx,
-            "slide_count": len(doc_slides),
-            "prompt_count": len(prompts_data),
-            "rendered_images": rendered_paths,
-            "overview_path": overview_path,
-        },
-    )
-    log_node(step_num, doc_idx, "-", "Done", f"{len(doc_slides)} slides, {len(rendered_paths)} renders")
-    return prompts_data
-
-
 # ==============================================================================
 # 5. TRAINING LOOP
 # ==============================================================================
+from trl import GRPOTrainer, GRPOConfig
+from rl.rewards import slide_aesthetics_reward, content_preservation_reward, visual_consistency_reward
+from rl.rewards.conciseness_reward import conciseness_reward
+from rl.rewards.text_embedding_reward import text_embedding_reward
+
 training_args = GRPOConfig(
     output_dir=output_dir,
     learning_rate=learning_rate,
@@ -433,6 +268,37 @@ training_args = GRPOConfig(
     fp16=not torch.cuda.is_bf16_supported() if not USE_CPU else False,
     gradient_checkpointing=USE_GRAD_CHECKPOINT if not USE_CPU else False,
 )
+
+# ==============================================================================
+# 5b. OPTIMIZER + SCHEDULER — TẠO MỘT LẦN DUY NHẤT, DÙNG XUYÊN SUỐT MỌI STEP
+# ------------------------------------------------------------------------------
+# Trước đây mỗi step tạo GRPOTrainer mới -> optimizer Adam bị khởi tạo lại
+# (mất hết m/v đã tích luỹ) và LR scheduler cũng reset theo max_steps=1.
+# Ở đây ta tự tạo optimizer + scheduler bên ngoài vòng lặp rồi truyền vào
+# GRPOTrainer qua `optimizers=(...)`. Vì Trainer chỉ tự tạo optimizer/scheduler
+# khi self.optimizer / self.lr_scheduler còn None, việc truyền sẵn khiến nó
+# tái sử dụng đúng object cũ mỗi lần train() được gọi -> momentum và lịch LR
+# được bảo toàn qua các step, dù mỗi lần vẫn dựng GRPOTrainer mới.
+# LƯU Ý: hãy test nhanh với total_steps nhỏ (vd 2) để xác nhận hành vi này
+# đúng với bản TRL/transformers đang cài, vì API nội bộ có thể đổi giữa các version.
+# ==============================================================================
+from transformers import get_linear_schedule_with_warmup
+
+_trainable_params = [p for p in model.parameters() if p.requires_grad]
+optimizer = torch.optim.AdamW(_trainable_params, lr=learning_rate)
+lr_scheduler = get_linear_schedule_with_warmup(
+    optimizer,
+    num_warmup_steps=0,
+    num_training_steps=total_steps,  # mỗi vòng lặp ngoài ứng với đúng 1 optimizer step (max_steps=1)
+)
+
+_effective_gen_batch = per_device_train_batch_size  # x số GPU nếu chạy multi-GPU
+if _effective_gen_batch % num_generations != 0:
+    print(
+        f"  [WARN] per_device_train_batch_size ({_effective_gen_batch}) không chia hết cho "
+        f"num_generations ({num_generations}). TRL có thể raise lỗi khi train() — "
+        f"nên chỉnh per_device_train_batch_size hoặc num_generations cho khớp."
+    )
 
 run_manifest = get_runtime_metadata(
     {
@@ -472,6 +338,7 @@ print(f"  Generations (GRPO): {num_generations}")
 print(f"{'='*60}\n")
 
 os.makedirs(data_dir, exist_ok=True)
+step_ckpt = None  # tránh NameError phía dưới nếu total_steps=0 hoặc mọi step đều bị skip
 
 for step in range(1, total_steps + 1):
     print(f"\n--- Step {step}/{total_steps} ---")
@@ -481,47 +348,44 @@ for step in range(1, total_steps + 1):
         print(f"  Step {step} skipped (checkpoint found at {step_ckpt})")
         continue
 
-    doc_path = os.path.join(data_dir, f"step_{step:04d}_docs.json")
-    cache_path = os.path.join(data_dir, f"step_{step:04d}_cache.json")
+    # Đường dẫn đến file dataset đã pre-computed
+    precomputed_dataset_path = os.path.join(os.path.dirname(__file__), "data", "dataset_with_candidate_tools.json")
+    if not os.path.exists(precomputed_dataset_path):
+        print(f"  ❌ Không tìm thấy file dataset: {precomputed_dataset_path}")
+        print(f"  → Hãy chạy: python scripts/pre_retrieve_candidate_tools.py")
+        continue
 
-    if os.path.exists(doc_path):
-        with open(doc_path, "r", encoding="utf-8") as f:
-            all_slides_flat = json.load(f)
-        docs = []
-        by_doc = {}
-        for s in all_slides_flat:
-            by_doc.setdefault(s["doc_id"], []).append(s)
-        # Cached data may contain more documents than the current run requests.
-        # Keep the workload consistent with the freshly generated-data path.
-        for did in sorted(by_doc)[:batch_docs]:
-            docs.append(by_doc[did])
-        selected_slide_count = sum(len(doc) for doc in docs)
-        print(
-            f"  Loaded {selected_slide_count}/{len(all_slides_flat)} slides "
-            f"across {len(docs)} docs from {doc_path}"
-        )
-    else:
-        docs = generate_docs(num_docs=batch_docs)
-        all_slides_flat = [s for doc in docs for s in doc]
-        with open(doc_path, "w", encoding="utf-8") as f:
-            json.dump(all_slides_flat, f, indent=2, ensure_ascii=False)
-        print(f"  Saved {len(all_slides_flat)} slides to {doc_path}")
+    with open(precomputed_dataset_path, "r", encoding="utf-8") as f:
+        all_slides_flat = json.load(f)
 
-    cache = {"plans": {}}
-    if os.path.exists(cache_path):
-        with open(cache_path, "r", encoding="utf-8") as f:
-            cache = json.load(f)
-        print(f"  Loaded {len(cache.get('plans', {}))} cached plans from {cache_path}")
+    # Nhóm các slide theo doc_id
+    by_doc = {}
+    for s in all_slides_flat:
+        by_doc.setdefault(s["doc_id"], []).append(s)
+
+    all_doc_ids = sorted(by_doc.keys())
+    if not all_doc_ids:
+        print("  ❌ Dataset rỗng (không có doc nào), skip step.")
+        continue
+
+    # Chọn batch_docs doc theo vòng tròn dựa vào step
+    step_offset = ((step - 1) * batch_docs) % len(all_doc_ids)
+    selected_ids = [all_doc_ids[(step_offset + i) % len(all_doc_ids)] for i in range(min(batch_docs, len(all_doc_ids)))]
+    docs = [by_doc[did] for did in selected_ids]
+
+    all_slides_flat_selected = [s for doc in docs for s in doc]
+    print(f"  Loaded {len(all_slides_flat_selected)} slides across {len(docs)} docs (doc_ids={selected_ids}) from pre-computed dataset")
+
 
     all_prompts = []
     with concurrent.futures.ThreadPoolExecutor(max_workers=batch_docs) as ex:
-        futures = [ex.submit(process_doc, doc, step, i, cache) for i, doc in enumerate(docs)]
+        futures = [
+            ex.submit(process_doc, doc, step, i, grpo_config, data_dir, embedding_provider)
+            for i, doc in enumerate(docs)
+        ]  # truyền embedding_provider dùng chung, tránh mỗi thread tự load lại DINOv2
         for f in concurrent.futures.as_completed(futures):
             all_prompts.extend(f.result())
 
-    with open(cache_path, "w", encoding="utf-8") as f:
-        json.dump({"plans": cache.get("plans", {})}, f, indent=2, ensure_ascii=False)
-    print(f"  Saved {len(cache.get('plans', {}))} plans to {cache_path}")
 
     if not all_prompts:
         print("  No valid prompts generated, skipping step.")
@@ -538,6 +402,7 @@ for step in range(1, total_steps + 1):
         args=training_args,
         train_dataset=dataset,
         peft_config=peft_config_for_trainer,
+        optimizers=(optimizer, lr_scheduler),  # tái sử dụng optimizer/scheduler xuyên suốt các step
     )
     trainer.train()
 
@@ -624,9 +489,11 @@ import shutil
 final_adapter = os.path.join(output_dir, "final_adapter")
 if os.path.exists(final_adapter):
     shutil.rmtree(final_adapter)
-if os.path.exists(step_ckpt):
+if step_ckpt and os.path.exists(step_ckpt):
     shutil.copytree(step_ckpt, final_adapter)
     print(f"Final adapter: {final_adapter} (from step {step})")
+else:
+    print("[WARN] Không có step nào tạo checkpoint — bỏ qua bước copy final_adapter.")
 
 selected_overviews = []
 if step_summaries:

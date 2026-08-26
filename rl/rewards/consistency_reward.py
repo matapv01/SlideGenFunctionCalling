@@ -36,10 +36,15 @@ def visual_consistency_reward(prompts, completions, previous_slide_embedding, **
             curr_embedding = embedder.get_embedding_np(temp_img_path)
             prev_embedding = np.array(previous_slide_embedding[idx])
 
-            dot = np.dot(curr_embedding, prev_embedding)
-            norm = np.linalg.norm(curr_embedding) * np.linalg.norm(prev_embedding)
-            sim_score = float(dot / norm) if norm > 0 else 0.0
-            sim_score = max(0.0, min(1.0, sim_score))
+            prev_norm = np.linalg.norm(prev_embedding)
+            if prev_norm == 0:
+                # First slide in deck has no previous slide to compare consistency with — give full score
+                sim_score = 1.0
+            else:
+                dot = np.dot(curr_embedding, prev_embedding)
+                norm = np.linalg.norm(curr_embedding) * prev_norm
+                sim_score = float(dot / norm) if norm > 0 else 0.0
+                sim_score = max(0.0, min(1.0, sim_score))
 
             if os.path.exists(temp_img_path):
                 os.remove(temp_img_path)
