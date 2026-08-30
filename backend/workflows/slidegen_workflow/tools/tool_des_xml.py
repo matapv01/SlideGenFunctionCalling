@@ -245,7 +245,7 @@ class GenerateGreenSocialMediaTransitionSlideInput(BaseModel):
 class GenerateSectionHeaderImageSlideInput(BaseModel):
     """Input schema for generate_section_header_image_slide_xml."""
 
-    section_header: str = Field(..., description="Section heading displayed as a bold, centered, editable text block inside the upper green panel. The text wraps inside a 1000 × 230 px text area without reducing the requested font size. example: 'Social Media Marketing Strategy'")
+    section_header: str = Field(..., description="Section heading displayed as a bold, centered, editable text block inside the upper green panel. The text automatically wraps and reduces in size to fit a 1000 × 230 px text area. example: 'Social Media Marketing Strategy'")
     image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1600&auto=format&fit=crop", description="URL for a wide landscape image displayed at 1600 × 462 px in PowerPoint with an approximately 3.46:1 aspect ratio.")
     background_color: str = Field(default="#FFFFFF", description="Fallback background color of the slide.")
     header_color: str = Field(default="#6F8369", description="Background color of the upper section-header panel.")
@@ -490,7 +490,7 @@ class GenerateClientSnapshotSlideInput(BaseModel):
 
     title: str = Field(..., description="Main slide title displayed at the top-left. example: 'Client snapshot'")
     subtitle: str = Field(..., description="Supporting subtitle displayed below the main title. example: 'About Value Financials'")
-    client_details: List[str] = Field(..., description="List of plain client information and goals displayed as structured bullet points. IMPORTANT: each item must contain content only, without •, -, *, 1., 1), or other numbering; the renderer adds one marker. Use 'Label: value' for a main detail. For a nested goal, use two leading spaces but still no bullet or number. example: ['Industry: Financial services and banking', 'Team size: 300+ employees', 'Primary goals:', '  Improve cross-team collaboration']")
+    client_details: str = Field(..., description="One plain-text block of client information and goals displayed as structured bullet points. Separate each detail with a newline. IMPORTANT: do not include bullet markers or numbering such as -, *, 1., or 1); the renderer adds the markers. Use 'Label: value' for a main detail. For a nested goal, use two leading spaces but still no bullet or number. example: 'Industry: Financial services and banking\\nTeam size: 300+ employees\\nPrimary goals:\\n  Improve cross-team collaboration'")
     top_image_url: str = Field(default="https://images.unsplash.com/photo-1552664730-d307ca884978?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     bottom_image_url: str = Field(default="https://images.unsplash.com/photo-1556761175-b413da4baf72?q=85&w=1200&auto=format&fit=crop", description="URL for a landscape image sized 715 × 410 px with an approximately 1.74:1 aspect ratio.")
     background_color: str = Field(default="#1A0B3A", description="Background color of the slide.")
@@ -607,7 +607,7 @@ class GenerateSocialMediaPointsSlideInput(BaseModel):
 class GenerateNumberedSocialMediaPointsSlideInput(BaseModel):
     """Input schema for generate_numbered_social_media_points_slide_xml."""
 
-    title: str = Field(..., description="Main slide title displayed as one centered editable text block above the content panel. The text wraps inside a 1400 × 128 px text area without reducing the requested font size. example: 'Key Social Media Strategies'")
+    title: str = Field(..., description="Main slide title displayed as one centered editable text block above the content panel. The text automatically wraps and reduces in size to fit a 1400 × 128 px text area. example: 'Key Social Media Strategies'")
     items: list[dict[str, str]] = Field(..., description="List of one or more numbered content items arranged in a responsive grid with up to 3 columns and additional rows when needed. Each item must contain two fields: 'title' is the bold main point displayed beside its automatically generated two-digit number and supports up to 3 wrapped lines; 'description' is the supporting explanation displayed below the item title and automatically wraps to fit the remaining cell height. Item numbers such as '01', '02', and '03' are generated from the list order and must not be included in the input. example: [{'title': 'BUILD A CONSISTENT BRAND', 'description': 'Use consistent visuals and messaging across every social media platform.'}]")
     background_color: str = Field(default="#FFFFFF", description="Background color of the upper title area.")
     content_background_color: str = Field(default="#F0F3F0", description="Background color of the lower numbered-content panel.")
@@ -855,7 +855,7 @@ CONTENT_TOOLS = [
     StructuredTool.from_function(
     func=generate_client_snapshot_slide_xml,
     name="generate_client_snapshot_slide_xml",
-     description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as plain text only—never include •, -, *, 1., or 1); use two leading spaces only for nested goals. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
+     description="Generates a client snapshot slide with a large title, subtitle, structured client details and goals on the left, and two stacked landscape images on the right. Provide client_details as one newline-separated plain-text block, never as an array. Do not include bullet markers or numbering such as -, *, 1., or 1); use two leading spaces only for nested goals because the renderer adds the markers. Ideal for client profiles, company overviews, customer summaries, business context, and proposal presentations.",
     args_schema=GenerateClientSnapshotSlideInput,
     ),
     StructuredTool.from_function(
@@ -956,97 +956,7 @@ THANK_YOU_TOOLS = [
     args_schema=GenerateClosingThankYouMemorialSlideInput,
     ),
 ]
-
-class GeneratePerformanceReviewSlideInput(BaseModel):
-    \"\"\"Input schema for generate_performance_review_slide_xml.\"\"\"
-
-    title: str = Field(default="ĐÁNH GIÁ HIỆU SUẤT TOÀN DIỆN", description="Main slide title.")
-    radar_labels: List[str] = Field(default=["Tính năng", "Hỗ trợ", "Hiệu quả hoạt động", "Khả năng sử dụng", "Giá trị"], description="Labels for the radar chart axes.")
-    radar_series: List[Dict[str, Union[str, List[float]]]] = Field(..., description="Radar chart data. Each dict needs 'name', 'data', and 'color'. example: [{'name': 'Tiêu chuẩn', 'data': [4, 3, 5, 6, 7], 'color': '#42A5F5'}]")
-    area_labels: List[str] = Field(default=["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"], description="Labels for the area chart X-axis.")
-    area_series: List[Dict[str, Union[str, List[float]]]] = Field(..., description="Area chart data. Each dict needs 'name', 'data', and 'color'. example: [{'name': 'Máy tính để bàn', 'data': [0, 15, 20, 30, 31, 32], 'color': '#42A5F5'}]")
-    bullet_points: List[str] = Field(default=["Dòng đánh giá về hiệu suất"], description="List of bullet points to display at the bottom right.")
-    bg_color_top: str = Field(default="#FFFFFF", description="Top background color.")
-    bg_color_bottom: str = Field(default="#F0F7FA", description="Bottom background color.")
-    title_color: str = Field(default="#1E88E5", description="Color of the main title text.")
-    text_color: str = Field(default="#333333", description="General text color.")
-
-class GenerateOutlookDashboardSlideInput(BaseModel):
-    \"\"\"Input schema for generate_outlook_dashboard_slide_xml.\"\"\"
-
-    title: str = Field(default="2026 Outlook", description="Main slide title.")
-    subtitle: str = Field(default="Goals & Strategic Priorities", description="Subtitle text.")
-    progress_cards: List[Dict[str, Union[str, int]]] = Field(..., description="Progress cards. Each dict needs 'title', 'percentage', 'card_color', 'bar_color', 'text_color'.")
-    line_chart_title: str = Field(default="Increase AI-driven advisory adoption", description="Title for the line chart.")
-    line_chart_labels: List[str] = Field(default=["2021", "2022", "2023", "2024", "2025", "2026"], description="Labels for the line chart X-axis.")
-    line_chart_data: List[float] = Field(default=[9, 10, 13, 20, 22, 30], description="Data for the line chart.")
-    regional_title: str = Field(default="New Regional Market", description="Title for the regional targets section.")
-    regional_targets: List[Dict[str, Union[str, int]]] = Field(..., description="Regional targets. Each dict needs 'name', 'region', 'percentage', 'color'.")
-    bg_color: str = Field(default="#EEF2F6", description="Slide background color.")
-
-class GenerateKPIDashboardSlideInput(BaseModel):
-    \"\"\"Input schema for generate_kpi_dashboard_slide_xml.\"\"\"
-
-    title: str = Field(default="Primary KPI Dashboard", description="Main slide title.")
-    kpi_cards: List[Dict[str, Union[str, int]]] = Field(
-        default=[
-            {"title": "Revenue\\nand Sales", "percentage": 72, "color": "#F26D60"},
-            {"title": "Achieved\\nConversion Rate", "percentage": 60, "color": "#E85EAE"},
-            {"title": "Customer\\nRetention", "percentage": 86, "color": "#3BBA77"}
-        ],
-        description="KPI cards. Each dict needs 'title', 'percentage', 'color'."
-    )
-    chart_labels: List[str] = Field(default=["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], description="Labels for the line chart X-axis.")
-    chart_data: List[float] = Field(default=[200, 700, 600, 900, 300, 600, 900, 250, 600, 500, 700, 600], description="Data for the line chart.")
-    bg_color: str = Field(default="#F8F9FA", description="Slide background color.")
-
-class GenerateRevenueTargetSlideInput(BaseModel):
-    \"\"\"Input schema for generate_revenue_target_slide_xml.\"\"\"
-
-    title: str = Field(default="Annual Revenue Target", description="Main slide title.")
-    top_left_card: Dict[str, str] = Field(
-        default={"title": "Annual Target", "value": "$15M", "subtitle": "on track"},
-        description="Top left teal card."
-    )
-    top_right_card: Dict[str, str] = Field(
-        default={"title": "Forecast Q4", "value": "+6-8%", "subtitle": "projected growth"},
-        description="Top right teal card."
-    )
-    bottom_card: Dict[str, Union[str, int]] = Field(
-        default={"title": "Current YTD (Q3)", "value": "$11.2M", "subtitle": "74% achieved", "percentage": 74},
-        description="Bottom wide card with a donut chart."
-    )
-    bar_chart_title: str = Field(default="Quarterly Revenue Data", description="Title for the bar chart card.")
-    bar_chart_labels: List[str] = Field(default=["Q1", "Q2", "Q3", "Q4"], description="Labels for the bar chart X-axis.")
-    bar_chart_data: List[float] = Field(default=[3, 4, 6, 4], description="Data for the bar chart.")
-    bg_color: str = Field(default="#F5F6F8", description="Slide background color.")
-
-CHART_TOOLS = [
-    StructuredTool.from_function(
-        func=generate_performance_review_slide_xml,
-        name="generate_performance_review_slide_xml",
-        description="Generates a performance review slide containing a radar chart on the left and an area chart on the right, with bullet points at the bottom right.",
-        args_schema=GeneratePerformanceReviewSlideInput,
-    ),
-    StructuredTool.from_function(
-        func=generate_outlook_dashboard_slide_xml,
-        name="generate_outlook_dashboard_slide_xml",
-        description="Generates an outlook dashboard slide with progress cards, a line chart, and regional gauge charts.",
-        args_schema=GenerateOutlookDashboardSlideInput,
-    ),
-    StructuredTool.from_function(
-        func=generate_kpi_dashboard_slide_xml,
-        name="generate_kpi_dashboard_slide_xml",
-        description="Generates a primary KPI dashboard slide with 3 progress cards on the left and a large line chart on the right.",
-        args_schema=GenerateKPIDashboardSlideInput,
-    ),
-    StructuredTool.from_function(
-        func=generate_revenue_target_slide_xml,
-        name="generate_revenue_target_slide_xml",
-        description="Generates an Annual Revenue Target slide with KPI cards (including a donut chart) and a bar chart.",
-        args_schema=GenerateRevenueTargetSlideInput,
-    ),
-]
+CHART_TOOLS = []
 
 ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
 

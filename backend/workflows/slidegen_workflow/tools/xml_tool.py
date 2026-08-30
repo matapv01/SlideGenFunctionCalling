@@ -3,6 +3,7 @@ from __future__ import annotations
 import os
 import re
 import xml.etree.ElementTree as ET
+from math import ceil
 from pathlib import Path
 from xml.dom import minidom
 
@@ -10,9 +11,8 @@ from PIL import ImageFont
 
 
 # Keep the requested font size even when the text exceeds its textbox.
-# Overflow is handled by wrapping/clipping in the renderer; generation never
-# silently reduces the requested font size.
-AUTO_SHRINK_TEXT = False
+# Overflow is handled by the renderer instead of silently shrinking text.
+AUTO_SHRINK_TEXT = True
 
 
 def _resolve_font_fallback_path(
@@ -1704,7 +1704,7 @@ def generate_elegant_professional_cover_slide_xml(
                         best = layout
                     break
 
-                break
+                current_font_size = round(current_font_size - 0.5, 2)
 
         return best
 
@@ -2206,7 +2206,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
                 best = layout
             if layout["height"] <= max_height:
                 return layout
-            break
+            size = round(size - 0.5, 2)
         return best
 
     title_font_name = "Arial"
@@ -2669,7 +2669,7 @@ def generate_intro_welcome_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best
 
@@ -3215,7 +3215,7 @@ def generate_memorial_cover_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 1.0, 2)
 
         return best_layout
 
@@ -3727,7 +3727,7 @@ def generate_social_topic_idea_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_size = round(current_size - 0.5, 2)
 
         return best_layout
 
@@ -4209,7 +4209,7 @@ def generate_roman_empire_history_cover_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            break
+            current_size = round(current_size - 0.5, 2)
 
         return best_layout
 
@@ -4273,8 +4273,14 @@ def generate_roman_empire_history_cover_slide_xml(
         if group_height <= available_group_height:
             break
 
-        # Keep the requested font sizes. Overflow is handled by the renderer.
-        break
+        # Give the title the first chance to use a smaller size because it is
+        # the larger block; only then reduce the subtitle.
+        if AUTO_SHRINK_TEXT and title_size > title_min_size:
+            title_size = round(max(title_min_size, title_size - 0.5), 2)
+        elif AUTO_SHRINK_TEXT and subtitle_size > subtitle_min_size:
+            subtitle_size = round(max(subtitle_min_size, subtitle_size - 0.5), 2)
+        else:
+            break
 
     group_height = (
         float(subtitle_layout["height"])
@@ -6094,7 +6100,7 @@ def generate_gallery_transition_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best
 
@@ -6585,7 +6591,7 @@ def generate_slide_transition_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best_layout
 
@@ -7007,7 +7013,7 @@ def generate_green_social_media_transition_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            break
+            current_size = round(current_size - 0.5, 2)
 
         return best_layout
 
@@ -7443,7 +7449,7 @@ def generate_section_header_image_slide_xml(
             if height <= max_height:
                 return layout
 
-            break
+            current_size = round(current_size - 0.5, 2)
 
         return best_layout
 
@@ -8838,8 +8844,17 @@ def generate_two_ideas_slide_xml(
         line_spacing: float,
         padding: float = 4,
     ) -> dict:
+        # Measure literal HTML break markers as real line breaks.  The XML
+        # parser performs the same normalization before rendering.
+        normalized_text = re.sub(
+            r"<br\s*/?>",
+            "\n",
+            str(text or ""),
+            flags=re.IGNORECASE,
+        )
+
         lines = wrap_text(
-            text,
+            normalized_text,
             font_path,
             font_size,
             max_width,
@@ -8855,9 +8870,13 @@ def generate_two_ideas_slide_xml(
             "text": "\n".join(lines),
             "lines": lines,
             "font_size": font_size,
-            "height": (
-                len(lines) * line_height
-                + padding
+            # Pillow and the browser/PPTX renderer do not always report the
+            # same glyph metrics (Vietnamese accents are especially prone to
+            # this).  Reserve a small box-only safety margin; the font size
+            # and line spacing remain unchanged.
+            "height": ceil(
+                len(lines) * line_height * 1.14
+                + max(padding, 8.0)
             ),
         }
 
@@ -8900,6 +8919,7 @@ def generate_two_ideas_slide_xml(
     item_gap = 70.0
 
     minimum_title_gap = 36.0
+    minimum_heading_to_body_gap = 6.0
     minimum_item_gap = 28.0
 
     # =====================================================
@@ -8990,11 +9010,16 @@ def generate_two_ideas_slide_xml(
 
         if (
             title_to_items_gap > minimum_title_gap
+            or heading_to_body_gap > minimum_heading_to_body_gap
             or item_gap > minimum_item_gap
         ):
             title_to_items_gap = max(
                 minimum_title_gap,
                 title_to_items_gap - 2,
+            )
+            heading_to_body_gap = max(
+                minimum_heading_to_body_gap,
+                heading_to_body_gap - 1,
             )
             item_gap = max(
                 minimum_item_gap,
@@ -9114,6 +9139,7 @@ def generate_two_ideas_slide_xml(
         width=content_width,
         height=layouts["title"]["height"],
         font=title_font_name,
+        font_path=str(title_font_path),
         size=layouts["title"]["font_size"],
         min_font_size=layouts["title"]["font_size"],
         bold="true",
@@ -9146,6 +9172,7 @@ def generate_two_ideas_slide_xml(
             width=content_width,
             height=item["heading"]["height"],
             font=heading_font_name,
+            font_path=str(heading_font_path),
             size=item["heading"]["font_size"],
             min_font_size=item["heading"]["font_size"],
             bold="true",
@@ -9175,6 +9202,7 @@ def generate_two_ideas_slide_xml(
             width=content_width,
             height=item["body"]["height"],
             font=body_font_name,
+            font_path=str(body_font_path),
             size=item["body"]["font_size"],
             min_font_size=item["body"]["font_size"],
             color=body_color,
@@ -9209,6 +9237,7 @@ def generate_two_ideas_slide_xml(
     ).decode("utf-8")
 
     return xml_content
+
 
 def generate_three_ideas_slide_xml(
     title: str = "THREE IDEAS",
@@ -13687,21 +13716,16 @@ def generate_bullet_content_slide_xml(
 def generate_client_snapshot_slide_xml(
     title: str = "Client snapshot, snapshot",
     subtitle: str = "About Value Financials",
-    client_details: list[str] = [
-        "Industry: Financial services and banking",
-        "Team size: 300+ employees",
-        (
+    client_details: str = (
+        "Industry: Financial services and banking\n"
+        "Team size: 300+ employees\n"
         "Current setup: Disconnected productivity tools, "
-        "shared drives, and manual handoffs"
-        ),
-        "Primary goals:",
-        "  Improve cross-team collaboration",
-        "  Standardize workflows across departments",
-        (
-            "  Support growth while meeting regulatory "
-            "requirements"
-        ),
-    ],
+        "shared drives, and manual handoffs\n"
+        "Primary goals:\n"
+        "  Improve cross-team collaboration\n"
+        "  Standardize workflows across departments\n"
+        "  Support growth while meeting regulatory requirements"
+    ),
     top_image_url: str = (
         "https://images.unsplash.com/"
         "photo-1552664730-d307ca884978"
@@ -13871,15 +13895,24 @@ def generate_client_snapshot_slide_xml(
             )
             return candidates[0][1]
 
-        fallback = (
+        fallback_name = (
             "DejaVuSans-Bold.ttf"
             if bold
             else "DejaVuSans.ttf"
         )
 
-        font_path = _resolve_font_fallback_path(bold=bold)
+        for directory in font_directories():
+            try:
+                for path in directory.rglob(fallback_name):
+                    if path.is_file():
+                        return path
+            except OSError:
+                continue
 
-        return Path(_resolve_font_fallback_path(bold=bold))
+        raise FileNotFoundError(
+            f"Font '{font_name}' was not found and no fallback font "
+            f"('{fallback_name}') is available"
+        )
 
     canvas_dpi = 120.0
 
@@ -14027,6 +14060,8 @@ def generate_client_snapshot_slide_xml(
     # Typography and responsive fitting
     # =====================================================
 
+    AUTO_SHRINK_TEXT = True
+
     title_font_name = "Arial"
     subtitle_font_name = "Arial"
     body_font_name = "Arial"
@@ -14102,7 +14137,7 @@ def generate_client_snapshot_slide_xml(
 
         bullet_layouts: list[dict] = []
 
-        for detail in client_details:
+        for detail in client_details.splitlines():
             raw_detail = detail.rstrip()
             stripped_detail = raw_detail.lstrip()
             had_indentation = len(raw_detail) != len(stripped_detail)
@@ -14622,6 +14657,7 @@ def generate_client_snapshot_slide_xml(
     ).decode("utf-8")
 
     return xml_content
+
 
 def generate_how_forge_works_slide_xml(
     title: str = "How Forge works How Forge works",
@@ -16675,7 +16711,7 @@ def generate_problem_slide_xml(
                         padding=padding,
                     )
                 except Exception:
-                    break
+                    current_size = round(current_size - 0.5, 2)
                     continue
 
                 candidate["width"] = width
@@ -16700,7 +16736,7 @@ def generate_problem_slide_xml(
                     candidate["score"] = score
                     return candidate
 
-                break
+                current_size = round(current_size - 0.5, 2)
 
         if best_candidate is None:
             # Extremely defensive fallback.
@@ -16709,7 +16745,7 @@ def generate_problem_slide_xml(
                 "source_text": text,
                 "text": text,
                 "lines": [text],
-                "font_size": preferred_font_size,
+                "font_size": absolute_min_font_size,
                 "height": preferred_max_height,
                 "width": fallback_width,
                 "score": 10**9,
@@ -17480,7 +17516,7 @@ def generate_topics_overview_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best
 
@@ -18162,7 +18198,7 @@ def generate_timeline_gallery_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best
 
@@ -18884,7 +18920,7 @@ def generate_memorial_introduction_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best_layout
 
@@ -19367,7 +19403,7 @@ def generate_legacy_of_love_slide_xml(
                 best_layout = layout
             if height <= max_height and not too_many_lines:
                 return layout
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
         return best_layout
 
     title_font_name = "Times New Roman"
@@ -19712,7 +19748,7 @@ def generate_social_media_points_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            break
+            current_size = round(current_size - 0.5, 2)
 
         return best_layout
 
@@ -20338,7 +20374,7 @@ def generate_numbered_social_media_points_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            break
+            current_size = round(current_size - 0.5, 2)
 
         return best_layout
 
@@ -21023,7 +21059,7 @@ def generate_platform_instructions_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            break
+            current_size = round(current_size - 0.5, 2)
 
         return best_layout
 
@@ -21679,7 +21715,7 @@ def generate_hanging_thank_you_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best
 
@@ -22407,7 +22443,10 @@ def generate_business_thank_you_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(
+                current_font_size - 0.5,
+                2,
+            )
 
         return best
 
@@ -22868,7 +22907,7 @@ def generate_dark_gold_thank_you_slide_xml(
                 best = layout
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
-            break
+            current = round(current - 0.5, 2)
         return best
 
     title_font_name = "Arial"
@@ -23499,7 +23538,7 @@ def generate_paper_flight_thank_you_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best
 
@@ -24266,7 +24305,7 @@ def generate_closing_thank_you_memorial_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            break
+            current_font_size = round(current_font_size - 0.5, 2)
 
         return best_layout
 
@@ -24535,787 +24574,5 @@ def generate_closing_thank_you_memorial_slide_xml(
         encoding="UTF-8",
     ).decode("utf-8")
 
-    return xml_content
-
-
-def generate_performance_review_slide_xml(
-    title: str = "ĐÁNH GIÁ HIỆU SUẤT TOÀN DIỆN",
-    radar_labels: list = None,
-    radar_series: list = None,
-    area_labels: list = None,
-    area_series: list = None,
-    bullet_points: list = None,
-    bg_color_top: str = "#FFFFFF",
-    bg_color_bottom: str = "#F0F7FA",
-    title_color: str = "#1E88E5",
-    text_color: str = "#333333"
-) -> str:
-    """
-    Generate XML for a performance review slide with a radar chart on the left and an area chart on the right.
-    """
-    import math
-    import html as html_mod
-    import xml.etree.ElementTree as ET
-    from xml.dom import minidom
-
-    if radar_labels is None:
-        radar_labels = ["Tính năng", "Hỗ trợ", "Hiệu quả hoạt động", "Khả năng sử dụng", "Giá trị"]
-    if radar_series is None:
-        radar_series = [
-            {"name": "Tiêu chuẩn", "data": [4, 3, 5, 6, 7], "color": "#42A5F5"},
-            {"name": "Cao cấp", "data": [8, 5, 8, 8, 4], "color": "#26C6DA"},
-            {"name": "Sang trọng", "data": [9, 7, 5, 6, 5], "color": "#F48FB1"}
-        ]
-    if area_labels is None:
-        area_labels = ["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"]
-    if area_series is None:
-        area_series = [
-            {"name": "Máy tính để bàn", "data": [0, 15, 20, 30, 31, 32, 30, 25, 12, 8, 2, 0], "color": "#42A5F5"},
-            {"name": "Thiết bị di động", "data": [0, 2, 8, 12, 23, 27, 40, 42, 48, 46, 24, 12], "color": "#F48FB1"}
-        ]
-    if bullet_points is None:
-        bullet_points = [
-            "Dòng đánh giá về hiệu suất",
-            "Dòng đánh giá về hiệu suất",
-            "Dòng đánh giá về hiệu suất"
-        ]
-
-    canvas_w = 1600
-    canvas_h = 900
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_w),
-            "height": str(canvas_h),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-
-    slide = ET.SubElement(
-        presentation,
-        "slide",
-        {"background": bg_color_top},
-    )
-
-    def add_element(tag, **attrs):
-        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
-
-    def add_textbox(text, **attrs):
-        node = add_element("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Background bottom
-    add_element("shape", type="rect", x=0, y=140, width=canvas_w, height=canvas_h-140, fill=bg_color_bottom, line_color="none")
-
-    # Title decor
-    add_element("shape", type="rect", x=40, y=40, width=60, height=60, fill="#1E88E5", line_color="none")
-    add_element("shape", type="rect", x=110, y=40, width=10, height=60, fill="#F48FB1", line_color="none")
-
-    # Title
-    add_textbox(
-        title.upper(),
-        x=140, y=40, width=1400, height=60,
-        font="Arial", size=48, bold="true", color=title_color,
-        align="left", vertical_align="middle", single_line="true"
-    )
-
-    # RADAR CHART (Left)
-    radar_cx, radar_cy = 450, 520
-    radar_r = 250
-    radar_max = 10
-    
-    svg_radar = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {canvas_w} {canvas_h}" width="{canvas_w}" height="{canvas_h}">'
-    
-    # Legend for Radar
-    leg_x = 200
-    leg_y = 180
-    for s in radar_series:
-        svg_radar += f'<circle cx="{leg_x}" cy="{leg_y}" r="8" fill="{s["color"]}" />'
-        svg_radar += f'<text x="{leg_x+15}" y="{leg_y+5}" font-family="Arial" font-size="20" fill="#333">{s["name"]}</text>'
-        leg_x += 180
-
-    num_axes = len(radar_labels)
-    angles = [i * 2 * math.pi / num_axes - math.pi / 2 for i in range(num_axes)]
-
-    # Draw grid (polygons)
-    for step in range(2, radar_max + 1, 2):
-        r_step = (step / radar_max) * radar_r
-        pts = []
-        for angle in angles:
-            px = radar_cx + r_step * math.cos(angle)
-            py = radar_cy + r_step * math.sin(angle)
-            pts.append(f"{px},{py}")
-        svg_radar += f'<polygon points="{" ".join(pts)}" fill="none" stroke="#CCCCCC" stroke-dasharray="4,4" stroke-width="1"/>'
-        # Add label for grid
-        svg_radar += f'<text x="{radar_cx}" y="{radar_cy - r_step + 15}" font-family="Arial" font-size="14" fill="#666" text-anchor="middle">{step}</text>'
-    
-    # Draw axes
-    for i, angle in enumerate(angles):
-        px = radar_cx + radar_r * math.cos(angle)
-        py = radar_cy + radar_r * math.sin(angle)
-        svg_radar += f'<line x1="{radar_cx}" y1="{radar_cy}" x2="{px}" y2="{py}" stroke="#CCCCCC" stroke-dasharray="4,4" stroke-width="1"/>'
-        
-        # Label alignment
-        anchor = "middle"
-        dx, dy = 0, 0
-        if math.cos(angle) > 0.1: anchor = "start"; dx = 10
-        elif math.cos(angle) < -0.1: anchor = "end"; dx = -10
-        if math.sin(angle) > 0.1: dy = 25
-        elif math.sin(angle) < -0.1: dy = -10
-        svg_radar += f'<text x="{px+dx}" y="{py+dy}" font-family="Arial" font-size="18" fill="#333" text-anchor="{anchor}">{radar_labels[i]}</text>'
-
-    # Draw data polygons
-    for s in radar_series:
-        pts = []
-        for i, val in enumerate(s["data"]):
-            r_val = (val / radar_max) * radar_r
-            px = radar_cx + r_val * math.cos(angles[i])
-            py = radar_cy + r_val * math.sin(angles[i])
-            pts.append(f"{px},{py}")
-        svg_radar += f'<polygon points="{" ".join(pts)}" fill="{s["color"]}" fill-opacity="0.4" stroke="{s["color"]}" stroke-width="2"/>'
-
-    # AREA CHART (Right)
-    area_x, area_y = 950, 250
-    area_w, area_h = 600, 400
-    area_max = 50
-
-    # Legend for Area
-    leg_x = 1000
-    leg_y = 180
-    for s in area_series:
-        svg_radar += f'<circle cx="{leg_x}" cy="{leg_y}" r="6" fill="{s["color"]}" />'
-        svg_radar += f'<text x="{leg_x+15}" y="{leg_y+5}" font-family="Arial" font-size="16" fill="#333">{s["name"]}</text>'
-        leg_x += 160
-
-    # Area Grid
-    for step in range(0, area_max + 1, 10):
-        y_pos = area_y + area_h - (step / area_max) * area_h
-        svg_radar += f'<line x1="{area_x}" y1="{y_pos}" x2="{area_x+area_w}" y2="{y_pos}" stroke="#DDDDDD" stroke-width="1"/>'
-        svg_radar += f'<text x="{area_x-10}" y="{y_pos+5}" font-family="Arial" font-size="14" fill="#666" text-anchor="end">{step}</text>'
-
-    # Area Paths
-    num_pts = len(area_labels)
-    dx = area_w / (num_pts - 1) if num_pts > 1 else area_w
-    for s in area_series:
-        path_d = f"M {area_x} {area_y + area_h} "
-        for i, val in enumerate(s["data"]):
-            px = area_x + i * dx
-            py = area_y + area_h - (val / area_max) * area_h
-            path_d += f"L {px} {py} "
-        path_d += f"L {area_x + area_w} {area_y + area_h} Z"
-        svg_radar += f'<path d="{path_d}" fill="{s["color"]}" fill-opacity="0.6" stroke="{s["color"]}" stroke-width="2"/>'
-
-    # Area X labels
-    for i, label in enumerate(area_labels):
-        px = area_x + i * dx
-        svg_radar += f'<text x="{px}" y="{area_y + area_h + 20}" font-family="Arial" font-size="14" fill="#333" text-anchor="middle">{label}</text>'
-
-    svg_radar += '</svg>'
-    
-    chart_el = add_element("shape", type="freeform", x=0, y=0, width=canvas_w, height=canvas_h, fill="none", line_color="none")
-    chart_el.set("svg_data", html_mod.escape(svg_radar))
-
-    # Bullet Points (Bottom Right)
-    bullet_y = 700
-    for bullet in bullet_points:
-        add_element("shape", type="oval", x=950, y=bullet_y+12, width=10, height=10, fill="#555555", line_color="none")
-        add_textbox(
-            bullet,
-            x=980, y=bullet_y, width=580, height=40,
-            font="Arial", size=28, bold="true", italic="true", color="#444444",
-            align="left", vertical_align="middle", single_line="true"
-        )
-        bullet_y += 45
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
-    return xml_content
-
-
-
-def generate_outlook_dashboard_slide_xml(
-    title: str = "2026 Outlook",
-    subtitle: str = "Goals & Strategic Priorities",
-    progress_cards: list = None,
-    line_chart_title: str = "Increase AI-driven advisory adoption",
-    line_chart_labels: list = None,
-    line_chart_data: list = None,
-    regional_title: str = "New Regional Market",
-    regional_targets: list = None,
-    bg_color: str = "#EEF2F6"
-) -> str:
-    """
-    Generate XML for a dashboard slide containing progress cards, a line chart, and regional gauge charts.
-    """
-    import math
-    import html as html_mod
-    import xml.etree.ElementTree as ET
-    from xml.dom import minidom
-
-    if progress_cards is None:
-        progress_cards = [
-            {"title": "Expand ESG-focused\\nfunds", "percentage": 25, "card_color": "#F6BE00", "bar_color": "#4A6CF7", "text_color": "#FFFFFF"},
-            {"title": "Enhance cybersecurity &\\ncompliance automation", "percentage": 100, "card_color": "#5A67D8", "bar_color": "#F6BE00", "text_color": "#FFFFFF"}
-        ]
-    if line_chart_labels is None:
-        line_chart_labels = ["2021", "2022", "2023", "2024", "2025", "2026"]
-    if line_chart_data is None:
-        line_chart_data = [9, 10, 13, 20, 22, 30]
-    if regional_targets is None:
-        regional_targets = [
-            {"name": "Target Regional 1", "region": "Vietnam", "percentage": 92, "color": "#F6BE00"},
-            {"name": "Target Regional 2", "region": "USA", "percentage": 95, "color": "#FF4B4B"}
-        ]
-
-    canvas_w = 1600
-    canvas_h = 900
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_w),
-            "height": str(canvas_h),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-    slide = ET.SubElement(presentation, "slide", {"background": bg_color})
-
-    def add_element(tag, **attrs):
-        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
-
-    def add_textbox(text, **attrs):
-        node = add_element("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Background
-    add_element("shape", type="rect", x=0, y=0, width=canvas_w, height=canvas_h, fill=bg_color, line_color="none")
-
-    # Title & Subtitle
-    add_textbox(title, x=80, y=80, width=800, height=80, font="Arial", size=72, bold="true", color="#333333", align="left", vertical_align="middle", single_line="true")
-    add_textbox(subtitle, x=80, y=170, width=800, height=40, font="Arial", size=32, bold="false", color="#555555", align="left", vertical_align="middle", single_line="true")
-
-    # Abstract Map (Dots) & Markers
-    map_x, map_y, map_w, map_h = 750, 40, 800, 350
-    map_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {map_w} {map_h}" width="{map_w}" height="{map_h}">'
-    
-    # Simple dotted map generator
-    map_pattern = [
-        "                xx   x x                ",
-        "             xxxxxx xxxxxx        xx    ",
-        "            xxxxxxxxxxxxxxxx     xxxx   ",
-        "           xxxxxxxxxxxxxxxxxx   xxxxxx  ",
-        "            xxxxxxxxxxxxxxxxxxxxxxxxxx  ",
-        "            xxxxxxxxxxxxxxxxxxxxxxxxxx  ",
-        "             xx xxxxxxxxxxxxxxxxxxxxx   ",
-        "              x  xxxx   xxxxxxxxxxx     ",
-        "                 xxx     xxxxx xxxx     ",
-        "                 xx       xxx   xx      ",
-        "                  x              x      ",
-        "                                 xx     "
-    ]
-    dot_r = 3
-    spacing_x = 18
-    spacing_y = 22
-    for r, row in enumerate(map_pattern):
-        for c, char in enumerate(row):
-            if char == 'x':
-                px = 50 + c * spacing_x
-                py = 50 + r * spacing_y
-                map_svg += f'<circle cx="{px}" cy="{py}" r="{dot_r}" fill="#999999" fill-opacity="0.5"/>'
-    
-    # Markers (USA and Vietnam approximations based on pattern)
-    markers = [
-        {"cx": 180, "cy": 160, "color": "#FF4B4B", "label": "USA"},
-        {"cx": 620, "cy": 220, "color": "#F6BE00", "label": "Vietnam"}
-    ]
-    for m in markers:
-        # Pill background
-        map_svg += f'<rect x="{m["cx"]-20}" y="{m["cy"]-15}" width="120" height="30" rx="15" fill="#FFFFFF" filter="drop-shadow(0px 4px 4px rgba(0,0,0,0.1))"/>'
-        # Dot
-        map_svg += f'<circle cx="{m["cx"]}" cy="{m["cy"]}" r="10" fill="{m["color"]}" />'
-        # Text
-        map_svg += f'<text x="{m["cx"]+20}" y="{m["cy"]+5}" font-family="Arial" font-size="14" font-weight="bold" fill="#333333">{m["label"]}</text>'
-        
-    map_svg += '</svg>'
-    map_el = add_element("shape", type="freeform", x=map_x, y=map_y, width=map_w, height=map_h, fill="none", line_color="none")
-    map_el.set("svg_data", html_mod.escape(map_svg))
-
-    # Progress Cards
-    card_y = 250
-    card_w = 400
-    card_h = 180
-    for i, card in enumerate(progress_cards):
-        cx = 80 + i * (card_w + 30)
-        # Card Background
-        add_element("shape", type="roundRect", x=cx, y=card_y, width=card_w, height=card_h, fill=card["card_color"], line_color="none")
-        # Title
-        add_textbox(card["title"], x=cx+30, y=card_y+30, width=card_w-60, height=80, font="Arial", size=24, bold="false", color=card["text_color"], align="left", vertical_align="top", single_line="false")
-        
-        # Progress Bar track
-        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=220, height=25, fill="#FFFFFF", line_color="none")
-        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=220, height=25, fill="#000000", line_color="none") # Will overlay transparency
-        # To make it look transparent white, we can just use a lighter version of the background or white with opacity. Since we can't easily do opacity in pure XML standard shapes, we just use a light grey.
-        # Actually, let's just use a solid light color for the track.
-        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=220, height=25, fill="#E2E8F0", line_color="none")
-        # Progress Bar fill
-        fill_w = max(20, int(220 * card["percentage"] / 100))
-        add_element("shape", type="roundRect", x=cx+30, y=card_y+115, width=fill_w, height=25, fill=card["bar_color"], line_color="none")
-        
-        # Percentage Text
-        add_textbox(f"{card['percentage']}%", x=cx+270, y=card_y+105, width=100, height=45, font="Arial", size=32, bold="true", color=card["text_color"], align="left", vertical_align="middle", single_line="true")
-
-    # Line Chart Card
-    line_x, line_y, line_w, line_h = 80, 460, 750, 400
-    add_element("shape", type="roundRect", x=line_x, y=line_y, width=line_w, height=line_h, fill="#FFFFFF", line_color="none")
-    
-    add_textbox(line_chart_title, x=line_x+40, y=line_y+30, width=line_w-80, height=40, font="Arial", size=24, bold="false", color="#333333", align="left", vertical_align="middle", single_line="true")
-    
-    # SVG Line Chart
-    chart_svg_w, chart_svg_h = line_w - 60, line_h - 100
-    chart_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {chart_svg_w} {chart_svg_h}" width="{chart_svg_w}" height="{chart_svg_h}">'
-    
-    # Grid and Y axis
-    max_val = max(line_chart_data) if line_chart_data else 30
-    if max_val == 0: max_val = 1
-    y_steps = 6
-    grid_y_start = 20
-    grid_y_end = chart_svg_h - 40
-    chart_h_inner = grid_y_end - grid_y_start
-    
-    for i in range(y_steps + 1):
-        y_val = i * (max_val / y_steps)
-        py = grid_y_end - (i / y_steps) * chart_h_inner
-        chart_svg += f'<line x1="40" y1="{py}" x2="{chart_svg_w-20}" y2="{py}" stroke="#EEEEEE" stroke-width="1"/>'
-        chart_svg += f'<text x="30" y="{py+5}" font-family="Arial" font-size="14" fill="#999999" text-anchor="end">{int(y_val)}</text>'
-        
-    # Line path
-    num_pts = len(line_chart_data)
-    dx = (chart_svg_w - 80) / (num_pts - 1) if num_pts > 1 else 0
-    pts = []
-    for i, val in enumerate(line_chart_data):
-        px = 60 + i * dx
-        py = grid_y_end - (val / max_val) * chart_h_inner
-        pts.append((px, py))
-        
-    path_d = f"M {pts[0][0]} {pts[0][1]} "
-    for i in range(1, num_pts):
-        # Smooth bezier curve
-        cp1x = pts[i-1][0] + dx * 0.4
-        cp1y = pts[i-1][1]
-        cp2x = pts[i][0] - dx * 0.4
-        cp2y = pts[i][1]
-        path_d += f"C {cp1x} {cp1y}, {cp2x} {cp2y}, {pts[i][0]} {pts[i][1]} "
-        
-    chart_svg += f'<path d="{path_d}" fill="none" stroke="#F6BE00" stroke-width="3"/>'
-    
-    # Points
-    for px, py in pts:
-        chart_svg += f'<circle cx="{px}" cy="{py}" r="4" fill="#F6BE00" />'
-        
-    # Highlight last point
-    if pts:
-        last_px, last_py = pts[-1]
-        chart_svg += f'<circle cx="{last_px}" cy="{last_py}" r="12" fill="#F6BE00" fill-opacity="0.2"/>'
-        chart_svg += f'<circle cx="{last_px}" cy="{last_py}" r="6" fill="#F6BE00" />'
-        # Label box
-        box_w, box_h = 70, 40
-        chart_svg += f'<rect x="{last_px-box_w/2}" y="{last_py+15}" width="{box_w}" height="{box_h}" rx="8" fill="#F4F4F4" />'
-        chart_svg += f'<text x="{last_px}" y="{last_py+40}" font-family="Arial" font-size="18" font-weight="bold" fill="#333333" text-anchor="middle">{line_chart_data[-1]}%</text>'
-
-    # X axis labels
-    for i, label in enumerate(line_chart_labels):
-        px = 60 + i * dx
-        chart_svg += f'<text x="{px}" y="{chart_svg_h - 10}" font-family="Arial" font-size="14" fill="#999999" text-anchor="middle">{label}</text>'
-
-    chart_svg += '</svg>'
-    chart_el = add_element("shape", type="freeform", x=line_x+30, y=line_y+80, width=chart_svg_w, height=chart_svg_h, fill="none", line_color="none")
-    chart_el.set("svg_data", html_mod.escape(chart_svg))
-
-    # Regional Market Card
-    reg_x, reg_y, reg_w, reg_h = 860, 460, 680, 400
-    
-    add_textbox(regional_title, x=reg_x, y=reg_y-40, width=reg_w, height=40, font="Arial", size=24, bold="false", color="#555555", align="left", vertical_align="middle", single_line="true")
-    add_element("shape", type="roundRect", x=reg_x, y=reg_y, width=reg_w, height=reg_h, fill="#8B5CF6", line_color="none")
-    
-    gauge_svg_w, gauge_svg_h = reg_w, reg_h
-    gauge_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {gauge_svg_w} {gauge_svg_h}" width="{gauge_svg_w}" height="{gauge_svg_h}">'
-    
-    # Gauges
-    start_y = 60
-    for i, t in enumerate(regional_targets):
-        gy = start_y + i * 160
-        # Text
-        gauge_svg += f'<text x="50" y="{gy + 20}" font-family="Arial" font-size="24" fill="#FFFFFF">{t["name"]}</text>'
-        gauge_svg += f'<circle cx="65" cy="{gy + 65}" r="4" fill="#FFFFFF" />'
-        gauge_svg += f'<text x="80" y="{gy + 72}" font-family="Arial" font-size="20" fill="#E2E8F0">{t["region"]}</text>'
-        
-        # Half Donut (Gauge)
-        gcx, gcy = 500, gy + 100
-        rout = 80
-        rin = 50
-        
-        # Background arc (grayish)
-        gauge_svg += f'<path d="M {gcx-rout} {gcy} A {rout} {rout} 0 0 1 {gcx+rout} {gcy} L {gcx+rin} {gcy} A {rin} {rin} 0 0 0 {gcx-rin} {gcy} Z" fill="#F1F5F9" fill-opacity="0.8"/>'
-        
-        # Foreground arc
-        val = t["percentage"] / 100
-        angle = math.pi - (val * math.pi)
-        px_out = gcx + rout * math.cos(angle)
-        py_out = gcy - rout * math.sin(angle)
-        px_in = gcx + rin * math.cos(angle)
-        py_in = gcy - rin * math.sin(angle)
-        
-        gauge_svg += f'<path d="M {gcx-rout} {gcy} A {rout} {rout} 0 0 1 {px_out} {py_out} L {px_in} {py_in} A {rin} {rin} 0 0 0 {gcx-rin} {gcy} Z" fill="{t["color"]}"/>'
-        
-        # Percentage text
-        gauge_svg += f'<text x="{gcx}" y="{gcy - 15}" font-family="Arial" font-size="28" fill="#FFFFFF" text-anchor="middle">{t["percentage"]}%</text>'
-        
-    gauge_svg += '</svg>'
-    gauge_el = add_element("shape", type="freeform", x=reg_x, y=reg_y, width=gauge_svg_w, height=gauge_svg_h, fill="none", line_color="none")
-    gauge_el.set("svg_data", html_mod.escape(gauge_svg))
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
-    return xml_content
-
-
-
-def generate_kpi_dashboard_slide_xml(
-    title: str = "Primary KPI Dashboard",
-    kpi_cards: list = None,
-    chart_labels: list = None,
-    chart_data: list = None,
-    bg_color: str = "#F8F9FA"
-) -> str:
-    """
-    Generate XML for a KPI dashboard slide with left-side progress cards and a right-side line chart.
-    """
-    import html as html_mod
-    import xml.etree.ElementTree as ET
-    from xml.dom import minidom
-
-    if kpi_cards is None:
-        kpi_cards = [
-            {"title": "Revenue\\nand Sales", "percentage": 72, "color": "#F26D60"},
-            {"title": "Achieved\\nConversion Rate", "percentage": 60, "color": "#E85EAE"},
-            {"title": "Customer\\nRetention", "percentage": 86, "color": "#3BBA77"}
-        ]
-    if chart_labels is None:
-        chart_labels = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"]
-    if chart_data is None:
-        chart_data = [200, 700, 600, 900, 300, 600, 900, 250, 600, 500, 700, 600]
-
-    canvas_w = 1600
-    canvas_h = 900
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_w),
-            "height": str(canvas_h),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-    slide = ET.SubElement(presentation, "slide", {"background": bg_color})
-
-    def add_element(tag, **attrs):
-        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
-
-    def add_textbox(text, **attrs):
-        node = add_element("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Background
-    add_element("shape", type="rect", x=0, y=0, width=canvas_w, height=canvas_h, fill=bg_color, line_color="none")
-
-    # Abstract dots background (Top right and Bottom left)
-    dot_color = "#FAD2D2"
-    dot_r = 8
-    spacing = 25
-    # Top right cluster
-    for r in range(8):
-        for c in range(15):
-            if (r+c) > 6 and (c-r) > 2:
-                add_element("shape", type="oval", x=1200 + c*spacing, y=-50 + r*spacing, width=dot_r, height=dot_r, fill=dot_color, line_color="none")
-    
-    # Bottom left cluster
-    for r in range(12):
-        for c in range(8):
-            if (r-c) > 2:
-                add_element("shape", type="oval", x=-50 + c*spacing, y=600 + r*spacing, width=dot_r, height=dot_r, fill=dot_color, line_color="none")
-
-    # Title Area
-    add_element("shape", type="roundRect", x=600, y=100, width=100, height=10, fill="#F26D60", line_color="none")
-    add_textbox(title, x=600, y=140, width=900, height=80, font="Segoe UI", size=64, bold="true", color="#111111", align="left", vertical_align="middle", single_line="true")
-
-    # Left KPI Cards
-    card_x = 80
-    card_w = 450
-    card_h = 220
-    
-    for i, card in enumerate(kpi_cards):
-        cy = 80 + i * (card_h + 40)
-        
-        # Add shadow simulation (slightly offset light grey rect)
-        add_element("shape", type="roundRect", x=card_x+5, y=cy+5, width=card_w, height=card_h, fill="#E2E8F0", line_color="none")
-        # Card body
-        add_element("shape", type="roundRect", x=card_x, y=cy, width=card_w, height=card_h, fill="#FFFFFF", line_color="none")
-        
-        # Text
-        add_textbox(card["title"], x=card_x+40, y=cy+40, width=220, height=80, font="Segoe UI", size=26, bold="true", color="#222222", align="left", vertical_align="top", single_line="false")
-        
-        # Percentage
-        add_textbox(f"{card['percentage']}%", x=card_x+250, y=cy+35, width=160, height=80, font="Segoe UI", size=54, bold="true", color=card["color"], align="right", vertical_align="top", single_line="true")
-        
-        # Progress Bar
-        bar_y = cy + 140
-        bar_w = 370
-        bar_h = 28
-        # Track
-        add_element("shape", type="roundRect", x=card_x+40, y=bar_y, width=bar_w, height=bar_h, fill="#F1F5F9", line_color="none")
-        # Fill
-        fill_w = max(20, int(bar_w * card["percentage"] / 100))
-        add_element("shape", type="roundRect", x=card_x+40, y=bar_y, width=fill_w, height=bar_h, fill=card["color"], line_color="none")
-
-    # Right Chart Card
-    chart_bg_x, chart_bg_y, chart_bg_w, chart_bg_h = 600, 340, 920, 480
-    add_element("shape", type="roundRect", x=chart_bg_x+5, y=chart_bg_y+5, width=chart_bg_w, height=chart_bg_h, fill="#E2E8F0", line_color="none")
-    add_element("shape", type="roundRect", x=chart_bg_x, y=chart_bg_y, width=chart_bg_w, height=chart_bg_h, fill="#FFFFFF", line_color="none")
-    
-    # Chart SVG
-    svg_w, svg_h = chart_bg_w - 60, chart_bg_h - 60
-    svg_x, svg_y = chart_bg_x + 30, chart_bg_y + 30
-    chart_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {svg_w} {svg_h}" width="{svg_w}" height="{svg_h}">'
-    
-    max_val = max(chart_data) if chart_data else 1000
-    if max_val == 0: max_val = 1
-    # Round max_val up to nearest nice number (e.g. 1000)
-    import math
-    pow10 = 10 ** math.floor(math.log10(max_val))
-    max_val = math.ceil(max_val / pow10) * pow10
-    if max_val == max(chart_data) and max_val > 10:
-        max_val += pow10
-
-    grid_y_start = 20
-    grid_y_end = svg_h - 40
-    chart_h_inner = grid_y_end - grid_y_start
-    
-    y_steps = 5
-    for i in range(y_steps + 1):
-        y_val = i * (max_val / y_steps)
-        py = grid_y_end - (i / y_steps) * chart_h_inner
-        chart_svg += f'<line x1="60" y1="{py}" x2="{svg_w-20}" y2="{py}" stroke="#E2E8F0" stroke-width="1"/>'
-        chart_svg += f'<text x="50" y="{py+5}" font-family="Arial" font-size="16" fill="#555555" text-anchor="end">{int(y_val)}</text>'
-        
-    num_pts = len(chart_data)
-    dx = (svg_w - 100) / (num_pts - 1) if num_pts > 1 else 0
-    pts = []
-    for i, val in enumerate(chart_data):
-        px = 80 + i * dx
-        py = grid_y_end - (val / max_val) * chart_h_inner
-        pts.append((px, py))
-        
-    # Line
-    if pts:
-        path_d = f"M {pts[0][0]} {pts[0][1]} "
-        for i in range(1, num_pts):
-            path_d += f"L {pts[i][0]} {pts[i][1]} "
-        chart_svg += f'<path d="{path_d}" fill="none" stroke="#2B5FEA" stroke-width="6"/>'
-        
-        # Dots
-        for px, py in pts:
-            chart_svg += f'<circle cx="{px}" cy="{py}" r="10" fill="#2B5FEA" />'
-
-    # X axis labels
-    for i, label in enumerate(chart_labels):
-        px = 80 + i * dx
-        chart_svg += f'<text x="{px}" y="{svg_h - 10}" font-family="Arial" font-size="16" fill="#555555" text-anchor="middle">{label}</text>'
-
-    chart_svg += '</svg>'
-    
-    chart_el = add_element("shape", type="freeform", x=svg_x, y=svg_y, width=svg_w, height=svg_h, fill="none", line_color="none")
-    chart_el.set("svg_data", html_mod.escape(chart_svg))
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
-    return xml_content
-
-
-
-def generate_revenue_target_slide_xml(
-    title: str = "Annual Revenue Target",
-    top_left_card: dict = None,
-    top_right_card: dict = None,
-    bottom_card: dict = None,
-    bar_chart_title: str = "Quarterly Revenue Data",
-    bar_chart_labels: list = None,
-    bar_chart_data: list = None,
-    bg_color: str = "#F5F6F8"
-) -> str:
-    """
-    Generate XML for an Annual Revenue Target slide with a donut chart and a bar chart.
-    """
-    import html as html_mod
-    import xml.etree.ElementTree as ET
-    import math
-    from xml.dom import minidom
-
-    if top_left_card is None:
-        top_left_card = {"title": "Annual Target", "value": "$15M", "subtitle": "on track"}
-    if top_right_card is None:
-        top_right_card = {"title": "Forecast Q4", "value": "+6-8%", "subtitle": "projected growth"}
-    if bottom_card is None:
-        bottom_card = {"title": "Current YTD (Q3)", "value": "$11.2M", "subtitle": "74% achieved", "percentage": 74}
-    if bar_chart_labels is None:
-        bar_chart_labels = ["Q1", "Q2", "Q3", "Q4"]
-    if bar_chart_data is None:
-        bar_chart_data = [3, 4, 6, 4]
-
-    canvas_w = 1600
-    canvas_h = 900
-
-    presentation = ET.Element(
-        "presentation",
-        {
-            "schemaVersion": "1.0",
-            "width": str(canvas_w),
-            "height": str(canvas_h),
-            "slideWidthInches": "13.333",
-            "slideHeightInches": "7.5",
-        },
-    )
-    slide = ET.SubElement(presentation, "slide", {"background": bg_color})
-
-    def add_element(tag, **attrs):
-        return ET.SubElement(slide, tag, {key: str(value) for key, value in attrs.items()})
-
-    def add_textbox(text, **attrs):
-        node = add_element("textbox", **attrs)
-        node.text = text
-        return node
-
-    # Background
-    add_element("shape", type="rect", x=0, y=0, width=canvas_w, height=canvas_h, fill=bg_color, line_color="none")
-
-    # Abstract background wave simulation (just soft circles in corners)
-    add_element("shape", type="oval", x=1300, y=-200, width=500, height=500, fill="#Eef0f4", line_color="#E2e6ec")
-    add_element("shape", type="oval", x=1400, y=-100, width=400, height=400, fill="#Eef0f4", line_color="#E2e6ec")
-    add_element("shape", type="oval", x=-200, y=700, width=400, height=400, fill="#Eef0f4", line_color="#E2e6ec")
-
-    # Title
-    add_textbox(title, x=80, y=80, width=1000, height=80, font="Segoe UI", size=60, bold="true", color="#16333F", align="left", vertical_align="middle", single_line="true")
-
-    # Cards Base Layout
-    card_y_top = 220
-    card_y_bot = 530
-    
-    # Top Left Card
-    tl_x = 80
-    add_element("shape", type="roundRect", x=tl_x, y=card_y_top, width=340, height=280, fill="#0A93A6", line_color="none")
-    # Icon Box
-    add_element("shape", type="roundRect", x=tl_x+30, y=card_y_top+30, width=50, height=50, fill="#FCE679", line_color="none")
-    add_textbox("+", x=tl_x+30, y=card_y_top+30, width=50, height=50, font="Segoe UI", size=32, bold="true", color="#0A93A6", align="center", vertical_align="middle", single_line="true")
-    add_textbox(top_left_card["title"], x=tl_x+30, y=card_y_top+120, width=280, height=40, font="Segoe UI", size=22, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
-    add_textbox(top_left_card["value"], x=tl_x+30, y=card_y_top+160, width=280, height=60, font="Segoe UI", size=48, bold="true", color="#FFFFFF", align="left", vertical_align="middle", single_line="true")
-    add_textbox(top_left_card["subtitle"], x=tl_x+30, y=card_y_top+220, width=280, height=30, font="Segoe UI", size=18, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
-
-    # Top Right Card
-    tr_x = 450
-    add_element("shape", type="roundRect", x=tr_x, y=card_y_top, width=340, height=280, fill="#0A93A6", line_color="none")
-    add_element("shape", type="roundRect", x=tr_x+30, y=card_y_top+30, width=50, height=50, fill="#FCE679", line_color="none")
-    # A fire/flame symbol or triangle
-    add_textbox("▲", x=tr_x+30, y=card_y_top+30, width=50, height=50, font="Segoe UI", size=24, bold="true", color="#0A93A6", align="center", vertical_align="middle", single_line="true")
-    add_textbox(top_right_card["title"], x=tr_x+30, y=card_y_top+120, width=280, height=40, font="Segoe UI", size=22, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
-    add_textbox(top_right_card["value"], x=tr_x+30, y=card_y_top+160, width=280, height=60, font="Segoe UI", size=48, bold="true", color="#FFFFFF", align="left", vertical_align="middle", single_line="true")
-    add_textbox(top_right_card["subtitle"], x=tr_x+30, y=card_y_top+220, width=280, height=30, font="Segoe UI", size=18, bold="false", color="#B2DFDB", align="left", vertical_align="middle", single_line="true")
-
-    # Bottom Card
-    add_element("shape", type="roundRect", x=80, y=card_y_bot, width=710, height=300, fill="#FFFFFF", line_color="#E2E8F0")
-    add_element("shape", type="roundRect", x=110, y=card_y_bot+30, width=50, height=50, fill="#0D7685", line_color="none")
-    # Clock symbol or circle
-    add_textbox("⊙", x=110, y=card_y_bot+30, width=50, height=50, font="Segoe UI", size=28, bold="true", color="#FCE679", align="center", vertical_align="middle", single_line="true")
-    add_textbox(bottom_card["title"], x=110, y=card_y_bot+120, width=280, height=40, font="Segoe UI", size=22, bold="false", color="#555555", align="left", vertical_align="middle", single_line="true")
-    add_textbox(bottom_card["value"], x=110, y=card_y_bot+160, width=280, height=60, font="Segoe UI", size=48, bold="true", color="#111111", align="left", vertical_align="middle", single_line="true")
-    add_textbox(bottom_card["subtitle"], x=110, y=card_y_bot+220, width=280, height=30, font="Segoe UI", size=18, bold="false", color="#888888", align="left", vertical_align="middle", single_line="true")
-
-    # Donut Chart SVG
-    donut_pct = bottom_card.get("percentage", 75)
-    donut_w, donut_h = 240, 240
-    donut_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {donut_w} {donut_h}" width="{donut_w}" height="{donut_h}">'
-    cx, cy, r = donut_w//2, donut_h//2, 85
-    circum = 2 * math.pi * r
-    fill_len = (donut_pct / 100) * circum
-    
-    donut_svg += f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#FDE68A" stroke-width="35"/>'
-    donut_svg += f'<circle cx="{cx}" cy="{cy}" r="{r}" fill="none" stroke="#0D7685" stroke-width="35" stroke-dasharray="{fill_len} {circum}" transform="rotate(-90 {cx} {cy})"/>'
-    donut_svg += f'<text x="{cx}" y="{cy+15}" font-family="Arial" font-size="44" font-weight="bold" fill="#111111" text-anchor="middle">{donut_pct}%</text>'
-    donut_svg += '</svg>'
-    
-    donut_el = add_element("shape", type="freeform", x=480, y=card_y_bot+30, width=donut_w, height=donut_h, fill="none", line_color="none")
-    donut_el.set("svg_data", html_mod.escape(donut_svg))
-
-    # Right Bar Chart Card
-    chart_bg_x, chart_bg_y, chart_bg_w, chart_bg_h = 820, 220, 700, 610
-    add_element("shape", type="roundRect", x=chart_bg_x, y=chart_bg_y, width=chart_bg_w, height=chart_bg_h, fill="#FFFFFF", line_color="#E2E8F0")
-    add_textbox(bar_chart_title, x=chart_bg_x+40, y=chart_bg_y+30, width=600, height=40, font="Segoe UI", size=24, bold="false", color="#333333", align="left", vertical_align="middle", single_line="true")
-    add_textbox("Amount (in millions)", x=chart_bg_x-40, y=chart_bg_y+250, width=300, height=40, font="Segoe UI", size=18, bold="false", color="#777777", align="center", vertical_align="middle", single_line="true")
-    # In presentation tools it's hard to rotate standard text box accurately without full transform support, we will just use SVG for rotated text
-    
-    svg_w, svg_h = chart_bg_w - 60, chart_bg_h - 100
-    svg_x, svg_y = chart_bg_x + 30, chart_bg_y + 80
-    chart_svg = f'<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 {svg_w} {svg_h}" width="{svg_w}" height="{svg_h}">'
-    
-    # Rotated Y-axis label
-    chart_svg += f'<text x="-{svg_h//2 + 50}" y="30" font-family="Arial" font-size="20" fill="#777777" transform="rotate(-90)" text-anchor="middle">Amount (in millions)</text>'
-
-    max_val = max(bar_chart_data) if bar_chart_data else 6
-    if max_val == 0: max_val = 1
-    import math
-    max_val = math.ceil(max_val)
-
-    grid_y_start = 20
-    grid_y_end = svg_h - 40
-    chart_h_inner = grid_y_end - grid_y_start
-    
-    # Draw Y axis grid
-    for i in range(max_val + 1):
-        py = grid_y_end - (i / max_val) * chart_h_inner
-        chart_svg += f'<line x1="80" y1="{py}" x2="{svg_w-20}" y2="{py}" stroke="#E2E8F0" stroke-width="1"/>'
-        chart_svg += f'<text x="60" y="{py+5}" font-family="Arial" font-size="18" fill="#555555" text-anchor="end">{i}</text>'
-        
-    num_bars = len(bar_chart_data)
-    if num_bars > 0:
-        bar_w = 80
-        dx = (svg_w - 120) / num_bars
-        colors = ["#63DFD8", "#06B6D4", "#0493A6", "#0D6F82", "#105563", "#16333F"]
-        
-        for i, val in enumerate(bar_chart_data):
-            bx = 100 + i * dx + (dx - bar_w) / 2
-            bh = (val / max_val) * chart_h_inner
-            by = grid_y_end - bh
-            color = colors[i % len(colors)]
-            chart_svg += f'<rect x="{bx}" y="{by}" width="{bar_w}" height="{bh}" fill="{color}" rx="5" />'
-            
-            # X label
-            if i < len(bar_chart_labels):
-                chart_svg += f'<text x="{bx + bar_w/2}" y="{svg_h - 10}" font-family="Arial" font-size="18" fill="#555555" text-anchor="middle">{bar_chart_labels[i]}</text>'
-
-    chart_svg += '</svg>'
-    
-    chart_el = add_element("shape", type="freeform", x=svg_x, y=svg_y, width=svg_w, height=svg_h, fill="none", line_color="none")
-    chart_el.set("svg_data", html_mod.escape(chart_svg))
-
-    raw_xml = ET.tostring(presentation, encoding="utf-8")
-    xml_content = minidom.parseString(raw_xml).toprettyxml(indent="  ", encoding="UTF-8").decode("utf-8")
     return xml_content
 
