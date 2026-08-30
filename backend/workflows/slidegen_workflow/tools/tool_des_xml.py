@@ -956,7 +956,97 @@ THANK_YOU_TOOLS = [
     args_schema=GenerateClosingThankYouMemorialSlideInput,
     ),
 ]
-CHART_TOOLS = []
+
+class GeneratePerformanceReviewSlideInput(BaseModel):
+    \"\"\"Input schema for generate_performance_review_slide_xml.\"\"\"
+
+    title: str = Field(default="ĐÁNH GIÁ HIỆU SUẤT TOÀN DIỆN", description="Main slide title.")
+    radar_labels: List[str] = Field(default=["Tính năng", "Hỗ trợ", "Hiệu quả hoạt động", "Khả năng sử dụng", "Giá trị"], description="Labels for the radar chart axes.")
+    radar_series: List[Dict[str, Union[str, List[float]]]] = Field(..., description="Radar chart data. Each dict needs 'name', 'data', and 'color'. example: [{'name': 'Tiêu chuẩn', 'data': [4, 3, 5, 6, 7], 'color': '#42A5F5'}]")
+    area_labels: List[str] = Field(default=["T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "T12"], description="Labels for the area chart X-axis.")
+    area_series: List[Dict[str, Union[str, List[float]]]] = Field(..., description="Area chart data. Each dict needs 'name', 'data', and 'color'. example: [{'name': 'Máy tính để bàn', 'data': [0, 15, 20, 30, 31, 32], 'color': '#42A5F5'}]")
+    bullet_points: List[str] = Field(default=["Dòng đánh giá về hiệu suất"], description="List of bullet points to display at the bottom right.")
+    bg_color_top: str = Field(default="#FFFFFF", description="Top background color.")
+    bg_color_bottom: str = Field(default="#F0F7FA", description="Bottom background color.")
+    title_color: str = Field(default="#1E88E5", description="Color of the main title text.")
+    text_color: str = Field(default="#333333", description="General text color.")
+
+class GenerateOutlookDashboardSlideInput(BaseModel):
+    \"\"\"Input schema for generate_outlook_dashboard_slide_xml.\"\"\"
+
+    title: str = Field(default="2026 Outlook", description="Main slide title.")
+    subtitle: str = Field(default="Goals & Strategic Priorities", description="Subtitle text.")
+    progress_cards: List[Dict[str, Union[str, int]]] = Field(..., description="Progress cards. Each dict needs 'title', 'percentage', 'card_color', 'bar_color', 'text_color'.")
+    line_chart_title: str = Field(default="Increase AI-driven advisory adoption", description="Title for the line chart.")
+    line_chart_labels: List[str] = Field(default=["2021", "2022", "2023", "2024", "2025", "2026"], description="Labels for the line chart X-axis.")
+    line_chart_data: List[float] = Field(default=[9, 10, 13, 20, 22, 30], description="Data for the line chart.")
+    regional_title: str = Field(default="New Regional Market", description="Title for the regional targets section.")
+    regional_targets: List[Dict[str, Union[str, int]]] = Field(..., description="Regional targets. Each dict needs 'name', 'region', 'percentage', 'color'.")
+    bg_color: str = Field(default="#EEF2F6", description="Slide background color.")
+
+class GenerateKPIDashboardSlideInput(BaseModel):
+    \"\"\"Input schema for generate_kpi_dashboard_slide_xml.\"\"\"
+
+    title: str = Field(default="Primary KPI Dashboard", description="Main slide title.")
+    kpi_cards: List[Dict[str, Union[str, int]]] = Field(
+        default=[
+            {"title": "Revenue\\nand Sales", "percentage": 72, "color": "#F26D60"},
+            {"title": "Achieved\\nConversion Rate", "percentage": 60, "color": "#E85EAE"},
+            {"title": "Customer\\nRetention", "percentage": 86, "color": "#3BBA77"}
+        ],
+        description="KPI cards. Each dict needs 'title', 'percentage', 'color'."
+    )
+    chart_labels: List[str] = Field(default=["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"], description="Labels for the line chart X-axis.")
+    chart_data: List[float] = Field(default=[200, 700, 600, 900, 300, 600, 900, 250, 600, 500, 700, 600], description="Data for the line chart.")
+    bg_color: str = Field(default="#F8F9FA", description="Slide background color.")
+
+class GenerateRevenueTargetSlideInput(BaseModel):
+    \"\"\"Input schema for generate_revenue_target_slide_xml.\"\"\"
+
+    title: str = Field(default="Annual Revenue Target", description="Main slide title.")
+    top_left_card: Dict[str, str] = Field(
+        default={"title": "Annual Target", "value": "$15M", "subtitle": "on track"},
+        description="Top left teal card."
+    )
+    top_right_card: Dict[str, str] = Field(
+        default={"title": "Forecast Q4", "value": "+6-8%", "subtitle": "projected growth"},
+        description="Top right teal card."
+    )
+    bottom_card: Dict[str, Union[str, int]] = Field(
+        default={"title": "Current YTD (Q3)", "value": "$11.2M", "subtitle": "74% achieved", "percentage": 74},
+        description="Bottom wide card with a donut chart."
+    )
+    bar_chart_title: str = Field(default="Quarterly Revenue Data", description="Title for the bar chart card.")
+    bar_chart_labels: List[str] = Field(default=["Q1", "Q2", "Q3", "Q4"], description="Labels for the bar chart X-axis.")
+    bar_chart_data: List[float] = Field(default=[3, 4, 6, 4], description="Data for the bar chart.")
+    bg_color: str = Field(default="#F5F6F8", description="Slide background color.")
+
+CHART_TOOLS = [
+    StructuredTool.from_function(
+        func=generate_performance_review_slide_xml,
+        name="generate_performance_review_slide_xml",
+        description="Generates a performance review slide containing a radar chart on the left and an area chart on the right, with bullet points at the bottom right.",
+        args_schema=GeneratePerformanceReviewSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_outlook_dashboard_slide_xml,
+        name="generate_outlook_dashboard_slide_xml",
+        description="Generates an outlook dashboard slide with progress cards, a line chart, and regional gauge charts.",
+        args_schema=GenerateOutlookDashboardSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_kpi_dashboard_slide_xml,
+        name="generate_kpi_dashboard_slide_xml",
+        description="Generates a primary KPI dashboard slide with 3 progress cards on the left and a large line chart on the right.",
+        args_schema=GenerateKPIDashboardSlideInput,
+    ),
+    StructuredTool.from_function(
+        func=generate_revenue_target_slide_xml,
+        name="generate_revenue_target_slide_xml",
+        description="Generates an Annual Revenue Target slide with KPI cards (including a donut chart) and a bar chart.",
+        args_schema=GenerateRevenueTargetSlideInput,
+    ),
+]
 
 ALL_TOOLS = INTRO_TOOLS + TRANSITION_TOOLS + CONTENT_TOOLS + TEAM_TOOLS + THANK_YOU_TOOLS + CHART_TOOLS
 
