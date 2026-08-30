@@ -3,7 +3,6 @@ from __future__ import annotations
 import os
 import re
 import xml.etree.ElementTree as ET
-from math import ceil
 from pathlib import Path
 from xml.dom import minidom
 
@@ -11,8 +10,9 @@ from PIL import ImageFont
 
 
 # Keep the requested font size even when the text exceeds its textbox.
-# Overflow is handled by the renderer instead of silently shrinking text.
-AUTO_SHRINK_TEXT = True
+# Overflow is handled by wrapping/clipping in the renderer; generation never
+# silently reduces the requested font size.
+AUTO_SHRINK_TEXT = False
 
 
 def _resolve_font_fallback_path(
@@ -1704,7 +1704,7 @@ def generate_elegant_professional_cover_slide_xml(
                         best = layout
                     break
 
-                current_font_size = round(current_font_size - 0.5, 2)
+                break
 
         return best
 
@@ -2206,7 +2206,7 @@ def generate_elegant_fancy_font_cover_slide_xml(
                 best = layout
             if layout["height"] <= max_height:
                 return layout
-            size = round(size - 0.5, 2)
+            break
         return best
 
     title_font_name = "Arial"
@@ -2669,7 +2669,7 @@ def generate_intro_welcome_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best
 
@@ -3215,7 +3215,7 @@ def generate_memorial_cover_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 1.0, 2)
+            break
 
         return best_layout
 
@@ -3727,7 +3727,7 @@ def generate_social_topic_idea_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            current_size = round(current_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -4209,7 +4209,7 @@ def generate_roman_empire_history_cover_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            current_size = round(current_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -4273,14 +4273,8 @@ def generate_roman_empire_history_cover_slide_xml(
         if group_height <= available_group_height:
             break
 
-        # Give the title the first chance to use a smaller size because it is
-        # the larger block; only then reduce the subtitle.
-        if AUTO_SHRINK_TEXT and title_size > title_min_size:
-            title_size = round(max(title_min_size, title_size - 0.5), 2)
-        elif AUTO_SHRINK_TEXT and subtitle_size > subtitle_min_size:
-            subtitle_size = round(max(subtitle_min_size, subtitle_size - 0.5), 2)
-        else:
-            break
+        # Keep the requested font sizes. Overflow is handled by the renderer.
+        break
 
     group_height = (
         float(subtitle_layout["height"])
@@ -6100,7 +6094,7 @@ def generate_gallery_transition_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best
 
@@ -6591,7 +6585,7 @@ def generate_slide_transition_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -7013,7 +7007,7 @@ def generate_green_social_media_transition_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            current_size = round(current_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -7449,7 +7443,7 @@ def generate_section_header_image_slide_xml(
             if height <= max_height:
                 return layout
 
-            current_size = round(current_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -8844,17 +8838,8 @@ def generate_two_ideas_slide_xml(
         line_spacing: float,
         padding: float = 4,
     ) -> dict:
-        # Measure literal HTML break markers as real line breaks.  The XML
-        # parser performs the same normalization before rendering.
-        normalized_text = re.sub(
-            r"<br\s*/?>",
-            "\n",
-            str(text or ""),
-            flags=re.IGNORECASE,
-        )
-
         lines = wrap_text(
-            normalized_text,
+            text,
             font_path,
             font_size,
             max_width,
@@ -8870,13 +8855,9 @@ def generate_two_ideas_slide_xml(
             "text": "\n".join(lines),
             "lines": lines,
             "font_size": font_size,
-            # Pillow and the browser/PPTX renderer do not always report the
-            # same glyph metrics (Vietnamese accents are especially prone to
-            # this).  Reserve a small box-only safety margin; the font size
-            # and line spacing remain unchanged.
-            "height": ceil(
-                len(lines) * line_height * 1.14
-                + max(padding, 8.0)
+            "height": (
+                len(lines) * line_height
+                + padding
             ),
         }
 
@@ -8919,7 +8900,6 @@ def generate_two_ideas_slide_xml(
     item_gap = 70.0
 
     minimum_title_gap = 36.0
-    minimum_heading_to_body_gap = 6.0
     minimum_item_gap = 28.0
 
     # =====================================================
@@ -9010,16 +8990,11 @@ def generate_two_ideas_slide_xml(
 
         if (
             title_to_items_gap > minimum_title_gap
-            or heading_to_body_gap > minimum_heading_to_body_gap
             or item_gap > minimum_item_gap
         ):
             title_to_items_gap = max(
                 minimum_title_gap,
                 title_to_items_gap - 2,
-            )
-            heading_to_body_gap = max(
-                minimum_heading_to_body_gap,
-                heading_to_body_gap - 1,
             )
             item_gap = max(
                 minimum_item_gap,
@@ -9139,7 +9114,6 @@ def generate_two_ideas_slide_xml(
         width=content_width,
         height=layouts["title"]["height"],
         font=title_font_name,
-        font_path=str(title_font_path),
         size=layouts["title"]["font_size"],
         min_font_size=layouts["title"]["font_size"],
         bold="true",
@@ -9172,7 +9146,6 @@ def generate_two_ideas_slide_xml(
             width=content_width,
             height=item["heading"]["height"],
             font=heading_font_name,
-            font_path=str(heading_font_path),
             size=item["heading"]["font_size"],
             min_font_size=item["heading"]["font_size"],
             bold="true",
@@ -9202,7 +9175,6 @@ def generate_two_ideas_slide_xml(
             width=content_width,
             height=item["body"]["height"],
             font=body_font_name,
-            font_path=str(body_font_path),
             size=item["body"]["font_size"],
             min_font_size=item["body"]["font_size"],
             color=body_color,
@@ -9237,7 +9209,6 @@ def generate_two_ideas_slide_xml(
     ).decode("utf-8")
 
     return xml_content
-
 
 def generate_three_ideas_slide_xml(
     title: str = "THREE IDEAS",
@@ -13716,16 +13687,21 @@ def generate_bullet_content_slide_xml(
 def generate_client_snapshot_slide_xml(
     title: str = "Client snapshot, snapshot",
     subtitle: str = "About Value Financials",
-    client_details: str = (
-        "Industry: Financial services and banking\n"
-        "Team size: 300+ employees\n"
+    client_details: list[str] = [
+        "Industry: Financial services and banking",
+        "Team size: 300+ employees",
+        (
         "Current setup: Disconnected productivity tools, "
-        "shared drives, and manual handoffs\n"
-        "Primary goals:\n"
-        "  Improve cross-team collaboration\n"
-        "  Standardize workflows across departments\n"
-        "  Support growth while meeting regulatory requirements"
-    ),
+        "shared drives, and manual handoffs"
+        ),
+        "Primary goals:",
+        "  Improve cross-team collaboration",
+        "  Standardize workflows across departments",
+        (
+            "  Support growth while meeting regulatory "
+            "requirements"
+        ),
+    ],
     top_image_url: str = (
         "https://images.unsplash.com/"
         "photo-1552664730-d307ca884978"
@@ -13895,24 +13871,15 @@ def generate_client_snapshot_slide_xml(
             )
             return candidates[0][1]
 
-        fallback_name = (
+        fallback = (
             "DejaVuSans-Bold.ttf"
             if bold
             else "DejaVuSans.ttf"
         )
 
-        for directory in font_directories():
-            try:
-                for path in directory.rglob(fallback_name):
-                    if path.is_file():
-                        return path
-            except OSError:
-                continue
+        font_path = _resolve_font_fallback_path(bold=bold)
 
-        raise FileNotFoundError(
-            f"Font '{font_name}' was not found and no fallback font "
-            f"('{fallback_name}') is available"
-        )
+        return Path(_resolve_font_fallback_path(bold=bold))
 
     canvas_dpi = 120.0
 
@@ -14060,8 +14027,6 @@ def generate_client_snapshot_slide_xml(
     # Typography and responsive fitting
     # =====================================================
 
-    AUTO_SHRINK_TEXT = True
-
     title_font_name = "Arial"
     subtitle_font_name = "Arial"
     body_font_name = "Arial"
@@ -14137,7 +14102,7 @@ def generate_client_snapshot_slide_xml(
 
         bullet_layouts: list[dict] = []
 
-        for detail in client_details.splitlines():
+        for detail in client_details:
             raw_detail = detail.rstrip()
             stripped_detail = raw_detail.lstrip()
             had_indentation = len(raw_detail) != len(stripped_detail)
@@ -14657,7 +14622,6 @@ def generate_client_snapshot_slide_xml(
     ).decode("utf-8")
 
     return xml_content
-
 
 def generate_how_forge_works_slide_xml(
     title: str = "How Forge works How Forge works",
@@ -16711,7 +16675,7 @@ def generate_problem_slide_xml(
                         padding=padding,
                     )
                 except Exception:
-                    current_size = round(current_size - 0.5, 2)
+                    break
                     continue
 
                 candidate["width"] = width
@@ -16736,7 +16700,7 @@ def generate_problem_slide_xml(
                     candidate["score"] = score
                     return candidate
 
-                current_size = round(current_size - 0.5, 2)
+                break
 
         if best_candidate is None:
             # Extremely defensive fallback.
@@ -16745,7 +16709,7 @@ def generate_problem_slide_xml(
                 "source_text": text,
                 "text": text,
                 "lines": [text],
-                "font_size": absolute_min_font_size,
+                "font_size": preferred_font_size,
                 "height": preferred_max_height,
                 "width": fallback_width,
                 "score": 10**9,
@@ -17516,7 +17480,7 @@ def generate_topics_overview_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best
 
@@ -18198,7 +18162,7 @@ def generate_timeline_gallery_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best
 
@@ -18920,7 +18884,7 @@ def generate_memorial_introduction_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -19403,7 +19367,7 @@ def generate_legacy_of_love_slide_xml(
                 best_layout = layout
             if height <= max_height and not too_many_lines:
                 return layout
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
         return best_layout
 
     title_font_name = "Times New Roman"
@@ -19748,7 +19712,7 @@ def generate_social_media_points_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            current_size = round(current_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -20374,7 +20338,7 @@ def generate_numbered_social_media_points_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            current_size = round(current_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -21059,7 +21023,7 @@ def generate_platform_instructions_slide_xml(
             if height <= max_height and not too_many:
                 return layout
 
-            current_size = round(current_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -21715,7 +21679,7 @@ def generate_hanging_thank_you_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best
 
@@ -22443,10 +22407,7 @@ def generate_business_thank_you_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(
-                current_font_size - 0.5,
-                2,
-            )
+            break
 
         return best
 
@@ -22907,7 +22868,7 @@ def generate_dark_gold_thank_you_slide_xml(
                 best = layout
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
-            current = round(current - 0.5, 2)
+            break
         return best
 
     title_font_name = "Arial"
@@ -23538,7 +23499,7 @@ def generate_paper_flight_thank_you_slide_xml(
             if layout["height"] <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best
 
@@ -24305,7 +24266,7 @@ def generate_closing_thank_you_memorial_slide_xml(
             if height <= max_height and not too_many_lines:
                 return layout
 
-            current_font_size = round(current_font_size - 0.5, 2)
+            break
 
         return best_layout
 
@@ -24575,4 +24536,3 @@ def generate_closing_thank_you_memorial_slide_xml(
     ).decode("utf-8")
 
     return xml_content
-
